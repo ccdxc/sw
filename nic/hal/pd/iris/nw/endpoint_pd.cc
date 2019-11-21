@@ -1006,6 +1006,56 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// EP Quiesce entry add/delete
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_quiesce (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t              ret = HAL_RET_OK;
+    pd_ep_quiesce_args_t  *args = pd_func_args->pd_ep_quiesce;
+    ep_t                  *pi_ep = args->ep;
+    pd_ep_t               *pd_ep = (pd_ep_t *)pi_ep->pd;
+    acl_tcam              *acl_tbl = g_hal_state_pd->acl_table();
+    nacl_swkey_t           key;
+    nacl_swkey_mask_t      mask;
+    nacl_actiondata_t      data;
+
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    if (args->entry_add) {
+        memset(&key, 0, sizeof(key));
+        memset(&mask, 0, sizeof(mask));
+        memset(&data, 0, sizeof(data));
+        // Key
+        key.entry_inactive_nacl        = 0;
+        mask.entry_inactive_nacl_mask  = 0x1;
+        memcpy(key.ethernet_dstAddr, pi_ep->l2_key.mac_addr, sizeof(mac_addr_t));
+        memset(mask.ethernet_dstAddr_mask, 0xFF, sizeof(mac_addr_t));
+        // Data
+        data.action_id                 = NACL_NACL_DENY_ID;
+
+        ret = acl_tbl->insert(&key, &mask, &data, ACL_QUIESCE_ENTRY_PRIORITY,
+                &pd_ep->ep_quiesce_nacl_hdl);
+        if (ret == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("EP Quiesce NACL programmed at: {}.", pd_ep->ep_quiesce_nacl_hdl);
+        } else {
+            HAL_TRACE_ERR("EP Quiesce NACL programming error. ret: {}", ret);
+        }
+    } else {
+        ret = acl_tbl->remove(pd_ep->ep_quiesce_nacl_hdl);
+
+        if (ret == HAL_RET_OK) {
+            pd_ep->ep_quiesce_nacl_hdl = INVALID_INDEXER_INDEX;
+            HAL_TRACE_DEBUG("EP Quiesce NACL removed at: {}.", pd_ep->ep_quiesce_nacl_hdl);
+        } else {
+            HAL_TRACE_ERR("EP Quiesce NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_quiesce_nacl_hdl);
+        }
+    }
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void

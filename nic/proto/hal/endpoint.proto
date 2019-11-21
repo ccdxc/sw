@@ -33,12 +33,17 @@ service Endpoint {
   rpc FilterGet (FilterGetRequestMsg) returns (FilterGetResponseMsg) {}
 }
 
-enum EndpointVMotionState {
-    VMOTION_STATE_NONE     = 0; // No VMotion State
-    VMOTION_STATE_START    = 1; // VMotion Start
-    VMOTION_STATE_SETUP    = 2; // VMotion Setup
-    VMOTION_STATE_ACTIVATE = 3; // VMotion Activate
-    VMOTION_END            = 4; // VMotion End
+enum EndpointVmotionState {
+    VMOTION_STATE_NONE     = 0; // No vMotion State
+    VMOTION_STATE_START    = 1; // vMotion Started
+    VMOTION_STATE_FAILED   = 2; // vMotion failed
+    VMOTION_STATE_DONE     = 3; // vMotion End
+}
+
+message EndpointVmotion {
+    EndpointVmotionState        vmotion_state       = 1;    // EP vMotion state
+    types.IPAddress             source_host_ip        = 2;  // EP vMotion from host's IP
+    types.IPAddress             destination_host_ip  = 3;  // EP Migrating to   host's IP
 }
 
 message EndpointAttributes {
@@ -46,9 +51,9 @@ message EndpointAttributes {
     uint32                      useg_vlan                        = 2;    // microseg vlan assigned to this EP
     repeated types.IPAddress    ip_address                       = 3;    // IP address(es) of endpoint
     repeated kh.SecurityGroupKeyHandle sg_key_handle             = 4 [(gogoproto.moretags) = "venice:ref"];
-    EndpointVMotionState        vmotion_state                    = 5;    // Vmotion state
+    types.IPAddress             homing_host_ip                   = 5;    // IP address of host where this endpoint exists
+    EndpointVmotion             vmotion_attrs                    = 6;    // Endpoint vMotion attributes
 }
-
 
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {

@@ -202,6 +202,8 @@ public:
     slab *ipsec_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_POL]); }
     slab *tcp_proxy_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE]); }
     slab *tcp_proxy_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCP_PROXY_CFG_POL]); }
+    slab *vmotion_ep_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VMOTION_EP]); }
+    slab *vmotion_thread_ctx_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VMOTION_THREAD_CTX]); }
 
 
 private:
@@ -367,8 +369,8 @@ public:
     void set_snake_test(snake_test_t *snake) { snake_test_ = snake; }
     snake_test_t *snake_test(void) const { return snake_test_; }
 
-    hal_vmotion *vmotion(void) const { return vmotion_; }
-    void set_vmotion(hal_vmotion *vmotion) { vmotion_ = vmotion; }
+    vmotion *get_vmotion(void) const { return vmotion_; }
+    void set_vmotion(vmotion *vmn) { vmotion_ = vmn; }
 
     std::map<std::string, uint32_t> *lif_name_id_map() { return &lif_name_id_map_; }
 
@@ -468,7 +470,7 @@ private:
     void         *fte_stats_;
 
     // vmotion object
-    hal_vmotion *vmotion_;
+    vmotion *vmotion_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -732,6 +734,10 @@ public:
     // get APIs for filter
     slab *filter_slab(void) const { return cfg_db_->filter_slab(); }
 
+    // get APIs for vMotion
+    slab *vmotion_ep_slab(void) const { return cfg_db_->vmotion_ep_slab(); }
+    slab *vmotion_thread_ctx_slab(void) const { return cfg_db_->vmotion_thread_ctx_slab(); }
+
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {
         oper_db_->set_forwarding_mode(mode);
@@ -800,8 +806,8 @@ public:
     void set_snake_test(snake_test_t *snake) { oper_db_->set_snake_test(snake); }
     snake_test_t *snake_test(void) const { return oper_db_->snake_test(); }
 
-    void set_vmotion(hal_vmotion *vmotion) { oper_db_->set_vmotion(vmotion); }
-    hal_vmotion *vmotion(void) const { return oper_db_->vmotion(); }
+    void set_vmotion(vmotion *vmn) { oper_db_->set_vmotion(vmn); }
+    vmotion *get_vmotion(void) const { return oper_db_->get_vmotion(); }
 
     slab_ptr_t register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
         return (cfg_db_->register_slab(slab_id, slab_args));

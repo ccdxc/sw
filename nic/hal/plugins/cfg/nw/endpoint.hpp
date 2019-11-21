@@ -44,7 +44,7 @@ using endpoint::EndpointDeleteRequest;
 using kh::EndpointL2Key;
 using kh::EndpointKey;
 
-using endpoint::EndpointVMotionState;
+using endpoint::EndpointVmotionState;
 using namespace endpoint;
 using sdk::lib::ht_ctxt_t;
 
@@ -114,7 +114,8 @@ typedef struct ep_s {
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
-    EndpointVMotionState vmotion_state;        // Vmotion state
+    EndpointVmotionState vmotion_state;        // Vmotion state
+    ip_addr_t            homing_host_ip;       // IP Address of host where the ep is homed
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
     bool                 egress_en;            // based on filter cfg from NIC mgr
 
@@ -160,12 +161,16 @@ typedef struct ep_update_app_ctxt_s {
     uint64_t                iplist_change:1;
     uint64_t                if_change:1;
     uint64_t                vmotion_state_change:1;
+    uint64_t                homing_host_ip_change:1;
     uint64_t                useg_vlan_change:1;
 
     dllist_ctxt_t           *add_iplist;
     dllist_ctxt_t           *del_iplist;
     hal_handle_t            new_if_handle;
-    EndpointVMotionState    new_vmotion_state;
+    EndpointVmotionState    new_vmotion_state;
+    ip_addr_t               new_homing_host_ip;
+    ip_addr_t               source_host_ip;
+    ip_addr_t               destination_host_ip;
     vlan_id_t               new_useg_vlan;
 } __PACK__ ep_update_app_ctxt_t;
 
@@ -256,6 +261,8 @@ bool endpoint_is_remote(ep_t *ep);
 
 hal_ret_t ep_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t ep_restore_cb(void *obj, uint32_t len);
+hal_ret_t ep_handle_vmotion(ep_t *ep, EndpointVmotionState vmotion_state);
+hal_ret_t ep_quiesce(ep_t *ep, bool entry_add);
 
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
 void register_arp_ep_status_callback(arp_status_func_t func);

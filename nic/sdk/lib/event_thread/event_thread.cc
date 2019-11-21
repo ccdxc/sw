@@ -221,11 +221,18 @@ event_thread::factory(const char *name, uint32_t thread_id,
                           sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~event_thread();
-        SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, new_thread);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_EVENT_THREAD, new_thread);
         return NULL;
     }
 
     return new_thread;
+}
+
+void
+event_thread::destroy(event_thread *thread)
+{
+    thread->~event_thread();
+    SDK_FREE(SDK_MEM_ALLOC_LIB_EVENT_THREAD, thread);
 }
 
 int
@@ -385,7 +392,7 @@ event_thread::start(void *ctx) {
 
 sdk_ret_t
 event_thread::stop(void) {
-    // This function will be called from different thread
+    // This function can be called from different thread
     // No locking required
     this->stop_ = true;
     this->set_running(false);

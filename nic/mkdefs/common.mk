@@ -32,7 +32,7 @@ export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ev ${NIC_COMMON_LD
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
 export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
-    ht indexer logger thread periodic twheel directmap sldirectmap \
+    ht indexer logger thread event_thread periodic twheel directmap sldirectmap \
     hash hbmhash tcam timerfd catalog device sdkplatformutils sdkcapri \
     sdkp4loader sdkasicrw lif_mgr sdkring sysmon sensor
 

@@ -12,20 +12,18 @@
 namespace hal {
 
 enum {
-    HAL_THREAD_ID_MIN                = 0,
-    HAL_THREAD_ID_CFG                = HAL_THREAD_ID_MIN,
-    HAL_THREAD_ID_PERIODIC           = 1,
-    HAL_THREAD_ID_FTE_MIN            = 2,
-    HAL_THREAD_ID_FTE_MAX            = 4,
-    HAL_THREAD_ID_ASIC_RW            = 5,
-    HAL_THREAD_ID_DELPHI_CLIENT      = 6,
-    HAL_THREAD_ID_LINKMGR_CTRL       = 7,
-    HAL_THREAD_ID_VMOTION            = 8,
-    HAL_THREAD_ID_VMOTION_SERVER_MIN = 9,
-    HAL_THREAD_ID_VMOTION_SERVER_MAX = 18,
-    HAL_THREAD_ID_VMOTION_CLIENT_MIN = 19,
-    HAL_THREAD_ID_VMOTION_CLIENT_MAX = 28,
-    HAL_THREAD_ID_MAX                = 28,
+    HAL_THREAD_ID_MIN                 = 0,
+    HAL_THREAD_ID_CFG                 = HAL_THREAD_ID_MIN,
+    HAL_THREAD_ID_PERIODIC            = 1,
+    HAL_THREAD_ID_FTE_MIN             = 2,
+    HAL_THREAD_ID_FTE_MAX             = 4,
+    HAL_THREAD_ID_ASIC_RW             = 5,
+    HAL_THREAD_ID_DELPHI_CLIENT       = 6,
+    HAL_THREAD_ID_LINKMGR_CTRL        = 7,
+    HAL_THREAD_ID_VMOTION             = 8,
+    HAL_THREAD_ID_MAX                 = 9,
+    HAL_THREAD_ID_VMOTION_THREADS_MIN = 10, // 64 Worker vMotion threads
+    HAL_THREAD_ID_VMOTION_THREADS_MAX = 73,
 };
 
 #define HAL_MAX_NAME_STR       16

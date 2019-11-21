@@ -42,7 +42,7 @@ fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_stat
     HAL_ABORT(result != sm->end());
     fsm_state_t state = result->second;
     if (state.entry_func) {
-        state.entry_func(NULL);
+        state.entry_func(this->ctx_);
     }
 
     HAL_TRACE_INFO("State machine initialized to state : {}",

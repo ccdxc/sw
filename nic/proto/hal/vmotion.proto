@@ -3,17 +3,19 @@ syntax = "proto3";
 import "types.proto";
 import "session.proto";
 
-package vmotion;
+package vmotion_msg;
 option go_package="halproto";
 
 enum VmotionMessageType {
-    VMOTION_MSG_TYPE_INITIATE           = 0; // initiate vmotion :: cl -> srv
-    VMOTION_MSG_TYPE_INITIATE_DONE      = 1; // vmotion initiation done :: srv -> cl
-    VMOTION_MSG_TYPE_STATE_SYNC_START   = 2; // start syncing state :: cl -> srv
-    VMOTION_MSG_TYPE_STATE_SYNC         = 3; // syncing state :: srv -> cl
-    VMOTION_MSG_TYPE_STATE_SYNC_END     = 4; // syncing done :: srv -> cl
-    VMOTION_MSG_TYPE_END                = 5; // vmotion end :: cl -> srv
-    VMOTION_MSG_TYPE_END_ACK            = 6; // vmotion end ack :: srv -> cl
+    VMOTION_MSG_TYPE_INIT               = 0; // syncing state :: new -> old
+    VMOTION_MSG_TYPE_SYNC               = 1; // syncing state :: old -> new
+    VMOTION_MSG_TYPE_SYNC_END           = 2; // syncing state :: old -> new
+    VMOTION_MSG_TYPE_TERM_SYNC_REQ      = 3; // syncing state :: new -> old
+    VMOTION_MSG_TYPE_TERM_SYNC          = 4; // syncing state :: old -> new
+    VMOTION_MSG_TYPE_TERM_SYNC_END      = 5; // syncing state :: old -> new
+    VMOTION_MSG_TYPE_TERM_SYNC_ACK      = 6; // syncing state :: new -> old
+    VMOTION_MSG_TYPE_EP_MOVED           = 7; // syncing state :: old -> new
+    VMOTION_MSG_TYPE_EP_MOVED_ACK       = 8; // syncing state :: new -> old
 }
 
 enum VmotionMessageStatus {
@@ -25,36 +27,42 @@ message VmotionInitiate {
     uint64 mac_address = 1; // mac of EP in vmotion
 }
 
-message VmotionInitiateDone {
-    VmotionMessageStatus status = 1;
-}
-
-message VmotionStateSyncStart {
-}
-
-message VmotionStateSync {
+message VmotionSync {
   repeated session.SessionGetResponse response = 1; // list of sessions
 }
 
-message VmotionStateSyncEnd {
+message VmotionSyncEnd {
     VmotionMessageStatus status = 1;
 }
 
-message VmotionEnd {
+message VmotionTermSyncReq {
 }
 
-message VmotionEndAck {
+message VmotionTermSync {
+  repeated session.SessionGetResponse response = 1; // list of sessions
+}
+
+message VmotionTermSyncEnd {
+    VmotionMessageStatus status = 1;
+}
+
+message VmotionTermSyncAck {
+    VmotionMessageStatus status = 1;
+}
+
+message VmotionEpMoved {
 }
 
 message VmotionMessage {
     VmotionMessageType type                     = 1;
     oneof msg {
         VmotionInitiate       init              = 2; 
-        VmotionInitiateDone   init_done         = 3;
-        VmotionStateSyncStart state_sync_start  = 4;
-        VmotionStateSync      state_sync        = 5;
-        VmotionStateSyncEnd   state_sync_end    = 6;
-        VmotionEnd            end               = 7;
-        VmotionEndAck         end_ack           = 8;
+        VmotionSync           sync              = 3;
+        VmotionSyncEnd        sync_end          = 4;
+        VmotionTermSyncReq    term_sync_req     = 5;
+        VmotionTermSync       term_sync         = 6;
+        VmotionTermSyncEnd    term_sync_end     = 7;
+        VmotionTermSyncAck    term_sync_ack     = 8;
+        VmotionEpMoved        ep_moved          = 9;
     }
 }

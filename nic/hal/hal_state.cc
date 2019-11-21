@@ -463,6 +463,20 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+    // initialize vmotion ep slab
+    slab = register_slab(HAL_SLAB_VMOTION_EP,
+                         slab_args={.name="vmotion_ep",
+                        .size=sizeof(hal::vmotion_ep), .num_elements=10,
+                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
+    slab = register_slab(HAL_SLAB_VMOTION_THREAD_CTX,
+                         slab_args={.name="vmotion_thread_ctx",
+                        .size=sizeof(hal::vmotion_thread_ctx_t), .num_elements=10,
+                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
@@ -2130,6 +2144,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PORT_TIMER_CTXT:
         g_hal_state->port_timer_ctxt_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_VMOTION_EP:
+        g_hal_state->vmotion_ep_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_VMOTION_THREAD_CTX:
+        g_hal_state->vmotion_thread_ctx_slab()->free(elem);
         break;
 
     default:

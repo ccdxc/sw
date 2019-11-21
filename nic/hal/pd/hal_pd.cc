@@ -145,6 +145,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_EP_GET, pd_ep_get);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_RESTORE, pd_ep_restore);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_IPSG_CHANGE, pd_ep_ipsg_change);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_QUIESCE, pd_ep_quiesce);
 
     // session pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_CREATE, pd_session_create);

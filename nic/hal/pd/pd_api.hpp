@@ -757,6 +757,19 @@ pd_ep_ipsg_change_args_init (pd_ep_ipsg_change_args_t *args)
     return;
 }
 
+typedef struct pd_ep_quiesce_args_s {
+    ep_t            *ep;
+    bool            entry_add;
+} __PACK__ pd_ep_quiesce_args_t;
+
+static inline void
+pd_ep_quiesce_args_init (pd_ep_quiesce_args_t *args)
+{
+    args->ep        = NULL;
+    args->entry_add = false;
+    return;
+}
+
 typedef struct pd_ep_delete_args_s {
     vrf_t        *vrf;
     l2seg_t         *l2seg;
@@ -3595,7 +3608,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
     ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
     ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
-    ENTRY(PD_FUNC_ID_MAX,                      337, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EP_QUIESCE,                 337, "PD_FUNC_ID_EP_QUIESCE")\
+    ENTRY(PD_FUNC_ID_MAX,                        338, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3684,6 +3698,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_ep_get);
         PD_UNION_ARGS_FIELD(pd_ep_restore);
         PD_UNION_ARGS_FIELD(pd_ep_ipsg_change);
+        PD_UNION_ARGS_FIELD(pd_ep_quiesce);
 
         // session calls
         PD_UNION_ARGS_FIELD(pd_session_create);
@@ -4161,6 +4176,7 @@ PD_FUNCP_TYPEDEF(pd_ep_make_clone);
 PD_FUNCP_TYPEDEF(pd_ep_get);
 PD_FUNCP_TYPEDEF(pd_ep_restore);
 PD_FUNCP_TYPEDEF(pd_ep_ipsg_change);
+PD_FUNCP_TYPEDEF(pd_ep_quiesce);
 
 // session calls
 PD_FUNCP_TYPEDEF(pd_session_create);

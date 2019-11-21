@@ -141,7 +141,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_RPC_TCP_BUFFER_4096             = 130,
     HAL_SLAB_RPC_TCP_BUFFER_8192             = 131,
     HAL_SLAB_RPC_TCP_BUFFER_16384            = 132,
-    HAL_SLAB_PI_MAX                          = 133,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_VMOTION_EP                      = 133,
+    HAL_SLAB_VMOTION_THREAD_CTX              = 134,
+    HAL_SLAB_PI_MAX                          = 135,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

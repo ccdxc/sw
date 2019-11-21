@@ -646,24 +646,21 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
     return ret;
 }
 
-#define HAL_VMOTION_MAX_SERVERS \
-    (HAL_THREAD_ID_VMOTION_SERVER_MAX - HAL_THREAD_ID_VMOTION_SERVER_MIN + 1)
-#define HAL_VMOTION_MAX_CLIENTS \
-    (HAL_THREAD_ID_VMOTION_CLIENT_MAX - HAL_THREAD_ID_VMOTION_CLIENT_MIN + 1)
+#define HAL_VMOTION_MAX_THREADS \
+    (HAL_THREAD_ID_VMOTION_THREADS_MAX - HAL_THREAD_ID_VMOTION_THREADS_MIN + 1)
 #define HAL_VMOTION_PORT 50055
 hal_ret_t
 hal_vmotion_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t ret = HAL_RET_OK;
-    hal_vmotion *vm;
+    vmotion   *vm;
 
     if (hal_cfg->device_cfg.forwarding_mode == 
         HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
         HAL_TRACE_DEBUG("vmotion init");
-        vm = hal_vmotion::factory(HAL_VMOTION_MAX_SERVERS,
-                                  HAL_VMOTION_MAX_CLIENTS,
-                                  stoi(hal_cfg->vmotion_port) ? 
-                                  stoi(hal_cfg->vmotion_port) : HAL_VMOTION_PORT);
+        vm = vmotion::factory(HAL_VMOTION_MAX_THREADS,
+                              stoi(hal_cfg->vmotion_port) ? 
+                              stoi(hal_cfg->vmotion_port) : HAL_VMOTION_PORT);
     }
     g_hal_state->set_vmotion(vm);
     return ret;

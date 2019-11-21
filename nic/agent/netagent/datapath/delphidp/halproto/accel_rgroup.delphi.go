@@ -270,6 +270,7 @@ It has these top-level messages:
 	DoSPolicyStats
 	DoSPolicyGetResponse
 	DoSPolicyGetResponseMsg
+	EndpointVmotion
 	EndpointAttributes
 	EndpointSpec
 	EndpointRequestMsg
@@ -1391,12 +1392,13 @@ It has these top-level messages:
 	EgressDropReasons
 	RuleMatch
 	VmotionInitiate
-	VmotionInitiateDone
-	VmotionStateSyncStart
-	VmotionStateSync
-	VmotionStateSyncEnd
-	VmotionEnd
-	VmotionEndAck
+	VmotionSync
+	VmotionSyncEnd
+	VmotionTermSyncReq
+	VmotionTermSync
+	VmotionTermSyncEnd
+	VmotionTermSyncAck
+	VmotionEpMoved
 	VmotionMessage
 	VrfSpec
 	VrfRequestMsg

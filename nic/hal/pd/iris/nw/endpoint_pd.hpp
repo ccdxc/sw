@@ -4,16 +4,20 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
+
+using hal::pd::utils::acl_tcam_entry_handle_t;
 
 namespace hal {
 namespace pd {
 
 struct pd_ep_s {
-    uint32_t    rw_tbl_idx[REWRITE_MAX_ID];
-    uint32_t    reg_mac_tbl_idx;        // Only in classic mode
+    uint32_t                rw_tbl_idx[REWRITE_MAX_ID];
+    uint32_t                reg_mac_tbl_idx;        // Only in classic mode
+    acl_tcam_entry_handle_t ep_quiesce_nacl_hdl;    // EP Quiesce NACL Handle
 
     // pi ptr
-    void        *pi_ep;
+    void                    *pi_ep;
 } __PACK__;
 
 struct pd_ep_ip_entry_s {

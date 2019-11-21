@@ -1087,6 +1087,7 @@ ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
     ep->vrf_handle = vrf->hal_handle;
     ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
+    ip_addr_spec_to_ip_addr(&ep->homing_host_ip, spec.endpoint_attrs().homing_host_ip());
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
         ep->ep_flags |= EP_FLAGS_LOCAL;
         HAL_TRACE_DEBUG("Setting local flag in EP {}", ep->ep_flags);
@@ -1469,6 +1470,14 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    if (app_ctxt->homing_host_ip_change) {
+        memcpy(&ep->homing_host_ip, &app_ctxt->new_homing_host_ip, sizeof(ip_addr_t));
+    }
+
+    if (app_ctxt->vmotion_state_change) {
+        ep_handle_vmotion(ep, app_ctxt->new_vmotion_state);
+    }
+
 end:
 
     return ret;
@@ -1715,15 +1724,13 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 
     if (app_ctxt->vmotion_state_change) {
         if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_SETUP) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP, VMOTION_STATE_ACTIVATE) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE, VMOTION_END)) {
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_DONE) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_FAILED)) {
             HAL_TRACE_DEBUG("Vmotion state change : {} => {}",
                             ep->vmotion_state, app_ctxt->new_vmotion_state);
         } else {
             HAL_TRACE_ERR("Invalid vmotion state change: {} => {}",
-                          ep->vmotion_state,
-                          app_ctxt->new_vmotion_state);
+                          ep->vmotion_state, app_ctxt->new_vmotion_state);
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
@@ -1739,28 +1746,30 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 
             hal_if = find_if_by_handle(app_ctxt->new_if_handle);
             if (!hal_if) {
-                HAL_TRACE_ERR("Invalid update, new if {} not present",
-                              app_ctxt->new_if_handle);
+                HAL_TRACE_ERR("Invalid update, new if {} not present", app_ctxt->new_if_handle);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
             }
 
             if (hal_if->if_type != intf::IF_TYPE_TUNNEL) {
-                HAL_TRACE_ERR("Invalid update, if has to be tunnel "
-                              "if if_hdl : {}, if_type : {}",
-                              app_ctxt->new_if_handle, hal_if->if_type);
-                ret = HAL_RET_INVALID_ARG;
+                // Handle the vMotion state change message only in the new destination host
+                HAL_TRACE_DEBUG("Ignoring update. Not new host. if_hdl : {}, if_type : {}",
+                                app_ctxt->new_if_handle, hal_if->if_type);
+                ret = HAL_RET_OK;
+                app_ctxt->vmotion_state_change = false;
                 goto end;
+            }
+
+            if (!memcmp(&app_ctxt->destination_host_ip, &ep->homing_host_ip, sizeof(ip_addr_t))) {
+                HAL_TRACE_ERR("vMotion Destination Host & Current Host is same. New: {} Curr: {}",
+                        ipaddr2str(&app_ctxt->destination_host_ip),
+                        ipaddr2str(&ep->homing_host_ip));
+                return HAL_RET_ERR;
             }
         }
 
-        // Vmotion Start => Setup, Setup => Activate, Activate => End
-        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START,
-                                   VMOTION_STATE_SETUP) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP,
-                                   VMOTION_STATE_ACTIVATE) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE,
-                                   VMOTION_END)) {
+        // Vmotion Start => End
+        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_DONE)) {
             // For now, assumption is nothing else changes
             if (app_ctxt->iplist_change || app_ctxt->if_change) {
                 HAL_TRACE_ERR("Invalid update. vmotion update "
@@ -1783,12 +1792,14 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                        ep_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    ip_addr_t               homing_host_ip;
 
     SDK_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     app_ctxt->if_change = false;
     app_ctxt->vmotion_state_change = false;
+    app_ctxt->homing_host_ip_change = false;
     app_ctxt->new_if_handle = HAL_HANDLE_INVALID;
     if (req.has_endpoint_attrs()) {
         auto hal_if =
@@ -1810,10 +1821,18 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                             app_ctxt->new_useg_vlan);
         }
 
+        // Check if homing Host IP change
+        ip_addr_spec_to_ip_addr(&homing_host_ip, req.endpoint_attrs().homing_host_ip());
+        if (!memcmp(&ep->homing_host_ip, &homing_host_ip, sizeof(ip_addr_t))) {
+            app_ctxt->homing_host_ip_change = true;
+            memcpy(&app_ctxt->new_homing_host_ip, &homing_host_ip, sizeof(ip_addr_t));
+        }
+
         // Check if vmotion state changed
-        if (ep->vmotion_state != req.endpoint_attrs().vmotion_state()) {
+        if (ep->vmotion_state != req.endpoint_attrs().vmotion_attrs().vmotion_state()) {
             app_ctxt->vmotion_state_change = true;
-            app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
+            app_ctxt->new_vmotion_state    = req.endpoint_attrs().vmotion_attrs().vmotion_state();
+            memcpy(&app_ctxt->new_homing_host_ip, &homing_host_ip, sizeof(ip_addr_t));
         }
     }
 
@@ -2770,10 +2789,12 @@ find_ep_by_mac (mac_addr_t mac)
     } ctxt = {};
 
     auto walk_func = [](void *ht_entry, void *ctxt) {
-        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
-        ep_t *tmp_ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
-        if (tmp_ep->l2_key.mac_addr == ((ep_get_t *)ctxt)->mac) {
-            ((ep_get_t *)ctxt)->ep = tmp_ep;
+        hal_handle_id_ht_entry_t *entry  = (hal_handle_id_ht_entry_t *)ht_entry;
+        ep_t                     *tmp_ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+        struct ep_get_t          *ep_ctx = (struct ep_get_t *)ctxt;
+
+        if (!(memcmp(&tmp_ep->l2_key.mac_addr, &ep_ctx->mac, ETH_ADDR_LEN))) {
+            ep_ctx->ep = tmp_ep;
             return true;
         }
       
@@ -3243,6 +3264,40 @@ ep_restore_cb (void *obj, uint32_t len)
     ep_restore_commit(ep, vrf, ep_info);
 
     return 0;    // TODO: fix me
+}
+
+hal_ret_t
+ep_handle_vmotion(ep_t *ep, EndpointVmotionState new_vmotion_state)
+{
+    // Migration start notification
+    if ((ep->vmotion_state == VMOTION_STATE_NONE) && (new_vmotion_state == VMOTION_STATE_START)) {
+        g_hal_state->get_vmotion()->run_vmotion(ep, VMOTION_TYPE_MIGRATE_IN);
+    }
+    ep->vmotion_state = new_vmotion_state;
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// ep's quiesce add/delete for vMotion
+//------------------------------------------------------------------------------
+hal_ret_t
+ep_quiesce(ep_t *ep, bool entry_add)
+{
+    pd::pd_func_args_t        pd_func_args = {0};
+    pd::pd_ep_quiesce_args_t  pd_ep_quiesce_args = {0};
+    hal_ret_t                 ret;
+
+    pd_ep_quiesce_args.ep        = ep;
+    pd_ep_quiesce_args.entry_add = entry_add;
+
+    pd_func_args.pd_ep_quiesce = &pd_ep_quiesce_args;
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_QUIESCE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("EP Quiesce failed EP {} err : {}", ep_l2_key_to_str(ep), ret);
+    }
+    return ret;
 }
 
 bool 

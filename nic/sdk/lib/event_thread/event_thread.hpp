@@ -155,6 +155,7 @@ public:
                                  message_cb message_cb,
                                  uint32_t prio, int sched_policy,
                                  bool can_yield);
+    static void destroy(event_thread *thread);
 
     void updown_up_subscribe(uint32_t thread_id, updown_up_cb cb, void *ctx);
     

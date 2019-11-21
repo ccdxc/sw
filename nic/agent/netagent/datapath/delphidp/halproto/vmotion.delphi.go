@@ -15,32 +15,38 @@ var _ = math.Inf
 type VmotionMessageType int32
 
 const (
-	VmotionMessageType_VMOTION_MSG_TYPE_INITIATE         VmotionMessageType = 0
-	VmotionMessageType_VMOTION_MSG_TYPE_INITIATE_DONE    VmotionMessageType = 1
-	VmotionMessageType_VMOTION_MSG_TYPE_STATE_SYNC_START VmotionMessageType = 2
-	VmotionMessageType_VMOTION_MSG_TYPE_STATE_SYNC       VmotionMessageType = 3
-	VmotionMessageType_VMOTION_MSG_TYPE_STATE_SYNC_END   VmotionMessageType = 4
-	VmotionMessageType_VMOTION_MSG_TYPE_END              VmotionMessageType = 5
-	VmotionMessageType_VMOTION_MSG_TYPE_END_ACK          VmotionMessageType = 6
+	VmotionMessageType_VMOTION_MSG_TYPE_INIT          VmotionMessageType = 0
+	VmotionMessageType_VMOTION_MSG_TYPE_SYNC          VmotionMessageType = 1
+	VmotionMessageType_VMOTION_MSG_TYPE_SYNC_END      VmotionMessageType = 2
+	VmotionMessageType_VMOTION_MSG_TYPE_TERM_SYNC_REQ VmotionMessageType = 3
+	VmotionMessageType_VMOTION_MSG_TYPE_TERM_SYNC     VmotionMessageType = 4
+	VmotionMessageType_VMOTION_MSG_TYPE_TERM_SYNC_END VmotionMessageType = 5
+	VmotionMessageType_VMOTION_MSG_TYPE_TERM_SYNC_ACK VmotionMessageType = 6
+	VmotionMessageType_VMOTION_MSG_TYPE_EP_MOVED      VmotionMessageType = 7
+	VmotionMessageType_VMOTION_MSG_TYPE_EP_MOVED_ACK  VmotionMessageType = 8
 )
 
 var VmotionMessageType_name = map[int32]string{
-	0: "VMOTION_MSG_TYPE_INITIATE",
-	1: "VMOTION_MSG_TYPE_INITIATE_DONE",
-	2: "VMOTION_MSG_TYPE_STATE_SYNC_START",
-	3: "VMOTION_MSG_TYPE_STATE_SYNC",
-	4: "VMOTION_MSG_TYPE_STATE_SYNC_END",
-	5: "VMOTION_MSG_TYPE_END",
-	6: "VMOTION_MSG_TYPE_END_ACK",
+	0: "VMOTION_MSG_TYPE_INIT",
+	1: "VMOTION_MSG_TYPE_SYNC",
+	2: "VMOTION_MSG_TYPE_SYNC_END",
+	3: "VMOTION_MSG_TYPE_TERM_SYNC_REQ",
+	4: "VMOTION_MSG_TYPE_TERM_SYNC",
+	5: "VMOTION_MSG_TYPE_TERM_SYNC_END",
+	6: "VMOTION_MSG_TYPE_TERM_SYNC_ACK",
+	7: "VMOTION_MSG_TYPE_EP_MOVED",
+	8: "VMOTION_MSG_TYPE_EP_MOVED_ACK",
 }
 var VmotionMessageType_value = map[string]int32{
-	"VMOTION_MSG_TYPE_INITIATE":         0,
-	"VMOTION_MSG_TYPE_INITIATE_DONE":    1,
-	"VMOTION_MSG_TYPE_STATE_SYNC_START": 2,
-	"VMOTION_MSG_TYPE_STATE_SYNC":       3,
-	"VMOTION_MSG_TYPE_STATE_SYNC_END":   4,
-	"VMOTION_MSG_TYPE_END":              5,
-	"VMOTION_MSG_TYPE_END_ACK":          6,
+	"VMOTION_MSG_TYPE_INIT":          0,
+	"VMOTION_MSG_TYPE_SYNC":          1,
+	"VMOTION_MSG_TYPE_SYNC_END":      2,
+	"VMOTION_MSG_TYPE_TERM_SYNC_REQ": 3,
+	"VMOTION_MSG_TYPE_TERM_SYNC":     4,
+	"VMOTION_MSG_TYPE_TERM_SYNC_END": 5,
+	"VMOTION_MSG_TYPE_TERM_SYNC_ACK": 6,
+	"VMOTION_MSG_TYPE_EP_MOVED":      7,
+	"VMOTION_MSG_TYPE_EP_MOVED_ACK":  8,
 }
 
 func (x VmotionMessageType) String() string {
@@ -85,127 +91,156 @@ func (m *VmotionInitiate) GetMacAddress() uint64 {
 	return 0
 }
 
-type VmotionInitiateDone struct {
-	Status VmotionMessageStatus `protobuf:"varint,1,opt,name=status,enum=vmotion.VmotionMessageStatus" json:"status,omitempty"`
-}
-
-func (m *VmotionInitiateDone) Reset()                    { *m = VmotionInitiateDone{} }
-func (m *VmotionInitiateDone) String() string            { return proto.CompactTextString(m) }
-func (*VmotionInitiateDone) ProtoMessage()               {}
-func (*VmotionInitiateDone) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
-
-func (m *VmotionInitiateDone) GetStatus() VmotionMessageStatus {
-	if m != nil {
-		return m.Status
-	}
-	return VmotionMessageStatus_STATUS_OK
-}
-
-type VmotionStateSyncStart struct {
-}
-
-func (m *VmotionStateSyncStart) Reset()                    { *m = VmotionStateSyncStart{} }
-func (m *VmotionStateSyncStart) String() string            { return proto.CompactTextString(m) }
-func (*VmotionStateSyncStart) ProtoMessage()               {}
-func (*VmotionStateSyncStart) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
-
-type VmotionStateSync struct {
+type VmotionSync struct {
 	Response []*SessionGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *VmotionStateSync) Reset()                    { *m = VmotionStateSync{} }
-func (m *VmotionStateSync) String() string            { return proto.CompactTextString(m) }
-func (*VmotionStateSync) ProtoMessage()               {}
-func (*VmotionStateSync) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
+func (m *VmotionSync) Reset()                    { *m = VmotionSync{} }
+func (m *VmotionSync) String() string            { return proto.CompactTextString(m) }
+func (*VmotionSync) ProtoMessage()               {}
+func (*VmotionSync) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
 
-func (m *VmotionStateSync) GetResponse() []*SessionGetResponse {
+func (m *VmotionSync) GetResponse() []*SessionGetResponse {
 	if m != nil {
 		return m.Response
 	}
 	return nil
 }
 
-type VmotionStateSyncEnd struct {
-	Status VmotionMessageStatus `protobuf:"varint,1,opt,name=status,enum=vmotion.VmotionMessageStatus" json:"status,omitempty"`
+type VmotionSyncEnd struct {
+	Status VmotionMessageStatus `protobuf:"varint,1,opt,name=status,enum=vmotion_msg.VmotionMessageStatus" json:"status,omitempty"`
 }
 
-func (m *VmotionStateSyncEnd) Reset()                    { *m = VmotionStateSyncEnd{} }
-func (m *VmotionStateSyncEnd) String() string            { return proto.CompactTextString(m) }
-func (*VmotionStateSyncEnd) ProtoMessage()               {}
-func (*VmotionStateSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
+func (m *VmotionSyncEnd) Reset()                    { *m = VmotionSyncEnd{} }
+func (m *VmotionSyncEnd) String() string            { return proto.CompactTextString(m) }
+func (*VmotionSyncEnd) ProtoMessage()               {}
+func (*VmotionSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
 
-func (m *VmotionStateSyncEnd) GetStatus() VmotionMessageStatus {
+func (m *VmotionSyncEnd) GetStatus() VmotionMessageStatus {
 	if m != nil {
 		return m.Status
 	}
 	return VmotionMessageStatus_STATUS_OK
 }
 
-type VmotionEnd struct {
+type VmotionTermSyncReq struct {
 }
 
-func (m *VmotionEnd) Reset()                    { *m = VmotionEnd{} }
-func (m *VmotionEnd) String() string            { return proto.CompactTextString(m) }
-func (*VmotionEnd) ProtoMessage()               {}
-func (*VmotionEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
+func (m *VmotionTermSyncReq) Reset()                    { *m = VmotionTermSyncReq{} }
+func (m *VmotionTermSyncReq) String() string            { return proto.CompactTextString(m) }
+func (*VmotionTermSyncReq) ProtoMessage()               {}
+func (*VmotionTermSyncReq) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
 
-type VmotionEndAck struct {
+type VmotionTermSync struct {
+	Response []*SessionGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
 }
 
-func (m *VmotionEndAck) Reset()                    { *m = VmotionEndAck{} }
-func (m *VmotionEndAck) String() string            { return proto.CompactTextString(m) }
-func (*VmotionEndAck) ProtoMessage()               {}
-func (*VmotionEndAck) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
+func (m *VmotionTermSync) Reset()                    { *m = VmotionTermSync{} }
+func (m *VmotionTermSync) String() string            { return proto.CompactTextString(m) }
+func (*VmotionTermSync) ProtoMessage()               {}
+func (*VmotionTermSync) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
+
+func (m *VmotionTermSync) GetResponse() []*SessionGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+type VmotionTermSyncEnd struct {
+	Status VmotionMessageStatus `protobuf:"varint,1,opt,name=status,enum=vmotion_msg.VmotionMessageStatus" json:"status,omitempty"`
+}
+
+func (m *VmotionTermSyncEnd) Reset()                    { *m = VmotionTermSyncEnd{} }
+func (m *VmotionTermSyncEnd) String() string            { return proto.CompactTextString(m) }
+func (*VmotionTermSyncEnd) ProtoMessage()               {}
+func (*VmotionTermSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
+
+func (m *VmotionTermSyncEnd) GetStatus() VmotionMessageStatus {
+	if m != nil {
+		return m.Status
+	}
+	return VmotionMessageStatus_STATUS_OK
+}
+
+type VmotionTermSyncAck struct {
+	Status VmotionMessageStatus `protobuf:"varint,1,opt,name=status,enum=vmotion_msg.VmotionMessageStatus" json:"status,omitempty"`
+}
+
+func (m *VmotionTermSyncAck) Reset()                    { *m = VmotionTermSyncAck{} }
+func (m *VmotionTermSyncAck) String() string            { return proto.CompactTextString(m) }
+func (*VmotionTermSyncAck) ProtoMessage()               {}
+func (*VmotionTermSyncAck) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
+
+func (m *VmotionTermSyncAck) GetStatus() VmotionMessageStatus {
+	if m != nil {
+		return m.Status
+	}
+	return VmotionMessageStatus_STATUS_OK
+}
+
+type VmotionEpMoved struct {
+}
+
+func (m *VmotionEpMoved) Reset()                    { *m = VmotionEpMoved{} }
+func (m *VmotionEpMoved) String() string            { return proto.CompactTextString(m) }
+func (*VmotionEpMoved) ProtoMessage()               {}
+func (*VmotionEpMoved) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
 
 type VmotionMessage struct {
-	Type VmotionMessageType `protobuf:"varint,1,opt,name=type,enum=vmotion.VmotionMessageType" json:"type,omitempty"`
+	Type VmotionMessageType `protobuf:"varint,1,opt,name=type,enum=vmotion_msg.VmotionMessageType" json:"type,omitempty"`
 	// Types that are valid to be assigned to Msg:
 	//	*VmotionMessage_Init
-	//	*VmotionMessage_InitDone
-	//	*VmotionMessage_StateSyncStart
-	//	*VmotionMessage_StateSync
-	//	*VmotionMessage_StateSyncEnd
-	//	*VmotionMessage_End
-	//	*VmotionMessage_EndAck
+	//	*VmotionMessage_Sync
+	//	*VmotionMessage_SyncEnd
+	//	*VmotionMessage_TermSyncReq
+	//	*VmotionMessage_TermSync
+	//	*VmotionMessage_TermSyncEnd
+	//	*VmotionMessage_TermSyncAck
+	//	*VmotionMessage_EpMoved
 	Msg isVmotionMessage_Msg `protobuf_oneof:"msg"`
 }
 
 func (m *VmotionMessage) Reset()                    { *m = VmotionMessage{} }
 func (m *VmotionMessage) String() string            { return proto.CompactTextString(m) }
 func (*VmotionMessage) ProtoMessage()               {}
-func (*VmotionMessage) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
+func (*VmotionMessage) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{8} }
 
 type isVmotionMessage_Msg interface{ isVmotionMessage_Msg() }
 
 type VmotionMessage_Init struct {
 	Init *VmotionInitiate `protobuf:"bytes,2,opt,name=init,oneof"`
 }
-type VmotionMessage_InitDone struct {
-	InitDone *VmotionInitiateDone `protobuf:"bytes,3,opt,name=init_done,json=initDone,oneof"`
+type VmotionMessage_Sync struct {
+	Sync *VmotionSync `protobuf:"bytes,3,opt,name=sync,oneof"`
 }
-type VmotionMessage_StateSyncStart struct {
-	StateSyncStart *VmotionStateSyncStart `protobuf:"bytes,4,opt,name=state_sync_start,json=stateSyncStart,oneof"`
+type VmotionMessage_SyncEnd struct {
+	SyncEnd *VmotionSyncEnd `protobuf:"bytes,4,opt,name=sync_end,json=syncEnd,oneof"`
 }
-type VmotionMessage_StateSync struct {
-	StateSync *VmotionStateSync `protobuf:"bytes,5,opt,name=state_sync,json=stateSync,oneof"`
+type VmotionMessage_TermSyncReq struct {
+	TermSyncReq *VmotionTermSyncReq `protobuf:"bytes,5,opt,name=term_sync_req,json=termSyncReq,oneof"`
 }
-type VmotionMessage_StateSyncEnd struct {
-	StateSyncEnd *VmotionStateSyncEnd `protobuf:"bytes,6,opt,name=state_sync_end,json=stateSyncEnd,oneof"`
+type VmotionMessage_TermSync struct {
+	TermSync *VmotionTermSync `protobuf:"bytes,6,opt,name=term_sync,json=termSync,oneof"`
 }
-type VmotionMessage_End struct {
-	End *VmotionEnd `protobuf:"bytes,7,opt,name=end,oneof"`
+type VmotionMessage_TermSyncEnd struct {
+	TermSyncEnd *VmotionTermSyncEnd `protobuf:"bytes,7,opt,name=term_sync_end,json=termSyncEnd,oneof"`
 }
-type VmotionMessage_EndAck struct {
-	EndAck *VmotionEndAck `protobuf:"bytes,8,opt,name=end_ack,json=endAck,oneof"`
+type VmotionMessage_TermSyncAck struct {
+	TermSyncAck *VmotionTermSyncAck `protobuf:"bytes,8,opt,name=term_sync_ack,json=termSyncAck,oneof"`
+}
+type VmotionMessage_EpMoved struct {
+	EpMoved *VmotionEpMoved `protobuf:"bytes,9,opt,name=ep_moved,json=epMoved,oneof"`
 }
 
-func (*VmotionMessage_Init) isVmotionMessage_Msg()           {}
-func (*VmotionMessage_InitDone) isVmotionMessage_Msg()       {}
-func (*VmotionMessage_StateSyncStart) isVmotionMessage_Msg() {}
-func (*VmotionMessage_StateSync) isVmotionMessage_Msg()      {}
-func (*VmotionMessage_StateSyncEnd) isVmotionMessage_Msg()   {}
-func (*VmotionMessage_End) isVmotionMessage_Msg()            {}
-func (*VmotionMessage_EndAck) isVmotionMessage_Msg()         {}
+func (*VmotionMessage_Init) isVmotionMessage_Msg()        {}
+func (*VmotionMessage_Sync) isVmotionMessage_Msg()        {}
+func (*VmotionMessage_SyncEnd) isVmotionMessage_Msg()     {}
+func (*VmotionMessage_TermSyncReq) isVmotionMessage_Msg() {}
+func (*VmotionMessage_TermSync) isVmotionMessage_Msg()    {}
+func (*VmotionMessage_TermSyncEnd) isVmotionMessage_Msg() {}
+func (*VmotionMessage_TermSyncAck) isVmotionMessage_Msg() {}
+func (*VmotionMessage_EpMoved) isVmotionMessage_Msg()     {}
 
 func (m *VmotionMessage) GetMsg() isVmotionMessage_Msg {
 	if m != nil {
@@ -218,7 +253,7 @@ func (m *VmotionMessage) GetType() VmotionMessageType {
 	if m != nil {
 		return m.Type
 	}
-	return VmotionMessageType_VMOTION_MSG_TYPE_INITIATE
+	return VmotionMessageType_VMOTION_MSG_TYPE_INIT
 }
 
 func (m *VmotionMessage) GetInit() *VmotionInitiate {
@@ -228,44 +263,51 @@ func (m *VmotionMessage) GetInit() *VmotionInitiate {
 	return nil
 }
 
-func (m *VmotionMessage) GetInitDone() *VmotionInitiateDone {
-	if x, ok := m.GetMsg().(*VmotionMessage_InitDone); ok {
-		return x.InitDone
+func (m *VmotionMessage) GetSync() *VmotionSync {
+	if x, ok := m.GetMsg().(*VmotionMessage_Sync); ok {
+		return x.Sync
 	}
 	return nil
 }
 
-func (m *VmotionMessage) GetStateSyncStart() *VmotionStateSyncStart {
-	if x, ok := m.GetMsg().(*VmotionMessage_StateSyncStart); ok {
-		return x.StateSyncStart
+func (m *VmotionMessage) GetSyncEnd() *VmotionSyncEnd {
+	if x, ok := m.GetMsg().(*VmotionMessage_SyncEnd); ok {
+		return x.SyncEnd
 	}
 	return nil
 }
 
-func (m *VmotionMessage) GetStateSync() *VmotionStateSync {
-	if x, ok := m.GetMsg().(*VmotionMessage_StateSync); ok {
-		return x.StateSync
+func (m *VmotionMessage) GetTermSyncReq() *VmotionTermSyncReq {
+	if x, ok := m.GetMsg().(*VmotionMessage_TermSyncReq); ok {
+		return x.TermSyncReq
 	}
 	return nil
 }
 
-func (m *VmotionMessage) GetStateSyncEnd() *VmotionStateSyncEnd {
-	if x, ok := m.GetMsg().(*VmotionMessage_StateSyncEnd); ok {
-		return x.StateSyncEnd
+func (m *VmotionMessage) GetTermSync() *VmotionTermSync {
+	if x, ok := m.GetMsg().(*VmotionMessage_TermSync); ok {
+		return x.TermSync
 	}
 	return nil
 }
 
-func (m *VmotionMessage) GetEnd() *VmotionEnd {
-	if x, ok := m.GetMsg().(*VmotionMessage_End); ok {
-		return x.End
+func (m *VmotionMessage) GetTermSyncEnd() *VmotionTermSyncEnd {
+	if x, ok := m.GetMsg().(*VmotionMessage_TermSyncEnd); ok {
+		return x.TermSyncEnd
 	}
 	return nil
 }
 
-func (m *VmotionMessage) GetEndAck() *VmotionEndAck {
-	if x, ok := m.GetMsg().(*VmotionMessage_EndAck); ok {
-		return x.EndAck
+func (m *VmotionMessage) GetTermSyncAck() *VmotionTermSyncAck {
+	if x, ok := m.GetMsg().(*VmotionMessage_TermSyncAck); ok {
+		return x.TermSyncAck
+	}
+	return nil
+}
+
+func (m *VmotionMessage) GetEpMoved() *VmotionEpMoved {
+	if x, ok := m.GetMsg().(*VmotionMessage_EpMoved); ok {
+		return x.EpMoved
 	}
 	return nil
 }
@@ -274,12 +316,13 @@ func (m *VmotionMessage) GetEndAck() *VmotionEndAck {
 func (*VmotionMessage) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _VmotionMessage_OneofMarshaler, _VmotionMessage_OneofUnmarshaler, _VmotionMessage_OneofSizer, []interface{}{
 		(*VmotionMessage_Init)(nil),
-		(*VmotionMessage_InitDone)(nil),
-		(*VmotionMessage_StateSyncStart)(nil),
-		(*VmotionMessage_StateSync)(nil),
-		(*VmotionMessage_StateSyncEnd)(nil),
-		(*VmotionMessage_End)(nil),
-		(*VmotionMessage_EndAck)(nil),
+		(*VmotionMessage_Sync)(nil),
+		(*VmotionMessage_SyncEnd)(nil),
+		(*VmotionMessage_TermSyncReq)(nil),
+		(*VmotionMessage_TermSync)(nil),
+		(*VmotionMessage_TermSyncEnd)(nil),
+		(*VmotionMessage_TermSyncAck)(nil),
+		(*VmotionMessage_EpMoved)(nil),
 	}
 }
 
@@ -292,34 +335,39 @@ func _VmotionMessage_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 		if err := b.EncodeMessage(x.Init); err != nil {
 			return err
 		}
-	case *VmotionMessage_InitDone:
+	case *VmotionMessage_Sync:
 		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.InitDone); err != nil {
+		if err := b.EncodeMessage(x.Sync); err != nil {
 			return err
 		}
-	case *VmotionMessage_StateSyncStart:
+	case *VmotionMessage_SyncEnd:
 		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.StateSyncStart); err != nil {
+		if err := b.EncodeMessage(x.SyncEnd); err != nil {
 			return err
 		}
-	case *VmotionMessage_StateSync:
+	case *VmotionMessage_TermSyncReq:
 		b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.StateSync); err != nil {
+		if err := b.EncodeMessage(x.TermSyncReq); err != nil {
 			return err
 		}
-	case *VmotionMessage_StateSyncEnd:
+	case *VmotionMessage_TermSync:
 		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.StateSyncEnd); err != nil {
+		if err := b.EncodeMessage(x.TermSync); err != nil {
 			return err
 		}
-	case *VmotionMessage_End:
+	case *VmotionMessage_TermSyncEnd:
 		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.End); err != nil {
+		if err := b.EncodeMessage(x.TermSyncEnd); err != nil {
 			return err
 		}
-	case *VmotionMessage_EndAck:
+	case *VmotionMessage_TermSyncAck:
 		b.EncodeVarint(8<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.EndAck); err != nil {
+		if err := b.EncodeMessage(x.TermSyncAck); err != nil {
+			return err
+		}
+	case *VmotionMessage_EpMoved:
+		b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EpMoved); err != nil {
 			return err
 		}
 	case nil:
@@ -340,53 +388,61 @@ func _VmotionMessage_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto
 		err := b.DecodeMessage(msg)
 		m.Msg = &VmotionMessage_Init{msg}
 		return true, err
-	case 3: // msg.init_done
+	case 3: // msg.sync
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionInitiateDone)
+		msg := new(VmotionSync)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_InitDone{msg}
+		m.Msg = &VmotionMessage_Sync{msg}
 		return true, err
-	case 4: // msg.state_sync_start
+	case 4: // msg.sync_end
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionStateSyncStart)
+		msg := new(VmotionSyncEnd)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_StateSyncStart{msg}
+		m.Msg = &VmotionMessage_SyncEnd{msg}
 		return true, err
-	case 5: // msg.state_sync
+	case 5: // msg.term_sync_req
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionStateSync)
+		msg := new(VmotionTermSyncReq)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_StateSync{msg}
+		m.Msg = &VmotionMessage_TermSyncReq{msg}
 		return true, err
-	case 6: // msg.state_sync_end
+	case 6: // msg.term_sync
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionStateSyncEnd)
+		msg := new(VmotionTermSync)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_StateSyncEnd{msg}
+		m.Msg = &VmotionMessage_TermSync{msg}
 		return true, err
-	case 7: // msg.end
+	case 7: // msg.term_sync_end
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionEnd)
+		msg := new(VmotionTermSyncEnd)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_End{msg}
+		m.Msg = &VmotionMessage_TermSyncEnd{msg}
 		return true, err
-	case 8: // msg.end_ack
+	case 8: // msg.term_sync_ack
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(VmotionEndAck)
+		msg := new(VmotionTermSyncAck)
 		err := b.DecodeMessage(msg)
-		m.Msg = &VmotionMessage_EndAck{msg}
+		m.Msg = &VmotionMessage_TermSyncAck{msg}
+		return true, err
+	case 9: // msg.ep_moved
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(VmotionEpMoved)
+		err := b.DecodeMessage(msg)
+		m.Msg = &VmotionMessage_EpMoved{msg}
 		return true, err
 	default:
 		return false, nil
@@ -402,34 +458,39 @@ func _VmotionMessage_OneofSizer(msg proto.Message) (n int) {
 		n += proto.SizeVarint(2<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_InitDone:
-		s := proto.Size(x.InitDone)
+	case *VmotionMessage_Sync:
+		s := proto.Size(x.Sync)
 		n += proto.SizeVarint(3<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_StateSyncStart:
-		s := proto.Size(x.StateSyncStart)
+	case *VmotionMessage_SyncEnd:
+		s := proto.Size(x.SyncEnd)
 		n += proto.SizeVarint(4<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_StateSync:
-		s := proto.Size(x.StateSync)
+	case *VmotionMessage_TermSyncReq:
+		s := proto.Size(x.TermSyncReq)
 		n += proto.SizeVarint(5<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_StateSyncEnd:
-		s := proto.Size(x.StateSyncEnd)
+	case *VmotionMessage_TermSync:
+		s := proto.Size(x.TermSync)
 		n += proto.SizeVarint(6<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_End:
-		s := proto.Size(x.End)
+	case *VmotionMessage_TermSyncEnd:
+		s := proto.Size(x.TermSyncEnd)
 		n += proto.SizeVarint(7<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
-	case *VmotionMessage_EndAck:
-		s := proto.Size(x.EndAck)
+	case *VmotionMessage_TermSyncAck:
+		s := proto.Size(x.TermSyncAck)
 		n += proto.SizeVarint(8<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *VmotionMessage_EpMoved:
+		s := proto.Size(x.EpMoved)
+		n += proto.SizeVarint(9<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
 	case nil:
@@ -441,12 +502,13 @@ func _VmotionMessage_OneofSizer(msg proto.Message) (n int) {
 
 func init() {
 	proto.RegisterType((*VmotionInitiate)(nil), "halproto.VmotionInitiate")
-	proto.RegisterType((*VmotionInitiateDone)(nil), "halproto.VmotionInitiateDone")
-	proto.RegisterType((*VmotionStateSyncStart)(nil), "halproto.VmotionStateSyncStart")
-	proto.RegisterType((*VmotionStateSync)(nil), "halproto.VmotionStateSync")
-	proto.RegisterType((*VmotionStateSyncEnd)(nil), "halproto.VmotionStateSyncEnd")
-	proto.RegisterType((*VmotionEnd)(nil), "halproto.VmotionEnd")
-	proto.RegisterType((*VmotionEndAck)(nil), "halproto.VmotionEndAck")
+	proto.RegisterType((*VmotionSync)(nil), "halproto.VmotionSync")
+	proto.RegisterType((*VmotionSyncEnd)(nil), "halproto.VmotionSyncEnd")
+	proto.RegisterType((*VmotionTermSyncReq)(nil), "halproto.VmotionTermSyncReq")
+	proto.RegisterType((*VmotionTermSync)(nil), "halproto.VmotionTermSync")
+	proto.RegisterType((*VmotionTermSyncEnd)(nil), "halproto.VmotionTermSyncEnd")
+	proto.RegisterType((*VmotionTermSyncAck)(nil), "halproto.VmotionTermSyncAck")
+	proto.RegisterType((*VmotionEpMoved)(nil), "halproto.VmotionEpMoved")
 	proto.RegisterType((*VmotionMessage)(nil), "halproto.VmotionMessage")
 	proto.RegisterEnum("halproto.VmotionMessageType", VmotionMessageType_name, VmotionMessageType_value)
 	proto.RegisterEnum("halproto.VmotionMessageStatus", VmotionMessageStatus_name, VmotionMessageStatus_value)
@@ -455,40 +517,41 @@ func init() {
 func init() { proto.RegisterFile("vmotion.proto", fileDescriptor33) }
 
 var fileDescriptor33 = []byte{
-	// 552 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x5b, 0x6f, 0xda, 0x3e,
-	0x18, 0xc6, 0x93, 0x86, 0x72, 0x78, 0x29, 0x34, 0x72, 0xfb, 0xff, 0x2f, 0x2d, 0x6d, 0x61, 0x99,
-	0xa6, 0xa1, 0x5e, 0x30, 0x8d, 0xa9, 0x9a, 0xb4, 0x5d, 0xd1, 0x12, 0x35, 0x8c, 0x01, 0x93, 0x93,
-	0x55, 0xea, 0x6e, 0xac, 0x2c, 0xb1, 0x3a, 0xc4, 0x70, 0x10, 0xf6, 0x26, 0xf1, 0x69, 0xf7, 0x45,
-	0x76, 0x31, 0xd9, 0x09, 0x94, 0x63, 0x2f, 0x76, 0xe5, 0xc3, 0xfb, 0x7b, 0x1e, 0xbf, 0xf6, 0xa3,
-	0x04, 0x4a, 0xbf, 0xc6, 0xb1, 0x18, 0xc6, 0xac, 0x31, 0x99, 0xc6, 0x22, 0x46, 0xb9, 0x74, 0x79,
-	0x5a, 0x14, 0xb3, 0x09, 0xe5, 0xc9, 0xee, 0x69, 0x89, 0x53, 0xce, 0x17, 0x90, 0xdd, 0x84, 0xc3,
-	0xbb, 0x04, 0xeb, 0xb0, 0xa1, 0x18, 0x06, 0x82, 0xa2, 0x2a, 0x14, 0xc7, 0x41, 0x48, 0x82, 0x28,
-	0x9a, 0x52, 0xce, 0x2d, 0xbd, 0xa6, 0xd7, 0x33, 0x18, 0xc6, 0x41, 0xd8, 0x4a, 0x76, 0xec, 0x4f,
-	0x70, 0xb4, 0xa6, 0x69, 0xc7, 0x8c, 0xa2, 0x2b, 0xc8, 0x72, 0x11, 0x88, 0x9f, 0x89, 0xa4, 0xdc,
-	0x3c, 0x6f, 0xcc, 0xfb, 0x49, 0xe9, 0x1e, 0xe5, 0x3c, 0x78, 0xa0, 0x9e, 0x82, 0x70, 0x0a, 0xdb,
-	0xcf, 0xe0, 0xbf, 0xb4, 0x2e, 0x0b, 0xd4, 0x9b, 0xb1, 0xd0, 0x13, 0xc1, 0x54, 0xd8, 0x5d, 0x30,
-	0xd7, 0x0b, 0xe8, 0x1d, 0xe4, 0xa7, 0x94, 0x4f, 0x62, 0xc6, 0xa9, 0xa5, 0xd7, 0x8c, 0x7a, 0xb1,
-	0x59, 0x69, 0xcc, 0x2f, 0xe4, 0x25, 0xe3, 0x2d, 0x15, 0x38, 0x45, 0xf0, 0x02, 0x5e, 0xea, 0x79,
-	0x61, 0xe6, 0xb0, 0xe8, 0x5f, 0x7b, 0x3e, 0x00, 0x48, 0xeb, 0x0e, 0x8b, 0xec, 0x43, 0x28, 0x3d,
-	0xae, 0x5a, 0xe1, 0xc8, 0xfe, 0x6d, 0x40, 0x79, 0x55, 0x8f, 0x5e, 0x43, 0x46, 0xa6, 0x90, 0x1e,
-	0x53, 0xd9, 0x71, 0x8c, 0x3f, 0x9b, 0x50, 0xac, 0x40, 0xd4, 0x80, 0xcc, 0x90, 0x0d, 0x85, 0xb5,
-	0x57, 0xd3, 0xeb, 0xc5, 0xa6, 0xb5, 0x2e, 0x98, 0xbf, 0xbc, 0xab, 0x61, 0xc5, 0xa1, 0x0f, 0x50,
-	0x90, 0x23, 0x89, 0x62, 0x46, 0x2d, 0x43, 0x89, 0xce, 0x76, 0x89, 0x64, 0x5c, 0xae, 0x86, 0xf3,
-	0x52, 0xa0, 0xa2, 0xfb, 0x08, 0xa6, 0xbc, 0x19, 0x25, 0x7c, 0xc6, 0x42, 0xc2, 0xe5, 0xf3, 0x5b,
-	0x19, 0xe5, 0x71, 0xb1, 0xee, 0xb1, 0x1a, 0x92, 0xab, 0xe1, 0x32, 0x5f, 0xd9, 0x41, 0xef, 0x01,
-	0x1e, 0xbd, 0xac, 0x7d, 0xe5, 0x72, 0xb2, 0xd3, 0xc5, 0xd5, 0x70, 0x61, 0x61, 0x80, 0xda, 0x50,
-	0x5e, 0xea, 0x83, 0xb2, 0xc8, 0xca, 0x6e, 0xbf, 0xc9, 0x72, 0x88, 0xae, 0x86, 0x0f, 0xf8, 0x72,
-	0xa8, 0xaf, 0xc0, 0x90, 0xd2, 0x9c, 0x92, 0x1e, 0xad, 0x4b, 0x13, 0x85, 0x24, 0xd0, 0x1b, 0xc8,
-	0x51, 0x16, 0x91, 0x20, 0x1c, 0x59, 0x79, 0x05, 0xff, 0xbf, 0x05, 0x6e, 0x85, 0x23, 0x57, 0xc3,
-	0x59, 0xaa, 0x66, 0xd7, 0xfb, 0x60, 0x8c, 0xf9, 0xc3, 0xe5, 0x1f, 0x1d, 0xd0, 0x66, 0x74, 0xe8,
-	0x1c, 0x4e, 0xee, 0x7a, 0x03, 0xbf, 0x33, 0xe8, 0x93, 0x9e, 0x77, 0x4b, 0xfc, 0xfb, 0xcf, 0x0e,
-	0xe9, 0xf4, 0x3b, 0x7e, 0xa7, 0xe5, 0x3b, 0xa6, 0x86, 0x6c, 0xb8, 0xd8, 0x59, 0x26, 0xed, 0x41,
-	0xdf, 0x31, 0x75, 0xf4, 0x12, 0x9e, 0x6f, 0x30, 0x9e, 0x2f, 0x01, 0xef, 0xbe, 0x7f, 0x23, 0xa7,
-	0xd8, 0x37, 0xf7, 0x50, 0x15, 0x2a, 0x4f, 0x60, 0xa6, 0x81, 0x5e, 0x40, 0xf5, 0x29, 0x1f, 0xa7,
-	0xdf, 0x36, 0x33, 0xc8, 0x82, 0xe3, 0x0d, 0x48, 0x56, 0xf6, 0xd1, 0x19, 0x58, 0xdb, 0x2a, 0xa4,
-	0x75, 0xd3, 0x35, 0xb3, 0x97, 0x57, 0x70, 0xbc, 0xed, 0xfb, 0x40, 0x25, 0x28, 0xc8, 0x33, 0xbe,
-	0x78, 0x64, 0xd0, 0x35, 0x35, 0x54, 0x06, 0x48, 0x97, 0x0e, 0xc6, 0xa6, 0x7e, 0x0d, 0x5f, 0xf3,
-	0xdf, 0x83, 0x1f, 0xea, 0xc7, 0xf3, 0x2d, 0xab, 0x86, 0xb7, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff,
-	0x28, 0x24, 0xc4, 0x4e, 0xb5, 0x04, 0x00, 0x00,
+	// 569 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x6f, 0xda, 0x4e,
+	0x14, 0xb4, 0xc1, 0x80, 0x79, 0x16, 0xfc, 0xac, 0x55, 0x7e, 0x92, 0x43, 0x9a, 0x84, 0xf8, 0x84,
+	0x72, 0xe0, 0x40, 0x54, 0x35, 0x55, 0x4f, 0x24, 0x71, 0x03, 0x45, 0x86, 0x74, 0xed, 0x22, 0xa5,
+	0x17, 0xcb, 0xb5, 0x57, 0x14, 0x51, 0xff, 0x89, 0xd7, 0x8d, 0xc4, 0x17, 0x6b, 0xbf, 0x5e, 0xb5,
+	0xf6, 0xe2, 0x52, 0x61, 0x8a, 0xd4, 0x9c, 0xd6, 0xbb, 0x6f, 0x66, 0xde, 0x9b, 0xf5, 0xd8, 0xd0,
+	0x7a, 0x0e, 0xa2, 0x74, 0x19, 0x85, 0xfd, 0x38, 0x89, 0xd2, 0x08, 0x29, 0x7c, 0xeb, 0x04, 0x74,
+	0xd1, 0x51, 0xd2, 0x75, 0x4c, 0x68, 0x5e, 0xe9, 0xb4, 0x28, 0xa1, 0xb4, 0x00, 0xea, 0x03, 0xf8,
+	0x6f, 0x9e, 0x43, 0xc7, 0xe1, 0x32, 0x5d, 0xba, 0x29, 0x41, 0xe7, 0xa0, 0x04, 0xae, 0xe7, 0xb8,
+	0xbe, 0x9f, 0x10, 0x4a, 0x35, 0xb1, 0x2b, 0xf6, 0x24, 0x0c, 0x81, 0xeb, 0x0d, 0xf3, 0x13, 0xfd,
+	0x3d, 0x28, 0x9c, 0x63, 0xad, 0x43, 0x0f, 0xbd, 0x01, 0x39, 0x21, 0x34, 0x8e, 0x42, 0x4a, 0x34,
+	0xb1, 0x5b, 0xed, 0x29, 0x83, 0x93, 0xfe, 0xa6, 0x89, 0x95, 0xaf, 0xf7, 0x24, 0xc5, 0x1c, 0x82,
+	0x0b, 0xb0, 0x3e, 0x81, 0xf6, 0x96, 0x8e, 0x11, 0xfa, 0xe8, 0x2d, 0xd4, 0x69, 0xea, 0xa6, 0xdf,
+	0xf3, 0xae, 0xed, 0xc1, 0x45, 0x7f, 0xcb, 0x47, 0x9f, 0x83, 0x4d, 0x42, 0xa9, 0xbb, 0x20, 0x56,
+	0x06, 0xc4, 0x9c, 0xa0, 0x1f, 0x01, 0xe2, 0x75, 0x9b, 0x24, 0x01, 0x13, 0xc4, 0xe4, 0x49, 0xff,
+	0x50, 0xd8, 0xdb, 0x9c, 0xfe, 0xfb, 0xb8, 0xb3, 0x9d, 0x0e, 0x2f, 0x1c, 0x79, 0x57, 0x70, 0xe8,
+	0xad, 0x5e, 0x22, 0xa8, 0x16, 0x17, 0x6a, 0xc4, 0x66, 0xf4, 0x4c, 0x7c, 0xfd, 0x87, 0x54, 0x1c,
+	0x71, 0x0a, 0xba, 0x02, 0x89, 0xe5, 0x81, 0xab, 0x9f, 0xff, 0x45, 0xdd, 0x5e, 0xc7, 0x04, 0x67,
+	0x60, 0x34, 0x00, 0x69, 0x19, 0x2e, 0x53, 0xad, 0xd2, 0x15, 0x7b, 0xca, 0xe0, 0x55, 0x19, 0x69,
+	0x93, 0x9f, 0x91, 0x80, 0x33, 0x2c, 0xea, 0x83, 0x44, 0xd7, 0xa1, 0xa7, 0x55, 0x33, 0x8e, 0x56,
+	0xc6, 0x61, 0x9e, 0x19, 0x9e, 0xe1, 0xd0, 0x35, 0xc8, 0x6c, 0x75, 0x48, 0xe8, 0x6b, 0x52, 0xc6,
+	0x39, 0xd9, 0xc7, 0x31, 0x42, 0x7f, 0x24, 0xe0, 0x06, 0xe5, 0xef, 0xc0, 0x80, 0x56, 0x4a, 0x92,
+	0xc0, 0xc9, 0xe8, 0x09, 0x79, 0xd2, 0x6a, 0x19, 0xbd, 0xd4, 0xdb, 0x56, 0x3a, 0x46, 0x02, 0x56,
+	0xd2, 0xdf, 0x5b, 0xf4, 0x0e, 0x9a, 0x85, 0x8c, 0x56, 0xdf, 0xef, 0x74, 0x23, 0x31, 0x12, 0xb0,
+	0xbc, 0xe1, 0xff, 0x39, 0x03, 0xb3, 0xd0, 0x38, 0x3c, 0x43, 0x6e, 0xa3, 0x98, 0x61, 0xc7, 0x8a,
+	0xeb, 0xad, 0x34, 0xf9, 0xb0, 0xcc, 0xd0, 0x5b, 0x6d, 0xcb, 0xb0, 0x10, 0x5d, 0x83, 0x4c, 0x62,
+	0x27, 0x60, 0x19, 0xd0, 0x9a, 0xfb, 0xef, 0x92, 0xc7, 0x84, 0xdd, 0x25, 0xc9, 0x1f, 0x6f, 0x6a,
+	0x50, 0x0d, 0xe8, 0xe2, 0xf2, 0x67, 0xa5, 0x08, 0xe7, 0x56, 0x1a, 0xd0, 0x31, 0xfc, 0x3f, 0x37,
+	0x67, 0xf6, 0x78, 0x36, 0x75, 0x4c, 0xeb, 0xde, 0xb1, 0x1f, 0x1f, 0x0c, 0x67, 0x3c, 0x1d, 0xdb,
+	0xaa, 0x50, 0x5a, 0xb2, 0x1e, 0xa7, 0xb7, 0xaa, 0x88, 0x4e, 0xe1, 0xb8, 0xb4, 0xe4, 0x18, 0xd3,
+	0x3b, 0xb5, 0x82, 0x74, 0x38, 0xdb, 0x29, 0xdb, 0x06, 0x36, 0x73, 0x0c, 0x36, 0x3e, 0xaa, 0x55,
+	0x74, 0x06, 0x9d, 0xfd, 0x18, 0x55, 0x3a, 0xa0, 0xc1, 0xfa, 0xd4, 0x0e, 0x60, 0x86, 0xb7, 0x13,
+	0xb5, 0x5e, 0x3a, 0xaa, 0xf1, 0xe0, 0x98, 0xb3, 0xb9, 0x71, 0xa7, 0x36, 0xd0, 0x05, 0x9c, 0xee,
+	0x2d, 0x67, 0x0a, 0xf2, 0xe5, 0x6b, 0x38, 0x2a, 0xfb, 0x48, 0x51, 0x0b, 0x9a, 0x96, 0x3d, 0xb4,
+	0x3f, 0x59, 0xce, 0x6c, 0xa2, 0x0a, 0xa8, 0x0d, 0xc0, 0xb7, 0x06, 0xc6, 0xaa, 0x78, 0x03, 0x9f,
+	0xe5, 0xaf, 0xee, 0xb7, 0xec, 0xa7, 0xfc, 0xa5, 0x9e, 0x2d, 0x57, 0xbf, 0x02, 0x00, 0x00, 0xff,
+	0xff, 0xf7, 0x5e, 0xe5, 0x32, 0xd5, 0x05, 0x00, 0x00,
 }

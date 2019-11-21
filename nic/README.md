@@ -28,7 +28,7 @@
 * No blank spaces at the end of each line
 * No unnecessary blank lines in the code
 * Don't leave space after function name in C style function declarations
-* Leave space after function name in C style function declarations
+* Leave space after function name in C style function definitions
 * Functions that are local to file must be declared static and for static
   functions avoid declarations even within in the .cc file
 * Don't expose internal functions in header files by default. This only makes
