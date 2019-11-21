@@ -96,7 +96,7 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
-        tep_data.tunnel_action.nexthop_base = nhgroup_impl->hw_id();
+        tep_data.tunnel_action.nexthop_base = nhgroup_impl->nh_base_hw_id();
         tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
     } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
         nh_impl = (nexthop_impl *)nexthop_db()->find(&spec->nh)->impl();

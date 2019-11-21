@@ -146,7 +146,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry for ARM to uplink ARP traffic (all vlans)
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -312,7 +312,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry for ARM to uplink ARP traffic (all vlans)
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -337,7 +337,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for (%s, ARP) -> "
-                      "uplink if index 0x%x, err %u", name_, pinned_if_idx_, ret);
+                      "uplink if index 0x%x, err %u",
+                      name_, pinned_if_idx_, ret);
         goto error;
     }
 
@@ -478,7 +479,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -515,7 +516,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry for DHCP requests going to vpp
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -552,7 +553,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = { sdk::POLICER_TYPE_PPS, 300000, 30000 };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
 
     // flow miss packet coming back from txdma to s/w datapath
     // lif (i.e., dpdk/vpp lif)
@@ -833,7 +834,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -872,7 +873,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     policer = {
         sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS, 0
     };
-    program_copp_entry_(&policer, idx);
+    program_copp_entry_(&policer, idx, false);
     // install NACL entry for DHCP requests going to vpp
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));

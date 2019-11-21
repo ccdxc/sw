@@ -128,7 +128,13 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
-    uint16_t hw_id(void) { return hw_id_; }
+    /// \brief     return nexthop group's h/w id
+    /// \return    h/w id of this nexthop group
+    uint16_t hw_id(void) const { return hw_id_; }
+
+    /// \brief     return base index of the group of nexthops in this group
+    /// \return    base idx of 1st nexthop in this nexthop group
+    uint16_t nh_base_hw_id(void) const { return nh_base_hw_id_; }
 
 private:
     /// \brief  constructor

@@ -311,43 +311,60 @@ private:
 sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint16_t vpc_hw_id,
                             uint16_t bd_hw_id, uint16_t vnic_hw_id);
 
+#define PROGRAM_POLICER_TABLE_ENTRY(policer, tbl, tid, aid, idx, upd)          \
+{                                                                              \
+    sdk_ret_t ret;                                                             \
+    p4pd_error_t p4pd_ret;                                                     \
+    uint64_t rate_tokens = 0;                                                  \
+    uint64_t burst_tokens = 0;                                                 \
+    tbl ## _actiondata_t tbl ## _data = { 0 };                                 \
+    tbl ## _actiondata_t tbl ## _data_mask;                                    \
+                                                                               \
+    tbl ## _data.action_id = aid;                                              \
+    if (policer->rate) {                                                       \
+        tbl ## _data.tbl ## _info.entry_valid = 1;                             \
+        if (policer->type == sdk::POLICER_TYPE_PPS) {                          \
+            tbl ## _data.tbl ## _info.pkt_rate = 1;                            \
+        }                                                                      \
+        ret = policer_to_token_rate(policer,                                   \
+                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,      \
+                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
+                                    &rate_tokens, &burst_tokens);              \
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
+        memcpy(tbl ## _data.tbl ## _info.burst, &burst_tokens,                 \
+               std::min(sizeof(tbl ## _data.tbl ## _info.burst),               \
+                        sizeof(burst_tokens)));                                \
+        memcpy(tbl ## _data.tbl ## _info.rate, &rate_tokens,                   \
+               std::min(sizeof(tbl ## _data.tbl ## _info.rate),                \
+                        sizeof(rate_tokens)));                                 \
+        memcpy(tbl ## _data.tbl ## _info.tbkt, &burst_tokens,                  \
+               std::min(sizeof(tbl ## _data.tbl ## _info.tbkt),                \
+               sizeof(burst_tokens)));                                         \
+    }                                                                          \
+    memset(&tbl ## _data_mask.tbl ## _info, 0xFF,                              \
+           sizeof(tbl ## _data_mask.tbl ## _info));                            \
+    tbl ## _data_mask.tbl ## _info.rsvd = 0;                                   \
+    tbl ## _data_mask.tbl ## _info.axi_wr_pend = 0;                            \
+    if (upd) {                                                                 \
+        memset(tbl ## _data_mask.tbl ## _info.tbkt, 0,                         \
+               sizeof(tbl ## _data_mask.tbl ## _info.tbkt));                   \
+    }                                                                          \
+    p4pd_ret = p4pd_global_entry_write_with_datamask(tid, idx,                 \
+                                                     NULL, NULL, &tbl ## _data,\
+                                                     &tbl ## _data_mask);      \
+    if (p4pd_ret != P4PD_SUCCESS) {                                            \
+        PDS_TRACE_ERR("Failed to write to tbl %u table at idx %u", tid, idx);  \
+        return sdk::SDK_RET_HW_PROGRAM_ERR;                                    \
+    }                                                                          \
+    return SDK_RET_OK;                                                         \
+}
+
 #define copp_info    action_u.copp_copp
 static inline sdk_ret_t
-program_copp_entry_ (sdk::policer_t *policer, uint16_t idx)
+program_copp_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
-    sdk_ret_t ret;
-    p4pd_error_t p4pd_ret;
-    uint64_t rate_tokens = 0;
-    uint64_t burst_tokens = 0;
-    copp_actiondata_t copp_data = { 0 };
-
-    copp_data.action_id = COPP_COPP_ID;
-    if (policer->rate) {
-        copp_data.copp_info.entry_valid = 1;
-        if (policer->type == sdk::POLICER_TYPE_PPS) {
-            copp_data.copp_info.pkt_rate = 1;
-        }
-        ret = policer_to_token_rate(policer,
-                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
-                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,
-                                    &rate_tokens, &burst_tokens);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-        memcpy(copp_data.copp_info.burst, &burst_tokens,
-               std::min(sizeof(copp_data.copp_info.burst),
-                        sizeof(burst_tokens)));
-        memcpy(copp_data.copp_info.rate, &rate_tokens,
-               std::min(sizeof(copp_data.copp_info.rate), sizeof(rate_tokens)));
-        memcpy(copp_data.copp_info.tbkt, &burst_tokens,
-               std::min(sizeof(copp_data.copp_info.tbkt),
-               sizeof(burst_tokens)));
-    }
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_COPP, idx,
-                                       NULL, NULL, &copp_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to write to copp table at idx %u", idx);
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-    return SDK_RET_OK;
+    PROGRAM_POLICER_TABLE_ENTRY(policer, copp, P4TBL_ID_COPP,
+                                COPP_COPP_ID, idx, upd);
 }
 #undef copp_info
 

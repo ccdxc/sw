@@ -26,6 +26,26 @@ namespace impl {
 /// \ingroup PDS_POLICER
 /// \@{
 
+#define vnic_policer_rx_info    action_u.vnic_policer_rx_vnic_policer_rx
+#define vnic_policer_tx_info    action_u.vnic_policer_tx_vnic_policer_tx
+static inline sdk_ret_t
+program_vnic_policer_rx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
+{
+    PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_rx,
+                                P4TBL_ID_VNIC_POLICER_RX,
+                                VNIC_POLICER_RX_VNIC_POLICER_RX_ID, idx, upd);
+}
+
+static inline sdk_ret_t
+program_vnic_policer_tx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
+{
+    PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_tx,
+                                P4TBL_ID_VNIC_POLICER_TX,
+                                VNIC_POLICER_TX_VNIC_POLICER_TX_ID, idx, upd);
+}
+#undef vnic_policer_tx_info
+#undef vnic_policer_rx_info
+
 policer_impl *
 policer_impl::factory(pds_policer_spec_t *spec) {
     policer_impl *impl;
