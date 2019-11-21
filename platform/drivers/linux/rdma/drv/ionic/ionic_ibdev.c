@@ -6363,10 +6363,6 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 		}
 	}
 
-	if (old_prod != eq->q.prod)
-		ionic_dbell_ring(dev->dbpage, dev->eq_qtype,
-				 ionic_queue_dbell_val(&eq->q));
-
 	return npolled;
 }
 
