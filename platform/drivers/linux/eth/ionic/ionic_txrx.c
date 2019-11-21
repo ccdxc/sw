@@ -158,22 +158,23 @@ static void ionic_rx_clean(struct ionic_queue *q,
 	netdev = q->lif->netdev;
 
 	if (comp->status) {
-		// TODO record errors
+		stats->dropped++;
 		return;
 	}
 
 	if (unlikely(test_bit(IONIC_LIF_QUEUE_RESET, q->lif->state))) {
 		/* no packet processing while resetting */
+		stats->dropped++;
 		return;
 	}
 
-#ifdef CSUM_DEBUG
-	if (le16_to_cpu(comp->len) > netdev->mtu + VLAN_ETH_HLEN) {
-		netdev_warn(netdev, "RX PKT TOO LARGE!  comp->len %d\n",
-			    le16_to_cpu(comp->len));
+	if (le16_to_cpu(comp->len) > netdev->mtu + ETH_HLEN) {
+		stats->dropped++;
+		net_warn_ratelimited("%s: RX PKT TOO LARGE! comp->len %d\n",
+				     q->lif->netdev->name,
+				     le16_to_cpu(comp->len));
 		return;
 	}
-#endif
 
 	stats->pkts++;
 	stats->bytes += le16_to_cpu(comp->len);
@@ -183,8 +184,10 @@ static void ionic_rx_clean(struct ionic_queue *q,
 	else
 		skb = ionic_rx_frags(q, desc_info, cq_info);
 
-	if (unlikely(!skb))
+	if (unlikely(!skb)) {
+		stats->dropped++;
 		return;
+	}
 
 #ifdef CSUM_DEBUG
 	csum = ip_compute_csum(skb->data, skb->len);
@@ -359,13 +362,16 @@ void ionic_rx_fill(struct ionic_queue *q)
 	struct ionic_page_info *page_info;
 	struct rxq_sg_desc *sg_desc;
 	struct rxq_sg_elem *sg_elem;
+	unsigned int remain_len;
 	struct rxq_desc *desc;
+	unsigned int seg_len;
 	unsigned int nfrags;
 	bool ring_doorbell;
-	unsigned int len;
 	unsigned int i, j;
+	unsigned int len;
 
 	len = netdev->mtu + ETH_HLEN;
+	remain_len = len;
 	nfrags = round_up(len, PAGE_SIZE) / PAGE_SIZE;
 
 	for (i = ionic_q_space_avail(q); i; i--) {
@@ -392,7 +398,9 @@ void ionic_rx_fill(struct ionic_queue *q)
 			return;
 		}
 		desc->addr = cpu_to_le64(page_info->dma_addr);
-		desc->len = cpu_to_le16(PAGE_SIZE);
+		seg_len = min_t(unsigned int, PAGE_SIZE, len);
+		desc->len = cpu_to_le16(seg_len);
+		remain_len -= seg_len;
 		page_info++;
 
 		/* fill sg descriptors - pages[1..n] */
@@ -408,7 +416,9 @@ void ionic_rx_fill(struct ionic_queue *q)
 				return;
 			}
 			sg_elem->addr = cpu_to_le64(page_info->dma_addr);
-			sg_elem->len = cpu_to_le16(PAGE_SIZE);
+			seg_len = min_t(unsigned int, PAGE_SIZE, remain_len);
+			sg_elem->len = cpu_to_le16(seg_len);
+			remain_len -= seg_len;
 			page_info++;
 		}
 
