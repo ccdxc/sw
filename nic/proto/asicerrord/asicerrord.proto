@@ -1929,8 +1929,8 @@ message PrprprdintintfMetrics {
 
 message PpppintppMetrics {
   fixed64 Key = 1;
-  delphi.Counter ppsd_sbe = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_sbe" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter ppsd_dbe = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_dbe" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter ppsd_sbe = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_sbe" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter ppsd_dbe = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_dbe" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sbus_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_sbus_err" Description: "" Units: Count } ];
   delphi.Counter port7_c_int = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port7_c_int" Description: "Info only, no action" Units: Count } ];
   delphi.Counter port7_p_int = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port7_p_int" Description: "Info only, no action" Units: Count } ];

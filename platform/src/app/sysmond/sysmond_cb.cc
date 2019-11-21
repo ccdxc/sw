@@ -86,15 +86,7 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case INTR_SEV_TYPE_HW_RMA:
         desc = string(reg->name) + "_" + string(field->name) + ":" +
                string(field->desc);
-        switch (reg->id) {
-        // TODO use enums
-        case 477 ... 482:
-            // skip over MX and BX interrupts
-            break;
-        default:
-            eventrecorder_fatal_interrupt_event_cb(desc.c_str());
-            break;
-        }
+        eventrecorder_fatal_interrupt_event_cb(desc.c_str());
 
     case INTR_SEV_TYPE_FATAL:
     case INTR_SEV_TYPE_ERR:

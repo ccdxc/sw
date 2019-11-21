@@ -63,6 +63,11 @@ traverse_interrupts (intr_reg_t &reg)
     case 150:
     case 152:
     case 154:
+    case 362:
+    case 363:
+        // Skip BX block
+    case 477 ... 482:
+        //Skip MX blocks
         // TODO skip PCIE ports for now
         return;
     }
@@ -76,7 +81,7 @@ traverse_interrupts (intr_reg_t &reg)
 
     for(int i=0; i < field_count; i++) {
         if (reg.id == 35 || reg.id == 16) {
-            if (i == 11 || i ==12) {
+            if (i >= 1 || i <=12) {
                 continue;
             }
         }

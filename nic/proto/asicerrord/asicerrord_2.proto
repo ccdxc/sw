@@ -379,14 +379,14 @@ message BxbxintmacMetrics {
 
 message MdhensintipcoreMetrics {
   fixed64 Key = 1;
-  delphi.Counter xts_enc = 2 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_xts_enc" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter xts = 3 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_xts" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter gcm0 = 4 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_gcm0" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter gcm1 = 5 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_gcm1" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter drbg = 6 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_drbg" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter pk = 7 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_pk" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter cp = 8 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_cp" Description: "https://docs.google.com/document/d/1w9UJ8ce9JcBOu_8ZdLXAdDs56Y-UO7QqCLZx7YBtQpU/edit?ts=5b7f3c37#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter dc = 9 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_dc" Description: "https://docs.google.com/document/d/1w9UJ8ce9JcBOu_8ZdLXAdDs56Y-UO7QqCLZx7YBtQpU/edit?ts=5b7f3c37#heading=h.e62qntm4xe7q" Units: Count } ];
+  delphi.Counter xts_enc = 2 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_xts_enc" Description: "" Units: Count } ];
+  delphi.Counter xts = 3 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_xts" Description: "" Units: Count } ];
+  delphi.Counter gcm0 = 4 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_gcm0" Description: "" Units: Count } ];
+  delphi.Counter gcm1 = 5 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_gcm1" Description: "" Units: Count } ];
+  delphi.Counter drbg = 6 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_drbg" Description: "" Units: Count } ];
+  delphi.Counter pk = 7 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_pk" Description: "" Units: Count } ];
+  delphi.Counter cp = 8 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_cp" Description: "" Units: Count } ];
+  delphi.Counter dc = 9 [ (venice.metricsField) = { DisplayName: "md_hens_int_ipcore_dc" Description: "" Units: Count } ];
 }
 
 message MdhensintpkeccMetrics {
@@ -1083,14 +1083,14 @@ message SemasemaintgroupsintregMetrics {
 
 message MpmpnsintcryptoMetrics {
   fixed64 Key = 1;
-  delphi.Counter mpp0 = 2 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp0" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp1 = 3 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp1" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp2 = 4 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp2" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp3 = 5 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp3" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp4 = 6 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp4" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp5 = 7 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp5" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp6 = 8 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp6" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
-  delphi.Counter mpp7 = 9 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp7" Description: "https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" Units: Count } ];
+  delphi.Counter mpp0 = 2 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp0" Description: "" Units: Count } ];
+  delphi.Counter mpp1 = 3 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp1" Description: "" Units: Count } ];
+  delphi.Counter mpp2 = 4 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp2" Description: "" Units: Count } ];
+  delphi.Counter mpp3 = 5 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp3" Description: "" Units: Count } ];
+  delphi.Counter mpp4 = 6 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp4" Description: "" Units: Count } ];
+  delphi.Counter mpp5 = 7 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp5" Description: "" Units: Count } ];
+  delphi.Counter mpp6 = 8 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp6" Description: "" Units: Count } ];
+  delphi.Counter mpp7 = 9 [ (venice.metricsField) = { DisplayName: "mp_mpns_int_crypto_mpp7" Description: "" Units: Count } ];
 }
 
 message MsmsintmsMetrics {
@@ -1142,12 +1142,12 @@ message MsmsintmiscMetrics {
   delphi.Counter int_rd_stall_hit1_interrupt = 15 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_stall_hit1_interrupt" Description: "Info only, no action" Units: Count } ];
   delphi.Counter int_wr_stall_hit2_interrupt = 16 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_stall_hit2_interrupt" Description: "Info only, no action" Units: Count } ];
   delphi.Counter int_rd_stall_hit2_interrupt = 17 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_stall_hit2_interrupt" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter int_wr_full0_interrupt = 18 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full0_interrupt" Description: "Hardware Error" Units: Count } ];
-  delphi.Counter int_rd_full0_interrupt = 19 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full0_interrupt" Description: "Hardware Error" Units: Count } ];
-  delphi.Counter int_wr_full1_interrupt = 20 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full1_interrupt" Description: "Hardware Error" Units: Count } ];
-  delphi.Counter int_rd_full1_interrupt = 21 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full1_interrupt" Description: "Hardware Error" Units: Count } ];
-  delphi.Counter int_wr_full2_interrupt = 22 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full2_interrupt" Description: "Hardware Error" Units: Count } ];
-  delphi.Counter int_rd_full2_interrupt = 23 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full2_interrupt" Description: "Hardware Error" Units: Count } ];
+  delphi.Counter int_wr_full0_interrupt = 18 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full0_interrupt" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter int_rd_full0_interrupt = 19 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full0_interrupt" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter int_wr_full1_interrupt = 20 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full1_interrupt" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter int_rd_full1_interrupt = 21 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full1_interrupt" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter int_wr_full2_interrupt = 22 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_wr_full2_interrupt" Description: "Info only, no action" Units: Count } ];
+  delphi.Counter int_rd_full2_interrupt = 23 [ (venice.metricsField) = { DisplayName: "ms_ms_int_misc_int_rd_full2_interrupt" Description: "Info only, no action" Units: Count } ];
 }
 
 message MsmsintesecureMetrics {

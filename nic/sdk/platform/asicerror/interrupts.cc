@@ -3909,14 +3909,14 @@ intr_reg_t rpc_pics_picc_int_groups_intreg = {  .name="rpc.pics.picc.int_groups.
 
 intr_reg_t mp_mpns_int_crypto = {  .name="mp.mpns.int_crypto", .addr=0x65640c0, .reg_type=0, .id=441, .field_count=8, .fields=
 	{
-		{  .name="mpp0", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp1", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp2", .next_ptr=nullptr, .id=4, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp3", .next_ptr=nullptr, .id=5, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp4", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp5", .next_ptr=nullptr, .id=7, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp6", .next_ptr=nullptr, .id=8, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="mpp7", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
+		{  .name="mpp0", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp1", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp2", .next_ptr=nullptr, .id=4, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp3", .next_ptr=nullptr, .id=5, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp4", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp5", .next_ptr=nullptr, .id=7, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp6", .next_ptr=nullptr, .id=8, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="mpp7", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_INFO, .desc="" },
 
 	} };
 intr_reg_t mp_mpns_int_groups_intreg = {  .name="mp.mpns.int_groups.intreg", .addr=0x65640b0, .reg_type=1, .id=442, .field_count=1, .fields=
@@ -4032,8 +4032,8 @@ intr_reg_t intr_intr_int_intr_ecc = {  .name="intr.intr.int_intr_ecc", .addr=0x6
 		{  .name="intr_coalesce_uncorrectable", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_HW_RMA, .desc="ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" },
 		{  .name="intr_coalesce_correctable", .next_ptr=nullptr, .id=7, .severity=INTR_SEV_TYPE_ERR, .desc="ecc correctable single bit SOFT error, expect once per 25 years per chip" },
 		{  .name="intr_legacy_fifo_overrun", .next_ptr=nullptr, .id=8, .severity=INTR_SEV_TYPE_FATAL, .desc="Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" },
-		{  .name="int_credit_positive_after_return", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_FATAL, .desc="" },
-		{  .name="int_credits_max_debug_threshold", .next_ptr=nullptr, .id=10, .severity=INTR_SEV_TYPE_FATAL, .desc="Info only, no action" },
+		{  .name="int_credit_positive_after_return", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="int_credits_max_debug_threshold", .next_ptr=nullptr, .id=10, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
 		{  .name="intr_bresp_err", .next_ptr=nullptr, .id=11, .severity=INTR_SEV_TYPE_ERR, .desc="" },
 
 	} };
@@ -4488,18 +4488,18 @@ intr_reg_t ms_ms_int_misc = {  .name="ms.ms.int_misc", .addr=0x6a001070, .reg_ty
 		{  .name="ahb_esec_esystem_ram_ecc_correctable", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_ERR, .desc="ecc correctable single bit SOFT error, expect once per 25 years per chip" },
 		{  .name="bl2_ram_ecc_uncorrectable", .next_ptr=nullptr, .id=10, .severity=INTR_SEV_TYPE_HW_RMA, .desc="Hardware Error" },
 		{  .name="bl2_ram_ecc_correctable", .next_ptr=nullptr, .id=11, .severity=INTR_SEV_TYPE_ERR, .desc="ecc correctable single bit SOFT error, expect once per 25 years per chip" },
-		{  .name="int_wr_stall_hit0", .next_ptr=nullptr, .id=12, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_rd_stall_hit0", .next_ptr=nullptr, .id=13, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_wr_stall_hit1", .next_ptr=nullptr, .id=14, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_rd_stall_hit1", .next_ptr=nullptr, .id=15, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_wr_stall_hit2", .next_ptr=nullptr, .id=16, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_rd_stall_hit2", .next_ptr=nullptr, .id=17, .severity=INTR_SEV_TYPE_ERR, .desc="Info only, no action" },
-		{  .name="int_wr_full0", .next_ptr=nullptr, .id=18, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
-		{  .name="int_rd_full0", .next_ptr=nullptr, .id=19, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
-		{  .name="int_wr_full1", .next_ptr=nullptr, .id=20, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
-		{  .name="int_rd_full1", .next_ptr=nullptr, .id=21, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
-		{  .name="int_wr_full2", .next_ptr=nullptr, .id=22, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
-		{  .name="int_rd_full2", .next_ptr=nullptr, .id=23, .severity=INTR_SEV_TYPE_ERR, .desc="Hardware Error" },
+		{  .name="int_wr_stall_hit0", .next_ptr=nullptr, .id=12, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_stall_hit0", .next_ptr=nullptr, .id=13, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_wr_stall_hit1", .next_ptr=nullptr, .id=14, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_stall_hit1", .next_ptr=nullptr, .id=15, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_wr_stall_hit2", .next_ptr=nullptr, .id=16, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_stall_hit2", .next_ptr=nullptr, .id=17, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_wr_full0", .next_ptr=nullptr, .id=18, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_full0", .next_ptr=nullptr, .id=19, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_wr_full1", .next_ptr=nullptr, .id=20, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_full1", .next_ptr=nullptr, .id=21, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_wr_full2", .next_ptr=nullptr, .id=22, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="int_rd_full2", .next_ptr=nullptr, .id=23, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
 
 	} };
 intr_reg_t ms_ms_int_esecure = {  .name="ms.ms.int_esecure", .addr=0x6a001080, .reg_type=0, .id=445, .field_count=2, .fields=
@@ -6059,8 +6059,8 @@ intr_reg_t bx_bx_int_groups_intreg = {  .name="bx.bx.int_groups.intreg", .addr=0
 
 intr_reg_t pp_pp_int_pp = {  .name="pp.pp.int_pp", .addr=0x70202e0, .reg_type=0, .id=137, .field_count=27, .fields=
 	{
-		{  .name="ppsd_sbe", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
-		{  .name="ppsd_dbe", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
+		{  .name="ppsd_sbe", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_ERR, .desc="ecc correctable single bit SOFT error, expect once per 25 years per chip" },
+		{  .name="ppsd_dbe", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_HW_RMA, .desc="ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" },
 		{  .name="sbus_err", .next_ptr=nullptr, .id=4, .severity=INTR_SEV_TYPE_INFO, .desc="" },
 		{  .name="port7_c_int", .next_ptr=nullptr, .id=5, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
 		{  .name="port7_p_int", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_INFO, .desc="Info only, no action" },
@@ -6667,14 +6667,14 @@ intr_reg_t pp_pp_port_c_7_int_groups_intreg = {  .name="pp.pp.port_c[7].int_grou
 
 intr_reg_t md_hens_int_ipcore = {  .name="md.hens.int_ipcore", .addr=0x6584030, .reg_type=0, .id=364, .field_count=8, .fields=
 	{
-		{  .name="xts_enc", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="xts", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="gcm0", .next_ptr=nullptr, .id=4, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="gcm1", .next_ptr=nullptr, .id=5, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="drbg", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="pk", .next_ptr=nullptr, .id=7, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1o7e-6AhV5ET_WoOvVRvMOXqFLDGzunZIx1R1BwUpzek/view#heading=h.e62qntm4xe7q" },
-		{  .name="cp", .next_ptr=nullptr, .id=8, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1w9UJ8ce9JcBOu_8ZdLXAdDs56Y-UO7QqCLZx7YBtQpU/edit?ts=5b7f3c37#heading=h.e62qntm4xe7q" },
-		{  .name="dc", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_INFO, .desc="https://docs.google.com/document/d/1w9UJ8ce9JcBOu_8ZdLXAdDs56Y-UO7QqCLZx7YBtQpU/edit?ts=5b7f3c37#heading=h.e62qntm4xe7q" },
+		{  .name="xts_enc", .next_ptr=nullptr, .id=2, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="xts", .next_ptr=nullptr, .id=3, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="gcm0", .next_ptr=nullptr, .id=4, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="gcm1", .next_ptr=nullptr, .id=5, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="drbg", .next_ptr=nullptr, .id=6, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="pk", .next_ptr=nullptr, .id=7, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="cp", .next_ptr=nullptr, .id=8, .severity=INTR_SEV_TYPE_INFO, .desc="" },
+		{  .name="dc", .next_ptr=nullptr, .id=9, .severity=INTR_SEV_TYPE_INFO, .desc="" },
 
 	} };
 intr_reg_t md_hens_int_pk_ecc = {  .name="md.hens.int_pk_ecc", .addr=0x6584040, .reg_type=0, .id=365, .field_count=2, .fields=
