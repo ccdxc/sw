@@ -54,6 +54,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
     pinned_if_idx_ = spec->pinned_ifidx;
     type_ = spec->type;
+    memcpy(mac_, spec->mac, ETH_ADDR_LEN);
     nh_idx_ = 0xFFFFFFFF;
     vnic_hw_id_ = 0xFFFF;
 }
