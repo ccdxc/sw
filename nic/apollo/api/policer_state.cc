@@ -19,11 +19,13 @@ namespace api {
 
 policer_state::policer_state() {
     policer_ht_ = ht::factory(PDS_MAX_POLICER >> 2,
-                           policer::policer_key_func_get, policer::key_size());
+                           policer_entry::policer_key_func_get,
+                           policer_entry::key_size());
     SDK_ASSERT(policer_ht_ != NULL);
 
     policer_slab_ = slab::factory("policer", PDS_SLAB_ID_POLICER,
-                                  sizeof(policer), 16, true, true, true, NULL);
+                                  sizeof(policer_entry), 16, true,
+                                  true, true, NULL);
     SDK_ASSERT(policer_slab_ != NULL);
 }
 
@@ -32,29 +34,30 @@ policer_state::~policer_state() {
     slab::destroy(policer_slab_);
 }
 
-policer *
+policer_entry *
 policer_state::alloc(void) {
-    return ((policer *)policer_slab_->alloc());
+    return ((policer_entry *)policer_slab_->alloc());
 }
 
 sdk_ret_t
-policer_state::insert(policer *pol) {
-    return policer_ht_->insert_with_key(&pol->key_, pol, &pol->ht_ctxt_);
+policer_state::insert(policer_entry *policer) {
+    return policer_ht_->insert_with_key(&policer->key_, policer,
+                                        &policer->ht_ctxt_);
 }
 
-policer *
-policer_state::remove(policer *pol) {
-    return (policer *)(policer_ht_->remove(&pol->key_));
+policer_entry *
+policer_state::remove(policer_entry *policer) {
+    return (policer_entry *)(policer_ht_->remove(&policer->key_));
 }
 
 void
-policer_state::free(policer *pol) {
-    policer_slab_->free(pol);
+policer_state::free(policer_entry *policer) {
+    policer_slab_->free(policer);
 }
 
-policer *
+policer_entry *
 policer_state::find(pds_policer_key_t *key) const {
-    return (policer *)(policer_ht_->lookup(key));
+    return (policer_entry *)(policer_ht_->lookup(key));
 }
 
 sdk_ret_t

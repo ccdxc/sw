@@ -89,10 +89,10 @@ policer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policer_impl::release_resources(api_base *api_obj) {
-    policer *pol = (policer *)api_obj;
+    policer_entry *policer = (policer_entry *)api_obj;
 
     if (hw_id_ != 0xFFFF) {
-        if (pol->dir() == PDS_POLICER_DIR_INGRESS) {
+        if (policer->dir() == PDS_POLICER_DIR_INGRESS) {
             return policer_impl_db()->rx_idxr()->free(hw_id_);
         } else {
             return policer_impl_db()->tx_idxr()->free(hw_id_);
@@ -103,8 +103,16 @@ policer_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 policer_impl::nuke_resources(api_base *api_obj) {
-    // for indexer, release and nuke operations are same
-    return this->release_resources(api_obj);
+    policer_entry *policer = (policer_entry *)api_obj;
+
+    if (hw_id_ != 0xFFFF) {
+        if (policer->dir() == PDS_POLICER_DIR_INGRESS) {
+            return policer_impl_db()->rx_idxr()->free(hw_id_);
+        } else {
+            return policer_impl_db()->tx_idxr()->free(hw_id_);
+        }
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -129,14 +137,54 @@ policer_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-policer_impl::activate_create_(pds_epoch_t epoch, policer *nh,
+policer_impl::activate_create_(pds_epoch_t epoch, policer_entry *policer,
                                pds_policer_spec_t *spec) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    sdk::policer_t pol;
+
+    if (spec->dir == PDS_POLICER_DIR_INGRESS) {
+        if (spec->type == sdk::POLICER_TYPE_PPS) {
+            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+            ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
+        } else {
+            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
+        }
+    } else {
+        if (spec->type == sdk::POLICER_TYPE_PPS) {
+            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+            ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
+        } else {
+            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
+        }
+    }
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u",
+                      spec->key.id, hw_id_);
+    }
+    return ret;
 }
 
 sdk_ret_t
-policer_impl::activate_delete_(pds_epoch_t epoch, policer *nh) {
-    return SDK_RET_INVALID_OP;
+policer_impl::activate_delete_(pds_epoch_t epoch, policer_entry *policer) {
+    sdk_ret_t ret;
+    sdk::policer_t pol;
+
+    // while deactivating policer, exact policer type doesn't matter as values
+    // are 0 for rate
+    if (policer->dir() == PDS_POLICER_DIR_INGRESS) {
+        pol = { sdk::POLICER_TYPE_PPS, 0, 0 };
+        ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
+    } else {
+        pol = { sdk::POLICER_TYPE_PPS, 0, 0 };
+        ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
+    }
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to de-activate policer %u, hw id %u",
+                      policer->key().id, hw_id_);
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -148,12 +196,12 @@ policer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case API_OP_CREATE:
         spec = &obj_ctxt->api_params->policer_spec;
-        ret = activate_create_(epoch, (policer *)api_obj, spec);
+        ret = activate_create_(epoch, (policer_entry *)api_obj, spec);
         break;
 
     case API_OP_DELETE:
         // spec is not available for DELETE operations
-        ret = activate_delete_(epoch, (policer *)api_obj);
+        ret = activate_delete_(epoch, (policer_entry *)api_obj);
         break;
 
     case API_OP_UPDATE:

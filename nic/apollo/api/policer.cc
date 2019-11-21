@@ -23,43 +23,43 @@ namespace api {
 /// \ingroup PDS_POLICER
 /// @{
 
-policer::policer() {
+policer_entry::policer_entry() {
     ht_ctxt_.reset();
     impl_ = NULL;
 }
 
-policer *
-policer::factory(pds_policer_spec_t *spec) {
-    policer *pol;
+policer_entry *
+policer_entry::factory(pds_policer_spec_t *spec) {
+    policer_entry *policer;
 
     ///< create policer with defaults, if any
-    pol = policer_db()->alloc();
-    if (pol) {
-        new (pol) policer();
-        pol->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_POLICER, spec);
-        if (pol->impl_ == NULL) {
-            policer::destroy(pol);
+    policer = policer_db()->alloc();
+    if (policer) {
+        new (policer) policer_entry();
+        policer->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_POLICER, spec);
+        if (policer->impl_ == NULL) {
+            policer_entry::destroy(policer);
             return NULL;
         }
     }
-    return pol;
+    return policer;
 }
 
-policer::~policer() {
+policer_entry::~policer_entry() {
 }
 
 void
-policer::destroy(policer *pol) {
-    pol->nuke_resources_();
-    if (pol->impl_) {
-        impl_base::destroy(impl::IMPL_OBJ_ID_POLICER, pol->impl_);
+policer_entry::destroy(policer_entry *policer) {
+    policer->nuke_resources_();
+    if (policer->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_POLICER, policer->impl_);
     }
-    pol->~policer();
-    policer_db()->free(pol);
+    policer->~policer_entry();
+    policer_db()->free(policer);
 }
 
 sdk_ret_t
-policer::init_config(api_ctxt_t *api_ctxt) {
+policer_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_policer_spec_t *spec = &api_ctxt->api_params->policer_spec;
 
     memcpy(&this->key_, &spec->key, sizeof(key_));
@@ -68,70 +68,70 @@ policer::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-policer::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-policer::program_config(obj_ctxt_t *obj_ctxt) {
+policer_entry::program_config(obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-policer::reprogram_config(api_op_t api_op) {
+policer_entry::reprogram_config(api_op_t api_op) {
     return SDK_RET_ERR;
 }
 
 sdk_ret_t
-policer::release_resources(void) {
+policer_entry::release_resources(void) {
     return impl_->release_resources(this);
 }
 
 sdk_ret_t
-policer::nuke_resources_(void) {
+policer_entry::nuke_resources_(void) {
     return impl_->nuke_resources(this);
 }
 
 sdk_ret_t
-policer::cleanup_config(obj_ctxt_t *obj_ctxt) {
+policer_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-policer::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-policer::activate_config(pds_epoch_t epoch, api_op_t api_op,
+policer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                          obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
-policer::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+policer_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-policer::read(pds_policer_key_t *key, pds_policer_info_t *info) {
+policer_entry::read(pds_policer_key_t *key, pds_policer_info_t *info) {
     return impl_->read_hw(this, (impl::obj_key_t *)key,
                           (impl::obj_info_t *)info);
 }
 
 sdk_ret_t
-policer::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-policer::add_to_db(void) {
+policer_entry::add_to_db(void) {
     return policer_db()->insert(this);
 }
 
 sdk_ret_t
-policer::del_from_db(void) {
+policer_entry::del_from_db(void) {
     if (policer_db()->remove(this)) {
         return SDK_RET_OK;
     }
@@ -139,7 +139,7 @@ policer::del_from_db(void) {
 }
 
 sdk_ret_t
-policer::delay_delete(void) {
+policer_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICER, this);
 }
 

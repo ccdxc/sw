@@ -25,20 +25,20 @@ class policer_state;
 /// \ingroup PDS_POLICER
 /// @{
 
-/// \brief    policer
-class policer : public api_base {
+/// \brief    policer entry
+class policer_entry : public api_base {
 public:
     /// \brief          factory method to allocate and initialize a policer
     /// \param[in]      spec    policer information
     /// \return         new instance of policer or NULL, in case of error
-    static policer *factory(pds_policer_spec_t *spec);
+    static policer_entry *factory(pds_policer_spec_t *spec);
 
     /// \brief          release all the s/w state associate with the given
     ///                 policer, if any, and free the memory
     /// \param[in]      pol     policer to be freed
     /// \NOTE: h/w entries should have been cleaned up (by calling
     ///        impl->cleanup_hw() before calling this
-    static void destroy(policer *pol);
+    static void destroy(policer_entry *policer);
 
     /// \brief          initialize policer with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
@@ -137,8 +137,8 @@ public:
     /// \param[in]      entry    pointer to policer instance
     /// \return         pointer to the policer instance's key
     static void *policer_key_func_get(void *entry) {
-        policer *pol = (policer *)entry;
-        return (void *)&(pol->key_);
+        policer_entry *policer = (policer_entry *)entry;
+        return (void *)&(policer->key_);
     }
 
     /// \brief   helper function to get size of key
@@ -161,10 +161,10 @@ public:
 
 private:
     /// \brief constructor
-    policer();
+    policer_entry();
 
     /// \brief destructor
-    ~policer();
+    ~policer_entry();
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
@@ -173,18 +173,18 @@ private:
 
 private:
     pds_policer_key_t key_;        ///< policer key
-    pds_policer_dir_t dir_;       ///< policer enforcement direction
+    pds_policer_dir_t dir_;        ///< policer enforcement direction
     ht_ctxt_t ht_ctxt_;            ///< hash table context
 
     // P4 datapath specific state
     impl_base *impl_;              ///< impl object instance
-    friend class policer_state;    ///< policer_state is friend of policer
+    friend class policer_state;    ///< policer_state is friend of policer_entry
 } __PACK__;
 
 /// \@}    // end of PDS_POLICER_ENTRY
 
 }    // namespace api
 
-using api::policer;
+using api::policer_entry;
 
 #endif    // __API_POLICER_HPP__

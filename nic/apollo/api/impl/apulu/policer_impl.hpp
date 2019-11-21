@@ -141,17 +141,17 @@ private:
 
     /// \brief     program policer related tables during create
     /// \param[in] epoch epoch being activated
-    /// \param[in] nh    policer obj being programmed
+    /// \param[in] policer    policer obj being programmed
     /// \param[in] spec  policer configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_create_(pds_epoch_t epoch, policer *nh,
+    sdk_ret_t activate_create_(pds_epoch_t epoch, policer_entry *policer,
                                pds_policer_spec_t *spec);
 
     /// \brief     program policer related tables during delete
     /// \param[in] epoch epoch being activated
-    /// \param[in] nh    policer obj being programmed
+    /// \param[in] policer    policer obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_delete_(pds_epoch_t epoch, policer *nh);
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, policer_entry *policer);
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification

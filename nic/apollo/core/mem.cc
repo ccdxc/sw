@@ -101,7 +101,7 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         break;
 
     case PDS_SLAB_ID_POLICER:
-        policer::destroy((policer *)elem);
+        policer_entry::destroy((policer_entry *)elem);
         break;
 
     default:

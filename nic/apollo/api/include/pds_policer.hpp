@@ -12,6 +12,7 @@
 #define __INCLUDE_API_PDS_POLICER_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_POLICER Policer API
@@ -21,13 +22,6 @@
 #define PDS_MAX_TX_POLICER        1024
 #define PDS_MAX_RX_POLICER        1024
 #define PDS_MAX_POLICER           (PDS_MAX_TX_POLICER + PDS_MAX_RX_POLICER)
-
-/// \brief policer type
-typedef enum pds_policer_type_e {
-    PDS_POLICER_TYPE_NONE = 0,
-    PDS_POLICER_TYPE_PPS  = 1,    ///< packets/second policer
-    PDS_POLICER_TYPE_BPS  = 2,    ///< bytes/second policer
-} pds_policer_type_t;
 
 /// \brief direction of the traffic the policer is applied on
 typedef enum pds_policer_dir_e {
@@ -41,7 +35,7 @@ typedef enum pds_policer_dir_e {
 /// \brief policer specification
 typedef struct pds_policer_spec_s {
     pds_policer_key_t key;          ///< policer's unique key
-    pds_policer_type_t type;        ///< type of the policer
+    sdk::policer_type_t type;       ///< type of the policer
     pds_policer_dir_t dir;          ///< traffic direction policer is applied on
     union {
         struct {
