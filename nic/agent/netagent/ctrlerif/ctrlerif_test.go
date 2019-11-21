@@ -1700,3 +1700,28 @@ func TestAppWatch(t *testing.T) {
 	cl.Stop()
 	srv.grpcServer.Stop()
 }
+
+// CreateIPAMPolicy creates a IPAMPolicy. Stubbed out to satisfy the interface
+func (ag *fakeAgent) CreateIPAMPolicy(tn *netproto.IPAMPolicy) error {
+	return nil
+}
+
+// DeleteIPAMPolicy deletes a IPAMPolicy. Stubbed out to satisfy the interface
+func (ag *fakeAgent) DeleteIPAMPolicy(tn, ns, name string) error {
+	return nil
+}
+
+// FindIPAMPolicy finds an IPAMPolicy. Stubbed out to satisfy the interface
+func (ag *fakeAgent) FindIPAMPolicy(meta api.ObjectMeta) (*netproto.IPAMPolicy, error) {
+	return nil, nil
+}
+
+// ListIPAMPolicy lists IPAMPolicy. Stubbed out to satisfy the interface
+func (ag *fakeAgent) ListIPAMPolicy() []*netproto.IPAMPolicy {
+	return nil
+}
+
+// UpdateIPAMPolicy updates a IPAMPolicy. Stubbed out to satisfy the interface
+func (ag *fakeAgent) UpdateIPAMPolicy(tn *netproto.IPAMPolicy) error {
+	return nil
+}

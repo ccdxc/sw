@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto2 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto4 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Namespace struct {
 	Meta      *delphi.ObjectMeta   `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key       string               `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Namespace *netproto2.Namespace `protobuf:"bytes,3,opt,name=Namespace" json:"Namespace,omitempty"`
+	Namespace *netproto4.Namespace `protobuf:"bytes,3,opt,name=Namespace" json:"Namespace,omitempty"`
 }
 
 func (m *Namespace) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type NamespaceReactor interface {
 func (m *Namespace) Reset()                    { *m = Namespace{} }
 func (m *Namespace) String() string            { return proto.CompactTextString(m) }
 func (*Namespace) ProtoMessage()               {}
-func (*Namespace) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (*Namespace) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
 
 func (m *Namespace) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *Namespace) GetKey() string {
 	return ""
 }
 
-func (m *Namespace) GetNamespace() *netproto2.Namespace {
+func (m *Namespace) GetNamespace() *netproto4.Namespace {
 	if m != nil {
 		return m.Namespace
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*Namespace)(nil), "dnetproto.Namespace")
 }
 
-func init() { proto.RegisterFile("delphi/namespace.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("delphi/namespace.proto", fileDescriptor4) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor4 = []byte{
 	// 187 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4b, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0xcf, 0x4b, 0xcc, 0x4d, 0x2d, 0x2e, 0x48, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca,

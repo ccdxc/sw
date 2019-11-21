@@ -3,9 +3,8 @@ NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/nim
 RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restclient
 
 # all the sources for which .pb.go is generated
-SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto agg_watch.proto
-NIMBUS_SRC := app.proto endpoint.proto namespace.proto  network.proto  security.proto sgpolicy.proto secprofile.proto tenant.proto interface.proto
-
+SRC := app.proto agg_watch.proto copp.proto endpoint.proto interface.proto ipam.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto
+NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto namespace.proto network.proto security.proto sgpolicy.proto secprofile.proto tenant.proto
 #these wont have _api.go generated
 FILTER_OUT_API := match.proto service.proto qos.proto copp.proto
 
@@ -21,7 +20,7 @@ DELPHI_SRC := $(NIMBUS_SRC:%.proto=./delphi/%.proto)
 
 default: ${DEST} nimbus delphi-gen
 
-qos.pb.% copp.pb.% app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% secprofile.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.% vrf.pb.%:  ${SRC}
+qos.pb.% copp.pb.% app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% secprofile.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.% vrf.pb.% ipam.pb.%:  ${SRC}
 	protoc -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../vendor/github.com/gogo/protobuf/gogoproto \

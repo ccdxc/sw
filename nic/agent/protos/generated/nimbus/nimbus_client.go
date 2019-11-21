@@ -138,6 +138,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "Endpoint":
 		err = client.processEndpointDynamic(evt.EventType, object.Message.(*netproto.Endpoint), reactor.(EndpointReactor))
 
+	case "IPAMPolicy":
+		err = client.processIPAMPolicyDynamic(evt.EventType, object.Message.(*netproto.IPAMPolicy), reactor.(IPAMPolicyReactor))
+
 	case "Interface":
 		err = client.processInterfaceDynamic(evt.EventType, object.Message.(*netproto.Interface), reactor.(InterfaceReactor))
 
@@ -282,6 +285,67 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 		if err == nil {
 			mobj, err := types.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffIPAMPolicysDynamic diffs local state with controller state
+func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyList, reactor IPAMPolicyReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.IPAMPolicy)
+	for _, obj := range objList.IPAMPolicys {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListIPAMPolicy()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.IPAMPolicyEvent{
+					EventType:  api.EventType_DeleteEvent,
+					IPAMPolicy: *lobj,
+				}
+				log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
+				client.processIPAMPolicyEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.IPAMPolicys {
+		evt := netproto.IPAMPolicyEvent{
+			EventType:  api.EventType_UpdateEvent,
+			IPAMPolicy: *obj,
+		}
+		client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
+		err := client.processIPAMPolicyEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "IPAMPolicy", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
 				EventType: api.EventType_UpdateEvent,
@@ -755,6 +819,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
 					return
 
+				case "IPAMPolicy":
+					msglist := lobj.objects.(*netproto.IPAMPolicyList)
+					msglist.IPAMPolicys = append(msglist.IPAMPolicys, obj.Message.(*netproto.IPAMPolicy))
+					return
+
 				case "Interface":
 					msglist := lobj.objects.(*netproto.InterfaceList)
 					msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
@@ -806,6 +875,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			listObj.objects = &netproto.EndpointList{}
 			msglist := listObj.objects.(*netproto.EndpointList)
 			msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
+
+		case "IPAMPolicy":
+			listObj.objects = &netproto.IPAMPolicyList{}
+			msglist := listObj.objects.(*netproto.IPAMPolicyList)
+			msglist.IPAMPolicys = append(msglist.IPAMPolicys, obj.Message.(*netproto.IPAMPolicy))
 
 		case "Interface":
 			listObj.objects = &netproto.InterfaceList{}
@@ -864,6 +938,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 		case "Endpoint":
 			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream)
 
+		case "IPAMPolicy":
+			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream)
+
 		case "Interface":
 			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream)
 
@@ -918,6 +995,11 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 		case "Endpoint":
 			if _, ok := reactor.(EndpointReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "EndpointReactor")
+			}
+
+		case "IPAMPolicy":
+			if _, ok := reactor.(IPAMPolicyReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "IPAMPolicyReactor")
 			}
 
 		case "Interface":

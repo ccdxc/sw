@@ -29,6 +29,16 @@ if [ -e ${curdir}/generated/relations.json ]; then
     rm -f ${curdir}/generated/relations.json
 fi
 
+# Delete the relations file if already exists.
+if [ -e ${curdir}/generated/relations/schema.json ]; then
+    rm -f ${curdir}/generated/relations/schema.json
+fi
+
+# Delete the relations file if already exists.
+if [ -e ${curdir}/generated/relations/schema.go]; then
+    rm -f ${curdir}/generated/relations/schema.go
+fi
+
 if [ -e ${curdir}/generated/apiclient/svcmanifest.json ]; then
     rm -f ${curdir}/generated/apiclient/svcmanifest.json
 fi

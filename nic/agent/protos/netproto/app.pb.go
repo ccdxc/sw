@@ -6,9 +6,11 @@
 
 	It is generated from these files:
 		app.proto
-		endpoint.proto
+		agg_watch.proto
 		copp.proto
+		endpoint.proto
 		interface.proto
+		ipam.proto
 		ipsec.proto
 		match.proto
 		namespace.proto
@@ -25,7 +27,6 @@
 		tunnel.proto
 		tcp_proxy.proto
 		vrf.proto
-		agg_watch.proto
 
 	It has these top-level messages:
 		App
@@ -42,18 +43,23 @@
 		AppList
 		AppEvent
 		AppEventList
-		Endpoint
-		EndpointSpec
-		EndpointStatus
-		EndpointList
-		EndpointEvent
-		EndpointEventList
+		AggKinds
+		AggObject
+		AggObjectList
+		AggObjectEvent
+		AggObjectEventList
 		ControlPlanePolicer
 		ControlPlanePolicerSpec
 		ControlPlanePolicerStatus
 		ControlPlanePolicerList
 		ControlPlanePolicerEvent
 		ControlPlanePolicerEventList
+		Endpoint
+		EndpointSpec
+		EndpointStatus
+		EndpointList
+		EndpointEvent
+		EndpointEventList
 		Interface
 		PauseSpec
 		InterfaceSpec
@@ -64,6 +70,14 @@
 		InterfaceList
 		InterfaceEvent
 		InterfaceEventList
+		DHCPServer
+		DHCPRelayPolicy
+		IPAMPolicySpec
+		IPAMPolicyStatus
+		IPAMPolicyEvent
+		IPAMPolicyEventList
+		IPAMPolicyList
+		IPAMPolicy
 		IPSecPolicy
 		IPSecPolicySpec
 		IPSecRule
@@ -191,11 +205,6 @@
 		VrfList
 		VrfEvent
 		VrfEventList
-		AggKinds
-		AggObject
-		AggObjectList
-		AggObjectEvent
-		AggObjectEventList
 */
 package netproto
 

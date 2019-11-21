@@ -7,24 +7,26 @@ Package dnetproto is a generated protocol buffer package.
 It is generated from these files:
 	delphi/app.proto
 	delphi/endpoint.proto
+	delphi/interface.proto
+	delphi/ipam.proto
 	delphi/namespace.proto
 	delphi/network.proto
 	delphi/security.proto
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
 	delphi/tenant.proto
-	delphi/interface.proto
 
 It has these top-level messages:
 	App
 	Endpoint
+	Interface
+	IPAMPolicy
 	Namespace
 	Network
 	SecurityGroup
 	NetworkSecurityPolicy
 	SecurityProfile
 	Tenant
-	Interface
 */
 package dnetproto
 

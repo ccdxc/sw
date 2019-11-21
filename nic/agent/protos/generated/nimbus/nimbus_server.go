@@ -240,6 +240,21 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "IPAMPolicy":
+			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
 			if err != nil {
@@ -401,6 +416,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
 
+			case "IPAMPolicy":
+				if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
+					err = eh.statusReactor.(IPAMPolicyStatusReactor).OnIPAMPolicyOperUpdate(nodeID,
+						object.Message.(*netproto.IPAMPolicy))
+					if err != nil {
+						log.Errorf("Error updating IPAMPolicy oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.IPAMPolicy).GetObjectMeta())
+
 			case "Interface":
 				if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
 					err = eh.statusReactor.(InterfaceStatusReactor).OnInterfaceOperUpdate(nodeID,
@@ -494,6 +519,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
+
+			case "IPAMPolicy":
+				if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
+					err = eh.statusReactor.(IPAMPolicyStatusReactor).OnIPAMPolicyOperDelete(nodeID,
+						object.Message.(*netproto.IPAMPolicy))
+					if err != nil {
+						log.Errorf("Error updating IPAMPolicy oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.IPAMPolicy).GetObjectMeta())
 
 			case "Interface":
 				if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
@@ -803,6 +838,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "IPAMPolicy":
+			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
 			if err != nil {
@@ -981,6 +1031,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 
 			case "Endpoint":
 				obj, err := EndpointFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "IPAMPolicy":
+				obj, err := IPAMPolicyFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

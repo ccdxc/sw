@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto8 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto10 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Tenant struct {
 	Meta   *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key    string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Tenant *netproto8.Tenant  `protobuf:"bytes,3,opt,name=Tenant" json:"Tenant,omitempty"`
+	Tenant *netproto10.Tenant `protobuf:"bytes,3,opt,name=Tenant" json:"Tenant,omitempty"`
 }
 
 func (m *Tenant) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type TenantReactor interface {
 func (m *Tenant) Reset()                    { *m = Tenant{} }
 func (m *Tenant) String() string            { return proto.CompactTextString(m) }
 func (*Tenant) ProtoMessage()               {}
-func (*Tenant) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{0} }
+func (*Tenant) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
 
 func (m *Tenant) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *Tenant) GetKey() string {
 	return ""
 }
 
-func (m *Tenant) GetTenant() *netproto8.Tenant {
+func (m *Tenant) GetTenant() *netproto10.Tenant {
 	if m != nil {
 		return m.Tenant
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*Tenant)(nil), "dnetproto.Tenant")
 }
 
-func init() { proto.RegisterFile("delphi/tenant.proto", fileDescriptor7) }
+func init() { proto.RegisterFile("delphi/tenant.proto", fileDescriptor9) }
 
-var fileDescriptor7 = []byte{
+var fileDescriptor9 = []byte{
 	// 183 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0x49, 0xcd, 0x4b, 0xcc, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,

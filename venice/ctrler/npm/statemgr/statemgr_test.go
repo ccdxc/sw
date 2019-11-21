@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -21,6 +22,32 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
+
+// createIPAMPolicy utility function to create an IPAM Policy
+func createIPAMPolicy(stateMgr *Statemgr, tenant, name, dhcpIP string) (*network.IPAMPolicy, error) {
+	policy := network.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+			Tenant:    tenant,
+		},
+		Spec: network.IPAMPolicySpec{
+			DHCPRelay: &network.DHCPRelayPolicy{},
+		},
+		Status: network.IPAMPolicyStatus{},
+	}
+
+	server := &network.DHCPServer{
+		IPAddress:     dhcpIP,
+		VirtualRouter: "default",
+	}
+
+	policy.Spec.DHCPRelay.Servers = append(policy.Spec.DHCPRelay.Servers, server)
+
+	err := stateMgr.ctrler.IPAMPolicy().Create(&policy)
+	return &policy, err
+}
 
 // createNetwork utility function to create a network
 func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw string) error {
@@ -2411,6 +2438,45 @@ func TestWatchFilter(t *testing.T) {
 	stateMgr.StartAppWatch()
 	stateMgr.StopNetworkSecurityPolicyWatch()
 	stateMgr.StartNetworkSecurityPolicyWatch()
+}
+
+func TestIPAMPolicyCreateDelete(t *testing.T) {
+	name := "testPolicy"
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create IPAMPolicy
+	policy, err := createIPAMPolicy(stateMgr, "default", name, "100.1.1.1")
+	AssertOk(t, err, "Error creating IPAMPolicy")
+
+	// verify we can find the IPAMPolicy
+	obj, err := stateMgr.FindIPAMPolicy("default", "default", name)
+	AssertOk(t, err, "Could not find the IPAMPolicy")
+	AssertEquals(t, obj.IPAMPolicy.Spec.DHCPRelay.Servers[0].IPAddress, policy.Spec.DHCPRelay.Servers[0].IPAddress, "IPAMPolicy params did not match")
+
+	// update the IPAMPolicy
+	version, _ := strconv.Atoi(obj.IPAMPolicy.GenerationID)
+	policy.GenerationID = strconv.Itoa(version + 1)
+	policy.Spec.DHCPRelay.Servers[0].IPAddress = "101.1.1.1"
+	err = stateMgr.ctrler.IPAMPolicy().Update(policy)
+	AssertOk(t, err, "Error updating IPAMPolicy")
+
+	// verify update went through
+	obj, err = stateMgr.FindIPAMPolicy("default", "default", name)
+	AssertOk(t, err, "Could not find the IPAMPolicy")
+	AssertEquals(t, obj.IPAMPolicy.Spec.DHCPRelay.Servers[0].IPAddress, policy.Spec.DHCPRelay.Servers[0].IPAddress, "IPAMPolicy params did not match")
+
+	// delete the IPAM policy
+	err = stateMgr.ctrler.IPAMPolicy().Delete(policy)
+	AssertOk(t, err, "Error deleting IPAMPolicy")
+
+	// verify the IPAMPolicy is deleted
+	_, err = stateMgr.FindIPAMPolicy("default", "default", name)
+	Assert(t, (err != nil), "IPAMPolicy still found after deleting")
 }
 
 func TestMain(m *testing.M) {

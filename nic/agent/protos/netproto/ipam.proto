@@ -1,0 +1,70 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ipam policy controller api
+service IPAMPolicyApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "IPAMPolicy",
+        Method: ["list"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/ipam-policies"
+    };
+
+    rpc GetIPAMPolicy (api.ObjectMeta) returns (IPAMPolicy) {};
+    rpc ListIPAMPolicys (api.ObjectMeta) returns (IPAMPolicyList) {};
+    rpc WatchIPAMPolicys (api.ObjectMeta) returns (stream IPAMPolicyEventList) {};
+    rpc UpdateIPAMPolicy (IPAMPolicy) returns (IPAMPolicy) {};
+    rpc IPAMPolicyOperUpdate (stream IPAMPolicyEvent) returns (api.TypeMeta) {};
+}
+
+message DHCPServer {
+    // IP Address of the server.
+    string IPAddress = 1 [(gogoproto.jsontag) = "ip-address,omitempty", (venice.check) = "IPAddr()"];
+    // Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached.
+    string VirtualRouter = 2 [(gogoproto.jsontag) = "virtual-router,omitempty"];
+}
+
+message DHCPRelayPolicy {
+    repeated DHCPServer Servers = 1 [(gogoproto.jsontag) = "relay-servers,omitempty"];
+}
+
+message IPAMPolicySpec {
+    enum IPAMType {
+        DHCP_Relay = 0;
+    }
+    string Type = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(IPAMPolicySpec.IPAMType)"];
+    DHCPRelayPolicy DHCPRelay = 2  [(gogoproto.jsontag) = "dhcp-relay,omitempty"];
+}
+
+message IPAMPolicyStatus {
+    //Empty
+}
+
+message IPAMPolicyEvent {
+    api.EventType EventType    = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    IPAMPolicy    IPAMPolicy   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipam-policy,omitempty"];
+}
+
+message IPAMPolicyEventList {
+    repeated IPAMPolicyEvent iPAMPolicyEvents = 1;
+}
+message IPAMPolicyList {
+    repeated IPAMPolicy iPAMPolicys = 1;
+}
+
+message IPAMPolicy {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    IPAMPolicySpec Spec       = 3  [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    IPAMPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

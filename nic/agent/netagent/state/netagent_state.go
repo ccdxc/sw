@@ -207,6 +207,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.SecurityProfileDB = make(map[string]*netproto.SecurityProfile)
 	na.AppDB = make(map[string]*netproto.App)
 	na.VrfDB = make(map[string]*netproto.Vrf)
+	na.IPAMPolicyDB = make(map[string]*netproto.IPAMPolicy)
 	na.Solver = dependencies.NewDepSolver()
 	na.ArpCache = types.ArpCache{
 		DoneCache: make(map[string]context.CancelFunc),
@@ -249,6 +250,11 @@ func (na *Nagent) PurgeConfigs() error {
 		}
 	}
 
+	for _, policy := range na.ListIPAMPolicy() {
+		if err := na.DeleteIPAMPolicy(policy.Tenant, policy.Namespace, policy.Name); err != nil {
+			log.Errorf("Failed to delete IPAM policy, err: %v", err)
+		}
+	}
 	return nil
 }
 
@@ -349,6 +355,26 @@ func (na *Nagent) ReplayConfigs() error {
 				log.Info("Replaying persisted NetworkSecurityPolicy objects")
 				if err := na.CreateNetworkSecurityPolicy(&sgp); err != nil {
 					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
+				}
+			}
+		}
+	}
+
+	// Replay IPAMPolicy Objects
+	ipamPolicies, err := na.Store.RawList("IPAMPolicy")
+	if err == nil {
+		for _, o := range ipamPolicies {
+			var policy netproto.IPAMPolicy
+			err := policy.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to IPAMPolicy. Err: %v", err)
+				continue
+			}
+			creator, ok := policy.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Infof("Replaying persisted IPAMPolicy object: %+v", policy)
+				if err := na.CreateIPAMPolicy(&policy); err != nil {
+					log.Errorf("Failed to recreate IPAMPolicy: %v. Err: %v", policy.GetKey(), err)
 				}
 			}
 		}

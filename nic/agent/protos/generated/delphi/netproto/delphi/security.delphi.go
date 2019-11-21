@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto4 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto6 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type SecurityGroup struct {
 	Meta          *delphi.ObjectMeta       `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key           string                   `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	SecurityGroup *netproto4.SecurityGroup `protobuf:"bytes,3,opt,name=SecurityGroup" json:"SecurityGroup,omitempty"`
+	SecurityGroup *netproto6.SecurityGroup `protobuf:"bytes,3,opt,name=SecurityGroup" json:"SecurityGroup,omitempty"`
 }
 
 func (m *SecurityGroup) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type SecurityGroupReactor interface {
 func (m *SecurityGroup) Reset()                    { *m = SecurityGroup{} }
 func (m *SecurityGroup) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroup) ProtoMessage()               {}
-func (*SecurityGroup) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (*SecurityGroup) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *SecurityGroup) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *SecurityGroup) GetKey() string {
 	return ""
 }
 
-func (m *SecurityGroup) GetSecurityGroup() *netproto4.SecurityGroup {
+func (m *SecurityGroup) GetSecurityGroup() *netproto6.SecurityGroup {
 	if m != nil {
 		return m.SecurityGroup
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*SecurityGroup)(nil), "dnetproto.SecurityGroup")
 }
 
-func init() { proto.RegisterFile("delphi/security.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("delphi/security.proto", fileDescriptor6) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor6 = []byte{
 	// 192 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4d, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0x4e, 0x4d, 0x2e, 0x2d, 0xca, 0x2c, 0xa9, 0xd4, 0x2b, 0x28, 0xca, 0x2f,

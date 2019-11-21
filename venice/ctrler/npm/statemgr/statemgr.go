@@ -44,6 +44,7 @@ type Topics struct {
 	NetworkSecurityPolicyTopic *nimbus.NetworkSecurityPolicyTopic
 	NetworkInterfaceTopic      *nimbus.InterfaceTopic
 	AggregateTopic             *nimbus.AggregateTopic
+	IPAMPolicyTopic            *nimbus.IPAMPolicyTopic
 }
 
 // Statemgr is the object state manager
@@ -191,6 +192,10 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	if err != nil {
 		logger.Fatalf("Error watching network-interface")
 	}
+	err = ctrler.IPAMPolicy().Watch(statemgr)
+	if err != nil {
+		logger.Fatalf("Error watching ipam-policy")
+	}
 
 	//Remove state endpoints after we start the watch
 	//Start watch would synchronosly does diff of all workload and endpoints.
@@ -231,6 +236,11 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	statemgr.topics.NetworkInterfaceTopic, err = nimbus.AddInterfaceTopic(mserver, statemgr)
 	if err != nil {
 		log.Errorf("Error starting network interface RPC server")
+		return nil, err
+	}
+	statemgr.topics.IPAMPolicyTopic, err = nimbus.AddIPAMPolicyTopic(mserver, nil)
+	if err != nil {
+		log.Errorf("Error starting network interface RPC server: %v", err)
 		return nil, err
 	}
 

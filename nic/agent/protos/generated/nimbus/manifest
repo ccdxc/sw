@@ -1,11 +1,12 @@
 
 App AppApi
 Endpoint EndpointApi
-Interface InterfaceApi
+IPAMPolicy IPAMPolicyApi
 Interface InterfaceApi
 Namespace NamespaceApi
 Network NetworkApi
 NetworkSecurityPolicy NetworkSecurityPolicyApi
 SecurityGroup SecurityGroupApi
 SecurityProfile SecurityProfileApi
+Tenant TenantApi
 Tenant TenantApi
