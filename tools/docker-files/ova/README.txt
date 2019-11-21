@@ -6,9 +6,9 @@ Target: venice-ova
 
 This is the new way (and default) of building the Venice OVA using buildit tool. Once the OVA is built, it will insert the OVA properties and convert to a new OVA. At the same time it will convert the vmdk in the OVA to a qcow2 for KVM. The output artifact of the build will be kept in the output/ directory.
 
-Executatable required:
+Executable required:
 
-packer executable obtained from https://releases.hashicorp.com/packer/1.4.3/packer_1.4.3_linux_amd64.zip
-VMware-ovftool-4.3.0-13981069-lin.x86_64.bundle obtained from Kangwarn from vmware website
-qemu-img (can do by yum -y install qemu-img)
-buildit tool
+packer - from https://releases.hashicorp.com/packer/1.4.3/packer_1.4.3_linux_amd64.zip
+VMware-ovftool-4.3.0-13981069-lin.x86_64.bundle - from https://code.vmware.com/web/tool/4.3.0/ovf
+qemu-img - (can do by yum -y install qemu-img)
+buildit - from jobd infra
