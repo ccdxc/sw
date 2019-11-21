@@ -42,6 +42,16 @@
     (tparams)->actiondata_mask = actiondata_mask_;                           \
 }
 
+#define P4_IPADDR_TO_IPADDR(p4_ip, ip, af_)                                  \
+{                                                                            \
+    ip.af = af_;                                                             \
+    if (af_ == IP_AF_IPV6) {                                                 \
+        sdk::lib::memrev(ip.addr.v6_addr.addr8, p4_ip, IP6_ADDR8_LEN);       \
+    } else {                                                                 \
+        memcpy(&ip.addr.v4_addr, p4_ip, IP4_ADDR8_LEN);                      \
+    }                                                                        \
+}
+
 namespace api {
 namespace impl {
 

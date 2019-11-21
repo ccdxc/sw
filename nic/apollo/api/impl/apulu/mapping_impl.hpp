@@ -195,11 +195,9 @@ private:
     /// \brief     program and activate mapping related tables during delete
     ///            by enabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch       epoch being activated
-    /// \param[in] key         key identifying the mapping
     /// \param[in] mapping     mapping instance
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_delete_(pds_epoch_t epoch,
-                                       pds_mapping_key_t *key,
                                        mapping_entry *mapping);
 
     /// \brief         read the configured values from the local mapping tables
@@ -224,6 +222,17 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_remote_mapping_resources_(api_base *api_obj);
 
+    /// \brief     deactivate mapping entry for a given overlay or public ip
+    /// \param[in] ip addr pointer to overlay or public ip
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_ip_mapping_entry_(ip_addr_t *ip);
+
+    /// \brief     deactivate local mapping and mapping entries for a given
+    ///            overlay or public ip
+    /// \param[in] ip addr pointer to overlay or public ip
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_ip_local_mapping_entry_(ip_addr_t *ip);
+
 private:
     bool              is_local_;
     // need to save the below for entry removal as the memhash handle is
@@ -233,6 +242,7 @@ private:
     uint32_t          subnet_hw_id_;
     pds_mapping_key_t key_;
     pds_encap_t       fabric_encap_;
+    bool              public_ip_valid_;
     ip_addr_t         public_ip_;
 
     // handles or indices for NAT table
