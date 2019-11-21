@@ -46,6 +46,39 @@
       "Field": "VirtualRouter"
     }
   ],
+  "network.NetworkInterfaceSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "cluster/Tenant",
+      "Field": "AttachTenant"
+    }
+  ],
+  "network.NetworkSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "network/VirtualRouter",
+      "Field": "VirtualRouter"
+    },
+    {
+      "Type": "NamedRef",
+      "To": "network/IPAMPolicy",
+      "Field": "IPAMPolicy"
+    }
+  ],
+  "network.Route": [
+    {
+      "Type": "WeakRef",
+      "To": "network/VirtualRouter",
+      "Field": "TargetVirtualRouter"
+    }
+  ],
+  "network.VirtualRouterStatus": [
+    {
+      "Type": "NamedRef",
+      "To": "network/RouteTable",
+      "Field": "RouteTable"
+    }
+  ],
   "security.NetworkSecurityPolicySpec": [
     {
       "Type": "NamedRef",

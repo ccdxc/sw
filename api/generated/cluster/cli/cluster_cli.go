@@ -99,7 +99,15 @@ func removeHostOper(obj interface{}) error {
 }
 
 // CreateNodeFlags specifies flags for Node create operation
-var CreateNodeFlags = []gen.CliFlag{}
+var CreateNodeFlags = []gen.CliFlag{
+	{
+		ID:     "routing-config",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
 
 func removeNodeOper(obj interface{}) error {
 	if v, ok := obj.(*cluster.Node); ok {
@@ -135,6 +143,7 @@ func init() {
 	cl.AddCliInfo("cluster.Host", "create", CreateHostFlags)
 	cl.AddRemoveObjOperFunc("cluster.Host", removeHostOper)
 
+	cl.AddCliInfo("cluster.Node", "create", CreateNodeFlags)
 	cl.AddRemoveObjOperFunc("cluster.Node", removeNodeOper)
 
 	cl.AddRemoveObjOperFunc("cluster.Version", removeVersionOper)

@@ -548,7 +548,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
 		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec, updateStatus)
 		if errs != nil {
-			l.Errorf("msg: request validation failed. Error: %v, updateSpec: %v updateStatus: %v", errs, updateSpec, updateStatus)
+			l.Errorf("msg: request validation failed. Error: %v, updateSpec: %v updateStatus: %v Obj: %+v", errs, updateSpec, updateStatus, i)
 			str := []string{}
 			for _, err = range errs {
 				str = append(str, err.Error())

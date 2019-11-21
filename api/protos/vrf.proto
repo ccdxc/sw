@@ -10,12 +10,35 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+import "route.proto";
+import "ipam.proto";
+
 message VirtualRouterSpec {
-    // Empty
+    enum VPCTypes {
+        Unknown     = 0;
+        Tenant      = 1;
+        Infra       = 2;
+    }
+    string Type                                 = 1 [(gogoproto.jsontag) = "type,", (venice.check) = "StrEnum(VirtualRouterSpec.VPCTypes)"];
+
+    // Default Router MAC Address to use for this Virtual Router.
+    string RouterMACAddress                     = 2 [(gogoproto.jsontag) = "router-mac-address,omitempty"];
+
+    // VxlAN VNI for the Virtual Router.
+    uint32 VxLanVNI                             = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty"];
+
+    // RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.
+    RDSpec RouteImportExport           			= 4 [(gogoproto.jsontag) = "route-import-export,omitempty"];
+
+    // Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.
+    network.IPAMPolicy DefaultIPAMPolicy        = 5 [(gogoproto.jsontag) = "default-ipam-policy,omitempty"];
 }
 
 message VirtualRouterStatus {
-    // Empty
+    // Handle allocated in the system.
+    uint64 Handle               = 1 [(gogoproto.jsontag) = "id,omitempty"];
+    string RouteTable           = 2 [(gogoproto.jsontag) = "route-table,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/RouteTable"}];
+    RouteDistinguisher RD       = 3 [(gogoproto.jsontag) = "rd,omitempty"];
 }
 
 // VirtualRouter - represents a forwarding instance. Could be multiple per tenant.

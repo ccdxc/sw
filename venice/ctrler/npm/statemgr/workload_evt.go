@@ -237,6 +237,7 @@ func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
 			Tenant:    ws.Workload.Tenant,
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  "",
 			IPv4Gateway: "",
 			VlanID:      extVlan,

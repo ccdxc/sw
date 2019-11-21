@@ -60,6 +60,7 @@ func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw str
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
 		},

@@ -86,6 +86,34 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoAddNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddNetworkInterface")(lAutoAddNetworkInterfaceEndpoint)
 	}
+	var lAutoAddRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoAddRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoAddRouteTable",
+			network.EncodeGrpcReqRouteTable,
+			network.DecodeGrpcRespRouteTable,
+			&network.RouteTable{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddRouteTable")(lAutoAddRouteTableEndpoint)
+	}
+	var lAutoAddRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoAddRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoAddRoutingConfig",
+			network.EncodeGrpcReqRoutingConfig,
+			network.DecodeGrpcRespRoutingConfig,
+			&network.RoutingConfig{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddRoutingConfig")(lAutoAddRoutingConfigEndpoint)
+	}
 	var lAutoAddServiceEndpoint endpoint.Endpoint
 	{
 		lAutoAddServiceEndpoint = grpctransport.NewClient(
@@ -169,6 +197,34 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteNetworkInterface")(lAutoDeleteNetworkInterfaceEndpoint)
+	}
+	var lAutoDeleteRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoDeleteRouteTable",
+			network.EncodeGrpcReqRouteTable,
+			network.DecodeGrpcRespRouteTable,
+			&network.RouteTable{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteRouteTable")(lAutoDeleteRouteTableEndpoint)
+	}
+	var lAutoDeleteRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoDeleteRoutingConfig",
+			network.EncodeGrpcReqRoutingConfig,
+			network.DecodeGrpcRespRoutingConfig,
+			&network.RoutingConfig{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteRoutingConfig")(lAutoDeleteRoutingConfigEndpoint)
 	}
 	var lAutoDeleteServiceEndpoint endpoint.Endpoint
 	{
@@ -254,6 +310,34 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoGetNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetNetworkInterface")(lAutoGetNetworkInterfaceEndpoint)
 	}
+	var lAutoGetRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoGetRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoGetRouteTable",
+			network.EncodeGrpcReqRouteTable,
+			network.DecodeGrpcRespRouteTable,
+			&network.RouteTable{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetRouteTable")(lAutoGetRouteTableEndpoint)
+	}
+	var lAutoGetRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoGetRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoGetRoutingConfig",
+			network.EncodeGrpcReqRoutingConfig,
+			network.DecodeGrpcRespRoutingConfig,
+			&network.RoutingConfig{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetRoutingConfig")(lAutoGetRoutingConfigEndpoint)
+	}
 	var lAutoGetServiceEndpoint endpoint.Endpoint
 	{
 		lAutoGetServiceEndpoint = grpctransport.NewClient(
@@ -337,6 +421,34 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoListNetworkInterface")(lAutoListNetworkInterfaceEndpoint)
+	}
+	var lAutoListRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoListRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoListRouteTable",
+			network.EncodeGrpcReqListWatchOptions,
+			network.DecodeGrpcRespRouteTableList,
+			&network.RouteTableList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoListRouteTable")(lAutoListRouteTableEndpoint)
+	}
+	var lAutoListRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoListRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoListRoutingConfig",
+			network.EncodeGrpcReqListWatchOptions,
+			network.DecodeGrpcRespRoutingConfigList,
+			&network.RoutingConfigList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoListRoutingConfig")(lAutoListRoutingConfigEndpoint)
 	}
 	var lAutoListServiceEndpoint endpoint.Endpoint
 	{
@@ -422,6 +534,34 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoUpdateNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateNetworkInterface")(lAutoUpdateNetworkInterfaceEndpoint)
 	}
+	var lAutoUpdateRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoUpdateRouteTable",
+			network.EncodeGrpcReqRouteTable,
+			network.DecodeGrpcRespRouteTable,
+			&network.RouteTable{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateRouteTable")(lAutoUpdateRouteTableEndpoint)
+	}
+	var lAutoUpdateRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoUpdateRoutingConfig",
+			network.EncodeGrpcReqRoutingConfig,
+			network.DecodeGrpcRespRoutingConfig,
+			&network.RoutingConfig{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateRoutingConfig")(lAutoUpdateRoutingConfigEndpoint)
+	}
 	var lAutoUpdateServiceEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateServiceEndpoint = grpctransport.NewClient(
@@ -457,30 +597,40 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		AutoAddLbPolicyEndpoint:            lAutoAddLbPolicyEndpoint,
 		AutoAddNetworkEndpoint:             lAutoAddNetworkEndpoint,
 		AutoAddNetworkInterfaceEndpoint:    lAutoAddNetworkInterfaceEndpoint,
+		AutoAddRouteTableEndpoint:          lAutoAddRouteTableEndpoint,
+		AutoAddRoutingConfigEndpoint:       lAutoAddRoutingConfigEndpoint,
 		AutoAddServiceEndpoint:             lAutoAddServiceEndpoint,
 		AutoAddVirtualRouterEndpoint:       lAutoAddVirtualRouterEndpoint,
 		AutoDeleteIPAMPolicyEndpoint:       lAutoDeleteIPAMPolicyEndpoint,
 		AutoDeleteLbPolicyEndpoint:         lAutoDeleteLbPolicyEndpoint,
 		AutoDeleteNetworkEndpoint:          lAutoDeleteNetworkEndpoint,
 		AutoDeleteNetworkInterfaceEndpoint: lAutoDeleteNetworkInterfaceEndpoint,
+		AutoDeleteRouteTableEndpoint:       lAutoDeleteRouteTableEndpoint,
+		AutoDeleteRoutingConfigEndpoint:    lAutoDeleteRoutingConfigEndpoint,
 		AutoDeleteServiceEndpoint:          lAutoDeleteServiceEndpoint,
 		AutoDeleteVirtualRouterEndpoint:    lAutoDeleteVirtualRouterEndpoint,
 		AutoGetIPAMPolicyEndpoint:          lAutoGetIPAMPolicyEndpoint,
 		AutoGetLbPolicyEndpoint:            lAutoGetLbPolicyEndpoint,
 		AutoGetNetworkEndpoint:             lAutoGetNetworkEndpoint,
 		AutoGetNetworkInterfaceEndpoint:    lAutoGetNetworkInterfaceEndpoint,
+		AutoGetRouteTableEndpoint:          lAutoGetRouteTableEndpoint,
+		AutoGetRoutingConfigEndpoint:       lAutoGetRoutingConfigEndpoint,
 		AutoGetServiceEndpoint:             lAutoGetServiceEndpoint,
 		AutoGetVirtualRouterEndpoint:       lAutoGetVirtualRouterEndpoint,
 		AutoListIPAMPolicyEndpoint:         lAutoListIPAMPolicyEndpoint,
 		AutoListLbPolicyEndpoint:           lAutoListLbPolicyEndpoint,
 		AutoListNetworkEndpoint:            lAutoListNetworkEndpoint,
 		AutoListNetworkInterfaceEndpoint:   lAutoListNetworkInterfaceEndpoint,
+		AutoListRouteTableEndpoint:         lAutoListRouteTableEndpoint,
+		AutoListRoutingConfigEndpoint:      lAutoListRoutingConfigEndpoint,
 		AutoListServiceEndpoint:            lAutoListServiceEndpoint,
 		AutoListVirtualRouterEndpoint:      lAutoListVirtualRouterEndpoint,
 		AutoUpdateIPAMPolicyEndpoint:       lAutoUpdateIPAMPolicyEndpoint,
 		AutoUpdateLbPolicyEndpoint:         lAutoUpdateLbPolicyEndpoint,
 		AutoUpdateNetworkEndpoint:          lAutoUpdateNetworkEndpoint,
 		AutoUpdateNetworkInterfaceEndpoint: lAutoUpdateNetworkInterfaceEndpoint,
+		AutoUpdateRouteTableEndpoint:       lAutoUpdateRouteTableEndpoint,
+		AutoUpdateRoutingConfigEndpoint:    lAutoUpdateRoutingConfigEndpoint,
 		AutoUpdateServiceEndpoint:          lAutoUpdateServiceEndpoint,
 		AutoUpdateVirtualRouterEndpoint:    lAutoUpdateVirtualRouterEndpoint,
 	}
@@ -669,13 +819,13 @@ func (a *restObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjNetworkV1Network) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return false
+		return true
 	case apiintf.UpdateOper:
-		return false
+		return true
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
-		return false
+		return true
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:
@@ -1245,17 +1395,17 @@ func (a *restObjNetworkV1VirtualRouter) Watch(ctx context.Context, options *api.
 func (a *restObjNetworkV1VirtualRouter) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return false
+		return true
 	case apiintf.UpdateOper:
-		return false
+		return true
 	case apiintf.GetOper:
-		return false
+		return true
 	case apiintf.DeleteOper:
-		return false
+		return true
 	case apiintf.ListOper:
-		return false
+		return true
 	case apiintf.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1434,9 +1584,9 @@ func (a *restObjNetworkV1NetworkInterface) Watch(ctx context.Context, options *a
 func (a *restObjNetworkV1NetworkInterface) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return false
+		return true
 	case apiintf.UpdateOper:
-		return false
+		return true
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
@@ -1642,6 +1792,387 @@ func (a *restObjNetworkV1IPAMPolicy) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjNetworkV1RoutingConfig struct {
+	logger log.Logger
+	client network.ServiceNetworkV1Client
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Create(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddRoutingConfig(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Update(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRoutingConfig(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) UpdateStatus(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateRoutingConfig(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RoutingConfig{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetRoutingConfig(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RoutingConfig{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteRoutingConfig(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListRoutingConfig(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchRoutingConfig(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.NetworkV1_AutoWatchRoutingConfigClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjNetworkV1RoutingConfig struct {
+	endpoints network.EndpointsNetworkV1RestClient
+	instance  string
+}
+
+func (a *restObjNetworkV1RoutingConfig) Create(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddRoutingConfig(ctx, in)
+}
+
+func (a *restObjNetworkV1RoutingConfig) Update(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateRoutingConfig(ctx, in)
+}
+
+func (a *restObjNetworkV1RoutingConfig) UpdateStatus(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjNetworkV1RoutingConfig) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RoutingConfig{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetRoutingConfig(ctx, &in)
+}
+
+func (a *restObjNetworkV1RoutingConfig) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RoutingConfig{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteRoutingConfig(ctx, &in)
+}
+
+func (a *restObjNetworkV1RoutingConfig) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RoutingConfig, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListRoutingConfig(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjNetworkV1RoutingConfig) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchRoutingConfig(ctx, options)
+}
+
+func (a *restObjNetworkV1RoutingConfig) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return true
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
+type grpcObjNetworkV1RouteTable struct {
+	logger log.Logger
+	client network.ServiceNetworkV1Client
+}
+
+func (a *grpcObjNetworkV1RouteTable) Create(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddRouteTable(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) Update(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRouteTable(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) UpdateStatus(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateRouteTable(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RouteTable{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetRouteTable(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RouteTable{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteRouteTable(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListRouteTable(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjNetworkV1RouteTable) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchRouteTable(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.NetworkV1_AutoWatchRouteTableClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjNetworkV1RouteTable) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjNetworkV1RouteTable struct {
+	endpoints network.EndpointsNetworkV1RestClient
+	instance  string
+}
+
+func (a *restObjNetworkV1RouteTable) Create(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddRouteTable(ctx, in)
+}
+
+func (a *restObjNetworkV1RouteTable) Update(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateRouteTable(ctx, in)
+}
+
+func (a *restObjNetworkV1RouteTable) UpdateStatus(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjNetworkV1RouteTable) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RouteTable{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetRouteTable(ctx, &in)
+}
+
+func (a *restObjNetworkV1RouteTable) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.RouteTable{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteRouteTable(ctx, &in)
+}
+
+func (a *restObjNetworkV1RouteTable) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RouteTable, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListRouteTable(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjNetworkV1RouteTable) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchRouteTable(ctx, options)
+}
+
+func (a *restObjNetworkV1RouteTable) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return true
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientNetworkV1 struct {
 	logger log.Logger
 	client network.ServiceNetworkV1Client
@@ -1652,6 +2183,8 @@ type crudClientNetworkV1 struct {
 	grpcVirtualRouter    network.NetworkV1VirtualRouterInterface
 	grpcNetworkInterface network.NetworkV1NetworkInterfaceInterface
 	grpcIPAMPolicy       network.NetworkV1IPAMPolicyInterface
+	grpcRoutingConfig    network.NetworkV1RoutingConfigInterface
+	grpcRouteTable       network.NetworkV1RouteTableInterface
 }
 
 // NewGrpcCrudClientNetworkV1 creates a GRPC client for the service
@@ -1667,6 +2200,8 @@ func NewGrpcCrudClientNetworkV1(conn *grpc.ClientConn, logger log.Logger) networ
 		grpcVirtualRouter:    &grpcObjNetworkV1VirtualRouter{client: client, logger: logger},
 		grpcNetworkInterface: &grpcObjNetworkV1NetworkInterface{client: client, logger: logger},
 		grpcIPAMPolicy:       &grpcObjNetworkV1IPAMPolicy{client: client, logger: logger},
+		grpcRoutingConfig:    &grpcObjNetworkV1RoutingConfig{client: client, logger: logger},
+		grpcRouteTable:       &grpcObjNetworkV1RouteTable{client: client, logger: logger},
 	}
 }
 
@@ -1692,6 +2227,14 @@ func (a *crudClientNetworkV1) NetworkInterface() network.NetworkV1NetworkInterfa
 
 func (a *crudClientNetworkV1) IPAMPolicy() network.NetworkV1IPAMPolicyInterface {
 	return a.grpcIPAMPolicy
+}
+
+func (a *crudClientNetworkV1) RoutingConfig() network.NetworkV1RoutingConfigInterface {
+	return a.grpcRoutingConfig
+}
+
+func (a *crudClientNetworkV1) RouteTable() network.NetworkV1RouteTableInterface {
+	return a.grpcRouteTable
 }
 
 func (a *crudClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -1743,6 +2286,8 @@ type crudRestClientNetworkV1 struct {
 	restVirtualRouter    network.NetworkV1VirtualRouterInterface
 	restNetworkInterface network.NetworkV1NetworkInterfaceInterface
 	restIPAMPolicy       network.NetworkV1IPAMPolicyInterface
+	restRoutingConfig    network.NetworkV1RoutingConfigInterface
+	restRouteTable       network.NetworkV1RouteTableInterface
 }
 
 // NewRestCrudClientNetworkV1 creates a REST client for the service.
@@ -1759,6 +2304,8 @@ func NewRestCrudClientNetworkV1(url string, httpClient *http.Client) network.Net
 		restVirtualRouter:    &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 		restNetworkInterface: &restObjNetworkV1NetworkInterface{endpoints: endpoints, instance: url},
 		restIPAMPolicy:       &restObjNetworkV1IPAMPolicy{endpoints: endpoints, instance: url},
+		restRoutingConfig:    &restObjNetworkV1RoutingConfig{endpoints: endpoints, instance: url},
+		restRouteTable:       &restObjNetworkV1RouteTable{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1776,6 +2323,8 @@ func NewStagedRestCrudClientNetworkV1(url string, id string, httpClient *http.Cl
 		restVirtualRouter:    &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 		restNetworkInterface: &restObjNetworkV1NetworkInterface{endpoints: endpoints, instance: url},
 		restIPAMPolicy:       &restObjNetworkV1IPAMPolicy{endpoints: endpoints, instance: url},
+		restRoutingConfig:    &restObjNetworkV1RoutingConfig{endpoints: endpoints, instance: url},
+		restRouteTable:       &restObjNetworkV1RouteTable{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1801,6 +2350,14 @@ func (a *crudRestClientNetworkV1) NetworkInterface() network.NetworkV1NetworkInt
 
 func (a *crudRestClientNetworkV1) IPAMPolicy() network.NetworkV1IPAMPolicyInterface {
 	return a.restIPAMPolicy
+}
+
+func (a *crudRestClientNetworkV1) RoutingConfig() network.NetworkV1RoutingConfigInterface {
+	return a.restRoutingConfig
+}
+
+func (a *crudRestClientNetworkV1) RouteTable() network.NetworkV1RouteTableInterface {
+	return a.restRouteTable
 }
 
 func (a *crudRestClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

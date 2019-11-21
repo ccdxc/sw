@@ -30,10 +30,11 @@ var _ listerwatcher.WatcherClient
 
 // NetworkInterfaceStatus_IFType_normal is a map of normalized values for the enum
 var NetworkInterfaceStatus_IFType_normal = map[string]string{
-	"host-pf":     "host-pf",
-	"none":        "none",
-	"uplink-eth":  "uplink-eth",
-	"uplink-mgmt": "uplink-mgmt",
+	"host-pf":      "host-pf",
+	"loopback-tep": "loopback-tep",
+	"none":         "none",
+	"uplink-eth":   "uplink-eth",
+	"uplink-mgmt":  "uplink-mgmt",
 }
 
 var NetworkInterfaceStatus_IFType_vname = map[int32]string{
@@ -41,13 +42,15 @@ var NetworkInterfaceStatus_IFType_vname = map[int32]string{
 	1: "host-pf",
 	3: "uplink-eth",
 	4: "uplink-mgmt",
+	5: "loopback-tep",
 }
 
 var NetworkInterfaceStatus_IFType_vvalue = map[string]int32{
-	"none":        0,
-	"host-pf":     1,
-	"uplink-eth":  3,
-	"uplink-mgmt": 4,
+	"none":         0,
+	"host-pf":      1,
+	"uplink-eth":   3,
+	"uplink-mgmt":  4,
+	"loopback-tep": 5,
 }
 
 func (x NetworkInterfaceStatus_IFType) String() string {
@@ -250,6 +253,58 @@ func (x PauseType) String() string {
 	return PauseType_vname[int32(x)]
 }
 
+// IFType_normal is a map of normalized values for the enum
+var IFType_normal = map[string]string{
+	"host-pf":      "host-pf",
+	"loopback-tep": "loopback-tep",
+	"none":         "none",
+	"uplink-eth":   "uplink-eth",
+	"uplink-mgmt":  "uplink-mgmt",
+}
+
+var IFType_vname = map[int32]string{
+	0: "none",
+	1: "host-pf",
+	3: "uplink-eth",
+	4: "uplink-mgmt",
+	5: "loopback-tep",
+}
+
+var IFType_vvalue = map[string]int32{
+	"none":         0,
+	"host-pf":      1,
+	"uplink-eth":   3,
+	"uplink-mgmt":  4,
+	"loopback-tep": 5,
+}
+
+func (x IFType) String() string {
+	return IFType_vname[int32(x)]
+}
+
+// IPAllocTypes_normal is a map of normalized values for the enum
+var IPAllocTypes_normal = map[string]string{
+	"dhcp":   "dhcp",
+	"none":   "none",
+	"static": "static",
+}
+
+var IPAllocTypes_vname = map[int32]string{
+	0: "none",
+	1: "static",
+	2: "dhcp",
+}
+
+var IPAllocTypes_vvalue = map[string]int32{
+	"none":   0,
+	"static": 1,
+	"dhcp":   2,
+}
+
+func (x IPAllocTypes) String() string {
+	return IPAllocTypes_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapNetworkinterface = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -339,6 +394,8 @@ func (m *NetworkInterfaceSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.AdminStatus = "up"
+		m.IPAllocType = "none"
+		m.Type = "none"
 	}
 	return ret
 }
@@ -459,6 +516,16 @@ func (m *TransceiverStatus) Defaults(ver string) bool {
 
 func (m *NetworkInterface) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -544,6 +611,28 @@ func (m *NetworkInterfaceHostStatus) Normalize() {
 
 func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "attach-tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
+			}
+		}
+
+		if m.AttachTenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.AttachTenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -581,9 +670,13 @@ func (m *NetworkInterfaceSpec) Normalize() {
 
 	m.AdminStatus = IFStatus_normal[strings.ToLower(m.AdminStatus)]
 
+	m.IPAllocType = IPAllocTypes_normal[strings.ToLower(m.IPAllocType)]
+
 	if m.Pause != nil {
 		m.Pause.Normalize()
 	}
+
+	m.Type = IFType_normal[strings.ToLower(m.Type)]
 
 }
 
@@ -744,6 +837,40 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdminStatus", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkInterfaceSpec)
+
+		if _, ok := IPAllocTypes_vvalue[m.IPAllocType]; !ok {
+			vals := []string{}
+			for k1, _ := range IPAllocTypes_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"IPAllocType", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkInterfaceSpec)
+		if err := validators.EmptyOr(validators.MacAddr, m.MACAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkInterfaceSpec)
+
+		if _, ok := IFType_vvalue[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range IFType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})

@@ -67,7 +67,7 @@ type Services interface {
 	DiagnosticsV1() diagnostics.DiagnosticsV1Interface
 	// Package is monitoring and len of messages is 10
 	MonitoringV1() monitoring.MonitoringV1Interface
-	// Package is network and len of messages is 6
+	// Package is network and len of messages is 8
 	NetworkV1() network.NetworkV1Interface
 	// Package is objstore and len of messages is 2
 	ObjstoreV1() objstore.ObjstoreV1Interface

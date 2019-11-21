@@ -9,11 +9,19 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface IClusterNodeSpec {
+    'routing-config'?: string;
 }
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
+    /** RoutingConfig the routing configuration */
+    'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterNodeSpec]: PropInfoItem } = {
+        'routing-config': {
+            description:  'RoutingConfig the routing configuration',
+            required: false,
+            type: 'string'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -47,6 +55,13 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['routing-config'] != null) {
+            this['routing-config'] = values['routing-config'];
+        } else if (fillDefaults && ClusterNodeSpec.hasDefaultValue('routing-config')) {
+            this['routing-config'] = ClusterNodeSpec.propInfo['routing-config'].default;
+        } else {
+            this['routing-config'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -54,6 +69,7 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'routing-config': CustomFormControl(new FormControl(this['routing-config']), ClusterNodeSpec.propInfo['routing-config']),
             });
         }
         return this._formGroup;
@@ -65,6 +81,7 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['routing-config'].setValue(this['routing-config']);
         }
     }
 }

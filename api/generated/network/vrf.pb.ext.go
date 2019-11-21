@@ -9,11 +9,14 @@ package network
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -24,6 +27,32 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// VirtualRouterSpec_VPCTypes_normal is a map of normalized values for the enum
+var VirtualRouterSpec_VPCTypes_normal = map[string]string{
+	"infra":   "infra",
+	"tenant":  "tenant",
+	"unknown": "unknown",
+}
+
+var VirtualRouterSpec_VPCTypes_vname = map[int32]string{
+	0: "unknown",
+	1: "tenant",
+	2: "infra",
+}
+
+var VirtualRouterSpec_VPCTypes_vvalue = map[string]int32{
+	"unknown": 0,
+	"tenant":  1,
+	"infra":   2,
+}
+
+func (x VirtualRouterSpec_VPCTypes) String() string {
+	return VirtualRouterSpec_VPCTypes_vname[int32(x)]
+}
+
+var _ validators.DummyVar
+var validatorMapVrf = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *VirtualRouter) MakeKey(prefix string) string {
@@ -59,6 +88,7 @@ func (m *VirtualRouter) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -80,7 +110,13 @@ func (m *VirtualRouterSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *VirtualRouterSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = "unknown"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -110,6 +146,26 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 
 	tenant = m.Tenant
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "status"
+
+		m.Status.References(tenant, tag, resp)
+
+	}
 	{
 		dlmtr := "."
 		if path == "" {
@@ -151,6 +207,41 @@ func (m *VirtualRouter) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -158,31 +249,135 @@ func (m *VirtualRouter) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
 }
 
 func (m *VirtualRouterSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "default-ipam-policy"
+
+		if m.DefaultIPAMPolicy != nil {
+			m.DefaultIPAMPolicy.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *VirtualRouterSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.DefaultIPAMPolicy != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "DefaultIPAMPolicy"
+			if errs := m.DefaultIPAMPolicy.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+
+	if m.RouteImportExport != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "RouteImportExport"
+			if errs := m.RouteImportExport.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	if vs, ok := validatorMapVrf["VirtualRouterSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapVrf["VirtualRouterSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *VirtualRouterSpec) Normalize() {
 
+	if m.DefaultIPAMPolicy != nil {
+		m.DefaultIPAMPolicy.Normalize()
+	}
+
+	if m.RouteImportExport != nil {
+		m.RouteImportExport.Normalize()
+	}
+
+	m.Type = VirtualRouterSpec_VPCTypes_normal[strings.ToLower(m.Type)]
+
 }
 
 func (m *VirtualRouterStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "route-table"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "RouteTable",
+			}
+		}
+
+		if m.RouteTable != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"route-tables/"+tenant+"/"+m.RouteTable)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *VirtualRouterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.RD != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "RD"
+			if errs := m.RD.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *VirtualRouterStatus) Normalize() {
+
+	if m.RD != nil {
+		m.RD.Normalize()
+	}
 
 }
 
@@ -193,5 +388,21 @@ func init() {
 	scheme.AddKnownTypes(
 		&VirtualRouter{},
 	)
+
+	validatorMapVrf = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapVrf["VirtualRouterSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapVrf["VirtualRouterSpec"]["all"] = append(validatorMapVrf["VirtualRouterSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*VirtualRouterSpec)
+
+		if _, ok := VirtualRouterSpec_VPCTypes_vvalue[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range VirtualRouterSpec_VPCTypes_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
 
 }

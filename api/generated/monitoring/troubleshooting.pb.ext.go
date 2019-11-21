@@ -305,20 +305,7 @@ func (m *TsPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TsPolicy) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.InRules {
-		if m.InRules[k] != nil {
-			i := m.InRules[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	for k := range m.OutRules {
-		if m.OutRules[k] != nil {
-			i := m.OutRules[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -339,16 +326,7 @@ func (m *TsReport) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TsReport) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Events {
-		i := m.Events[k]
-		ret = i.Defaults(ver) || ret
-	}
-	for k := range m.Policies {
-		i := m.Policies[k]
-		ret = i.Defaults(ver) || ret
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil

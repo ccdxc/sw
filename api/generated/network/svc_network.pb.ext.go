@@ -65,6 +65,26 @@ func (m *NetworkList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *RouteTableList) MakeKey(prefix string) string {
+	obj := RouteTable{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *RouteTableList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *RoutingConfigList) MakeKey(prefix string) string {
+	obj := RoutingConfig{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *RoutingConfigList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *ServiceList) MakeKey(prefix string) string {
 	obj := Service{}
 	return obj.MakeKey(prefix)
@@ -105,6 +125,18 @@ func (m *AutoMsgNetworkInterfaceWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgNetworkWatchHelper) MakeKey(prefix string) string {
 	obj := Network{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgRouteTableWatchHelper) MakeKey(prefix string) string {
+	obj := RouteTable{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgRoutingConfigWatchHelper) MakeKey(prefix string) string {
+	obj := RoutingConfig{}
 	return obj.MakeKey(prefix)
 }
 
@@ -289,6 +321,90 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRouteTableWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRouteTableWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRouteTableWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgRouteTableWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgRouteTableWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRouteTableWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRouteTableWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRouteTableWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRouteTableWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgRouteTableWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgRouteTableWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRouteTableWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRoutingConfigWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRoutingConfigWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRoutingConfigWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgRoutingConfigWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoutingConfigWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRoutingConfigWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRoutingConfigWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRoutingConfigWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgRoutingConfigWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoutingConfigWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgServiceWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgServiceWatchHelper
 	var ok bool
@@ -453,6 +569,48 @@ func (m *NetworkList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *RouteTableList) Clone(into interface{}) (interface{}, error) {
+	var out *RouteTableList
+	var ok bool
+	if into == nil {
+		out = &RouteTableList{}
+	} else {
+		out, ok = into.(*RouteTableList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*RouteTableList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RouteTableList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *RoutingConfigList) Clone(into interface{}) (interface{}, error) {
+	var out *RoutingConfigList
+	var ok bool
+	if into == nil {
+		out = &RoutingConfigList{}
+	} else {
+		out, ok = into.(*RoutingConfigList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*RoutingConfigList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RoutingConfigList) Defaults(ver string) bool {
 	return false
 }
 
@@ -647,6 +805,19 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Normalize() {
 
 func (m *AutoMsgNetworkInterfaceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgNetworkInterfaceWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -677,6 +848,18 @@ func (m *AutoMsgNetworkInterfaceWatchHelper) Normalize() {
 
 func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -707,6 +890,19 @@ func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Normalize() {
 
 func (m *AutoMsgNetworkWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgNetworkWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -737,6 +933,18 @@ func (m *AutoMsgNetworkWatchHelper) Normalize() {
 
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -758,6 +966,151 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver, path string, ignore
 }
 
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgRouteTableWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *AutoMsgRouteTableWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRouteTableWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgRouteTableWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
+func (m *AutoMsgRouteTableWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRouteTableWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -827,6 +1180,19 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Normalize() {
 
 func (m *AutoMsgVirtualRouterWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgVirtualRouterWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -857,6 +1223,18 @@ func (m *AutoMsgVirtualRouterWatchHelper) Normalize() {
 
 func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -960,6 +1338,19 @@ func (m *LbPolicyList) Normalize() {
 
 func (m *NetworkInterfaceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *NetworkInterfaceList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -990,6 +1381,19 @@ func (m *NetworkInterfaceList) Normalize() {
 
 func (m *NetworkList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *NetworkList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -1008,6 +1412,79 @@ func (m *NetworkList) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 }
 
 func (m *NetworkList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *RouteTableList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *RouteTableList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *RouteTableList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *RoutingConfigList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *RoutingConfigList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *RoutingConfigList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {
@@ -1050,6 +1527,19 @@ func (m *ServiceList) Normalize() {
 
 func (m *VirtualRouterList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *VirtualRouterList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

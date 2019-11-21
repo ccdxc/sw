@@ -159,7 +159,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 								Namespace: globals.DefaultNamespace,
 							},
 							Spec: network.NetworkSpec{
-								Type:        "vlan",
+								Type:        network.NetworkType_Bridged.String(),
 								IPv4Subnet:  "255.255.255.0",
 								IPv4Gateway: "10.1.1.1",
 							},

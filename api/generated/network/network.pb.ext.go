@@ -9,11 +9,14 @@ package network
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -24,6 +27,29 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// NetworkType_normal is a map of normalized values for the enum
+var NetworkType_normal = map[string]string{
+	"bridged": "bridged",
+	"routed":  "routed",
+}
+
+var NetworkType_vname = map[int32]string{
+	0: "bridged",
+	1: "routed",
+}
+
+var NetworkType_vvalue = map[string]int32{
+	"bridged": 0,
+	"routed":  1,
+}
+
+func (x NetworkType) String() string {
+	return NetworkType_vname[int32(x)]
+}
+
+var _ validators.DummyVar
+var validatorMapNetwork = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Network) MakeKey(prefix string) string {
@@ -59,6 +85,7 @@ func (m *Network) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -80,7 +107,13 @@ func (m *NetworkSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = "bridged"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -110,6 +143,16 @@ func (m *Network) References(tenant string, path string, resp map[string]apiintf
 
 	tenant = m.Tenant
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
 	{
 		dlmtr := "."
 		if path == "" {
@@ -151,6 +194,29 @@ func (m *Network) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool)
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -158,18 +224,96 @@ func (m *Network) Normalize() {
 
 	m.ObjectMeta.Normalize()
 
+	m.Spec.Normalize()
+
 }
 
 func (m *NetworkSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "ipam-policy"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "IPAMPolicy",
+			}
+		}
+
+		if m.IPAMPolicy != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"ipam-policies/"+tenant+"/"+m.IPAMPolicy)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "virtual-router"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "VirtualRouter",
+			}
+		}
+
+		if m.VirtualRouter != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"virtualrouters/"+tenant+"/"+m.VirtualRouter)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.RouteImportExport != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "RouteImportExport"
+			if errs := m.RouteImportExport.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	if vs, ok := validatorMapNetwork["NetworkSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetwork["NetworkSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *NetworkSpec) Normalize() {
+
+	if m.RouteImportExport != nil {
+		m.RouteImportExport.Normalize()
+	}
+
+	m.Type = NetworkType_normal[strings.ToLower(m.Type)]
 
 }
 
@@ -193,5 +337,21 @@ func init() {
 	scheme.AddKnownTypes(
 		&Network{},
 	)
+
+	validatorMapNetwork = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapNetwork["NetworkSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkSpec)
+
+		if _, ok := NetworkType_vvalue[m.Type]; !ok {
+			vals := []string{}
+			for k1, _ := range NetworkType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
 
 }

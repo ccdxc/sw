@@ -132,6 +132,7 @@ func (it *integTestSuite) CreateNetwork(tenant, namespace, net, subnet, gw strin
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
 		},

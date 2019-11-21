@@ -4496,3 +4496,1493 @@ func (api *ipampolicyAPI) StopWatch(handler IPAMPolicyHandler) error {
 func (ct *ctrlerCtx) IPAMPolicy() IPAMPolicyAPI {
 	return &ipampolicyAPI{ct: ct}
 }
+
+// RoutingConfig is a wrapper object that implements additional functionality
+type RoutingConfig struct {
+	sync.Mutex
+	network.RoutingConfig
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *RoutingConfig) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("RoutingConfig_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().RoutingConfig().UpdateStatus(context.Background(), &obj.RoutingConfig)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.NetworkV1().RoutingConfig().Create(context.Background(), &obj.RoutingConfig)
+	}
+
+	return nil
+}
+
+// RoutingConfigHandler is the event handler for RoutingConfig object
+type RoutingConfigHandler interface {
+	OnRoutingConfigCreate(obj *RoutingConfig) error
+	OnRoutingConfigUpdate(oldObj *RoutingConfig, newObj *network.RoutingConfig) error
+	OnRoutingConfigDelete(obj *RoutingConfig) error
+}
+
+// handleRoutingConfigEvent handles RoutingConfig events from watcher
+func (ct *ctrlerCtx) handleRoutingConfigEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoutingConfigEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.RoutingConfig:
+		eobj := evt.Object.(*network.RoutingConfig)
+		kind := "RoutingConfig"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &routingconfigCtx{event: evt.Type,
+			obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoutingConfig watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoutingConfigEventNoResolver handles RoutingConfig events from watcher
+func (ct *ctrlerCtx) handleRoutingConfigEventNoResolver(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *network.RoutingConfig:
+		eobj := evt.Object.(*network.RoutingConfig)
+		kind := "RoutingConfig"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		routingconfigHandler := handler.(RoutingConfigHandler)
+		// handle based on event type
+		ctrlCtx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
+			if err != nil {
+				ct.addObject(ctrlCtx)
+				ct.stats.Counter("RoutingConfig_Created_Events").Inc()
+
+				// call the event handler
+				ctrlCtx.Lock()
+				err = routingconfigHandler.OnRoutingConfigCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
+					return err
+				}
+			} else {
+				ctrlCtx := fobj.(*routingconfigCtx)
+				ct.stats.Counter("RoutingConfig_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.RoutingConfig{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
+
+				err = routingconfigHandler.OnRoutingConfigUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.RoutingConfig = *eobj
+				ctrlCtx.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					return err
+				}
+
+			}
+		case kvstore.Deleted:
+			ctrlCtx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*RoutingConfig)
+			ct.stats.Counter("RoutingConfig_Deleted_Events").Inc()
+			obj.Lock()
+			err = routingconfigHandler.OnRoutingConfigDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
+
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoutingConfig watch channel", tp)
+	}
+
+	return nil
+}
+
+type routingconfigCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *RoutingConfig //
+	//   newObj     *network.RoutingConfig //update
+	newObj *routingconfigCtx //update
+}
+
+func (ctx *routingconfigCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *routingconfigCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *routingconfigCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *routingconfigCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *routingconfigCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*routingconfigCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *routingconfigCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *routingconfigCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *routingconfigCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *routingconfigCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *routingconfigCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *routingconfigCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "RoutingConfig"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	routingconfigHandler := handler.(RoutingConfigHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = routingconfigHandler.OnRoutingConfigCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("RoutingConfig_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.RoutingConfig{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = routingconfigHandler.OnRoutingConfigUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = routingconfigHandler.OnRoutingConfigDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
+// handleRoutingConfigEventParallel handles RoutingConfig events from watcher
+func (ct *ctrlerCtx) handleRoutingConfigEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRoutingConfigEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.RoutingConfig:
+		eobj := evt.Object.(*network.RoutingConfig)
+		kind := "RoutingConfig"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoutingConfig watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRoutingConfigEventParallel handles RoutingConfig events from watcher
+func (ct *ctrlerCtx) handleRoutingConfigEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *network.RoutingConfig:
+		eobj := evt.Object.(*network.RoutingConfig)
+		kind := "RoutingConfig"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		routingconfigHandler := handler.(RoutingConfigHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*routingconfigCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
+				if err != nil {
+					ct.addObject(workCtx)
+					ct.stats.Counter("RoutingConfig_Created_Events").Inc()
+					eobj.Lock()
+					err = routingconfigHandler.OnRoutingConfigCreate(eobj)
+					eobj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
+					}
+				} else {
+					workCtx := fobj.(*routingconfigCtx)
+					obj := workCtx.obj
+					ct.stats.Counter("RoutingConfig_Updated_Events").Inc()
+					obj.Lock()
+					p := network.RoutingConfig{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = routingconfigHandler.OnRoutingConfigUpdate(obj, &p)
+					workCtx.obj = eobj
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}
+				return err
+			}
+			ctrlCtx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+			ct.runFunction("RoutingConfig", ctrlCtx, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*routingconfigCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*RoutingConfig)
+				ct.stats.Counter("RoutingConfig_Deleted_Events").Inc()
+				obj.Lock()
+				err = routingconfigHandler.OnRoutingConfigDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+				ct.delObject(kind, workCtx.GetKey())
+				return nil
+			}
+			ctrlCtx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
+			ct.runFunction("RoutingConfig", ctrlCtx, workFunc)
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoutingConfig watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffRoutingConfig does a diff of RoutingConfig objects between local cache and API server
+func (ct *ctrlerCtx) diffRoutingConfig(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.NetworkV1().RoutingConfig().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffRoutingConfig(): RoutingConfigList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*network.RoutingConfig)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	list, err := ct.RoutingConfig().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range list {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffRoutingConfig(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.RoutingConfig,
+			}
+			ct.handleRoutingConfigEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffRoutingConfig(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleRoutingConfigEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runRoutingConfigWatcher() {
+	kind := "RoutingConfig"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "RoutingConfigWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffRoutingConfig(apiclt)
+	}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("RoutingConfig_Watch").Inc()
+		defer ct.stats.Counter("RoutingConfig_Watch").Dec()
+
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("RoutingConfig_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
+
+				// RoutingConfig object watcher
+				wt, werr := apicl.NetworkV1().RoutingConfig().Watch(ctx, &opts)
+				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
+				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffRoutingConfig(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("RoutingConfig_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event in parallel
+						ct.handleRoutingConfigEventParallel(evt)
+					}
+				}
+				apicl.Close()
+			}
+
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
+
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+// WatchRoutingConfig starts watch on RoutingConfig object
+func (ct *ctrlerCtx) WatchRoutingConfig(handler RoutingConfigHandler) error {
+	kind := "RoutingConfig"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if ok {
+		return fmt.Errorf("RoutingConfig watcher already exists")
+	}
+
+	// save handler
+	ct.Lock()
+	ct.handlers[kind] = handler
+	ct.Unlock()
+
+	// run RoutingConfig watcher in a go routine
+	ct.runRoutingConfigWatcher()
+
+	return nil
+}
+
+// StopWatchRoutingConfig stops watch on RoutingConfig object
+func (ct *ctrlerCtx) StopWatchRoutingConfig(handler RoutingConfigHandler) error {
+	kind := "RoutingConfig"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("RoutingConfig watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
+// RoutingConfigAPI returns
+type RoutingConfigAPI interface {
+	Create(obj *network.RoutingConfig) error
+	CreateEvent(obj *network.RoutingConfig) error
+	Update(obj *network.RoutingConfig) error
+	Delete(obj *network.RoutingConfig) error
+	Find(meta *api.ObjectMeta) (*RoutingConfig, error)
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoutingConfig, error)
+	Watch(handler RoutingConfigHandler) error
+	StopWatch(handler RoutingConfigHandler) error
+}
+
+// dummy struct that implements RoutingConfigAPI
+type routingconfigAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates RoutingConfig object
+func (api *routingconfigAPI) Create(obj *network.RoutingConfig) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+		}
+		return err
+	}
+
+	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
+}
+
+// CreateEvent creates RoutingConfig object and synchronously triggers local event
+func (api *routingconfigAPI) CreateEvent(obj *network.RoutingConfig) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
+		return err
+	}
+
+	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
+}
+
+// Update triggers update on RoutingConfig object
+func (api *routingconfigAPI) Update(obj *network.RoutingConfig) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+		return err
+	}
+
+	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
+}
+
+// Delete deletes RoutingConfig object
+func (api *routingconfigAPI) Delete(obj *network.RoutingConfig) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RoutingConfig().Delete(context.Background(), &obj.ObjectMeta)
+		return err
+	}
+
+	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *routingconfigAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "routing-config", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "routing-config", "/", name)
+}
+
+// Find returns an object by meta
+func (api *routingconfigAPI) Find(meta *api.ObjectMeta) (*RoutingConfig, error) {
+	// find the object
+	obj, err := api.ct.FindObject("RoutingConfig", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *RoutingConfig:
+		hobj := obj.(*RoutingConfig)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all RoutingConfig objects
+func (api *routingconfigAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoutingConfig, error) {
+	var objlist []*RoutingConfig
+	objs, err := api.ct.List("RoutingConfig", ctx, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *RoutingConfig:
+			eobj := obj.(*RoutingConfig)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for RoutingConfig", tp)
+		}
+	}
+
+	return objlist, nil
+}
+
+// Watch sets up a event handlers for RoutingConfig object
+func (api *routingconfigAPI) Watch(handler RoutingConfigHandler) error {
+	api.ct.startWorkerPool("RoutingConfig")
+	return api.ct.WatchRoutingConfig(handler)
+}
+
+// StopWatch stop watch for Tenant RoutingConfig object
+func (api *routingconfigAPI) StopWatch(handler RoutingConfigHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["RoutingConfig"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRoutingConfig(handler)
+}
+
+// RoutingConfig returns RoutingConfigAPI
+func (ct *ctrlerCtx) RoutingConfig() RoutingConfigAPI {
+	return &routingconfigAPI{ct: ct}
+}
+
+// RouteTable is a wrapper object that implements additional functionality
+type RouteTable struct {
+	sync.Mutex
+	network.RouteTable
+	HandlerCtx interface{} // additional state handlers can store
+	ctrler     *ctrlerCtx  // reference back to the controller instance
+}
+
+func (obj *RouteTable) Write() error {
+	// if there is no API server to connect to, we are done
+	if (obj.ctrler == nil) || (obj.ctrler.resolver == nil) || obj.ctrler.apisrvURL == "" {
+		return nil
+	}
+
+	apicl, err := obj.ctrler.apiClient()
+	if err != nil {
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
+		return err
+	}
+
+	obj.ctrler.stats.Counter("RouteTable_Writes").Inc()
+
+	// write to api server
+	if obj.ObjectMeta.ResourceVersion != "" {
+		// update it
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().RouteTable().UpdateStatus(context.Background(), &obj.RouteTable)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	} else {
+		//  create
+		_, err = apicl.NetworkV1().RouteTable().Create(context.Background(), &obj.RouteTable)
+	}
+
+	return nil
+}
+
+// RouteTableHandler is the event handler for RouteTable object
+type RouteTableHandler interface {
+	OnRouteTableCreate(obj *RouteTable) error
+	OnRouteTableUpdate(oldObj *RouteTable, newObj *network.RouteTable) error
+	OnRouteTableDelete(obj *RouteTable) error
+}
+
+// handleRouteTableEvent handles RouteTable events from watcher
+func (ct *ctrlerCtx) handleRouteTableEvent(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRouteTableEventNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.RouteTable:
+		eobj := evt.Object.(*network.RouteTable)
+		kind := "RouteTable"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &routetableCtx{event: evt.Type,
+			obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RouteTable watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRouteTableEventNoResolver handles RouteTable events from watcher
+func (ct *ctrlerCtx) handleRouteTableEventNoResolver(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *network.RouteTable:
+		eobj := evt.Object.(*network.RouteTable)
+		kind := "RouteTable"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		routetableHandler := handler.(RouteTableHandler)
+		// handle based on event type
+		ctrlCtx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			fobj, err := ct.getObject(kind, ctrlCtx.GetKey())
+			if err != nil {
+				ct.addObject(ctrlCtx)
+				ct.stats.Counter("RouteTable_Created_Events").Inc()
+
+				// call the event handler
+				ctrlCtx.Lock()
+				err = routetableHandler.OnRouteTableCreate(ctrlCtx.obj)
+				ctrlCtx.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.delObject(kind, ctrlCtx.GetKey())
+					return err
+				}
+			} else {
+				ctrlCtx := fobj.(*routetableCtx)
+				ct.stats.Counter("RouteTable_Updated_Events").Inc()
+				ctrlCtx.Lock()
+				p := network.RouteTable{Spec: eobj.Spec,
+					ObjectMeta: eobj.ObjectMeta,
+					TypeMeta:   eobj.TypeMeta,
+					Status:     eobj.Status}
+
+				err = routetableHandler.OnRouteTableUpdate(ctrlCtx.obj, &p)
+				ctrlCtx.obj.RouteTable = *eobj
+				ctrlCtx.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					return err
+				}
+
+			}
+		case kvstore.Deleted:
+			ctrlCtx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+			fobj, err := ct.findObject(kind, ctrlCtx.GetKey())
+			if err != nil {
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				return err
+			}
+
+			obj := fobj.(*RouteTable)
+			ct.stats.Counter("RouteTable_Deleted_Events").Inc()
+			obj.Lock()
+			err = routetableHandler.OnRouteTableDelete(obj)
+			obj.Unlock()
+			if err != nil {
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+			}
+			ct.delObject(kind, ctrlCtx.GetKey())
+			return nil
+
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RouteTable watch channel", tp)
+	}
+
+	return nil
+}
+
+type routetableCtx struct {
+	ctkitBaseCtx
+	event kvstore.WatchEventType
+	obj   *RouteTable //
+	//   newObj     *network.RouteTable //update
+	newObj *routetableCtx //update
+}
+
+func (ctx *routetableCtx) References() map[string]apiintf.ReferenceObj {
+	resp := make(map[string]apiintf.ReferenceObj)
+	ctx.obj.References(ctx.obj.GetObjectMeta().Name, ctx.obj.GetObjectMeta().Namespace, resp)
+	return resp
+}
+
+func (ctx *routetableCtx) GetKey() string {
+	return ctx.obj.MakeKey("network")
+}
+
+func (ctx *routetableCtx) GetKind() string {
+	return ctx.obj.GetKind()
+}
+
+func (ctx *routetableCtx) SetEvent(event kvstore.WatchEventType) {
+	ctx.event = event
+}
+
+func (ctx *routetableCtx) SetNewObj(newObj apiintf.CtkitObject) {
+	if newObj == nil {
+		ctx.newObj = nil
+	} else {
+		ctx.newObj = newObj.(*routetableCtx)
+		ctx.newObj.obj.HandlerCtx = ctx.obj.HandlerCtx
+	}
+}
+
+func (ctx *routetableCtx) GetNewObj() apiintf.CtkitObject {
+	return ctx.newObj
+}
+
+func (ctx *routetableCtx) Lock() {
+	ctx.obj.Lock()
+}
+
+func (ctx *routetableCtx) Unlock() {
+	ctx.obj.Unlock()
+}
+
+func (ctx *routetableCtx) GetObjectMeta() *api.ObjectMeta {
+	return ctx.obj.GetObjectMeta()
+}
+
+func (ctx *routetableCtx) RuntimeObject() runtime.Object {
+	var v interface{}
+	v = ctx.obj
+	return v.(runtime.Object)
+}
+
+func (ctx *routetableCtx) WorkFunc(context context.Context) error {
+	var err error
+	evt := ctx.event
+	ct := ctx.obj.ctrler
+	kind := "RouteTable"
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	routetableHandler := handler.(RouteTableHandler)
+	switch evt {
+	case kvstore.Created:
+		ctx.obj.Lock()
+		err = routetableHandler.OnRouteTableCreate(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Updated:
+		ct.stats.Counter("RouteTable_Updated_Events").Inc()
+		ctx.obj.Lock()
+		p := network.RouteTable{Spec: ctx.newObj.obj.Spec,
+			ObjectMeta: ctx.newObj.obj.ObjectMeta,
+			TypeMeta:   ctx.newObj.obj.TypeMeta,
+			Status:     ctx.newObj.obj.Status}
+		err = routetableHandler.OnRouteTableUpdate(ctx.obj, &p)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ctx.SetEvent(kvstore.Deleted)
+		}
+	case kvstore.Deleted:
+		ctx.obj.Lock()
+		err = routetableHandler.OnRouteTableDelete(ctx.obj)
+		ctx.obj.Unlock()
+		if err != nil {
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+		}
+	}
+	ct.resolveObject(ctx.event, ctx)
+	return nil
+}
+
+// handleRouteTableEventParallel handles RouteTable events from watcher
+func (ct *ctrlerCtx) handleRouteTableEventParallel(evt *kvstore.WatchEvent) error {
+
+	if ct.objResolver == nil {
+		return ct.handleRouteTableEventParallelWithNoResolver(evt)
+	}
+
+	switch tp := evt.Object.(type) {
+	case *network.RouteTable:
+		eobj := evt.Object.(*network.RouteTable)
+		kind := "RouteTable"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ctx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+
+		var err error
+		switch evt.Type {
+		case kvstore.Created:
+			err = ct.processAdd(ctx)
+		case kvstore.Updated:
+			err = ct.processUpdate(ctx)
+		case kvstore.Deleted:
+			err = ct.processDelete(ctx)
+		}
+		return err
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RouteTable watch channel", tp)
+	}
+
+	return nil
+}
+
+// handleRouteTableEventParallel handles RouteTable events from watcher
+func (ct *ctrlerCtx) handleRouteTableEventParallelWithNoResolver(evt *kvstore.WatchEvent) error {
+	switch tp := evt.Object.(type) {
+	case *network.RouteTable:
+		eobj := evt.Object.(*network.RouteTable)
+		kind := "RouteTable"
+
+		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+
+		ct.Lock()
+		handler, ok := ct.handlers[kind]
+		ct.Unlock()
+		if !ok {
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
+		}
+		routetableHandler := handler.(RouteTableHandler)
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Created:
+			fallthrough
+		case kvstore.Updated:
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*routetableCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.getObject(kind, workCtx.GetKey())
+				if err != nil {
+					ct.addObject(workCtx)
+					ct.stats.Counter("RouteTable_Created_Events").Inc()
+					eobj.Lock()
+					err = routetableHandler.OnRouteTableCreate(eobj)
+					eobj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.delObject(kind, workCtx.GetKey())
+					}
+				} else {
+					workCtx := fobj.(*routetableCtx)
+					obj := workCtx.obj
+					ct.stats.Counter("RouteTable_Updated_Events").Inc()
+					obj.Lock()
+					p := network.RouteTable{Spec: eobj.Spec,
+						ObjectMeta: eobj.ObjectMeta,
+						TypeMeta:   eobj.TypeMeta,
+						Status:     eobj.Status}
+
+					err = routetableHandler.OnRouteTableUpdate(obj, &p)
+					workCtx.obj = eobj
+					obj.Unlock()
+					if err != nil {
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					}
+				}
+				return err
+			}
+			ctrlCtx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+			ct.runFunction("RouteTable", ctrlCtx, workFunc)
+		case kvstore.Deleted:
+			workFunc := func(ctx context.Context, ctrlCtx shardworkers.WorkObj) error {
+				var err error
+				workCtx := ctrlCtx.(*routetableCtx)
+				eobj := workCtx.obj
+				fobj, err := ct.findObject(kind, workCtx.GetKey())
+				if err != nil {
+					ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+					return err
+				}
+				obj := fobj.(*RouteTable)
+				ct.stats.Counter("RouteTable_Deleted_Events").Inc()
+				obj.Lock()
+				err = routetableHandler.OnRouteTableDelete(obj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				}
+				ct.delObject(kind, workCtx.GetKey())
+				return nil
+			}
+			ctrlCtx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
+			ct.runFunction("RouteTable", ctrlCtx, workFunc)
+		}
+	default:
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RouteTable watch channel", tp)
+	}
+
+	return nil
+}
+
+// diffRouteTable does a diff of RouteTable objects between local cache and API server
+func (ct *ctrlerCtx) diffRouteTable(apicl apiclient.Services) {
+	opts := api.ListWatchOptions{}
+
+	// get a list of all objects from API server
+	objlist, err := apicl.NetworkV1().RouteTable().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
+		return
+	}
+
+	ct.logger.Infof("diffRouteTable(): RouteTableList returned %d objects", len(objlist))
+
+	// build an object map
+	objmap := make(map[string]*network.RouteTable)
+	for _, obj := range objlist {
+		objmap[obj.GetKey()] = obj
+	}
+
+	list, err := ct.RouteTable().List(context.Background(), &opts)
+	if err != nil {
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+		return
+	}
+
+	// if an object is in our local cache and not in API server, trigger delete for it
+	for _, obj := range list {
+		_, ok := objmap[obj.GetKey()]
+		if !ok {
+			ct.logger.Infof("diffRouteTable(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
+			evt := kvstore.WatchEvent{
+				Type:   kvstore.Deleted,
+				Key:    obj.GetKey(),
+				Object: &obj.RouteTable,
+			}
+			ct.handleRouteTableEvent(&evt)
+		}
+	}
+
+	// trigger create event for all others
+	for _, obj := range objlist {
+		ct.logger.Infof("diffRouteTable(): Adding object %#v", obj.GetKey())
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.GetKey(),
+			Object: obj,
+		}
+		ct.handleRouteTableEvent(&evt)
+	}
+}
+
+func (ct *ctrlerCtx) runRouteTableWatcher() {
+	kind := "RouteTable"
+
+	// if there is no API server to connect to, we are done
+	if (ct.resolver == nil) || ct.apisrvURL == "" {
+		return
+	}
+
+	// create context
+	ctx, cancel := context.WithCancel(context.Background())
+	ct.Lock()
+	ct.watchCancel[kind] = cancel
+	ct.Unlock()
+	opts := api.ListWatchOptions{}
+	logger := ct.logger.WithContext("submodule", "RouteTableWatcher")
+
+	// create a grpc client
+	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+	if err == nil {
+		ct.diffRouteTable(apiclt)
+	}
+
+	// setup wait group
+	ct.waitGrp.Add(1)
+
+	// start a goroutine
+	go func() {
+		defer ct.waitGrp.Done()
+		ct.stats.Counter("RouteTable_Watch").Inc()
+		defer ct.stats.Counter("RouteTable_Watch").Dec()
+
+		// loop forever
+		for {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+			if err != nil {
+				logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+				ct.stats.Counter("RouteTable_ApiClientErr").Inc()
+			} else {
+				logger.Infof("API client connected {%+v}", apicl)
+
+				// RouteTable object watcher
+				wt, werr := apicl.NetworkV1().RouteTable().Watch(ctx, &opts)
+				if werr != nil {
+					select {
+					case <-ctx.Done():
+						logger.Infof("watch %s cancelled", kind)
+						return
+					default:
+					}
+					logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+					// wait for a second and retry connecting to api server
+					apicl.Close()
+					time.Sleep(time.Second)
+					continue
+				}
+				ct.Lock()
+				ct.watchers[kind] = wt
+				ct.Unlock()
+
+				// perform a diff with API server and local cache
+				time.Sleep(time.Millisecond * 100)
+				ct.diffRouteTable(apicl)
+
+				// handle api server watch events
+			innerLoop:
+				for {
+					// wait for events
+					select {
+					case evt, ok := <-wt.EventChan():
+						if !ok {
+							logger.Error("Error receiving from apisrv watcher")
+							ct.stats.Counter("RouteTable_WatchErrors").Inc()
+							break innerLoop
+						}
+
+						// handle event in parallel
+						ct.handleRouteTableEventParallel(evt)
+					}
+				}
+				apicl.Close()
+			}
+
+			// if stop flag is set, we are done
+			if ct.stoped {
+				logger.Infof("Exiting API server watcher")
+				return
+			}
+
+			// wait for a second and retry connecting to api server
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+// WatchRouteTable starts watch on RouteTable object
+func (ct *ctrlerCtx) WatchRouteTable(handler RouteTableHandler) error {
+	kind := "RouteTable"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if ok {
+		return fmt.Errorf("RouteTable watcher already exists")
+	}
+
+	// save handler
+	ct.Lock()
+	ct.handlers[kind] = handler
+	ct.Unlock()
+
+	// run RouteTable watcher in a go routine
+	ct.runRouteTableWatcher()
+
+	return nil
+}
+
+// StopWatchRouteTable stops watch on RouteTable object
+func (ct *ctrlerCtx) StopWatchRouteTable(handler RouteTableHandler) error {
+	kind := "RouteTable"
+
+	// see if we already have a watcher
+	ct.Lock()
+	_, ok := ct.watchers[kind]
+	ct.Unlock()
+	if !ok {
+		return fmt.Errorf("RouteTable watcher does not exist")
+	}
+
+	ct.Lock()
+	cancel, _ := ct.watchCancel[kind]
+	cancel()
+	delete(ct.watchers, kind)
+	delete(ct.watchCancel, kind)
+	ct.Unlock()
+
+	time.Sleep(100 * time.Millisecond)
+
+	return nil
+}
+
+// RouteTableAPI returns
+type RouteTableAPI interface {
+	Create(obj *network.RouteTable) error
+	CreateEvent(obj *network.RouteTable) error
+	Update(obj *network.RouteTable) error
+	Delete(obj *network.RouteTable) error
+	Find(meta *api.ObjectMeta) (*RouteTable, error)
+	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RouteTable, error)
+	Watch(handler RouteTableHandler) error
+	StopWatch(handler RouteTableHandler) error
+}
+
+// dummy struct that implements RouteTableAPI
+type routetableAPI struct {
+	ct *ctrlerCtx
+}
+
+// Create creates RouteTable object
+func (api *routetableAPI) Create(obj *network.RouteTable) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+		}
+		return err
+	}
+
+	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
+}
+
+// CreateEvent creates RouteTable object and synchronously triggers local event
+func (api *routetableAPI) CreateEvent(obj *network.RouteTable) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+		}
+		if err != nil {
+			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
+			return err
+		}
+		return err
+	}
+
+	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
+	return nil
+}
+
+// Update triggers update on RouteTable object
+func (api *routetableAPI) Update(obj *network.RouteTable) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+		return err
+	}
+
+	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
+	return nil
+}
+
+// Delete deletes RouteTable object
+func (api *routetableAPI) Delete(obj *network.RouteTable) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.NetworkV1().RouteTable().Delete(context.Background(), &obj.ObjectMeta)
+		return err
+	}
+
+	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+	return nil
+}
+
+// MakeKey generates a KV store key for the object
+func (api *routetableAPI) getFullKey(tenant, name string) string {
+	if tenant != "" {
+		return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "route-tables", "/", tenant, "/", name)
+	}
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", "network", "/", "route-tables", "/", name)
+}
+
+// Find returns an object by meta
+func (api *routetableAPI) Find(meta *api.ObjectMeta) (*RouteTable, error) {
+	// find the object
+	obj, err := api.ct.FindObject("RouteTable", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *RouteTable:
+		hobj := obj.(*RouteTable)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
+// List returns a list of all RouteTable objects
+func (api *routetableAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*RouteTable, error) {
+	var objlist []*RouteTable
+	objs, err := api.ct.List("RouteTable", ctx, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range objs {
+		switch tp := obj.(type) {
+		case *RouteTable:
+			eobj := obj.(*RouteTable)
+			objlist = append(objlist, eobj)
+		default:
+			log.Fatalf("Got invalid object type %v while looking for RouteTable", tp)
+		}
+	}
+
+	return objlist, nil
+}
+
+// Watch sets up a event handlers for RouteTable object
+func (api *routetableAPI) Watch(handler RouteTableHandler) error {
+	api.ct.startWorkerPool("RouteTable")
+	return api.ct.WatchRouteTable(handler)
+}
+
+// StopWatch stop watch for Tenant RouteTable object
+func (api *routetableAPI) StopWatch(handler RouteTableHandler) error {
+	api.ct.Lock()
+	api.ct.workPools["RouteTable"].Stop()
+	api.ct.Unlock()
+	return api.ct.StopWatchRouteTable(handler)
+}
+
+// RouteTable returns RouteTableAPI
+func (ct *ctrlerCtx) RouteTable() RouteTableAPI {
+	return &routetableAPI{ct: ct}
+}

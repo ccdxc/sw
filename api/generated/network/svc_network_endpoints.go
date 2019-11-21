@@ -47,30 +47,40 @@ type EndpointsNetworkV1Client struct {
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddRouteTableEndpoint          endpoint.Endpoint
+	AutoAddRoutingConfigEndpoint       endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
 	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteRouteTableEndpoint       endpoint.Endpoint
+	AutoDeleteRoutingConfigEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
 	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetRouteTableEndpoint          endpoint.Endpoint
+	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListRouteTableEndpoint         endpoint.Endpoint
+	AutoListRoutingConfigEndpoint      endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
 	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateRouteTableEndpoint       endpoint.Endpoint
+	AutoUpdateRoutingConfigEndpoint    endpoint.Endpoint
 	AutoUpdateServiceEndpoint          endpoint.Endpoint
 	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
 }
@@ -86,36 +96,48 @@ type EndpointsNetworkV1RestClient struct {
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddRouteTableEndpoint          endpoint.Endpoint
+	AutoAddRoutingConfigEndpoint       endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
 	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteRouteTableEndpoint       endpoint.Endpoint
+	AutoDeleteRoutingConfigEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
 	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetRouteTableEndpoint          endpoint.Endpoint
+	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListRouteTableEndpoint         endpoint.Endpoint
+	AutoListRoutingConfigEndpoint      endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
 	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateRouteTableEndpoint       endpoint.Endpoint
+	AutoUpdateRoutingConfigEndpoint    endpoint.Endpoint
 	AutoUpdateServiceEndpoint          endpoint.Endpoint
 	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
 	AutoWatchIPAMPolicyEndpoint        endpoint.Endpoint
 	AutoWatchLbPolicyEndpoint          endpoint.Endpoint
 	AutoWatchNetworkEndpoint           endpoint.Endpoint
 	AutoWatchNetworkInterfaceEndpoint  endpoint.Endpoint
+	AutoWatchRouteTableEndpoint        endpoint.Endpoint
+	AutoWatchRoutingConfigEndpoint     endpoint.Endpoint
 	AutoWatchServiceEndpoint           endpoint.Endpoint
 	AutoWatchSvcNetworkV1Endpoint      endpoint.Endpoint
 	AutoWatchVirtualRouterEndpoint     endpoint.Endpoint
@@ -132,30 +154,40 @@ type EndpointsNetworkV1Server struct {
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
 	AutoAddNetworkEndpoint             endpoint.Endpoint
 	AutoAddNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoAddRouteTableEndpoint          endpoint.Endpoint
+	AutoAddRoutingConfigEndpoint       endpoint.Endpoint
 	AutoAddServiceEndpoint             endpoint.Endpoint
 	AutoAddVirtualRouterEndpoint       endpoint.Endpoint
 	AutoDeleteIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteLbPolicyEndpoint         endpoint.Endpoint
 	AutoDeleteNetworkEndpoint          endpoint.Endpoint
 	AutoDeleteNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoDeleteRouteTableEndpoint       endpoint.Endpoint
+	AutoDeleteRoutingConfigEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint          endpoint.Endpoint
 	AutoDeleteVirtualRouterEndpoint    endpoint.Endpoint
 	AutoGetIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoGetLbPolicyEndpoint            endpoint.Endpoint
 	AutoGetNetworkEndpoint             endpoint.Endpoint
 	AutoGetNetworkInterfaceEndpoint    endpoint.Endpoint
+	AutoGetRouteTableEndpoint          endpoint.Endpoint
+	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
 	AutoListNetworkInterfaceEndpoint   endpoint.Endpoint
+	AutoListRouteTableEndpoint         endpoint.Endpoint
+	AutoListRoutingConfigEndpoint      endpoint.Endpoint
 	AutoListServiceEndpoint            endpoint.Endpoint
 	AutoListVirtualRouterEndpoint      endpoint.Endpoint
 	AutoUpdateIPAMPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateLbPolicyEndpoint         endpoint.Endpoint
 	AutoUpdateNetworkEndpoint          endpoint.Endpoint
 	AutoUpdateNetworkInterfaceEndpoint endpoint.Endpoint
+	AutoUpdateRouteTableEndpoint       endpoint.Endpoint
+	AutoUpdateRoutingConfigEndpoint    endpoint.Endpoint
 	AutoUpdateServiceEndpoint          endpoint.Endpoint
 	AutoUpdateVirtualRouterEndpoint    endpoint.Endpoint
 
@@ -165,6 +197,8 @@ type EndpointsNetworkV1Server struct {
 	watchHandlerVirtualRouter    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerNetworkInterface func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerIPAMPolicy       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRoutingConfig    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRouteTable       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddIPAMPolicy is endpoint for AutoAddIPAMPolicy
@@ -220,6 +254,34 @@ func (e EndpointsNetworkV1Client) AutoAddNetworkInterface(ctx context.Context, i
 
 type respNetworkV1AutoAddNetworkInterface struct {
 	V   NetworkInterface
+	Err error
+}
+
+// AutoAddRouteTable is endpoint for AutoAddRouteTable
+func (e EndpointsNetworkV1Client) AutoAddRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	resp, err := e.AutoAddRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTable{}, err
+	}
+	return resp.(*RouteTable), nil
+}
+
+type respNetworkV1AutoAddRouteTable struct {
+	V   RouteTable
+	Err error
+}
+
+// AutoAddRoutingConfig is endpoint for AutoAddRoutingConfig
+func (e EndpointsNetworkV1Client) AutoAddRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	resp, err := e.AutoAddRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfig{}, err
+	}
+	return resp.(*RoutingConfig), nil
+}
+
+type respNetworkV1AutoAddRoutingConfig struct {
+	V   RoutingConfig
 	Err error
 }
 
@@ -307,6 +369,34 @@ type respNetworkV1AutoDeleteNetworkInterface struct {
 	Err error
 }
 
+// AutoDeleteRouteTable is endpoint for AutoDeleteRouteTable
+func (e EndpointsNetworkV1Client) AutoDeleteRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	resp, err := e.AutoDeleteRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTable{}, err
+	}
+	return resp.(*RouteTable), nil
+}
+
+type respNetworkV1AutoDeleteRouteTable struct {
+	V   RouteTable
+	Err error
+}
+
+// AutoDeleteRoutingConfig is endpoint for AutoDeleteRoutingConfig
+func (e EndpointsNetworkV1Client) AutoDeleteRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	resp, err := e.AutoDeleteRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfig{}, err
+	}
+	return resp.(*RoutingConfig), nil
+}
+
+type respNetworkV1AutoDeleteRoutingConfig struct {
+	V   RoutingConfig
+	Err error
+}
+
 // AutoDeleteService is endpoint for AutoDeleteService
 func (e EndpointsNetworkV1Client) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
 	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
@@ -388,6 +478,34 @@ func (e EndpointsNetworkV1Client) AutoGetNetworkInterface(ctx context.Context, i
 
 type respNetworkV1AutoGetNetworkInterface struct {
 	V   NetworkInterface
+	Err error
+}
+
+// AutoGetRouteTable is endpoint for AutoGetRouteTable
+func (e EndpointsNetworkV1Client) AutoGetRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	resp, err := e.AutoGetRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTable{}, err
+	}
+	return resp.(*RouteTable), nil
+}
+
+type respNetworkV1AutoGetRouteTable struct {
+	V   RouteTable
+	Err error
+}
+
+// AutoGetRoutingConfig is endpoint for AutoGetRoutingConfig
+func (e EndpointsNetworkV1Client) AutoGetRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	resp, err := e.AutoGetRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfig{}, err
+	}
+	return resp.(*RoutingConfig), nil
+}
+
+type respNetworkV1AutoGetRoutingConfig struct {
+	V   RoutingConfig
 	Err error
 }
 
@@ -475,6 +593,34 @@ type respNetworkV1AutoListNetworkInterface struct {
 	Err error
 }
 
+// AutoListRouteTable is endpoint for AutoListRouteTable
+func (e EndpointsNetworkV1Client) AutoListRouteTable(ctx context.Context, in *api.ListWatchOptions) (*RouteTableList, error) {
+	resp, err := e.AutoListRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTableList{}, err
+	}
+	return resp.(*RouteTableList), nil
+}
+
+type respNetworkV1AutoListRouteTable struct {
+	V   RouteTableList
+	Err error
+}
+
+// AutoListRoutingConfig is endpoint for AutoListRoutingConfig
+func (e EndpointsNetworkV1Client) AutoListRoutingConfig(ctx context.Context, in *api.ListWatchOptions) (*RoutingConfigList, error) {
+	resp, err := e.AutoListRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfigList{}, err
+	}
+	return resp.(*RoutingConfigList), nil
+}
+
+type respNetworkV1AutoListRoutingConfig struct {
+	V   RoutingConfigList
+	Err error
+}
+
 // AutoListService is endpoint for AutoListService
 func (e EndpointsNetworkV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions) (*ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -559,6 +705,34 @@ type respNetworkV1AutoUpdateNetworkInterface struct {
 	Err error
 }
 
+// AutoUpdateRouteTable is endpoint for AutoUpdateRouteTable
+func (e EndpointsNetworkV1Client) AutoUpdateRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	resp, err := e.AutoUpdateRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTable{}, err
+	}
+	return resp.(*RouteTable), nil
+}
+
+type respNetworkV1AutoUpdateRouteTable struct {
+	V   RouteTable
+	Err error
+}
+
+// AutoUpdateRoutingConfig is endpoint for AutoUpdateRoutingConfig
+func (e EndpointsNetworkV1Client) AutoUpdateRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	resp, err := e.AutoUpdateRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfig{}, err
+	}
+	return resp.(*RoutingConfig), nil
+}
+
+type respNetworkV1AutoUpdateRoutingConfig struct {
+	V   RoutingConfig
+	Err error
+}
+
 // AutoUpdateService is endpoint for AutoUpdateService
 func (e EndpointsNetworkV1Client) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
 	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
@@ -619,6 +793,16 @@ func (e EndpointsNetworkV1Client) AutoWatchNetworkInterface(ctx context.Context,
 // AutoWatchIPAMPolicy performs Watch for IPAMPolicy
 func (e EndpointsNetworkV1Client) AutoWatchIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchIPAMPolicyClient, error) {
 	return e.Client.AutoWatchIPAMPolicy(ctx, in)
+}
+
+// AutoWatchRoutingConfig performs Watch for RoutingConfig
+func (e EndpointsNetworkV1Client) AutoWatchRoutingConfig(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchRoutingConfigClient, error) {
+	return e.Client.AutoWatchRoutingConfig(ctx, in)
+}
+
+// AutoWatchRouteTable performs Watch for RouteTable
+func (e EndpointsNetworkV1Client) AutoWatchRouteTable(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchRouteTableClient, error) {
+	return e.Client.AutoWatchRouteTable(ctx, in)
 }
 
 // AutoAddIPAMPolicy implementation on server Endpoint
@@ -707,6 +891,50 @@ func MakeNetworkV1AutoAddNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logg
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoAddNetworkInterface")(f)
+}
+
+// AutoAddRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoAddRouteTable(ctx context.Context, in RouteTable) (RouteTable, error) {
+	resp, err := e.AutoAddRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTable{}, err
+	}
+	return *resp.(*RouteTable), nil
+}
+
+// MakeNetworkV1AutoAddRouteTableEndpoint creates  AutoAddRouteTable endpoints for the service
+func MakeNetworkV1AutoAddRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RouteTable)
+		v, err := s.AutoAddRouteTable(ctx, *req)
+		return respNetworkV1AutoAddRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoAddRouteTable")(f)
+}
+
+// AutoAddRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoAddRoutingConfig(ctx context.Context, in RoutingConfig) (RoutingConfig, error) {
+	resp, err := e.AutoAddRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfig{}, err
+	}
+	return *resp.(*RoutingConfig), nil
+}
+
+// MakeNetworkV1AutoAddRoutingConfigEndpoint creates  AutoAddRoutingConfig endpoints for the service
+func MakeNetworkV1AutoAddRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoutingConfig)
+		v, err := s.AutoAddRoutingConfig(ctx, *req)
+		return respNetworkV1AutoAddRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoAddRoutingConfig")(f)
 }
 
 // AutoAddService implementation on server Endpoint
@@ -841,6 +1069,50 @@ func MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint(s ServiceNetworkV1Server, l
 	return trace.ServerEndpoint("NetworkV1:AutoDeleteNetworkInterface")(f)
 }
 
+// AutoDeleteRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoDeleteRouteTable(ctx context.Context, in RouteTable) (RouteTable, error) {
+	resp, err := e.AutoDeleteRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTable{}, err
+	}
+	return *resp.(*RouteTable), nil
+}
+
+// MakeNetworkV1AutoDeleteRouteTableEndpoint creates  AutoDeleteRouteTable endpoints for the service
+func MakeNetworkV1AutoDeleteRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RouteTable)
+		v, err := s.AutoDeleteRouteTable(ctx, *req)
+		return respNetworkV1AutoDeleteRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoDeleteRouteTable")(f)
+}
+
+// AutoDeleteRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoDeleteRoutingConfig(ctx context.Context, in RoutingConfig) (RoutingConfig, error) {
+	resp, err := e.AutoDeleteRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfig{}, err
+	}
+	return *resp.(*RoutingConfig), nil
+}
+
+// MakeNetworkV1AutoDeleteRoutingConfigEndpoint creates  AutoDeleteRoutingConfig endpoints for the service
+func MakeNetworkV1AutoDeleteRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoutingConfig)
+		v, err := s.AutoDeleteRoutingConfig(ctx, *req)
+		return respNetworkV1AutoDeleteRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoDeleteRoutingConfig")(f)
+}
+
 // AutoDeleteService implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoDeleteService(ctx context.Context, in Service) (Service, error) {
 	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
@@ -971,6 +1243,50 @@ func MakeNetworkV1AutoGetNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logg
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoGetNetworkInterface")(f)
+}
+
+// AutoGetRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoGetRouteTable(ctx context.Context, in RouteTable) (RouteTable, error) {
+	resp, err := e.AutoGetRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTable{}, err
+	}
+	return *resp.(*RouteTable), nil
+}
+
+// MakeNetworkV1AutoGetRouteTableEndpoint creates  AutoGetRouteTable endpoints for the service
+func MakeNetworkV1AutoGetRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RouteTable)
+		v, err := s.AutoGetRouteTable(ctx, *req)
+		return respNetworkV1AutoGetRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoGetRouteTable")(f)
+}
+
+// AutoGetRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoGetRoutingConfig(ctx context.Context, in RoutingConfig) (RoutingConfig, error) {
+	resp, err := e.AutoGetRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfig{}, err
+	}
+	return *resp.(*RoutingConfig), nil
+}
+
+// MakeNetworkV1AutoGetRoutingConfigEndpoint creates  AutoGetRoutingConfig endpoints for the service
+func MakeNetworkV1AutoGetRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoutingConfig)
+		v, err := s.AutoGetRoutingConfig(ctx, *req)
+		return respNetworkV1AutoGetRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoGetRoutingConfig")(f)
 }
 
 // AutoGetService implementation on server Endpoint
@@ -1105,6 +1421,50 @@ func MakeNetworkV1AutoListNetworkInterfaceEndpoint(s ServiceNetworkV1Server, log
 	return trace.ServerEndpoint("NetworkV1:AutoListNetworkInterface")(f)
 }
 
+// AutoListRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoListRouteTable(ctx context.Context, in api.ListWatchOptions) (RouteTableList, error) {
+	resp, err := e.AutoListRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTableList{}, err
+	}
+	return *resp.(*RouteTableList), nil
+}
+
+// MakeNetworkV1AutoListRouteTableEndpoint creates  AutoListRouteTable endpoints for the service
+func MakeNetworkV1AutoListRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListRouteTable(ctx, *req)
+		return respNetworkV1AutoListRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoListRouteTable")(f)
+}
+
+// AutoListRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoListRoutingConfig(ctx context.Context, in api.ListWatchOptions) (RoutingConfigList, error) {
+	resp, err := e.AutoListRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfigList{}, err
+	}
+	return *resp.(*RoutingConfigList), nil
+}
+
+// MakeNetworkV1AutoListRoutingConfigEndpoint creates  AutoListRoutingConfig endpoints for the service
+func MakeNetworkV1AutoListRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListRoutingConfig(ctx, *req)
+		return respNetworkV1AutoListRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoListRoutingConfig")(f)
+}
+
 // AutoListService implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoListService(ctx context.Context, in api.ListWatchOptions) (ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -1235,6 +1595,50 @@ func MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint(s ServiceNetworkV1Server, l
 		}, nil
 	}
 	return trace.ServerEndpoint("NetworkV1:AutoUpdateNetworkInterface")(f)
+}
+
+// AutoUpdateRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoUpdateRouteTable(ctx context.Context, in RouteTable) (RouteTable, error) {
+	resp, err := e.AutoUpdateRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTable{}, err
+	}
+	return *resp.(*RouteTable), nil
+}
+
+// MakeNetworkV1AutoUpdateRouteTableEndpoint creates  AutoUpdateRouteTable endpoints for the service
+func MakeNetworkV1AutoUpdateRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RouteTable)
+		v, err := s.AutoUpdateRouteTable(ctx, *req)
+		return respNetworkV1AutoUpdateRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoUpdateRouteTable")(f)
+}
+
+// AutoUpdateRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoUpdateRoutingConfig(ctx context.Context, in RoutingConfig) (RoutingConfig, error) {
+	resp, err := e.AutoUpdateRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfig{}, err
+	}
+	return *resp.(*RoutingConfig), nil
+}
+
+// MakeNetworkV1AutoUpdateRoutingConfigEndpoint creates  AutoUpdateRoutingConfig endpoints for the service
+func MakeNetworkV1AutoUpdateRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RoutingConfig)
+		v, err := s.AutoUpdateRoutingConfig(ctx, *req)
+		return respNetworkV1AutoUpdateRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoUpdateRoutingConfig")(f)
 }
 
 // AutoUpdateService implementation on server Endpoint
@@ -1371,6 +1775,32 @@ func MakeAutoWatchIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger
 	}
 }
 
+// AutoWatchRoutingConfig is the watch handler for RoutingConfig on the server side.
+func (e EndpointsNetworkV1Server) AutoWatchRoutingConfig(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRoutingConfigServer) error {
+	return e.watchHandlerRoutingConfig(in, stream)
+}
+
+// MakeAutoWatchRoutingConfigEndpoint creates the Watch endpoint
+func MakeAutoWatchRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchRoutingConfigServer)
+		return s.AutoWatchRoutingConfig(options, wstream)
+	}
+}
+
+// AutoWatchRouteTable is the watch handler for RouteTable on the server side.
+func (e EndpointsNetworkV1Server) AutoWatchRouteTable(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRouteTableServer) error {
+	return e.watchHandlerRouteTable(in, stream)
+}
+
+// MakeAutoWatchRouteTableEndpoint creates the Watch endpoint
+func MakeAutoWatchRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchRouteTableServer)
+		return s.AutoWatchRouteTable(options, wstream)
+	}
+}
+
 // MakeNetworkV1ServerEndpoints creates server endpoints
 func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) EndpointsNetworkV1Server {
 	return EndpointsNetworkV1Server{
@@ -1380,30 +1810,40 @@ func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) E
 		AutoAddLbPolicyEndpoint:            MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
 		AutoAddNetworkEndpoint:             MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
 		AutoAddNetworkInterfaceEndpoint:    MakeNetworkV1AutoAddNetworkInterfaceEndpoint(s, logger),
+		AutoAddRouteTableEndpoint:          MakeNetworkV1AutoAddRouteTableEndpoint(s, logger),
+		AutoAddRoutingConfigEndpoint:       MakeNetworkV1AutoAddRoutingConfigEndpoint(s, logger),
 		AutoAddServiceEndpoint:             MakeNetworkV1AutoAddServiceEndpoint(s, logger),
 		AutoAddVirtualRouterEndpoint:       MakeNetworkV1AutoAddVirtualRouterEndpoint(s, logger),
 		AutoDeleteIPAMPolicyEndpoint:       MakeNetworkV1AutoDeleteIPAMPolicyEndpoint(s, logger),
 		AutoDeleteLbPolicyEndpoint:         MakeNetworkV1AutoDeleteLbPolicyEndpoint(s, logger),
 		AutoDeleteNetworkEndpoint:          MakeNetworkV1AutoDeleteNetworkEndpoint(s, logger),
 		AutoDeleteNetworkInterfaceEndpoint: MakeNetworkV1AutoDeleteNetworkInterfaceEndpoint(s, logger),
+		AutoDeleteRouteTableEndpoint:       MakeNetworkV1AutoDeleteRouteTableEndpoint(s, logger),
+		AutoDeleteRoutingConfigEndpoint:    MakeNetworkV1AutoDeleteRoutingConfigEndpoint(s, logger),
 		AutoDeleteServiceEndpoint:          MakeNetworkV1AutoDeleteServiceEndpoint(s, logger),
 		AutoDeleteVirtualRouterEndpoint:    MakeNetworkV1AutoDeleteVirtualRouterEndpoint(s, logger),
 		AutoGetIPAMPolicyEndpoint:          MakeNetworkV1AutoGetIPAMPolicyEndpoint(s, logger),
 		AutoGetLbPolicyEndpoint:            MakeNetworkV1AutoGetLbPolicyEndpoint(s, logger),
 		AutoGetNetworkEndpoint:             MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
 		AutoGetNetworkInterfaceEndpoint:    MakeNetworkV1AutoGetNetworkInterfaceEndpoint(s, logger),
+		AutoGetRouteTableEndpoint:          MakeNetworkV1AutoGetRouteTableEndpoint(s, logger),
+		AutoGetRoutingConfigEndpoint:       MakeNetworkV1AutoGetRoutingConfigEndpoint(s, logger),
 		AutoGetServiceEndpoint:             MakeNetworkV1AutoGetServiceEndpoint(s, logger),
 		AutoGetVirtualRouterEndpoint:       MakeNetworkV1AutoGetVirtualRouterEndpoint(s, logger),
 		AutoListIPAMPolicyEndpoint:         MakeNetworkV1AutoListIPAMPolicyEndpoint(s, logger),
 		AutoListLbPolicyEndpoint:           MakeNetworkV1AutoListLbPolicyEndpoint(s, logger),
 		AutoListNetworkEndpoint:            MakeNetworkV1AutoListNetworkEndpoint(s, logger),
 		AutoListNetworkInterfaceEndpoint:   MakeNetworkV1AutoListNetworkInterfaceEndpoint(s, logger),
+		AutoListRouteTableEndpoint:         MakeNetworkV1AutoListRouteTableEndpoint(s, logger),
+		AutoListRoutingConfigEndpoint:      MakeNetworkV1AutoListRoutingConfigEndpoint(s, logger),
 		AutoListServiceEndpoint:            MakeNetworkV1AutoListServiceEndpoint(s, logger),
 		AutoListVirtualRouterEndpoint:      MakeNetworkV1AutoListVirtualRouterEndpoint(s, logger),
 		AutoUpdateIPAMPolicyEndpoint:       MakeNetworkV1AutoUpdateIPAMPolicyEndpoint(s, logger),
 		AutoUpdateLbPolicyEndpoint:         MakeNetworkV1AutoUpdateLbPolicyEndpoint(s, logger),
 		AutoUpdateNetworkEndpoint:          MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
 		AutoUpdateNetworkInterfaceEndpoint: MakeNetworkV1AutoUpdateNetworkInterfaceEndpoint(s, logger),
+		AutoUpdateRouteTableEndpoint:       MakeNetworkV1AutoUpdateRouteTableEndpoint(s, logger),
+		AutoUpdateRoutingConfigEndpoint:    MakeNetworkV1AutoUpdateRoutingConfigEndpoint(s, logger),
 		AutoUpdateServiceEndpoint:          MakeNetworkV1AutoUpdateServiceEndpoint(s, logger),
 		AutoUpdateVirtualRouterEndpoint:    MakeNetworkV1AutoUpdateVirtualRouterEndpoint(s, logger),
 
@@ -1413,6 +1853,8 @@ func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) E
 		watchHandlerVirtualRouter:    MakeAutoWatchVirtualRouterEndpoint(s, logger),
 		watchHandlerNetworkInterface: MakeAutoWatchNetworkInterfaceEndpoint(s, logger),
 		watchHandlerIPAMPolicy:       MakeAutoWatchIPAMPolicyEndpoint(s, logger),
+		watchHandlerRoutingConfig:    MakeAutoWatchRoutingConfigEndpoint(s, logger),
+		watchHandlerRouteTable:       MakeAutoWatchRouteTableEndpoint(s, logger),
 	}
 }
 
@@ -1498,6 +1940,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddNetworkInterface(ctx context.Co
 	resp, err = m.next.AutoAddNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoAddRouteTable(ctx context.Context, in *RouteTable) (resp *RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoAddRoutingConfig(ctx context.Context, in *RoutingConfig) (resp *RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddRoutingConfig(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoAddService(ctx context.Context, in *Service) (resp *Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1574,6 +2042,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetworkInterface(ctx context
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoDeleteRouteTable(ctx context.Context, in *RouteTable) (resp *RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoDeleteRoutingConfig(ctx context.Context, in *RoutingConfig) (resp *RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRoutingConfig(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoDeleteService(ctx context.Context, in *Service) (resp *Service, err error) {
@@ -1654,6 +2148,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetNetworkInterface(ctx context.Co
 	resp, err = m.next.AutoGetNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoGetRouteTable(ctx context.Context, in *RouteTable) (resp *RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoGetRoutingConfig(ctx context.Context, in *RoutingConfig) (resp *RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetRoutingConfig(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoGetService(ctx context.Context, in *Service) (resp *Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1732,6 +2252,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoListNetworkInterface(ctx context.C
 	resp, err = m.next.AutoListNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoListRouteTable(ctx context.Context, in *api.ListWatchOptions) (resp *RouteTableList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoListRoutingConfig(ctx context.Context, in *api.ListWatchOptions) (resp *RoutingConfigList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListRoutingConfig(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareClient) AutoListService(ctx context.Context, in *api.ListWatchOptions) (resp *ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1808,6 +2354,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetworkInterface(ctx context
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoUpdateRouteTable(ctx context.Context, in *RouteTable) (resp *RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoUpdateRoutingConfig(ctx context.Context, in *RoutingConfig) (resp *RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRoutingConfig(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoUpdateService(ctx context.Context, in *Service) (resp *Service, err error) {
@@ -1929,6 +2501,32 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchIPAMPolicy(ctx context.Contex
 	resp, err = m.next.AutoWatchIPAMPolicy(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareClient) AutoWatchRoutingConfig(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchRoutingConfigClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchRoutingConfig(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoWatchRouteTable(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchRouteTableClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchRouteTable(ctx, in)
+	return
+}
 
 func (m loggingNetworkV1MiddlewareServer) AutoAddIPAMPolicy(ctx context.Context, in IPAMPolicy) (resp IPAMPolicy, err error) {
 	defer func(begin time.Time) {
@@ -1980,6 +2578,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoAddNetworkInterface(ctx context.Co
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetworkInterface", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoAddRouteTable(ctx context.Context, in RouteTable) (resp RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoAddRoutingConfig(ctx context.Context, in RoutingConfig) (resp RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRoutingConfig(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoAddService(ctx context.Context, in Service) (resp Service, err error) {
@@ -2060,6 +2684,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoDeleteNetworkInterface(ctx context
 	resp, err = m.next.AutoDeleteNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoDeleteRouteTable(ctx context.Context, in RouteTable) (resp RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoDeleteRoutingConfig(ctx context.Context, in RoutingConfig) (resp RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRoutingConfig(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoDeleteService(ctx context.Context, in Service) (resp Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2136,6 +2786,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetNetworkInterface(ctx context.Co
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetworkInterface", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoGetRouteTable(ctx context.Context, in RouteTable) (resp RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoGetRoutingConfig(ctx context.Context, in RoutingConfig) (resp RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRoutingConfig(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoGetService(ctx context.Context, in Service) (resp Service, err error) {
@@ -2216,6 +2892,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoListNetworkInterface(ctx context.C
 	resp, err = m.next.AutoListNetworkInterface(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoListRouteTable(ctx context.Context, in api.ListWatchOptions) (resp RouteTableList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoListRoutingConfig(ctx context.Context, in api.ListWatchOptions) (resp RoutingConfigList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRoutingConfig(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoListService(ctx context.Context, in api.ListWatchOptions) (resp ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2292,6 +2994,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetworkInterface(ctx context
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetworkInterface", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoUpdateRouteTable(ctx context.Context, in RouteTable) (resp RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoUpdateRoutingConfig(ctx context.Context, in RoutingConfig) (resp RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRoutingConfig(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoUpdateService(ctx context.Context, in Service) (resp Service, err error) {
@@ -2413,6 +3141,32 @@ func (m loggingNetworkV1MiddlewareServer) AutoWatchIPAMPolicy(in *api.ListWatchO
 	err = m.next.AutoWatchIPAMPolicy(in, stream)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoWatchRoutingConfig(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRoutingConfigServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchRoutingConfig(in, stream)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoWatchRouteTable(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRouteTableServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchRouteTable(in, stream)
+	return
+}
 
 func (r *EndpointsNetworkV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -2450,14 +3204,23 @@ func makeURINetworkV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
 
 //
 func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
+}
+
+//
+func makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in *NetworkInterface) string {
+	return fmt.Sprint("/configs/network/v1", "/networkinterfaces")
+}
+
+//
+func makeURINetworkV1AutoAddRouteTableCreateOper(in *RouteTable) string {
 	return ""
 
 }
 
 //
-func makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in *NetworkInterface) string {
-	return ""
-
+func makeURINetworkV1AutoAddRoutingConfigCreateOper(in *RoutingConfig) string {
+	return fmt.Sprint("/configs/network/v1", "/routing-config")
 }
 
 //
@@ -2468,8 +3231,7 @@ func makeURINetworkV1AutoAddServiceCreateOper(in *Service) string {
 
 //
 func makeURINetworkV1AutoAddVirtualRouterCreateOper(in *VirtualRouter) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters")
 }
 
 //
@@ -2485,14 +3247,24 @@ func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
 
 //
 func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoDeleteNetworkInterfaceDeleteOper(in *NetworkInterface) string {
 	return ""
 
+}
+
+//
+func makeURINetworkV1AutoDeleteRouteTableDeleteOper(in *RouteTable) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoDeleteRoutingConfigDeleteOper(in *RoutingConfig) string {
+	return fmt.Sprint("/configs/network/v1", "/routing-config/", in.Name)
 }
 
 //
@@ -2503,8 +3275,7 @@ func makeURINetworkV1AutoDeleteServiceDeleteOper(in *Service) string {
 
 //
 func makeURINetworkV1AutoDeleteVirtualRouterDeleteOper(in *VirtualRouter) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters/", in.Name)
 }
 
 //
@@ -2529,6 +3300,16 @@ func makeURINetworkV1AutoGetNetworkInterfaceGetOper(in *NetworkInterface) string
 }
 
 //
+func makeURINetworkV1AutoGetRouteTableGetOper(in *RouteTable) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/route-tables/", in.Name)
+}
+
+//
+func makeURINetworkV1AutoGetRoutingConfigGetOper(in *RoutingConfig) string {
+	return fmt.Sprint("/configs/network/v1", "/routing-config/", in.Name)
+}
+
+//
 func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
 	return ""
 
@@ -2536,8 +3317,7 @@ func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
 
 //
 func makeURINetworkV1AutoGetVirtualRouterGetOper(in *VirtualRouter) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters/", in.Name)
 }
 
 //
@@ -2562,6 +3342,16 @@ func makeURINetworkV1AutoListNetworkInterfaceListOper(in *api.ListWatchOptions) 
 }
 
 //
+func makeURINetworkV1AutoListRouteTableListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/route-tables")
+}
+
+//
+func makeURINetworkV1AutoListRoutingConfigListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/routing-config")
+}
+
+//
 func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -2569,8 +3359,7 @@ func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURINetworkV1AutoListVirtualRouterListOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters")
 }
 
 //
@@ -2586,14 +3375,23 @@ func makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
 
 //
 func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
+}
+
+//
+func makeURINetworkV1AutoUpdateNetworkInterfaceUpdateOper(in *NetworkInterface) string {
+	return fmt.Sprint("/configs/network/v1", "/networkinterfaces/", in.Name)
+}
+
+//
+func makeURINetworkV1AutoUpdateRouteTableUpdateOper(in *RouteTable) string {
 	return ""
 
 }
 
 //
-func makeURINetworkV1AutoUpdateNetworkInterfaceUpdateOper(in *NetworkInterface) string {
-	return ""
-
+func makeURINetworkV1AutoUpdateRoutingConfigUpdateOper(in *RoutingConfig) string {
+	return fmt.Sprint("/configs/network/v1", "/routing-config/", in.Name)
 }
 
 //
@@ -2604,8 +3402,7 @@ func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
 
 //
 func makeURINetworkV1AutoUpdateVirtualRouterUpdateOper(in *VirtualRouter) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters/", in.Name)
 }
 
 //
@@ -2630,6 +3427,16 @@ func makeURINetworkV1AutoWatchNetworkInterfaceWatchOper(in *api.ListWatchOptions
 }
 
 //
+func makeURINetworkV1AutoWatchRouteTableWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/route-tables")
+}
+
+//
+func makeURINetworkV1AutoWatchRoutingConfigWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/network/v1", "/watch/routing-config")
+}
+
+//
 func makeURINetworkV1AutoWatchServiceWatchOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -2643,18 +3450,51 @@ func makeURINetworkV1AutoWatchSvcNetworkV1WatchOper(in *api.ListWatchOptions) st
 
 //
 func makeURINetworkV1AutoWatchVirtualRouterWatchOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/virtualrouters")
 }
 
 // AutoAddNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoAddNetwork(ctx context.Context, in *Network) (*Network, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoAddNetworkCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoAddNetwork(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Network), nil
 }
 
 // AutoUpdateNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in *Network) (*Network, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoUpdateNetworkUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoUpdateNetwork(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Network), err
 }
 
 // AutoGetNetwork CRUD method for Network
@@ -2681,7 +3521,24 @@ func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *N
 
 // AutoDeleteNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in *Network) (*Network, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoDeleteNetworkDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoDeleteNetwork(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Network), err
 }
 
 // AutoListNetwork CRUD method for Network
@@ -2902,27 +3759,112 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 
 // AutoAddVirtualRouter CRUD method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoAddVirtualRouter(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoAddVirtualRouterCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoAddVirtualRouter(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouter), nil
 }
 
 // AutoUpdateVirtualRouter CRUD method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoUpdateVirtualRouter(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoUpdateVirtualRouterUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoUpdateVirtualRouter(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouter), err
 }
 
 // AutoGetVirtualRouter CRUD method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoGetVirtualRouter(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoGetVirtualRouterGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoGetVirtualRouter(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouter), err
 }
 
 // AutoDeleteVirtualRouter CRUD method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoDeleteVirtualRouter(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoDeleteVirtualRouterDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoDeleteVirtualRouter(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouter), err
 }
 
 // AutoListVirtualRouter CRUD method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoListVirtualRouter(ctx context.Context, options *api.ListWatchOptions) (*VirtualRouterList, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoListVirtualRouterListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoListVirtualRouter(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouterList), err
 }
 
 // AutoWatchVirtualRouter CRUD method for VirtualRouter
@@ -2975,12 +3917,46 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchVirtualRouter(ctx context.Contex
 
 // AutoAddNetworkInterface CRUD method for NetworkInterface
 func (r *EndpointsNetworkV1RestClient) AutoAddNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoAddNetworkInterface(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkInterface), nil
 }
 
 // AutoUpdateNetworkInterface CRUD method for NetworkInterface
 func (r *EndpointsNetworkV1RestClient) AutoUpdateNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoUpdateNetworkInterfaceUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoUpdateNetworkInterface(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkInterface), err
 }
 
 // AutoGetNetworkInterface CRUD method for NetworkInterface
@@ -3210,6 +4186,271 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchIPAMPolicy(ctx context.Context, 
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgIPAMPolicyWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoAddRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	path := makeURINetworkV1AutoAddRoutingConfigCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoAddRoutingConfig(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfig), nil
+}
+
+// AutoUpdateRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoUpdateRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	path := makeURINetworkV1AutoUpdateRoutingConfigUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoUpdateRoutingConfig(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfig), err
+}
+
+// AutoGetRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoGetRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	path := makeURINetworkV1AutoGetRoutingConfigGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoGetRoutingConfig(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfig), err
+}
+
+// AutoDeleteRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoDeleteRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
+	path := makeURINetworkV1AutoDeleteRoutingConfigDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoDeleteRoutingConfig(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfig), err
+}
+
+// AutoListRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoListRoutingConfig(ctx context.Context, options *api.ListWatchOptions) (*RoutingConfigList, error) {
+	path := makeURINetworkV1AutoListRoutingConfigListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoListRoutingConfig(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfigList), err
+}
+
+// AutoWatchRoutingConfig CRUD method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoWatchRoutingConfig(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURINetworkV1AutoWatchRoutingConfigWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRoutingConfigWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoAddRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoUpdateRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoGetRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	path := makeURINetworkV1AutoGetRouteTableGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoGetRouteTable(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RouteTable), err
+}
+
+// AutoDeleteRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoDeleteRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoListRouteTable(ctx context.Context, options *api.ListWatchOptions) (*RouteTableList, error) {
+	path := makeURINetworkV1AutoListRouteTableListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoListRouteTable(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RouteTableList), err
+}
+
+// AutoWatchRouteTable CRUD method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoWatchRouteTable(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURINetworkV1AutoWatchRouteTableWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRouteTableWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

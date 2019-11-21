@@ -182,6 +182,8 @@ type Controller interface {
 	VirtualRouter() VirtualRouterAPI                     // return VirtualRouter API interface
 	NetworkInterface() NetworkInterfaceAPI               // return NetworkInterface API interface
 	IPAMPolicy() IPAMPolicyAPI                           // return IPAMPolicy API interface
+	RoutingConfig() RoutingConfigAPI                     // return RoutingConfig API interface
+	RouteTable() RouteTableAPI                           // return RouteTable API interface
 	Bucket() BucketAPI                                   // return Bucket API interface
 	Object() ObjectAPI                                   // return Object API interface
 	Orchestrator() OrchestratorAPI                       // return Orchestrator API interface
@@ -507,6 +509,12 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "IPAMPolicy":
 		obj := ipampolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RoutingConfig":
+		obj := routingconfigAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RouteTable":
+		obj := routetableAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Bucket":
 		obj := bucketAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -669,6 +677,12 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "IPAMPolicy":
 		obj := ipampolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RoutingConfig":
+		obj := routingconfigAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "RouteTable":
+		obj := routetableAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Bucket":
 		obj := bucketAPI{}

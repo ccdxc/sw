@@ -161,6 +161,60 @@ func (a adapterNetworkV1) AutoAddNetworkInterface(oldctx oldcontext.Context, t *
 	return ret.(*network.NetworkInterface), err
 }
 
+func (a adapterNetworkV1) AutoAddRouteTable(oldctx oldcontext.Context, t *network.RouteTable, options ...grpc.CallOption) (*network.RouteTable, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddRouteTable", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "RouteTable", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RouteTable)
+		return a.service.AutoAddRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RouteTable), err
+}
+
+func (a adapterNetworkV1) AutoAddRoutingConfig(oldctx oldcontext.Context, t *network.RoutingConfig, options ...grpc.CallOption) (*network.RoutingConfig, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoAddRoutingConfig", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "RoutingConfig", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RoutingConfig)
+		return a.service.AutoAddRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RoutingConfig), err
+}
+
 func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -323,6 +377,60 @@ func (a adapterNetworkV1) AutoDeleteNetworkInterface(oldctx oldcontext.Context, 
 	return ret.(*network.NetworkInterface), err
 }
 
+func (a adapterNetworkV1) AutoDeleteRouteTable(oldctx oldcontext.Context, t *network.RouteTable, options ...grpc.CallOption) (*network.RouteTable, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteRouteTable", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "RouteTable", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RouteTable)
+		return a.service.AutoDeleteRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RouteTable), err
+}
+
+func (a adapterNetworkV1) AutoDeleteRoutingConfig(oldctx oldcontext.Context, t *network.RoutingConfig, options ...grpc.CallOption) (*network.RoutingConfig, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoDeleteRoutingConfig", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "RoutingConfig", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RoutingConfig)
+		return a.service.AutoDeleteRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RoutingConfig), err
+}
+
 func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -483,6 +591,60 @@ func (a adapterNetworkV1) AutoGetNetworkInterface(oldctx oldcontext.Context, t *
 		return nil, err
 	}
 	return ret.(*network.NetworkInterface), err
+}
+
+func (a adapterNetworkV1) AutoGetRouteTable(oldctx oldcontext.Context, t *network.RouteTable, options ...grpc.CallOption) (*network.RouteTable, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetRouteTable", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "RouteTable", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RouteTable)
+		return a.service.AutoGetRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RouteTable), err
+}
+
+func (a adapterNetworkV1) AutoGetRoutingConfig(oldctx oldcontext.Context, t *network.RoutingConfig, options ...grpc.CallOption) (*network.RoutingConfig, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoGetRoutingConfig", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "RoutingConfig", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RoutingConfig)
+		return a.service.AutoGetRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RoutingConfig), err
 }
 
 func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
@@ -665,6 +827,68 @@ func (a adapterNetworkV1) AutoListNetworkInterface(oldctx oldcontext.Context, t 
 	return ret.(*network.NetworkInterfaceList), err
 }
 
+func (a adapterNetworkV1) AutoListRouteTable(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.RouteTableList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListRouteTable", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "RouteTable", t.Tenant, t.Namespace, "network", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RouteTableList), err
+}
+
+func (a adapterNetworkV1) AutoListRoutingConfig(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.RoutingConfigList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoListRoutingConfig", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "RoutingConfig", t.Tenant, t.Namespace, "network", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RoutingConfigList), err
+}
+
 func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.ServiceList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -835,6 +1059,60 @@ func (a adapterNetworkV1) AutoUpdateNetworkInterface(oldctx oldcontext.Context, 
 		return nil, err
 	}
 	return ret.(*network.NetworkInterface), err
+}
+
+func (a adapterNetworkV1) AutoUpdateRouteTable(oldctx oldcontext.Context, t *network.RouteTable, options ...grpc.CallOption) (*network.RouteTable, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateRouteTable", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "RouteTable", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RouteTable)
+		return a.service.AutoUpdateRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RouteTable), err
+}
+
+func (a adapterNetworkV1) AutoUpdateRoutingConfig(oldctx oldcontext.Context, t *network.RoutingConfig, options ...grpc.CallOption) (*network.RoutingConfig, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.NetworkV1AutoUpdateRoutingConfig", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "RoutingConfig", t.Tenant, t.Namespace, "network", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.RoutingConfig)
+		return a.service.AutoUpdateRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.RoutingConfig), err
 }
 
 func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
@@ -1297,6 +1575,122 @@ func (a adapterNetworkV1) AutoWatchIPAMPolicy(oldctx oldcontext.Context, in *api
 	return ret.(network.NetworkV1_AutoWatchIPAMPolicyClient), err
 }
 
+func (a adapterNetworkV1) AutoWatchRoutingConfig(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchRoutingConfigClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchRoutingConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RoutingConfig", in.Tenant, in.Namespace, "network"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchRoutingConfig] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchRoutingConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(network.NetworkV1_AutoWatchRoutingConfigClient), err
+}
+
+func (a adapterNetworkV1) AutoWatchRouteTable(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchRouteTableClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchRouteTable")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if in.Tenant == "" {
+		in.Tenant = globals.DefaultTenant
+	}
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RouteTable", in.Tenant, in.Namespace, "network"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchRouteTable] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchRouteTable(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(network.NetworkV1_AutoWatchRouteTableClient), err
+}
+
 func (e *sNetworkV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "network", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1304,7 +1698,21 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.CreateOper)
 
+	e.svcProf["AutoAddNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoAddNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoAddRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoAddVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.CreateOper)
+
 	e.svcProf["AutoDeleteIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.DeleteOper)
 
 	e.svcProf["AutoGetIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.GetOper)
 
@@ -1312,19 +1720,45 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.GetOper)
 
+	e.svcProf["AutoGetRouteTable"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RouteTable", "network", apiintf.GetOper)
+
+	e.svcProf["AutoGetRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.GetOper)
+
+	e.svcProf["AutoGetVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.GetOper)
+
 	e.svcProf["AutoListIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicyList", "network", apiintf.ListOper)
 
 	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkList", "network", apiintf.ListOper)
 
 	e.svcProf["AutoListNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterfaceList", "network", apiintf.ListOper)
 
+	e.svcProf["AutoListRouteTable"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RouteTableList", "network", apiintf.ListOper)
+
+	e.svcProf["AutoListRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfigList", "network", apiintf.ListOper)
+
+	e.svcProf["AutoListVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouterList", "network", apiintf.ListOper)
+
 	e.svcProf["AutoUpdateIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.UpdateOper)
 
 	e.svcProf["AutoWatchIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgIPAMPolicyWatchHelper", "network", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkWatchHelper", "network", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkInterfaceWatchHelper", "network", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchRouteTable"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRouteTableWatchHelper", "network", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoutingConfigWatchHelper", "network", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgVirtualRouterWatchHelper", "network", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

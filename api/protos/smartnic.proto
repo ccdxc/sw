@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+
 import "cluster.proto";
 
 //------------------------------------ Distributed Service Card  -------------------------------------------
@@ -91,10 +92,13 @@ message DistributedServiceCardSpec {
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // means we use untagged-vlan for doing inband management
     uint32 MgmtVlan                 = 6 [(venice.check) = "IntRange(0,4095)",
-                                        (gogoproto.jsontag) = "mgmt-vlan,omitempty"];   
+                                        (gogoproto.jsontag) = "mgmt-vlan,omitempty"];
 
     // Controllers contains the list of remote controllers IP addresses or hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
+
+    // RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.
+    string RoutingConfig            = 8 [(gogoproto.jsontag) = "routing-config,omitempty"];
 }
 
 // IPConfig defines the static IP configuration for a DistributedServiceCard

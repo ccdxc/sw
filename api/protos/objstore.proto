@@ -7,7 +7,8 @@ package objstore;
 
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/protos/tenant.proto";
+
+import "tenant.proto";
 
 // Bucket names are always lower case
 enum Buckets {

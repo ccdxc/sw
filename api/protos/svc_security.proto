@@ -8,8 +8,9 @@ package security;
 import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/pensando/sw/api/protos/tenant.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
+
+import "tenant.proto";
 import "sgpolicy.proto";
 import "securitygroup.proto";
 import "app.proto";

@@ -87,6 +87,30 @@ type NetworkV1IPAMPolicyInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// NetworkV1RoutingConfigInterface exposes the CRUD methods for RoutingConfig
+type NetworkV1RoutingConfigInterface interface {
+	Create(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error)
+	Update(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error)
+	UpdateStatus(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RoutingConfig, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RoutingConfig, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*RoutingConfig, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
+// NetworkV1RouteTableInterface exposes the CRUD methods for RouteTable
+type NetworkV1RouteTableInterface interface {
+	Create(ctx context.Context, in *RouteTable) (*RouteTable, error)
+	Update(ctx context.Context, in *RouteTable) (*RouteTable, error)
+	UpdateStatus(ctx context.Context, in *RouteTable) (*RouteTable, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RouteTable, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RouteTable, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*RouteTable, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // NetworkV1Interface exposes objects with CRUD operations allowed by the service
 type NetworkV1Interface interface {
 	Network() NetworkV1NetworkInterface
@@ -95,5 +119,7 @@ type NetworkV1Interface interface {
 	VirtualRouter() NetworkV1VirtualRouterInterface
 	NetworkInterface() NetworkV1NetworkInterfaceInterface
 	IPAMPolicy() NetworkV1IPAMPolicyInterface
+	RoutingConfig() NetworkV1RoutingConfigInterface
+	RouteTable() NetworkV1RouteTableInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

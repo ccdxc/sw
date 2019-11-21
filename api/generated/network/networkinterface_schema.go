@@ -54,13 +54,19 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"admin-status":     api.CLIInfo{Path: "Spec.AdminStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"attach-network":   api.CLIInfo{Path: "Spec.AttachNetwork", Skip: false, Insert: "", Help: ""},
+			"attach-tenant":    api.CLIInfo{Path: "Spec.AttachTenant", Skip: false, Insert: "", Help: ""},
 			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
+			"cluster-node":     api.CLIInfo{Path: "Status.ClusterNode", Skip: false, Insert: "", Help: ""},
+			"device-id":        api.CLIInfo{Path: "Status.IFHostStatus.DeviceID", Skip: false, Insert: "", Help: ""},
 			"dsc":              api.CLIInfo{Path: "Status.DSC", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
+			"ip-alloc-type":    api.CLIInfo{Path: "Spec.IPAllocType", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
+			"mac-address":      api.CLIInfo{Path: "Spec.MACAddress", Skip: false, Insert: "", Help: ""},
 			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
 			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
@@ -83,6 +89,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceHostStatus{}) },
 		Fields: map[string]api.Field{
 			"HostIfName": api.Field{Name: "HostIfName", CLITag: api.CLIInfo{ID: "host-ifname", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-ifname", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DeviceID": api.Field{Name: "DeviceID", CLITag: api.CLIInfo{ID: "device-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "device-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.NetworkInterfaceSpec": &api.Struct{
@@ -95,6 +103,18 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"MTU": api.Field{Name: "MTU", CLITag: api.CLIInfo{ID: "mtu", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mtu", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"Pause": api.Field{Name: "Pause", CLITag: api.CLIInfo{ID: "pause", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pause", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.PauseSpec"},
+
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AttachTenant": api.Field{Name: "AttachTenant", CLITag: api.CLIInfo{ID: "attach-tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-tenant", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AttachNetwork": api.Field{Name: "AttachNetwork", CLITag: api.CLIInfo{ID: "attach-network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPAllocType": api.Field{Name: "IPAllocType", CLITag: api.CLIInfo{ID: "ip-alloc-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-alloc-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPConfig": api.Field{Name: "IPConfig", CLITag: api.CLIInfo{ID: "ip-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.IPConfig"},
+
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.NetworkInterfaceStatus": &api.Struct{
@@ -115,6 +135,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"IFUplinkStatus": api.Field{Name: "IFUplinkStatus", CLITag: api.CLIInfo{ID: "if-uplink-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-uplink-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.NetworkInterfaceUplinkStatus"},
 
 			"MirrorEnabled": api.Field{Name: "MirrorEnabled", CLITag: api.CLIInfo{ID: "mirror-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"ClusterNode": api.Field{Name: "ClusterNode", CLITag: api.CLIInfo{ID: "cluster-node", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cluster-node", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.NetworkInterfaceUplinkStatus": &api.Struct{

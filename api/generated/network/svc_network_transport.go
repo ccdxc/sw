@@ -29,30 +29,40 @@ type grpcServerNetworkV1 struct {
 	AutoAddLbPolicyHdlr            grpctransport.Handler
 	AutoAddNetworkHdlr             grpctransport.Handler
 	AutoAddNetworkInterfaceHdlr    grpctransport.Handler
+	AutoAddRouteTableHdlr          grpctransport.Handler
+	AutoAddRoutingConfigHdlr       grpctransport.Handler
 	AutoAddServiceHdlr             grpctransport.Handler
 	AutoAddVirtualRouterHdlr       grpctransport.Handler
 	AutoDeleteIPAMPolicyHdlr       grpctransport.Handler
 	AutoDeleteLbPolicyHdlr         grpctransport.Handler
 	AutoDeleteNetworkHdlr          grpctransport.Handler
 	AutoDeleteNetworkInterfaceHdlr grpctransport.Handler
+	AutoDeleteRouteTableHdlr       grpctransport.Handler
+	AutoDeleteRoutingConfigHdlr    grpctransport.Handler
 	AutoDeleteServiceHdlr          grpctransport.Handler
 	AutoDeleteVirtualRouterHdlr    grpctransport.Handler
 	AutoGetIPAMPolicyHdlr          grpctransport.Handler
 	AutoGetLbPolicyHdlr            grpctransport.Handler
 	AutoGetNetworkHdlr             grpctransport.Handler
 	AutoGetNetworkInterfaceHdlr    grpctransport.Handler
+	AutoGetRouteTableHdlr          grpctransport.Handler
+	AutoGetRoutingConfigHdlr       grpctransport.Handler
 	AutoGetServiceHdlr             grpctransport.Handler
 	AutoGetVirtualRouterHdlr       grpctransport.Handler
 	AutoListIPAMPolicyHdlr         grpctransport.Handler
 	AutoListLbPolicyHdlr           grpctransport.Handler
 	AutoListNetworkHdlr            grpctransport.Handler
 	AutoListNetworkInterfaceHdlr   grpctransport.Handler
+	AutoListRouteTableHdlr         grpctransport.Handler
+	AutoListRoutingConfigHdlr      grpctransport.Handler
 	AutoListServiceHdlr            grpctransport.Handler
 	AutoListVirtualRouterHdlr      grpctransport.Handler
 	AutoUpdateIPAMPolicyHdlr       grpctransport.Handler
 	AutoUpdateLbPolicyHdlr         grpctransport.Handler
 	AutoUpdateNetworkHdlr          grpctransport.Handler
 	AutoUpdateNetworkInterfaceHdlr grpctransport.Handler
+	AutoUpdateRouteTableHdlr       grpctransport.Handler
+	AutoUpdateRoutingConfigHdlr    grpctransport.Handler
 	AutoUpdateServiceHdlr          grpctransport.Handler
 	AutoUpdateVirtualRouterHdlr    grpctransport.Handler
 }
@@ -91,6 +101,20 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkInterface", logger)))...,
+		),
+
+		AutoAddRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoAddRouteTableEndpoint,
+			DecodeGrpcReqRouteTable,
+			EncodeGrpcRespRouteTable,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRouteTable", logger)))...,
+		),
+
+		AutoAddRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoAddRoutingConfigEndpoint,
+			DecodeGrpcReqRoutingConfig,
+			EncodeGrpcRespRoutingConfig,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoutingConfig", logger)))...,
 		),
 
 		AutoAddServiceHdlr: grpctransport.NewServer(
@@ -135,6 +159,20 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkInterface", logger)))...,
 		),
 
+		AutoDeleteRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteRouteTableEndpoint,
+			DecodeGrpcReqRouteTable,
+			EncodeGrpcRespRouteTable,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRouteTable", logger)))...,
+		),
+
+		AutoDeleteRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteRoutingConfigEndpoint,
+			DecodeGrpcReqRoutingConfig,
+			EncodeGrpcRespRoutingConfig,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoutingConfig", logger)))...,
+		),
+
 		AutoDeleteServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteServiceEndpoint,
 			DecodeGrpcReqService,
@@ -175,6 +213,20 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkInterface", logger)))...,
+		),
+
+		AutoGetRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoGetRouteTableEndpoint,
+			DecodeGrpcReqRouteTable,
+			EncodeGrpcRespRouteTable,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRouteTable", logger)))...,
+		),
+
+		AutoGetRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoGetRoutingConfigEndpoint,
+			DecodeGrpcReqRoutingConfig,
+			EncodeGrpcRespRoutingConfig,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoutingConfig", logger)))...,
 		),
 
 		AutoGetServiceHdlr: grpctransport.NewServer(
@@ -219,6 +271,20 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkInterface", logger)))...,
 		),
 
+		AutoListRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoListRouteTableEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespRouteTableList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRouteTable", logger)))...,
+		),
+
+		AutoListRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoListRoutingConfigEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespRoutingConfigList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoutingConfig", logger)))...,
+		),
+
 		AutoListServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoListServiceEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -259,6 +325,20 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkInterface", logger)))...,
+		),
+
+		AutoUpdateRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateRouteTableEndpoint,
+			DecodeGrpcReqRouteTable,
+			EncodeGrpcRespRouteTable,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRouteTable", logger)))...,
+		),
+
+		AutoUpdateRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateRoutingConfigEndpoint,
+			DecodeGrpcReqRoutingConfig,
+			EncodeGrpcRespRoutingConfig,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoutingConfig", logger)))...,
 		),
 
 		AutoUpdateServiceHdlr: grpctransport.NewServer(
@@ -345,6 +425,42 @@ func decodeHTTPrespNetworkV1AutoAddNetworkInterface(_ context.Context, r *http.R
 		return nil, errorDecoder(r)
 	}
 	var resp NetworkInterface
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoAddRouteTable(ctx oldcontext.Context, req *RouteTable) (*RouteTable, error) {
+	_, resp, err := s.AutoAddRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddRouteTable).V
+	return &r, resp.(respNetworkV1AutoAddRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTable
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoAddRoutingConfig(ctx oldcontext.Context, req *RoutingConfig) (*RoutingConfig, error) {
+	_, resp, err := s.AutoAddRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoAddRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfig
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -457,6 +573,42 @@ func decodeHTTPrespNetworkV1AutoDeleteNetworkInterface(_ context.Context, r *htt
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoDeleteRouteTable(ctx oldcontext.Context, req *RouteTable) (*RouteTable, error) {
+	_, resp, err := s.AutoDeleteRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteRouteTable).V
+	return &r, resp.(respNetworkV1AutoDeleteRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTable
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoDeleteRoutingConfig(ctx oldcontext.Context, req *RoutingConfig) (*RoutingConfig, error) {
+	_, resp, err := s.AutoDeleteRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoDeleteRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfig
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoDeleteService(ctx oldcontext.Context, req *Service) (*Service, error) {
 	_, resp, err := s.AutoDeleteServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -561,6 +713,42 @@ func decodeHTTPrespNetworkV1AutoGetNetworkInterface(_ context.Context, r *http.R
 		return nil, errorDecoder(r)
 	}
 	var resp NetworkInterface
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoGetRouteTable(ctx oldcontext.Context, req *RouteTable) (*RouteTable, error) {
+	_, resp, err := s.AutoGetRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetRouteTable).V
+	return &r, resp.(respNetworkV1AutoGetRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTable
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoGetRoutingConfig(ctx oldcontext.Context, req *RoutingConfig) (*RoutingConfig, error) {
+	_, resp, err := s.AutoGetRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoGetRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfig
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -673,6 +861,42 @@ func decodeHTTPrespNetworkV1AutoListNetworkInterface(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoListRouteTable(ctx oldcontext.Context, req *api.ListWatchOptions) (*RouteTableList, error) {
+	_, resp, err := s.AutoListRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListRouteTable).V
+	return &r, resp.(respNetworkV1AutoListRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTableList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoListRoutingConfig(ctx oldcontext.Context, req *api.ListWatchOptions) (*RoutingConfigList, error) {
+	_, resp, err := s.AutoListRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoListRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfigList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoListService(ctx oldcontext.Context, req *api.ListWatchOptions) (*ServiceList, error) {
 	_, resp, err := s.AutoListServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -781,6 +1005,42 @@ func decodeHTTPrespNetworkV1AutoUpdateNetworkInterface(_ context.Context, r *htt
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoUpdateRouteTable(ctx oldcontext.Context, req *RouteTable) (*RouteTable, error) {
+	_, resp, err := s.AutoUpdateRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateRouteTable).V
+	return &r, resp.(respNetworkV1AutoUpdateRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTable
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoUpdateRoutingConfig(ctx oldcontext.Context, req *RoutingConfig) (*RoutingConfig, error) {
+	_, resp, err := s.AutoUpdateRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoUpdateRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfig
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoUpdateService(ctx oldcontext.Context, req *Service) (*Service, error) {
 	_, resp, err := s.AutoUpdateServiceHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -843,6 +1103,14 @@ func (s *grpcServerNetworkV1) AutoWatchNetworkInterface(in *api.ListWatchOptions
 
 func (s *grpcServerNetworkV1) AutoWatchIPAMPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchIPAMPolicyServer) error {
 	return s.Endpoints.AutoWatchIPAMPolicy(in, stream)
+}
+
+func (s *grpcServerNetworkV1) AutoWatchRoutingConfig(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRoutingConfigServer) error {
+	return s.Endpoints.AutoWatchRoutingConfig(in, stream)
+}
+
+func (s *grpcServerNetworkV1) AutoWatchRouteTable(in *api.ListWatchOptions, stream NetworkV1_AutoWatchRouteTableServer) error {
+	return s.Endpoints.AutoWatchRouteTable(in, stream)
 }
 
 func encodeHTTPIPAMPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -978,6 +1246,74 @@ func EncodeGrpcRespNetworkList(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespNetworkList decodes the GRPC response
 func DecodeGrpcRespNetworkList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRouteTableList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRouteTableList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RouteTableList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRouteTableList encodes GRPC request
+func EncodeGrpcReqRouteTableList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RouteTableList)
+	return req, nil
+}
+
+// DecodeGrpcReqRouteTableList decodes GRPC request
+func DecodeGrpcReqRouteTableList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RouteTableList)
+	return req, nil
+}
+
+// EncodeGrpcRespRouteTableList endodes the GRPC response
+func EncodeGrpcRespRouteTableList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRouteTableList decodes the GRPC response
+func DecodeGrpcRespRouteTableList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRoutingConfigList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRoutingConfigList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RoutingConfigList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRoutingConfigList encodes GRPC request
+func EncodeGrpcReqRoutingConfigList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoutingConfigList)
+	return req, nil
+}
+
+// DecodeGrpcReqRoutingConfigList decodes GRPC request
+func DecodeGrpcReqRoutingConfigList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RoutingConfigList)
+	return req, nil
+}
+
+// EncodeGrpcRespRoutingConfigList endodes the GRPC response
+func EncodeGrpcRespRoutingConfigList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRoutingConfigList decodes the GRPC response
+func DecodeGrpcRespRoutingConfigList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

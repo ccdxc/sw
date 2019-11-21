@@ -20,6 +20,7 @@ export interface INetworkNetworkInterfaceStatus {
     'if-host-status'?: INetworkNetworkInterfaceHostStatus;
     'if-uplink-status'?: INetworkNetworkInterfaceUplinkStatus;
     'mirror-enabled'?: boolean;
+    'cluster-node'?: string;
 }
 
 
@@ -32,6 +33,8 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
     'mirror-enabled': boolean = null;
+    /** Set only if interface is on Venice Node. */
+    'cluster-node': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
         'dsc': {
             required: false,
@@ -66,6 +69,11 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         'mirror-enabled': {
             required: false,
             type: 'boolean'
+        },
+        'cluster-node': {
+            description:  'Set only if interface is on Venice Node.',
+            required: false,
+            type: 'string'
         },
     }
 
@@ -147,6 +155,13 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         } else {
             this['mirror-enabled'] = null
         }
+        if (values && values['cluster-node'] != null) {
+            this['cluster-node'] = values['cluster-node'];
+        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('cluster-node')) {
+            this['cluster-node'] = NetworkNetworkInterfaceStatus.propInfo['cluster-node'].default;
+        } else {
+            this['cluster-node'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -161,6 +176,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
                 'if-host-status': CustomFormGroup(this['if-host-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-host-status'].required),
                 'if-uplink-status': CustomFormGroup(this['if-uplink-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-uplink-status'].required),
                 'mirror-enabled': CustomFormControl(new FormControl(this['mirror-enabled']), NetworkNetworkInterfaceStatus.propInfo['mirror-enabled']),
+                'cluster-node': CustomFormControl(new FormControl(this['cluster-node']), NetworkNetworkInterfaceStatus.propInfo['cluster-node']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('if-host-status') as FormGroup).controls).forEach(field => {
@@ -189,6 +205,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             this['if-host-status'].setFormGroupValuesToBeModelValues();
             this['if-uplink-status'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['mirror-enabled'].setValue(this['mirror-enabled']);
+            this._formGroup.controls['cluster-node'].setValue(this['cluster-node']);
         }
     }
 }

@@ -324,6 +324,7 @@ var typesMapCluster = map[string]*api.Struct{
 			"quorum":               api.CLIInfo{Path: "Status.Quorum", Skip: false, Insert: "", Help: ""},
 			"reason":               api.CLIInfo{Path: "Status.Conditions[].Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"routing-config":       api.CLIInfo{Path: "Spec.RoutingConfig", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"status":               api.CLIInfo{Path: "Status.Conditions[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
@@ -363,7 +364,9 @@ var typesMapCluster = map[string]*api.Struct{
 	},
 	"cluster.NodeSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeSpec{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"RoutingConfig": api.Field{Name: "RoutingConfig", CLITag: api.CLIInfo{ID: "routing-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "routing-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
 	},
 	"cluster.NodeStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeStatus{}) },

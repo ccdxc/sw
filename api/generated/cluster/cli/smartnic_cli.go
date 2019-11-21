@@ -56,6 +56,13 @@ var CreateDistributedServiceCardFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "routing-config",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeDistributedServiceCardOper(obj interface{}) error {

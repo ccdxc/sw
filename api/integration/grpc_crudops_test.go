@@ -3398,6 +3398,7 @@ func TestCrossTenantList(t *testing.T) {
 		net.Defaults("v1")
 		net.Tenant = globals.DefaultTenant
 		net.Name = fmt.Sprintf("nework-%d", i)
+		net.Spec.Type = network.NetworkType_Bridged.String()
 		defNetworks = append(defNetworks, net)
 		_, err := apicl.NetworkV1().Network().Create(ctx, &net)
 		AssertOk(t, err, "failed to create network [%d](%s)", i, err)
@@ -3409,6 +3410,7 @@ func TestCrossTenantList(t *testing.T) {
 		net.Defaults("v1")
 		net.Tenant = "testtenant"
 		net.Name = fmt.Sprintf("nework-%d", i)
+		net.Spec.Type = network.NetworkType_Bridged.String()
 		testNetworks = append(testNetworks, net)
 		_, err := apicl.NetworkV1().Network().Create(ctx, &net)
 		AssertOk(t, err, "failed to create network [%d](%s)", i, err)

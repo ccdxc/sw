@@ -18,6 +18,11 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
+export enum NetworkBGPNeighbor_enable_address_families {
+    'ipv4-unicast' = "ipv4-unicast",
+    'evpn' = "evpn",
+}
+
 export enum NetworkIPAMPolicySpec_type {
     'dhcp-relay' = "dhcp-relay",
 }
@@ -27,11 +32,26 @@ export enum NetworkNetworkInterfaceSpec_admin_status {
     'down' = "down",
 }
 
+export enum NetworkNetworkInterfaceSpec_type {
+    'none' = "none",
+    'host-pf' = "host-pf",
+    'uplink-eth' = "uplink-eth",
+    'uplink-mgmt' = "uplink-mgmt",
+    'loopback-tep' = "loopback-tep",
+}
+
+export enum NetworkNetworkInterfaceSpec_ip_alloc_type {
+    'none' = "none",
+    'static' = "static",
+    'dhcp' = "dhcp",
+}
+
 export enum NetworkNetworkInterfaceStatus_type {
     'none' = "none",
     'host-pf' = "host-pf",
     'uplink-eth' = "uplink-eth",
     'uplink-mgmt' = "uplink-mgmt",
+    'loopback-tep' = "loopback-tep",
 }
 
 export enum NetworkNetworkInterfaceStatus_oper_status {
@@ -39,10 +59,26 @@ export enum NetworkNetworkInterfaceStatus_oper_status {
     'down' = "down",
 }
 
+export enum NetworkNetworkSpec_type {
+    'bridged' = "bridged",
+    'routed' = "routed",
+}
+
 export enum NetworkPauseSpec_type {
     'disable' = "disable",
     'link' = "link",
     'priority' = "priority",
+}
+
+export enum NetworkRDSpec_address_family {
+    'ipv4-unicast' = "ipv4-unicast",
+    'evpn' = "evpn",
+}
+
+export enum NetworkRouteDistinguisher_type {
+    'type0' = "type0",
+    'type1' = "type1",
+    'type2' = "type2",
 }
 
 export enum NetworkTLSServerPolicySpec_client_authentication {
@@ -97,6 +133,12 @@ export enum NetworkTransceiverStatus_pid {
     'pid_na' = "pid_na",
 }
 
+export enum NetworkVirtualRouterSpec_type {
+    'unknown' = "unknown",
+    'tenant' = "tenant",
+    'infra' = "infra",
+}
+
 
 export enum ApiListWatchOptions_sort_order_uihint {
     'by-creation-time' = "By Creation Time",
@@ -142,15 +184,22 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    NetworkBGPNeighbor_enable_address_families = NetworkBGPNeighbor_enable_address_families;
     NetworkIPAMPolicySpec_type = NetworkIPAMPolicySpec_type;
     NetworkNetworkInterfaceSpec_admin_status = NetworkNetworkInterfaceSpec_admin_status;
+    NetworkNetworkInterfaceSpec_type = NetworkNetworkInterfaceSpec_type;
+    NetworkNetworkInterfaceSpec_ip_alloc_type = NetworkNetworkInterfaceSpec_ip_alloc_type;
     NetworkNetworkInterfaceStatus_type = NetworkNetworkInterfaceStatus_type;
     NetworkNetworkInterfaceStatus_oper_status = NetworkNetworkInterfaceStatus_oper_status;
+    NetworkNetworkSpec_type = NetworkNetworkSpec_type;
     NetworkPauseSpec_type = NetworkPauseSpec_type;
+    NetworkRDSpec_address_family = NetworkRDSpec_address_family;
+    NetworkRouteDistinguisher_type = NetworkRouteDistinguisher_type;
     NetworkTLSServerPolicySpec_client_authentication = NetworkTLSServerPolicySpec_client_authentication;
     NetworkTransceiverStatus_state = NetworkTransceiverStatus_state;
     NetworkTransceiverStatus_cable_type = NetworkTransceiverStatus_cable_type;
     NetworkTransceiverStatus_pid = NetworkTransceiverStatus_pid;
+    NetworkVirtualRouterSpec_type = NetworkVirtualRouterSpec_type;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
 }

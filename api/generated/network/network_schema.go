@@ -55,6 +55,8 @@ var typesMapNetwork = map[string]*api.Struct{
 			"allocated-ipv4-addrs": api.CLIInfo{Path: "Status.AllocatedIPv4Addrs", Skip: false, Insert: "", Help: ""},
 			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"id":                   api.CLIInfo{Path: "Status.Handle", Skip: false, Insert: "", Help: ""},
+			"ipam-policy":          api.CLIInfo{Path: "Spec.IPAMPolicy", Skip: false, Insert: "", Help: ""},
 			"ipv4-gateway":         api.CLIInfo{Path: "Spec.IPv4Gateway", Skip: false, Insert: "", Help: ""},
 			"ipv4-subnet":          api.CLIInfo{Path: "Spec.IPv4Subnet", Skip: false, Insert: "", Help: ""},
 			"ipv6-gateway":         api.CLIInfo{Path: "Spec.IPv6Gateway", Skip: false, Insert: "", Help: ""},
@@ -68,6 +70,7 @@ var typesMapNetwork = map[string]*api.Struct{
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":                 api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
 			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"virtual-router":       api.CLIInfo{Path: "Spec.VirtualRouter", Skip: false, Insert: "", Help: ""},
 			"vlan-id":              api.CLIInfo{Path: "Spec.VlanID", Skip: false, Insert: "", Help: ""},
 			"vxlan-vni":            api.CLIInfo{Path: "Spec.VxlanVNI", Skip: false, Insert: "", Help: ""},
 			"workloads":            api.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
@@ -89,6 +92,12 @@ var typesMapNetwork = map[string]*api.Struct{
 			"VlanID": api.Field{Name: "VlanID", CLITag: api.CLIInfo{ID: "vlan-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vlan-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"VxlanVNI": api.Field{Name: "VxlanVNI", CLITag: api.CLIInfo{ID: "vxlan-vni", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vxlan-vni", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"VirtualRouter": api.Field{Name: "VirtualRouter", CLITag: api.CLIInfo{ID: "virtual-router", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "virtual-router", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPAMPolicy": api.Field{Name: "IPAMPolicy", CLITag: api.CLIInfo{ID: "ipam-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipam-policy", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RouteImportExport": api.Field{Name: "RouteImportExport", CLITag: api.CLIInfo{ID: "route-imoport-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-imoport-export", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RDSpec"},
 		},
 	},
 	"network.NetworkStatus": &api.Struct{
@@ -97,6 +106,8 @@ var typesMapNetwork = map[string]*api.Struct{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{ID: "workloads", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AllocatedIPv4Addrs": api.Field{Name: "AllocatedIPv4Addrs", CLITag: api.CLIInfo{ID: "allocated-ipv4-addrs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "allocated-ipv4-addrs", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+
+			"Handle": api.Field{Name: "Handle", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
 		},
 	},
 }

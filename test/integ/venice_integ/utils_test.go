@@ -73,6 +73,7 @@ func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw str
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
 		},

@@ -11,8 +11,9 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
-import "github.com/pensando/sw/api/protos/cluster.proto";
-import "github.com/pensando/sw/api/protos/sgpolicy.proto";
+
+import "cluster.proto";
+import "sgpolicy.proto";
 
 // ----------------------------- Workload Object -----------------------------
 //

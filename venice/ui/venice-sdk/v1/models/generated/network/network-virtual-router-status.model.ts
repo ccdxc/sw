@@ -7,13 +7,34 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { NetworkRouteDistinguisher, INetworkRouteDistinguisher } from './network-route-distinguisher.model';
 
 export interface INetworkVirtualRouterStatus {
+    'id'?: string;
+    'route-table'?: string;
+    'rd'?: INetworkRouteDistinguisher;
 }
 
 
 export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVirtualRouterStatus {
+    /** Handle allocated in the system. */
+    'id': string = null;
+    'route-table': string = null;
+    'rd': NetworkRouteDistinguisher = null;
     public static propInfo: { [prop in keyof INetworkVirtualRouterStatus]: PropInfoItem } = {
+        'id': {
+            description:  'Handle allocated in the system.',
+            required: false,
+            type: 'string'
+        },
+        'route-table': {
+            required: false,
+            type: 'string'
+        },
+        'rd': {
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -38,6 +59,7 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['rd'] = new NetworkRouteDistinguisher();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -47,6 +69,25 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['id'] != null) {
+            this['id'] = values['id'];
+        } else if (fillDefaults && NetworkVirtualRouterStatus.hasDefaultValue('id')) {
+            this['id'] = NetworkVirtualRouterStatus.propInfo['id'].default;
+        } else {
+            this['id'] = null
+        }
+        if (values && values['route-table'] != null) {
+            this['route-table'] = values['route-table'];
+        } else if (fillDefaults && NetworkVirtualRouterStatus.hasDefaultValue('route-table')) {
+            this['route-table'] = NetworkVirtualRouterStatus.propInfo['route-table'].default;
+        } else {
+            this['route-table'] = null
+        }
+        if (values) {
+            this['rd'].setValues(values['rd'], fillDefaults);
+        } else {
+            this['rd'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -54,6 +95,14 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'id': CustomFormControl(new FormControl(this['id']), NetworkVirtualRouterStatus.propInfo['id']),
+                'route-table': CustomFormControl(new FormControl(this['route-table']), NetworkVirtualRouterStatus.propInfo['route-table']),
+                'rd': CustomFormGroup(this['rd'].$formGroup, NetworkVirtualRouterStatus.propInfo['rd'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('rd') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rd').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -65,6 +114,9 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['id'].setValue(this['id']);
+            this._formGroup.controls['route-table'].setValue(this['route-table']);
+            this['rd'].setFormGroupValuesToBeModelValues();
         }
     }
 }

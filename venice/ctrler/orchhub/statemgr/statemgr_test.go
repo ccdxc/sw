@@ -60,6 +60,7 @@ func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid ui
 			Labels:    labels,
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
 			VlanID:      vlanid,

@@ -13,7 +13,29 @@ import (
 )
 
 // CreateVirtualRouterFlags specifies flags for VirtualRouter create operation
-var CreateVirtualRouterFlags = []gen.CliFlag{}
+var CreateVirtualRouterFlags = []gen.CliFlag{
+	{
+		ID:     "router-mac-address",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "type",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "vxlan-vni",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
 
 func removeVirtualRouterOper(obj interface{}) error {
 	if v, ok := obj.(*network.VirtualRouter); ok {
@@ -29,6 +51,7 @@ func removeVirtualRouterOper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 
+	cl.AddCliInfo("network.VirtualRouter", "create", CreateVirtualRouterFlags)
 	cl.AddRemoveObjOperFunc("network.VirtualRouter", removeVirtualRouterOper)
 
 }

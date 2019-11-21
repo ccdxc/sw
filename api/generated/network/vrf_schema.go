@@ -52,25 +52,46 @@ var typesMapVrf = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"api-version":        api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"generation-id":      api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"id":                 api.CLIInfo{Path: "Status.Handle", Skip: false, Insert: "", Help: ""},
+			"kind":               api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":             api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"name":               api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":          api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version":   api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"route-table":        api.CLIInfo{Path: "Status.RouteTable", Skip: false, Insert: "", Help: ""},
+			"router-mac-address": api.CLIInfo{Path: "Spec.RouterMACAddress", Skip: false, Insert: "", Help: ""},
+			"self-link":          api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":             api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":               api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
+			"uuid":               api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"vxlan-vni":          api.CLIInfo{Path: "Spec.VxLanVNI", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"network.VirtualRouterSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(VirtualRouterSpec{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RouterMACAddress": api.Field{Name: "RouterMACAddress", CLITag: api.CLIInfo{ID: "router-mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "router-mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"VxLanVNI": api.Field{Name: "VxLanVNI", CLITag: api.CLIInfo{ID: "vxlan-vni", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vxlan-vni", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"RouteImportExport": api.Field{Name: "RouteImportExport", CLITag: api.CLIInfo{ID: "route-import-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-import-export", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RDSpec"},
+
+			"DefaultIPAMPolicy": api.Field{Name: "DefaultIPAMPolicy", CLITag: api.CLIInfo{ID: "default-ipam-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "default-ipam-policy", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.IPAMPolicy"},
+		},
 	},
 	"network.VirtualRouterStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(VirtualRouterStatus{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"Handle": api.Field{Name: "Handle", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
+
+			"RouteTable": api.Field{Name: "RouteTable", CLITag: api.CLIInfo{ID: "route-table", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-table", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RD": api.Field{Name: "RD", CLITag: api.CLIInfo{ID: "rd", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rd", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
+		},
 	},
 }
 

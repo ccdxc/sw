@@ -21,6 +21,7 @@ networkinterface.proto network true
 objstore.proto objstore true
 orchestration.proto orchestration true
 rollout.proto rollout true
+route.proto network true
 search.proto search true
 securitygroup.proto security true
 service.proto network true

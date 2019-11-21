@@ -129,9 +129,6 @@ func (m *OrchestratorSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *OrchestratorSpec) Defaults(ver string) bool {
 	var ret bool
-	if m.Credentials != nil {
-		ret = m.Credentials.Defaults(ver) || ret
-	}
 	ret = true
 	switch ver {
 	default:

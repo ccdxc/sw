@@ -10,8 +10,9 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
-import "github.com/pensando/sw/api/protos/securitygroup.proto";
-import "github.com/pensando/sw/api/protos/network.proto";
+
+import "securitygroup.proto";
+import "network.proto";
 
 // ----------------------------- Endpoint Object -----------------------------
 

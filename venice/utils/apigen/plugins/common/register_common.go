@@ -170,6 +170,7 @@ var ValidatorArgMap = map[string][]CheckArgs{
 	"EmptyOrStrLen":   {govldtr.IsInt, govldtr.IsInt},
 	"IntRange":        {govldtr.IsInt, govldtr.IsInt},
 	"IntMin":          {govldtr.IsInt},
+	"CIDR":            {},
 	"IPAddr":          {},
 	"IPv4":            {},
 	"HostAddr":        {},
@@ -223,6 +224,7 @@ var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descript
 	"EmptyOrStrLen":   emptyOrStrLenProfile,
 	"IntRange":        intRangeProfile,
 	"IntMin":          intMinProfile,
+	"CIDR":            cidrProfile,
 	"IPAddr":          ipAddrProfile,
 	"IPv4":            ipv4Profile,
 	"HostAddr":        hostAddrProfile,
@@ -390,6 +392,14 @@ func intMinProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 	}
 	prof.MinInt[ver] = min
 	prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("value should be at least %v", min)
+	prof.Required[ver] = true
+	return nil
+}
+
+func cidrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "10.1.1.1/24, ff02::5/32 "
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocString[ver] = prof.DocString[ver] + "should be a valid v4 or v6 CIDR block"
 	prof.Required[ver] = true
 	return nil
 }

@@ -63,6 +63,7 @@ var _ = Describe("Network object create delete throughput", func() {
 						Tenant:    "defaultTenant",
 					},
 					Spec: network.NetworkSpec{
+						Type:        network.NetworkType_Bridged.String(),
 						IPv4Subnet:  "100.100.100.0/24",
 						IPv4Gateway: "100.100.100.1",
 					},

@@ -120,6 +120,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"primary-mac":          api.CLIInfo{Path: "Status.PrimaryMAC", Skip: false, Insert: "", Help: ""},
 			"reason":               api.CLIInfo{Path: "Status.Conditions[].Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"routing-config":       api.CLIInfo{Path: "Spec.RoutingConfig", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"serial-num":           api.CLIInfo{Path: "Status.SerialNum", Skip: false, Insert: "", Help: ""},
 			"status":               api.CLIInfo{Path: "Status.Conditions[].Status", Skip: false, Insert: "", Help: ""},
@@ -146,6 +147,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"MgmtVlan": api.Field{Name: "MgmtVlan", CLITag: api.CLIInfo{ID: "mgmt-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mgmt-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"Controllers": api.Field{Name: "Controllers", CLITag: api.CLIInfo{ID: "controllers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "controllers", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RoutingConfig": api.Field{Name: "RoutingConfig", CLITag: api.CLIInfo{ID: "routing-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "routing-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.DistributedServiceCardStatus": &api.Struct{

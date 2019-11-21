@@ -220,7 +220,6 @@ func (m *WorkloadStatus) Defaults(ver string) bool {
 	if m.Migration != nil {
 		ret = m.Migration.Defaults(ver) || ret
 	}
-	ret = m.PropagationStatus.Defaults(ver) || ret
 	return ret
 }
 

@@ -168,7 +168,7 @@ func testAPICRUDOps() func() {
 					Namespace: globals.DefaultNamespace,
 				},
 				Spec: network.NetworkSpec{
-					Type:        "vlan",
+					Type:        network.NetworkType_Bridged.String(),
 					IPv4Subnet:  "255.255.255.0",
 					IPv4Gateway: "10.1.1.1",
 				},
@@ -246,7 +246,7 @@ func testAPICRUDOps() func() {
 					Name:      "e2eNetwork2",
 				},
 				Spec: network.NetworkSpec{
-					Type:        "vlan",
+					Type:        network.NetworkType_Bridged.String(),
 					IPv4Subnet:  "255.255.255.0",
 					IPv4Gateway: "11.1.1.1",
 				},
@@ -416,7 +416,7 @@ var _ = Describe("api crud tests", func() {
 				Name:      "e2eSaveNetwork1",
 			},
 			Spec: network.NetworkSpec{
-				Type:        "vlan",
+				Type:        network.NetworkType_Bridged.String(),
 				IPv4Subnet:  "10.1.1.1/24",
 				IPv4Gateway: "10.1.1.1",
 			},

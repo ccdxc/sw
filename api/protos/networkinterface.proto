@@ -9,6 +9,9 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+import "vrf.proto";
+import "smartnic.proto";
+
 // NetworkInterface represents a VF, PF or an Uplink within an I/O subsystem
 // Each NetworkInterface is uniquely prepended by I/O subsystem to provide unique name
 // Create/Delete: by the system as VFs, PFs and Uplinks are detected by the system
@@ -69,6 +72,20 @@ message PauseSpec {
 
 }
 
+enum IFType {
+    NONE              = 0;
+    HOST_PF           = 1 [(venice.enumValueStr) = "host-pf"];
+    UPLINK_ETH        = 3 [(venice.enumValueStr) = "uplink-eth"];
+    UPLINK_MGMT       = 4 [(venice.enumValueStr) = "uplink-mgmt"];
+    LOOPBACK_TEP      = 5 [(venice.enumValueStr) = "loopback-tep"];
+}
+
+enum IPAllocTypes {
+    None    = 0;
+    Static  = 1;
+    DHCP    = 2;
+}
+
 // NetworkInterfaceSpec
 message NetworkInterfaceSpec {
     //desired Admin state of the port
@@ -84,18 +101,37 @@ message NetworkInterfaceSpec {
     //Pause Spec
     PauseSpec Pause             = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "pause,omitempty"];
 
+    // Type specifies the type of interface
+    string Type             = 5 [(venice.check) = "StrEnum(IFType)",
+                                (gogoproto.jsontag) = "type,omitempty"];
+
+    string AttachTenant     = 6 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/Tenant"},
+                                 (gogoproto.jsontag) = "attach-tenant,omitempty"];
+
+    // AttachNetwork associates the interface with a Network. This is only valid for HOST_PF type.
+    string AttachNetwork    = 7 [(gogoproto.jsontag) = "attach-network,omitempty"];
+
+    string IPAllocType      = 8 [(venice.check) = "StrEnum(IPAllocTypes)",
+                            (gogoproto.jsontag) = "ip-alloc-type,omitempty"];
+
+    // Interface IP Configuration if any.
+    cluster.IPConfig IPConfig       = 9 [(gogoproto.jsontag) = "ip-config,omitempty"];
+
+    // Override system allocated MAC address
+    string MACAddress       = 10 [(venice.check) = "EmptyOr(MacAddr())", (gogoproto.jsontag) = "mac-address,omitempty"];
+
     // Future: Breakout Config, CDP, LLDP, LACP, configuration would come here
     // Future: A lot of above configuration would be driven by profile when available
 }
 
 // NetworkInterfaceStatus
 message NetworkInterfaceStatus {
-
     enum IFType {
         NONE              = 0;
         HOST_PF           = 1 [(venice.enumValueStr) = "host-pf"];
         UPLINK_ETH        = 3 [(venice.enumValueStr) = "uplink-eth"];
         UPLINK_MGMT       = 4 [(venice.enumValueStr) = "uplink-mgmt"];
+        LOOPBACK_TEP      = 5 [(venice.enumValueStr) = "loopback-tep"];
         // TB Added for SR-IOV: HOST_VF
     }
 
@@ -111,12 +147,18 @@ message NetworkInterfaceStatus {
     NetworkInterfaceUplinkStatus IFUplinkStatus = 7 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
 
     bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
+    
+    // Set only if interface is on Venice Node.
+    string ClusterNode                          = 9 [(gogoproto.jsontag) = "cluster-node,omitempty"];
 }
 
 // NetworkInterfaceHostStatus is populated for PF and VF
 message NetworkInterfaceHostStatus {
-    // interface name seen by the host driver
+    // interface name seen by the host driver.
     string HostIfName   = 1 [(gogoproto.jsontag) = "host-ifname,omitempty"];
+
+    // PCIE Device ID.
+    string DeviceID     = 2 [(gogoproto.jsontag) = "device-id,omitempty"];
 }
 
 

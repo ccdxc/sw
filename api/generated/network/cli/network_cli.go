@@ -15,6 +15,13 @@ import (
 // CreateNetworkFlags specifies flags for Network create operation
 var CreateNetworkFlags = []gen.CliFlag{
 	{
+		ID:     "ipam-policy",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "ipv4-gateway",
 		Type:   "String",
 		Help:   "",
@@ -44,6 +51,13 @@ var CreateNetworkFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "type",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "virtual-router",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,

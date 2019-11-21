@@ -19,6 +19,7 @@ export interface IClusterDistributedServiceCardSpec {
     'network-mode': ClusterDistributedServiceCardSpec_network_mode;
     'mgmt-vlan': number;
     'controllers'?: Array<string>;
+    'routing-config'?: string;
 }
 
 
@@ -38,6 +39,8 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
     'mgmt-vlan': number = null;
     /** Controllers contains the list of remote controllers IP addresses or hostnames */
     'controllers': Array<string> = null;
+    /** RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in. */
+    'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardSpec]: PropInfoItem } = {
         'admit': {
             description:  'Admit allows a DistributedServiceCard to join the cluster',
@@ -77,6 +80,11 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
             description:  'Controllers contains the list of remote controllers IP addresses or hostnames',
             required: false,
             type: 'Array<string>'
+        },
+        'routing-config': {
+            description:  'RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.',
+            required: false,
+            type: 'string'
         },
     }
 
@@ -160,6 +168,13 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
         } else {
             this['controllers'] = [];
         }
+        if (values && values['routing-config'] != null) {
+            this['routing-config'] = values['routing-config'];
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('routing-config')) {
+            this['routing-config'] = ClusterDistributedServiceCardSpec.propInfo['routing-config'].default;
+        } else {
+            this['routing-config'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -174,6 +189,7 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
                 'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterDistributedServiceCardSpec_network_mode), ]), ClusterDistributedServiceCardSpec.propInfo['network-mode']),
                 'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterDistributedServiceCardSpec.propInfo['mgmt-vlan']),
                 'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterDistributedServiceCardSpec.propInfo['controllers']),
+                'routing-config': CustomFormControl(new FormControl(this['routing-config']), ClusterDistributedServiceCardSpec.propInfo['routing-config']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('ip-config') as FormGroup).controls).forEach(field => {
@@ -197,6 +213,7 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
             this._formGroup.controls['network-mode'].setValue(this['network-mode']);
             this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
             this._formGroup.controls['controllers'].setValue(this['controllers']);
+            this._formGroup.controls['routing-config'].setValue(this['routing-config']);
         }
     }
 }

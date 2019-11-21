@@ -275,14 +275,7 @@ func (m *PolicyMatchEntries) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PolicyMatchEntries) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Entries {
-		if m.Entries[k] != nil {
-			i := m.Entries[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -303,11 +296,7 @@ func (m *PolicyMatchEntry) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PolicyMatchEntry) Defaults(ver string) bool {
-	var ret bool
-	if m.Rule != nil {
-		ret = m.Rule.Defaults(ver) || ret
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -357,12 +346,6 @@ func (m *PolicySearchResponse) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *PolicySearchResponse) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Results {
-		if m.Results[k] != nil {
-			i := m.Results[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
 	ret = true
 	switch ver {
 	default:

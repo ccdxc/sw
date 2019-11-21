@@ -772,6 +772,258 @@ func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Allowed(oper interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Allowed), oper)
 }
 
+// MockNetworkV1RoutingConfigInterface is a mock of NetworkV1RoutingConfigInterface interface
+type MockNetworkV1RoutingConfigInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockNetworkV1RoutingConfigInterfaceMockRecorder
+}
+
+// MockNetworkV1RoutingConfigInterfaceMockRecorder is the mock recorder for MockNetworkV1RoutingConfigInterface
+type MockNetworkV1RoutingConfigInterfaceMockRecorder struct {
+	mock *MockNetworkV1RoutingConfigInterface
+}
+
+// NewMockNetworkV1RoutingConfigInterface creates a new mock instance
+func NewMockNetworkV1RoutingConfigInterface(ctrl *gomock.Controller) *MockNetworkV1RoutingConfigInterface {
+	mock := &MockNetworkV1RoutingConfigInterface{ctrl: ctrl}
+	mock.recorder = &MockNetworkV1RoutingConfigInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockNetworkV1RoutingConfigInterface) EXPECT() *MockNetworkV1RoutingConfigInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Create(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Update(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) UpdateStatus(ctx context.Context, in *network.RoutingConfig) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Allowed), oper)
+}
+
+// MockNetworkV1RouteTableInterface is a mock of NetworkV1RouteTableInterface interface
+type MockNetworkV1RouteTableInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockNetworkV1RouteTableInterfaceMockRecorder
+}
+
+// MockNetworkV1RouteTableInterfaceMockRecorder is the mock recorder for MockNetworkV1RouteTableInterface
+type MockNetworkV1RouteTableInterfaceMockRecorder struct {
+	mock *MockNetworkV1RouteTableInterface
+}
+
+// NewMockNetworkV1RouteTableInterface creates a new mock instance
+func NewMockNetworkV1RouteTableInterface(ctrl *gomock.Controller) *MockNetworkV1RouteTableInterface {
+	mock := &MockNetworkV1RouteTableInterface{ctrl: ctrl}
+	mock.recorder = &MockNetworkV1RouteTableInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockNetworkV1RouteTableInterface) EXPECT() *MockNetworkV1RouteTableInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockNetworkV1RouteTableInterface) Create(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockNetworkV1RouteTableInterface) Update(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockNetworkV1RouteTableInterface) UpdateStatus(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockNetworkV1RouteTableInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockNetworkV1RouteTableInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockNetworkV1RouteTableInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockNetworkV1RouteTableInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockNetworkV1RouteTableInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Allowed), oper)
+}
+
 // MockNetworkV1Interface is a mock of NetworkV1Interface interface
 type MockNetworkV1Interface struct {
 	ctrl     *gomock.Controller
@@ -865,6 +1117,30 @@ func (m *MockNetworkV1Interface) IPAMPolicy() network.NetworkV1IPAMPolicyInterfa
 // IPAMPolicy indicates an expected call of IPAMPolicy
 func (mr *MockNetworkV1InterfaceMockRecorder) IPAMPolicy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IPAMPolicy", reflect.TypeOf((*MockNetworkV1Interface)(nil).IPAMPolicy))
+}
+
+// RoutingConfig mocks base method
+func (m *MockNetworkV1Interface) RoutingConfig() network.NetworkV1RoutingConfigInterface {
+	ret := m.ctrl.Call(m, "RoutingConfig")
+	ret0, _ := ret[0].(network.NetworkV1RoutingConfigInterface)
+	return ret0
+}
+
+// RoutingConfig indicates an expected call of RoutingConfig
+func (mr *MockNetworkV1InterfaceMockRecorder) RoutingConfig() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoutingConfig", reflect.TypeOf((*MockNetworkV1Interface)(nil).RoutingConfig))
+}
+
+// RouteTable mocks base method
+func (m *MockNetworkV1Interface) RouteTable() network.NetworkV1RouteTableInterface {
+	ret := m.ctrl.Call(m, "RouteTable")
+	ret0, _ := ret[0].(network.NetworkV1RouteTableInterface)
+	return ret0
+}
+
+// RouteTable indicates an expected call of RouteTable
+func (mr *MockNetworkV1InterfaceMockRecorder) RouteTable() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RouteTable", reflect.TypeOf((*MockNetworkV1Interface)(nil).RouteTable))
 }
 
 // Watch mocks base method

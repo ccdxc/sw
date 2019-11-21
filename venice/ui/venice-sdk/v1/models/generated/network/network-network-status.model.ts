@@ -11,6 +11,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface INetworkNetworkStatus {
     'workloads'?: Array<string>;
     'allocated-ipv4-addrs'?: string;
+    'id'?: string;
 }
 
 
@@ -19,6 +20,8 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     'workloads': Array<string> = null;
     /** allocated IPv4 addresses (bitmap) */
     'allocated-ipv4-addrs': string = null;
+    /** Handle is the internal Handle allocated to this network */
+    'id': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkStatus]: PropInfoItem } = {
         'workloads': {
             description:  'List of all workloads in this network',
@@ -27,6 +30,11 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         },
         'allocated-ipv4-addrs': {
             description:  'Allocated IPv4 addresses (bitmap)',
+            required: false,
+            type: 'string'
+        },
+        'id': {
+            description:  'Handle is the internal Handle allocated to this network',
             required: false,
             type: 'string'
         },
@@ -78,6 +86,13 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         } else {
             this['allocated-ipv4-addrs'] = null
         }
+        if (values && values['id'] != null) {
+            this['id'] = values['id'];
+        } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('id')) {
+            this['id'] = NetworkNetworkStatus.propInfo['id'].default;
+        } else {
+            this['id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -87,6 +102,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
             this._formGroup = new FormGroup({
                 'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkNetworkStatus.propInfo['workloads']),
                 'allocated-ipv4-addrs': CustomFormControl(new FormControl(this['allocated-ipv4-addrs']), NetworkNetworkStatus.propInfo['allocated-ipv4-addrs']),
+                'id': CustomFormControl(new FormControl(this['id']), NetworkNetworkStatus.propInfo['id']),
             });
         }
         return this._formGroup;
@@ -100,6 +116,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         if (this._formGroup) {
             this._formGroup.controls['workloads'].setValue(this['workloads']);
             this._formGroup.controls['allocated-ipv4-addrs'].setValue(this['allocated-ipv4-addrs']);
+            this._formGroup.controls['id'].setValue(this['id']);
         }
     }
 }

@@ -1388,6 +1388,13 @@
             }
           },
           {
+            "name": "spec.routing-config",
+            "description": "RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.admission-phase",
             "description": "Current admission phase of the DistributedServiceCard.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
             "in": "query",
@@ -2551,6 +2558,13 @@
           {
             "name": "meta.self-link",
             "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.routing-config",
+            "description": "RoutingConfig the routing configuration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5527,6 +5541,10 @@
             "type": "string"
           },
           "title": "Controllers contains the list of remote controllers IP addresses or hostnames"
+        },
+        "routing-config": {
+          "type": "string",
+          "description": "RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in."
         }
       },
       "title": "DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)"
@@ -5823,6 +5841,12 @@
     },
     "clusterNodeSpec": {
       "type": "object",
+      "properties": {
+        "routing-config": {
+          "type": "string",
+          "title": "RoutingConfig the routing configuration"
+        }
+      },
       "description": "NodeSpec contains the configuration of the node."
     },
     "clusterNodeStatus": {

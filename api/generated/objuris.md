@@ -31,6 +31,8 @@
 | RoleBinding | /configs/auth/v1/role-bindings |
 | Rollout | /configs/rollout/v1/rollout |
 | RolloutAction | /configs/rollout/v1/rolloutAction |
+| RouteTable | /configs/network/v1/route-tables |
+| RoutingConfig | /configs/network/v1/routing-config |
 | SecurityGroup | /configs/security/v1/security-groups |
 | Service | /configs/network/v1/services |
 | SnapshotRestore | /configs/cluster/v1/config-restore |

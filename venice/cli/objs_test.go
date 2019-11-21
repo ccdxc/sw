@@ -47,7 +47,7 @@ func TestPatchObj(t *testing.T) {
 			Labels: map[string]string{"label-key1": "label-value1", "label-key2": "label=value2"},
 		},
 		Spec: network.NetworkSpec{
-			Type:   "l2",
+			Type:   network.NetworkType_Bridged.String(),
 			VlanID: 23,
 		},
 	}

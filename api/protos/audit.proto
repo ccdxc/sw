@@ -7,9 +7,10 @@ package audit;
 import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/pensando/sw/api/protos/auth.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
+
+import "auth.proto";
 
 // Level to control amount of audit information logged
 enum Level {

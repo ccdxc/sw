@@ -35,6 +35,24 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
 	},
+	"network.NetworkInterfaceSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "cluster/Tenant", Field: "AttachTenant"},
+		{Type: "NamedRef", To: "cluster/Tenant", Field: "AttachTenant"},
+	},
+	"network.NetworkSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
+		{Type: "NamedRef", To: "network/IPAMPolicy", Field: "IPAMPolicy"},
+		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
+		{Type: "NamedRef", To: "network/IPAMPolicy", Field: "IPAMPolicy"},
+	},
+	"network.Route": []apiintf.ObjRelation{
+		{Type: "WeakRef", To: "network/VirtualRouter", Field: "TargetVirtualRouter"},
+		{Type: "WeakRef", To: "network/VirtualRouter", Field: "TargetVirtualRouter"},
+	},
+	"network.VirtualRouterStatus": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/RouteTable", Field: "RouteTable"},
+		{Type: "NamedRef", To: "network/RouteTable", Field: "RouteTable"},
+	},
 	"security.NetworkSecurityPolicySpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "security/SecurityGroup", Field: "AttachGroups"},
 		{Type: "NamedRef", To: "security/SecurityGroup", Field: "AttachGroups"},

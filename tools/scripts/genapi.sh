@@ -19,6 +19,11 @@ if [ -e ${curdir}/generated/manifest ]; then
     rm -f ${curdir}/generated/manifest
 fi
 
+# Delete the manifest file if already exists.
+if [ -e ${curdir}/generated/pkgmanifest ]; then
+    rm -f ${curdir}/generated/pkgmanifest
+fi
+
 # Delete the swaggerindex file if already exists.
 if [ -e ${curdir}/generated/swagger/index.json ]; then
     rm -f ${curdir}/generated/swagger/index.json
@@ -85,7 +90,7 @@ do
     protofile=$(echo $line | awk '{ print $1 }')
     pkg=$(echo $line | awk '{ print $2 }')
     [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
-    PROTOSUBST=${PROTOSUBST},Mgithub.com/pensando/sw/api/protos/${protofile}=github.com/pensando/sw/api/generated/${pkg}
+    PROTOSUBST=${PROTOSUBST},Mgithub.com/pensando/sw/api/protos/${protofile}=github.com/pensando/sw/api/generated/${pkg},M${protofile}=github.com/pensando/sw/api/generated/${pkg}
 done < ${curdir}/generated/manifest
 
 cd ${curdir}

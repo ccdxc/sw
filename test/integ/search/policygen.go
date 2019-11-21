@@ -140,6 +140,7 @@ func createNetwork(tenant, namespace, name, subnet, gw string) *network.Network 
 			},
 		},
 		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
 		},

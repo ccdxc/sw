@@ -256,7 +256,7 @@ func testStagingFn(instance string) {
 				Name:   "network1",
 			},
 			Spec: network.NetworkSpec{
-				Type:   "vlan",
+				Type:   network.NetworkType_Bridged.String(),
 				VlanID: 10,
 			},
 		}
@@ -277,7 +277,7 @@ func testStagingFn(instance string) {
 				Name:   "network2",
 			},
 			Spec: network.NetworkSpec{
-				Type:   "vlan",
+				Type:   network.NetworkType_Bridged.String(),
 				VlanID: 10,
 			},
 		}
@@ -297,7 +297,7 @@ func testStagingFn(instance string) {
 				Name:   "network3",
 			},
 			Spec: network.NetworkSpec{
-				Type:   "vlan",
+				Type:   network.NetworkType_Bridged.String(),
 				VlanID: 10,
 			},
 		}

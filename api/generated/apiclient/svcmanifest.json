@@ -517,7 +517,9 @@
           "LbPolicy",
           "VirtualRouter",
           "NetworkInterface",
-          "IPAMPolicy"
+          "IPAMPolicy",
+          "RoutingConfig",
+          "RouteTable"
         ],
         "Properties": {
           "IPAMPolicy": {
@@ -545,6 +547,9 @@
               "tenant"
             ],
             "RestMethods": [
+              "post",
+              "put",
+              "delete",
               "get",
               "list",
               "watch"
@@ -556,11 +561,38 @@
               "cluster"
             ],
             "RestMethods": [
+              "post",
+              "put",
               "get",
               "list",
               "watch"
             ],
             "URI": "/configs/network/v1/networkinterfaces"
+          },
+          "RouteTable": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/network/v1/route-tables"
+          },
+          "RoutingConfig": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "post",
+              "put",
+              "delete",
+              "get",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/network/v1/routing-config"
           },
           "Service": {
             "Scopes": [
@@ -571,6 +603,14 @@
           "VirtualRouter": {
             "Scopes": [
               "tenant"
+            ],
+            "RestMethods": [
+              "post",
+              "put",
+              "delete",
+              "get",
+              "list",
+              "watch"
             ],
             "URI": "/configs/network/v1/virtualrouters"
           }

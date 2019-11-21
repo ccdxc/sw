@@ -10,15 +10,23 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface INetworkNetworkInterfaceHostStatus {
     'host-ifname'?: string;
+    'device-id'?: string;
 }
 
 
 export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INetworkNetworkInterfaceHostStatus {
-    /** interface name seen by the host driver */
+    /** interface name seen by the host driver. */
     'host-ifname': string = null;
+    /** PCIE Device ID. */
+    'device-id': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceHostStatus]: PropInfoItem } = {
         'host-ifname': {
-            description:  'Interface name seen by the host driver',
+            description:  'Interface name seen by the host driver.',
+            required: false,
+            type: 'string'
+        },
+        'device-id': {
+            description:  'PCIE Device ID.',
             required: false,
             type: 'string'
         },
@@ -62,6 +70,13 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
         } else {
             this['host-ifname'] = null
         }
+        if (values && values['device-id'] != null) {
+            this['device-id'] = values['device-id'];
+        } else if (fillDefaults && NetworkNetworkInterfaceHostStatus.hasDefaultValue('device-id')) {
+            this['device-id'] = NetworkNetworkInterfaceHostStatus.propInfo['device-id'].default;
+        } else {
+            this['device-id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -70,6 +85,7 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'host-ifname': CustomFormControl(new FormControl(this['host-ifname']), NetworkNetworkInterfaceHostStatus.propInfo['host-ifname']),
+                'device-id': CustomFormControl(new FormControl(this['device-id']), NetworkNetworkInterfaceHostStatus.propInfo['device-id']),
             });
         }
         return this._formGroup;
@@ -82,6 +98,7 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['host-ifname'].setValue(this['host-ifname']);
+            this._formGroup.controls['device-id'].setValue(this['device-id']);
         }
     }
 }
