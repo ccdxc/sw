@@ -7,9 +7,7 @@ import iris.test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 
-rnmdr = 0
-rnmpr = 0
-rnmpr_small = 0
+cpurx_dpr = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -22,9 +20,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
+    global cpurx_dpr
     tc.SetRetryEnabled(True)
     tc.pvtdata = ObjectDatabase()
 
@@ -33,19 +29,14 @@ def TestCaseSetup(tc):
 
 
     # Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.GetMeta()
-    
+    cpurx_dpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"])
+    cpurx_dpr.GetMeta()
+    cpurx_dpr.GetRingEntries([cpurx_dpr.pi])
+
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
+    global cpurx_dpr
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -56,17 +47,9 @@ def TestCaseVerify(tc):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
     # Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.GetMeta()
-
-    print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-
-    print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-    print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
+    cpurx_dpr_cur = tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"]
+    cpurx_dpr_cur.GetMeta()
+    print("CPU_RX_DPR pi old %d new %d" % (cpurx_dpr.pi, cpurx_dpr_cur.pi))
 
     return True
 

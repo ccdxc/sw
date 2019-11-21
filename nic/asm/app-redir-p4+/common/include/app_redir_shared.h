@@ -19,6 +19,19 @@
 #define CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT    6
 #endif
 
+/*
+ * MPU stages
+ */
+#ifndef CAPRI_STAGE_0
+#define CAPRI_STAGE_0                       0
+#define CAPRI_STAGE_1                       1
+#define CAPRI_STAGE_2                       2
+#define CAPRI_STAGE_3                       3
+#define CAPRI_STAGE_4                       4
+#define CAPRI_STAGE_5                       5
+#define CAPRI_STAGE_6                       6
+#define CAPRI_STAGE_7                       7
+#endif
 
 /*
  * App redirect queue types
@@ -67,48 +80,22 @@
 /*
  * Raw Redirect Control Block sizes
  */
-#define RAWRCB_TABLE_ENTRY_SIZE             128
-#define RAWRCB_TABLE_ENTRY_SIZE_SHFT        7
+#define RAWRCB_TABLE_ENTRY_SIZE             256
+#define RAWRCB_TABLE_ENTRY_SIZE_SHFT        8
 #define RAWRCB_TABLE_ENTRY_MULTIPLE         (RAWRCB_TABLE_ENTRY_SIZE_SHFT - \
                                              CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
-#define RAWRCB_TABLE_STATS_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
-
-/*
- * For use by NCC ASM code
- */
-#define RAWRCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
-                                      qstate_addr_src, phv_inc_stat)            \
-    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWRCB_TABLE_STATS_OFFSET,                        \
-                              phv_inc_stat, rawr_normal_stats_inc)
-#define RAWRCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
-                                   qstate_addr_src, phv_inc_stat)               \
-    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWRCB_TABLE_STATS_OFFSET,                        \
-                              phv_inc_stat, rawr_err_stats_inc)
+#define RAWRCB_TABLE_EXTRA_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+#define RAWRCB_TABLE_METRICS0_OFFSET        (2 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
 
 /*
  * Raw Chain Control Block sizes
  */
-#define RAWCCB_TABLE_ENTRY_SIZE             128
-#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        7
+#define RAWCCB_TABLE_ENTRY_SIZE             256
+#define RAWCCB_TABLE_ENTRY_SIZE_SHFT        8
 #define RAWCCB_TABLE_ENTRY_MULTIPLE         (RAWCCB_TABLE_ENTRY_SIZE_SHFT - \
                                              CAPRI_CB_TABLE_ENTRY_SINGLE_SHFT + 1)
-#define RAWCCB_TABLE_STATS_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
-
-/*
- * For use by NCC ASM code
- */
-#define RAWCCB_NORMAL_STAT_INC_LAUNCH(table, qstate_addr_dst,                   \
-                                      qstate_addr_src, phv_inc_stat)            \
-    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWCCB_TABLE_STATS_OFFSET,                        \
-                              phv_inc_stat, rawc_normal_stats_inc)
-#define RAWCCB_ERR_STAT_INC_LAUNCH(table, qstate_addr_dst,                      \
-                                   qstate_addr_src, phv_inc_stat)               \
-    APP_REDIR_STAT_INC_LAUNCH(table, qstate_addr_dst, qstate_addr_src,          \
-                              RAWCCB_TABLE_STATS_OFFSET,                        \
-                              phv_inc_stat, rawc_err_stats_inc)
+#define RAWCCB_TABLE_EXTRA_OFFSET           (1 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
+#define RAWCCB_TABLE_METRICS0_OFFSET        (2 * CAPRI_CB_TABLE_ENTRY_SINGLE_SIZE)
 
 /*
  * Proxy Redirect Control Block sizes
@@ -229,5 +216,17 @@
 #define DESC_VALID_BIT_SHIFT                63
 #endif
 
+/*
+ * Descriptor-Page Ring info
+ */
+#define RAWR_RNMDPR_ALLOC_IDX               CPU_RX_DPR_ALLOC_IDX
+#define RAWR_RNMDPR_ALLOC_CI_RAW_ADDR       CPU_RX_DPR_ALLOC_CI_RAW_ADDR
+#define RAWR_RNMDPR_TABLE_BASE              CPU_RX_DPR_TABLE_BASE
+#define RAWR_RNMDPR_TABLE_ENTRY_SIZE_SHIFT  CPU_RX_DPR_TABLE_ENTRY_SIZE_SHFT
+#define RAWR_RNMDPR_RING_SHIFT              CAPRI_CPU_RX_DPR_RING_SHIFT
+#define RAWR_RNMDPR_PAGE_OFFSET             CAPRI_CPU_RX_DPR_PAGE_OFFSET
+#define RAWR_RNMDPR_PAGE_SIZE               CAPRI_CPU_RX_DPR_OBJ_TOTAL_SIZE
+#define RAWR_RNMDPR_OVERHEADS_SIZE          RAWR_RNMDPR_PAGE_OFFSET
+#define RAWR_RNMDPR_USABLE_PAGE_SIZE        (RAWR_RNMDPR_PAGE_SIZE - RAWR_RNMDPR_PAGE_OFFSET)
 #endif //__APP_REDIR_SHARED_H
 

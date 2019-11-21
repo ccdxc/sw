@@ -59,6 +59,9 @@ class RawrCbObject(base.ConfigObjectBase):
            req_spec.chain_txq_qtype              = self.chain_txq_qtype
            req_spec.chain_txq_qid                = self.chain_txq_qid
 
+           req_spec.cpu_id                       = self.cpu_id
+           req_spec.ascq_base                    = self.ascq_base
+           req_spec.ascq_sem_inf_addr            = self.ascq_sem_inf_addr
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -82,17 +85,18 @@ class RawrCbObject(base.ConfigObjectBase):
             self.chain_txq_qtype              = resp_spec.spec.chain_txq_qtype
             self.chain_txq_qid                = resp_spec.spec.chain_txq_qid
 
-            self.stat_pkts_redir              = resp_spec.spec.stat_pkts_redir
-            self.stat_pkts_discard            = resp_spec.spec.stat_pkts_discard
-            self.stat_cb_not_ready            = resp_spec.spec.stat_cb_not_ready
-            self.stat_qstate_cfg_err          = resp_spec.spec.stat_qstate_cfg_err
-            self.stat_pkt_len_err             = resp_spec.spec.stat_pkt_len_err
-            self.stat_rxq_full                = resp_spec.spec.stat_rxq_full
-            self.stat_txq_full                = resp_spec.spec.stat_txq_full
-            self.stat_desc_sem_alloc_full     = resp_spec.spec.stat_desc_sem_alloc_full
-            self.stat_mpage_sem_alloc_full    = resp_spec.spec.stat_mpage_sem_alloc_full
-            self.stat_ppage_sem_alloc_full    = resp_spec.spec.stat_ppage_sem_alloc_full
-            self.stat_sem_free_full           = resp_spec.spec.stat_sem_free_full
+            self.cpu_id                       = resp_spec.spec.cpu_id
+            self.ascq_base                    = resp_spec.spec.ascq_base
+            self.ascq_sem_inf_addr            = resp_spec.spec.ascq_sem_inf_addr
+
+            self.redir_pkts                   = resp_spec.spec.redir_pkts
+            self.cb_not_ready_discards        = resp_spec.spec.cb_not_ready_discards
+            self.qstate_cfg_discards          = resp_spec.spec.qstate_cfg_discards
+            self.pkt_len_discards             = resp_spec.spec.pkt_len_discards
+            self.rxq_full_discards            = resp_spec.spec.rxq_full_discards
+            self.txq_full_discards            = resp_spec.spec.txq_full_discards
+            self.pkt_alloc_errors             = resp_spec.spec.pkt_alloc_errors
+            self.pkt_free_errors              = resp_spec.spec.pkt_free_errors
 
         return
 
@@ -121,28 +125,22 @@ class RawrCbObject(base.ConfigObjectBase):
     # Print rawrcb statistics
     #
     def StatsPrint(self):
-        logger.info("RAWRCB %d stat_pkts_redir %d" % 
-              (self.id, self.stat_pkts_redir))
-        logger.info("RAWRCB %d stat_pkts_discard %d" % 
-              (self.id, self.stat_pkts_discard))
-        logger.info("RAWRCB %d stat_cb_not_ready %d" % 
-              (self.id, self.stat_cb_not_ready))
-        logger.info("RAWRCB %d stat_qstate_cfg_err %d" % 
-              (self.id, self.stat_qstate_cfg_err))
-        logger.info("RAWRCB %d stat_pkt_len_err %d" % 
-              (self.id, self.stat_pkt_len_err))
-        logger.info("RAWRCB %d stat_rxq_full %d" % 
-              (self.id, self.stat_rxq_full))
-        logger.info("RAWRCB %d stat_txq_full %d" % 
-              (self.id, self.stat_txq_full))
-        logger.info("RAWRCB %d stat_desc_sem_alloc_full %d" % 
-              (self.id, self.stat_desc_sem_alloc_full))
-        logger.info("RAWRCB %d stat_mpage_sem_alloc_full %d" % 
-              (self.id, self.stat_mpage_sem_alloc_full))
-        logger.info("RAWRCB %d stat_ppage_sem_alloc_full %d" % 
-              (self.id, self.stat_ppage_sem_alloc_full))
-        logger.info("RAWRCB %d stat_sem_free_full %d" % 
-              (self.id, self.stat_sem_free_full))
+        logger.info("RAWRCB %d redir_pkts %d" % 
+              (self.id, self.redir_pkts))
+        logger.info("RAWRCB %d cb_not_ready_discards %d" % 
+              (self.id, self.cb_not_ready_discards))
+        logger.info("RAWRCB %d qstate_cfg_discards %d" % 
+              (self.id, self.qstate_cfg_discards))
+        logger.info("RAWRCB %d pkt_len_discards %d" % 
+              (self.id, self.pkt_len_discards))
+        logger.info("RAWRCB %d rxq_full_discards %d" % 
+              (self.id, self.rxq_full_discards))
+        logger.info("RAWRCB %d txq_full_discards %d" % 
+              (self.id, self.txq_full_discards))
+        logger.info("RAWRCB %d pkt_alloc_errors %d" % 
+              (self.id, self.pkt_alloc_errors))
+        logger.info("RAWRCB %d pkt_free_errors %d" % 
+              (self.id, self.pkt_free_errors))
         return
 
 

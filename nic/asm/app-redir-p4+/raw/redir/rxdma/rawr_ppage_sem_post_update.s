@@ -1,8 +1,7 @@
 #include "app_redir_common.h"
 
-struct phv_                                         p;
-struct rawr_ppage_sem_k                             k;
-struct rawr_ppage_sem_ppage_pindex_post_update_d    d;
+struct phv_                                     p;
+struct s1_tbl_ppage_pindex_post_update_d        d;
 
 /*
  * Registers usage
@@ -13,35 +12,35 @@ struct rawr_ppage_sem_ppage_pindex_post_update_d    d;
 #define r_table_base                r4  // semaphore table base
 
 %%
-    .param      rawr_s2_ppage_post_alloc
-    .param      RNMPR_TABLE_BASE
+    .param      rawr_ppage_post_alloc
+    .param      RAWR_RNMDPR_TABLE_BASE
     .align
 
 /*
  * Page (for storing packet) pindex fetched and updated via HW semaphore,
  * the page itself will now be allocated.
  */
-rawr_s1_ppage_sem_pindex_post_update:
+rawr_ppage_sem_pindex_post_update:
 
-    //CAPRI_CLEAR_TABLE1_VALID
+    //CAPRI_CLEAR_TABLE0_VALID
 
     /*
      * If semaphore full, handle it in a later stage but
      * launch a ppage fetch now anyway (at pindex 0)
      */    
-    add         r_pi, r0, d.{pindex}.wx
-    mincr       r_pi, CAPRI_RNMPR_RING_SHIFT, r0
-    sne         c1, d.pindex_full, r0
+    add         r_pi, r0, d.{page_pindex}.wx
+    mincr       r_pi, RAWR_RNMDPR_RING_SHIFT, r0
+    sne         c1, d.page_pindex_full, r0
     add.c1      r_pi, r0, r0
-    phvwri.c1   p.common_phv_do_cleanup_discard, TRUE
+    phvwri.c1   p.rawr_kivec0_do_cleanup_discard, TRUE
 
-    APP_REDIR_IMM64_LOAD(r_table_base, RNMPR_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ_INDEX(1, r_pi,
+    APP_REDIR_IMM64_LOAD(r_table_base, RAWR_RNMDPR_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_INDEX(0, r_pi,
                                 TABLE_LOCK_DIS,
-                                rawr_s2_ppage_post_alloc,
+                                rawr_ppage_post_alloc,
                                 r_table_base, 
-                                RNMPR_TABLE_ENTRY_SIZE_SHFT,
+                                RAWR_RNMDPR_TABLE_ENTRY_SIZE_SHIFT,
                                 TABLE_SIZE_64_BITS)
-    phvwr.e     p.common_phv_ppage_sem_pindex_full, d.pindex_full
-    phvwr       p.t3_s2s_inc_stat_ppage_sem_alloc_full, d.pindex_full // delay slot
+    phvwr.e     p.rawr_kivec0_ppage_sem_pindex_full, d.page_pindex_full
+    RAWR_METRICS_VAL_SET(pkt_alloc_errors, d.page_pindex_full) // delay slot
     

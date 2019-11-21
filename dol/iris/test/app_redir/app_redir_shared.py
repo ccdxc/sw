@@ -11,15 +11,16 @@ import infra.common.defs as defs
 # The following definitions should match proxy.hpp
 #
 service_lif_cpu       = 33
-service_lif_tcp_proxy = 34
-service_lif_tls_proxy = 35
-service_lif_ipsec_esp = 36
-service_lif_ipsec_ah  = 37
-service_lif_ipfix     = 38
-service_lif_app_redir = 39
-service_lif_gc        = 40
-service_lif_p4pt      = 41
-service_lif_cpu_bypass = 42
+service_lif_apollo    = 34
+service_lif_tcp_proxy = 35
+service_lif_tls_proxy = 36
+service_lif_ipsec_esp = 37
+service_lif_ipsec_ah  = 38
+service_lif_ipfix     = 39
+service_lif_app_redir = 40
+service_lif_gc        = 41
+service_lif_p4pt      = 42
+service_lif_cpu_bypass = 43
 
 #
 # rawrcb/rawccb creation for span;

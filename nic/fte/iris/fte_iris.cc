@@ -1096,11 +1096,11 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     if (pkt_ != NULL && enq_or_free_rx_pkt_ == false) {
 
-        if (flow_miss() && !drop()) {
+        if (flow_miss() && !drop() &&
 
 	    // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-	    // This needs to be moved to plugin code
-            //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
+	    // Note: app_redir_pkt_tx_ownership() below is an inline
+            !hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
 	    queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU,
                         CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
                         types::WRING_TYPE_ASQ, copied_pkt_ ? free_flow_miss_pkt : NULL);

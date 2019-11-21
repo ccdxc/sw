@@ -1,28 +1,26 @@
 #include "app_redir_common.h"
 
-struct phv_                             p;
-struct rawr_chain_pindex_pre_alloc_k    k;
+struct phv_             p;
+struct s4_tbl_k         k;
 
 /*
  * Registers usage
  *
  * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_ring_index_select         r3
 #define r_ring_indices_addr         r4
-#define r_qstate_addr               r5
 
 %%
 
-    .param      rawr_s5_chain_txq_pindex_post_read
-    .param      rawr_s5_chain_sem_pindex_post_update
-    .param      rawr_s5_cleanup_discard
+    .param      rawr_chain_txq_pindex_post_read
+    .param      rawr_chain_sem_pindex_post_update
+    .param      rawr_cleanup_discard
     
     .align
     
-rawr_s4_chain_pindex_pre_alloc:
+rawr_chain_pindex_pre_alloc:
 
-    //CAPRI_CLEAR_TABLE1_VALID
+    //CAPRI_CLEAR_TABLE0_VALID
     
     /*
      * For a given flow, one of 2 types of redirection applies:
@@ -31,21 +29,21 @@ rawr_s4_chain_pindex_pre_alloc:
      *
      * Proceed only if cleanup_discard had not been signaled
      */
-    sne         c1, k.common_phv_do_cleanup_discard, r0
-    bcf         [c1], _cleanup_discard_launch
-
+    bbeq        RAWR_KIVEC0_DO_CLEANUP_DISCARD, 1, _cleanup_discard_launch
+    nop
+    
     /*
      * Based on redirection type, launch the corresponding read
      * of ring indices.
      */
-    seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
-    bcf         [c1], _chain_txq_ring_indices_launch
+    bbeq        RAWR_KIVEC0_CHAIN_TO_RXQ, 0, _chain_txq_ring_indices_launch
+    add         r_ring_indices_addr, r0, RAWR_KIVEC1_CHAIN_RING_INDICES_ADDR    // delay slot
     
-    CPU_ARQ_SEM_INF_ADDR(k.common_phv_chain_ring_index_select,
+    CPU_ARQ_SEM_INF_ADDR(RAWR_KIVEC0_CHAIN_RING_INDEX_SELECT,
                          r_ring_indices_addr)
-    CAPRI_NEXT_TABLE_READ_e(1, 
+    CAPRI_NEXT_TABLE_READ_e(0, 
                             TABLE_LOCK_DIS,
-                            rawr_s5_chain_sem_pindex_post_update,
+                            rawr_chain_sem_pindex_post_update,
                             r_ring_indices_addr,
                             TABLE_SIZE_64_BITS)
     nop
@@ -58,8 +56,8 @@ rawr_s4_chain_pindex_pre_alloc:
  */
 _chain_txq_ring_indices_launch:
      
-    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
-                            rawr_s5_chain_txq_pindex_post_read,
+    CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS,
+                            rawr_chain_txq_pindex_post_read,
                             r_ring_indices_addr,
                             TABLE_SIZE_32_BITS)
     nop                          
@@ -67,11 +65,7 @@ _chain_txq_ring_indices_launch:
 
 _cleanup_discard_launch:    
 
-    CAPRI_CLEAR_TABLE1_VALID
-    
     /*
      * Launch common cleanup code for next stage
      */
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s5_cleanup_discard)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP_e(0, rawr_cleanup_discard)

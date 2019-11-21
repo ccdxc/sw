@@ -57,6 +57,9 @@ class RawcCbObject(base.ConfigObjectBase):
            req_spec.chain_txq_qtype              = self.chain_txq_qtype
            req_spec.chain_txq_qid                = self.chain_txq_qid
            req_spec.chain_txq_ring               = self.chain_txq_ring
+           req_spec.cpu_id                       = self.cpu_id
+           req_spec.ascq_base                    = self.ascq_base
+           req_spec.ascq_sem_inf_addr            = self.ascq_sem_inf_addr
 
         return
 
@@ -78,17 +81,19 @@ class RawcCbObject(base.ConfigObjectBase):
             self.chain_txq_qtype              = resp_spec.spec.chain_txq_qtype
             self.chain_txq_qid                = resp_spec.spec.chain_txq_qid
             self.chain_txq_ring               = resp_spec.spec.chain_txq_ring
+            self.cpu_id                       = resp_spec.spec.cpu_id
+            self.ascq_base                    = resp_spec.spec.ascq_base
+            self.ascq_sem_inf_addr            = resp_spec.spec.ascq_sem_inf_addr
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 
-            self.stat_pkts_chain              = resp_spec.spec.stat_pkts_chain
-            self.stat_pkts_discard            = resp_spec.spec.stat_pkts_discard
-            self.stat_cb_not_ready            = resp_spec.spec.stat_cb_not_ready
-            self.stat_my_txq_empty            = resp_spec.spec.stat_my_txq_empty
-            self.stat_aol_err                 = resp_spec.spec.stat_aol_err
-            self.stat_txq_full                = resp_spec.spec.stat_txq_full
-            self.stat_desc_sem_free_full      = resp_spec.spec.stat_desc_sem_free_full
-            self.stat_page_sem_free_full      = resp_spec.spec.stat_page_sem_free_full
+            self.chain_pkts                   = resp_spec.spec.chain_pkts
+            self.cb_not_ready_discards        = resp_spec.spec.cb_not_ready_discards
+            self.qstate_cfg_discards          = resp_spec.spec.qstate_cfg_discards
+            self.aol_error_discards           = resp_spec.spec.aol_error_discards
+            self.my_txq_empty_discards        = resp_spec.spec.my_txq_empty_discards
+            self.txq_full_discards            = resp_spec.spec.txq_full_discards
+            self.pkt_free_errors              = resp_spec.spec.pkt_free_errors
 
         return
 
@@ -117,22 +122,20 @@ class RawcCbObject(base.ConfigObjectBase):
     # Print rawccb statistics
     #
     def StatsPrint(self):
-        logger.info("RAWCCB %d stat_pkts_chain %d" % 
-              (self.id, self.stat_pkts_chain))
-        logger.info("RAWCCB %d stat_pkts_discard %d" % 
-              (self.id, self.stat_pkts_discard))
-        logger.info("RAWCCB %d stat_cb_not_ready %d" % 
-              (self.id, self.stat_cb_not_ready))
-        logger.info("RAWCCB %d stat_my_txq_empty %d" % 
-              (self.id, self.stat_my_txq_empty))
-        logger.info("RAWCCB %d stat_aol_err %d" % 
-              (self.id, self.stat_aol_err))
-        logger.info("RAWCCB %d stat_txq_full %d" % 
-              (self.id, self.stat_txq_full))
-        logger.info("RAWCCB %d stat_desc_sem_free_full %d" % 
-              (self.id, self.stat_desc_sem_free_full))
-        logger.info("RAWCCB %d stat_page_sem_free_full %d" % 
-              (self.id, self.stat_page_sem_free_full))
+        logger.info("RAWCCB %d chain_pkts %d" % 
+              (self.id, self.chain_pkts))
+        logger.info("RAWCCB %d cb_not_ready_discards %d" % 
+              (self.id, self.cb_not_ready_discards))
+        logger.info("RAWCCB %d qstate_cfg_discards %d" % 
+              (self.id, self.qstate_cfg_discards))
+        logger.info("RAWCCB %d aol_error_discards %d" % 
+              (self.id, self.aol_error_discards))
+        logger.info("RAWCCB %d my_txq_empty_discards %d" % 
+              (self.id, self.my_txq_empty_discards))
+        logger.info("RAWCCB %d txq_full_discards %d" % 
+              (self.id, self.txq_full_discards))
+        logger.info("RAWCCB %d pkt_free_errors %d" % 
+              (self.id, self.pkt_free_errors))
         return
 
 

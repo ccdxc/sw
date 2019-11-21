@@ -1,63 +1,64 @@
 #include "app_redir_common.h"
 
-struct phv_                         p;
-struct rawc_desc_free_k             k;
-struct rawc_desc_free_desc_free_d   d;
+struct phv_                     p;
+struct s4_tbl1_k                k;
+struct s4_tbl1_desc_free_d      d;
 
 /*
  * Registers usage
  */
-#define r_table_base                r1  // RNMDR_TABLE_BASE
-#define r_table_idx                 r2  // PI index
-#define r_qstate_addr               r3
+#define r_ascq_entry                r5
+#define r_last_mem2pkt_ptr          r6
 
 %%
-    .param      RNMDR_TABLE_BASE
-    .param      rawc_err_stats_inc
     
     .align
 
-/*
- * Entered after having acquired a descriptor free index semaphore,
- * this function invokes a common function to free page 0.
- */    
-rawc_s5_desc_free:
+rawc_desc_free:
 
-    CAPRI_CLEAR_TABLE0_VALID
-
-    /*
-     * descriptor free semaphore should never be full
-     */
-    sne         c1, d.pindex_full, r0
-    bcf         [c1], _free_sem_pindex_full
-    add         r_table_idx, r0, d.{pindex}.wx    // delay slot
-
-    APP_REDIR_IMM64_LOAD(r_table_base, RNMDR_TABLE_BASE)
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, r0
-    add         r_table_base, r_table_base, r_table_idx, \
-                RNMDR_TABLE_ENTRY_SIZE_SHFT
-    memwr.d     r_table_base, k.t0_s2s_desc
+    bbeq        RAWC_KIVEC0_PKT_FREEQ_NOT_CFG, 1, _pkt_not_free
+    CAPRI_CLEAR_TABLE1_VALID                    // delay slot
     
     /*
-     * Update CI
+     * NOTE: to get here, the following condition have been been verified:
+     *  - service_chain_action was false, i.e., not chaining to a TxQ
+     *  - PEN_APP_REDIR_DONT_FREE_DESC flag was false
      */
-    addi        r_table_base, r0, CAPRI_SEM_RNMDR_ALLOC_CI_RAW_ADDR
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, 1
-    memwr.w     r_table_base, r_table_idx.wx
-    wrfence.e
-    nop
-    
+    sne         c1, d.ascq_full, r0
+    bcf         [c1], _handle_cmdeop
+    RAWC_METRICS_SET_c(c1, pkt_free_errors)     // delay slot
 
-/*
- * A free semaphore index was unexpectedly full
- */                                   
-_free_sem_pindex_full:
-                                   
-    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               k.{common_phv_qstate_addr_sbit0_ebit5... \
-                                  common_phv_qstate_addr_sbit30_ebit33},
-                               p.t3_s2s_inc_stat_desc_sem_free_full)
-    APP_REDIR_FREE_SEM_PINDEX_FULL_TRAP()
-    nop.e
-    nop
+    CPU_TX_ASCQ_ENQUEUE(r_ascq_entry,
+                        RAWC_KIVEC3_DESC,
+                        d.{ascq_pindex}.wx,
+                        RAWC_KIVEC4_ASCQ_BASE,
+                        ring_entry_descr_addr,
+                        dma_chain_dma_cmd,
+                        TRUE,   // eop
+                        TRUE)   // fence
+    /*
+     * In the case of do_cleanup_discard, the above DMA command
+     * should be the only command excuted so we make the
+     * corresponding adjustment here.
+     */
+    sne.e       c2, RAWC_KIVEC0_DO_CLEANUP_DISCARD, r0
+    phvwri.c2   p.p4_txdma_intr_dma_cmd_ptr,\
+                CAPRI_PHV_START_OFFSET(dma_chain_dma_cmd_type) / 16
     
+_pkt_not_free:
+
+    RAWC_METRICS_SET(pkt_free_errors)
+
+_handle_cmdeop:
+    
+    add         r_last_mem2pkt_ptr, RAWC_KIVEC3_LAST_MEM2PKT_PTR, r0
+    sne         c3, r_last_mem2pkt_ptr, r0
+    phvwrpi.c3  r_last_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(cmdeop), \
+                APP_REDIR_BIT_SIZE_DMA_MEM2PKT(cmdeop), TRUE    // delay slot
+    /*
+     * We could have gotten to this point with RAWC_KIVEC0_PKT_FREEQ_NOT_CFG=1,
+     * and if RAWC_KIVEC0_DO_CLEANUP_DISCARD=1, all DMA should be canceled.
+     */
+    sne.e       c2, RAWC_KIVEC0_DO_CLEANUP_DISCARD, r0
+    phvwr.c2    p.p4_txdma_intr_dma_cmd_ptr, r0
+                

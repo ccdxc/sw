@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
-struct phv_                             p;
-struct rawc_desc_enqueue_k              k;
-struct rawc_desc_enqueue_desc_enqueue_d d;
+struct phv_                     p;
+struct s2_tbl1_k                k;
+struct s2_tbl1_desc_enqueue_d   d;
 
 /*
  * Registers usage
@@ -10,6 +10,7 @@ struct rawc_desc_enqueue_desc_enqueue_d d;
 #define r_pi                        r1
 #define r_ci                        r2
 #define r_qentry_addr               r3
+#define r_rawccb_flags              r4
 #define r_db_addr_scratch           r5
 #define r_db_data_scratch           r6
 #define r_desc                      r7
@@ -17,13 +18,9 @@ struct rawc_desc_enqueue_desc_enqueue_d d;
 /*
  * Register reuse
  */
-#define r_rawccb_flags              r_qentry_addr
-#define r_qstate_addr               r_desc
 
 %%
 
-    .param      rawc_err_stats_inc
-    
     .align
     
 /*
@@ -32,9 +29,9 @@ struct rawc_desc_enqueue_desc_enqueue_d d;
  * next service chain TxQ had been configured to which we will enqueue
  * the given packet descriptor.
  */
-rawc_s2_chain_txq_desc_enqueue:
+rawc_chain_txq_desc_enqueue:
 
-    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE1_VALID
 
     /*
      * Ring is full when PI+1 == CI and, if so, we'll set a flag 
@@ -43,10 +40,10 @@ rawc_s2_chain_txq_desc_enqueue:
     add         r_pi, r0, d.{pi_curr}.hx
     add         r_qentry_addr, r0, r_pi
     add         r_ci, r0, d.{ci_curr}.hx
-    mincr       r_pi, k.common_phv_chain_txq_ring_size_shift, 1
-    mincr       r_ci, k.common_phv_chain_txq_ring_size_shift, r0
+    mincr       r_pi, RAWC_KIVEC0_CHAIN_TXQ_RING_SIZE_SHIFT, 1
+    mincr       r_ci, RAWC_KIVEC0_CHAIN_TXQ_RING_SIZE_SHIFT, r0
     beq         r_pi, r_ci, _txq_ring_full_discard
-    mincr       r_qentry_addr, k.common_phv_chain_txq_ring_size_shift, r0   // delay slot
+    mincr       r_qentry_addr, RAWC_KIVEC0_CHAIN_TXQ_RING_SIZE_SHIFT, r0   // delay slot
     phvwri      p.p4_txdma_intr_dma_cmd_ptr, \
                 CAPRI_PHV_START_OFFSET(dma_chain_dma_cmd_type) / 16
     /*
@@ -55,11 +52,8 @@ rawc_s2_chain_txq_desc_enqueue:
      * still be available for the next service, including cpu_to_p4plus_header_t,
      * p4plus_to_p4_header_t, and L7 header.
      */
-    sllv        r_qentry_addr, r_qentry_addr, \
-                k.common_phv_chain_txq_entry_size_shift
-    add         r_qentry_addr, r_qentry_addr, \
-                k.{common_phv_chain_txq_base_sbit0_ebit31...\
-                   common_phv_chain_txq_base_sbit32_ebit33}
+    sllv        r_qentry_addr, r_qentry_addr, RAWC_KIVEC0_CHAIN_TXQ_ENTRY_SIZE_SHIFT
+    add         r_qentry_addr, r_qentry_addr, RAWC_KIVEC2_CHAIN_TXQ_BASE
     phvwrpair   p.dma_chain_dma_cmd_addr, r_qentry_addr, \
                 p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
@@ -67,16 +61,16 @@ rawc_s2_chain_txq_desc_enqueue:
      * Service chain's queue may be expecting to get a desc that has already
      * been adjusted to point to the beginning of the AOL area.
      */
-    add         r_rawccb_flags, r0, k.common_phv_rawccb_flags
-    smeqh       c1, r_rawccb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
+    add         r_desc, RAWC_KIVEC3_DESC, r0
+    add         r_rawccb_flags, RAWC_KIVEC0_RAWCCB_FLAGS, r0
+    smeqh       c1, r_rawccb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET, \
                                     APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
-    add.c1      r_desc, k.t0_s2s_desc, NIC_DESC_ENTRY_0_OFFSET
-    add.!c1     r_desc, k.t0_s2s_desc, r0
-    phvwr       p.chain_txq_desc_addr_descr_addr, r_desc
+    add.c1      r_desc, r_desc, NIC_DESC_ENTRY_0_OFFSET
+    phvwr       p.ring_entry_descr_addr, r_desc
     phvwrpair   p.dma_chain_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(chain_txq_desc_addr_descr_addr), \
+                CAPRI_PHV_END_OFFSET(ring_entry_descr_addr), \
                 p.dma_chain_dma_cmd_phv_start_addr, \
-                CAPRI_PHV_START_OFFSET(chain_txq_desc_addr_descr_addr)
+                CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 
     /*
      * Set up DMA to increment PI and ring doorbell
@@ -84,14 +78,11 @@ rawc_s2_chain_txq_desc_enqueue:
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             DB_SCHED_WR_EVAL_RING,
-                            k.{t0_s2s_chain_txq_lif_sbit0_ebit7...\
-                               t0_s2s_chain_txq_lif_sbit8_ebit10},
-                            k.t0_s2s_chain_txq_qtype,
+                            RAWC_KIVEC2_CHAIN_TXQ_LIF,
+                            RAWC_KIVEC2_CHAIN_TXQ_QTYPE,
                             r_db_addr_scratch);
-    APP_REDIR_SETUP_DB_DATA(k.{t0_s2s_chain_txq_qid_sbit0_ebit1...\
-                               t0_s2s_chain_txq_qid_sbit18_ebit23},
-                            k.{t0_s2s_chain_txq_ring_sbit0_ebit1...\
-                               t0_s2s_chain_txq_ring_sbit2_ebit2},
+    APP_REDIR_SETUP_DB_DATA(RAWC_KIVEC2_CHAIN_TXQ_QID,
+                            RAWC_KIVEC2_CHAIN_TXQ_RING,
                             r0, // current PI is actually dontcare for DB_INC_PINDEX
                             r_db_data_scratch)
                         
@@ -103,7 +94,7 @@ rawc_s2_chain_txq_desc_enqueue:
                 p.dma_doorbell_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)
     phvwrpair   p.dma_doorbell_dma_cmd_wr_fence, TRUE, \
-                p.dma_doorbell_dma_cmd_eop, TRUE    // delay slot
+                p.dma_doorbell_dma_cmd_eop, TRUE        // delay slot
                 
 
 /*
@@ -111,9 +102,8 @@ rawc_s2_chain_txq_desc_enqueue:
  */                       
 _txq_ring_full_discard:
 
-    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               k.{common_phv_qstate_addr_sbit0_ebit5... \
-                                  common_phv_qstate_addr_sbit30_ebit33},
-                               p.t3_s2s_inc_stat_txq_full)
-    phvwri.e    p.common_phv_do_cleanup_discard, TRUE
-    nop
+    /*
+     * Cleanup discard will be launched from a different stage
+     */
+    phvwri.e    p.rawc_kivec0_do_cleanup_discard, TRUE
+    RAWC_METRICS_SET(txq_full_discards)                 // delay slot

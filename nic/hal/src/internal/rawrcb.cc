@@ -170,6 +170,9 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_lif = spec.chain_txq_lif();
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
+    rawrcb->cpu_id = spec.cpu_id();
+    rawrcb->ascq_base = spec.ascq_base();
+    rawrcb->ascq_sem_inf_addr = spec.ascq_sem_inf_addr();
 
     rawrcb->hal_handle = hal_alloc_handle();
 
@@ -235,6 +238,9 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_lif = spec.chain_txq_lif();
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
+    rawrcb->cpu_id = spec.cpu_id();
+    rawrcb->ascq_base = spec.ascq_base();
+    rawrcb->ascq_sem_inf_addr = spec.ascq_sem_inf_addr();
 
     pd::pd_rawrcb_update_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
@@ -305,18 +311,18 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponseMsg *rsp_msg)
     rsp->mutable_spec()->set_chain_txq_lif(rrawrcb.chain_txq_lif);
     rsp->mutable_spec()->set_chain_txq_qtype(rrawrcb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawrcb.chain_txq_qid);
+    rsp->mutable_spec()->set_cpu_id(rrawrcb.cpu_id);
+    rsp->mutable_spec()->set_ascq_base(rrawrcb.ascq_base);
+    rsp->mutable_spec()->set_ascq_sem_inf_addr(rrawrcb.ascq_sem_inf_addr);
 
-    rsp->mutable_spec()->set_stat_pkts_redir(rrawrcb.stat_pkts_redir);
-    rsp->mutable_spec()->set_stat_pkts_discard(rrawrcb.stat_pkts_discard);
-    rsp->mutable_spec()->set_stat_cb_not_ready(rrawrcb.stat_cb_not_ready);
-    rsp->mutable_spec()->set_stat_qstate_cfg_err(rrawrcb.stat_qstate_cfg_err);
-    rsp->mutable_spec()->set_stat_pkt_len_err(rrawrcb.stat_pkt_len_err);
-    rsp->mutable_spec()->set_stat_rxq_full(rrawrcb.stat_rxq_full);
-    rsp->mutable_spec()->set_stat_txq_full(rrawrcb.stat_txq_full);
-    rsp->mutable_spec()->set_stat_desc_sem_alloc_full(rrawrcb.stat_desc_sem_alloc_full);
-    rsp->mutable_spec()->set_stat_mpage_sem_alloc_full(rrawrcb.stat_mpage_sem_alloc_full);
-    rsp->mutable_spec()->set_stat_ppage_sem_alloc_full(rrawrcb.stat_ppage_sem_alloc_full);
-    rsp->mutable_spec()->set_stat_sem_free_full(rrawrcb.stat_sem_free_full);
+    rsp->mutable_spec()->set_redir_pkts(rrawrcb.redir_pkts);
+    rsp->mutable_spec()->set_cb_not_ready_discards(rrawrcb.cb_not_ready_discards);
+    rsp->mutable_spec()->set_qstate_cfg_discards(rrawrcb.qstate_cfg_discards);
+    rsp->mutable_spec()->set_pkt_len_discards(rrawrcb.pkt_len_discards);
+    rsp->mutable_spec()->set_rxq_full_discards(rrawrcb.rxq_full_discards);
+    rsp->mutable_spec()->set_txq_full_discards(rrawrcb.txq_full_discards);
+    rsp->mutable_spec()->set_pkt_alloc_errors(rrawrcb.pkt_alloc_errors);
+    rsp->mutable_spec()->set_pkt_free_errors(rrawrcb.pkt_free_errors);
 
     // fill operational state of this RAWR CB
     rsp->mutable_status()->set_rawrcb_handle(rawrcb->hal_handle);

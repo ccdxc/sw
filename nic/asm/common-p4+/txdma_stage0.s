@@ -39,7 +39,7 @@ struct phv_ p;
     .param      edma_fetch_desc
     .param      nicmgr_fetch_desc
     .param      nicmgr_drop
-    .param      rawc_s0_tx_start
+    .param      rawc_tx_start
     .param      gc_tx_rnmdr_s0_start
     .param      gc_tx_tnmdr_s0_start
     .param      storage_tx_pvm_roce_sq_cb_pop_start
@@ -193,7 +193,7 @@ nicmgr_resp_stage0:
 
 .align
 rawc_tx_stage0:
-    j   rawc_s0_tx_start
+    j   rawc_tx_start
     nop
 
 .align

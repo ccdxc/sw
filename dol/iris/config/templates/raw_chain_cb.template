@@ -30,12 +30,14 @@ chain_txq_lif                   : 0
 chain_txq_qtype                 : 0
 chain_txq_qid                   : 0
 chain_txq_ring                  : 0
-stat_pkts_chain                 : 0
-stat_pkts_discard               : 0
-stat_cb_not_ready               : 0
-stat_my_txq_empty               : 0
-stat_aol_err                    : 0
-stat_txq_full                   : 0
-stat_desc_sem_free_full         : 0
-stat_page_sem_free_full         : 0
+cpu_id                          : 0
+ascq_base                       : 0
+ascq_sem_inf_addr               : 0
+chain_pkts                      : 0
+cb_not_ready_discards           : 0
+qstate_cfg_discards             : 0
+aol_error_discards              : 0
+my_txq_empty_discards           : 0
+txq_full_discards               : 0
+pkt_free_errors                 : 0
 

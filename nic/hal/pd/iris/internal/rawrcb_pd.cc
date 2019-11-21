@@ -62,11 +62,11 @@ p4pd_get_rawr_rx_stage0_prog_addr(uint64_t* offset)
 hal_ret_t
 p4pd_clear_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
 {
-    rawr_stats_err_stat_inc_d   data = {0};
+    s7_tbl2_metrics0_commit_d   data = {0};
 
     // hardware index for this entry
     rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
-                               RAWRCB_TABLE_STATS_OFFSET;
+                               RAWRCB_TABLE_METRICS0_OFFSET;
 
     if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
@@ -176,6 +176,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
      * desc_valid_bit_req defaults to true unless specifically
      * updated by the caller.
      */
+    data.u.rawr_rx_start_d.cpu_id = rawrcb->cpu_id;
     data.u.rawr_rx_start_d.rawrcb_flags = rawrcb->rawrcb_flags |
                                           APP_REDIR_DESC_VALID_BIT_REQ;
     if (rawrcb->rawrcb_flags & APP_REDIR_DESC_VALID_BIT_UPD) {
@@ -230,6 +231,54 @@ done:
     return ret;
 }
 
+static hal_ret_t
+p4pd_add_or_del_rawr_rx_stage1_entry(pd_rawrcb_t* rawrcb_pd,
+                                     bool del)
+{
+    s1_tbl1_d                                   data = {0};
+    rawrcb_t                                    *rawrcb;
+    hal_ret_t                                   ret = HAL_RET_OK;
+    wring_hw_id_t                               ascq_base;
+    rawrcb_hw_addr_t                            hw_addr;
+
+    rawrcb = rawrcb_pd->rawrcb;
+    if (!del) {
+        data.u.cb_extra_read_d.ascq_base = rawrcb->ascq_base;;
+        data.u.cb_extra_read_d.ascq_sem_inf_addr = rawrcb->ascq_sem_inf_addr;
+        if (!data.u.cb_extra_read_d.ascq_base) {
+
+            /*
+             * Provide reasonable defaults for above
+             */
+            ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ,
+                                         rawrcb->cpu_id, &ascq_base);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{} base_addr not found for WRING_TYPE_ASCQ for cpu_id {}",
+                              __FUNCTION__, rawrcb->cpu_id);
+                goto done;
+            }
+            data.u.cb_extra_read_d.ascq_base = ascq_base;
+            data.u.cb_extra_read_d.ascq_sem_inf_addr =
+                                   CAPRI_SEM_ASCQ_INF_ADDR(rawrcb->cpu_id);
+        }
+    }
+
+    HAL_TRACE_DEBUG("RAWRCB {} ascq_base: {:#x} ascq_sem_inf_addr: {:#x}",
+                    rawrcb->cb_id, data.u.cb_extra_read_d.ascq_base,
+                    data.u.cb_extra_read_d.ascq_sem_inf_addr);
+
+    hw_addr = rawrcb_pd->hw_addr + RAWRCB_TABLE_EXTRA_OFFSET;
+    HAL_TRACE_DEBUG("RAWRCB Programming stage1 at hw_addr: {:#x}", hw_addr);
+    if (!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
+                          P4PLUS_CACHE_INVALIDATE_BOTH)){
+        HAL_TRACE_ERR("Failed to create rx: stage1 entry for RAWRCB");
+        ret = HAL_RET_HW_FAIL;
+    }
+
+done:
+    return ret;
+}
+
 hal_ret_t
 p4pd_add_or_del_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd,
                                    bool del,
@@ -239,7 +288,10 @@ p4pd_add_or_del_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd,
 
     ret = p4pd_add_or_del_rawr_rx_stage0_entry(rawrcb_pd, del,
                                                qstate_header_overwrite);
-    if(ret != HAL_RET_OK) {
+    if (ret == HAL_RET_OK) {
+        ret = p4pd_add_or_del_rawr_rx_stage1_entry(rawrcb_pd, del);
+    }
+    if (ret != HAL_RET_OK) {
         goto cleanup;
     }
 
@@ -278,6 +330,27 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb->chain_txq_lif = data.u.rawr_rx_start_d.chain_txq_lif;
     rawrcb->chain_txq_qtype = data.u.rawr_rx_start_d.chain_txq_qtype;
     rawrcb->chain_txq_qid = data.u.rawr_rx_start_d.chain_txq_qid;
+    rawrcb->cpu_id = data.u.rawr_rx_start_d.cpu_id;
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_get_rawrcb_rx_stage1_entry(pd_rawrcb_t* rawrcb_pd)
+{
+    s1_tbl1_d   data = {0};
+    rawrcb_t    *rawrcb;
+
+    // hardware index for this entry
+    rawrcb_hw_addr_t    hw_addr = rawrcb_pd->hw_addr + RAWRCB_TABLE_EXTRA_OFFSET;
+
+    if(sdk::asic::asic_mem_read(hw_addr,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: stage1 entry for RAWRCB");
+        return HAL_RET_HW_FAIL;
+    }
+    rawrcb = rawrcb_pd->rawrcb;
+    rawrcb->ascq_base = data.u.cb_extra_read_d.ascq_base;
+    rawrcb->ascq_sem_inf_addr = data.u.cb_extra_read_d.ascq_sem_inf_addr;
 
     return HAL_RET_OK;
 }
@@ -285,29 +358,26 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
 hal_ret_t
 p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
 {
-    rawr_stats_err_stat_inc_d   data;
+    s7_tbl2_metrics0_commit_d   data;
     rawrcb_t                    *rawrcb;
 
     // hardware index for this entry
     rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
-                               RAWRCB_TABLE_STATS_OFFSET;
+                               RAWRCB_TABLE_METRICS0_OFFSET;
 
     if(sdk::asic::asic_mem_read(hw_addr, (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get stats entry for RAWRCB");
         return HAL_RET_HW_FAIL;
     }
     rawrcb = rawrcb_pd->rawrcb;
-    rawrcb->stat_pkts_redir = ntohll(data.stat_pkts_redir);
-    rawrcb->stat_pkts_discard = ntohll(data.stat_pkts_discard);
-    rawrcb->stat_cb_not_ready = ntohl(data.stat_cb_not_ready);
-    rawrcb->stat_qstate_cfg_err = ntohl(data.stat_qstate_cfg_err);
-    rawrcb->stat_pkt_len_err = ntohl(data.stat_pkt_len_err);
-    rawrcb->stat_rxq_full = ntohl(data.stat_rxq_full);
-    rawrcb->stat_txq_full = ntohl(data.stat_txq_full);
-    rawrcb->stat_desc_sem_alloc_full = ntohl(data.stat_desc_sem_alloc_full);
-    rawrcb->stat_mpage_sem_alloc_full = ntohl(data.stat_mpage_sem_alloc_full);
-    rawrcb->stat_ppage_sem_alloc_full = ntohl(data.stat_ppage_sem_alloc_full);
-    rawrcb->stat_sem_free_full = ntohl(data.stat_sem_free_full);
+    rawrcb->redir_pkts = data.redir_pkts;
+    rawrcb->cb_not_ready_discards = data.cb_not_ready_discards;
+    rawrcb->qstate_cfg_discards = data.qstate_cfg_discards;
+    rawrcb->pkt_len_discards = data.pkt_len_discards;
+    rawrcb->rxq_full_discards = data.rxq_full_discards;
+    rawrcb->txq_full_discards = data.txq_full_discards;
+    rawrcb->pkt_alloc_errors = data.pkt_alloc_errors;
+    rawrcb->pkt_free_errors = data.pkt_free_errors;
 
     return HAL_RET_OK;
 }
@@ -318,6 +388,9 @@ p4pd_get_rawrcb_rxdma_entry(pd_rawrcb_t* rawrcb_pd)
     hal_ret_t   ret = HAL_RET_OK;
 
     ret = p4pd_get_rawr_rx_stage0_entry(rawrcb_pd);
+    if (ret == HAL_RET_OK) {
+        ret = p4pd_get_rawrcb_rx_stage1_entry(rawrcb_pd);
+    }
     if (ret == HAL_RET_OK) {
         ret = p4pd_get_rawr_stats_entry(rawrcb_pd);
     }

@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
 struct phv_                     p;
-struct rawc_pkt_prep_k          k;
-struct rawc_pkt_prep_pkt_prep_d d;
+struct s2_tbl_k                 k;
+struct s2_tbl_pkt_prep_d        d;
 
 /*
  * Registers for phvwrp accesses to DMA_MEM2PKT descriptors
@@ -11,7 +11,7 @@ struct rawc_pkt_prep_pkt_prep_d d;
  * so ensure program stage ends after invoking it.
  */
 #define r_num_dma                   r1  // # of DMA descriptors written
-#define r_dma_base                  r2  // DMA descriptor base offset
+#define r_dma_mem2pkt_ptr           r2  // current DMA mem2pkt pointer
 #define r_addr                      r3  // DMA page address
 #define r_size                      r4  // DMA page size
 #define r_skip                      r5  // adjustment to r_addr/r_size
@@ -21,13 +21,11 @@ struct rawc_pkt_prep_pkt_prep_d d;
 /*
  * Register reuse
  */
-#define r_qstate_addr               r_addr
 
 %%
 
-    .param      rawc_s3_pkt_txdma_post
-    .param      rawc_s3_cpu_flags_not_read
-    .param      rawc_err_stats_inc
+    .param      rawc_pkt_txdma_post
+    .param      rawc_cpu_flags_not_read
 
     .align
     
@@ -37,7 +35,7 @@ struct rawc_pkt_prep_pkt_prep_d d;
  * strip certain meta headers as necessary.
  *
  * Note1: If a next service chain TxQ had been configured, none of the
- * DMA commands here will actually execute (see rawc_s3_pkt_txdma_post).
+ * DMA commands here will actually execute (see rawc_pkt_txdma_post).
  * However, AOLs evaluation is always done in case freeing of the pages
  * becomes necessary.
  *
@@ -45,10 +43,8 @@ struct rawc_pkt_prep_pkt_prep_d d;
  * the src_lif in the cap_phv_intr_global_t for the DMA. This value will
  * be read from a meta header and passed to the next stage.
  */
-rawc_s2_pkt_txdma_prep:
+rawc_pkt_txdma_prep:
 
-    CAPRI_CLEAR_TABLE1_VALID
-    
     /*
      * Make some assumptions to simplify implementation:
      * Meta headers and packet data are described within the first 3 AOLs,
@@ -59,66 +55,56 @@ rawc_s2_pkt_txdma_prep:
      */
     add         r_cpu_header_addr, r0, r0
     add         r_num_dma, r0, r0
-    add         r_dma_base, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt0_dma_cmd_type)
+    add         r_dma_mem2pkt_ptr, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt0_dma_cmd_type)
     addi        r_skip, r0, CPU_TO_P4PLUS_HEADER_SIZE
     add         r_addr, r0, d.{A0}.dx
-    add         r_addr, r_addr, d.{O0}.wx
     add         r_size, r0, d.{L0}.wx
     sne         c1, r_size, r0
     bal.c1      r_return, _dma_mem2pkt_prep
-    phvwr       p.t1_s2s_aol_A0, d.A0   // delay slot
+    add         r_addr, r_addr, d.{O0}.wx       // delay slot
 
     bal         r_return, _next_dma_base_get
-    add         r_addr, r0, d.{A1}.dx   // delay slot
-    add         r_addr, r_addr, d.{O1}.wx
+    add         r_addr, r0, d.{A1}.dx           // delay slot
     add         r_size, r0, d.{L1}.wx
     sne         c1, r_size, r0
     bal.c1      r_return, _dma_mem2pkt_prep
-    phvwr       p.t1_s2s_aol_A1, d.A1   // delay slot
+    add         r_addr, r_addr, d.{O1}.wx       // delay slot
 
     bal         r_return, _next_dma_base_get
-    add         r_addr, r0, d.{A2}.dx   // delay slot
-    add         r_addr, r_addr, d.{O2}.wx
+    add         r_addr, r0, d.{A2}.dx           // delay slot
     add         r_size, r0, d.{L2}.wx
     sne         c1, r_size, r0
     bal.c1      r_return, _dma_mem2pkt_prep
-    phvwr       p.t1_s2s_aol_A2, d.A2   // delay slot
+    add         r_addr, r_addr, d.{O2}.wx       // delay slot
 
     /*
      * Ensure at least one DMA descriptor was written
      */
     seq         c1, r_num_dma, r0
     bal.c1      r_return, _aol_error
-    subi        r_num_dma, r_num_dma, 1 // delay slot
+    subi        r_num_dma, r_num_dma, 1         // delay slot
     bal         r_return, _next_dma_base_get
-    nop
+    CAPRI_CLEAR_TABLE0_VALID                    // delay slot
             
-    phvwrpi     r_dma_base, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(pkteop), \
+    phvwrpi     r_dma_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(pkteop), \
                 APP_REDIR_BIT_SIZE_DMA_MEM2PKT(pkteop), TRUE;
-                
-    phvwrpi     r_dma_base, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(cmdeop), \
-                APP_REDIR_BIT_SIZE_DMA_MEM2PKT(cmdeop), TRUE;
+    phvwr       p.rawc_kivec3_last_mem2pkt_ptr, r_dma_mem2pkt_ptr
 
     /*
      * Launch read of cpu_to_p4plus_header_t to obtain src_lif info plus
      * page freeing instruction. The header address was calculated
-     * by prep_dma_mem2pkt. If r_cpu_header_addr is not available, will
-     * assume pages are from RNMPR (as opposed to RNMPR_SMALL).
+     * by prep_dma_mem2pkt.
      */
-    beq         r_cpu_header_addr, r0, _aol_cpu_flags_missing
-    nop     
+_if2:     
+    beq         r_cpu_header_addr, r0, _endif2
     CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
-                            rawc_s3_pkt_txdma_post,
+                            rawc_pkt_txdma_post,
                             r_cpu_header_addr,
                             TABLE_SIZE_32_BITS)
     nop
+_endif2:
 
-
-_aol_cpu_flags_missing:
-
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, rawc_s3_cpu_flags_not_read)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP_e(1, rawc_cpu_flags_not_read)
 
 
 _next_dma_base_get:
@@ -127,15 +113,14 @@ _next_dma_base_get:
      * Layout of DMA descriptors in PHV is not straight forward, in that
      * dma0's bit offset is usually less than dma1's offset, except when
      * they span 2 different flits. So we can't rely on add/sub but
-     * must manually calculate the new r_dma_base here.
+     * must manually calculate the new r_dma_mem2pkt_ptr here.
      */
-    add         r_dma_base, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt0_dma_cmd_type)
+    add         r_dma_mem2pkt_ptr, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt0_dma_cmd_type)
     seq         c1, r_num_dma, 1
-    add.c1      r_dma_base, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt1_dma_cmd_type)
+    add.c1      r_dma_mem2pkt_ptr, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt1_dma_cmd_type)
     seq         c1, r_num_dma, 2
     jr          r_return
-    add.c1      r_dma_base, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt2_dma_cmd_type) // delay slot
-    
+    add.c1      r_dma_mem2pkt_ptr, r0, APP_REDIR_BIT_OFFS_PHV(dma_pkt2_dma_cmd_type) // delay slot
     
 _dma_mem2pkt_prep:
 
@@ -170,13 +155,13 @@ _dma_mem2pkt_prep:
     sle         c3, r_size, r_skip
     add.!c3     r_addr, r_addr, r_skip
     sub.!c3     r_size, r_size, r_skip
-    phvwrpi.!c3 r_dma_base, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(cmdtype),    \
+    phvwrpi.!c3 r_dma_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(cmdtype),    \
                 APP_REDIR_BIT_SIZE_DMA_MEM2PKT(cmdtype), CAPRI_DMA_COMMAND_MEM_TO_PKT;
                 
-    phvwrp.!c3  r_dma_base, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(addr),       \
+    phvwrp.!c3  r_dma_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(addr),       \
                 APP_REDIR_BIT_SIZE_DMA_MEM2PKT(addr), r_addr;
                 
-    phvwrp.!c3  r_dma_base, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(size),       \
+    phvwrp.!c3  r_dma_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(size),       \
                 APP_REDIR_BIT_SIZE_DMA_MEM2PKT(size), r_size;
     /*
      * Update r_num_dma and r_skip on return:
@@ -194,12 +179,9 @@ _dma_mem2pkt_prep:
  */
 _aol_error:
 
-    RAWCCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               k.{common_phv_qstate_addr_sbit0_ebit5... \
-                                  common_phv_qstate_addr_sbit30_ebit33},
-                               p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
+    RAWC_METRICS_SET(aol_error_discards)
     jr          r_return
-    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot
+    phvwri      p.rawc_kivec0_do_cleanup_discard, TRUE   // delay slot
 
     

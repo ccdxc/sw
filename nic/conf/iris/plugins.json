@@ -253,6 +253,8 @@
                 "pensando.io/sfw:alg_rpc",
                 "pensando.io/sfw:alg_rtsp",
                 "pensando.io/proxy:tcp",
+                "pensando.io/app-redir:app-redir-miss",
+                "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/sfw:sfw",
                 "pensando.io/network:qos",
                 "pensando.io/network:fwding-pre-stage",
@@ -264,6 +266,7 @@
                 "pensando.io/proxy:ipsec",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
+                "pensando.io/app-redir:app-redir-fini",
                 "pensando.io/proxy:tcp-trigger-connection"
             ],
             "inbound_features": [
@@ -275,7 +278,9 @@
                 "pensando.io/nat:nat",
                 "pensando.io/lb:lb",
                 "pensando.io/proxy:tcp",
+                "pensando.io/app-redir:app-redir-miss",
                 "pensando.io/sfw:sfw",
+                "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:qos",
                 "pensando.io/network:rdma",
                 "pensando.io/network:fwding-pre-stage",
@@ -291,6 +296,7 @@
                 "pensando.io/proxy:ipsec",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
+                "pensando.io/app-redir:app-redir-fini",
                 "pensando.io/proxy:tcp-trigger-connection"
            ]
         },

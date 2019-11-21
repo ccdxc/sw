@@ -26,7 +26,7 @@ struct phv_ p;
     .param      eth_rx_drop
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table
     .param      esp_ipv4_tunnel_n2h_rxdma_initial_table
-    .param      rawr_s0_rx_start
+    .param      rawr_rx_start
     .param      p4pt_s0_rx_start
     .param      virtio_rx_read_qstate_start
     .param      rdma_cq_rx_cqcb0_process
@@ -110,7 +110,7 @@ p4pt_rx_stage0:
 
 .align
 rawr_rx_stage0:
-    j rawr_s0_rx_start
+    j rawr_rx_start
     nop
 
 .align

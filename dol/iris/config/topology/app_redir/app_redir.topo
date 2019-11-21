@@ -28,7 +28,7 @@ tenants:
 app_redir_if:
     - entry:
         id      : appredir1
-        lif_id  : 39
+        lif_id  : 40
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_APP_REDIR
 security_policy: ref://store/specs/id=SECURITY_POLICY_APP_REDIR

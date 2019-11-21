@@ -44,7 +44,10 @@ app_redir_rawrcb_spec_build(const rawrcb_t& rawrcb,
         spec.set_chain_rxq_ring_index_select(rawrcb.chain_rxq_ring_index_select);
     }
 
+    spec.set_ascq_base(rawrcb.ascq_base);
+    spec.set_ascq_sem_inf_addr(rawrcb.ascq_sem_inf_addr);
     spec.set_rawrcb_flags(rawrcb.rawrcb_flags);
+    spec.set_cpu_id(rawrcb.cpu_id);
 }
 
 
@@ -109,12 +112,15 @@ app_redir_rawccb_spec_build(const rawccb_t& rawccb,
 
     spec.set_chain_txq_base(rawccb.chain_txq_base);
     spec.set_chain_txq_ring_indices_addr(rawccb.chain_txq_ring_indices_addr);
+    spec.set_ascq_base(rawccb.ascq_base);
+    spec.set_ascq_sem_inf_addr(rawccb.ascq_sem_inf_addr);
     spec.set_chain_txq_ring_size_shift(rawccb.chain_txq_ring_size_shift);
     spec.set_chain_txq_entry_size_shift(rawccb.chain_txq_entry_size_shift);
     spec.set_chain_txq_lif(rawccb.chain_txq_lif);
     spec.set_chain_txq_qtype(rawccb.chain_txq_qtype);
     spec.set_chain_txq_qid(rawccb.chain_txq_qid);
     spec.set_chain_txq_ring(rawccb.chain_txq_ring);
+    spec.set_cpu_id(rawccb.cpu_id);
 
     spec.set_rawccb_flags(rawccb.rawccb_flags);
 }

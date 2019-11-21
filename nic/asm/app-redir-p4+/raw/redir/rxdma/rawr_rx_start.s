@@ -16,19 +16,18 @@ struct common_p4plus_stage0_app_header_table_d  d;
 #define r_pkt_type                  r7
 
 /*
- * Register reuse (on early abort)
+ * Register reuse
  */
 #define r_qstate_addr               r7
 
 %%
-    .param          rawr_s1_desc_sem_pindex_post_update
-    .param          rawr_s1_ppage_sem_pindex_post_update
-    .param          rawr_s1_mpage_sem_pindex_post_update
-    .param          rawr_err_stats_inc
+    .param          rawr_ppage_sem_pindex_post_update
+    .param          rawr_cb_extra_read
+     RAWR_METRICS_PARAMS()
     
     .align
 
-rawr_s0_rx_start:
+rawr_rx_start:
         
     /*
      * Stage 0 table engine always fetches the qstate (in d-vector)
@@ -44,7 +43,6 @@ rawr_s0_rx_start:
      * R7 = qstate ring_not_empty
      */
      
-    CAPRI_CLEAR_TABLE0_VALID
 
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -54,7 +52,7 @@ rawr_s0_rx_start:
     sne         c1, d.u.rawr_rx_start_d.rawrcb_deactivate, RAWRCB_DEACTIVATE
     seq.c1      c1, d.u.rawr_rx_start_d.rawrcb_activate, RAWRCB_ACTIVATE
     b.!c1       _rawrcb_not_ready
-    phvwr       p.common_phv_rawrcb_flags,\
+    phvwr       p.rawr_kivec0_rawrcb_flags,\
                 d.{u.rawr_rx_start_d.rawrcb_flags}.hx // delay slot
     /*
      * For a given flow, one of 2 types of redirection applies:
@@ -77,36 +75,36 @@ rawr_s0_rx_start:
                                   rawr_app_header_packet_len_sbit6_ebit13} // delay slot
     ble.s       r_pkt_len, r0, _packet_len_err_discard
     addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ // delay slot
-    phvwrpair   p.common_phv_packet_len, r_pkt_len, \
-                p.common_phv_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
+    phvwrpair   p.rawr_kivec0_packet_len, r_pkt_len, \
+                p.rawr_kivec0_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
     /*
      * qid is our flow ID context
      */
     bcf         [!c1 & !c2], _qstate_cfg_err_discard
     phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID // delay slot
     bcf         [c1], _chain_rxq_set
-    phvwrpair   p.common_phv_chain_ring_index_select,\
+    phvwrpair   p.rawr_kivec0_chain_ring_index_select,\
                 d.u.rawr_rx_start_d.chain_txq_ring_index_select[2:0],\
-                p.common_phv_chain_ring_base, r_chain_txq_base  // delay slot
-    phvwrpair   p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift[4:0],\
-                p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift[4:0]
-    phvwr       p.t1_s2s_chain_lif, d.{u.rawr_rx_start_d.chain_txq_lif}.hx
-    phvwr       p.t1_s2s_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
-    phvwr       p.t1_s2s_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
+                p.rawr_kivec0_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift[4:0]
+    phvwrpair   p.rawr_kivec2_chain_ring_base, r_chain_txq_base, \
+                p.rawr_kivec2_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift[4:0]
+    phvwr       p.rawr_kivec2_chain_lif, d.{u.rawr_rx_start_d.chain_txq_lif}.hx
+    phvwr       p.rawr_kivec2_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
+    phvwr       p.rawr_kivec2_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
     b           _r_ring_indices_addr_check
     add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_txq_ring_indices_addr}.dx // delay slot
 
 _chain_rxq_set:
-    phvwrpair   p.common_phv_chain_to_rxq, TRUE,\
-                p.common_phv_chain_ring_base, r_chain_rxq_base
-    phvwrpair   p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift[4:0],\
-                p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift[4:0]
-    phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_rxq_ring_index_select
+    phvwrpair   p.rawr_kivec0_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift[4:0], \
+                p.rawr_kivec0_chain_to_rxq, TRUE
+    phvwrpair   p.rawr_kivec2_chain_ring_base, r_chain_rxq_base, \
+                p.rawr_kivec2_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift[4:0]
+    phvwr       p.rawr_kivec0_chain_ring_index_select, d.u.rawr_rx_start_d.chain_rxq_ring_index_select
     add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_rxq_ring_indices_addr}.dx
 
 _r_ring_indices_addr_check:
     beq         r_ring_indices_addr, r0, _qstate_cfg_err_discard
-    phvwr       p.t1_s2s_chain_ring_indices_addr, r_ring_indices_addr // delay slot
+    phvwr       p.rawr_kivec1_chain_ring_indices_addr, r_ring_indices_addr // delay slot
 
     /*
      * qid 0 is dedicated for SPAN and, in which case,
@@ -114,7 +112,7 @@ _r_ring_indices_addr_check:
      */
     seq         c3, CAPRI_RXDMA_INTRINSIC_QID, APP_REDIR_SPAN_RAWRCB_ID // delay slot
     bcf         [!c3], _page_alloc_prep
-    phvwr.c3    p.common_phv_redir_span_instance, TRUE // delay slot
+    phvwr.c3    p.rawr_kivec0_redir_span_instance, TRUE // delay slot
     
     /*
      * Set up HW toeplitz hash for SPAN;
@@ -129,75 +127,56 @@ _r_ring_indices_addr_check:
                             r_pkt_type,
                             r_hash_key,
                             _page_alloc_prep)
-_page_alloc_prep:
-
 #endif
     
-    /*
-     * Allocate either one meta page, or one packet page, or both.
-     */
-    blei        r_pkt_len, APP_REDIR_MPAGE_SIZE, _mpage_sem_pindex_fetch_update
-    nop
-    
-_ppage_sem_pindex_fetch_update:
+_page_alloc_prep:
 
     /*
      * Fetch/update memory page pindex for storing packet
      */
-    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_ALLOC_INF_ADDR
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
-                          rawr_s1_ppage_sem_pindex_post_update,
-                          r_alloc_inf_addr,
-                          TABLE_SIZE_64_BITS)
-    blei        r_pkt_len, APP_REDIR_PPAGE_SIZE, _desc_sem_pindex_fetch_update
-    nop
-    
-/*
- * Fetch/update memory page pindex for storing metaheader
- */
-_mpage_sem_pindex_fetch_update:
-
-    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_ALLOC_INF_ADDR
-    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS,
-                          rawr_s1_mpage_sem_pindex_post_update,
-                          r_alloc_inf_addr,
-                          TABLE_SIZE_64_BITS)
-
-/*
- * Fetch/update buffer descriptor pindex for queuing to chain ring
- */
-_desc_sem_pindex_fetch_update:
-
-    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMDR_ALLOC_INF_ADDR
+    bgti        r_pkt_len, RAWR_RNMDPR_USABLE_PAGE_SIZE, _packet_len_err_discard
+    addi        r_alloc_inf_addr, r0, RAWR_RNMDPR_ALLOC_IDX  // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
-                          rawr_s1_desc_sem_pindex_post_update,
+                          rawr_ppage_sem_pindex_post_update,
                           r_alloc_inf_addr,
                           TABLE_SIZE_64_BITS)
-    nop.e
-    nop
+    /*
+     * Launch read of cb_extra portion
+     */                          
+    add         r_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, \
+                RAWRCB_TABLE_EXTRA_OFFSET
+    CAPRI_NEXT_TABLE_READ(1,
+                          TABLE_LOCK_DIS,
+                          rawr_cb_extra_read,
+                          r_qstate_addr,
+                          TABLE_SIZE_512_BITS)
+
+_metrics_launch:
+
+    /*
+     * Initiate launch of metrics tables update/commit here. Subsequent stages
+     * launched for the same tables would be required to relaunch the
+     * the affected metrics tables update.
+     */
+    RAWR_METRICS0_TABLE2_COMMIT_e(CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR)
 
 /*
  * Discard packet due to invalid packet length;
  */
 _packet_len_err_discard:
 
-    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               p.t3_s2s_inc_stat_pkt_len_err)
-    phvwr.e     p.p4_intr_global_drop, 1
-    nop    
+    RAWR_METRICS_SET(pkt_len_discards)
+    b           _metrics_launch
+    CAPRI_CLEAR_TABLE0_VALID                    // delay slot
 
-    
 /*
  * Discard packet due to error in qstate configuration
  */
 _qstate_cfg_err_discard:
 
-    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               p.t3_s2s_inc_stat_qstate_cfg_err)
-    phvwr.e     p.p4_intr_global_drop, 1
-    nop
+    RAWR_METRICS_SET(qstate_cfg_discards)
+    b           _metrics_launch
+    CAPRI_CLEAR_TABLE0_VALID                    // delay slot
 
 
 /*
@@ -205,9 +184,7 @@ _qstate_cfg_err_discard:
  */
 _rawrcb_not_ready:     
 
-    RAWRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                               CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR,
-                               p.t3_s2s_inc_stat_cb_not_ready)
-    phvwr.e     p.p4_intr_global_drop, 1
-    nop
+    RAWR_METRICS_SET(cb_not_ready_discards)
+    b           _metrics_launch
+    CAPRI_CLEAR_TABLE0_VALID                    // delay slot
 

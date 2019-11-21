@@ -4,7 +4,7 @@ feature:
     id          : app_redir
     package     : test.app_redir
     module      : app_redir
-    enable      : False
+    enable      : True
     ignore      : False
     rtl         : False
 
@@ -147,6 +147,7 @@ modules:
         name    : APP_REDIR_RAW_NFS
         module  : app_redir_raw_appid
         spec    : app_redir_raw_nfs.testspec
+        enable  : False
         rtl     : True
         args    :
             num_pkts : 6
@@ -294,6 +295,7 @@ modules:
         name    : APP_REDIR_RAW_SPAN
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span.testspec
+        enable  : False
         rtl     : True
         args    :
             num_pkts : 1
@@ -305,6 +307,7 @@ modules:
         name    : APP_REDIR_RAW_SPAN_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span_multi_pkts.testspec
+        enable  : False
         rtl     : True
         args    :
             num_pkts : 3
@@ -317,6 +320,7 @@ modules:
         name    : APP_REDIR_RAW_V6_SPAN
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span.testspec
+        enable  : False
         rtl     : True
         args    :
             num_pkts : 1
@@ -328,6 +332,7 @@ modules:
         name    : APP_REDIR_RAW_V6_SPAN_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span_multi_pkts.testspec
+        enable  : False
         rtl     : True
         args    :
             num_pkts : 3

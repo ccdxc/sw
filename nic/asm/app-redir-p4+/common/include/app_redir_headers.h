@@ -59,9 +59,10 @@ struct pen_raw_redir_header_v1_t {
 #define PEN_APP_REDIR_L4_CSUM_CHECKED       0x0002
 #define PEN_APP_REDIR_SPAN_INSTANCE         0x0004
 #define PEN_APP_REDIR_PIPELINE_LOOPBK_EN    0x0008
-#define PEN_APP_REDIR_A0_RNMPR_SMALL        0x0010
-#define PEN_APP_REDIR_A1_RNMPR_SMALL        0x0020
-#define PEN_APP_REDIR_A2_RNMPR_SMALL        0x0040
+#define PEN_APP_REDIR_A0_RNMPR_SMALL        0x0010      // deprecated
+#define PEN_APP_REDIR_A1_RNMPR_SMALL        0x0020      // deprecated
+#define PEN_APP_REDIR_A2_RNMPR_SMALL        0x0040      // deprecated
+#define PEN_APP_REDIR_DONT_FREE_DESC        0x0080
 
 
 /*

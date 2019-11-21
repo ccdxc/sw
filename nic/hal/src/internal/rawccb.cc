@@ -162,12 +162,15 @@ rawccb_create (internal::RawcCbSpec& spec, internal::RawcCbResponse *rsp)
 
     rawccb->chain_txq_base = spec.chain_txq_base();
     rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
+    rawccb->ascq_base = spec.ascq_base();
+    rawccb->ascq_sem_inf_addr = spec.ascq_sem_inf_addr();
     rawccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawccb->chain_txq_lif = spec.chain_txq_lif();
     rawccb->chain_txq_qtype = spec.chain_txq_qtype();
     rawccb->chain_txq_qid = spec.chain_txq_qid();
     rawccb->chain_txq_ring = spec.chain_txq_ring();
+    rawccb->cpu_id = spec.cpu_id();
 
     rawccb->hal_handle = hal_alloc_handle();
 
@@ -225,12 +228,15 @@ rawccb_update (internal::RawcCbSpec& spec, internal::RawcCbResponse *rsp)
     rawccb->rawccb_flags = spec.rawccb_flags();
     rawccb->chain_txq_base = spec.chain_txq_base();
     rawccb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr();
+    rawccb->ascq_base = spec.ascq_base();
+    rawccb->ascq_sem_inf_addr = spec.ascq_sem_inf_addr();
     rawccb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
     rawccb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
     rawccb->chain_txq_lif = spec.chain_txq_lif();
     rawccb->chain_txq_qtype = spec.chain_txq_qtype();
     rawccb->chain_txq_qid = spec.chain_txq_qid();
     rawccb->chain_txq_ring = spec.chain_txq_ring();
+    rawccb->cpu_id = spec.cpu_id();
 
     pd::pd_rawccb_update_args_init(&pd_rawccb_args);
     pd_rawccb_args.rawccb = rawccb;
@@ -292,21 +298,23 @@ rawccb_get (internal::RawcCbGetRequest& req, internal::RawcCbGetResponseMsg *res
 
     rsp->mutable_spec()->set_chain_txq_base(rrawccb.chain_txq_base);
     rsp->mutable_spec()->set_chain_txq_ring_indices_addr(rrawccb.chain_txq_ring_indices_addr);
+    rsp->mutable_spec()->set_ascq_base(rrawccb.ascq_base);
+    rsp->mutable_spec()->set_ascq_sem_inf_addr(rrawccb.ascq_sem_inf_addr);
     rsp->mutable_spec()->set_chain_txq_ring_size_shift(rrawccb.chain_txq_ring_size_shift);
     rsp->mutable_spec()->set_chain_txq_entry_size_shift(rrawccb.chain_txq_entry_size_shift);
     rsp->mutable_spec()->set_chain_txq_lif(rrawccb.chain_txq_lif);
     rsp->mutable_spec()->set_chain_txq_qtype(rrawccb.chain_txq_qtype);
     rsp->mutable_spec()->set_chain_txq_qid(rrawccb.chain_txq_qid);
     rsp->mutable_spec()->set_chain_txq_ring(rrawccb.chain_txq_ring);
+    rsp->mutable_spec()->set_cpu_id(rrawccb.cpu_id);
 
-    rsp->mutable_spec()->set_stat_pkts_chain(rrawccb.stat_pkts_chain);
-    rsp->mutable_spec()->set_stat_pkts_discard(rrawccb.stat_pkts_discard);
-    rsp->mutable_spec()->set_stat_cb_not_ready(rrawccb.stat_cb_not_ready);
-    rsp->mutable_spec()->set_stat_my_txq_empty(rrawccb.stat_my_txq_empty);
-    rsp->mutable_spec()->set_stat_aol_err(rrawccb.stat_aol_err);
-    rsp->mutable_spec()->set_stat_txq_full(rrawccb.stat_txq_full);
-    rsp->mutable_spec()->set_stat_desc_sem_free_full(rrawccb.stat_desc_sem_free_full);
-    rsp->mutable_spec()->set_stat_page_sem_free_full(rrawccb.stat_page_sem_free_full);
+    rsp->mutable_spec()->set_chain_pkts(rrawccb.chain_pkts);
+    rsp->mutable_spec()->set_cb_not_ready_discards(rrawccb.cb_not_ready_discards);
+    rsp->mutable_spec()->set_qstate_cfg_discards(rrawccb.qstate_cfg_discards);
+    rsp->mutable_spec()->set_aol_error_discards(rrawccb.aol_error_discards);
+    rsp->mutable_spec()->set_my_txq_empty_discards(rrawccb.my_txq_empty_discards);
+    rsp->mutable_spec()->set_txq_full_discards(rrawccb.txq_full_discards);
+    rsp->mutable_spec()->set_pkt_free_errors(rrawccb.pkt_free_errors);
 
     rsp->mutable_spec()->set_pi(rrawccb.pi);
     rsp->mutable_spec()->set_ci(rrawccb.ci);

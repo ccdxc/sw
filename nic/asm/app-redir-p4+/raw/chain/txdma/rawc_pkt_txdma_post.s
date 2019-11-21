@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
 struct phv_                     p;
-struct rawc_pkt_post_k          k;
-struct rawc_pkt_post_pkt_post_d d;
+struct s3_tbl1_k                k;
+struct s3_tbl1_pkt_post_d       d;
 
 /*
  * Registers usage
@@ -11,68 +11,95 @@ struct rawc_pkt_post_pkt_post_d d;
  * so ensure program stage ends after invoking it.
  */
 #define r_cpu_flags                 r3
-#define r_qstate_addr               r4
+#define r_last_mem2pkt_ptr          r4  // last  DMA mem2pkt pointer set by rawc_pkt_txdma_prep
 
 %%
 
-    .param      rawc_s4_cleanup_discard
-    .param      rawc_normal_stats_inc
+    .param      rawc_desc_free
     
     .align
 
 /*
- * This is the continuation of rawc_s2_pkt_txdma_prep. We indicate the acquired
+ * This is the continuation of rawc_pkt_txdma_prep. We indicate the acquired
  * (original) src_lif in cap_phv_intr_global_t as the last step for the DMA
  * to P4.
  */
-rawc_s3_pkt_txdma_post:
-
-    CAPRI_CLEAR_TABLE1_VALID
+rawc_pkt_txdma_post:
 
     /*
-     * Save cpu_to_p4plus_header_t flags which tell us how to free the AOL
-     * pages in the current descriptor, that is, if we need to do so
-     * as indicated in k.to_s3_do_cleanup_discard.
+     * Save cpu_to_p4plus_header_t flags which tell us whether to submit the
+     * descriptor for freeing...
      */
-    add         r_cpu_flags, r0, d.{flags}.hx
-    smeqh       c1, r_cpu_flags, PEN_APP_REDIR_A0_RNMPR_SMALL,  \
-                                 PEN_APP_REDIR_A0_RNMPR_SMALL
-    phvwri.c1   p.t1_s2s_aol_A0_small, TRUE
-    smeqh       c1, r_cpu_flags, PEN_APP_REDIR_A1_RNMPR_SMALL,  \
-                                 PEN_APP_REDIR_A1_RNMPR_SMALL
-    phvwri.c1   p.t1_s2s_aol_A1_small, TRUE
-    smeqh       c1, r_cpu_flags, PEN_APP_REDIR_A2_RNMPR_SMALL,  \
-                                 PEN_APP_REDIR_A2_RNMPR_SMALL
-    phvwri.c1   p.t1_s2s_aol_A2_small, TRUE
+    add         r_cpu_flags, d.{flags}.hx, r0
 
-_cleanup_discard_check:
+_desc_free_prep_check:
+
+    smeqh       c1, r_cpu_flags, PEN_APP_REDIR_DONT_FREE_DESC,  \
+                                 PEN_APP_REDIR_DONT_FREE_DESC
+    sne         c2, RAWC_KIVEC0_NEXT_SERVICE_CHAIN_ACTION, r0
+    sne         c3, RAWC_KIVEC0_DO_CLEANUP_DISCARD, r0
     
-    sne         c1, k.common_phv_do_cleanup_discard, r0
-    bcf         [c1], _cleanup_discard_prep
+    /*
+     * Never free the packet descriptor if  PEN_APP_REDIR_DONT_FREE_DESC was set.
+     */
+    bcf         [c1], _desc_free_skip
+    CAPRI_CLEAR_TABLE1_VALID                            // delay slot
+    
+    bcf         [c3], _desc_free_prep
+    nop
+    
+    /*
+     * Skip desc free if desc already successfully enqueued to next service
+     */
+    bcf         [c2], _desc_free_skip
+    nop
+    
+_desc_free_prep:
+
+    bbeq        RAWC_KIVEC0_PKT_FREEQ_NOT_CFG, 0, _desc_free_launch
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, rawc_desc_free)
+    b           _desc_free_skip
+    nop
+
+_desc_free_launch:
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
+                          rawc_desc_free,
+                          RAWC_KIVEC3_ASCQ_SEM_INF_ADDR,
+                          TABLE_SIZE_64_BITS)
+_desc_free_skip:
+
+    /*
+     * Early exit in the case of do_cleanup_discard
+     */
+    nop.c3.e
+    add         r_last_mem2pkt_ptr, RAWC_KIVEC3_LAST_MEM2PKT_PTR, r0    // delay slot
     
     /*
      * Gather packet chain statistics
      */
-    RAWCCB_NORMAL_STAT_INC_LAUNCH(3, r_qstate_addr, 
-                                  k.{common_phv_qstate_addr_sbit0_ebit5...\
-                                     common_phv_qstate_addr_sbit30_ebit33},
-                                  p.t3_s2s_inc_stat_pkts_chain)
-    /*
-     * If discard was not taken, we are done if service chaining was in effect
-     */
-    sne         c1, k.common_phv_next_service_chain_action, r0
-    nop.c1.e
+    RAWC_METRICS_SET(chain_pkts)
     
     /*
-     * Note that DMA mem2pkt command descriptors (including the necessary EOP
-     * descriptor) have been set up by rawc_s2_pkt_txdma_prep prior to coming here.
+     * Now, exit if packet descriptor already enqueued to next service
      */
+    nop.c2.e
+
     phvwr       p.p4_intr_global_lif, d.{src_lif}.hx    // delay slot
     phvwri      p.p4_txdma_intr_dma_cmd_ptr, \
                 CAPRI_PHV_START_OFFSET(dma_intr_global_dma_cmd_type) / 16
     phvwrpair   p.p4_intr_global_tm_iport, TM_PORT_DMA,\
                 p.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    
+    /*
+     * Note that DMA mem2pkt command descriptors (including the necessary pkteop
+     * descriptor) have been set up by rawc_pkt_txdma_prep prior to coming here.
+     *
+     * If the packet descriptor were to be freed, there would be one more DMA
+     * command (which would be filled in by rawc_desc_free) so don't set cmdeop if so.
+     * NOTE: capri_dma_cmd_mem2pkt_t does not have a wr_fence bit.
+     */
+    phvwrpi.c1  r_last_mem2pkt_ptr, APP_REDIR_BIT_OFFS_DMA_MEM2PKT(cmdeop), \
+                APP_REDIR_BIT_SIZE_DMA_MEM2PKT(cmdeop), TRUE
+                
     /*
      * Set up DMA of cap_phv_intr_global_t header to packet domain
      */
@@ -85,24 +112,11 @@ _cleanup_discard_check:
     /*
      * Set up DMA of cap_phv_intr_txdma_t header to packet domain
      */
-    phvwri      p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwrpair.e p.dma_intr_txdma_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), \
                 p.dma_intr_txdma_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
-    phvwrpair   p.dma_doorbell_dma_cmd_wr_fence, TRUE, \
-                p.dma_doorbell_dma_cmd_eop, TRUE    // delay slot
-
-
-/*
- * Prep for cleaning up and discarding desc/pages.
- */         
-_cleanup_discard_prep:
-
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, rawc_s4_cleanup_discard)
-    nop.e
-    nop
-
+    phvwri      p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT     // delay slot
     
     .align
         
@@ -110,11 +124,9 @@ _cleanup_discard_prep:
  * Entered as a stage transition when cpu_to_p4plus_header_t flags
  * were not available to be read.
  */         
-rawc_s3_cpu_flags_not_read:
-
-    CAPRI_CLEAR_TABLE1_VALID
-    b           _cleanup_discard_check
-    nop
+rawc_cpu_flags_not_read:
+    b           _desc_free_prep_check
+    add         r_cpu_flags, r0, r0             // delay slot
 
     
 

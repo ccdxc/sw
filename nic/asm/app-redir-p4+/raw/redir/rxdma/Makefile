@@ -21,22 +21,17 @@ all: asm
 
 SRC_FILES := \
     $(SRC_DIR)/rawr_rx_start.s \
-    $(SRC_DIR)/rawr_desc_sem_post_update.s \
-    $(SRC_DIR)/rawr_desc_post_alloc.s \
+    $(SRC_DIR)/rawr_cb_extra_read.s \
     $(SRC_DIR)/rawr_ppage_sem_post_update.s \
     $(SRC_DIR)/rawr_ppage_post_alloc.s \
-    $(SRC_DIR)/rawr_mpage_sem_post_update.s \
-    $(SRC_DIR)/rawr_mpage_post_alloc.s \
     $(SRC_DIR)/rawr_hash_calc_id.s \
     $(SRC_DIR)/rawr_chain_pindex_pre_alloc.s \
     $(SRC_DIR)/rawr_chain_txq_pindex_post_read.s \
     $(SRC_DIR)/rawr_chain_sem_post_update.s \
     $(SRC_DIR)/rawr_cleanup_discard.s \
-    $(SRC_DIR)/rawr_desc_free.s \
     $(SRC_DIR)/rawr_ppage_free.s \
-    $(SRC_DIR)/rawr_mpage_free.s \
     $(SRC_DIR)/rawr_chain_xfer.s \
-    $(SRC_DIR)/rawr_stats.s \
+    $(SRC_DIR)/rawr_metrics0_commit.s \
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

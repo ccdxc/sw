@@ -31,6 +31,13 @@
         phvwr   p.common_te##_num##_phv_table_addr, r0; \
         phvwri  p.app_header_table##_num##_valid, 1;
 
+#define CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP_e(_num, _stage_entry) \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (0 << 3 | TABLE_SIZE_0_BITS); \
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        phvwr.e p.common_te##_num##_phv_table_addr, r0; \
+        phvwri  p.app_header_table##_num##_valid, 1;
+
 #define CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(_stage_entry) \
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, _stage_entry)
 
@@ -84,17 +91,32 @@
 #define CAPRI_CLEAR_TABLE_VALID(_num) \
         phvwri  p.app_header_table##_num##_valid, 0;
 
+#define CAPRI_CLEAR_TABLE_VALID_COND(_num, _cond) \
+        phvwri._cond p.app_header_table##_num##_valid, 0;
+        
 #define CAPRI_CLEAR_TABLE0_VALID \
         CAPRI_CLEAR_TABLE_VALID(0)
+
+#define CAPRI_CLEAR_TABLE0_VALID_COND(_cond) \
+        CAPRI_CLEAR_TABLE_VALID_COND(0, _cond)
 
 #define CAPRI_CLEAR_TABLE1_VALID \
         CAPRI_CLEAR_TABLE_VALID(1)
 
+#define CAPRI_CLEAR_TABLE1_VALID_COND(_cond) \
+        CAPRI_CLEAR_TABLE_VALID_COND(1, _cond)
+
 #define CAPRI_CLEAR_TABLE2_VALID \
         CAPRI_CLEAR_TABLE_VALID(2)
 
+#define CAPRI_CLEAR_TABLE2_VALID_COND(_cond) \
+        CAPRI_CLEAR_TABLE_VALID_COND(2, _cond)
+
 #define CAPRI_CLEAR_TABLE3_VALID \
         CAPRI_CLEAR_TABLE_VALID(3)
+
+#define CAPRI_CLEAR_TABLE3_VALID_COND(_cond) \
+        CAPRI_CLEAR_TABLE_VALID_COND(3, _cond)
 
 #define CAPRI_READ_ADDR(_addr, _table_type, _stage_entry) \
         add             r1, r0, _addr                                   ;\
@@ -486,6 +508,9 @@
 
 #define RNMDPR_ALLOC_IDX               CAPRI_SEM_RNMDPR_BIG_ALLOC_INF_ADDR 
 #define RNMDPR_FREE_IDX                CAPRI_SEM_RNMDPR_BIG_FREE_INC_ADDR 
+
+#define RNMDPR_SMALL_ALLOC_IDX         CAPRI_SEM_RNMDPR_SMALL_ALLOC_INF_ADDR 
+#define RNMDPR_SMALL_FREE_IDX          CAPRI_SEM_RNMDPR_SMALL_FREE_INC_ADDR 
 
 #define TNMPR_ALLOC_IDX                CAPRI_SEM_TNMPR_ALLOC_INF_ADDR
 #define TNMPR_FREE_IDX                 CAPRI_SEM_TNMPR_FREE_INC_ADDR

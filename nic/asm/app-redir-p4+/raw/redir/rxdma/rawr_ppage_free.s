@@ -1,39 +1,42 @@
 #include "app_redir_common.h"
 
-struct phv_                         p;
-struct rawr_ppage_free_k            k;
-struct rawr_ppage_free_ppage_free_d d;
+struct phv_                     p;
+struct s6_tbl_k                 k;
+struct s6_tbl_ppage_free_d      d;
 
 /*
- * Registers usage; must match same definitions in rawr_mpage_free.s
+ * Registers usage
  */
-#define r_page_addr                 r1  // page address to free
-#define r_page_is_small             r2  // small page indicator
-#define r_table_base                r3  // RNMPR_TABLE_BASE or RNMPR_SMALL_TABLE_BASE
-#define r_table_idx                 r4  // PI index
-#define r_return                    r5  // return address
-#define r_scratch                   r6
+#define r_ascq_entry                r3
 
 %%
-    .param      rawr_page_free
     
     .align
 
-rawr_s6_ppage_free:
+rawr_ppage_free:
 
-    CAPRI_CLEAR_TABLE1_VALID
-
-    /*
-     * ppage free semaphore should never be full,
-     * but abort if so... rawr_s6_desc_free will launch stats collect
-     */
-    sne         c1, d.pindex_full, r0
-    phvwri.c1.e p.t3_s2s_inc_stat_sem_free_full, 1
+    CAPRI_CLEAR_TABLE0_VALID
+    sne         c1, RAWR_KIVEC0_PKT_FREEQ_NOT_CFG, r0
+    nop.c1.e
+    RAWR_METRICS_SET_c(c1, pkt_free_errors)
     
-    addi        r_page_is_small, r0, FALSE   // delay slot
-    add         r_page_addr, r0, k.{to_s6_ppage_sbit0_ebit5...\
-                                    to_s6_ppage_sbit30_ebit33}
-    jal         r_return, rawr_page_free
-    add         r_table_idx, r0, d.pindex                   // delay slot
-    nop.e
+    /*
+     * ASCQ should never be full,
+     */
+    sne         c2, d.ascq_full, r0
+    nop.c2.e
+    RAWR_METRICS_SET_c(c2, pkt_free_errors)            // delay slot
+
+    CPU_TX_ASCQ_ENQUEUE(r_ascq_entry,
+                        RAWR_KIVEC1_PPAGE,
+                        d.{ascq_pindex}.wx,
+                        RAWR_KIVEC3_ASCQ_BASE,
+                        ring_entry_descr_addr,
+                        dma_desc_dma_cmd,
+                        TRUE,   // eop
+                        TRUE)   // fence
+                       
+    phvwri.e    p.p4_rxdma_intr_dma_cmd_ptr,\
+                CAPRI_PHV_START_OFFSET(dma_desc_dma_cmd_type) / 16
     nop
+

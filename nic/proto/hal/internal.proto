@@ -1662,25 +1662,21 @@ message RawrCbSpec {
   uint32                chain_txq_lif              = 14;
   uint32                chain_txq_qtype            = 15;
   uint32                chain_txq_qid              = 16;
+  uint32                cpu_id                     = 17;
+  uint64                ascq_base                  = 18;
+  uint64                ascq_sem_inf_addr          = 19;
   
   /*
    * 64-bit statistic counters
    */
-  uint64                stat_pkts_redir            = 17;
-  uint64                stat_pkts_discard          = 18;
-  
-  /*
-   * 32-bit saturating statistic counters
-   */
-  uint32                stat_cb_not_ready          = 19;
-  uint32                stat_qstate_cfg_err        = 20;
-  uint32                stat_pkt_len_err           = 21;
-  uint32                stat_rxq_full              = 22;
-  uint32                stat_txq_full              = 23;
-  uint32                stat_desc_sem_alloc_full   = 24;
-  uint32                stat_mpage_sem_alloc_full  = 25;
-  uint32                stat_ppage_sem_alloc_full  = 26;
-  uint32                stat_sem_free_full         = 27;
+  uint64                redir_pkts                 = 20;
+  uint64                cb_not_ready_discards      = 21;
+  uint64                qstate_cfg_discards        = 22;
+  uint64                pkt_len_discards           = 23;
+  uint64                rxq_full_discards          = 24;
+  uint64                txq_full_discards          = 25;
+  uint64                pkt_alloc_errors           = 26;
+  uint64                pkt_free_errors            = 27;
 }
 
 // RawrCbRequestMsg is batched add or modify rawrcb request
@@ -1775,22 +1771,20 @@ message RawcCbSpec {
   uint32                chain_txq_qtype            = 13;
   uint32                chain_txq_qid              = 14;
   uint32                chain_txq_ring             = 15;
+  uint32                cpu_id                     = 16;
+  uint64                ascq_base                  = 17;
+  uint64                ascq_sem_inf_addr          = 18;
   
   /*
    * 64-bit statistic counters
    */
-  uint64                stat_pkts_chain            = 16;
-  uint64                stat_pkts_discard          = 17;
-
-  /*
-   * 32-bit saturating statistic counters
-   */
-  uint32                stat_cb_not_ready          = 18;
-  uint32                stat_my_txq_empty          = 19;
-  uint32                stat_aol_err               = 20;
-  uint32                stat_txq_full              = 21;
-  uint32                stat_desc_sem_free_full    = 22;
-  uint32                stat_page_sem_free_full    = 23;
+  uint64                chain_pkts                 = 19;
+  uint64                cb_not_ready_discards      = 20;
+  uint64                qstate_cfg_discards        = 21;
+  uint64                aol_error_discards         = 22;
+  uint64                my_txq_empty_discards      = 23;
+  uint64                txq_full_discards          = 24;
+  uint64                pkt_free_errors            = 25;
 }
 
 // RawcCbRequestMsg is batched add or modify rawccb request

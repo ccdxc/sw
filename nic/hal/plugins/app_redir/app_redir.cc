@@ -119,8 +119,9 @@ _app_redir_rawrcb_create(fte::ctx_t& ctx,
      * would need to be specified here.
      */
     app_redir_rawrcb_init(cb_id, rawrcb);
+    rawrcb.cpu_id = fte::fte_id();
     if (cb_id != APP_REDIR_SPAN_RAWRCB_ID) {
-        rawrcb.chain_rxq_ring_index_select = fte::fte_id();
+        rawrcb.chain_rxq_ring_index_select = rawrcb.cpu_id;
     }
     return app_redir_rawrcb_create(rawrcb);
 }
@@ -140,6 +141,7 @@ _app_redir_rawccb_create(fte::ctx_t& ctx,
      * left at zero.
      */
     app_redir_rawccb_init(cb_id, rawccb);
+    rawccb.cpu_id = fte::fte_id();
     return app_redir_rawccb_create(rawccb);
 }
 
@@ -892,10 +894,16 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
         if (ctx.existing_session()) {
 
             /*
-             * Ignore direction. Always set it to 0 for flow_info lookup.
+             * Ignore direction - always set to 0 for flow_info lookup.
              */
             rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
             rev_flow_key.dir = 0;
+
+            /*
+             * lkpvrf is present in flow_key_t but the proxy_flow gRPC infra
+             * does not support it, hence we also set it to 0 here.
+             */
+            rev_flow_key.lkpvrf = 0;
             rpfi = app_redir_proxy_flow_info_find(ctx, rev_flow_key,
                                                   flow_type_include);
             if (!rpfi) {
@@ -1028,10 +1036,16 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
     hal_ret_t               ret = HAL_RET_OK;
 
     /*
-     * Ignore direction. Always set it to 0 for flow_info lookup.
+     * Ignore direction - always set to 0 for flow_info lookup.
      */
     flow_key = ctx.key();
     flow_key.dir = 0;
+
+    /*
+     * lkpvrf is present in flow_key_t but the proxy_flow gRPC infra
+     * does not support it, hence we also set it to 0 here.
+     */
+    flow_key.lkpvrf = 0;
     pfi = app_redir_proxy_flow_info_get(ctx, flow_key, flow_type_include);
     if (pfi) {
         ret = app_redir_flow_fwding_update(ctx, pfi, flow_key);

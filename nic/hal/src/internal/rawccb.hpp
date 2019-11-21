@@ -56,22 +56,20 @@ typedef struct rawccb_s {
     uint8_t               chain_txq_ring_size_shift;
     uint8_t               chain_txq_entry_size_shift;
     uint8_t               chain_txq_ring;
+    uint8_t               cpu_id;
+    uint64_t              ascq_base;
+    uint64_t              ascq_sem_inf_addr;
 
     /*
      * 64-bit statistic counters
      */
-    uint64_t              stat_pkts_chain;
-    uint64_t              stat_pkts_discard;
-
-    /*
-     * 32-bit saturating statistic counters
-     */
-    uint32_t              stat_cb_not_ready;
-    uint32_t              stat_my_txq_empty;
-    uint32_t              stat_aol_err;
-    uint32_t              stat_txq_full;
-    uint32_t              stat_desc_sem_free_full;
-    uint32_t              stat_page_sem_free_full;
+    uint64_t              chain_pkts;
+    uint64_t              cb_not_ready_discards;
+    uint64_t              qstate_cfg_discards;
+    uint64_t              aol_error_discards;
+    uint64_t              my_txq_empty_discards;
+    uint64_t              txq_full_discards;
+    uint64_t              pkt_free_errors;
 
     hal_handle_t          hal_handle;               // HAL allocated handle
 

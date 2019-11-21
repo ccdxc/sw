@@ -1,15 +1,14 @@
 #include "app_redir_common.h"
 
-struct phv_                             p;
-struct rawr_chain_sem_k                 k;
+struct phv_             p;
+struct s5_tbl_k         k;
 
-#define r_chain_pindex                  r1  // must match rawr_chain_qidx_post_read
+#define r_chain_pindex                  r1  // must match rawr_chain_sem_pindex_post_update
 #define r_rawrcb_flags                  r2
 #define r_page_addr                     r3  // page address
-#define r_page_size                     r4  // page size
+#define r_desc                          r4  // descriptor address
 #define r_rawr_hdr_flags                r5
 #define r_pkt_len                       r6  // current packet length
-#define r_xfer_len                      r7  // current transfer length
 
 /*
  * Register reuse (chain TxQ handling)
@@ -17,7 +16,6 @@ struct rawr_chain_sem_k                 k;
 #define r_txq_db_sched                  r1
 #define r_txq_db_addr                   r3
 #define r_txq_db_data                   r4
-#define r_desc                          r5  // descriptor address
 #define r_chain_entry                   r6  // chain ring entry
 #define r_scratch                       r7
 
@@ -37,8 +35,9 @@ struct rawr_chain_sem_k                 k;
  * Register args:
  *     On entry, r1 contains the allocated chain ring pindex
  */
-rawr_s5_chain_xfer:
+rawr_chain_xfer:
 
+    CAPRI_CLEAR_TABLE0_VALID
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr,\
                 CAPRI_PHV_START_OFFSET(dma_cpu_pkt_dma_cmd_type) / 16
     /*
@@ -50,35 +49,27 @@ rawr_s5_chain_xfer:
     /*
      * Continue to fill out meta headers
      */
-    sne         c1, k.common_phv_redir_span_instance, r0
+    sne         c1, RAWR_KIVEC0_REDIR_SPAN_INSTANCE, r0
     ori.c1      r_rawr_hdr_flags, r_rawr_hdr_flags,\
                 PEN_APP_REDIR_SPAN_INSTANCE
-    add         r_rawrcb_flags, r0, k.common_phv_rawrcb_flags
-    smeqh       c1, r_rawrcb_flags, APP_REDIR_DOL_PIPELINE_LOOPBK_EN,\
+    add         r_rawrcb_flags, r0, RAWR_KIVEC0_RAWRCB_FLAGS
+    smeqh       c2, r_rawrcb_flags, APP_REDIR_DOL_PIPELINE_LOOPBK_EN,\
                                     APP_REDIR_DOL_PIPELINE_LOOPBK_EN
-    ori.c1      r_rawr_hdr_flags, r_rawr_hdr_flags,\
+    ori.c2      r_rawr_hdr_flags, r_rawr_hdr_flags,\
                 PEN_APP_REDIR_PIPELINE_LOOPBK_EN
     phvwri      p.pen_app_redir_hdr_h_proto, PEN_APP_REDIR_ETHERTYPE
     phvwrpair   p.pen_app_redir_version_hdr_hdr_len,\
                 PEN_APP_REDIR_VERSION_HEADER_SIZE + PEN_RAW_REDIR_HEADER_V1_SIZE, \
                 p.pen_app_redir_version_hdr_format, PEN_RAW_REDIR_V1_FORMAT
+    phvwr       p.pen_raw_redir_hdr_v1_flags, r_rawr_hdr_flags
                 
     /*
      * Set up DMA of meta headers (p4_to_p4plus_cpu_pkt_t + app_redir headers) 
-     * and the packet content. They either fit entirely in one mpage, 
-     * or one pppage, or both, as guaranteed by rawr_s0_rx_start.
+     * and the packet content. They are guaranteed by rawr_rx_start to fit
+     * entirely in one pppage.
      */
-    add         r_page_addr, r0, k.{to_s5_mpage_sbit0_ebit3...\
-                                    to_s5_mpage_sbit28_ebit33}
-    sne         c1, r_page_addr, r0
-    addi.c1     r_page_size, r0, APP_REDIR_MPAGE_SIZE
-    ori.c1      r_rawr_hdr_flags, r_rawr_hdr_flags,\
-                PEN_APP_REDIR_A0_RNMPR_SMALL
-    add.!c1     r_page_addr, r0, k.{to_s5_ppage_sbit0_ebit5...\
-                                    to_s5_ppage_sbit30_ebit33}
-    addi.!c1    r_page_size, r0, APP_REDIR_PPAGE_SIZE
-
-    phvwr       p.pen_raw_redir_hdr_v1_flags, r_rawr_hdr_flags
+    add         r_desc, r0, RAWR_KIVEC1_PPAGE
+    add         r_page_addr, r_desc, RAWR_RNMDPR_PAGE_OFFSET
                                                      
     /*
      * First, transfer the p4_to_p4plus_cpu_pkt_t header.
@@ -100,38 +91,20 @@ rawr_s5_chain_xfer:
                 p.dma_meta_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(pen_app_redir_hdr_h_dest)
     
-    addi        r_xfer_len, r0, P4PLUS_CPU_PKT_SZ + P4PLUS_RAW_REDIR_HDR_SZ
-      
-    /*
-     * if total len (p4_to_p4plus_cpu_pkt_t + meta headers + packet) > current page size
-     *   transfer the rest of the packet to the next page
-     */    
-    add         r_pkt_len, r0, k.common_phv_packet_len
+    add         r_pkt_len, r0, RAWR_KIVEC0_PACKET_LEN
     phvwr       p.aol_L0, r_pkt_len.wx
-    sle         c2, r_pkt_len, r_page_size
-    addi.c2     r_page_addr, r_page_addr, P4PLUS_RAW_REDIR_HDR_SZ
-    phvwr.!c2   p.aol_L0, r_xfer_len.wx
-    add.!c2     r_page_addr, r0, k.{to_s5_ppage_sbit0_ebit5...\
-                                    to_s5_ppage_sbit30_ebit33}
+    addi        r_page_addr, r_page_addr, P4PLUS_RAW_REDIR_HDR_SZ
     
-    sub         r_pkt_len, r_pkt_len, r_xfer_len
+    sub         r_pkt_len, r_pkt_len, P4PLUS_CPU_PKT_SZ + P4PLUS_RAW_REDIR_HDR_SZ
     phvwr       p.dma_pkt_content_dma_cmd_addr, r_page_addr
     phvwrpair   p.dma_pkt_content_dma_cmd_size, r_pkt_len,\
                 p.dma_pkt_content_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     
     /*
-     * Depending on the number of pages required, prep AOL1
-     */
-    phvwrpair.!c2  p.aol_A1, r_page_addr.dx,\
-                   p.aol_L1, r_pkt_len.wx
-
-    /*
      * Set up transfer of the AOL's into queue descriptor
      */    
-    add         r_desc, k.{to_s5_desc_sbit0_ebit31...\
-                           to_s5_desc_sbit32_ebit33},\
-                NIC_DESC_ENTRY_0_OFFSET
-    phvwrpair   p.dma_desc_dma_cmd_addr, r_desc,\
+    add         r_scratch, r_desc, NIC_DESC_ENTRY_0_OFFSET
+    phvwrpair   p.dma_desc_dma_cmd_addr, r_scratch,\
                 p.dma_desc_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.dma_desc_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(aol_next_pkt)
@@ -142,29 +115,26 @@ rawr_s5_chain_xfer:
      * Set up DMA to enqueue descriptor to next service chain
      */
     add         r_chain_entry, r_chain_pindex, r0
-    mincr       r_chain_entry, k.common_phv_chain_ring_size_shift, r0
+    mincr       r_chain_entry, RAWR_KIVEC0_CHAIN_RING_SIZE_SHIFT, r0
     sllv        r_chain_entry, r_chain_entry, \
-                k.common_phv_chain_entry_size_shift
-    add         r_chain_entry, r_chain_entry, \
-                k.{common_phv_chain_ring_base_sbit0_ebit31...\
-                   common_phv_chain_ring_base_sbit32_ebit33}
+                RAWR_KIVEC2_CHAIN_ENTRY_SIZE_SHIFT
+    add         r_chain_entry, r_chain_entry, RAWR_KIVEC2_CHAIN_RING_BASE
+    
     /*
      * Service chain's queue may be expecting to get a desc that has already
      * been adjusted to point to the beginning of the AOL area.
      */
-    smeqh       c1, r_rawrcb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
+    smeqh       c4, r_rawrcb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
                                     APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
-    add.c1      r_desc, k.{to_s5_desc_sbit0_ebit31...\
-                           to_s5_desc_sbit32_ebit33}, NIC_DESC_ENTRY_0_OFFSET
-    add.!c1     r_desc, k.{to_s5_desc_sbit0_ebit31...\
-                           to_s5_desc_sbit32_ebit33}, r0
+    add.c4      r_desc, r_desc, NIC_DESC_ENTRY_0_OFFSET
+
     /*
      * The same queue may also require descriptor valid bit to be set
      */
-    smeqh       c1, r_rawrcb_flags, APP_REDIR_DESC_VALID_BIT_REQ,  \
+    smeqh       c5, r_rawrcb_flags, APP_REDIR_DESC_VALID_BIT_REQ,  \
                                     APP_REDIR_DESC_VALID_BIT_REQ
-    srl         r_scratch, r_chain_pindex, k.{common_phv_chain_ring_size_shift}
-    add.c1      r_desc, r_desc, r_scratch[0], DESC_VALID_BIT_SHIFT
+    srl         r_scratch, r_chain_pindex, RAWR_KIVEC0_CHAIN_RING_SIZE_SHIFT
+    add.c5      r_desc, r_desc, r_scratch[0], DESC_VALID_BIT_SHIFT
     phvwr       p.ring_entry_descr_addr, r_desc // content for this PHV2MEM
     phvwrpair   p.dma_chain_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(ring_entry_descr_addr), \
@@ -177,16 +147,14 @@ rawr_s5_chain_xfer:
     /*
      * Gather packet redirect statistics
      */
-     RAWRCB_NORMAL_STAT_INC_LAUNCH(3, r_scratch, 
-                                   k.{common_phv_qstate_addr_sbit0_ebit0...\
-                                      common_phv_qstate_addr_sbit33_ebit33},
-                                   p.t3_s2s_inc_stat_pkts_redir)
+    RAWR_METRICS_SET(redir_pkts)
+
     /*
      * If the next service ring belongs to a TxQ, set up DMA to increment
      * pindex and ring doorbell.
      */
-    sne         c1, k.common_phv_chain_to_rxq, r0
-    phvwrpair.c1.e p.dma_chain_dma_cmd_wr_fence, TRUE, \
+    sne         c6, RAWR_KIVEC0_CHAIN_TO_RXQ, r0
+    phvwrpair.c6.e p.dma_chain_dma_cmd_wr_fence, TRUE, \
                    p.dma_chain_dma_cmd_eop, TRUE
     
     /*
@@ -194,21 +162,19 @@ rawr_s5_chain_xfer:
      * Set up DMA to increment PI and ring doorbell
      * with scheduler bit set/unset as an option
      */
-    smeqh       c1, r_rawrcb_flags, APP_REDIR_CHAIN_DOORBELL_NO_SCHED,\
+    smeqh       c7, r_rawrcb_flags, APP_REDIR_CHAIN_DOORBELL_NO_SCHED,\
                                     APP_REDIR_CHAIN_DOORBELL_NO_SCHED // delay slot
-    cmov        r_txq_db_sched, c1, DB_NO_SCHED_WR,\
+    cmov        r_txq_db_sched, c7, DB_NO_SCHED_WR,\
                 DB_SCHED_WR_EVAL_RING
     
     APP_REDIR_SETUP_DB_ADDR(DB_ADDR_BASE,
                             DB_INC_PINDEX,
                             r_txq_db_sched,
-                            k.{t1_s2s_chain_lif_sbit0_ebit7...\
-                               t1_s2s_chain_lif_sbit8_ebit10},
-                            k.t1_s2s_chain_qtype,
+                            RAWR_KIVEC2_CHAIN_LIF,
+                            RAWR_KIVEC2_CHAIN_QTYPE,
                             r_txq_db_addr)
-    APP_REDIR_SETUP_DB_DATA(k.{t1_s2s_chain_qid_sbit0_ebit1...\
-                               t1_s2s_chain_qid_sbit18_ebit23},
-                            k.common_phv_chain_ring_index_select,
+    APP_REDIR_SETUP_DB_DATA(RAWR_KIVEC2_CHAIN_QID,
+                            RAWR_KIVEC0_CHAIN_RING_INDEX_SELECT,
                             r0, // curr PI is dontcare for DB_INC_PINDEX
                             r_txq_db_data)
                         

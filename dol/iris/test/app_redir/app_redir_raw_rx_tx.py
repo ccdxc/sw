@@ -10,10 +10,7 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 import iris.test.app_redir.app_redir_shared as app_redir_shared
 
-rnmdr = 0
-rnmpr = 0
-rnmpr_small = 0
-rnmdpr_big = 0
+cpurx_dpr = 0
 rawrcbid = ""
 rawccbid = ""
 rawrcb = 0
@@ -31,10 +28,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
-    global rnmdpr_big
+    global cpurx_dpr
     global rawrcbid
     global rawccbid
     global rawrcb
@@ -68,14 +62,9 @@ def TestCaseSetup(tc):
     rawccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.GetMeta()
-    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
-    rnmdpr_big.GetMeta()
+    cpurx_dpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"])
+    cpurx_dpr.GetMeta()
+    cpurx_dpr.GetRingEntries([cpurx_dpr.pi])
 
     rawrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawrcbid])
     rawrcb.GetObjValPd()
@@ -85,10 +74,7 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
-    global rnmdpr_big
+    global cpurx_dpr
     global rawrcbid
     global rawccbid
     global rawrcb
@@ -123,37 +109,28 @@ def TestCaseVerify(tc):
         print("my_txq_base value post-sync from HBM 0x%x" % rawccb_cur.my_txq_base)
 
     # Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.GetMeta()
-    rnmdpr_big_cur = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
-    rnmdpr_big_cur.GetMeta()
+    cpurx_dpr_cur = tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"]
+    cpurx_dpr_cur.GetMeta()
 
-    # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts-(rnmdpr_big_cur.pi - rnmdpr_big.pi)):
-        print("RNMDR pi check failed old %d new %d expected %d" %
-                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+    # Verify PI for CPU_RX_DPR got incremented
+    if (cpurx_dpr_cur.pi != cpurx_dpr.pi+num_pkts):
+        print("CPU_RX_DPR pi check failed old %d new %d expected %d" %
+                     (cpurx_dpr.pi, cpurx_dpr_cur.pi, cpurx_dpr.pi+num_pkts))
         rawrcb_cur.StatsPrint()
         rawccb_cur.StatsPrint()
         return False
-    print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-
-    print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-    print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
+    print("CPU_RX_DPR pi old %d new %d" % (cpurx_dpr.pi, cpurx_dpr_cur.pi))
 
     # Rx: verify # packets redirected
     num_redir_pkts = num_pkts - num_flow_miss_pkts
-    if (rawrcb_cur.stat_pkts_redir != rawrcb.stat_pkts_redir+num_redir_pkts):
-        print("stat_pkts_redir check failed old %d new %d expected %d" %
-              (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir, rawrcb.stat_pkts_redir+num_redir_pkts))
+    if (rawrcb_cur.redir_pkts != rawrcb.redir_pkts+num_redir_pkts):
+        print("redir_pkts check failed old %d new %d expected %d" %
+              (rawrcb.redir_pkts, rawrcb_cur.redir_pkts, rawrcb.redir_pkts+num_redir_pkts))
         rawrcb_cur.StatsPrint()
         rawccb_cur.StatsPrint()
         return False
-    print("stat_pkts_redir old %d new %d" % 
-          (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir))
+    print("redir_pkts old %d new %d" % 
+          (rawrcb.redir_pkts, rawrcb_cur.redir_pkts))
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()
@@ -170,14 +147,14 @@ def TestCaseVerify(tc):
     print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
 
     # Tx: verify # packets chained
-    if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_exp_rawccb_pkts):
-        print("stat_pkts_chain check failed old %d new %d expected %d" %
-              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_exp_rawccb_pkts))
+    if (rawccb_cur.chain_pkts != rawccb.chain_pkts+num_exp_rawccb_pkts):
+        print("chain_pkts check failed old %d new %d expected %d" %
+              (rawccb.chain_pkts, rawccb_cur.chain_pkts, rawccb.chain_pkts+num_exp_rawccb_pkts))
         rawrcb_cur.StatsPrint()
         rawccb_cur.StatsPrint()
         return False
-    print("stat_pkts_chain old %d new %d" % 
-          (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
+    print("chain_pkts old %d new %d" % 
+          (rawccb.chain_pkts, rawccb_cur.chain_pkts))
 
     rawrcb_cur.StatsPrint()
     rawccb_cur.StatsPrint()

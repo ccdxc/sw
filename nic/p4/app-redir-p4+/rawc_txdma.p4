@@ -9,34 +9,32 @@
 /*
  * L7 Raw Chain stage 0
  */
-#define tx_table_s0_t0_action   start
+#define tx_table_s0_t0_action   rawc_tx_start
 
 
 /*
  * Table names
  */
-#define tx_table_s0_t0          rawc_tx_start
-#define tx_table_s1_t0          rawc_my_txq_entry
-#define tx_table_s2_t0          rawc_desc_enqueue
-#define tx_table_s2_t1          rawc_pkt_prep
-#define tx_table_s3_t1          rawc_pkt_post
-#define tx_table_s4_t1          rawc_cleanup_discard
-#define tx_table_s5_t0          rawc_desc_free
-#define tx_table_s5_t1          rawc_page0_free
-#define tx_table_s6_t1          rawc_page1_free
-#define tx_table_s7_t1          rawc_page2_free
-#define tx_table_s7_t3          rawc_stats              // actually stage agnostic
+#define tx_table_s0_t0          s0_tbl
+#define tx_table_s1_t0          s1_tbl
+#define tx_table_s2_t0          s2_tbl
+#define tx_table_s1_t1          s1_tbl1
+#define tx_table_s2_t1          s2_tbl1
+#define tx_table_s3_t1          s3_tbl1
+#define tx_table_s4_t1          s4_tbl1
+#define tx_table_s7_t2          s7_tbl2
 
 /*
  * L7 Raw Chain stage 1
  */
 #define tx_table_s1_t0_action   consume
+#define tx_table_s1_t1_action   cb_extra_read
 
 /*
  * L7 Raw Chain stage 2
  */
-#define tx_table_s2_t0_action   desc_enqueue
-#define tx_table_s2_t1_action   pkt_prep
+#define tx_table_s2_t0_action   pkt_prep
+#define tx_table_s2_t1_action   desc_enqueue
 
 /*
  * L7 Raw Chain stage 3
@@ -46,24 +44,12 @@
 /*
  * L7 Raw Chain stage 4
  */
-#define tx_table_s4_t1_action   cleanup_discard
-
-/*
- * L7 Raw Chain stage 5
- */
-#define tx_table_s5_t0_action   desc_free
-#define tx_table_s5_t1_action   page0_free
-
-/*
- * L7 Raw Chain stage 6
- */
-#define tx_table_s6_t1_action   page1_free
+#define tx_table_s4_t1_action   desc_free
 
 /*
  * L7 Raw Chain stage 7
  */
-#define tx_table_s7_t1_action   page2_free
-#define tx_table_s7_t3_action   err_stat_inc    // actually stage agnostic
+#define tx_table_s7_t2_action   metrics0_commit
 
 
 #include "../common-p4+/common_txdma.p4"
@@ -116,6 +102,7 @@ header_type rawccb_t {
         
         my_txq_ring_size_shift          : 8;
         my_txq_entry_size_shift         : 8;
+        cpu_id                          : 8;
         
         /*
          * Sentinel to indicate all bytes in CB have been written and P4+ code
@@ -125,7 +112,27 @@ header_type rawccb_t {
     }
 }
 
-// d for stage 1 table 0
+header_type rawccb_extra_t {
+    fields {
+        ascq_base                       : 64;
+        ascq_sem_inf_addr               : 64;
+    }
+}
+
+header_type rawccb_metrics0_t {
+    fields {
+
+        // CAUTION: order of fields must match rawc_kivec9_t
+        chain_pkts                     	: 64;
+        cb_not_ready_discards           : 64;
+        qstate_cfg_discards             : 64;
+        aol_error_discards              : 64;
+        my_txq_empty_discards           : 64;
+        txq_full_discards               : 64;
+        pkt_free_errors                 : 64;
+    }
+}
+
 header_type txq_desc_d_t {
     fields {
         desc                            : 64;
@@ -133,7 +140,6 @@ header_type txq_desc_d_t {
     }
 }
 
-// d for stage 2 table 0
 header_type chain_txq_ring_indices_d_t {
     fields {
         CAPRI_QSTATE_HEADER_RING(curr)
@@ -141,106 +147,127 @@ header_type chain_txq_ring_indices_d_t {
     }
 }
 
-// d for stage 2 table 1 is pkt_descr_aol_t
-
-// d for stage 3 table 1 is p4_to_p4plus_cpu_pkt_t
-
-// d for stage 5 table 0
-header_type sem_desc_d_t {
+header_type sem_ascq_d_t {
     fields {
-        pindex_hi                       : 31;
-        pindex_full                     : 1;
-        pindex                          : 32;
-        pad                             : 448;
+        ascq_pindex      : 32;
+        ascq_full        : 8;
     }
-}
-
-// d for stage 5 table 1
-header_type sem_page_d_t {
-    fields {
-        pindex_hi                       : 31;
-        pindex_full                     : 1;
-        pindex                          : 32;
-        pad                             : 448;
-    }
-}
-
-// d for stage 6 table 1 is also sem_page_d_t
-
-// d for stage 7 table 1 is also sem_page_d_t
-
-// d for stage x table 3
-header_type rawccb_stats_t {
-    fields {
-        stat_pkts_chain                 : 64;
-        stat_pkts_discard               : 64;
-
-        // 32-bit saturating statistic counters
-        stat_cb_not_ready               : 32;
-        stat_my_txq_empty               : 32;
-        stat_aol_err                    : 32;
-        stat_txq_full                   : 32;
-        stat_desc_sem_free_full         : 32;
-        stat_page_sem_free_full         : 32;
-        unused0                         : 32;
-        unused1                         : 32;
-        unused2                         : 32;
-        unused3                         : 32;
-        unused4                         : 32;
-        unused5                         : 32;
-    }
-}
+} 
 
 /*
- * Global PHV definitions
+ * kivec0: header union with global (128 bits max)
  */
-header_type common_global_phv_t {
+header_type rawc_kivec0_t {
     fields {
-        // p4plus_common_global_t (max is GLOBAL_WIDTH or 128)
         chain_txq_ring_size_shift       : 8;
         chain_txq_entry_size_shift      : 8;
         rawccb_flags                    : 16;
-        chain_txq_base                  : 34;
-        qstate_addr                     : 34;
+        qstate_addr                     : 40;
         
         do_cleanup_discard              : 1;
         next_service_chain_action       : 1;
+        pkt_freeq_not_cfg               : 1;
     }
 }
 
-#define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.do_cleanup_discard, common_phv.do_cleanup_discard); \
-    modify_field(common_global_scratch.chain_txq_base, common_phv.chain_txq_base); \
-    modify_field(common_global_scratch.chain_txq_ring_size_shift, common_phv.chain_txq_ring_size_shift); \
-    modify_field(common_global_scratch.chain_txq_entry_size_shift, common_phv.chain_txq_entry_size_shift); \
-    modify_field(common_global_scratch.next_service_chain_action, common_phv.next_service_chain_action); \
-    modify_field(common_global_scratch.rawccb_flags, common_phv.rawccb_flags); \
-    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr);
-
+#define RAWC_KIVEC0_USE(scratch, kivec)	\
+    modify_field(scratch.chain_txq_ring_size_shift, kivec.chain_txq_ring_size_shift); \
+    modify_field(scratch.chain_txq_entry_size_shift, kivec.chain_txq_entry_size_shift); \
+    modify_field(scratch.rawccb_flags, kivec.rawccb_flags); \
+    modify_field(scratch.qstate_addr, kivec.qstate_addr); \
+    modify_field(scratch.do_cleanup_discard, kivec.do_cleanup_discard); \
+    modify_field(scratch.next_service_chain_action, kivec.next_service_chain_action); \
+    modify_field(scratch.pkt_freeq_not_cfg, kivec.pkt_freeq_not_cfg); \
 
 /*
- * to_stage PHV definitions
+ * kivec1: header union with to_stage1 (128 bits max)
  */
-
-header_type to_stage_1_phv_t {
+header_type rawc_kivec1_t {
     fields {
-        // (max 128 bits)
-        my_txq_ring_size_shift          : 8;
-        chain_txq_ring_indices_addr     : 34;
-        my_txq_qid                      : 24;
-        my_txq_lif                      : 11;
-        my_txq_qtype                    : 3;
+        chain_txq_ring_indices_addr     : 64;
     }
 }
 
-#define GENERATE_TO_S1_K \
-    modify_field(to_s1_scratch.chain_txq_ring_indices_addr, to_s1.chain_txq_ring_indices_addr); \
-    modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift); \
-    modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif); \
-    modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype); \
-    modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
+#define RAWC_KIVEC1_USE(scratch, kivec)	\
+    modify_field(scratch.chain_txq_ring_indices_addr, kivec.chain_txq_ring_indices_addr); \
     
+/*
+ * kivec2: header union with to_stage2 (128 bits max)
+ */
+header_type rawc_kivec2_t {
+    fields {
+        chain_txq_base                  : 64;
+        chain_txq_lif                   : 11;
+        chain_txq_qtype                 : 3;
+        chain_txq_qid                   : 24;
+        chain_txq_ring                  : 3;
+    }
+}
 
+#define RAWC_KIVEC2_USE(scratch, kivec)	\
+    modify_field(scratch.chain_txq_base, kivec.chain_txq_base); \
+    modify_field(scratch.chain_txq_lif, kivec.chain_txq_lif); \
+    modify_field(scratch.chain_txq_qtype, kivec.chain_txq_qtype); \
+    modify_field(scratch.chain_txq_qid, kivec.chain_txq_qid); \
+    modify_field(scratch.chain_txq_ring, kivec.chain_txq_ring); \
+    
+/*
+ * kivec3: header union with stage_2_stage for table 1 (160 bits max)
+ */
+header_type rawc_kivec3_t {
+    fields {
+        desc                            : 64;
+        ascq_sem_inf_addr               : 64;
+        last_mem2pkt_ptr                : 32;
+    }
+}
+
+#define RAWC_KIVEC3_USE(scratch, kivec)	\
+    modify_field(scratch.desc, kivec.desc); \
+    modify_field(scratch.ascq_sem_inf_addr, kivec.ascq_sem_inf_addr); \
+    modify_field(scratch.last_mem2pkt_ptr, kivec.last_mem2pkt_ptr); \
+
+/*
+ * kivec4: header union with to_stage4 (128 bits max)
+ */
+header_type rawc_kivec4_t {
+    fields {
+        ascq_base                       : 64;
+    }
+}
+
+#define RAWC_KIVEC4_USE(scratch, kivec)	\
+    modify_field(scratch.ascq_base, kivec.ascq_base); \
+
+/*
+ * kivec9: header union with stage_2_stage for table 2 (160 bits max)
+ */
+header_type rawc_kivec9_t {
+    fields {
+        // CAUTION: order of fields must match rawccb_metrics0_t
+        metrics0_start                  : 1;
+        chain_pkts                      : 1;
+        cb_not_ready_discards           : 1;
+        qstate_cfg_discards             : 1;
+        aol_error_discards              : 1;
+        my_txq_empty_discards           : 1;
+        txq_full_discards               : 1;
+        pkt_free_errors                 : 1;
+        metrics0_end                    : 1;
+    }
+}
+
+#define RAWC_KIVEC9_USE(scratch, kivec)	\
+    modify_field(scratch.metrics0_start, kivec.metrics0_start); \
+    modify_field(scratch.chain_pkts, kivec.chain_pkts); \
+    modify_field(scratch.cb_not_ready_discards, kivec.cb_not_ready_discards); \
+    modify_field(scratch.qstate_cfg_discards, kivec.qstate_cfg_discards); \
+    modify_field(scratch.aol_error_discards, kivec.aol_error_discards); \
+    modify_field(scratch.my_txq_empty_discards, kivec.my_txq_empty_discards); \
+    modify_field(scratch.txq_full_discards, kivec.txq_full_discards); \
+    modify_field(scratch.pkt_free_errors, kivec.pkt_free_errors); \
+    modify_field(scratch.metrics0_end, kivec.metrics0_end); \
+    
 /*
  * Header unions for d-vector
  */
@@ -248,10 +275,7 @@ header_type to_stage_1_phv_t {
 metadata rawccb_t                       rawccb_d;
 
 @pragma scratch_metadata
-metadata sem_desc_d_t                   sem_desc_d;
-
-@pragma scratch_metadata
-metadata sem_page_d_t                   sem_page_d;
+metadata rawccb_extra_t                 rawccb_extra_d;
 
 @pragma scratch_metadata
 metadata txq_desc_d_t                   my_txq_desc_d;
@@ -263,96 +287,21 @@ metadata pkt_descr_aol_t                txq_desc_aol_d;
 metadata chain_txq_ring_indices_d_t     chain_txq_ring_indices_d;
 
 @pragma scratch_metadata
-metadata rawccb_stats_t                 rawccb_stats_d;
-
-@pragma scratch_metadata
 metadata cpu_to_p4plus_header_t         cpu_to_p4plus_header_d;
 
-/*
- * Stage to stage PHV definitions
- */
-header_type common_t0_s2s_phv_t {
-    fields {
-        // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-        desc                    : 64;
-        chain_txq_lif           : 11;
-        chain_txq_qtype         : 3;
-        chain_txq_qid           : 24;
-        chain_txq_ring          : 3;
-    }
-}
+@pragma scratch_metadata
+metadata sem_ascq_d_t                   sem_ascq_d;
 
-#define GENERATE_T0_S2S_K \
-    modify_field(t0_s2s_scratch.desc, t0_s2s.desc); \
-    modify_field(t0_s2s_scratch.chain_txq_lif, t0_s2s.chain_txq_lif); \
-    modify_field(t0_s2s_scratch.chain_txq_qtype, t0_s2s.chain_txq_qtype); \
-    modify_field(t0_s2s_scratch.chain_txq_qid, t0_s2s.chain_txq_qid); \
-    modify_field(t0_s2s_scratch.chain_txq_ring, t0_s2s.chain_txq_ring);
-
-
-header_type common_t1_s2s_phv_t {
-    fields {
-        // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-        aol_A0                  : 52;
-        aol_A1                  : 52;
-        aol_A2                  : 52;
-        aol_A0_small            : 1;
-        aol_A1_small            : 1;
-        aol_A2_small            : 1;
-    }
-}
-
-#define GENERATE_T1_S2S_K \
-    modify_field(t1_s2s_scratch.aol_A0, t1_s2s.aol_A0); \
-    modify_field(t1_s2s_scratch.aol_A1, t1_s2s.aol_A1); \
-    modify_field(t1_s2s_scratch.aol_A2, t1_s2s.aol_A2); \
-    modify_field(t1_s2s_scratch.aol_A0_small, t1_s2s.aol_A0_small); \
-    modify_field(t1_s2s_scratch.aol_A1_small, t1_s2s.aol_A1_small); \
-    modify_field(t1_s2s_scratch.aol_A2_small, t1_s2s.aol_A2_small);
-
-
-header_type common_t3_s2s_phv_t {
-    fields {
-        // (max is STAGE_2_STAGE_WIDTH or 160 bits)
-        inc_stat_begin                : 1;
-        inc_stat_pkts_chain           : 1;
-        inc_stat_pkts_discard         : 1;
-        inc_stat_cb_not_ready         : 1;
-        inc_stat_my_txq_empty         : 1;
-        inc_stat_aol_err              : 1;
-        inc_stat_txq_full             : 1;
-        inc_stat_desc_sem_free_full   : 1;
-        inc_stat_page_sem_free_full   : 1;
-        inc_stat_end                  : 1;
-	
-	/* Check all above for increment applicability;
-	 * must be outside of inc_stat_begin...inc_stat_end
-	 */
-        inc_stat_check_all            : 1;
-    }
-}
-
-#define GENERATE_T3_S2S_K \
-    modify_field(t3_s2s_scratch.inc_stat_begin, t3_s2s.inc_stat_begin); \
-    modify_field(t3_s2s_scratch.inc_stat_pkts_chain, t3_s2s.inc_stat_pkts_chain); \
-    modify_field(t3_s2s_scratch.inc_stat_pkts_discard, t3_s2s.inc_stat_pkts_discard); \
-    modify_field(t3_s2s_scratch.inc_stat_cb_not_ready, t3_s2s.inc_stat_cb_not_ready); \
-    modify_field(t3_s2s_scratch.inc_stat_my_txq_empty, t3_s2s.inc_stat_my_txq_empty); \
-    modify_field(t3_s2s_scratch.inc_stat_aol_err, t3_s2s.inc_stat_aol_err); \
-    modify_field(t3_s2s_scratch.inc_stat_txq_full, t3_s2s.inc_stat_txq_full); \
-    modify_field(t3_s2s_scratch.inc_stat_desc_sem_free_full, t3_s2s.inc_stat_desc_sem_free_full); \
-    modify_field(t3_s2s_scratch.inc_stat_page_sem_free_full, t3_s2s.inc_stat_page_sem_free_full); \
-    modify_field(t3_s2s_scratch.inc_stat_end, t3_s2s.inc_stat_end); \
-    modify_field(t3_s2s_scratch.inc_stat_check_all, t3_s2s.inc_stat_check_all);
-
+@pragma scratch_metadata
+metadata rawccb_metrics0_t              rawccb_metrics0;
 
 /*
  * Header unions for PHV layout
  */
 @pragma pa_header_union ingress         common_global
-metadata common_global_phv_t            common_phv;
+metadata rawc_kivec0_t                  rawc_kivec0;
 @pragma scratch_metadata
-metadata common_global_phv_t            common_global_scratch;
+metadata rawc_kivec0_t                  rawc_kivec0_scratch;
 
 @pragma pa_header_union ingress         app_header
 metadata p4plus_to_p4_header_t          rawc_app_header;
@@ -360,31 +309,37 @@ metadata p4plus_to_p4_header_t          rawc_app_header;
 metadata p4plus_to_p4_header_t          rawc_scratch_app;
 
 @pragma pa_header_union ingress         to_stage_1
-metadata to_stage_1_phv_t               to_s1;
+metadata rawc_kivec1_t                  rawc_kivec1;
 @pragma scratch_metadata
-metadata to_stage_1_phv_t               to_s1_scratch;
+metadata rawc_kivec1_t                  rawc_kivec1_scratch;
 
-@pragma pa_header_union ingress         common_t0_s2s
-metadata common_t0_s2s_phv_t            t0_s2s;
+@pragma pa_header_union ingress         to_stage_2
+metadata rawc_kivec2_t                  rawc_kivec2;
 @pragma scratch_metadata
-metadata common_t0_s2s_phv_t            t0_s2s_scratch;
+metadata rawc_kivec2_t                  rawc_kivec2_scratch;
 
 @pragma pa_header_union ingress         common_t1_s2s
-metadata common_t1_s2s_phv_t            t1_s2s;
+metadata rawc_kivec3_t                  rawc_kivec3;
 @pragma scratch_metadata
-metadata common_t1_s2s_phv_t            t1_s2s_scratch;
+metadata rawc_kivec3_t                  rawc_kivec3_scratch;
 
 @pragma dont_trim
-@pragma pa_header_union ingress         common_t3_s2s
-metadata common_t3_s2s_phv_t            t3_s2s;
+@pragma pa_header_union ingress         to_stage_4
+metadata rawc_kivec4_t                  rawc_kivec4;
 @pragma scratch_metadata
-metadata common_t3_s2s_phv_t            t3_s2s_scratch;
+metadata rawc_kivec4_t                  rawc_kivec4_scratch;
+
+@pragma dont_trim
+@pragma pa_header_union ingress         common_t2_s2s
+metadata rawc_kivec9_t                  rawc_kivec9;
+@pragma scratch_metadata
+metadata rawc_kivec9_t                  rawc_kivec9_scratch;
 
 /*
  * PHV following k (for app DMA etc.)
  */
 @pragma dont_trim
-metadata ring_entry_t                   chain_txq_desc_addr; 
+metadata ring_entry_t                   ring_entry; 
 
 @pragma dont_trim
 metadata doorbell_data_raw_t            chain_txq_db_data; 
@@ -421,20 +376,18 @@ metadata dma_cmd_phv2mem_t              dma_doorbell;
  * and do not implement any pseudo code
  */
 
-/*
- * Stage 0 table 0 action
- */
-action start(rsvd, cosA, cosB, cos_sel, 
-             eval_last, host, total, pid,
-             pi_0, ci_0,
-             rawccb_deactivate,
-             my_txq_base, my_txq_ring_size_shift, my_txq_entry_size_shift,
-             chain_txq_ring_size_shift, chain_txq_entry_size_shift,
-             chain_txq_base, chain_txq_ring_indices_addr,
-             chain_txq_qid, chain_txq_lif, chain_txq_qtype, chain_txq_ring,
-             rawccb_flags, rawccb_activate) {
-
-    // k + i for stage 0
+/*****************************************************************************
+ *  rawc_tx_start : Initial stage
+ *****************************************************************************/
+action rawc_tx_start(rsvd, cosA, cosB, cos_sel, 
+                     eval_last, host, total, pid,
+                     pi_0, ci_0,
+                     rawccb_deactivate, pad, rawccb_flags,
+                     my_txq_base, chain_txq_base, chain_txq_ring_indices_addr,
+                     chain_txq_ring_size_shift, chain_txq_entry_size_shift,
+		     chain_txq_qtype, chain_txq_ring, chain_txq_qid,
+                     chain_txq_lif, my_txq_ring_size_shift,
+                     my_txq_entry_size_shift, cpu_id, rawccb_activate) {
 
     // from intrinsic
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -450,8 +403,6 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawc_scratch_app.tcp_seq_delta, rawc_app_header.tcp_seq_delta);
     modify_field(rawc_scratch_app.vlan_tag, rawc_app_header.vlan_tag);
     
-    // d for stage 0
-    
     //modify_field(rawccb_d.pc, pc);
     modify_field(rawccb_d.rsvd, rsvd);
     modify_field(rawccb_d.cosA, cosA);
@@ -465,48 +416,55 @@ action start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawccb_d.ci_0, ci_0);
     
     modify_field(rawccb_d.rawccb_deactivate, rawccb_deactivate);
+    modify_field(rawccb_d.pad, pad);
+    modify_field(rawccb_d.rawccb_flags, rawccb_flags);
     modify_field(rawccb_d.my_txq_base, my_txq_base);
-    modify_field(rawccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
-    modify_field(rawccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
     modify_field(rawccb_d.chain_txq_base, chain_txq_base);
     modify_field(rawccb_d.chain_txq_ring_indices_addr, chain_txq_ring_indices_addr);
     modify_field(rawccb_d.chain_txq_ring_size_shift, chain_txq_ring_size_shift);
     modify_field(rawccb_d.chain_txq_entry_size_shift, chain_txq_entry_size_shift);
-    modify_field(rawccb_d.chain_txq_lif, chain_txq_lif);
     modify_field(rawccb_d.chain_txq_qtype, chain_txq_qtype);
-    modify_field(rawccb_d.chain_txq_qid, chain_txq_qid);
     modify_field(rawccb_d.chain_txq_ring, chain_txq_ring);
-    modify_field(rawccb_d.rawccb_flags, rawccb_flags);
+    modify_field(rawccb_d.chain_txq_qid, chain_txq_qid);
+    modify_field(rawccb_d.chain_txq_lif, chain_txq_lif);
+    modify_field(rawccb_d.my_txq_ring_size_shift, my_txq_ring_size_shift);
+    modify_field(rawccb_d.my_txq_entry_size_shift, my_txq_entry_size_shift);
+    modify_field(rawccb_d.cpu_id, cpu_id);
     modify_field(rawccb_d.rawccb_activate, rawccb_activate);
 }
 
 
-/*
- * Stage 1 table 0 action
- */
+/*****************************************************************************
+ *  cb_extra_read : Read extra portion of rawccb
+ *****************************************************************************/
+action cb_extra_read(ascq_base, ascq_sem_inf_addr) {
+
+    modify_field(rawccb_extra_d.ascq_base, ascq_base);
+    modify_field(rawccb_extra_d.ascq_sem_inf_addr, ascq_sem_inf_addr);
+}
+
+
+/*****************************************************************************
+ *  consume : Consume descriptor at my_txq current cindex
+ *****************************************************************************/
 action consume(desc) {
 
-    // from to_stage
-    GENERATE_TO_S1_K
-    
-    // from ki global
-    GENERATE_GLOBAL_K
+    RAWC_KIVEC0_USE(rawc_kivec0_scratch, rawc_kivec0)
+    RAWC_KIVEC1_USE(rawc_kivec1_scratch, rawc_kivec1)
     
     // d for stage and table
     modify_field(my_txq_desc_d.desc, desc);
 }
 
 
-/*
- * Stage 2 table 0 action
- */
+/*****************************************************************************
+ *  desc_enqueue : Enqueue packet descriptor for chaining to a next service TxQ.
+ *****************************************************************************/
 action desc_enqueue(pi_curr, ci_curr) {
 
-    // stage to stage
-    GENERATE_T0_S2S_K
-    
-    // from ki global
-    GENERATE_GLOBAL_K
+    RAWC_KIVEC0_USE(rawc_kivec0_scratch, rawc_kivec0)
+    RAWC_KIVEC2_USE(rawc_kivec2_scratch, rawc_kivec2)
+    RAWC_KIVEC3_USE(rawc_kivec3_scratch, rawc_kivec3)
     
     // d for stage and table
     modify_field(chain_txq_ring_indices_d.pi_curr, pi_curr);
@@ -514,21 +472,14 @@ action desc_enqueue(pi_curr, ci_curr) {
 }
 
 
-/*
- * Stage 2 table 1 action
- */
+/*****************************************************************************
+ *  pkt_prep : Prepare packet descriptor for P4 transmission, stripping CPU/P4+
+ *             headers as necessary.
+ *****************************************************************************/
 action pkt_prep(A0, O0, L0,
                 A1, O1, L1,
                 A2, O2, L2) {
 
-    // from to_stage
-    
-    // from ki global
-    GENERATE_GLOBAL_K
-    
-    // from stage to stage
-    GENERATE_T1_S2S_K
-    
     // d for stage and table
     modify_field(txq_desc_aol_d.A0, A0);
     modify_field(txq_desc_aol_d.O0, O0);
@@ -542,18 +493,13 @@ action pkt_prep(A0, O0, L0,
 }
 
 
-/*
- * Stage 3 table 1 action
- */
+/*****************************************************************************
+ *  pkt_post : Initiate mem2pkt DMA
+ *****************************************************************************/
 action pkt_post(flags, src_lif, hw_vlan_id, l2_offset) {
 
-    // from to_stage
-    
-    // from ki global
-    GENERATE_GLOBAL_K
-    
-    // from stage to stage
-    GENERATE_T1_S2S_K
+    RAWC_KIVEC0_USE(rawc_kivec0_scratch, rawc_kivec0)
+    RAWC_KIVEC3_USE(rawc_kivec3_scratch, rawc_kivec3)
     
     // d for stage and table
     modify_field(cpu_to_p4plus_header_d.flags, flags);
@@ -563,142 +509,36 @@ action pkt_post(flags, src_lif, hw_vlan_id, l2_offset) {
 }
 
 
-/*
- * Stage 4 table 1 action
- */
-action cleanup_discard() {
+/*****************************************************************************
+ *  desc_free : Enqueue packet descriptor to ASCQ for freeing
+ *****************************************************************************/
+action desc_free(ascq_pindex, ascq_full) {
 
-    // k + i for stage 4
-
-    // from to_stage 4
-
-    // from ki global
-    GENERATE_GLOBAL_K
+    RAWC_KIVEC0_USE(rawc_kivec0_scratch, rawc_kivec0)
+    RAWC_KIVEC3_USE(rawc_kivec3_scratch, rawc_kivec3)
+    RAWC_KIVEC4_USE(rawc_kivec4_scratch, rawc_kivec4)
     
-    // from stage to stage
-    GENERATE_T1_S2S_K
-    
-    // d for stage 4 table 1
+    modify_field(sem_ascq_d.ascq_pindex, ascq_pindex);
+    modify_field(sem_ascq_d.ascq_full, ascq_full);
 }
 
-
-/*
- * Stage 5 table 0 action
- */
-action desc_free(pindex, pindex_full) {
-    // k + i for stage 5 table 0
-    
-    // from to_stage 5
-
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_T0_S2S_K
-
-    // d for stage 5 table 0
-    modify_field(sem_desc_d.pindex, pindex);
-    modify_field(sem_desc_d.pindex_full, pindex_full);
-}
-
-
-/*
- * Stage 5 table 1 action
- */
-action page0_free(pindex, pindex_full) {
-    // k + i for stage 5 table 1
-    
-    // from to_stage 5
-
-    // from ki global
-    //GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_T1_S2S_K
-
-    // d for stage 7 table 1
-    modify_field(sem_page_d.pindex, pindex);
-    modify_field(sem_page_d.pindex_full, pindex_full);
-}
-
-
-/*
- * Stage 6 table 1 action
- */
-action page1_free(pindex, pindex_full) {
-    // k + i for stage 6 table 1
-    
-    // from to_stage 6
-
-    // from ki global
-    //GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_T1_S2S_K
-
-    // d for stage 6 table 1
-    modify_field(sem_page_d.pindex, pindex);
-    modify_field(sem_page_d.pindex_full, pindex_full);
-}
-
-
-/*
- * Stage 7 table 1 action
- */
-action page2_free(pindex, pindex_full) {
-    // k + i for stage 7 table 1
-    
-    // from to_stage 7
-
-    // from ki global
-    //GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_T1_S2S_K
-
-    // d for stage 7 table 1
-    modify_field(sem_page_d.pindex, pindex);
-    modify_field(sem_page_d.pindex_full, pindex_full);
-}
-
-
-/*
- * Stage agnostic table 3 action.
- * Caution: must not be launched from stage 7.
- */
-action err_stat_inc(stat_pkts_chain,
-                    stat_pkts_discard,
-                    stat_cb_not_ready,
-                    stat_my_txq_empty,
-                    stat_aol_err,
-                    stat_txq_full,
-                    stat_desc_sem_free_full,
-                    stat_page_sem_free_full,
-                    unused0, unused1, unused2, unused3, unused4, unused5) {
-    // k + i for stage x table 3
-    
-    // from to_stage x
-
-    // from ki global
-    //GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_T3_S2S_K
-
-    // d for stage x table 3
-    modify_field(rawccb_stats_d.stat_pkts_chain, stat_pkts_chain);
-    modify_field(rawccb_stats_d.stat_pkts_discard, stat_pkts_discard);
-    modify_field(rawccb_stats_d.stat_cb_not_ready, stat_cb_not_ready);
-    modify_field(rawccb_stats_d.stat_my_txq_empty, stat_my_txq_empty);
-    modify_field(rawccb_stats_d.stat_aol_err, stat_aol_err);
-    modify_field(rawccb_stats_d.stat_txq_full, stat_txq_full);
-    modify_field(rawccb_stats_d.stat_desc_sem_free_full, stat_desc_sem_free_full);
-    modify_field(rawccb_stats_d.stat_page_sem_free_full, stat_page_sem_free_full);
-    modify_field(rawccb_stats_d.unused0, unused0);
-    modify_field(rawccb_stats_d.unused1, unused1);
-    modify_field(rawccb_stats_d.unused2, unused2);
-    modify_field(rawccb_stats_d.unused3, unused3);
-    modify_field(rawccb_stats_d.unused4, unused4);
-    modify_field(rawccb_stats_d.unused5, unused5);
+/*****************************************************************************
+ *  metrics0_commit : Update and commit metrics0 to qstate.
+ *****************************************************************************/
+@pragma little_endian chain_pkts cb_not_ready_discards qstate_cfg_discards aol_error_discards my_txq_empty_discards txq_full_discards pkt_free_errors
+action metrics0_commit(chain_pkts, cb_not_ready_discards,
+                       qstate_cfg_discards, aol_error_discards,
+		       my_txq_empty_discards, txq_full_discards,
+		       pkt_free_errors) {
+			   
+  RAWC_KIVEC9_USE(rawc_kivec9_scratch, rawc_kivec9)
+  
+  modify_field(rawccb_metrics0.chain_pkts, chain_pkts);
+  modify_field(rawccb_metrics0.cb_not_ready_discards, cb_not_ready_discards);
+  modify_field(rawccb_metrics0.qstate_cfg_discards, qstate_cfg_discards);
+  modify_field(rawccb_metrics0.aol_error_discards, aol_error_discards);
+  modify_field(rawccb_metrics0.my_txq_empty_discards, my_txq_empty_discards);
+  modify_field(rawccb_metrics0.txq_full_discards, txq_full_discards);
+  modify_field(rawccb_metrics0.pkt_free_errors, pkt_free_errors);
 }
 
