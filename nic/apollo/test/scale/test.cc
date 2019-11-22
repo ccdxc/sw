@@ -325,7 +325,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.provider_ip.af = IP_AF_IPV4;
                         pds_local_mapping.provider_ip.addr.v4_addr =
                                         provider_pfx->addr.addr.v4_addr + ip_offset;
-                        pds_local_mapping.svc_tag = svc_tag++;
+                        pds_local_mapping.num_tags = 1;
+                        pds_local_mapping.tags[0] = svc_tag++;
                     }
                     ip_offset++;
 

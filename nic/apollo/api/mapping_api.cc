@@ -78,7 +78,10 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->public_ip = local_spec->public_ip;
     spec->provider_ip_valid = local_spec->provider_ip_valid;
     spec->provider_ip = local_spec->provider_ip;
-    spec->svc_tag = local_spec->svc_tag;
+    spec->num_tags = local_spec->num_tags;
+    for (uint32_t i = 0; i < local_spec->num_tags; i++) {
+        spec->tags[i] = local_spec->tags[i];
+    }
 }
 
 static inline void
@@ -99,6 +102,10 @@ pds_remote_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     spec->provider_ip_valid = remote_spec->provider_ip_valid;
     spec->provider_ip = remote_spec->provider_ip;
     spec->is_local = false;
+    spec->num_tags = remote_spec->num_tags;
+    for (uint32_t i = 0; i < remote_spec->num_tags; i++) {
+        spec->tags[i] = remote_spec->tags[i];
+    }
 }
 
 static inline void
@@ -115,7 +122,10 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->public_ip = spec->public_ip;
     local_spec->provider_ip_valid = spec->provider_ip_valid;
     local_spec->provider_ip = spec->provider_ip;
-    local_spec->svc_tag = spec->svc_tag;
+    local_spec->num_tags = spec->num_tags;
+    for (uint32_t i = 0; i < spec->num_tags; i++) {
+        local_spec->tags[i] = spec->tags[i];
+    }
 }
 
 static inline void
@@ -135,6 +145,10 @@ pds_mapping_spec_to_remote_spec (pds_remote_mapping_spec_t *remote_spec,
     memcpy(&remote_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
     remote_spec->provider_ip_valid = spec->provider_ip_valid;
     remote_spec->provider_ip = spec->provider_ip;
+    remote_spec->num_tags = spec->num_tags;
+    for (uint32_t i = 0; i < spec->num_tags; i++) {
+        remote_spec->tags[i] = spec->tags[i];
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -187,7 +201,9 @@ pds_local_mapping_read (pds_mapping_key_t *key,
     info.spec.key = *key;
     entry->set_local(true);
     rv = entry->read(key, &info);
-    pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
+    if (rv == SDK_RET_OK) {
+        pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
+    }
     return rv;
 }
 
@@ -210,7 +226,9 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
     info.spec.key = *key;
     entry->set_local(false);
     rv = entry->read(key, &info);
-    pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
+    if (rv == SDK_RET_OK) {
+        pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
+    }
     return rv;
 }
 

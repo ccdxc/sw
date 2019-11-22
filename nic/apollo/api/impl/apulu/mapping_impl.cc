@@ -819,7 +819,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     }
     spec->fabric_encap.val.vnid = bd_data.bd_info.vni;
     spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-
+    // TODO: tag support
+    spec->num_tags = 0;
     status->subnet_hw_id = mapping_data.egress_bd_id;
 
     return SDK_RET_OK;
@@ -865,6 +866,8 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
         P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, spec->public_ip,
                             spec->key.ip_addr.af);
     }
+    // TODO: tag support
+    spec->num_tags = 0;
 
     return SDK_RET_OK;
 }

@@ -3021,7 +3021,8 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
 
     proto_spec->set_subnetid(local_spec->subnet.id);
     proto_spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
-    pds_encap_to_proto_encap(proto_spec->mutable_encap(), &local_spec->fabric_encap);
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &local_spec->fabric_encap);
     proto_spec->set_vnicid(local_spec->vnic.id);
     if (local_spec->public_ip_valid) {
         ipaddr_api_spec_to_proto_spec(proto_spec->mutable_publicip(),
@@ -3031,10 +3032,12 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
         ipaddr_api_spec_to_proto_spec(proto_spec->mutable_providerip(),
                                       &local_spec->provider_ip);
     }
-    proto_spec->set_servicetag(local_spec->svc_tag);
+    for (uint32_t i = 0; i < local_spec->num_tags; i++) {
+        proto_spec->set_tags(i, local_spec->tags[i]);
+    }
 }
 
-// build PC API spec from protobuf spec
+// build API spec from protobuf spec
 static inline sdk_ret_t
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
@@ -3042,7 +3045,6 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-
     switch (key.keyinfo_case()) {
     case pds::MappingKey::kMACKey:
         local_spec->key.type = PDS_MAPPING_TYPE_L2;
@@ -3080,9 +3082,18 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                           proto_spec.providerip());
         }
     }
-    local_spec->svc_tag = proto_spec.servicetag();
     MAC_UINT64_TO_ADDR(local_spec->vnic_mac, proto_spec.macaddr());
     local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+    local_spec->num_tags = proto_spec.tags_size();
+    if (local_spec->num_tags > PDS_MAX_TAGS_PER_MAPPING) {
+        PDS_TRACE_ERR("No. of tags {} on local IP mapping exceeded max. "
+                      "supported {}", local_spec->num_tags,
+                      PDS_MAX_TAGS_PER_MAPPING);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (uint32_t i = 0; i < local_spec->num_tags; i++) {
+        local_spec->tags[i] = proto_spec.tags(i);
+    }
     return SDK_RET_OK;
 }
 
@@ -3129,6 +3140,9 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
     if (remote_spec->provider_ip_valid) {
         ipaddr_api_spec_to_proto_spec(proto_spec->mutable_providerip(),
                                       &remote_spec->provider_ip);
+    }
+    for (uint32_t i = 0; i < remote_spec->num_tags; i++) {
+        proto_spec->set_tags(i, remote_spec->tags[i]);
     }
 }
 
@@ -3227,6 +3241,16 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
             ipaddr_proto_spec_to_api_spec(&remote_spec->provider_ip,
                                           proto_spec.providerip());
         }
+    }
+    remote_spec->num_tags = proto_spec.tags_size();
+    if (remote_spec->num_tags > PDS_MAX_TAGS_PER_MAPPING) {
+        PDS_TRACE_ERR("No. of tags {} on remote IP mapping exceeded max. "
+                      "supported {}", remote_spec->num_tags,
+                      PDS_MAX_TAGS_PER_MAPPING);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (uint32_t i = 0; i < remote_spec->num_tags; i++) {
+        remote_spec->tags[i] = proto_spec.tags(i);
     }
     return SDK_RET_OK;
 }

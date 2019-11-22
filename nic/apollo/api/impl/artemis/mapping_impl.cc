@@ -541,7 +541,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                          vpc->hw_id(), &spec->key.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
                                            vnic_impl_obj->hw_id(), vpc->hw_id(),
-                                           spec->svc_tag,
+                                           spec->tags[0],
                                            overlay_ip_to_provider_ip_nat_hdl_,
                                            overlay_ip_to_public_ip_nat_hdl_,
                                            vpc->nat46_prefix_valid() ?
@@ -563,7 +563,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                              &spec->public_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
                                                vnic_impl_obj->hw_id(),
-                                               vpc->hw_id(), spec->svc_tag,
+                                               vpc->hw_id(), spec->tags[0],
                                                to_overlay_ip_nat_hdl_,
                                                PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX,
                                                PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
@@ -585,7 +585,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
                                              &spec->provider_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
                                                vnic_impl_obj->hw_id(),
-                                               vpc->hw_id(), spec->svc_tag,
+                                               vpc->hw_id(), spec->tags[0],
                                                to_overlay_ip_nat_hdl_,
                                                PDS_IMPL_NAT_TBL_RSVD_ENTRY_IDX,
                                                PDS_IMPL_LOCAL_46_MAPPING_RSVD_ENTRY_IDX);
@@ -689,11 +689,15 @@ mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
+    // TODO: tag support
+    spec->num_tags = 0;
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
+    // TODO: tag support
+    spec->num_tags = 0;
     return SDK_RET_INVALID_OP;
 }
 

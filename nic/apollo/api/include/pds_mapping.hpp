@@ -21,18 +21,24 @@
 /// \defgroup PDS_MAPPING Mapping API
 /// @{
 
+///< maximum of 5 tags per local/remote IP mapping
+#define PDS_MAX_TAGS_PER_MAPPING        5
+
 /// \brief    local mapping specification
 typedef struct pds_local_mapping_spec_s {
-    pds_mapping_key_t key;       ///< mapping key
-    pds_vnic_key_t vnic;         ///< vnic for given IP
-    pds_subnet_key_t subnet;     ///< subnet this IP is part of
-    pds_encap_t fabric_encap;    ///< fabric encap for this mapping
-    mac_addr_t vnic_mac;         ///< vnic MAC
-    bool public_ip_valid;        ///< true if public IP is valid
-    ip_addr_t public_ip;         ///< public IP address
-    bool provider_ip_valid;      ///< true if provider IP is valid
-    ip_addr_t provider_ip;       ///< provider IP address
-    uint32_t  svc_tag;           ///< service tag, if any
+    pds_mapping_key_t key;                    ///< mapping key
+    pds_vnic_key_t vnic;                      ///< vnic for given IP
+    pds_subnet_key_t subnet;                  ///< subnet this IP is part of
+    pds_encap_t fabric_encap;                 ///< fabric encap for this mapping
+    mac_addr_t vnic_mac;                      ///< vnic MAC
+    bool public_ip_valid;                     ///< true if public IP is valid
+    ip_addr_t public_ip;                      ///< public IP address
+    bool provider_ip_valid;                   ///< true if provider IP is valid
+    ip_addr_t provider_ip;                    ///< provider IP address
+    /// number of tag/labels/security groups for the mapping
+    uint32_t num_tags;
+    /// tags/labels/security groups for the mapping
+    uint32_t  tags[PDS_MAX_TAGS_PER_MAPPING];
 } __PACK__ pds_local_mapping_spec_t;
 
 /// \brief    remote mapping specification
@@ -47,7 +53,11 @@ typedef struct pds_remote_mapping_spec_s {
         ///< overlay nexthop group for this mapping
         pds_nexthop_group_key_t nh_group;
     };
-    mac_addr_t vnic_mac;         ///< vnic MAC
+    mac_addr_t vnic_mac;         ///< remote vnic's MAC
+    /// number of tag/labels/security groups for the mapping
+    uint32_t num_tags;
+    /// tags/labels/security groups for the mapping
+    uint32_t  tags[PDS_MAX_TAGS_PER_MAPPING];
     bool provider_ip_valid;      ///< true if provider IP is valid
     ip_addr_t provider_ip;       ///< provider IP address
 } __PACK__ pds_remote_mapping_spec_t;

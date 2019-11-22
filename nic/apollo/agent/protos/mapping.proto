@@ -67,10 +67,12 @@ message MappingSpec {
   types.IPAddress     PublicIP       = 8;
   // provider/underlay IP corresponding to the overlay IP, if any
   types.IPAddress     ProviderIp     = 9;
-  // service tag for this IP mapping, if exists. service tag can be used
-  // in defining security policies
-  // NOTE: service tag 0 is invalid
-  uint32              ServiceTag     = 10;
+  // tag/label/security group of this IP mapping, these tags/labels/SGs can be
+  // used// in defining security policy rules
+  // NOTE:
+  // 1. service tag 0 is invalid
+  // 2. a maximum of 5 tags are supported
+  repeated uint32     Tags           = 10;
 }
 
 // operational status of a mapping

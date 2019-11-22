@@ -917,6 +917,8 @@ mapping_impl::fill_mapping_spec_(
         // spec->tep.ip_addr.af = IP_AF_IPV4;
         // spec->tep.ip_addr.addr.v4_addr = tep_data->tep_ipv4_vxlan_action.dipo;
     }
+    // TODO: tag support
+    spec->num_tags = 0;
 }
 
 sdk_ret_t
