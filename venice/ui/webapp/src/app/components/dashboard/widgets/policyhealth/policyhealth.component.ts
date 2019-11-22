@@ -25,10 +25,10 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   hasHover: boolean = false;
   cardStates = CardStates;
 
-  title: string = 'Active Flows';
+  title: string = 'Active Sessions';  // VS-645 change from 'active flows' to 'active sessions'
   firstStat: Stat = {
     value: '90%',
-    description: 'ACTIVE FLOWS',
+    description: 'ACTIVE SESSIONS',
     arrowDirection: StatArrowDirection.UP,
     statColor: '#61b3a0'
   };
@@ -47,7 +47,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
 
 
   activeFlows: LineGraphStat = {
-    title: 'ACTIVE FLOWS',
+    title: 'ACTIVE SESSIONS',
     data: [],
     statColor: '#61b3a0',
     gradientStart: 'rgba(97, 179, 160, 1)',

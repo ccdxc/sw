@@ -74,7 +74,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   isTabComponent: boolean = false;
   cols: TableCol[] = [
-    { field: 'spec.id', header: 'Name', class: '', sortable: true, width: 10 },
+    { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
     { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
     { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: 3 },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: 15 },
