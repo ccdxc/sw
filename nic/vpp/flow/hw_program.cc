@@ -7,6 +7,7 @@
 
 #include <nic/sdk/include/sdk/table.hpp>
 #include <cstring>
+#include "nic/utils/ftl/ftl_structs.hpp"
 #include <nic/utils/ftl/ftlv4.hpp>
 #include <nic/utils/ftl/ftlv6.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>

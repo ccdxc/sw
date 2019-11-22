@@ -15,6 +15,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -77,9 +78,9 @@ dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
     if (g_fp) {
         fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
-                ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
-                entry->epoch, entry->flow_role, entry->ktype);
+                entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
+                ipaddr2str(&sip), ipaddr2str(&dip), entry->key_metadata_sport, entry->key_metadata_dport,
+                entry->epoch, entry->flow_role, entry->key_metadata_ktype);
         fflush(g_fp);
     }
 #endif
@@ -91,8 +92,8 @@ dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
     if (g_fp) {
         fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
                 "sport %u, dport %u, epoch %u, role %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
-                ipaddr2str(&sip), ipaddr2str(&dip), entry->sport, entry->dport,
+                entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
+                ipaddr2str(&sip), ipaddr2str(&dip), entry->key_metadata_sport, entry->key_metadata_dport,
                 entry->epoch, entry->flow_role);
         fflush(g_fp);
     }
@@ -728,13 +729,13 @@ public:
             v4entry.session_index = session_index;
             v4entry.epoch = 0xFF;
             // Common KEY fields
-            v4entry.vpc_id = vpc;
-            v4entry.proto = proto;
+            v4entry.vnic_metadata_vpc_id = vpc;
+            v4entry.key_metadata_proto = proto;
             // Create IFLOW
-            v4entry.sport = flow_sport;
-            v4entry.dport = flow_dport;
-            v4entry.src = flow_sip.addr.v4_addr;
-            v4entry.dst = flow_dip.addr.v4_addr;
+            v4entry.key_metadata_sport = flow_sport;
+            v4entry.key_metadata_dport = flow_dport;
+            v4entry.key_metadata_ipv4_src = flow_sip.addr.v4_addr;
+            v4entry.key_metadata_ipv4_dst = flow_dip.addr.v4_addr;
             v4entry.flow_role = role;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
@@ -747,14 +748,14 @@ public:
             v6entry.session_index = session_index;
             v6entry.epoch = 0xFF;
             // Common KEY fields
-            v6entry.ktype = 2;
-            v6entry.vpc_id = vpc;
-            v6entry.proto = proto;
-            v6entry.sport = flow_sport;
-            v6entry.dport = flow_dport;
-            sdk::lib::memrev(v6entry.src, flow_sip.addr.v6_addr.addr8,
+            v6entry.key_metadata_ktype = 2;
+            v6entry.vnic_metadata_vpc_id = vpc;
+            v6entry.key_metadata_proto = proto;
+            v6entry.key_metadata_sport = flow_sport;
+            v6entry.key_metadata_dport = flow_dport;
+            sdk::lib::memrev(v6entry.key_metadata_src, flow_sip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
-            sdk::lib::memrev(v6entry.dst, flow_dip.addr.v6_addr.addr8,
+            sdk::lib::memrev(v6entry.key_metadata_dst, flow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
             v6entry.flow_role = role;
             ret = insert_(&v6entry);
@@ -780,14 +781,14 @@ public:
             v4entry.epoch = 0xFF;
 
             // Common KEY fields
-            v4entry.vpc_id = vpc;
-            v4entry.proto = proto;
+            v4entry.vnic_metadata_vpc_id = vpc;
+            v4entry.key_metadata_proto = proto;
 
             // Create IFLOW
-            v4entry.sport = iflow_sport;
-            v4entry.dport = iflow_dport;
-            v4entry.src = iflow_sip.addr.v4_addr;
-            v4entry.dst = iflow_dip.addr.v4_addr;
+            v4entry.key_metadata_sport = iflow_sport;
+            v4entry.key_metadata_dport = iflow_dport;
+            v4entry.key_metadata_ipv4_src = iflow_sip.addr.v4_addr;
+            v4entry.key_metadata_ipv4_dst = iflow_dip.addr.v4_addr;
             v4entry.flow_role = TCP_FLOW_INITIATOR;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
@@ -796,10 +797,10 @@ public:
             //}
 
             // Create RFLOW
-            v4entry.sport = rflow_sport;
-            v4entry.dport = rflow_dport;
-            v4entry.src = rflow_sip.addr.v4_addr;
-            v4entry.dst = rflow_dip.addr.v4_addr;
+            v4entry.key_metadata_sport = rflow_sport;
+            v4entry.key_metadata_dport = rflow_dport;
+            v4entry.key_metadata_ipv4_src = rflow_sip.addr.v4_addr;
+            v4entry.key_metadata_ipv4_dst = rflow_dip.addr.v4_addr;
             v4entry.flow_role = TCP_FLOW_RESPONDER;
             ret = insert_(&v4entry);
             SDK_ASSERT(ret == SDK_RET_OK);
@@ -814,17 +815,17 @@ public:
             v6entry.epoch = 0xFF;
 
             // Common KEY fields
-            v6entry.ktype = 2;
-            v6entry.vpc_id = vpc;
-            v6entry.proto = proto;
+            v6entry.key_metadata_ktype = 2;
+            v6entry.vnic_metadata_vpc_id = vpc;
+            v6entry.key_metadata_proto = proto;
 
             // create IFLOW
-            v6entry.sport = iflow_sport;
-            v6entry.dport = iflow_dport;
+            v6entry.key_metadata_sport = iflow_sport;
+            v6entry.key_metadata_dport = iflow_dport;
             v6entry.flow_role = TCP_FLOW_INITIATOR;
-            sdk::lib::memrev(v6entry.src, iflow_sip.addr.v6_addr.addr8,
+            sdk::lib::memrev(v6entry.key_metadata_src, iflow_sip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
-            sdk::lib::memrev(v6entry.dst, iflow_dip.addr.v6_addr.addr8,
+            sdk::lib::memrev(v6entry.key_metadata_dst, iflow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
             ret = insert_(&v6entry);
             SDK_ASSERT(ret == SDK_RET_OK);
@@ -833,11 +834,11 @@ public:
             //}
 
             // create RFLOW
-            v6entry.sport = rflow_sport;
-            v6entry.dport = rflow_dport;
-            sdk::lib::memrev(v6entry.src, rflow_sip.addr.v6_addr.addr8,
+            v6entry.key_metadata_sport = rflow_sport;
+            v6entry.key_metadata_dport = rflow_dport;
+            sdk::lib::memrev(v6entry.key_metadata_src, rflow_sip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
-            sdk::lib::memrev(v6entry.dst, rflow_dip.addr.v6_addr.addr8,
+            sdk::lib::memrev(v6entry.key_metadata_dst, rflow_dip.addr.v6_addr.addr8,
                              sizeof(ipv6_addr_t));
             v6entry.flow_role = TCP_FLOW_RESPONDER;
             ret = insert_(&v6entry);

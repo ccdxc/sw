@@ -17,6 +17,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -74,19 +75,19 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, ktype %d, lkp_id %d\n",
-                entry->proto,
+        fprintf(d_fp, "proto %lu, session_index %lu, sip %s, dip %s, sport %lu, dport %lu, "
+                "nexthop_group_index %lu %lu, flow_role %lu, ktype %lu, lkp_id %lu\n",
+                entry->key_metadata_proto,
                 entry->session_index,
                 src_ip_str,
                 dst_ip_str,
-                entry->sport,
-                entry->dport,
+                entry->key_metadata_sport,
+                entry->key_metadata_dport,
                 entry->nexthop_group_index_sbit0_ebit6,
                 entry->nexthop_group_index_sbit7_ebit9,
                 entry->flow_role,
-                entry->ktype,
-                entry->lkp_id);
+                entry->key_metadata_ktype,
+                entry->key_metadata_lkp_id);
         fflush(d_fp);
     }
 }
@@ -99,18 +100,18 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (d_fp) {
-        fprintf(d_fp, "proto %d, session_index %d, sip %s, dip %s, sport %d, dport %d, "
-                "nexthop_group_index %d %d, flow_role %d, lkp_id %d\n",
-                entry->proto,
+        fprintf(d_fp, "proto %lu, session_index %lu, sip %s, dip %s, sport %lu, dport %lu, "
+                "nexthop_group_index %lu %lu, flow_role %lu, lkp_id %lu\n",
+                entry->key_metadata_proto,
                 entry->session_index,
                 src_ip_str,
                 dst_ip_str,
-                entry->sport,
-                entry->dport,
+                entry->key_metadata_sport,
+                entry->key_metadata_dport,
                 entry->nexthop_group_index_sbit0_ebit6,
                 entry->nexthop_group_index_sbit7_ebit9,
                 entry->flow_role,
-                entry->lkp_id);
+                entry->key_metadata_lkp_id);
         fflush(d_fp);
     }
 }
@@ -464,15 +465,15 @@ public:
                           ipv6_addr_t v6_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
-        v6entry.ktype = 2;
-        v6entry.lkp_id = vpc - 1;
-        v6entry.sport = sport;
-        v6entry.dport = dport;
-        v6entry.proto = proto;
-        sdk::lib::memrev(v6entry.src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
+        v6entry.key_metadata_ktype = 2;
+        v6entry.key_metadata_lkp_id = vpc - 1;
+        v6entry.key_metadata_sport = sport;
+        v6entry.key_metadata_dport = dport;
+        v6entry.key_metadata_proto = proto;
+        sdk::lib::memrev(v6entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.session_index = session_index++;
-        v6entry.set_nhgroup_index(nexthop_group_index++);
+        v6entry.set_nexthop_group_index(nexthop_group_index++);
 
         // reset nexthop_group_index if it reaches max
         if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {
@@ -491,14 +492,14 @@ public:
                           ipv4_addr_t v4_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.lkp_id = vpc - 1;
-        v4entry.sport = sport;
-        v4entry.dport = dport;
-        v4entry.proto = proto;
-        v4entry.src = v4_addr_sip;
-        v4entry.dst = v4_addr_dip;
+        v4entry.key_metadata_lkp_id = vpc - 1;
+        v4entry.key_metadata_sport = sport;
+        v4entry.key_metadata_dport = dport;
+        v4entry.key_metadata_proto = proto;
+        v4entry.key_metadata_ipv4_src = v4_addr_sip;
+        v4entry.key_metadata_ipv4_dst = v4_addr_dip;
         v4entry.session_index = session_index++;
-        v4entry.set_nhgroup_index(nexthop_group_index++);
+        v4entry.set_nexthop_group_index(nexthop_group_index++);
 
         // reset nexthop_group_index if it reaches max
         if (nexthop_group_index == MAX_NEXTHOP_GROUP_INDEX) {

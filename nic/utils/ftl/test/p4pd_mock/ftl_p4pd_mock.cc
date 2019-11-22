@@ -7,10 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <cinttypes>
 
 #include "lib/p4/p4_api.hpp"
 #include "ftl_p4pd_mock.hpp"
-#include "nic/utils/ftl/ftl_structs.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 
 typedef struct ftl_mock_table_s {
     ftlv6_entry_t *entries;

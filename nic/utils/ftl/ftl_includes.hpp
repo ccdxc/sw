@@ -72,7 +72,7 @@ using sdk::table::sdk_table_factory_params_t;
 using sdk::table::sdk_table_api_params_t;
 
 #include "ftl_utils.hpp"
-#include "ftl_structs.hpp"
+// #include "ftl_structs.hpp"
 #include "ftl_indexer.hpp"
 #include "ftl_stats.hpp"
 #include "ftl_table.hpp"

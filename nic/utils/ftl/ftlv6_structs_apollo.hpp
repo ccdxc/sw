@@ -1,6 +1,11 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
 #define FTLV6_APOLLO_ENTRY_NUM_HINTS 4
 
 struct __attribute__((__packed__)) ftlv6_entry_t {

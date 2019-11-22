@@ -29,21 +29,21 @@ gencrc32 (bool nextindex, bool nexthint)
 void
 fill_entry (uint32_t index, ftlv6_entry_t *entry)
 {
-    entry->proto = 17;
-    entry->sport = index;
-    entry->dport = index;
-    
-    entry->src[0] = 0x22;
-    entry->src[12] = index >> 24 & 0xFF;
-    entry->src[13] = index >> 16 & 0xFF;
-    entry->src[14] = index >> 8 & 0xFF;
-    entry->src[15] = index & 0xFF;
+    entry->key_metadata_proto = 17;
+    entry->key_metadata_sport = index;
+    entry->key_metadata_dport = index;
 
-    entry->dst[0] = 0x33;
-    entry->dst[12] = index >> 24 & 0xFF;
-    entry->dst[13] = index >> 16 & 0xFF;
-    entry->dst[14] = index >> 8 & 0xFF;
-    entry->dst[15] = index & 0xFF;
+    entry->key_metadata_src[0] = 0x22;
+    entry->key_metadata_src[12] = index >> 24 & 0xFF;
+    entry->key_metadata_src[13] = index >> 16 & 0xFF;
+    entry->key_metadata_src[14] = index >> 8 & 0xFF;
+    entry->key_metadata_src[15] = index & 0xFF;
+
+    entry->key_metadata_dst[0] = 0x33;
+    entry->key_metadata_dst[12] = index >> 24 & 0xFF;
+    entry->key_metadata_dst[13] = index >> 16 & 0xFF;
+    entry->key_metadata_dst[14] = index >> 8 & 0xFF;
+    entry->key_metadata_dst[15] = index & 0xFF;
 
     entry->session_index = index+1;
     return;

@@ -16,6 +16,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "nic/utils/ftl/ftl_structs.hpp"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"

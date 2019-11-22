@@ -6,10 +6,14 @@
 
 #include <gtest/gtest.h>
 #include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include <cinttypes>
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
 #include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 

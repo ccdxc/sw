@@ -17,6 +17,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -87,10 +88,10 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     if (g_fp) {
         fprintf(g_fp, "bd %u, proto %u, session_id %u, smac %s, sip %s, "
                 "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, flow_role %u, "
-                "ktype %u\n", entry->bd_id, entry->proto,
+                "ktype %u\n", entry->vnic_metadata_bd_id, entry->key_metadata_proto,
                 entry->session_id, macaddr2str(smac), src_ip_str,
-                macaddr2str(dmac), dst_ip_str, entry->sport, entry->dport,
-                entry->nexthop_id, entry->flow_role, entry->ktype);
+                macaddr2str(dmac), dst_ip_str, entry->key_metadata_sport, entry->key_metadata_dport,
+                entry->nexthop_id, entry->flow_role, entry->key_metadata_ktype);
         fflush(g_fp);
     }
 }
@@ -104,9 +105,9 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip, mac_addr_t smac,
     if (g_fp) {
         fprintf(g_fp, "bd %u, proto %u, session_id %d, smac %s, sip %s, "
                 "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, "
-                "flow_role %u\n", entry->bd_id, entry->proto, entry->session_id,
+                "flow_role %u\n", entry->vnic_metadata_bd_id, entry->key_metadata_proto, entry->session_id,
                 macaddr2str(smac), src_ip_str,  macaddr2str(dmac), dst_ip_str,
-                entry->sport, entry->dport, entry->nexthop_id,
+                entry->key_metadata_sport, entry->key_metadata_dport, entry->nexthop_id,
                 entry->flow_role);
         fflush(g_fp);
     }
@@ -560,17 +561,17 @@ public:
                           mac_addr_t dmac, uint8_t proto, uint16_t sport,
                           uint16_t dport, uint32_t nh_idx) {
         memset(&v6entry, 0, sizeof(ftlv6_entry_t));
-        v6entry.ktype = KEY_TYPE_IPV6;
-        v6entry.bd_id = src_bd_id - 1;
-        v6entry.sport = sport;
-        v6entry.dport = dport;
-        v6entry.proto = proto;
-        sdk::lib::memrev(v6entry.src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
+        v6entry.key_metadata_ktype = KEY_TYPE_IPV6;
+        v6entry.vnic_metadata_bd_id = src_bd_id - 1;
+        v6entry.key_metadata_sport = sport;
+        v6entry.key_metadata_dport = dport;
+        v6entry.key_metadata_proto = proto;
+        sdk::lib::memrev(v6entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.session_id = session_id++;
-        //v6entry.set_nexthop_index(nh_idx);
-        //v6entry.nexthop_valid = 1;
-        //v6entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+        // v6entry.set_nexthop_id(nh_idx);
+        // v6entry.nexthop_valid = 1;
+        // v6entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
         auto ret = insert_(&v6entry);
         if (ret != SDK_RET_OK) {
             return ret;
@@ -591,12 +592,12 @@ public:
                              uint8_t proto) {
         // install iflow
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = iflow_bd_id;
-        v4entry.sport = iflow_sport;
-        v4entry.dport = iflow_dport;
-        v4entry.proto = proto;
-        v4entry.src = iflow_sip;
-        v4entry.dst = iflow_dip;
+        v4entry.vnic_metadata_bd_id = iflow_bd_id;
+        v4entry.key_metadata_sport = iflow_sport;
+        v4entry.key_metadata_dport = iflow_dport;
+        v4entry.key_metadata_proto = proto;
+        v4entry.key_metadata_ipv4_src = iflow_sip;
+        v4entry.key_metadata_ipv4_dst = iflow_dip;
         v4entry.session_id = session_id;
         v4entry.flow_role = TCP_FLOW_INITIATOR;
         auto ret = insert_(&v4entry);
@@ -608,12 +609,12 @@ public:
 
         // install rflow
         memset(&v4entry, 0, sizeof(ftlv4_entry_t));
-        v4entry.bd_id = rflow_bd_id;
-        v4entry.sport = rflow_sport;
-        v4entry.dport = rflow_dport;
-        v4entry.proto = proto;
-        v4entry.src = rflow_sip;
-        v4entry.dst = rflow_dip;
+        v4entry.vnic_metadata_bd_id = rflow_bd_id;
+        v4entry.key_metadata_sport = rflow_sport;
+        v4entry.key_metadata_dport = rflow_dport;
+        v4entry.key_metadata_proto = proto;
+        v4entry.key_metadata_ipv4_src = rflow_sip;
+        v4entry.key_metadata_ipv4_dst = rflow_dip;
         v4entry.session_id = session_id;
         ret = insert_(&v4entry);
         v4entry.flow_role = TCP_FLOW_RESPONDER;

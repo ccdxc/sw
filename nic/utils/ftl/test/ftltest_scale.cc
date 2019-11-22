@@ -1,6 +1,11 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <cinttypes>
+#include "gen/p4gen/p4/include/ftl.h"
 #include "ftltest_base.hpp"
 
 class scale: public FtlGtestBase {
