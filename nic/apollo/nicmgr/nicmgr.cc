@@ -67,7 +67,6 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     PDS_TRACE_INFO("Initializing device manager ...");
     g_devmgr = new DeviceManager(config_file, fwd_mode, state->platform_type(),
                                curr_thread->ev_loop());
-    g_devmgr->LoadConfig(config_file);
 
     // initialize pciemgr
     if (platform_is_hw(state->platform_type())) {
@@ -76,6 +75,8 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
                                     curr_thread->ev_loop());
         pciemgr->initialize();
     }
+
+    g_devmgr->LoadConfig(config_file);
 
     if (pciemgr) {
         pciemgr->finalize();
