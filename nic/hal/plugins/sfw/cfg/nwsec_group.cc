@@ -1722,7 +1722,6 @@ nwsec_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("delete commit cb");
     // free the rules in the config db
     del_nwsec_policy_from_db(policy);
-    nwsec_policy_free(policy);
     hal_handle_free(hal_handle);
 
 end:
@@ -1770,7 +1769,7 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
 
     HAL_TRACE_DEBUG("deleting policy id:{}", policy->key.policy_id);
     ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
-
+    hal_cfg_db_close();
     rule_lib_delete(ctx_name);
 
     dhl_entry.handle = policy->hal_handle;
@@ -1779,12 +1778,15 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal_handle_del_obj(policy->hal_handle, &cfg_ctxt,
                              nwsec_policy_delete_del_cb,
                              nwsec_policy_delete_commit_cb,
                              nwsec_policy_delete_abort_cb,
                              nwsec_policy_delete_cleanup_cb);
 
+    nwsec_policy_rules_free(policy);
+    g_hal_state->nwsec_policy_slab()->free(policy);
 end:
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_SUCCESS);
