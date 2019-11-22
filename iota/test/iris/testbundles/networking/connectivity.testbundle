@@ -10,6 +10,7 @@ testcases:
         stress  : True
         args    :
             type: local_only
+            #timeout : 60
         iterators :
             type    : nested
             pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]

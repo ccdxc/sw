@@ -2,6 +2,7 @@
 import pdb
 import copy
 import os
+import signal
 import subprocess
 import time
 
@@ -16,6 +17,26 @@ from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.exceptions import *
 
 gl_owner_db = {}
+
+defaultTcTimeout = 3600
+
+def tcTimeout():
+    def alarmWrapper(func):
+        def alarmHandler(sig,frame):
+            Logger.error("testcase {0} timed out".format(func.__name__))
+            raise TestcaseTimeoutException()
+        def wrapped(*args, **kwargs):
+            signal.signal(signal.SIGALRM,alarmHandler)
+            try: seconds=args[0].GetTimeout()
+            except: seconds=defaultTcTimeout
+            Logger.info("testcase timeout: {0}".format(seconds))
+            signal.alarm(seconds)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+        return wrapped
+    return alarmWrapper
 
 def get_owner(filename):
     global gl_owner_db
@@ -239,7 +260,8 @@ class Testcase:
         self.__ignored = getattr(self.__spec, "ignore", False)
         self.__stress = getattr(self.__spec, "stress", GlobalOptions.stress)
         self.__package = self.__spec.packages
-
+        try: self.timeout = spec.args.timeout
+        except: self.timeout = defaultTcTimeout
 
         self.__timer = timeprofiler.TimeProfiler()
         self.__iters = []
@@ -284,6 +306,9 @@ class Testcase:
             td.SetStatus(types.status.IGNORED)
         td.SetPackage(self.GetPackage())
         return td
+
+    def GetTimeout(self):
+        return self.timeout
 
     def SetSelected(self, selected):
         self.selected = selected
@@ -437,6 +462,7 @@ class Testcase:
         instance_id = self.__get_instance_id(self.__iterid)
         self.__mk_testcase_directory(instance_id)
 
+    @tcTimeout()
     def __execute(self):
         final_result = types.status.SUCCESS
         for iter_data in self.__iters:
