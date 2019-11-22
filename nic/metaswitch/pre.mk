@@ -20,6 +20,9 @@ else
     MS_COMPILATION_SWITCH += LINUX_MT_NBASE
 endif
 
+ifeq ($(MODE),debug)
+    MS_COMPILATION_SWITCH += NBB_DEBUG
+endif
 
 MS_INCLPATH = \
         code/comn/intface        \

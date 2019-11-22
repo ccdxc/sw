@@ -30,7 +30,7 @@ pdsa_ctm_send_transaction_start (NBB_ULONG correlator)
     NBB_CORR_PUT_VALUE (trans_start->trans_correlator, correlator);
 
     // Send the IPS
-    NBB_TRC_DETAIL ((NBB FORAMT "Send Transaction Start"));
+    NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction Start"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_start);
 
     NBB_TRC_EXIT();
@@ -54,7 +54,7 @@ pdsa_ctm_send_transaction_abort (NBB_ULONG correlator)
     NBB_CORR_PUT_VALUE (trans_abort->trans_correlator, correlator);
 
     // Send the IPS
-    NBB_TRC_DETAIL ((NBB FORAMT "Send Transaction Abort"));
+    NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction Abort"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_abort);
 
     NBB_TRC_EXIT();
@@ -79,7 +79,7 @@ pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
     NBB_CORR_PUT_VALUE (trans_end->trans_correlator, correlator);
 
     // Send the IPS
-    NBB_TRC_DETAIL ((NBB FORAMT "Send Transaction End"));
+    NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction End"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_end);
 
 
@@ -185,9 +185,6 @@ pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
     ATG_CPI_ROW_UPDATE  *row_update = NULL;
 
     NBB_TRC_ENTRY ("pdsa_ctm_bld_row_update_common");
-
-    // Validate the incoming buffer 
-    NBB_ASSERT_PTR_NE(row_status, NULL);
 
     // Set up the size info and fill in the buffer
     oid_offset      = sizeof (AMB_GEN_IPS);
