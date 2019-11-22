@@ -129,7 +129,7 @@ def Verify(tc):
             cmd = resp.commands[1]
             value = intr.parse_count_cmd_output(cmd.stdout)
 
-            if expected != value:
+            if value < expected:
                 api.Logger.error("Node {}, Interrupt {}, Field {}, Expected {}, Got {}".format(node, intr.name(), intr.field(), expected, value))
                 return api.types.status.FAILURE
 
