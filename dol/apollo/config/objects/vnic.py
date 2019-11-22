@@ -145,6 +145,16 @@ class VnicObject(base.ConfigObjectBase):
             return False
         # if spec.SubnetId != self.SUBNET.SubnetId:
         #     return False
+        if Store.IsDeviceEncapTypeMPLS():
+            if utils.ValidateTunnelEncap(self.MplsSlot, spec.FabricEncap) is False:
+                return False
+        else:
+            if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+                return False
+        if utils.IsPipelineApulu():
+            if self.HostIf:
+                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                    return False
         if spec.VPCId != self.SUBNET.VPC.VPCId:
             return False
         if spec.MACAddress != self.MACAddr.getnum():

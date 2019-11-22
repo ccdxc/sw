@@ -58,6 +58,24 @@ class DeviceObject(base.ConfigObjectBase):
     def PopulateKey(self, grpcmsg):
         return
 
+    def ValidateSpec(self, spec):
+        if utils.ValidateRpcIPAddr(self.IPAddr, spec.IPAddr) is False:
+            return False
+        if utils.ValidateRpcIPAddr(self.GatewayAddr, spec.GatewayIP) is False:
+            return False
+        # TODO: fix this
+        if utils.IsPipelineArtemis() is False:
+            if spec.MACAddr != self.MACAddr.getnum():
+                return False
+        if utils.IsPipelineApulu() is True:
+            if self.Mode == "bitw":
+                if spec.DevOperMode != device_pb2.DEVICE_OPER_MODE_BITW:
+                    return False
+            elif self.Mode == "host":
+                if spec.DevOperMode != device_pb2.DEVICE_OPER_MODE_HOST:
+                    return False
+        return True
+
     def PopulateSpec(self, grpcmsg):
         grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
@@ -136,8 +154,26 @@ class DeviceObjectClient:
 
     def ReadObjects(self):
         msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        api.client.Get(api.ObjectTypes.SWITCH, msgs)
+        resp = api.client.Get(api.ObjectTypes.SWITCH, msgs)
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("DEVICE object validation failed!!!")
+            sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("DEVICE get request failed for ", obj)
+                return False
+            resp = obj.Response
+            device = self.__objs[0]
+            if not utils.ValidateObject(device, resp):
+                logger.error("DEVICE validation failed for ", obj)
+                device.Show()
+                return False
+        return True
 
 client = DeviceObjectClient()
 

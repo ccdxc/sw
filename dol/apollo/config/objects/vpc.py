@@ -166,6 +166,18 @@ class VpcObject(base.ConfigObjectBase):
             utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.VPCId:
+            return False
+        if spec.Type != self.Type:
+            return False
+        if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+            return False
+        if utils.IsPipelineApulu():
+            if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
+                return False
+        return True
+
     def Show(self):
         logger.info("VPC Object:", self)
         logger.info("- %s" % repr(self))
@@ -188,6 +200,9 @@ class VpcObjectClient:
 
     def Objects(self):
         return self.__objs.values()
+
+    def GetVPCObject(self, vpcid):
+        return self.__objs.get(vpcid, None);
 
     def IsValidConfig(self):
         count = len(self.__objs.values())
@@ -261,9 +276,30 @@ class VpcObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.VPC, [msg])
+        resp = api.client.Get(api.ObjectTypes.VPC, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("VPC object validation failed!!!")
+            sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("VPC get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                vpc = self.GetVPCObject(spec.Id)
+                if not utils.ValidateObject(vpc, resp):
+                    logger.error("VPC validation failed for ", obj)
+                    vpc.Show()
+                    return False
+        return True
 
 client = VpcObjectClient()
 

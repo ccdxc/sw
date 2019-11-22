@@ -116,6 +116,32 @@ class TunnelObject(base.ConfigObjectBase):
             spec.NexthopGroupId = self.NEXTHOPGROUP.Id
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.Id:
+            return False
+        if utils.ValidateTunnelEncap(self.EncapValue, spec.Encap) == False:
+            return False
+        if utils.ValidateRpcIPAddr(self.LocalIPAddr, spec.LocalIP) == False:
+            return False
+        if utils.ValidateRpcIPAddr(self.RemoteIPAddr, spec.RemoteIP) == False:
+            return False
+        if spec.Type != self.Type:
+            return False
+        if spec.Nat != self.Nat:
+            return False
+        if not utils.IsPipelineApollo():
+            if spec.MACAddress != self.MACAddr.getnum():
+                return False
+        if utils.IsServiceTunnelSupported():
+            if self.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and self.Remote is True:
+                if spec.RemoteService != self.Remote:
+                    return False
+                if utils.ValidateRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP) == False:
+                    return False
+                if utils.ValidateTunnelEncap(self.RemoteServiceEncap, spec.RemoteServiceEncap) == False:
+                    return False
+        return True
+
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
             return True
@@ -220,9 +246,30 @@ class TunnelObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.TUNNEL, [msg])
+        resp = api.client.Get(api.ObjectTypes.TUNNEL, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("TUNNEL object validation failed!!!")
+            sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("TUNNEL get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                tunnel = self.GetTunnelObject(spec.Id)
+                if not utils.ValidateObject(tunnel, resp):
+                    logger.error("TUNNEL validation failed for ", obj)
+                    tunnel.Show()
+                    return False
+        return True
 
 client = TunnelObjectClient()
 

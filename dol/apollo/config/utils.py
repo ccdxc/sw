@@ -146,6 +146,38 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
+def ValidateRpcIPAddr(srcaddr, dstaddr):
+    if srcaddr.version == IP_VERSION_6:
+        if dstaddr.Af != types_pb2.IP_AF_INET6:
+            return False
+        if dstaddr.V6Addr != srcaddr.packed:
+            return False
+    else:
+        if dstaddr.Af != types_pb2.IP_AF_INET:
+            return False
+        if dstaddr.V4Addr != int(srcaddr):
+            return False
+    return True
+
+def ValidateTunnelEncap(srcencap, dstencap):
+    if dstencap.type != Store.GetDeviceEncapType():
+        return False
+    if Store.IsDeviceEncapTypeMPLS():
+         if dstencap.value.MPLSTag != srcencap:
+             return False
+    else:
+        if dstencap.value.Vnid != srcencap:
+            return False
+    return True
+
+def ValidateRpcEncap(encaptype, encapval, dstencap):
+    if dstencap.type != encaptype:
+        return False
+    if encaptype == types_pb2.ENCAP_TYPE_DOT1Q:
+        if encapval != dstencap.value.VlanId:
+            return False
+    return True
+
 def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
     return expApiStatus == resp.ApiStatus
 

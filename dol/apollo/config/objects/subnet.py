@@ -142,10 +142,37 @@ class SubnetObject(base.ConfigObjectBase):
         spec.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
         spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
         spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
-        utils.GetRpcEncap(0, self.Vnid, spec.FabricEncap)
+        utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.HostIf:
             spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.SubnetId:
+            return False
+        if spec.VPCId != self.VPC.VPCId:
+            return False
+        if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
+            return False
+        if spec.V4RouteTableId != self.V4RouteTableId:
+            return False
+        if spec.V6RouteTableId != self.V6RouteTableId:
+            return False
+        if spec.IngV4SecurityPolicyId != self.IngV4SecurityPolicyId:
+            return False
+        if spec.IngV6SecurityPolicyId != self.IngV6SecurityPolicyId:
+            return False
+        if spec.EgV4SecurityPolicyId !=  self.EgV4SecurityPolicyId:
+            return False
+        if spec.EgV6SecurityPolicyId != self.EgV6SecurityPolicyId:
+            return False
+        if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+            return False
+        if utils.IsPipelineApulu():
+            if self.HostIf:
+                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                    return False
+        return True
 
     def GetNaclId(self, direction, af=utils.IP_VERSION_4):
         if af == utils.IP_VERSION_4:
@@ -162,14 +189,17 @@ class SubnetObject(base.ConfigObjectBase):
 
 class SubnetObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
+
+    def GetSubnetObject(self, subnetid):
+        return self.__objs.get(subnetid, None)
 
     def IsValidConfig(self):
-        count = len(self.__objs)
+        count = len(self.__objs.values())
         if  count > resmgr.MAX_SUBNET:
             return False, "Subnet count %d exceeds allowed limit of %d" %\
                           (count, resmgr.MAX_SUBNET)
@@ -181,13 +211,13 @@ class SubnetObjectClient:
             parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
                 obj = SubnetObject(parent, subnet_spec_obj, poolid)
-                self.__objs.append(obj)
+                self.__objs.update({obj.SubnetId: obj})
             poolid = poolid + 1
         return
 
     def CreateObjects(self):
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
         api.client.Create(api.ObjectTypes.SUBNET, msgs)
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects()
@@ -199,9 +229,30 @@ class SubnetObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.SUBNET, [msg])
+        resp = api.client.Get(api.ObjectTypes.SUBNET, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("SUBNET object validation failed!!!")
+            sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("SUBNET get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                subnet = self.GetSubnetObject(spec.Id)
+                if not utils.ValidateObject(subnet, resp):
+                    logger.error("SUBNET validation failed for ", obj)
+                    subnet.Show()
+                    return False
+        return True
 
 client = SubnetObjectClient()
 

@@ -85,6 +85,30 @@ class MirrorSessionObject(base.ConfigObjectBase):
             assert(0)
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.Id:
+            return False
+        if spec.SnapLen > self.SnapLen:
+            return False
+        if self.SpanType == 'RSPAN':
+            if spec.RspanSpec.InterfaceId != self.Interface:
+                return False
+            if utils.ValidateRpcEncap(types_pb2.ENCAP_TYPE_DOT1Q, self.VlanId, spec.RspanSpec.Encap) is False:
+                return False
+        elif self.SpanType == 'ERSPAN':
+            #if spec.ErspanSpec.TunnelId != self.TunnelId:
+            #    return False
+            if utils.ValidateRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP) is False:
+                return False
+            #if spec.ErspanSpec.Dscp != self.Dscp:
+            #    return False
+            #if spec.ErspanSpec.SpanId != self.SpanID:
+            #    return False
+            #if spec.ErspanSpec.VPCId != self.VPCId:
+            #    return False
+        else:
+            assert(0)
+        return True
 
 class MirrorSessionObjectClient:
     def __init__(self):
@@ -142,9 +166,30 @@ class MirrorSessionObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.MIRROR, [msg])
+        resp = api.client.Get(api.ObjectTypes.MIRROR, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("MIRROR object validation failed!!!")
+            sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("MIRROR get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                mirror = self.GetMirrorObject(spec.Id)
+                if not utils.ValidateObject(mirror, resp):
+                    logger.error("MIRROR validation failed for ", obj)
+                    mirror.Show()
+                    return False
+        return True
 
 client = MirrorSessionObjectClient()
 

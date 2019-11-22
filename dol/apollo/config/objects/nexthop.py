@@ -97,6 +97,28 @@ class NexthopObject(base.ConfigObjectBase):
         self.FillSpec(spec)
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.NexthopId:
+            return False
+        if self.__type == utils.NhType.IP:
+            if spec.IPNhInfo.Mac != self.MACAddr.getnum():
+                return False
+            if spec.IPNhInfo.Vlan != self.VlanId:
+                return False
+            if spec.IPNhInfo.VPCId != self.VPC.VPCId:
+                return False
+            if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
+                return False
+        elif self.__type == utils.NhType.UNDERLAY:
+            if spec.UnderlayNhInfo.L3InterfaceId != self.L3Interface.InterfaceId:
+                return False
+            if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
+                return False
+        elif self.__type != utils.NhType.OVERLAY:
+            if spec.TunnelId != self.TunnelId:
+                return False
+        return True
+
     def IsUnderlay(self):
         if self.__type == utils.NhType.UNDERLAY:
             return True
@@ -138,7 +160,6 @@ class NexthopObjectClient:
         return self.__objs.values()
 
     def GetNexthopObject(self, nexthopid):
-        self.__objs.get(nexthopid, None).Show()
         return self.__objs.get(nexthopid, None)
 
     def GetV4Nexthop(self, vpcid):
@@ -220,9 +241,33 @@ class NexthopObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
+        if len(self.__objs.values()) == 0:
+            return
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
+        resp = api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
+        # TODO: Fix get all for nh, currently not supported
+        # nh read is based on id and type only
+        if False:
+            result = self.ValidateObjects(resp)
+            if result is False:
+                logger.critical("NEXTHOP object validation failed!!!")
+                sys.exit(1)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("NEXTHOP get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                nh = self.GetNexthopObject(spec.Id)
+                if not utils.ValidateObject(nh, resp):
+                    logger.error("NEXTHOP validation failed for ", obj)
+                    vnic.Show()
+                    return False
+        return True
 
 client = NexthopObjectClient()
 
