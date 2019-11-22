@@ -153,14 +153,14 @@ def update(ch):
         exit()
 
     logging.info("Copying naples_fw.tar to naples\n")
-    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /tmp/naples_fw.tar root@169.254.0.1:/tmp/', '[Pp]assword.*')
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /tmp/naples_fw.tar root@169.254.0.1:/update/', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
     sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@169.254.0.1', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
     logging.info("Updating naples_fw.tar on naples\n")
-    op = sendCmd(ch, '/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar', '#', timeout=120)
+    op = sendCmd(ch, '/nic/tools/sysupdate.sh -p /update/naples_fw.tar', '#', timeout=120)
     sendCmd(ch, 'exit', '#')
 
 def reset(ch, dev, hostOS):
@@ -240,12 +240,13 @@ def loadDrivers(ch, dev, hostOS):
         sendCmd(ch, 'tar xfm drivers-linux.tar.xz', '#')
         sendCmd(ch, 'cd drivers-linux', '#')
         sendCmd(ch, './build.sh', '#', timeout=60)
+        time.sleep(30)
         sendCmd(ch, 'insmod drivers/eth/ionic/ionic.ko', '#')
-        time.sleep(2)
+        time.sleep(5)
         sendCmd(ch, 'modprobe ib_uverbs', '#')
         time.sleep(1)
         sendCmd(ch, 'insmod drivers/rdma/drv/ionic/ionic_rdma.ko', '#')
-        time.sleep(1)
+        time.sleep(5)
 
     elif hostOS == 'FreeBSD':
         op = sendCmd(ch, 'ls -lrt drivers-freebsd.tar.xz', '#')

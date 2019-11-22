@@ -126,6 +126,14 @@
         "if0":           "enp96s0",
         "if1":           "enp97s0",
         "if2":           "enp98s0"
+    },
+    {
+        "host":          "tb54-host1",
+        "console":       "chamber-ts7",
+        "port":          "15",
+        "if0":           "ionic0",
+        "if1":           "ionic1",
+        "if2":           "ionic2"
     }
 
 ]
