@@ -50,9 +50,9 @@ echo "Running subnet test"
 $GDB apulu_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_subnet_test.xml" > apulu_subnet_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_subnet_test failed!" && exit 1
 
-#echo "Running route test"
-#$GDB apulu_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_route_test.xml" > /dev/null
-#[[ $? -ne 0 ]] && echo "apulu_route_test failed!" && exit 1
+echo "Running route test"
+$GDB apulu_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_route_test.xml" > /dev/null
+[[ $? -ne 0 ]] && echo "apulu_route_test failed!" && exit 1
 
 echo "Running nexthop test"
 $GDB apulu_nh_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_nh_test.xml" > apulu_nh_test.log.txt

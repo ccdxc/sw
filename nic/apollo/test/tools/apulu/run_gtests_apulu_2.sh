@@ -26,8 +26,6 @@ trap finish EXIT
 
 export PATH=${PATH}:${BUILD_DIR}/bin
 
-exit 0
-
 rm -f ${NICDIR}/conf/pipeline.json
 ln -s ${NICDIR}/conf/apulu/pipeline.json ${NICDIR}/conf/pipeline.json
 

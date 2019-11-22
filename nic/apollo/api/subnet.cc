@@ -151,6 +151,14 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->cleanup_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
     if (impl_) {

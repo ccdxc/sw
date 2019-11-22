@@ -194,7 +194,7 @@ targets:
     - build-apulu-x86
 
   apulu/gtest_2:
-    commands: ["make", "PIPELINE=apollo", "jobd/apulu/gtest_2"]
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_2"]
     owners: ["email:jcruz@pensando.io"]
     area:
     sub-area:

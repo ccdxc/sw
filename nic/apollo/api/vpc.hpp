@@ -74,9 +74,7 @@ public:
     ///            with latest epoch#
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     update all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
