@@ -317,9 +317,9 @@ struct capri_intrinsic_ring_t {
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE0_READ_PC_CE(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
-    phvwri._c.e   p.common.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c.e  p.common.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri._c   p.common.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c  p.common.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair.e p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE1_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
@@ -339,9 +339,9 @@ struct capri_intrinsic_ring_t {
     CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_NEXT_TABLE1_READ_PC_CE(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
-    phvwri._c.e   p.common.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c.e  p.common.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri._c   p.common.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c  p.common.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair.e p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
     CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_NEXT_TABLE2_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
@@ -355,9 +355,9 @@ struct capri_intrinsic_ring_t {
     CAPRI_SET_TABLE_2_VALID(1);
 
 #define CAPRI_NEXT_TABLE2_READ_PC_CE(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
-    phvwri._c.e   p.common.common_te2_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c.e  p.common.common_te2_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri._c   p.common.common_te2_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c  p.common.common_te2_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair.e p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
     CAPRI_SET_TABLE_2_VALID(1);
 
 #define CAPRI_NEXT_TABLE3_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
