@@ -1,20 +1,23 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Initialize Mgmt Stub
 
-#include "nbase.h"
-#include "nbbstub.h"
-extern "C" {
-#include "smsiincl.h"
-}
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
-
+#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include <nbase.h>
+#include <nbbstub.h>
+extern "C" {
+#include <a0user.h>
+#include <smsiincl.h>
+}
+#include <net/if.h>
 #include <iostream>
+
 using namespace std;
 
 extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
 
 static void
-nbase_init()
+nbase_init ()
 {
     NBB_BOOL nbase_init = FALSE;
 
@@ -88,7 +91,9 @@ nbase_init()
     SMSI_HALS_INITIALIZE();
     SMSI_L2_INITIALIZE();
     SMSI_FTM_INITIALIZE();
-
+    
+    // Register user callback to convert MS IfIndex to Linux IfIndex
+    A0_USER_REG_LOCAL_IF_MAP_FN (pdsa_stub::ms_to_lnx_ifindex);
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */

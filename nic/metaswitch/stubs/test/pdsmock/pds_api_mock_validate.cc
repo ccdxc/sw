@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock_validate.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock_validate.hpp"
 
 namespace pdsa_test {
 

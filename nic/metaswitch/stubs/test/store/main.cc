@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <gtest/gtest.h>
 #include <ifaddrs.h>
@@ -22,6 +23,13 @@ using pdsa_stub::state_t;
 using pdsa_stub::bd_store_t;
 using pdsa_stub::bd_obj_t;
 using pdsa_stub::bd_obj_uptr_t;
+
+sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
 
 namespace api_test {
 

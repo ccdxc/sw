@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 
 namespace pdsa_stub {
 
@@ -101,9 +102,7 @@ public:
     pds_batch_ctxt_guard_t() {};
     pds_batch_ctxt_guard_t(pds_batch_ctxt_t bctxt) : bctxt_ (bctxt) {};
     ~pds_batch_ctxt_guard_t (void) {
-#if 0 /* TODO: SDK Library linkage */
         if (bctxt_ != 0) {pds_batch_destroy (bctxt_);}
-#endif
     }
     // Allow move
     pds_batch_ctxt_guard_t(pds_batch_ctxt_guard_t&& bg) {
@@ -119,9 +118,7 @@ public:
     pds_batch_ctxt_guard_t(const pds_batch_ctxt_guard_t& bg)=delete; 
     pds_batch_ctxt_guard_t& operator=(const pds_batch_ctxt_guard_t& bg)=delete;
     void set (pds_batch_ctxt_t bctxt) {
-#if 0 /* TODO: SDK Library linkage */
         if (bctxt_ != 0) {pds_batch_destroy (bctxt_);}
-#endif
         bctxt_ = bctxt;
     }
     pds_batch_ctxt_t get(void) {return bctxt_;}

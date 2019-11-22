@@ -2,8 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock.hpp"
-#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock_validate.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock_validate.hpp"
 
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -25,15 +25,12 @@
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 
-#include  <stdio.h>
-
-
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
 {
     auto pds_mock = dynamic_cast<pdsa_test::pds_mock_t*>(pdsa_test::test_params()->test_output);
     if (pds_mock == nullptr) {
         // Not running in mock test mode - return dummy
-        return ((uint64_t) new pdsa_test::pds_mock_t);
+        return ((uint64_t) new pdsa_test::pds_mock_t(true));
     }
     pds_mock->cookie = (void*) batch_params->cookie;
     return ((pds_batch_ctxt_t) pds_mock);
@@ -41,9 +38,14 @@ pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params)
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) 
 {
+    // Gtest mode
     auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
     int count = 0;
     auto& pds_ret_status =  pds_mock->pds_ret_status;
+
+    if (pds_mock->sim) {
+        return SDK_RET_OK;
+    }
 
     if (pds_mock->mock_pds_batch_commit_fail_) {
         return SDK_RET_ERR;

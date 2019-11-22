@@ -57,6 +57,7 @@ private:
     bool cache_obj_in_cookie_for_update_op_(void);
     void cache_obj_in_cookie_for_delete_op_(void); 
     pds_batch_ctxt_guard_t make_batch_pds_spec_ (void);
+    void fetch_store_info_(pdsa_stub::state_t* state);
 
     void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
         ips_info_.if_index = vxlan_tnl_add_upd->id.if_index;
@@ -66,16 +67,6 @@ private:
         pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
         NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd->id.hw_correlator);
         ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
-    }
-
-    void fetch_store_info_(pdsa_stub::state_t* state) {
-        store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);
-        if (op_delete_) {
-            auto& tun_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
-            store_info_.tep_obj = state->tep_store().get(tun_prop.tep_ip.addr.v4_addr);
-        } else {
-            store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip.addr.v4_addr);
-        }
     }
 
     pds_tep_key_t make_pds_tep_key_(void) {

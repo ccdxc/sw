@@ -21,7 +21,7 @@ public:
     //-------------------------------------------------------------------------
     pdsa_smi_hw_desc_t (NBB_BYTE (&)[ATG_L2_MAC_ADDR_LEN], NBB_ULONG);
     ~pdsa_smi_hw_desc_t () {};
-    void verify (void) {};
+    void verify(void) {};
 
     //-------------------------------------------------------------------------
     // Reset the hardware description.

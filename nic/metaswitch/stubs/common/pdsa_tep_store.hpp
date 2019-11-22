@@ -67,6 +67,12 @@ public:
     uint32_t key(void) const {return prop_.tep_ip.addr.v4_addr;}
 
     void update_store(state_t* state, bool op_delete) override;
+    std::string debug_str(void) override {
+        return std::string("TEP:") + ipaddr2str (&(prop_.tep_ip)) + ";";
+    }
+    void print_debug_str(void) override {
+        SDK_TRACE_DEBUG ("TEP: %s ", ipaddr2str (&(prop_.tep_ip)));
+    }
 
 private:
     properties_t  prop_;

@@ -16,7 +16,7 @@ ifeq ($(ARCH),aarch64)
         -Wl,-rpath,$(TOPDIR)/nic/third-party/liblzma/$(GMK_TARGETOS)/lib \
         -Wl,-rpath,$(TOPDIR)/nic/third-party/libicuuc/$(GMK_TARGETOS)/lib
 else
-    GMK_TARGETOS = linuxmt64
+    GMK_TARGETOS = x86_64
     MS_COMPILATION_SWITCH += LINUX_MT_NBASE
 endif
 

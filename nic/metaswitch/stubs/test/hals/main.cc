@@ -10,8 +10,8 @@
 
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -108,8 +108,9 @@ main (int argc, char **argv)
 {
     // Call the mock pds init
     pds_init(nullptr);
-    // This will start nbase
-    pdsa_stub::init();
+    // Initialize the State and HAL stubs
+    pdsa_stub::state_init();
+    pdsa_stub::hal_init();
 
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);

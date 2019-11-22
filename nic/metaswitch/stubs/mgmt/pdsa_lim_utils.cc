@@ -372,7 +372,6 @@ pdsa_test_row_update_lim_if_addr (pdsa_config_t *conf)
     conf->data_len      = sizeof (AMB_LIM_L3_IF_ADDR);
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
-    conf->if_index      = conf->g_evpn_if_index;
     conf->prefix_len    = 24;
     
     pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);

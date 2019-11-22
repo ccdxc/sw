@@ -5,7 +5,7 @@
 #define __PDSA_TEST_VXLAN_PDS_MOCK_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
-#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock.hpp"
 
 namespace pdsa_test {
 

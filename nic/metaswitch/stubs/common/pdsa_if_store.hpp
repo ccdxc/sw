@@ -71,6 +71,8 @@ public:
                                                           // should be fine since this is always
                                                           // the first member
     void update_store(state_t* state, bool op_delete) override;
+    std::string debug_str(void) override {return std::string();}
+    void print_debug_str(void) override {};
 
 private:
     struct properties_t {
@@ -114,6 +116,8 @@ public:
     void set_properties(const properties_t& prop) {prop_ = prop;}
     pds_lif_key_t key (void) const {return prop_.host_lif;}
     void update_store(state_t* state, bool op_delete) override;
+    std::string debug_str(void) override {return std::string();}
+    void print_debug_str(void) override {};
 
 private:
     properties_t prop_;

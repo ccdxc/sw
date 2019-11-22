@@ -33,8 +33,12 @@ NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex)
 
 NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd)
 {
+    try {
     auto vrf_id = vrfname_2_vrfid(vrf_add_upd->vrf_name, vrf_add_upd->vrf_name_len);
     vrf_id = vrf_id;
+    } catch (Error& e) {
+        SDK_TRACE_ERR("VRF Add Update failed %s", e.what());
+    }
     return ATG_OK;
 }
 

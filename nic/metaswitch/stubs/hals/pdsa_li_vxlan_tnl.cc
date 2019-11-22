@@ -3,10 +3,24 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
-#include "pdsa_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pdsa_stub {
+
+void li_vxlan_tnl::fetch_store_info_(pdsa_stub::state_t* state) {
+    store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);
+    if (op_delete_) {
+        if (unlikely(store_info_.tun_if_obj == nullptr)) {
+            throw Error("VXLAN Tunnel delete for unknown IfIndex " + std::to_string(ips_info_.if_index));
+        }
+        auto& tun_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
+        store_info_.tep_obj = state->tep_store().get(tun_prop.tep_ip.addr.v4_addr);
+        SDK_ASSERT (store_info_.tep_obj != nullptr);
+    } else {
+        store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip.addr.v4_addr);
+    }
+}
 
 void 
 li_vxlan_tnl::cache_obj_in_cookie_for_create_op_ (void)
@@ -139,7 +153,7 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
 
     parse_ips_info_(vxlan_tnl_add_upd);
     // Alloc new cookie and cache IPS
-    cookie_uptr_.reset (new cookie_t("Add-Update TEP "+ips_info_.tep_ip_str));
+    cookie_uptr_.reset (new cookie_t);
     cookie_uptr_->ips = (NBB_IPS*) vxlan_tnl_add_upd;
 
     { // Enter thread-safe context to access/modify global state
@@ -202,7 +216,7 @@ li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex)
     SDK_TRACE_INFO ("TEP %s: Delete IPS", ips_info_.tep_ip_str.c_str());
 
     // Alloc new cookie without IPS (sync response to MS)
-    cookie_uptr_.reset (new cookie_t("Delete TEP " + ips_info_.tep_ip_str));
+    cookie_uptr_.reset (new cookie_t);
     cookie_uptr_->op_delete = true;
 
     // Delete Tunnel

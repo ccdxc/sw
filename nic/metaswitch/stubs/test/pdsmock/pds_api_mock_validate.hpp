@@ -4,7 +4,7 @@
 #ifndef __PDSA_PDS_MOCK_VALIDATE__
 #define _PDSA_PDS_MOCK_VALIDATE__
 
-#include "nic/metaswitch/stubs/test/hals/pdsmock/pds_api_mock.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock.hpp"
 
 namespace pdsa_test {
 bool

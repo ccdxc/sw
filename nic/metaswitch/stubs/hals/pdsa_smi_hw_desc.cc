@@ -4,13 +4,13 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pdsa_smi_hw_desc.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include <lipi.h>
 #include <lim_smi_mac.hpp>
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 
@@ -54,9 +54,14 @@ create_hw_desc(void)
     NBB_BYTE initial_mac_address[ATG_L2_MAC_ADDR_LEN];
     NBB_ULONG total_macs = get_initial_mac_address(initial_mac_address,
                                                    false, 0);
-
-    static pdsa_stub::pdsa_smi_hw_desc_t g_hw_desc_(initial_mac_address, total_macs);
-    return &g_hw_desc_;
+    // TODO: When there is any failure in the initial CTM transaction
+    // MS will destroy all created object including this HwDesc object.
+    // During destruction in Debug mode NBASE calls verify memory which
+    // requires the memory to be allocated using NBB_NEW and for the verify
+    // method set a bit in the memory.
+    // Eve with this it asserts if there is a failure in the 
+    // initial CTM transaction - need to look into this.
+    return (new pdsa_stub::pdsa_smi_hw_desc_t(initial_mac_address, total_macs));
 }
 } // End namespace
 
@@ -69,6 +74,10 @@ pdsa_smi_hw_desc_t::pdsa_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_ADDR_L
     reset();
 }
 
+// Populate physical port database in SMI HW Desc. 
+// This is called from smi::fte, smi::PortManager class construction 
+// that happens as part of NBASE init when a new SMI entity is created. 
+// The HW Desc is sent to LIM during the Join activation between LIM & SMI
 bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
 {
     SDK_TRACE_INFO("Creating uplinks ...");
@@ -78,50 +87,23 @@ bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
 
     for (uint32_t port = 1;
          port <= api::g_pds_state.catalogue()->num_fp_ports(); port++) {
-        // Using the HAL L3 IfIndex as the Metaswitch IfIndex avoids 
-        // the need for IfIndex translation in the MS HAL Stubs
-        uint32_t  ifindex = IFINDEX(IF_TYPE_L3, 
-                                    api::g_pds_state.catalogue()->slot(),
-                                    port, ETH_IF_DEFAULT_CHILD_PORT);
 
+        std::string if_name;
+        auto ms_ifindex = pds_port_to_ms_ifindex_and_ifname(port, &if_name);
         smi::PortData temp_port = smi::PortData();
         temp_port.id.module_id = 1;
         temp_port.id.slot_id = api::g_pds_state.catalogue()->slot();
-        long_to_3_byte(temp_port.id, ifindex);
-
-        // Hardcoding the interface name to be same as Linux interface names avoids
-        // the need for translation in FT-stub when programming routes in Linux
-        // uplink 1 - inb_mnic0
-        // uplink 2 - inb_mnic1
-        // TODO: This needs to be changed to use L3 interface name
-        // And also if linux interface name for the uplink is not fixed then 
-        // need a way to derive dynamically here or in the FT-Stub
-
-#ifdef SIM
-        std::string if_name = "eth";
-#else
-        std::string if_name = "inb_mnic";
-#endif
-
-        if_name += std::to_string(port-1);
+        long_to_3_byte(temp_port.id, ms_ifindex);
         strncpy (temp_port.id.if_name, if_name.c_str(), AMB_LIM_NAME_MAX_LEN);
 
-        // Fetch Linux MAC address
         temp_port.settings = settings;
-        auto& mac_address = temp_port.settings.mac_address;
-        if (!get_interface_mac_address (if_name, mac_address)) {
-            // Set a dummy MAC
-            // Need to fetch it later in LI stub when LIM interface is created
-            ATG_SET_ZERO_MAC(mac_address);
-            SDK_TRACE_DEBUG ("Could not find Linux interface %s. Using dummy MAC", 
-                             if_name);
-            mac_address[5] = port;
-        }
-
-        SDK_TRACE_INFO ("Metaswitch SMI port add id=%d name=%s ifindex=0x%x MAC=%s", 
-                        port, if_name.c_str(), ifindex, macaddr2str(mac_address));
+        // Set dummy MAC - fetch actual MAC from Linux in the LI Stub 
+        // interface create handler
+        temp_port.settings.mac_address[5] = port;
 
         port_config.push_back(temp_port);
+        SDK_TRACE_INFO ("Metaswitch SMI port add id=%d name=%s ms_ifindex=0x%x", 
+                        port, if_name.c_str(), ms_ifindex);
     }
     return true;
 }

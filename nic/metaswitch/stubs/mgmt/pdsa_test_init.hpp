@@ -62,7 +62,10 @@ NBB_VOID pdsa_test_row_update_psm_mj (pdsa_config_t *conf,
                                       NBB_ULONG   partner_index,
                                       NBB_ULONG   sub_index);
 NBB_VOID pdsa_test_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status);
+NBB_VOID pdsa_test_row_update_fts (pdsa_config_t *conf, NBB_LONG  admin_status);
 NBB_VOID pdsa_test_row_update_rtm_mj (pdsa_config_t *conf, NBB_LONG slave_type);
+NBB_VOID pdsa_rtm_redis_connected (pdsa_config_t *conf);
+
 NBB_VOID pdsa_test_row_update_bgp_rm (pdsa_config_t *conf);
 NBB_VOID pdsa_test_row_update_bgp_nm (pdsa_config_t *conf);
 NBB_VOID pdsa_test_row_update_bgp_rm_afi_safi (pdsa_config_t *conf);

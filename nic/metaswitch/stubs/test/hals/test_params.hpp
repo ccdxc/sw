@@ -60,8 +60,8 @@ public:
 
 class test_params_t {
 public:    
-    test_input_base_t* test_input;
-    test_output_base_t* test_output;
+    test_input_base_t* test_input = nullptr;
+    test_output_base_t* test_output = nullptr;
 };
 
 test_params_t* test_params();    

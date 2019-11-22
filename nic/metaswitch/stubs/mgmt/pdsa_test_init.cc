@@ -5,6 +5,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 
 NBB_VOID
 pdsa_test_init ()
@@ -42,6 +43,9 @@ pdsa_test_init ()
     // liEntTable
     pdsa_test_row_update_li (&conf);
 
+    //smiEntTable
+    pdsa_test_row_update_smi (&conf);
+
     // liMjTable
     pdsa_test_row_update_li_mj (&conf,
                                 AMB_LI_IF_ATG_FRI,
@@ -66,14 +70,21 @@ pdsa_test_init ()
                                  1,
                                  0);
 
-    // limInterfaceCfgTable - NODE_A_EVPN_IF_INDEX
+    // limInterfaceCfgTable - L3 interface for physical port
+    // NetAgent will provide the HAL L3 IfIndex. 
+    // Mgmt Stub has to convert it to MS IfIndex
+    auto ms_ifindex = pdsa_stub::pds_to_ms_ifindex(conf.g_evpn_if_index);
+    SDK_TRACE_INFO ("Configuring uplink port %ld L3 IfIndex 0x%lx MS IfIndex 0x%lx", 
+                    ETH_IFINDEX_TO_PARENT_PORT(conf.g_evpn_if_index), conf.g_evpn_if_index, ms_ifindex);
     pdsa_test_row_update_lim_if_cfg (&conf,
-                                     conf.g_evpn_if_index,
+                                     ms_ifindex,
                                      AMB_TRUE,
                                      AMB_TRISTATE_TRUE,
                                      AMB_TRISTATE_TRUE,
                                      AMB_TRISTATE_TRUE,
                                      AMB_LIM_FWD_MODE_L3);
+    // limL3InterfaceAddressTable
+    pdsa_test_row_update_lim_if_addr (&conf);
 
     // limInterfaceCfgTable -NODE_A_AC_IF_INDEX 
     pdsa_test_row_update_lim_if_cfg (&conf,
@@ -84,18 +95,12 @@ pdsa_test_init ()
                                      AMB_TRISTATE_FALSE,
                                      AMB_LIM_FWD_MODE_DEFAULT);
 
-    // limL3InterfaceAddressTable
-    pdsa_test_row_update_lim_if_addr (&conf);
-
     // sckTable 
     pdsa_test_row_update_sck (&conf);
 
     // l2fMacIpCfgTable
     pdsa_test_row_update_l2f_mac_ip_cfg(&conf);
     
-    //smiEntTable
-    pdsa_test_row_update_smi (&conf);
-
     // ftmEntTable
     pdsa_test_row_update_ftm (&conf);
 
@@ -174,8 +179,11 @@ pdsa_test_init ()
                                  1,
                                  0);
 
+    // FT Stub - ftsEntityTable
+    pdsa_test_row_update_fts (&conf, AMB_ADMIN_STATUS_UP);
+
     // rtmEntityTable - Admin Down                                
-    pdsa_test_row_update_rtm (&conf, AMB_ADMIN_STATUS_DOWN );
+    pdsa_test_row_update_rtm (&conf, AMB_ADMIN_STATUS_DOWN);
 
     // rtmMjTable - AMB_RTM_ARI_PARTNER_BGP
     pdsa_test_row_update_rtm_mj (&conf, AMB_RTM_ARI_PARTNER_BGP);
@@ -185,6 +193,9 @@ pdsa_test_init ()
 
     // rtmEntityTable - Admin UP                                
     pdsa_test_row_update_rtm (&conf, AMB_ADMIN_STATUS_UP);
+
+    // rtm Redistribute connected
+    pdsa_rtm_redis_connected (&conf);
 
    // bgpRmEntTable
    pdsa_test_row_update_bgp_rm (&conf);
@@ -206,7 +217,7 @@ pdsa_test_init ()
 
     // bgpRmAfmJoinTable - AMB_BGP_AFI_L2VPN
     pdsa_test_row_update_bgp_rm_afm_join (&conf,
-                                          1, 
+                                          2, 
                                           AMB_BGP_AFI_L2VPN, 
                                           AMB_BGP_EVPN);
 

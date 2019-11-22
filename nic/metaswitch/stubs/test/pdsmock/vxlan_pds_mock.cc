@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/test/hals/pdsmock/vxlan_pds_mock.hpp"
+#include "nic/metaswitch/stubs/test/pdsmock/vxlan_pds_mock.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"

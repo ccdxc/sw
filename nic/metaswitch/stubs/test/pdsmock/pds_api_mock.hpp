@@ -40,9 +40,12 @@ using batch_spec_t = std::vector<spec_t>;
 
 class pds_mock_t : public test_output_base_t {
 public:
-    void*                   cookie = nullptr;
+    bool          sim;
+    void*         cookie = nullptr;
     batch_spec_t  expected_pds;
     batch_spec_t  rcvd_pds;
+
+    pds_mock_t(bool sim_=false) : sim(sim_) {};
 
     // Following need to be overridden by one of the xxx_pds_mock files
     // to set expected results specific to that feature
