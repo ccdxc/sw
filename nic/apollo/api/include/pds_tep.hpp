@@ -61,10 +61,18 @@ typedef struct pds_tep_spec_s {
     ip_addr_t      remote_svc_public_ip;
     /// type of the nexthop for this mapping
     pds_nh_type_t nh_type;
-    /// forwarding information for this TEP
+    /// forwarding information for this TEP can be one of
+    /// 1. nexthop
+    /// 2. nexthop group
+    /// 3. another TEP (with encap type as MPLSoUDP)
+    /// NOTE:
+    /// 1. A tunnel can point to another tunnel is supported only when the
+    ///    2nd tunnel's encap is MPLSoUDP
+    /// 2. 2nd tunnel can't point to another tunnel
     union {
-        pds_nexthop_key_t nh;
-        pds_nexthop_group_key_t nh_group;
+        pds_nexthop_key_t nh;                ///< underlay nexthop
+        pds_nexthop_group_key_t nh_group;    ///< underlay nexthop group
+        pds_tep_key_t tep;                   ///< another tunnel/TEP
     };
 } __PACK__ pds_tep_spec_t;
 

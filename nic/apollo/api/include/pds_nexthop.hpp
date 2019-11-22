@@ -23,15 +23,15 @@
 
 /// \brief nexthop type
 typedef enum pds_nh_type_e {
-    PDS_NH_TYPE_NONE            = 0,
-    PDS_NH_TYPE_BLACKHOLE       = 1,    ///< blackhole/drop nexthop
-    PDS_NH_TYPE_OVERLAY         = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_OVERLAY_ECMP    = 3,    ///< overlay nexthop group
-    PDS_NH_TYPE_UNDERLAY        = 4,    ///< underlay nexthop
-    PDS_NH_TYPE_UNDERLAY_ECMP   = 5,    ///< underlay ECMP nexthop
-    PDS_NH_TYPE_PEER_VPC        = 6,    ///< VPC id of the peer VPC
-    PDS_NH_TYPE_VNIC            = 7,    ///< vnic nexthop
-    PDS_NH_TYPE_IP              = 8,    ///< native IP route
+    PDS_NH_TYPE_NONE          = 0,
+    PDS_NH_TYPE_BLACKHOLE     = 1,    ///< blackhole/drop nexthop
+    PDS_NH_TYPE_OVERLAY       = 2,    ///< any of the possible types of TEP
+    PDS_NH_TYPE_OVERLAY_ECMP  = 3,    ///< overlay nexthop group
+    PDS_NH_TYPE_UNDERLAY      = 4,    ///< underlay nexthop
+    PDS_NH_TYPE_UNDERLAY_ECMP = 5,    ///< underlay ECMP nexthop
+    PDS_NH_TYPE_PEER_VPC      = 6,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_VNIC          = 7,    ///< vnic nexthop
+    PDS_NH_TYPE_IP            = 8,    ///< native IP route
 } pds_nh_type_t;
 
 /// \brief nexthop specification

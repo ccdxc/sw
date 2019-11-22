@@ -1182,6 +1182,9 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     case PDS_NH_TYPE_UNDERLAY_ECMP:
         proto_spec->set_nexthopid(api_spec->nh_group.id);
         break;
+    case PDS_NH_TYPE_OVERLAY:
+        proto_spec->set_tunnelid(api_spec->tep.id);
+        break;
     default:
         //PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
                       //api_spec->nh_type, api_spec->key.id);
@@ -1240,7 +1243,7 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
     case pds::TUNNEL_TYPE_WORKLOAD:
         api_spec->type = PDS_TEP_TYPE_WORKLOAD;
         break;
-    case  pds::TUNNEL_TYPE_SERVICE:
+    case pds::TUNNEL_TYPE_SERVICE:
         api_spec->type = PDS_TEP_TYPE_SERVICE;
         break;
     default:
@@ -1264,6 +1267,10 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
     case pds::TunnelSpec::kNexthopGroupId:
         api_spec->nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
         api_spec->nh_group.id = proto_spec.nexthopgroupid();
+        break;
+    case pds::TunnelSpec::kTunnelId:
+        api_spec->nh_type = PDS_NH_TYPE_OVERLAY;
+        api_spec->tep.id = proto_spec.tunnelid();
         break;
     default:
         PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
