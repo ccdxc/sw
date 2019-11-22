@@ -74,8 +74,6 @@ asicerror_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
-    walk_interrupts(intr_dump_cb);
-    sysmond_flush_logger();
 }
 
 static void
@@ -86,7 +84,7 @@ siginit (void)
     memset(&act, 0, sizeof(act));
     act.sa_sigaction = sig_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGPIPE, &act, NULL);
     return;
 }
 
