@@ -16,7 +16,25 @@ struct req_tx_s5_t0_k k;
 #define K_HOST_ADDR CAPRI_KEY_FIELD(IN_P, host_addr)
 
 %%
-
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
+nop
+.align
 req_tx_sqptseg_process:
 
     // page_id = pt_info_p->pt_offset / pt_info_p->page_size
