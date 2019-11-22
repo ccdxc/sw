@@ -33,6 +33,7 @@ cleanup() {
     fi
     pkill agent
     pkill cap_model
+    rm -f $NICDIR/out.sh
     echo "===== Collecting logs ====="
     ${NICDIR}/apollo/test/tools/savelogs.sh
 }

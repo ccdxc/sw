@@ -181,10 +181,24 @@ def ValidateRpcEncap(encaptype, encapval, dstencap):
 def ValidateGrpcResponse(resp, expApiStatus=types_pb2.API_STATUS_OK):
     return expApiStatus == resp.ApiStatus
 
-def ValidateObject(obj, resp):
+def ValidateGrpcValues(obj, resp):
     return obj.ValidateSpec(resp.Spec) and\
            obj.ValidateStats(resp.Stats) and\
            obj.ValidateStatus(resp.Status)
+
+# TODO: convert yaml 2 proto and remove the following
+def ValidateYamlValues(obj, resp):
+    spec = resp['spec']
+    status = resp['status']
+    stats = resp['stats']
+    return obj.ValidateYamlSpec(spec) and\
+           obj.ValidateYamlStats(stats) and\
+           obj.ValidateYamlStatus(status)
+
+def ValidateObject(obj, resp, yaml=False):
+    if yaml:
+        return ValidateYamlValues(obj, resp)
+    return ValidateGrpcValues(obj, resp)
 
 def ValidateCreate(obj, resps):
     if IsDryRun(): return

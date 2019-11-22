@@ -142,6 +142,11 @@ class ConfigObjectBase(objects.FrameworkObject):
     def IsRetryEnabled(self):
         return False
 
+class ConfigClientBase(objects.FrameworkObject):
+    def __init__(self):
+        super().__init__()
+        return
+
 class AgentObjectMeta:
     def __init__(self):
         self.Name = None

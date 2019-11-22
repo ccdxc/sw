@@ -178,6 +178,13 @@ class VpcObject(base.ConfigObjectBase):
                 return False
         return True
 
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.VPCId:
+            return False
+        if spec['type'] != self.Type:
+            return False
+        return True
+
     def Show(self):
         logger.info("VPC Object:", self)
         logger.info("- %s" % repr(self))
@@ -192,27 +199,25 @@ class VpcObject(base.ConfigObjectBase):
     def IsV6Stack(self):
         return utils.IsV6Stack(self.Stack)
 
-class VpcObjectClient:
+class VpcObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
-        self.__underlay_vpcid = -1
+        super().__init__(api.ObjectTypes.VPC)
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
-    def GetVPCObject(self, vpcid):
-        return self.__objs.get(vpcid, None);
-
+    # TODO: move to base class
     def IsValidConfig(self):
-        count = len(self.__objs.values())
+        count = self.GetNumObjects()
         if  count > resmgr.MAX_VPC:
             return False, "VPC count %d exceeds allowed limit of %d" %\
                           (count, resmgr.MAX_VPC)
         return True, ""
 
+    # TODO: move to GetObjectByKey
     def GetVpcObject(self, vpcid):
-        return self.__objs.get(vpcid, None)
+        return self.GetObjectByKey(vpcid)
+
+    def GetKeyfromSpec(self, spec):
+        return spec.Id
 
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()
@@ -231,7 +236,7 @@ class VpcObjectClient:
                     if p.nat46 is True and not utils.IsPipelineArtemis():
                         continue
                 obj = VpcObject(p, c, p.count)
-                self.__objs.update({obj.VPCId: obj})
+                self.Objs.update({obj.VPCId: obj})
                 if obj.IsUnderlayVPC():
                     Store.SetUnderlayVPC(obj)
         # Write the flow and nexthop config to agent hook file
@@ -249,8 +254,8 @@ class VpcObjectClient:
 
     def CreateObjects(self):
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.VPC, msgs)
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+        api.client.Create(self.ObjType, msgs)
 
         # Create Nexthop object
         NhClient.CreateObjects()
@@ -270,36 +275,6 @@ class VpcObjectClient:
         # Create Subnet Objects after policy & route
         subnet.client.CreateObjects()
         return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = vpc_pb2.VPCGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.VPC, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("VPC object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("VPC get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                vpc = self.GetVPCObject(spec.Id)
-                if not utils.ValidateObject(vpc, resp):
-                    logger.error("VPC validation failed for ", obj)
-                    vpc.Show()
-                    return False
-        return True
 
 client = VpcObjectClient()
 
