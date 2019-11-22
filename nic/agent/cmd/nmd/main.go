@@ -81,6 +81,10 @@ func main() {
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
 	if _, err := os.Stat(globals.NmdDBPath); os.IsNotExist(err) {
 		os.MkdirAll(path.Dir(globals.NmdDBPath), 0664)
+	}
+
+	// Create the /sysconfig/config1 if it doesn't exist. Needed for non naples nmd test environments
+	if _, err := os.Stat(globals.NmdBackupDBPath); os.IsNotExist(err) {
 		os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
 	}
 
