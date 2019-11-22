@@ -74,9 +74,9 @@ echo "Running interface test"
 $GDB apulu_if_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_if_test.xml" > apulu_if_test.log.txt
 [[ $? -ne 0 ]] && echo "apulu_if_test failed!" && exit 1
 
-#echo "Running mapping test"
-#$GDB apulu_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_mapping_test.xml" > /dev/null
-#[[ $? -ne 0 ]] && echo "apulu_mapping_test failed!" && exit 1
+echo "Running mapping test"
+$GDB apulu_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_mapping_test.xml" > /dev/null
+[[ $? -ne 0 ]] && echo "apulu_mapping_test failed!" && exit 1
 
 #echo "Running mirror session test"
 #$GDB apulu_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_mirror_session_test.xml" > apulu_mirror_session_test.log.txt
