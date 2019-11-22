@@ -160,6 +160,10 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 		logger.Fatalf("Error watching app")
 	}
 
+	err = ctrler.VirtualRouter().Watch(statemgr)
+	if err != nil {
+		logger.Fatalf("Error watching virtual router")
+	}
 	err = ctrler.Network().Watch(statemgr)
 	if err != nil {
 		logger.Fatalf("Error watching network")
