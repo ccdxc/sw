@@ -71,6 +71,8 @@ export class RolloutOrder {
 })
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   @ViewChild('checkboxSetDuration') checkboxSetDuration: Checkbox;
+  @Input() existingObjects: IRolloutRollout[] = [];
+
   orders: RolloutOrder[] = [];
   repeaterList: RepeaterItem[] = [];
   newRollout: RolloutRollout;
@@ -219,6 +221,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout.$formGroup.get(['spec', 'retry']).setValue(false);
       this.newRollout.$formGroup.get(['spec', 'retry']).disable();
       this.newRollout.setFormGroupValuesToBeModelValues();
+
+      this.setValidators(this.newRollout);
     } else {   // edit mode
       const myrollout: IRolloutRollout = Utility.getLodash().cloneDeep(this.selectedRolloutData);
       myrollout.spec['scheduled-start-time'] = new Date(myrollout.spec['scheduled-start-time']);
@@ -237,6 +241,22 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).setValidators([required, this.isRolloutScheduleTimeValid()]);
       this.newRollout.$formGroup.get(['spec', 'version']).setValidators([required]);
     }
+    if (!this.isInline) {
+      // If it is not inline, we change the toolbar buttons, and save the old one
+      // so that we can set it back when we are done
+      this.setToolbarButtons();
+    }
+  }
+
+  setValidators(newRollout: RolloutRollout) {
+    newRollout.$formGroup.get(['meta', 'name']).setValidators([
+      this.newRollout.$formGroup.get(['meta', 'name']).validator,
+      this.isNewRolloutNameValid(this.existingObjects)]);
+  }
+
+  isNewRolloutNameValid(existingObjects: IRolloutRollout[]): ValidatorFn {
+    // checks if name field is valid
+    return Utility.isModelNameUniqueValidator(existingObjects, 'newRollout-name');
   }
 
   computeDefaultStartTime(): number {
@@ -259,31 +279,31 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
 
   ngAfterViewInit() {
-    if (!this.isInline) {
-      // If it is not inline, we change the toolbar buttons, and save the old one
-      // so that we can set it back when we are done
-      this.oldToolbarData = this.controllerService.getToolbarData();
-      const newToolbarData = this.controllerService.getToolbarData();
-      newToolbarData.buttons = [
-        {
-          cssClass: 'global-button-primary newrollout-toolbar-button',
-          text: 'SAVE ROLLOUT',
-          genTooltip: () => this.getTooltip(),
-          callback: () => {
-            this.addRollout();
-          },
-          computeClass: () => this.isAllInputsValidated() ? '' : 'global-button-disabled',
+  }
+
+  private setToolbarButtons() {
+    this.oldToolbarData = this.controllerService.getToolbarData();
+    const newToolbarData = this.controllerService.getToolbarData();
+    const newbuttons = [
+      {
+        cssClass: 'global-button-primary newrollout-toolbar-button',
+        text: 'SAVE ROLLOUT',
+        genTooltip: () => this.getTooltip(),
+        callback: () => {
+          this.addRollout();
         },
-        {
-          cssClass: 'global-button-neutral newrollout-toolbar-button',
-          text: 'CANCEL',
-          callback: () => {
-            this.cancelRollout();
-          },
+        computeClass: () => this.isAllInputsValidated() ? '' : 'global-button-disabled',
+      },
+      {
+        cssClass: 'global-button-neutral newrollout-toolbar-button',
+        text: 'CANCEL',
+        callback: () => {
+          this.cancelRollout();
         },
-      ];
-      this.controllerService.setToolbarData(newToolbarData);
-    }
+      },
+    ];
+    newToolbarData.buttons = newbuttons;
+    this.controllerService.setToolbarData(newToolbarData);
   }
 
   getTooltip(): string {
@@ -458,12 +478,15 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   onRolloutDSCRetryChange(checked) {
     if (checked) {
       this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).enable();
+      // Per VS-898, we want to let user upgrade DSC with RETRY option without setting end time.
+      /* comment out this block for now.
       this.rolloutDurationcheck = true;
       this.computeDefaultEndTime();
       if (this.checkboxSetDuration) {
         this.checkboxSetDuration.checked = true;  // set the Duration-check to UI checked state.
         this.checkboxSetDuration.disabled = true;
-     }
+      }
+      */
     } else {
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
     }
@@ -489,8 +512,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   /**
    * This API serves html template
    * When DSC.retry is selected, disable rollout duration checkbox.
+   * 2019-11-21, this function is not registered in html. QA wants to test  DSD.retry without end-time.
    */
   isToDisableDurationCheckbox(): boolean {
+    // add back [disabled]="isToDisableDurationCheckbox()" to  html #checkboxSetDuration, once QA wants to force DSD.retry with end-time.
     if (this.selectedRolloutNicNodeTypes !== RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
       if (!!this.newRollout.$formGroup.get(['spec', 'retry']).value) {
         return true;

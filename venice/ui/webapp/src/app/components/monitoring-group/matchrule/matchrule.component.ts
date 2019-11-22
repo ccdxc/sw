@@ -4,6 +4,7 @@ import { MonitoringMatchRule, IMonitoringMatchRule, MonitoringFlowExportPolicySp
 import { FormArray, FormGroup } from '@angular/forms';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-matchrule',
@@ -14,6 +15,8 @@ import { ControllerService } from '@app/services/controller.service';
 })
 export class MatchruleComponent extends BaseComponent implements OnInit {
   @Input() rules: IMonitoringMatchRule[] = [];
+  @Input() customizeValidFunc: () => boolean = null;
+
   flowTarget: FormGroup;
   matchRules: FormGroup[];
 
@@ -83,6 +86,29 @@ export class MatchruleComponent extends BaseComponent implements OnInit {
     if (matchRules.length > 1) {
       matchRules.removeAt(index);
     }
+  }
+
+  isValid(): boolean {
+     if (! this.customizeValidFunc) {
+       return this.validateAllRulesEmpty();
+     } else {
+       return this.customizeValidFunc();
+     }
+  }
+
+  /**
+   * Check wheter all rules are empty
+   */
+  validateAllRulesEmpty(): boolean {
+    let rules = this.getValues();
+    rules = Utility.TrimDefaultsAndEmptyFields(rules);
+    let countEmptyRule: number = 0;
+    for (let i = 0; i < rules.length; i++ ) {
+      if (!rules[i]) {
+        countEmptyRule  += 1;
+      }
+    }
+    return (countEmptyRule === rules.length);
   }
 
 

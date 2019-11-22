@@ -9,6 +9,7 @@ import { MatchruleComponent } from '@app/components/monitoring-group/matchrule/m
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ValidatorFn } from '@angular/forms';
 
 @Component({
   selector: 'app-newflowexportpolicy',
@@ -22,10 +23,12 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
 
   @Input() maxTargets: number;
+  @Input() existingObjects: IMonitoringFlowExportPolicy[] = [];
 
   syslogConfig: IMonitoringSyslogExport;
 
   formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFlowExportPolicySpec.propInfo['format'].enum);
+  validationMessage: string = null;
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -44,27 +47,57 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       format: this.newObject.spec.format as any,
       targets: this.newObject.spec.exports,
     };
+    if (!this.isInline) {
+      this.setValidators(this.newObject);
+    }
   }
 
-  // Empty Hook
+  setValidators(newMonitoringFlowExportPolicy: MonitoringFlowExportPolicy) {
+    newMonitoringFlowExportPolicy.$formGroup.get(['meta', 'name']).setValidators([
+      this.newObject.$formGroup.get(['meta', 'name']).validator,
+      this.isNewFlowExportPolicyNameValid(this.existingObjects)]);
+  }
+
+  isNewFlowExportPolicyNameValid(existingObjects: IMonitoringFlowExportPolicy[]): ValidatorFn {
+    // checks if name field is valid
+    return Utility.isModelNameUniqueValidator(existingObjects, 'newRollout-name');
+  }
+
+  /**
+   * Validate uesr inputs
+   */
   isFormValid(): boolean {
-    return this.areMatchRulesValid();
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      this.validationMessage = 'Flow export name is required.';
+      return false;
+    }
+    if (!this.areMatchRulesValid()) {
+      this.validationMessage = 'Either configure at least one match rule or no match rules.';
+      return false;
+    }
+    if (!this.areExportTargetsValid()) {
+      this.validationMessage = 'At least one target config is needed.';
+      return false;
+    }
+    if (!this.newObject.$formGroup.valid) {
+      this.validationMessage = 'Please correct validation error.';
+      return false;
+    }
+    return true;
   }
 
   /**
    * This API validate whether the match-rule input is valid
    * VS-858
+   * VS-893
+   * User can specify no rule, but can not have some empty rules.
    */
   areMatchRulesValid(): boolean {
-    const obj = this.newObject.getFormGroupValues();
-    let rules = this.matchRulesComponent.getValues();
-    rules = Utility.TrimDefaultsAndEmptyFields(rules);
-    for (let i = 0; i < rules.length; i++ ) {
-      if (!rules[i]) {
-        return false;
-      }
-    }
-    return true;
+    return this.matchRulesComponent.isValid();
+  }
+
+  areExportTargetsValid(): boolean {
+   return this.syslogComponent.atLeastOneTargetFilled();
   }
 
   setToolbar() {
@@ -74,7 +107,8 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
         cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'CREATE FLOW EXPORT POLICY',
         callback: () => { this.saveObject(); },
-        computeClass: () => this.computeButtonClass()
+        computeClass: () => this.computeButtonClass(),
+        genTooltip: () => this.getTooltip(),
       },
       {
         cssClass: 'global-button-neutral flowexportpolicy-button',
@@ -84,6 +118,11 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
     ];
 
     this._controllerService.setToolbarData(currToolbar);
+  }
+
+  getTooltip(): string {
+    this.isFormValid();
+    return Utility.isEmpty(this.validationMessage) ? 'Ready to save flow export policy' : this.validationMessage;
   }
 
   getObjectValues(): IMonitoringFlowExportPolicy {

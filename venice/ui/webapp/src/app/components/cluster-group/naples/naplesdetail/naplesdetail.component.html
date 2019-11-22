@@ -258,8 +258,9 @@
                   {{ selectedObj?.status['system-info']['os-info']['processor'] }}
                 </div>
               </div>
-              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+              <div fxFlex="" fxLayout="row" fxLayoutAlign="start start">
                 <div class="naplesdetail-panel-auto-admit-nics naplesdetail-workloads-container"
+                     fxFlex="200px"
                      *ngIf="selectedObj">
                   <div *ngFor="let w of selectedObj['associatedWorkloads'] let i=index"
                        class="naplesdetail-workloads-div">

@@ -96,5 +96,6 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newrollout (formClose)="closeRowExpand()" [selectedRolloutData]="rowData" [isInline]="true"
+                  [existingObjects]="dataObjects"
                   [rolloutImages]="rolloutImages"></app-newrollout>
 </ng-template>

@@ -2,6 +2,7 @@
 
 .tableviewedit-overlay {
   position: absolute;
+  pointer-events: none; // VS-905
   top: 0;
   left: 0;
   right: 0;

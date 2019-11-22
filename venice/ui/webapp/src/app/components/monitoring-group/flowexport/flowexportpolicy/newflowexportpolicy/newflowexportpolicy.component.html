@@ -3,12 +3,13 @@
        class="newflowexportpolicy-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'"
-         fxLayoutAlign="start stretch" class="newflowexportpolicy-content">
+         fxLayoutAlign="start stretch"
+         class="newflowexportpolicy-content">
       <div fxFlex fxLayout="column">
         <div fxFlex="nogrow" fxLayout="row" [formGroup]="newObject.$formGroup.get(['meta'])">
           <input fxFlex="300px" formControlName="name" class="newflowexportpolicy-name"
-                 appErrorTooltip spellcheck="false" type="text" pInputText
-                 placeholder="Unique Policy Name...">
+                 appErrorTooltip
+                 spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
         </div>
         <div fxFlex="15px"></div>
         <!-- Buffer -->
@@ -38,8 +39,7 @@
             <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
               <input fxFlex="nogrow" appErrorTooltip formControlName="interval"
                      class="newflowexportpolicy-input"
-                     spellcheck="false" type="text" pInputText
-                     placeholder="0h0m10s">
+                     spellcheck="false" type="text" pInputText placeholder="0h0m10s">
             </div>
           </div>
 
@@ -52,8 +52,7 @@
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
               <input fxFlex="nogrow" appErrorTooltip formControlName="template-interval"
-                     class="newflowexportpolicy-input"
-                     spellcheck="false" type="text" pInputText
+                     class="newflowexportpolicy-input" spellcheck="false" type="text" pInputText
                      placeholder="0h0m10s">
             </div>
           </div>
@@ -69,17 +68,15 @@
         </div>
 
         <div fxFlex="noshrink" fxLayout="row">
-          <app-syslog #syslogComponent
-                      [syslogExport]="syslogConfig"
-                      [formatOptions]="formatOptions"
-                      targetTransport="UDP/<port>"
-                      [showSyslogOptions]="false"
-                      [maxTargets]="maxTargets"
-                      fxFlex="nogrow" fxLayout="column"></app-syslog>
+          <app-syslog #syslogComponent [syslogExport]="syslogConfig" [formatOptions]="formatOptions"
+                      targetTransport="UDP/<port>" [showSyslogOptions]="false"
+                      [maxTargets]="maxTargets" fxFlex="nogrow"
+                      fxLayout="column"></app-syslog>
         </div>
       </div>
       <div *ngIf="isInline" class="newflowexportpolicy-buttoncontainer" fxFlex="nogrow"
-           fxLayout="row wrap" fxLayoutAlign="start start">
+           fxLayout="row wrap"
+           fxLayoutAlign="start start">
         <div fxFlex="nogrow">
           <button [disabled]="!isFormValid()" (click)="saveObject()"
                   class="global-button-primary newflowexportpolicy-save">SAVE</button>

@@ -20,6 +20,8 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   @Input() targetTransport: String = '<protocol>/<port>';
   @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
   @Input() maxTargets: number = 2;
+  @Input() customizedValidator: () => boolean  = null;
+
   syslogServerForm: FormGroup;
 
   syslogOverrideOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExportConfig.propInfo['facility-override'].enum);
@@ -75,5 +77,44 @@ export class SyslogComponent extends BaseComponent implements OnInit {
       targets.removeAt(index);
     }
   }
+
+  /**
+   * validate inputs
+   * If there is @input va
+   */
+  isValid(): boolean {
+     if (! this.customizedValidator) {
+       return this.allTargetsEmpty();
+     } else {
+       return this.customizedValidator();
+     }
+  }
+
+  getNumberOfEmptyTarget(): number {
+    const targets = this.syslogServerForm.get('targets').value;  // return an array
+    let countEmptyRule: number = 0;
+    for (let i = 0; i < targets.length; i++ ) {
+      const target = targets[i];
+      // content is like
+      // "{"destination":null,"transport":null,"credentials":{"auth-type":"none","username":null,"password":null,"bearer-token":null,"cert-data":null,"key-data":null,"ca-data":null}}"
+      const content = Utility.TrimDefaultsAndEmptyFields(target);
+      if (Utility.isEmpty(content.destination) || Utility.isEmpty(content.transport)) {
+        countEmptyRule  += 1;
+      }
+    }
+    return countEmptyRule;
+  }
+
+  allTargetsEmpty(): boolean {
+    const targets = this.syslogServerForm.get('targets').value;  // return an array
+    const countEmptyRule = this.getNumberOfEmptyTarget();
+    return (countEmptyRule === targets.length);
+  }
+
+  atLeastOneTargetFilled(): boolean {
+    const targets = this.syslogServerForm.get('targets').value;  // return an array
+    const countEmptyRule = this.getNumberOfEmptyTarget();
+    return (countEmptyRule < targets.length);
+ }
 
 }
