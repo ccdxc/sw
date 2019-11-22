@@ -92,16 +92,15 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 190)
+	hdrLine := strings.Repeat("-", 155)
 	fmt.Printf("\n")
-	fmt.Printf("RtTblID   - Route Table IDs (IPv4/IPv6)        HostIf    - Host interface subnet is deployed on\n")
-	fmt.Printf("IngV4SGID - Ingress IPv4 Security Group ID     IngV6SGID - Ingress IPv6 Security Group ID\n")
-	fmt.Printf("EgV4SGID  - Egress IPv4 Security Group ID      EgV6SGID  - Egress IPv6 Security Group ID\n")
-	fmt.Printf("ToS       - Type of Service in outer IP header\n")
+	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
+	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
+	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-14s%-14s%-14s%-14s%-3s\n",
+	fmt.Printf("%-6s%-6s%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3s\n",
 		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VR IPv4", "VR IPv6", "VR MAC",
-		"RtTblID", "IngV4SGID", "IngV6SGID", "EgV4SGID", "EgV6SGID", "ToS")
+		"RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
 }
 
@@ -112,15 +111,14 @@ func printSubnet(subnet *pds.Subnet) {
 		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
 	}
 	rtTblID := fmt.Sprintf("%d/%d", spec.GetV4RouteTableId(), spec.GetV6RouteTableId())
-	fmt.Printf("%-6d%-6d%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-14d%-14d%-14d%-14d%-3s\n",
+	ingSGID := fmt.Sprintf("%d/%d", spec.GetIngV4SecurityPolicyId(), spec.GetIngV6SecurityPolicyId())
+	egSGID := fmt.Sprintf("%d/%d", spec.GetEgV4SecurityPolicyId(), spec.GetEgV6SecurityPolicyId())
+	fmt.Printf("%-6d%-6d%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3d\n",
 		spec.GetId(), spec.GetVPCId(), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 		utils.ByteIPv6AddrtoStr(spec.GetIPv6VirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
-		rtTblID, spec.GetIngV4SecurityPolicyId(),
-		spec.GetIngV6SecurityPolicyId(),
-		spec.GetEgV4SecurityPolicyId(),
-		spec.GetEgV6SecurityPolicyId(), spec.GetToS())
+		rtTblID, ingSGID, egSGID, spec.GetToS())
 }
