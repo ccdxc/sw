@@ -48,6 +48,12 @@ typedef struct pds_vpc_spec_s {
                                              ///< (S)NAT outbound traffic from
                                              ///< this VPC that is destined to
                                              ///< a IPv6-only service/network
+    /// type of service to be used in the outer header in encapped pkts when
+    /// vpc's vnid is used in the packet
+    /// NOTE: this tos value is not inherited by subnets inside this vpc (they
+    ///       need to be configured explicitly with either same tos value as
+    ///       their vpc or a different value
+    uint8_t tos;
 } __PACK__ pds_vpc_spec_t;
 
 /// \brief VPC status

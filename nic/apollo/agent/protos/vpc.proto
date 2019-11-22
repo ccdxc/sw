@@ -52,6 +52,14 @@ message VPCSpec {
   // service in IPv6 only network/service (all VNICs in this VPC will use this
   // prefix to get their IPv4 traffic (S)NAT-ed in the outbound direction)
   types.IPv6Prefix Nat46Prefix    = 7;
+  // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
+  // header or in the Traffic Class field of IPv6 outer header, this value will
+  // be written as-is (i.e., not interpreted) during encap time by the dataplane
+  // when vpc's vnid is put in the VxLAN encapped packet
+  // NOTE: subnets under this VPC don't inherit this ToS value, subnets need to
+  //       be explicitly configured with same ToS value as that of VPC or
+  //       potentially different ToS value of their own
+  uint32          ToS             = 8;
 }
 
 // operational status of a VPC, if any

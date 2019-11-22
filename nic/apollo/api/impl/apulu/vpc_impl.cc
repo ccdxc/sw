@@ -109,6 +109,8 @@ vpc_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program VPC table in the egress pipe
     vpc_data.action_id = VPC_VPC_INFO_ID;
     vpc_data.vpc_info.vni = spec->fabric_encap.val.vnid;
+    // TODO: handle tos once p4 adds this field
+    //vpc_data.tos = spec->tos;
     memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, vpc->hw_id(),
                                        NULL, NULL, &vpc_data);

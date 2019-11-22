@@ -2935,6 +2935,7 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
     api_spec->v6_route_table.id = proto_spec.v6routetableid();
+    api_spec->tos = proto_spec.tos();
 }
 
 // populate proto buf spec from vpc API spec
@@ -2958,6 +2959,7 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
     proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
     proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
+    proto_spec->set_tos(api_spec->tos);
 }
 
 // populate proto buf status from vpc API status

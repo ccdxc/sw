@@ -180,8 +180,9 @@ pds_local_mapping_read (pds_mapping_key_t *key,
     if (key == NULL || local_info == NULL)
         return SDK_RET_INVALID_ARG;
 
-    if ((entry = pds_mapping_entry_find(key)) == NULL)
+    if ((entry = pds_mapping_entry_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
+    }
 
     info.spec.key = *key;
     entry->set_local(true);
