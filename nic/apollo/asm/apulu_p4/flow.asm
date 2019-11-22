@@ -11,6 +11,13 @@ struct phv_ p;
 
 %%
 
+.assert(offsetof(k, key_metadata_dport)  == (512 - 32 - (16)))
+.assert(offsetof(k, key_metadata_sport)  == (512 - 32 - (16 + 16)))
+.assert(offsetof(k, key_metadata_proto)  == (512 - 32 - (16 + 16 + 8)))
+.assert(offsetof(k, key_metadata_dst)    == (512 - 32 - (16 + 16 + 8 + 128)))
+.assert(offsetof(k, key_metadata_src)    == (512 - 32 - (16 + 16 + 8 + 128 + 128)))
+.assert(offsetof(k, vnic_metadata_bd_id) == (512 - 32 - (16 + 16 + 8 + 128 + 128 + 16)))
+
 flow_hash:
     bbne        d.flow_hash_d.entry_valid, TRUE, label_flow_miss
     phvwr       p.p4i_i2e_entropy_hash, r1

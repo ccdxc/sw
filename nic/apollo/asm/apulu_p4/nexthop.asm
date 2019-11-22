@@ -9,11 +9,21 @@ struct phv_         p;
 
 %%
 
+// r1 : packet length
+
 nexthop_info:
     seq             c1, k.p4e_i2e_nexthop_id, r0
     bcf             [c1], nexthop_invalid
-    // r1 : packet length
+    sne             c1, d.nexthop_info_d.tunnel2_id, r0
+    bcf             [!c1], nexthop_info2
     add             r1, r0, k.capri_p4_intrinsic_packet_len
+
+    // second tunnel info
+    phvwr           p.control_metadata_apply_tunnel2, TRUE
+    phvwr           p.rewrite_metadata_tunnel2_id, d.nexthop_info_d.tunnel2_id
+    phvwr           p.rewrite_metadata_tunnel2_vni, d.nexthop_info_d.vlan
+
+nexthop_info2:
     seq             c1, d.nexthop_info_d.port, TM_PORT_DMA
     bcf             [!c1], nexthop_rewrite
     phvwr           p.capri_intrinsic_tm_oport, d.nexthop_info_d.port

@@ -236,5 +236,7 @@ table p4e_inter_pipe {
 control egress_inter_pipe {
     if (capri_intrinsic.drop == 0) {
         apply(p4e_inter_pipe);
+    } else {
+        apply(p4e_drop_stats);
     }
 }

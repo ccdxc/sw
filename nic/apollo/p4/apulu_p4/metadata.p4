@@ -1,6 +1,7 @@
 header_type capri_deparser_len_t {
     fields {
         trunc_pkt_len   : 16;
+        ipv4_00_hdr_len : 16;
         ipv4_0_hdr_len  : 16;
         ipv4_1_hdr_len  : 16;
         l4_payload_len  : 16;
@@ -63,6 +64,7 @@ header_type control_metadata_t {
         copp_policer_valid      : 1;
         apply_nat               : 1;
         apply_nat2              : 1;
+        apply_tunnel2           : 1;
     }
 }
 
@@ -81,6 +83,8 @@ header_type rewrite_metadata_t {
         ip_type             : 1;
         tunnel_dmaci        : 48;
         tunnel_vni          : 24;
+        tunnel2_id          : 8;
+        tunnel2_vni         : 24;
     }
 }
 

@@ -90,7 +90,4 @@ control egress_stats {
     if (control_metadata.rx_packet == TRUE) {
         apply(vnic_rx_stats);
     }
-    if (capri_intrinsic.drop == TRUE) {
-        apply(p4e_drop_stats);
-    }
 }

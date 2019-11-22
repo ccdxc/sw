@@ -58,6 +58,15 @@ header apulu_p4_to_arm_header_t p4i_to_arm;
 header apulu_p4_to_arm_header_t p4e_to_arm;
 header apulu_arm_to_p4_header_t arm_to_p4i;
 
+// layer 00
+header ethernet_t ethernet_00;
+header vlan_tag_t ctag_00;
+@pragma pa_header_union egress ipv4_00 ipv6_00
+header ipv4_t ipv4_00;
+header ipv6_t ipv6_00;
+header udp_t udp_00;
+header mpls_t mpls_00;
+
 // layer 0
 header ethernet_t ethernet_0;
 header vlan_tag_t ctag_0;
@@ -556,6 +565,14 @@ parser deparse_egress {
     extract(p4e_to_arm);
     extract(p4e_i2e);
 
+    // layer 00
+    extract(ethernet_00);
+    extract(ctag_00);
+    extract(ipv4_00);
+    extract(ipv6_00);
+    extract(udp_00);
+    extract(mpls_00);
+
     // layer 0
     extract(ethernet_0);
     extract(ctag_0);
@@ -567,6 +584,37 @@ parser deparse_egress {
     extract(erspan);
 
     return parse_egress_packet;
+}
+
+/******************************************************************************
+ * Checksums : Layer 00 (compute only, no verification)                       *
+ *****************************************************************************/
+field_list ipv4_00_checksum_list {
+    ipv4_00.version;
+    ipv4_00.ihl;
+    ipv4_00.diffserv;
+    ipv4_00.totalLen;
+    ipv4_00.identification;
+    ipv4_00.flags;
+    ipv4_00.fragOffset;
+    ipv4_00.ttl;
+    ipv4_00.protocol;
+    ipv4_00.srcAddr;
+    ipv4_00.dstAddr;
+}
+
+@pragma checksum gress egress
+@pragma checksum update_len capri_deparser_len.ipv4_00_hdr_len
+field_list_calculation ipv4_00_checksum {
+    input {
+        ipv4_00_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_00.hdrChecksum  {
+    update ipv4_00_checksum;
 }
 
 /******************************************************************************

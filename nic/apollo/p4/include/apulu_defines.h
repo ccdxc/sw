@@ -103,6 +103,7 @@
 #define TX_REWRITE_ENCAP_NONE                   0
 #define TX_REWRITE_ENCAP_VLAN                   1
 #define TX_REWRITE_ENCAP_VXLAN                  2
+#define TX_REWRITE_ENCAP_MPLSoUDP               3
 #define TX_REWRITE_ENCAP_BITS                   8:7
 
 #define TX_REWRITE_VNI_START                    9

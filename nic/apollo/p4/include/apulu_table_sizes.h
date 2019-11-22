@@ -21,6 +21,7 @@
 #define NAT2_TABLE_SIZE                                     1024        // 1K
 #define ECMP_TABLE_SIZE                                     2048
 #define TUNNEL_TABLE_SIZE                                   2048
+#define TUNNEL2_TABLE_SIZE                                  256
 #define NEXTHOP_TABLE_SIZE                                  65536
 #define CHECKSUM_TABLE_SIZE                                 32
 #define VPC_TABLE_SIZE                                      1024

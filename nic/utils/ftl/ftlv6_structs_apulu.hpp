@@ -21,9 +21,9 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
 
     // key
     uint32_t ktype : 2;
+    uint32_t bd_id : 16;
     uint8_t  src[16];
     uint8_t  dst[16];
-    uint32_t bd_id : 16;
     uint32_t proto : 8;
     uint32_t sport : 16;
     uint32_t dport : 16;

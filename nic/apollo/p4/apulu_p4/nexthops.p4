@@ -184,10 +184,18 @@ action ipv6_vxlan_encap(dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, (40 + 14));
 }
 
-action nexthop_info(lif, qtype, qid, port, vlan, dmaco, smaco, dmaci) {
+action nexthop_info(lif, qtype, qid, port, vlan, dmaco, smaco, dmaci,
+                    tunnel2_id) {
     if (p4e_i2e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
+
+    if (tunnel2_id != 0) {
+        modify_field(control_metadata.apply_tunnel2, TRUE);
+        modify_field(rewrite_metadata.tunnel2_id, tunnel2_id);
+        modify_field(rewrite_metadata.tunnel2_vni, vlan);
+    }
+
     if (control_metadata.rx_packet == FALSE) {
         if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
             modify_field(ethernet_1.dstAddr, rewrite_metadata.dmaci);
@@ -252,6 +260,136 @@ table nexthop {
     size : NEXTHOP_TABLE_SIZE;
 }
 
+/******************************************************************************
+ * Tunnel 2
+ *****************************************************************************/
+action tunnel2_ipv4_encap(vlan, dmac, smac, dipo) {
+    // remove inner ethernet header
+    remove_header(ethernet_0);
+
+    // add tunnel headers
+    add_header(ethernet_00);
+    add_header(ipv4_00);
+    add_header(udp_00);
+
+    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
+
+    // account for new headers that are added
+    // 8 bytes of UDP header, 4 bytes of MPLS header, 20 bytes of IP header
+    // -14 bytes of inner Ethernet header
+    add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 4 - 14);
+
+    modify_field(ethernet_00.dstAddr, dmac);
+    modify_field(ethernet_00.srcAddr, smac);
+
+    modify_field(ipv4_00.version, 4);
+    modify_field(ipv4_00.ihl, 5);
+    modify_field(ipv4_00.totalLen, scratch_metadata.ip_totallen);
+    modify_field(ipv4_00.ttl, 64);
+    modify_field(ipv4_00.protocol, IP_PROTO_UDP);
+    modify_field(ipv4_00.srcAddr, rewrite_metadata.device_ipv4_addr);
+    modify_field(ipv4_00.dstAddr, dipo);
+
+    modify_field(udp_00.srcPort, (0xC000 | p4e_i2e.entropy_hash));
+    subtract(udp_00.len, scratch_metadata.ip_totallen, 20);
+
+    modify_field(udp_00.dstPort, UDP_PORT_MPLS);
+    add_header(mpls_00);
+    modify_field(mpls_00.label, rewrite_metadata.tunnel2_vni);
+    modify_field(mpls_00.exp, 0);
+    modify_field(mpls_00.bos, 1);
+    modify_field(mpls_00.ttl, 64);
+
+    if (vlan == 0) {
+        modify_field(ethernet_00.etherType, ETHERTYPE_IPV4);
+        add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, 14);
+    } else {
+        modify_field(ethernet_00.etherType, ETHERTYPE_VLAN);
+        add_header(ctag_00);
+        modify_field(ctag_00.pcp, 0);
+        modify_field(ctag_00.dei, 0);
+        modify_field(ctag_00.vid, vlan);
+        modify_field(ctag_00.etherType, ETHERTYPE_IPV4);
+        add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, 18);
+    }
+}
+
+action tunnel2_ipv6_encap(vlan, dmac, smac, dipo) {
+    // remove inner ethernet header
+    remove_header(ethernet_0);
+
+    // add tunnel headers
+    add_header(ethernet_00);
+    add_header(ipv6_00);
+    add_header(udp_00);
+
+    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
+
+    // account for new headers that are added
+    // 8 bytes of UDP header, 4 bytes of MPLS header,
+    // -14 bytes of inner Ethernet header
+    add_to_field(scratch_metadata.ip_totallen, 8 + 4 - 14);
+
+    modify_field(ethernet_00.dstAddr, dmac);
+    modify_field(ethernet_00.srcAddr, smac);
+
+    modify_field(ipv6_00.version, 6);
+    modify_field(ipv6_00.payloadLen, scratch_metadata.ip_totallen);
+    modify_field(ipv6_00.hopLimit, 64);
+    modify_field(ipv6_00.nextHdr, IP_PROTO_UDP);
+    modify_field(ipv6_00.srcAddr, rewrite_metadata.device_ipv6_addr);
+    modify_field(ipv6_00.dstAddr, dipo);
+
+    modify_field(udp_00.srcPort, (0xC000 | p4e_i2e.entropy_hash));
+    modify_field(udp_00.len, scratch_metadata.ip_totallen);
+
+    modify_field(udp_00.dstPort, UDP_PORT_MPLS);
+    add_header(mpls_00);
+    modify_field(mpls_00.label, rewrite_metadata.tunnel2_vni);
+    modify_field(mpls_00.exp, 0);
+    modify_field(mpls_00.bos, 1);
+    modify_field(mpls_00.ttl, 64);
+
+    if (vlan == 0) {
+        modify_field(ethernet_00.etherType, ETHERTYPE_IPV6);
+        add(capri_p4_intrinsic.packet_len,
+            scratch_metadata.ip_totallen, (40 + 14));
+    } else {
+        modify_field(ethernet_00.etherType, ETHERTYPE_VLAN);
+        add_header(ctag_00);
+        modify_field(ctag_00.pcp, 0);
+        modify_field(ctag_00.dei, 0);
+        modify_field(ctag_00.vid, vlan);
+        modify_field(ctag_00.etherType, ETHERTYPE_IPV6);
+        add(capri_p4_intrinsic.packet_len,
+            scratch_metadata.ip_totallen, (40 + 18));
+    }
+}
+
+action tunnel2_info(port, vlan, dmaco, smaco, dipo, ip_type) {
+    if (rewrite_metadata.tunnel2_id == 0) {
+        // return;
+    }
+    modify_field(capri_intrinsic.tm_oport, port);
+    modify_field(scratch_metadata.flag, ip_type);
+    if (ip_type == IPTYPE_IPV4) {
+        tunnel2_ipv4_encap(vlan, dmaco, smaco, dipo);
+    } else {
+        tunnel2_ipv6_encap(vlan, dmaco, smaco, dipo);
+    }
+}
+
+@pragma stage 5
+table tunnel2 {
+    reads {
+        rewrite_metadata.tunnel2_id : exact;
+    }
+    actions {
+        tunnel2_info;
+    }
+    size : TUNNEL2_TABLE_SIZE;
+}
+
 control nexthops {
     if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_ECMP) {
         apply(ecmp);
@@ -260,4 +398,7 @@ control nexthops {
         apply(tunnel);
     }
     apply(nexthop);
+    if (control_metadata.apply_tunnel2 == TRUE) {
+        apply(tunnel2);
+    }
 }
