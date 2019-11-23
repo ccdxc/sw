@@ -77,11 +77,13 @@ message Route {
 //       supported)
 message RouteTableSpec {
   // unique route table id (this id is not scoped under VPC or subnet)
-  uint32         Id     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32         Id        = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address family
-  types.IPAF     Af     = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAF     Af        = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // enable or disable Priority-Based-Routing (PBR) for the route table
+  bool           EnablePBR = 3 [(gogoproto.moretags) = "meta:default=false"];
   // routes in this route table
-  repeated Route Routes = 3;
+  repeated Route Routes    = 4;
 }
 
 // operational status of the route table, if any

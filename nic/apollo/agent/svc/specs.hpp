@@ -2365,6 +2365,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     default:
         return SDK_RET_INVALID_ARG;
     }
+    api_spec->enable_pbr = proto_spec.enablepbr();
     num_routes = proto_spec.routes_size();
     api_spec->num_routes = num_routes;
     api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
@@ -2448,6 +2449,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
     }
+    proto_spec->set_enablepbr(api_spec->enable_pbr);
 
     for (uint32_t i = 0; i < api_spec->num_routes; i++) {
         pds::Route *route = proto_spec->add_routes();

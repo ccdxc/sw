@@ -45,7 +45,7 @@ typedef struct route_s {
 
 typedef struct route_table_s {
     uint8_t         af;            /**< address family */
-    uint8_t         priority_en;   /**< Priority Routing knob */
+    uint8_t         pbr_enabled;   /**< T => priority based routing is enabled */
     uint32_t        default_nhid;  /**< NH Id for the default route */
     uint32_t        max_routes;    /**< max size of table */
     uint32_t        num_routes;    /**< number of routes */

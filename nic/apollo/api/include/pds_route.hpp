@@ -62,10 +62,11 @@ typedef struct pds_route_s {
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
 /// \brief route table configuration
 struct pds_route_table_spec_s {
-    pds_route_table_key_t    key;          ///< key
-    uint8_t                  af;           ///< address family - v4 or v6
-    uint32_t                 num_routes;   ///< number of routes in the list
-    pds_route_t              *routes;      ///< list or route rules
+    pds_route_table_key_t key;        ///< key
+    uint8_t               af;         ///< address family - v4 or v6
+    bool                  enable_pbr; ///< enable/disable priority based routing
+    uint32_t              num_routes; ///< number of routes in the list
+    pds_route_t           *routes;    ///< list or route rules
 
     // constructor
     pds_route_table_spec_s() { routes = NULL; }
@@ -85,6 +86,7 @@ struct pds_route_table_spec_s {
         }
         key = route_table.key;
         af = route_table.af;
+        enable_pbr = route_table.enable_pbr;
         num_routes = route_table.num_routes;
         if (routes) {
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);

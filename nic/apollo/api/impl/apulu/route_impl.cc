@@ -130,6 +130,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
+    rtable->pbr_enabled = spec->enable_pbr;
     rtable->default_nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
@@ -139,7 +140,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
-        if (rtable->priority_en) {
+        if (rtable->pbr_enabled) {
             rtable->routes[i].prio = spec->routes[i].prio;
         } else {
             rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
