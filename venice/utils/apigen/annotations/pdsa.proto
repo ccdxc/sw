@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package venice;
+
+import "google/protobuf/descriptor.proto";
+
+message GlobalOpts {
+    string                 OidLen        = 1;
+    string                 Mib           = 2;
+}
+
+// Venice Option extensions applicable to messages
+extend google.protobuf.MessageOptions {
+  GlobalOpts pdsaSetGlobOpts = 82400;
+  GlobalOpts pdsaGetGlobOpts = 82401;
+};
+
+message PdsaFields {
+  string     Field          = 1;
+  string     SetFieldFn     = 5;
+  string     GetFieldFn     = 6;
+  string     SetKeyOidIndex = 7;
+  string     GetKeyOidIndex = 8;
+  string     SetKeyOidFn    = 9;
+  string     GetKeyOidFn    = 10;
+}
+
+// PDSA Option extensions applicable to Fields
+extend google.protobuf.FieldOptions {
+  PdsaFields pdsaFields = 83400;
+};

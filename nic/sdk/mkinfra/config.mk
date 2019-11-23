@@ -18,6 +18,10 @@ export TMAGENT_PEN_IN_DIR  := ${GOPATH}/src/github.com/pensando/sw/nic/agent/pro
 export TMAGENT_PEN_OUT_DIR := ${TOPDIR}/nic/agent/protos/generated/restapi/tmagent
 export PEN_IN_DIR          := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd/metrics/templates
 export PEN_OUT_DIR         := ${TOPDIR}/penctl/cmd
+export PDSA_SVC_IN_DIR     := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/mgmt/svc/templates
+export PDSA_SVC_OUT_DIR    := ${TOPDIR}/nic/metaswitch/stubs/mgmt/svc
+export PDSA_MGMT_IN_DIR    := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/mgmt/templates
+export PDSA_MGMT_OUT_DIR   := ${TOPDIR}/nic/metaswitch/stubs/mgmt
 
 include ${MKINFRA}/config_${ARCH}.mk
 

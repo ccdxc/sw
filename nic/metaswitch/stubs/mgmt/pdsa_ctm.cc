@@ -170,7 +170,7 @@ pdsa_ctm_fill_mib_msg_defaults (AMB_GEN_IPS   *mib_msg)
 }
 
 
-static ATG_CPI_ROW_UPDATE *
+ATG_CPI_ROW_UPDATE *
 pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
                                  NBB_LONG        data_len,
                                  NBB_LONG        oid_len,

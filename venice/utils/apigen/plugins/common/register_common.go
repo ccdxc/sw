@@ -72,6 +72,14 @@ func parseObjRelation(val interface{}) (interface{}, error) {
 	return *v, nil
 }
 
+func parsePdsaFieldOptions(val interface{}) (interface{}, error) {
+	v, ok := val.(*venice.PdsaFields)
+	if !ok {
+		return nil, errors.New("invalid value")
+	}
+	return *v, nil
+}
+
 func parseBoolOptions(val interface{}) (interface{}, error) {
 	v, ok := val.(*bool)
 	if !ok {
@@ -98,6 +106,14 @@ func parseGoogleAPIHTTP(val interface{}) (interface{}, error) {
 
 func parsePenctlCmd(val interface{}) (interface{}, error) {
 	c, ok := val.(*venice.PenCtlCmd)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
+func parseGlobalOpts(val interface{}) (interface{}, error) {
+	c, ok := val.(*venice.GlobalOpts)
 	if !ok {
 		return nil, errInvalidOption
 	}
@@ -940,4 +956,7 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.metricInfo", parseMetricInfo)
 	reg.RegisterOptionParser("venice.metricsField", parseMetricFieldInfo)
 	reg.RegisterOptionParser("venice.enumValueStr", parseStringOptions)
+	reg.RegisterOptionParser("venice.pdsaFields", parsePdsaFieldOptions)
+	reg.RegisterOptionParser("venice.pdsaSetGlobOpts", parseGlobalOpts)
+	reg.RegisterOptionParser("venice.pdsaGetGlobOpts", parseGlobalOpts)
 }

@@ -305,6 +305,12 @@ define PROCESS_MODULEMK_OBJS
         ifeq "$$(filter PENMETRICS,$${${1}_GEN_TYPES})" "PENMETRICS"
             ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_penmetricsobj,$$(basename $${${1}_SRCS})))
         endif
+        ifeq "$$(filter PDSASVC,$${${1}_GEN_TYPES})" "PDSASVC"
+            ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_pdsasvcobj,$$(basename $${${1}_SRCS})))
+        endif
+        ifeq "$$(filter PDSAMGMT,$${${1}_GEN_TYPES})" "PDSAMGMT"
+            ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_pdsamgmtobj,$$(basename $${${1}_SRCS})))
+        endif
         ifeq "$$(filter GOMETRICS,$${${1}_GEN_TYPES})" "GOMETRICS"
             ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_gometricsobj,$$(basename $${${1}_SRCS})))
         endif

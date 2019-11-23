@@ -128,6 +128,22 @@ $${${1}_BLD_OUT_DIR}/${2}/%.proto_penmetricsobj: ${2}/%.proto $${${1}_DEPS}
 	${AT}touch $$@
 endef
 
+define ADD_SRC_RULE_PROTO_GEN_PDSASVC
+$${${1}_BLD_OUT_DIR}/${2}/%.proto_pdsasvcobj: ${2}/%.proto $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${NAT}${AT}echo ${NAME_PROT2PDSASVC} $$(call CANPATH,$$<)
+	${AT}$(strip ${CMD_PROTOC} --grpc-gateway_out=templates=${PDSA_SVC_IN_DIR}/svc.yml:${PDSA_SVC_OUT_DIR} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}touch $$@
+endef
+
+define ADD_SRC_RULE_PROTO_GEN_PDSAMGMT
+$${${1}_BLD_OUT_DIR}/${2}/%.proto_pdsamgmtobj: ${2}/%.proto $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${NAT}${AT}echo ${NAME_PROT2PDSAMGMT} $$(call CANPATH,$$<)
+	${AT}$(strip ${CMD_PROTOC} --grpc-gateway_out=templates=${PDSA_MGMT_IN_DIR}/mgmt.yml:${PDSA_MGMT_OUT_DIR} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}touch $$@
+endef
+
 define ADD_SRC_MOCKGEN_OBJECT_RULE
 ${2}/%_mock.go: ${2}/%.pb.go $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)

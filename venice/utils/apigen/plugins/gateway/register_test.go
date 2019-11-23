@@ -1259,7 +1259,10 @@ func TestGetNimbusManifest(t *testing.T) {
 	if len(mfest) == 2 {
 		t.Errorf("genManifest failed (%s)", err)
 	}
-
+	mfest, err = getNimbusManifest("/tmp/nimbusXXX")
+	if err == nil {
+		t.Errorf("got manifest for non-existent file")
+	}
 }
 
 func TestGetManifest(t *testing.T) {
@@ -1527,6 +1530,10 @@ func TestGetSvcKeyFromManifest(t *testing.T) {
 	if key != "roles" {
 		t.Fatal("Service key don't match")
 	}
+	_, err = getServiceKey("/tmp/genmanifestXXXX", "test-service", "OrchestratorV1", "Orchestrator")
+	if err == nil {
+		t.Fatal("Got non-existent service key")
+	}
 }
 
 func TestGetSvcManifest(t *testing.T) {
@@ -1709,23 +1716,26 @@ func TestGetAutoTypes(t *testing.T) {
 				number: 1
 			>
 		>
+                message_type <
+                        name: 'Auto_ListNest1'
+                        field <
+                                name: 'meta'
+                                label: LABEL_OPTIONAL
+                                type: TYPE_MESSAGE
+                                type_name: '.example.Nest1'
+                                number: 2
+                        >
+                        field <
+                                name: 'Items'
+                                label: LABEL_OPTIONAL
+                                type: TYPE_MESSAGE
+                                type_name: '.example.Nest1'
+                                number: 2
+                        >
+                        options:<[venice.objectAutoGen]: "listhelper">
+                >
 		message_type <
-			name: 'Auto_ListNest1'
-			field <
-				name: 'meta'
-				label: LABEL_OPTIONAL
-				type: TYPE_MESSAGE
-				type_name: '.example.Nest1'
-				number: 2
-			>
-			field <
-				name: 'Items'
-				label: LABEL_OPTIONAL
-				type: TYPE_MESSAGE
-				type_name: '.example.Nest1'
-				number: 2
-			>
-			options:<[venice.objectAutoGen]: "listhelper">
+			name: 'Auto_ListNest2'
 		>
 		message_type <
 			name: 'Auto_WatchNest1'
@@ -1836,6 +1846,22 @@ func TestGetAutoTypes(t *testing.T) {
 				t.Errorf("check for isAutoList failed")
 			}
 		}
+	}
+	lmsg2, err := r.LookupMsg("", ".example.Auto_ListNest2")
+	if err != nil {
+		t.Errorf("error finding ListNest2 auto message")
+	}
+	_, err = getMsgMetricOptionsHdlr(lmsg2)
+	if err == nil {
+		t.Errorf("got metric option for non-type message")
+	}
+	_, err = getListType(lmsg2, false)
+	if err == nil {
+		t.Errorf("failed to retrieve list type")
+	}
+	_, err = getListTypeMsg(lmsg2)
+	if err == nil {
+		t.Errorf("failed to retrieve list type")
 	}
 	lmsg, err := r.LookupMsg("", ".example.Auto_ListNest1")
 	if err != nil {
@@ -4400,4 +4426,58 @@ func TestGenMetricsManifest(t *testing.T) {
 		t.Fatalf("unexpected output [%v]", manifest)
 	}
 
+}
+
+func TestApis(t *testing.T) {
+	str := getCWD2()
+	if str == "" {
+		t.Fatalf("could not get current working directory")
+	}
+	err := createDir("/sw/", "dir1", "dir2")
+	if err != nil {
+		t.Fatalf("could not create directories")
+	}
+	cam, err := getMetaswitchMibTablesInfo()
+	if err != nil {
+		t.Errorf("Error reading MibTables")
+	}
+	if getFamFromCam(cam, "bgpRmEntTable") != "0x41000001" {
+		t.Errorf("Invalid FAM for bgpRmEntTable")
+	}
+	if getFamFromCam(cam, "bgpRmEntTableXXXX") == "0x41000001" {
+		t.Errorf("Got FAM for bgpRmEntTableXXXX")
+	}
+	if getStructFromCam(cam, "bgpRmEntTable") != "AMB_BGP_RM_ENT" {
+		t.Errorf("did not get AMB_BGP_RM_ENT for bgpRmEntTable")
+	}
+	if getStructFromCam(cam, "bgpRmEntTableXXXX") == "AMB_BGP_RM_ENT" {
+		t.Errorf("Got AMB_BGP_RM_ENT for bgpRmEntTableXXXX")
+	}
+	if getFieldIsKeyFromCam(cam, "AMB_BGP_RM_ENT", "index") == false {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIsKeyFromCam(cam, "AMB_BGP_RM_ENT", "local_as") == true {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIdxFromCam(cam, "AMB_BGP_RM_ENTXX", "index") != "" {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIdxFromCam(cam, "AMB_BGP_RM_ENT", "index") != "1" {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIdxFromCam(cam, "AMB_BGP_RM_ENT", "local_as") != "6" {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldDataTypeFromCam(cam, "AMB_BGP_RM_ENTXX", "local_as") != "" {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldDataTypeFromCam(cam, "AMB_BGP_RM_ENT", "local_as") != "ulong" {
+		t.Errorf("Got wrong value")
+	}
+	if isFieldInCamTable(cam, "AMB_BGP_RM_ENTXX", "local_as") != false {
+		t.Errorf("Got wrong value")
+	}
+	if isFieldInCamTable(cam, "AMB_BGP_RM_ENT", "local_as") != true {
+		t.Errorf("Got wrong value")
+	}
 }

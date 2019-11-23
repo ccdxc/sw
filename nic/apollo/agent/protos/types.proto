@@ -36,11 +36,45 @@ enum IPAF {
 }
 
 // BGP address families
-enum BGPAf {
-  BGP_AF_NONE            = 0;
-  BGP_AF_IPV4_UNICAST    = 1;
-  BGP_AF_IPV6_UNICAST    = 2;
-  BGP_AF_L2VPN_EVPN      = 3;
+enum BGPAfi {
+  BGP_AFI_NONE       = 0;
+  BGP_AFI_IPV4       = 1;
+  BGP_AFI_IPV6       = 2;
+  BGP_AFI_L2VPN      = 3;
+}
+
+// Admin Status
+enum BGPAdminSt {
+  BGP_ADMIN_NONE     = 0;
+  BGP_ADMIN_UP       = 1;
+  BGP_ADMIN_DOWN     = 2;
+}
+
+// AMB Bool
+enum AMBBool {
+  BOOL_NONE               = 0;
+  BOOL_TRUE               = 1;
+  BOOL_FALSE              = 2;
+}
+
+// BGP sub-address families
+enum BGPSafi {
+  BGP_SAFI_NONE            = 0;
+  BGP_SAFI_UNICAST         = 1;
+  BGP_SAFI_MULTICAST       = 2;
+  BGP_SAFI_BOTH            = 3;
+  BGP_SAFI_LABEL           = 4;
+  BGP_SAFI_VPLS            = 65;
+  BGP_SAFI_EVPN            = 70;
+  BGP_SAFI_MPLS_BGP_VPN    = 128;
+  BGP_SAFI_PRIVATE         = 241;
+}
+
+// BGP Peer RR Client
+enum BGPPeerClient {
+  BGP_NON_CLIENT           = 0;
+  BGP_CLIENT               = 1;
+  BGP_MESHED_CLIENT        = 2;
 }
 
 // IP Address object

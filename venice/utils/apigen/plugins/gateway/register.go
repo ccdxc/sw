@@ -3,9 +3,11 @@ package plugin
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"flag"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -90,6 +92,14 @@ type ServiceParams struct {
 	StagingPath string
 }
 
+// PdsaGlobalOpts holds raw venice.pdsaSetGlobOpts
+type PdsaGlobalOpts struct {
+	OidLen string
+	OidFam string
+	Struct string
+	Mib    string
+}
+
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
 type PenctlCmdOpts struct {
 	Cmd          string
@@ -121,6 +131,135 @@ type KeyComponent struct {
 	Type string
 	// Val holds a string literal or a field name depending on type
 	Val string
+}
+
+// CamInfo is the struct to parse metaswitch mib.xml
+type CamInfo struct {
+	XMLName   xml.Name `xml:"camInfo"`
+	Text      string   `xml:",chardata"`
+	Constants struct {
+		Text  string `xml:",chardata"`
+		Value []struct {
+			Text     string `xml:",chardata"`
+			CodeName string `xml:"codeName,attr"`
+		} `xml:"value"`
+	} `xml:"constants"`
+	Groups struct {
+		Text       string `xml:",chardata"`
+		EnumValues []struct {
+			Text  string `xml:",chardata"`
+			Group string `xml:"group,attr"`
+			Value []struct {
+				Text     string `xml:",chardata"`
+				Name     string `xml:"name,attr"`
+				Asn1Name string `xml:"asn1Name,attr"`
+				TextName string `xml:"textName,attr"`
+				CodeName string `xml:"codeName,attr"`
+			} `xml:"value"`
+		} `xml:"enumValues"`
+	} `xml:"groups"`
+	Mibs struct {
+		Text    string `xml:",chardata"`
+		MibInfo []struct {
+			Text           string `xml:",chardata"`
+			Mib            string `xml:"mib,attr"`
+			Asn1Name       string `xml:"asn1Name,attr"`
+			TextName       string `xml:"textName,attr"`
+			CodeName       string `xml:"codeName,attr"`
+			Droid          string `xml:"droid,attr"`
+			File           string `xml:"file,attr"`
+			Owner          string `xml:"owner,attr"`
+			MibType        string `xml:"mibType,attr"`
+			RowStatusField string `xml:"rowStatusField,attr"`
+			MaxAccess      string `xml:"maxAccess,attr"`
+			Description    string `xml:"description"`
+			FieldInfo      []struct {
+				Text           string `xml:",chardata"`
+				Name           string `xml:"name,attr"`
+				Asn1Name       string `xml:"asn1Name,attr"`
+				TextName       string `xml:"textName,attr"`
+				CodeName       string `xml:"codeName,attr"`
+				Droid          string `xml:"droid,attr"`
+				Oid            string `xml:"oid,attr"`
+				IsIndex        string `xml:"isIndex,attr"`
+				FieldType      string `xml:"fieldType,attr"`
+				Access         string `xml:"access,attr"`
+				Format         string `xml:"format,attr"`
+				Mandatory      string `xml:"mandatory,attr"`
+				Detail         string `xml:"detail,attr"`
+				CodeLengthName string `xml:"codeLengthName,attr"`
+				MinLength      string `xml:"minLength,attr"`
+				MaxLength      string `xml:"maxLength,attr"`
+				Units          string `xml:"units,attr"`
+				Description    string `xml:"description"`
+				MinValue       string `xml:"minValue"`
+				MaxValue       string `xml:"maxValue"`
+				EnumValues     struct {
+					Text     string `xml:",chardata"`
+					Group    string `xml:"group,attr"`
+					EnumType string `xml:"enumType,attr"`
+					Value    []struct {
+						Text     string `xml:",chardata"`
+						Name     string `xml:"name,attr"`
+						Asn1Name string `xml:"asn1Name,attr"`
+						TextName string `xml:"textName,attr"`
+						CodeName string `xml:"codeName,attr"`
+					} `xml:"value"`
+				} `xml:"enumValues"`
+				DefaultValue string `xml:"defaultValue"`
+			} `xml:"fieldInfo"`
+		} `xml:"mibInfo"`
+	} `xml:"mibs"`
+	Traps struct {
+		Text     string `xml:",chardata"`
+		TrapInfo []struct {
+			Text        string `xml:",chardata"`
+			Trap        string `xml:"trap,attr"`
+			Asn1Name    string `xml:"asn1Name,attr"`
+			TextName    string `xml:"textName,attr"`
+			CodeName    string `xml:"codeName,attr"`
+			TrapType    string `xml:"trapType,attr"`
+			File        string `xml:"file,attr"`
+			Owner       string `xml:"owner,attr"`
+			MaxAccess   string `xml:"maxAccess,attr"`
+			Description string `xml:"description"`
+			FieldInfo   []struct {
+				Text           string `xml:",chardata"`
+				Name           string `xml:"name,attr"`
+				Asn1Name       string `xml:"asn1Name,attr"`
+				TextName       string `xml:"textName,attr"`
+				CodeName       string `xml:"codeName,attr"`
+				Oid            string `xml:"oid,attr"`
+				FieldType      string `xml:"fieldType,attr"`
+				Access         string `xml:"access,attr"`
+				Format         string `xml:"format,attr"`
+				Detail         string `xml:"detail,attr"`
+				CodeLengthName string `xml:"codeLengthName,attr"`
+				MinLength      string `xml:"minLength,attr"`
+				MaxLength      string `xml:"maxLength,attr"`
+				Units          string `xml:"units,attr"`
+				Description    string `xml:"description"`
+				MinValue       string `xml:"minValue"`
+				MaxValue       string `xml:"maxValue"`
+				EnumValues     struct {
+					Text     string `xml:",chardata"`
+					Group    string `xml:"group,attr"`
+					EnumType string `xml:"enumType,attr"`
+					Value    []struct {
+						Text     string `xml:",chardata"`
+						Name     string `xml:"name,attr"`
+						Asn1Name string `xml:"asn1Name,attr"`
+						TextName string `xml:"textName,attr"`
+						CodeName string `xml:"codeName,attr"`
+					} `xml:"value"`
+				} `xml:"enumValues"`
+			} `xml:"fieldInfo"`
+		} `xml:"trapInfo"`
+	} `xml:"traps"`
+	GenerationTime struct {
+		Text      string `xml:",chardata"`
+		Timestamp string `xml:"timestamp"`
+	} `xml:"generationTime"`
 }
 
 //--- Functions registered in the funcMap for the plugin  ---//
@@ -476,6 +615,21 @@ type fileMetricOptions struct {
 	Messages []msgMetricOptions `json:",omitempty"`
 }
 
+type pdsaFieldOpt struct {
+	Field          string
+	Name           string
+	IsKey          bool
+	SetFieldIdx    string
+	GetFieldIdx    string
+	SetFieldFn     string
+	GetFieldFn     string
+	SetKeyOidFn    string
+	GetKeyOidFn    string
+	SetKeyOidIndex string
+	GetKeyOidIndex string
+	CppDataType    string
+}
+
 type fieldMetricOptions struct {
 	Name          string   `json:",omitempty"`
 	DisplayName   string   `json:",omitempty"`
@@ -518,6 +672,110 @@ func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
 	default:
 		return "unknown"
 	}
+}
+
+func getFieldIsKeyFromCam(cam *CamInfo, table string, field string) bool {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field {
+					if fieldInfo.IsIndex == "1" {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
+func getFieldIdxFromCam(cam *CamInfo, table string, field string) string {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field {
+					return fieldInfo.Oid
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func getFieldDataTypeFromCam(cam *CamInfo, table string, field string) string {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field {
+					return fieldInfo.FieldType
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func isFieldInCamTable(cam *CamInfo, table string, field string) bool {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func isPdsaFieldInTable(f *descriptor.Field, cam *CamInfo, table string) bool {
+	i, err := reg.GetExtension("venice.pdsaFields", f)
+	if err == nil {
+		o := i.(venice.PdsaFields)
+		return isFieldInCamTable(cam, table, o.Field)
+	}
+	return false
+}
+
+func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaFieldOpt, error) {
+	ret := pdsaFieldOpt{}
+	i, err := reg.GetExtension("venice.pdsaFields", f)
+	if err == nil {
+		o := i.(venice.PdsaFields)
+		ret.Name = *f.Name
+		ret.Field = o.Field
+		ret.SetFieldFn = o.SetFieldFn
+		ret.GetFieldFn = o.GetFieldFn
+		ret.SetKeyOidFn = o.SetKeyOidFn
+		ret.GetKeyOidFn = o.GetKeyOidFn
+		ret.SetKeyOidIndex = o.SetKeyOidIndex
+		ret.GetKeyOidIndex = o.GetKeyOidIndex
+		ret.IsKey = getFieldIsKeyFromCam(cam, table, o.Field)
+		ret.SetFieldIdx = getFieldIdxFromCam(cam, table, o.Field)
+		ret.CppDataType = getFieldDataTypeFromCam(cam, table, o.Field)
+	}
+	return ret, err
+}
+
+func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string) string {
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
+		return "NBB_PUT_LONG"
+	}
+	return ""
+}
+
+func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string) string {
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
+		return "pdsa_nbb_get_long"
+	}
+	return ""
+}
+
+func getCppTypeFieldFromProto(protoFieldType gogoproto.FieldDescriptorProto_Type, protoFieldTypeName string) string {
+	if protoFieldType == gogoproto.FieldDescriptorProto_TYPE_ENUM {
+		return strings.ReplaceAll(protoFieldTypeName, ".", "::")
+	}
+	return ""
 }
 
 func getFieldMetricOptions(f *descriptor.Field) (fieldMetricOptions, bool) {
@@ -710,6 +968,46 @@ func getPenctlCmdOptions(m *descriptor.Message) (PenctlCmdOpts, error) {
 		}
 	}
 	return penctlCmdOpts, nil
+}
+
+func getFamFromCam(cam *CamInfo, table string) string {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.Mib == table {
+			return mibInfo.Droid
+		}
+	}
+	return ""
+}
+
+func getStructFromCam(cam *CamInfo, table string) string {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.Mib == table {
+			return mibInfo.CodeName
+		}
+	}
+	return ""
+}
+
+func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, error) {
+	var pdsaGlobOpts PdsaGlobalOpts
+	i, _ := reg.GetExtension("venice.pdsaSetGlobOpts", m)
+	r := i.(*venice.GlobalOpts)
+	pdsaGlobOpts.OidLen = r.OidLen
+	pdsaGlobOpts.Mib = r.Mib
+	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
+	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
+	return pdsaGlobOpts, nil
+}
+
+func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, error) {
+	var pdsaGlobOpts PdsaGlobalOpts
+	i, _ := reg.GetExtension("venice.pdsaGetGlobOpts", m)
+	r := i.(*venice.GlobalOpts)
+	pdsaGlobOpts.OidLen = r.OidLen
+	pdsaGlobOpts.Mib = r.Mib
+	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
+	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
+	return pdsaGlobOpts, nil
 }
 
 // getRestSvcOptions returns the ServiceOptions for the service. This call will ensure that the raw venice.naplesRestService
@@ -1648,6 +1946,30 @@ func parseStorageTransformers(in string) (*storageTransformerField, error) {
 		return nil, fmt.Errorf("unknown storageTransformer %s", ret.Fn)
 	}
 	return &ret, nil
+}
+
+func getMetaswitchMibTablesInfo() (*CamInfo, error) {
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+	// Open our xmlFile
+	xmlFile, err := os.Open(gopath + "/src/github.com/pensando/sw/nic/third-party/metaswitch/mibref/mib.xml")
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	// defer the closing of our xmlFile so that we can parse it later on
+	defer xmlFile.Close()
+
+	// read our opened xmlFile as a byte array.
+	byteValue, _ := ioutil.ReadAll(xmlFile)
+
+	var camInfo CamInfo
+	xml.Unmarshal(byteValue, &camInfo)
+	return &camInfo, nil
 }
 
 func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers, error) {
@@ -2596,6 +2918,14 @@ func isScalarType(in string) bool {
 	return false
 }
 
+func typeIsMessage(f *descriptor.Field) bool {
+	if *f.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		return true
+	}
+
+	return false
+}
+
 func getCLIType(fld *Field) string {
 	if fld.Map || fld.Slice {
 		return "StringSlice"
@@ -3402,6 +3732,8 @@ func init() {
 	reg.RegisterFunc("getSvcParams", getSvcParams)
 	reg.RegisterFunc("getPenctlCmdOptions", getPenctlCmdOptions)
 	reg.RegisterFunc("getPenctlParentCmdOptions", getPenctlParentCmdOptions)
+	reg.RegisterFunc("getPdsaGetGlobalOpts", getPdsaGetGlobalOpts)
+	reg.RegisterFunc("getPdsaSetGlobalOpts", getPdsaSetGlobalOpts)
 	reg.RegisterFunc("getRestSvcOptions", getRestSvcOptions)
 	reg.RegisterFunc("getMethodParams", getMethodParams)
 	reg.RegisterFunc("getCWD2", getCWD2)
@@ -3477,7 +3809,9 @@ func init() {
 	reg.RegisterFunc("getProxyPaths", getProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
+	reg.RegisterFunc("TrimPrefix", strings.TrimPrefix)
 	reg.RegisterFunc("ToLower", strings.ToLower)
+	reg.RegisterFunc("ToUpper", strings.ToUpper)
 	reg.RegisterFunc("CamelCase", gogen.CamelCase)
 	reg.RegisterFunc("isActionMethod", isActionMethod)
 	reg.RegisterFunc("getActionTarget", getActionTarget)
@@ -3498,10 +3832,17 @@ func init() {
 	reg.RegisterFunc("getGenParamsPath", getGenParamsPath)
 	reg.RegisterFunc("genMetricsManifest", genMetricsManifest)
 	reg.RegisterFunc("getMsgMetricOptionsHdlr", getMsgMetricOptionsHdlr)
+	reg.RegisterFunc("getPdsaFieldOpt", getPdsaFieldOpt)
+	reg.RegisterFunc("isPdsaFieldInTable", isPdsaFieldInTable)
 	reg.RegisterFunc("getEnumVNameName", getEnumVNameName)
 	reg.RegisterFunc("getEnumVNameValues", getEnumVNameValues)
 	reg.RegisterFunc("getEnumVValueName", getEnumVValueName)
 	reg.RegisterFunc("getEnumVValueValues", getEnumVValueValues)
+	reg.RegisterFunc("getMetaswitchMibTablesInfo", getMetaswitchMibTablesInfo)
+	reg.RegisterFunc("TypeIsMessage", typeIsMessage)
+	reg.RegisterFunc("getPdsaCastSetFunc", getPdsaCastSetFunc)
+	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
+	reg.RegisterFunc("getCppTypeFieldFromProto", getCppTypeFieldFromProto)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)
