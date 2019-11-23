@@ -251,7 +251,7 @@ testcases:
 
     -   name    : DriverWatchdog
         testcase: testcases.drivers.watchdog
-        disable : False
+        disable : True
         iterators :
         args    :
 
