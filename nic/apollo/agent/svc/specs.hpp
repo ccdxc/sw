@@ -1137,16 +1137,16 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     }
     proto_spec->set_switchvnic(api_spec->switch_vnic);
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
-        proto_spec->set_ingv4securitypolicyid(i, api_spec->ing_v4_policy[i].id);
+        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id);
     }
     for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
-        proto_spec->set_ingv6securitypolicyid(i, api_spec->ing_v6_policy[i].id);
+        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
-        proto_spec->set_egv4securitypolicyid(i, api_spec->egr_v4_policy[i].id);
+        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
-        proto_spec->set_egv6securitypolicyid(i, api_spec->egr_v6_policy[i].id);
+        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
     }
     proto_spec->set_hostifindex(api_spec->host_ifindex);
     proto_spec->set_primary(api_spec->primary);
@@ -3216,7 +3216,7 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
                                       &local_spec->provider_ip);
     }
     for (uint32_t i = 0; i < local_spec->num_tags; i++) {
-        proto_spec->set_tags(i, local_spec->tags[i]);
+        proto_spec->add_tags(local_spec->tags[i]);
     }
 }
 
@@ -3325,7 +3325,7 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
                                       &remote_spec->provider_ip);
     }
     for (uint32_t i = 0; i < remote_spec->num_tags; i++) {
-        proto_spec->set_tags(i, remote_spec->tags[i]);
+        proto_spec->add_tags(remote_spec->tags[i]);
     }
 }
 

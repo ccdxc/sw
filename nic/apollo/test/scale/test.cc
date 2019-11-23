@@ -198,9 +198,11 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                     svc_mapping.vip.addr.v4_addr =
                         v4_vip_pfx->addr.addr.v4_addr + key_ip_offset++;
                     svc_mapping.svc_port = TEST_APP_VIP_PORT;
-                    svc_mapping.backend_provider_ip.af = IP_AF_IPV4;
-                    svc_mapping.backend_provider_ip.addr.v4_addr =
-                        v4_provider_pfx->addr.addr.v4_addr + ip_offset;
+                    if (!apulu()) {
+                        svc_mapping.backend_provider_ip.af = IP_AF_IPV4;
+                        svc_mapping.backend_provider_ip.addr.v4_addr =
+                            v4_provider_pfx->addr.addr.v4_addr + ip_offset;
+                    }
                     ip_offset++;
                     rv = create_svc_mapping(&svc_mapping);
                     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
