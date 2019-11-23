@@ -57,6 +57,48 @@ export class IPUtility {
     return true;
   }
 
+  // check whether input string is valid submask number
+  public static isValidSubmask(mask: string): boolean {
+    const number = parseInt(mask, 10);
+    if (isNaN(number)) {
+      return false;
+    }
+    return number > 1 && number < 32;
+  }
+
+  /**
+   * Returns true if the ip with mask is valid
+   * mask is optional
+   */
+  public static isValidIPWithOptionalMask(ip: string): boolean {
+    const arr: string[] = ip.split('/');
+    if (arr.length > 2) {
+      return false;
+    }
+    if (!IPUtility.isValidIP(arr[0])) {
+      return false;
+    }
+    if (arr.length === 1) {
+      return true;
+    }
+    return IPUtility.isValidSubmask(arr[1]);
+  }
+
+  /**
+   * Returns true if the ip with mask is valid
+   * mask must be provided
+   */
+  public static isValidIPWithMask(ip: string): boolean {
+    const arr: string[] = ip.split('/');
+    if (arr.length !== 2) {
+      return false;
+    }
+    if (!IPUtility.isValidIP(arr[0])) {
+      return false;
+    }
+    return IPUtility.isValidSubmask(arr[1]);
+  }
+
   public static isValidIPValidator(control: AbstractControl): ValidationErrors | null {
     if (control.value == null || control.value.length === 0) {
       return null;

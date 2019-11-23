@@ -496,7 +496,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
 
   isValidIP(ip: string) {
-    return IPUtility.isValidIP(ip);
+    return IPUtility.isValidIPWithOptionalMask(ip);
   }
 
   isValidMAC(mac: string) {
