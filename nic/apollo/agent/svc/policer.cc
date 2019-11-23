@@ -13,7 +13,6 @@ PolicerSvcImpl::PolicerCreate(ServerContext *context,
                               const pds::PolicerRequest *proto_req,
                               pds::PolicerResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policer_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_policer_spec_t api_spec;
     bool batched_internally = false;
@@ -41,7 +40,6 @@ PolicerSvcImpl::PolicerCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        key.id = request.id();
         pds_policer_proto_to_api_spec(&api_spec, request);
         if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_policer_create(&api_spec, bctxt);
@@ -72,7 +70,6 @@ PolicerSvcImpl::PolicerUpdate(ServerContext *context,
                               const pds::PolicerRequest *proto_req,
                               pds::PolicerResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policer_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_policer_spec_t api_spec;
     bool batched_internally = false;
@@ -100,7 +97,6 @@ PolicerSvcImpl::PolicerUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        key.id = request.id();
         pds_policer_proto_to_api_spec(&api_spec, request);
         if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_policer_update(&api_spec, bctxt);

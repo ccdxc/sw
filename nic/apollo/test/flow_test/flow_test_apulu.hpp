@@ -86,12 +86,14 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "bd %u, proto %u, session_id %u, smac %s, sip %s, "
-                "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, flow_role %u, "
-                "ktype %u\n", entry->vnic_metadata_bd_id, entry->key_metadata_proto,
+        fprintf(g_fp, "bd %lu, proto %lu, session_id %lu, smac %s, sip %s, "
+                "dmac %s, dip %s, sport %lu, dport %lu, nh_idx %lu, "
+                "flow_role %lu, ktype %lu\n",
+                entry->vnic_metadata_bd_id, entry->key_metadata_proto,
                 entry->session_id, macaddr2str(smac), src_ip_str,
-                macaddr2str(dmac), dst_ip_str, entry->key_metadata_sport, entry->key_metadata_dport,
-                entry->nexthop_id, entry->flow_role, entry->key_metadata_ktype);
+                macaddr2str(dmac), dst_ip_str, entry->key_metadata_sport,
+                entry->key_metadata_dport, entry->nexthop_id,
+                entry->flow_role, entry->key_metadata_ktype);
         fflush(g_fp);
     }
 }
@@ -103,12 +105,13 @@ dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip, mac_addr_t smac,
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
     if (g_fp) {
-        fprintf(g_fp, "bd %u, proto %u, session_id %d, smac %s, sip %s, "
-                "dmac %s, dip %s, sport %u, dport %u, nh_idx %u, "
-                "flow_role %u\n", entry->vnic_metadata_bd_id, entry->key_metadata_proto, entry->session_id,
+        fprintf(g_fp, "bd %lu, proto %lu, session_id %lu smac %s, sip %s, "
+                "dmac %s, dip %s, sport %lu, dport %lu, nh_idx %lu, "
+                "flow_role %lu\n", entry->vnic_metadata_bd_id,
+                entry->key_metadata_proto, entry->session_id,
                 macaddr2str(smac), src_ip_str,  macaddr2str(dmac), dst_ip_str,
-                entry->key_metadata_sport, entry->key_metadata_dport, entry->nexthop_id,
-                entry->flow_role);
+                entry->key_metadata_sport, entry->key_metadata_dport,
+                entry->nexthop_id, entry->flow_role);
         fflush(g_fp);
     }
 }
