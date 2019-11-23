@@ -182,7 +182,6 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
         ret = core::policy_delete(&key, bctxt);
-        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -192,6 +191,7 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 
 end:
@@ -200,6 +200,7 @@ end:
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }
 

@@ -195,7 +195,6 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
         ipaddr_proto_spec_to_api_spec(&key.ip_addr,
                                       proto_req->id(i).ipkey().ipaddr());
         ret = pds_local_mapping_delete(&key, bctxt);
-        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -232,13 +231,10 @@ MappingSvcImpl::MappingGet(ServerContext *context,
     }
     proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     for (int i = 0; i < proto_req->id_size(); i++) {
-
         // perhaps reference is sufficient here ?
         pds::MappingKey proto_key;
         proto_key = proto_req->id(i);
-
         switch (proto_key.keyinfo_case()) {
-
         case pds::MappingKey::kIPKey:
             key.type = PDS_MAPPING_TYPE_L3;
             key.vpc.id = proto_key.ipkey().vpcid();

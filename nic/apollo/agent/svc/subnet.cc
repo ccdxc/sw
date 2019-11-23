@@ -33,7 +33,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -97,7 +97,7 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -159,7 +159,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
             return Status::CANCELLED;
         }
         batched_internally = true;
@@ -168,7 +168,6 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
         ret = core::subnet_delete(&key, bctxt);
-        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -178,6 +177,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 
 end:
@@ -186,6 +186,7 @@ end:
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }
 

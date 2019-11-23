@@ -25,6 +25,7 @@
 #include "nic/apollo/agent/svc/nh.hpp"
 #include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
+#include "nic/apollo/agent/svc/policer.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
@@ -66,6 +67,7 @@ svc_reg (void)
     TagSvcImpl            tag_svc;
     NhSvcImpl             nh_svc;
     SvcImpl               svc;
+    PolicerSvcImpl        policer_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -96,6 +98,7 @@ svc_reg (void)
     server_builder->RegisterService(&tag_svc);
     server_builder->RegisterService(&nh_svc);
     server_builder->RegisterService(&svc);
+    server_builder->RegisterService(&policer_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

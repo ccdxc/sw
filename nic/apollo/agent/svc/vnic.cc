@@ -174,7 +174,6 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
     for (int i = 0; i < proto_req->vnicid_size(); i++) {
         key.id = proto_req->vnicid(i);
         ret = core::vnic_delete(&key, bctxt);
-        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -182,8 +181,9 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
 
     if (batched_internally) {
         // commit the internal batch
-        pds_batch_commit(bctxt);
+        ret = pds_batch_commit(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 
 end:
@@ -191,6 +191,7 @@ end:
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     return Status::CANCELLED;
 }
 
