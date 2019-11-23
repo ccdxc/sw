@@ -112,11 +112,31 @@ public:
 private:
     /// \brief constructor
     tep_impl() {
+        tep2_tbl_ = 0;
         hw_id_ = 0xFFFF;
     }
 
     /// \brief destructor
     ~tep_impl() {}
+
+    /// \brief     program outer tunnel (MPLSoUDP in this case) related tables
+    ///            during TEP create
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being programmed
+    /// \param[in] spec TEP configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
+                                pds_tep_spec_t *spec);
+
+    /// \brief     program TEP related tables during TEP create by enabling
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being programmed
+    /// \param[in] spec TEP configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
+                                     pds_tep_spec_t *spec);
 
     /// \brief     program TEP related tables during TEP create by enabling
     ///            stage0 tables corresponding to the new epoch
@@ -145,6 +165,7 @@ private:
 private:
     // P4 datapath specific state
     uint16_t   hw_id_;    ///< hardware id for this tep
+    uint8_t    tep2_tbl_; ///< true if hw_id_ is for TUNNEL2 table
 } __PACK__;
 
 /// \@}

@@ -64,9 +64,9 @@ sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s",
-                    spec->key.id, ipaddr2str(&spec->remote_ip));
-
+    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s encap %s",
+                    spec->key.id, ipaddr2str(&spec->remote_ip),
+                    pds_encap2str(&spec->encap));
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     this->type_ = spec->type;
     this->remote_svc_ = spec->remote_svc;

@@ -102,19 +102,6 @@ nexthop_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-typedef struct __attribute__((__packed__)) __nexthop_nexthop_info {
-    uint16_t lif;
-    uint8_t qtype;
-    uint32_t qid;
-    uint8_t port;
-    uint16_t vlan;
-    uint8_t ip_type;
-    uint8_t dipo[16];
-    uint8_t dmaco[6];
-    uint8_t smaco[6];
-    uint8_t dmaci[6];
-} nexthop_nexthop_info_t;
-
 sdk_ret_t
 nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
                                pds_nexthop_spec_t *spec) {
@@ -220,8 +207,7 @@ nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
                                       NULL, NULL, &nh_data);
     if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
-        PDS_TRACE_ERR("Failed to read nexthop table at index %u ret %u",
-                      hw_id_, p4pd_ret);
+        PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     sdk::lib::memrev(spec->underlay_mac,
