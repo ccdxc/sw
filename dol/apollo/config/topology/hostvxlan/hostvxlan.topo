@@ -140,12 +140,12 @@ vpc:
             - count : 4
       nexthop:
         - type : underlay
-          count : 2
+          count : 8
         - type : overlay
-          count : 2
+          count : 8
         - type : overlay
           dual-ecmp : true
-          count : 2
+          count : 8
       nexthop-group:
         - type : underlay
           count : 2

@@ -118,8 +118,12 @@ MAX_POLICY_PER_VNIC = 5
 MAX_MIRROR = 8
 MAX_TAG = 1
 MAX_METER = 64
+MAX_UNDERLAY_NHS = 2
+MAX_OVERLAY_NHS = 8
 
 NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
+UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
+OverlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'

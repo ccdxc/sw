@@ -19,14 +19,15 @@ class NexthopGroupObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.Id = next(resmgr.NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
-        self.NumNexthops = spec.count
         self.Nexthops = {}
         self.DualEcmp = utils.IsDualEcmp(spec)
         self.Type = None
         if spec.type == 'overlay':
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP
+            self.NumNexthops = resmgr.OverlayNumNexthopsAllocator.rrnext()
         elif spec.type == 'underlay':
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
+            self.NumNexthops = resmgr.UnderlayNumNexthopsAllocator.rrnext()
         self.Show()
         return
 
