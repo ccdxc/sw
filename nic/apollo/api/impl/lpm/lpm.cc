@@ -96,6 +96,12 @@ lpm_tree_create (route_table_t *route_table, itree_type_t type,
     }
     SDK_ASSERT(route_table->num_routes <= route_table->max_routes);
 
+    PDS_TRACE_DEBUG("Creating LPM tree type %u, route count %u, "
+                    "default nh %u, max routes %u, root addr 0x%llx, "
+                    "LPM block size %u", type, route_table->num_routes,
+                    route_table->default_nhid, route_table->max_routes,
+                    lpm_tree_root_addr, lpm_mem_size);
+
     /**< sort the given route table */
     qsort_r(route_table->routes, route_table->num_routes,
             sizeof(route_t), route_compare_cb, route_table);

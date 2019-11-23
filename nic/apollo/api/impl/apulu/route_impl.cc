@@ -139,7 +139,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
-        if (!rtable->routes[i].prio) {
+        if (rtable->priority_en) {
+            rtable->routes[i].prio = spec->routes[i].prio;
+        } else {
             rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
         }
         switch (spec->routes[i].nh_type) {

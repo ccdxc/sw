@@ -12,6 +12,7 @@
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/lpm/lpm_priv.hpp"
 #include "nic/apollo/api/impl/lpm/lpm_impl.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 using std::stack;
 
@@ -43,6 +44,10 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     stack<itable_stack_elem_t>    s;
     itable_stack_elem_t           elem = {}, end = {};
     uint32_t                      num_intervals = 0;
+
+    PDS_TRACE_DEBUG("Building Interval Table: route count %u, "
+                    "default nh %u, max routes %u", route_table->num_routes,
+                    route_table->default_nhid, route_table->max_routes);
 
     /**< create a stack elem with the highest prefix & invalid nh */
     end.interval.data = LPM_NEXTHOP_INVALID;
