@@ -366,11 +366,7 @@ action tunnel2_ipv6_encap(vlan, dmac, smac, dipo) {
     }
 }
 
-action tunnel2_info(port, vlan, dmaco, smaco, dipo, ip_type) {
-    if (rewrite_metadata.tunnel2_id == 0) {
-        // return;
-    }
-    modify_field(capri_intrinsic.tm_oport, port);
+action tunnel2_info(vlan, dmaco, smaco, dipo, ip_type) {
     modify_field(scratch_metadata.flag, ip_type);
     if (ip_type == IPTYPE_IPV4) {
         tunnel2_ipv4_encap(vlan, dmaco, smaco, dipo);

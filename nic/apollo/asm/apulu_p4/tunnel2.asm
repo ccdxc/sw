@@ -41,7 +41,6 @@ struct phv_         p;
 */
 
 tunnel2_info:
-    phvwr           p.capri_intrinsic_tm_oport, d.tunnel2_info_d.port
     phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
                         d.{tunnel2_info_d.dmaco,tunnel2_info_d.smaco}
     add             r7, r0, k.capri_p4_intrinsic_packet_len
