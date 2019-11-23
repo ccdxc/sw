@@ -126,7 +126,9 @@ def Trigger(tc):
     #==============================================================
     if hasattr(tc.iterators, 'duration'):
         iter_opt = ' -D {dur} '.format(dur = tc.iterators.duration)
-        bkg_timeout = tc.iterators.duration + 10
+        # For scale tests, we noticed all 8 threads not started early,
+        # so need to give extra timeout
+        bkg_timeout = tc.iterators.duration + 30
 
     if hasattr(tc.iterators, 'rdma_cm') and \
        tc.iterators.rdma_cm == 'yes':
