@@ -519,7 +519,7 @@ def GetExpectedEgressUplinkPort(testcase, args=None):
     port = l3if.IfInfo.port_num + 1
     return port
 
-def GetOuterSrcMac(testcase, args=None):
+def GetUplinkPortMac(testcase, args=None):
     nh = __get_expected_nexthop(testcase.config)
     if nh is None:
         return None
@@ -527,7 +527,7 @@ def GetOuterSrcMac(testcase, args=None):
     mac = l3if.IfInfo.macaddr.get()
     return mac
 
-def GetOuterDstMac(testcase, args=None):
+def GetUnderlayRemoteMac(testcase, args=None):
     nh = __get_expected_nexthop(testcase.config)
     if nh is None:
         return None

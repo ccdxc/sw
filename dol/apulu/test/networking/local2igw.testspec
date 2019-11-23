@@ -87,16 +87,13 @@ descriptors:
 session:
     - step:
         trigger:
-
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
 
         expect:
-
             delay    :    1
-
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=TO_SWITCH_PKT

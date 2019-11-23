@@ -27,7 +27,6 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
-
     - packet:
         id          : FROM_SWITCH_PKT # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
