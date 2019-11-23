@@ -27,7 +27,7 @@ fi
 set -x
 echo $NICDIR
 
-cleanup() {
+function cleanup() {
     if [ $START_VPP == 1 ]; then
         sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
     fi
@@ -61,11 +61,12 @@ if [ $START_VPP == 1 ]; then
     sudo $NICDIR/vpp/tools/start-vpp-sim.sh $*
     if [[ $? != 0 ]]; then
         echo "Failed to bring up VPP"
-        exit -1
+        exit 1
     fi
 fi
 
 $DOLDIR/main.py $* 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
+# end of script
 exit $status
