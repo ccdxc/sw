@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
 MODULE_TARGET   = libipsfeeder.so
-MODULE_PIPELINE = apulu
+MODULE_PIPELINE = apollo artemis apulu
 MODULE_ARCH     = x86_64
 MODULE_INCS 	= $(TOPDIR)/nic/metaswitch/stubs/hals \
 		  $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))

@@ -86,7 +86,7 @@ bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
     create_default_port_settings(settings);
 
     for (uint32_t port = 1;
-         port <= api::g_pds_state.catalogue()->num_fp_ports(); port++) {
+        port <= api::g_pds_state.catalogue()->num_fp_ports(); port++) {
 
         std::string if_name;
         auto ms_ifindex = pds_port_to_ms_ifindex_and_ifname(port, &if_name);

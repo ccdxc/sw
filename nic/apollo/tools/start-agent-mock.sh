@@ -10,6 +10,7 @@ export PERSISTENT_LOG_DIR=$NIC_DIR/
 export CAPRI_MOCK_MODE=1
 export CAPRI_MOCK_MEMORY_MODE=1
 export ZMQ_SOC_DIR=${NIC_DIR}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/third-party/metaswitch/output/x86_64/debug/
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 BUILD_DIR=$NIC_DIR/build/x86_64/apollo
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov

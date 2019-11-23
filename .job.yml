@@ -22,7 +22,7 @@ builds:
     artifacts:
       - /sw/iota.tgz
   build-apollo-x86:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apollo package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apollo_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apollo package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apollo_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build /usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/debug/lib*"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/build_apollo_x86.tar.gz
@@ -32,12 +32,12 @@ builds:
     artifacts:
       - /sw/build_gft_x86.tar.gz
   build-artemis-x86:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=artemis package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_artemis_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=artemis package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_artemis_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build /usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/debug/lib*"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/build_artemis_x86.tar.gz
   build-apulu-x86:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apulu package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apulu_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apulu package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apulu_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build /usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/debug/lib*"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/build_apulu_x86.tar.gz

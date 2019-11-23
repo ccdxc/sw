@@ -20,6 +20,13 @@ if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
 
+function finish {
+   echo "===== Collecting logs ====="
+   ${NICDIR}/apollo/test/tools/savelogs.sh
+   rm -f ${NICDIR}/conf/pipeline.json
+}
+trap finish EXIT
+
 rm -f $NICDIR/conf/pipeline.json
 ln -s $NICDIR/conf/apulu/pipeline.json $NICDIR/conf/pipeline.json
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"

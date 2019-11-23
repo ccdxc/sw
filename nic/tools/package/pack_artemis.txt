@@ -187,7 +187,6 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevice.so                        /nic/lib/
-
 nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
 
 # platform config files
@@ -232,6 +231,18 @@ nic/sdk/third-party/vpp-pkg/$ARCH/lib/vpp_plugins/dpdk_plugin.so  /nic/lib/vpp_p
 nic/vpp/tools/start-vpp.sh                                        /nic/tools/
 nic/vpp/conf/*                                                    /nic/conf/vpp/
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so                          /nic/lib/libnuma.so.1
+
+# Metaswitch
+nic/third-party/metaswitch/output/$ARCH/debug/libsi.so            /nic/lib/
+nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
+nic/third-party/libxml2/$ARCH/lib/libxml2.so.2                    /nic/lib/
+nic/third-party/liblzma/$ARCH/lib/liblzma.so.5                    /nic/lib/
+nic/third-party/libicuuc/$ARCH/lib/libicuuc.so.60                 /nic/lib/
+nic/third-party/libicuuc/$ARCH/lib/libicudata.so.60               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsahals.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsacommon.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsamgmt.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsastubs.so                     /nic/lib/
 
 # cronjobs
 nic/conf/$PIPELINE/crontabs/root                                  /nic/conf/$PIPELINE/crontabs/

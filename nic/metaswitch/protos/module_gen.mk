@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = pdsgen.proto
-MODULE_PIPELINE     = apulu
+MODULE_PIPELINE     = apollo artemis apulu
 MODULE_GEN_TYPES    = PY CC PDSAMGMT PDSASVC
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic/${MODULE_DIR} \

@@ -17,6 +17,13 @@ if [[ "$1" ==  --cfg ]]; then
     cfgfile=$2
 fi
 
+function finish {
+   echo "===== Collecting logs ====="
+   ${NICDIR}/apollo/test/tools/savelogs.sh
+   rm -f ${NICDIR}/conf/pipeline.json
+}
+trap finish EXIT
+
 export PATH=${PATH}:${BUILD_DIR}/bin
 rm -f $NICDIR/conf/pipeline.json
 ln -s $NICDIR/conf/apulu/pipeline.json $NICDIR/conf/pipeline.json

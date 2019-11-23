@@ -3,5 +3,5 @@
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
 MODULE_TARGET   = metaswitch.submake
-MODULE_PIPELINE = apulu
+MODULE_PIPELINE = apollo artemis apulu
 include ${MKDEFS}/post.mk

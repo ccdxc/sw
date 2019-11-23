@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := annotateproto.submake
-MODULE_PIPELINE := apulu iris
+MODULE_PIPELINE := apollo apulu artemis iris
 include ${MKDEFS}/post.mk

@@ -65,9 +65,10 @@ naples_container_startup_script = nic_dir + "/sim/naples/start-naples-docker.sh"
 
 lock_file = nic_dir + "/.run.pid"
 
+ms_libs = nic_dir + "/third-party/metaswitch/output/x86_64/debug/"
 # Environment
 
-os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
+os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin:" + ms_libs
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 #Path and executables

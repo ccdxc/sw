@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET        = libpdsgenproto.so
-MODULE_PIPELINE      = apulu
+MODULE_PIPELINE      = apollo artemis apulu
 MODULE_INCS          = /usr/local/include \
                        ${TOPDIR}/nic/hal/third-party/google/include \
                        ${BLD_PROTOGEN_DIR}

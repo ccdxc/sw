@@ -12,13 +12,17 @@
 #include "nic/apollo/agent/core/cmd.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace core {
 
+//TODO: Move these to global store
 static sdk::event_thread::event_thread *g_cmd_server_thread;
+static sdk::lib::thread *g_routing_thread;
+sdk_ret_t spawn_routing_thread(void);
 
 #define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
@@ -53,6 +57,9 @@ pds_sig_handler (int sig, siginfo_t *info, void *ptr)
         break;
 
     case SIGUSR1:
+        spawn_routing_thread();
+        break;
+
     case SIGUSR2:
     case SIGHUP:
     case SIGCHLD:
@@ -245,6 +252,28 @@ spawn_cmd_server_thread (void)
 }
 
 //------------------------------------------------------------------------------
+// spawn thread for metaswitch control plane stack
+//------------------------------------------------------------------------------
+sdk_ret_t
+spawn_routing_thread (void)
+{
+    // spawn control plane routing thread
+    g_routing_thread =
+        sdk::lib::thread::factory(
+            "routing", THREAD_ID_AGENT_ROUTING, sdk::lib::THREAD_ROLE_CONTROL,
+            0x0, &pdsa_stub::pdsa_thread_init,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            false);
+
+    SDK_ASSERT_TRACE_RETURN((g_routing_thread != NULL), SDK_RET_ERR,
+                            "Routing thread create failure");
+    g_routing_thread->start(g_routing_thread);
+
+    return SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
@@ -274,6 +303,15 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    
+    // spawn metaswitch control plane thread
+    // TODO: Triggerred from sig handler for now
+#if 0
+    ret = spawn_routing_thread();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#endif
 
     if (std::getenv("PDS_MOCK_MODE")) {
         agent_state::state()->pds_mock_mode_set(true);

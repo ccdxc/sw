@@ -46,7 +46,7 @@ copy_files() {
         protobuf+='venice/utils/log venice/utils/testenv '
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '
         protobuf+='nic/third-party/gflags/include nic/hal/third-party/openssl/include '
-        protobuf+='nic/third-party/libz/include nic/third-party/liblmdb/include '
+        protobuf+='nic/third-party/libz nic/third-party/liblmdb/include '
         protobuf+='bin/upx '
         mkdir -p $DST/proto_bin
         cp -r /usr/bin/proto* $DST/proto_bin
@@ -57,7 +57,9 @@ copy_files() {
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 
-    files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf"
+    metaswitch='nic/metaswitch nic/third-party/metaswitch nic/third-party/libxml2 nic/third-party/libicuuc nic/third-party/liblzma nic/third-party/libz '
+
+    files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf $metaswitch"
 
 
     cd /sw
