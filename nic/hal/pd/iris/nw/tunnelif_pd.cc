@@ -382,8 +382,10 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
         
         // Program LIF policers
         ret = pd_tunnelif_update_lif_policers(pd_tunnelif, false);
+#if 0
         if (ret != HAL_RET_OK)
             goto fail_flag;
+#endif
         
     }
 

@@ -800,7 +800,7 @@ void DelphiClient::reconnectTimerHandler(ev::timer &watcher, int revents) {
     // connect to server
     error err = this->mclient_->Connect();
     if (err.IsNotOK()) {
-        LogInfo("Error({}) connecting to hub. Will try again", err);
+        // LogInfo("Error({}) connecting to hub. Will try again", err);
         return;
     }
 

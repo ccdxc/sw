@@ -637,8 +637,21 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // For SWM lif, no need of qstate
     if (lif->type == types::LIF_TYPE_SWM) {
-        lif_info.with_hw_lif_id = 1;
-        lif_info.hw_lif_id = lif_hal_info->hw_lif_id;
+        if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
+            lif_info.with_hw_lif_id = 1;
+            lif_info.hw_lif_id = lif_hal_info->hw_lif_id;
+        } else {
+            // Only for MBT
+            // DOL
+            sret = lif_manager()->alloc_id(&hw_lif_id, 1);
+            if (sret != SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
+                ret = HAL_RET_NO_RESOURCE;
+                goto end;
+            }
+            lif_info.with_hw_lif_id = 1;
+            lif_info.hw_lif_id = hw_lif_id;
+        }
     } else {
         /*
          * Who creates LIFs:
