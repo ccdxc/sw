@@ -57,6 +57,7 @@ typedef uint32_t    pds_policer_id_t;          ///< policer id
 typedef uint32_t    pds_dhcp_relay_agent_id_t; ///< DHCP relay agent id
 typedef uint32_t    pds_dhcp_policy_id_t;      ///< DHCP policy id
 typedef uint32_t    pds_nat_port_block_id_t;   ///< NAT port block id
+typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface

@@ -29,6 +29,7 @@
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
@@ -694,6 +695,110 @@ pds_meter_debug_stats_to_proto (pds_meter_debug_stats_t *stats, void *ctxt)
     proto_stats->set_statsindex(stats->idx);
     proto_stats->set_rxbytes(stats->rx_bytes);
     proto_stats->set_txbytes(stats->tx_bytes);
+}
+
+static inline pds::PolicerDir
+pds_policer_dir_api_spec_to_proto (pds_policer_dir_t dir)
+{
+    switch (dir) {
+    case PDS_POLICER_DIR_INGRESS:
+        return pds::POLICER_DIR_INGRESS;
+    case PDS_POLICER_DIR_EGRESS:
+        return pds::POLICER_DIR_EGRESS;
+    default:
+        return pds::POLICER_DIR_NONE;
+    }
+}
+
+static inline pds_policer_dir_t
+pds_policer_dir_proto_to_api_spec (pds::PolicerDir dir)
+{
+    switch (dir) {
+    case pds::POLICER_DIR_INGRESS:
+        return PDS_POLICER_DIR_INGRESS;
+    case pds::POLICER_DIR_EGRESS:
+        return PDS_POLICER_DIR_EGRESS;
+    default:
+        return PDS_POLICER_DIR_NONE;
+    }
+}
+
+// build policer api spec from proto buf spec
+static inline sdk_ret_t
+pds_policer_proto_to_api_spec (pds_policer_spec_t *api_spec,
+                               const pds::PolicerSpec &proto_spec)
+{
+    api_spec->key.id = proto_spec.id();
+    api_spec->dir = pds_policer_dir_proto_to_api_spec(proto_spec.direction());
+    if (proto_spec.has_ppspolicer()) {
+        api_spec->type = sdk::POLICER_TYPE_PPS;
+        api_spec->pps = proto_spec.ppspolicer().packetspersecond();
+        api_spec->pps_burst = proto_spec.ppspolicer().burst();
+    } else if (proto_spec.has_bpspolicer()) {
+        api_spec->type = sdk::POLICER_TYPE_BPS;
+        api_spec->bps = proto_spec.bpspolicer().bytespersecond();
+        api_spec->bps_burst = proto_spec.bpspolicer().burst();
+    }
+    return SDK_RET_OK;
+}
+
+// populate proto buf spec from policer API spec
+static inline void
+pds_policer_api_spec_to_proto (pds::PolicerSpec *proto_spec,
+                               const pds_policer_spec_t *api_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_direction(pds_policer_dir_api_spec_to_proto(api_spec->dir));
+    switch (api_spec->type) {
+    case sdk::POLICER_TYPE_PPS:
+        {
+            auto pps = proto_spec->mutable_ppspolicer();
+            pps->set_packetspersecond(api_spec->pps);
+            pps->set_burst(api_spec->pps_burst);
+        }
+        break;
+    case sdk::POLICER_TYPE_BPS:
+        {
+            auto bps = proto_spec->mutable_bpspolicer();
+            bps->set_bytespersecond(api_spec->bps);
+            bps->set_burst(api_spec->bps_burst);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+// populate proto buf status from policer API status
+static inline void
+pds_policer_api_status_to_proto (pds::PolicerStatus *proto_status,
+                                 const pds_policer_status_t *api_status)
+{
+}
+
+// populate proto buf stats from policer API stats
+static inline void
+pds_policer_api_stats_to_proto (pds::PolicerStats *proto_stats,
+                                const pds_policer_stats_t *api_stats)
+{
+}
+
+// populate proto buf from policer API info
+static inline void
+pds_policer_api_info_to_proto (const pds_policer_info_t *api_info, void *ctxt)
+{
+    pds::PolicerGetResponse *proto_rsp = (pds::PolicerGetResponse *)ctxt;
+    auto policer = proto_rsp->add_response();
+    pds::PolicerSpec *proto_spec = policer->mutable_spec();
+    pds::PolicerStatus *proto_status = policer->mutable_status();
+    pds::PolicerStats *proto_stats = policer->mutable_stats();
+
+    pds_policer_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_policer_api_status_to_proto(proto_status, &api_info->status);
+    pds_policer_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
 // build Meter api spec from proto buf spec
@@ -1853,6 +1958,84 @@ pds_policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
     pds_policy_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_policy_api_status_to_proto(proto_status, &api_info->status);
     pds_policy_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+// build policy API spec from protobuf spec
+static inline sdk_ret_t
+pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
+                                        const pds::SecurityProfileSpec &proto_spec)
+{
+    api_spec->id = proto_spec.id();
+    api_spec->conn_track_en = proto_spec.conntracken();
+    api_spec->default_action.fw_action.action =
+            pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
+    api_spec->tcp_idle_timeout = proto_spec.tcpidletimeout();
+    api_spec->udp_idle_timeout = proto_spec.udpidletimeout();
+    api_spec->icmp_idle_timeout = proto_spec.icmpidletimeout();
+    api_spec->other_idle_timeout = proto_spec.otheridletimeout();
+    api_spec->tcp_syn_timeout = proto_spec.tcpcnxnsetuptimeout();
+    api_spec->tcp_halfclose_timeout = proto_spec.tcphalfclosetimeout();
+    api_spec->tcp_close_timeout = proto_spec.tcpclosetimeout();
+    api_spec->tcp_drop_timeout = proto_spec.tcpdroptimeout();
+    api_spec->udp_drop_timeout = proto_spec.udpdroptimeout();
+    api_spec->icmp_drop_timeout = proto_spec.icmpdroptimeout();
+    api_spec->other_drop_timeout = proto_spec.otherdroptimeout();
+    return SDK_RET_OK;
+}
+
+// populate proto buf spec from security profile API spec
+static inline void
+pds_security_profile_api_spec_to_proto (pds::SecurityProfileSpec *proto_spec,
+                                        const pds_security_profile_spec_t *api_spec)
+{
+    if (!api_spec || !proto_spec) {
+        return;
+    }
+
+    proto_spec->set_id(api_spec->id);
+    proto_spec->set_conntracken(api_spec->conn_track_en);
+    proto_spec->set_defaultfwaction(
+            pds_rule_action_to_proto_action((rule_action_data_t *)&api_spec->default_action));
+    proto_spec->set_tcpidletimeout(api_spec->tcp_idle_timeout);
+    proto_spec->set_udpidletimeout(api_spec->udp_idle_timeout);
+    proto_spec->set_icmpidletimeout(api_spec->icmp_idle_timeout);
+    proto_spec->set_otheridletimeout(api_spec->other_idle_timeout);
+    proto_spec->set_tcpcnxnsetuptimeout(api_spec->tcp_syn_timeout);
+    proto_spec->set_tcphalfclosetimeout(api_spec->tcp_halfclose_timeout);
+    proto_spec->set_tcpclosetimeout(api_spec->tcp_close_timeout);
+    proto_spec->set_tcpdroptimeout(api_spec->tcp_drop_timeout);
+    proto_spec->set_udpdroptimeout(api_spec->udp_drop_timeout);
+    proto_spec->set_icmpdroptimeout(api_spec->icmp_drop_timeout);
+    proto_spec->set_otherdroptimeout(api_spec->other_drop_timeout);
+}
+
+// populate proto buf status from security profile API status
+static inline void
+pds_security_profile_api_status_to_proto (pds::SecurityProfileStatus *proto_status,
+                                          const pds_security_profile_status_t *api_status)
+{
+}
+
+// populate proto buf stats from security profile API stats
+static inline void
+pds_security_profile_api_stats_to_proto (pds::SecurityProfileStats *proto_stats,
+                                         const pds_security_profile_stats_t *api_stats)
+{
+}
+
+// populate proto buf from security profile API info
+static inline void
+pds_security_profile_api_info_to_proto (const pds_security_profile_info_t *api_info, void *ctxt)
+{
+    pds::SecurityProfileGetResponse *proto_rsp = (pds::SecurityProfileGetResponse *)ctxt;
+    auto profile = proto_rsp->add_response();
+    pds::SecurityProfileSpec *proto_spec = profile->mutable_spec();
+    pds::SecurityProfileStatus *proto_status = profile->mutable_status();
+    pds::SecurityProfileStats *proto_stats = profile->mutable_stats();
+
+    pds_security_profile_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_security_profile_api_status_to_proto(proto_status, &api_info->status);
+    pds_security_profile_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
 static inline pds_nh_type_t
