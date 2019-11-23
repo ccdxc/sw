@@ -393,7 +393,7 @@ catalog::populate_clock_info (ptree &prop_tree)
     for (ptree::value_type &clock_info : prop_tree.get_child("clock_info")) {
          if (num_freq < MAX_CLOCK_FREQ) {
              catalog_db_.clock_info[num_freq].clock_freq = clock_info.second.get<uint16_t>("freq", 0);
-             catalog_db_.clock_info[num_freq].clock_multiplier = clock_info.second.get<uint16_t>("multiplier", 0);
+             catalog_db_.clock_info[num_freq].clock_multiplier = clock_info.second.get<uint32_t>("multiplier", 0);
              num_freq += 1;
           }
     }

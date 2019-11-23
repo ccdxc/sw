@@ -113,7 +113,10 @@ def VerifyTimeStamp(command):
                tdelta = g_time-pkttimestamp
             else:
                tdelta = pkttimestamp-g_time
-            if (tdelta.seconds != 0 or tdelta.days != 0):
+            #Its pretty hard to comapare the time the actual packet
+            #was sent to when the comparator is obtained. May be execute
+            #date in naples might help
+            if (tdelta.seconds > 59 or tdelta.days != 0):
                 result = api.types.status.FAILURE
             api.Logger.info("Timestamp delta: %s" %(tdelta))
     if spanpktsfound == False:
