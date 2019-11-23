@@ -830,7 +830,7 @@ static int ionic_tx_pkt_frags(struct queue *q,
         struct txq_sg_desc *sg_desc = q->head->sg_desc;
         struct txq_sg_elem *elem = sg_desc->elems;
         dma_addr_t dma_addr;
-        vmk_uint32 i, nr_frags = ctx->nr_frags;
+        vmk_uint32 i, sg_elem_len, nr_frags = ctx->nr_frags;
 
         VMK_ASSERT(len_left >= 0);
 
@@ -843,7 +843,8 @@ static int ionic_tx_pkt_frags(struct queue *q,
                         goto map_err;
                 }
 
-                dma_addr = ionic_tx_map_frag(q, sg_elem, 0, sg_elem->length);
+                sg_elem_len = IONIC_MIN(sg_elem->length, len_left);
+                dma_addr = ionic_tx_map_frag(q, sg_elem, 0, sg_elem_len);
                 if (VMK_UNLIKELY(!dma_addr)) {
                         ionic_en_err("ionic_tx_map_frag() failed, status: "
                                   "VMK_NO_MEMORY");
@@ -852,7 +853,7 @@ static int ionic_tx_pkt_frags(struct queue *q,
                         goto map_err;
                 }
 
-                elem->len = sg_elem->length;
+                elem->len = sg_elem_len;
                 elem->addr = dma_addr;
                 len_left -= elem->len;
 
