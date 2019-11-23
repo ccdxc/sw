@@ -48,7 +48,7 @@ tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
 
-    ret = tep_impl_db()->tep_idxr()->alloc(&idx);
+    ret = tep_impl_db()->tunnel_idxr()->alloc(&idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in TEP table for TEP %s, err %u",
                       api_obj->key2str().c_str(), ret);
@@ -61,7 +61,7 @@ tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
     if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->tep_idxr()->free(hw_id_);
+        tep_impl_db()->tunnel_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
 }
@@ -69,7 +69,7 @@ tep_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 tep_impl::nuke_resources(api_base *api_obj) {
     if (hw_id_ != 0xFFFF) {
-        tep_impl_db()->tep_idxr()->free(hw_id_);
+        tep_impl_db()->tunnel_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
 }

@@ -22,25 +22,25 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
 
 #define PDS_TRACE_ERR(fmt, ...)                                           \
 {                                                                         \
-    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%d] "                  \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%u] "                  \
                fmt, __func__, __LINE__, ##__VA_ARGS__);                   \
 }
 
 #define PDS_TRACE_WARN(fmt, ...)                                          \
 {                                                                         \
-    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_WARN, "[%s:%d] "                 \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_WARN, "[%s:%u] "                 \
                fmt, __func__, __LINE__, ##__VA_ARGS__);                   \
 }
 
 #define PDS_TRACE_INFO(fmt, ...)                                          \
 {                                                                         \
-    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_INFO, "[%s:%d] "                 \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_INFO, "[%s:%u] "                 \
                fmt, __func__, __LINE__,  ##__VA_ARGS__);                  \
 }
 
 #define PDS_TRACE_DEBUG(fmt, ...)                                         \
 {                                                                         \
-    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_DEBUG, "[%s:%d] "                \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_DEBUG, "[%s:%u] "                \
                fmt, __func__, __LINE__, ##__VA_ARGS__);                   \
 }
 
@@ -51,7 +51,7 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
 
 #define PDS_TRACE_VERBOSE(fmt, ...)                                       \
 {                                                                         \
-    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_VERBOSE, "[%s:%d] "              \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_VERBOSE, "[%s:%u] "              \
                fmt, __func__, __LINE__, ##__VA_ARGS__);                   \
 }
 
