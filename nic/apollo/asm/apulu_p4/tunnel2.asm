@@ -41,8 +41,6 @@ struct phv_         p;
 */
 
 tunnel2_info:
-    phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
-                        d.{tunnel2_info_d.dmaco,tunnel2_info_d.smaco}
     add             r7, r0, k.capri_p4_intrinsic_packet_len
     bbeq            d.tunnel2_info_d.ip_type, IPTYPE_IPV6, tunnel2_ipv6_encap
     sne             c7, d.tunnel2_info_d.vlan, r0

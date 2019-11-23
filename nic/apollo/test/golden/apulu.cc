@@ -807,8 +807,6 @@ tunnel2_init (void)
 
     memset(&data, 0, sizeof(data));
     memcpy(tunnel2_info->dipo, &g_dipo4, 4);
-    memcpy(tunnel2_info->dmaco, &g_dmaco1, 6);
-    memcpy(tunnel2_info->smaco, &g_device_mac, 6);
     tunnel2_info->ip_type = IPTYPE_IPV4;
     entry_write(tbl_id, g_tunnel2_id4, 0, 0, &data, false, 0);
 }

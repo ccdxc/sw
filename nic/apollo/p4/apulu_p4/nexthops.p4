@@ -116,6 +116,9 @@ action ipv4_vxlan_encap(dmac, smac) {
     modify_field(ethernet_0.srcAddr, smac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
 
+    modify_field(ethernet_00.dstAddr, dmac);
+    modify_field(ethernet_00.srcAddr, smac);
+
     modify_field(ipv4_0.version, 4);
     modify_field(ipv4_0.ihl, 5);
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
@@ -161,6 +164,9 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(ethernet_0.dstAddr, dmac);
     modify_field(ethernet_0.srcAddr, smac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
+
+    modify_field(ethernet_00.dstAddr, dmac);
+    modify_field(ethernet_00.srcAddr, smac);
 
     modify_field(ipv6_0.version, 6);
     modify_field(ipv6_0.payloadLen, scratch_metadata.ip_totallen);
@@ -263,7 +269,7 @@ table nexthop {
 /******************************************************************************
  * Tunnel 2
  *****************************************************************************/
-action tunnel2_ipv4_encap(vlan, dmac, smac, dipo) {
+action tunnel2_ipv4_encap(vlan, dipo) {
     // remove inner ethernet header
     remove_header(ethernet_0);
 
@@ -278,9 +284,6 @@ action tunnel2_ipv4_encap(vlan, dmac, smac, dipo) {
     // 8 bytes of UDP header, 4 bytes of MPLS header, 20 bytes of IP header
     // -14 bytes of inner Ethernet header
     add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 4 - 14);
-
-    modify_field(ethernet_00.dstAddr, dmac);
-    modify_field(ethernet_00.srcAddr, smac);
 
     modify_field(ipv4_00.version, 4);
     modify_field(ipv4_00.ihl, 5);
@@ -314,7 +317,7 @@ action tunnel2_ipv4_encap(vlan, dmac, smac, dipo) {
     }
 }
 
-action tunnel2_ipv6_encap(vlan, dmac, smac, dipo) {
+action tunnel2_ipv6_encap(vlan, dipo) {
     // remove inner ethernet header
     remove_header(ethernet_0);
 
@@ -329,9 +332,6 @@ action tunnel2_ipv6_encap(vlan, dmac, smac, dipo) {
     // 8 bytes of UDP header, 4 bytes of MPLS header,
     // -14 bytes of inner Ethernet header
     add_to_field(scratch_metadata.ip_totallen, 8 + 4 - 14);
-
-    modify_field(ethernet_00.dstAddr, dmac);
-    modify_field(ethernet_00.srcAddr, smac);
 
     modify_field(ipv6_00.version, 6);
     modify_field(ipv6_00.payloadLen, scratch_metadata.ip_totallen);
@@ -366,12 +366,12 @@ action tunnel2_ipv6_encap(vlan, dmac, smac, dipo) {
     }
 }
 
-action tunnel2_info(vlan, dmaco, smaco, dipo, ip_type) {
+action tunnel2_info(dipo, ip_type, vlan) {
     modify_field(scratch_metadata.flag, ip_type);
     if (ip_type == IPTYPE_IPV4) {
-        tunnel2_ipv4_encap(vlan, dmaco, smaco, dipo);
+        tunnel2_ipv4_encap(vlan, dipo);
     } else {
-        tunnel2_ipv6_encap(vlan, dmaco, smaco, dipo);
+        tunnel2_ipv6_encap(vlan, dipo);
     }
 }
 

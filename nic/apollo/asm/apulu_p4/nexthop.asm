@@ -60,8 +60,10 @@ vxlan_encap:
     seq             c1, k.ctag_1_valid, TRUE
     sub.c1          r1, r1, 4
     phvwr.c1        p.ethernet_1_etherType, k.ctag_1_etherType
-    phvwr           p.ethernet_0_dstAddr, d.nexthop_info_d.dmaco
-    phvwr           p.ethernet_0_srcAddr, d.nexthop_info_d.smaco
+    phvwr           p.{ethernet_0_dstAddr,ethernet_0_srcAddr}, \
+                        d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
+    phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
+                        d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_VNI_BITS], \
                         TX_REWRITE_VNI_FROM_TUNNEL
     cmov            r7, c1, k.rewrite_metadata_tunnel_vni, \
