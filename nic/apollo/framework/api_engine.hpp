@@ -121,6 +121,19 @@ typedef struct api_batch_ctxt_s {
     dep_obj_list_t          dep_obj_list;    ///< dependent object list
 } api_batch_ctxt_t;
 
+/// \brief API counters maintained by API engine
+typedef struct api_counters_s {
+    struct {
+        struct {
+            uint64_t ok;
+            uint64_t oom_err;
+            uint64_t init_cfg_err;
+            uint64_t obj_exists_err;
+            uint64_t invalid_op_err;
+        } create;
+    } preprocess;
+} api_counters_t;
+
 /// \brief Encapsulation for all API processing framework
 class api_engine {
 public:
@@ -313,6 +326,7 @@ private:
     };
     api_batch_ctxt_t    batch_ctxt_;
     slab                *api_params_slab_;
+    api_counters_t      counters_;
 };
 
 /// \brief    initialize the API engine

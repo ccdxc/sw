@@ -17,6 +17,9 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 
+#define PDS_API_PREPROCESS_CREATE_COUNTER_INC(cntr_, val)    \
+            counters_.preprocess.create.cntr_ += (val)
+
 namespace api {
 
 static slab *g_api_ctxt_slab_ = NULL;
@@ -79,6 +82,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         api_obj = api_base::factory(api_ctxt);
         if (unlikely(api_obj == NULL)) {
             batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(oom_err, 1);
             return SDK_RET_ERR;
         }
         PDS_TRACE_VERBOSE("allocated api obj %p, api op %u, obj id %u",
@@ -90,7 +94,8 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         add_to_dirty_list_(api_obj, obj_ctxt);
         // initialize the object with the given config
         ret = api_obj->init_config(api_ctxt);
-        if (ret != SDK_RET_OK) {
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
             PDS_TRACE_ERR("Config initialization failed for obj id %u, "
                           "api op %u, err %u", api_ctxt->obj_id,
                           api_ctxt->api_op, ret);
@@ -101,26 +106,30 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         // this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want
         // to support idempotency)
-        if (api_obj->in_dirty_list() == false) {
+        if (unlikely(api_obj->in_dirty_list() == false)) {
             // attemping a CREATED on already created object
-            PDS_TRACE_ERR("Creating an obj already created, obj %s",
+            PDS_TRACE_ERR("Creating an obj that exists already, obj %s",
                           api_obj->key2str().c_str());
-            return SDK_RET_INVALID_OP;
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(obj_exists_err, 1);
+            return SDK_RET_ENTRY_EXISTS;
         }
         obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-        if ((octxt.api_op != API_OP_NONE) &&
-            (octxt.api_op != API_OP_DELETE)) {
+        if (unlikely((octxt.api_op != API_OP_NONE) &&
+                     (octxt.api_op != API_OP_DELETE))) {
             // only API_OP_NONE and API_OP_DELETE are expected in current state
             // in the dirty obj map
-            PDS_TRACE_ERR("Unexpected outstanding api op %u for obj id %u in "
-                          "dirty list to process api op %u", octxt.api_op,
-                          api_ctxt->obj_id, api_ctxt->api_op);
+            PDS_TRACE_ERR("Invalid CREATE operation on obj %s, id %u with "
+                          "outstanding api op %u", api_obj->key2str().c_str(),
+                          api_ctxt->obj_id, octxt.api_op);
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
             return SDK_RET_INVALID_OP;
         }
         octxt.api_op = api_op_(octxt.api_op, API_OP_CREATE);
-        if (octxt.api_op == API_OP_INVALID) {
-            PDS_TRACE_ERR("Invalid resultant api op on obj id %u with "
-                          "API_OP_CREATE", api_ctxt->obj_id);
+        if (unlikely(octxt.api_op == API_OP_INVALID)) {
+            PDS_TRACE_ERR("Invalid resultant api op on obj %s id %u with "
+                          "API_OP_CREATE", api_obj->key2str().c_str(),
+                          api_ctxt->obj_id);
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
             return SDK_RET_INVALID_OP;
         }
 
@@ -133,23 +142,57 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                 octxt.api_params = api_ctxt->api_params;
                 octxt.cloned_obj = api_obj->clone(api_ctxt);
                 ret = octxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    PDS_TRACE_ERR("Config initialization failed for obj %s, "
+                                  "id %u, api op %u, err %u",
+                                  api_obj->key2str().c_str(), api_ctxt->obj_id,
+                                  octxt.api_op, ret);
+                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+                    return ret;
+                }
             } else {
                 // ADD-XXX-DEL-XXX-ADD scenario, re-init same object
-                SDK_ASSERT(octxt.api_op == API_OP_CREATE);
+                if (unlikely(octxt.api_op != API_OP_CREATE)) {
+                    PDS_TRACE_ERR("Unexpected api op %u, obj %s, id %u, "
+                                  "expected CREATE", octxt.api_op,
+                                  api_obj->key2str().c_str(), api_ctxt->obj_id);
+                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
+                    return SDK_RET_INVALID_OP;
+                }
                 octxt.api_params = api_ctxt->api_params;
                 ret = api_obj->init_config(api_ctxt);
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    PDS_TRACE_ERR("Config initialization failed for obj %s, "
+                                  "id %u, api op %u, err %u",
+                                  api_obj->key2str().c_str(), api_ctxt->obj_id,
+                                  octxt.api_op, ret);
+                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+                    return ret;
+                }
             }
         } else {
             // UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg (if
             // we update original obj, we may not be able to abort later)
-            SDK_ASSERT(octxt.api_op == API_OP_UPDATE);
+            if (unlikely(octxt.api_op != API_OP_UPDATE)) {
+                PDS_TRACE_ERR("Unexpected api op %u, obj %s, id %u, "
+                              "expected CREATE", octxt.api_op,
+                              api_obj->key2str().c_str(), api_ctxt->obj_id);
+                PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
+                return SDK_RET_INVALID_OP;
+            }
             octxt.api_params = api_ctxt->api_params;
             ret = octxt.cloned_obj->init_config(api_ctxt);
-            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Config initialization failed for obj %s, "
+                              "id %u, api op %u, err %u",
+                              api_obj->key2str().c_str(), api_ctxt->obj_id,
+                              octxt.api_op, ret);
+                PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+                return ret;
+            }
         }
     }
+    PDS_API_PREPROCESS_CREATE_COUNTER_INC(ok, 1);
     return ret;
 }
 
@@ -673,6 +716,51 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 }
 
 sdk_ret_t
+api_engine::batch_abort_(void) {
+    sdk_ret_t                     ret;
+    dirty_obj_list_t::iterator    next_it;
+    obj_ctxt_t                    octxt;
+
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
+                      sdk::SDK_RET_INVALID_ARG);
+
+    PDS_TRACE_INFO("Starting rollback config stage");
+    for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
+         it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
+        next_it++;
+        octxt = batch_ctxt_.dirty_obj_map[*it];
+        ret = rollback_config_(it, *it, &octxt);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+    PDS_TRACE_INFO("Finished rollback config stage");
+
+    // clear all batch related info
+    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
+    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+
+    // walk dirty object map/list & release all stateless object memory
+    PDS_TRACE_INFO("Clearing dirty object map/list ...");
+#if 0
+    // TODO: handle stateless case inside rollback_config_() itself
+    //       (similar to activate_config_())
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ) {
+        api_obj = it->first;
+        if (api_obj->stateless()) {
+            // destroy this object as it is not needed anymore
+            api_obj->delay_delete();
+        }
+        batch_ctxt_.dirty_obj_list.erase(it++);
+    }
+#endif
+    batch_ctxt_.dirty_obj_map.clear();
+    batch_ctxt_.dirty_obj_list.clear();
+    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 api_engine::batch_commit(batch_info_t *batch) {
     sdk_ret_t    ret;
 
@@ -682,12 +770,11 @@ api_engine::batch_commit(batch_info_t *batch) {
 
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
-    PDS_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts->size());
-    PDS_TRACE_INFO("Starting pre-process stage for epoch %u",
-                   batch_ctxt_.epoch);
+    PDS_TRACE_INFO("Preprocess stage start, epoch %u, API count %u",
+                   batch_ctxt_.epoch,  batch_ctxt_.api_ctxts->size());
     ret = pre_process_stage_();
-    PDS_TRACE_INFO("Finished pre-process stage for epoch %u",
-                   batch_ctxt_.epoch);
+    PDS_TRACE_INFO("Preprocess stage end, epoch %u, result %u",
+                   batch_ctxt_.epoch, ret);
     if (ret != SDK_RET_OK) {
         goto error;
     }
@@ -766,51 +853,6 @@ error:
 
     batch_abort_();
     return ret;
-}
-
-sdk_ret_t
-api_engine::batch_abort_(void) {
-    sdk_ret_t                     ret;
-    dirty_obj_list_t::iterator    next_it;
-    obj_ctxt_t                    octxt;
-
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
-                      sdk::SDK_RET_INVALID_ARG);
-
-    PDS_TRACE_INFO("Starting rollback config stage");
-    for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
-         it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
-        next_it++;
-        octxt = batch_ctxt_.dirty_obj_map[*it];
-        ret = rollback_config_(it, *it, &octxt);
-        SDK_ASSERT(ret == SDK_RET_OK);
-    }
-    PDS_TRACE_INFO("Finished rollback config stage");
-
-    // clear all batch related info
-    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
-    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-
-    // walk dirty object map/list & release all stateless object memory
-    PDS_TRACE_INFO("Clearing dirty object map/list ...");
-#if 0
-    // TODO: handle stateless case inside rollback_config_() itself
-    //       (similar to activate_config_())
-    for (auto it = batch_ctxt_.dirty_obj_list.begin();
-         it != batch_ctxt_.dirty_obj_list.end(); ) {
-        api_obj = it->first;
-        if (api_obj->stateless()) {
-            // destroy this object as it is not needed anymore
-            api_obj->delay_delete();
-        }
-        batch_ctxt_.dirty_obj_list.erase(it++);
-    }
-#endif
-    batch_ctxt_.dirty_obj_map.clear();
-    batch_ctxt_.dirty_obj_list.clear();
-    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
-
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
