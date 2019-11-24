@@ -105,8 +105,7 @@ class MeterRuleObject(base.ConfigObjectBase):
 
 class MeterObject(base.ConfigObjectBase):
     def __init__(self, parent, af, rules):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.METER)
         ################# PUBLIC ATTRIBUTES OF METER OBJECT #####################
         self.VPCId = parent.VPCId
         if af == utils.IP_VERSION_6:
@@ -128,10 +127,6 @@ class MeterObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         for rule in self.Rules:
             rule.Show()
-        return
-
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.METER
         return
 
     def PopulateKey(self, grpcmsg):
@@ -159,9 +154,9 @@ class MeterObject(base.ConfigObjectBase):
         return
 
 
-class MeterObjectClient:
+class MeterObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = []
+        super().__init__(api.ObjectTypes.METER, resmgr.MAX_METER)
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -170,18 +165,15 @@ class MeterObjectClient:
         self.__num_v6_meter_per_vpc = []
         return
 
-    def Objects(self):
-        return self.__objs
-
     def GetV4MeterId(self, vpcid):
-        if len(self.__objs):
+        if self.GetNumObjects():
             assert(len(self.__v4objs[vpcid]) != 0)
             return self.__v4iter[vpcid].rrnext().MeterId
         else:
             return 0
 
     def GetV6MeterId(self, vpcid):
-        if len(self.__objs):
+        if self.GetNumObjects():
             assert(len(self.__v6objs[vpcid]) != 0)
             return self.__v6iter[vpcid].rrnext().MeterId
         else:
@@ -204,7 +196,7 @@ class MeterObjectClient:
             self.__num_v6_meter_per_vpc.append(0)
             return
 
-        if utils.IsPipelineArtemis() == False:
+        if not utils.IsMeteringSupported():
             return
 
         def __add_specific_meter_prefixes(rulespec, af):
@@ -272,13 +264,13 @@ class MeterObjectClient:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_4)
                     obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                     self.__v4objs[vpcid].append(obj)
-                    self.__objs.append(obj)
+                    self.Objs.update({obj.MeterId: obj})
                     v4_count += len(rules)
                 if isV6Stack:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_6)
                     obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                     self.__v6objs[vpcid].append(obj)
-                    self.__objs.append(obj)
+                    self.Objs.update({obj.MeterId: obj})
                     v6_count += len(rules)
             else:
                 while c < meter.count:
@@ -286,13 +278,13 @@ class MeterObjectClient:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_4, c)
                         obj = MeterObject(parent, utils.IP_VERSION_4, rules)
                         self.__v4objs[vpcid].append(obj)
-                        self.__objs.append(obj)
+                        self.Objs.update({obj.MeterId: obj})
                         v4_count += len(rules)
                     if isV6Stack:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
                         obj = MeterObject(parent, utils.IP_VERSION_6, rules)
                         self.__v6objs[vpcid].append(obj)
-                        self.__objs.append(obj)
+                        self.Objs.update({obj.MeterId: obj})
                         v6_count += len(rules)
                     c += 1
 
@@ -304,21 +296,10 @@ class MeterObjectClient:
         self.__num_v6_meter_per_vpc.append(v6_count)
         return
 
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = meter_pb2.MeterGetRequest()
-        return grpcmsg
-
-    def CreateObjects(self):
-        if utils.IsPipelineArtemis():
-            cookie = utils.GetBatchCookie()
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
-            api.client.Create(api.ObjectTypes.METER, msgs)
-        return
-
     def ReadObjects(self):
-        if utils.IsPipelineArtemis():
-            msg = self.GetGrpcReadAllMessage()
-            api.client.Get(api.ObjectTypes.METER, [msg])
+        # TODO: Fix spec 2 proto in agent and enable validation
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(self.ObjType, [msg])
         return
 
 client = MeterObjectClient()

@@ -12,10 +12,9 @@ import apollo.config.objects.base as base
 
 class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, tunobj, ipversion, count):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.MAPPING)
 
-        ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         self.MappingId = next(resmgr.RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
@@ -68,10 +67,6 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.MAPPING
-        return
-
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
         key.IPKey.VPCId = self.SUBNET.VPC.VPCId
@@ -92,13 +87,10 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
 
-class RemoteMappingObjectClient:
+class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = []
+        super().__init__(api.ObjectTypes.MAPPING)
         return
-
-    def Objects(self):
-        return self.__objs
 
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
@@ -119,29 +111,14 @@ class RemoteMappingObjectClient:
                 tunobj = tunnelAllocator.rrnext()
                 if isV6Stack:
                     obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
-                    self.__objs.append(obj)
+                    self.Objs.update({obj.MappingId: obj})
                     c = c + 1
                     v6c = v6c + 1
                 if c < rmap_spec_obj.count and isV4Stack:
                     obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c)
-                    self.__objs.append(obj)
+                    self.Objs.update({obj.MappingId: obj})
                     c = c + 1
                     v4c = v4c + 1
-        return
-
-    def CreateObjects(self):
-        if len(self.__objs) == 0:
-            return
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
-        api.client.Create(api.ObjectTypes.MAPPING, msgs)
-        return
-
-    def ReadObjects(self):
-        if len(self.__objs) == 0:
-            return
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        api.client.Get(api.ObjectTypes.MAPPING, msgs)
         return
 
 client = RemoteMappingObjectClient()

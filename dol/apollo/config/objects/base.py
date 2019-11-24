@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-import yaml
 
 from infra.common.logging import logger
 import infra.config.base as base
@@ -22,10 +21,10 @@ class StatusObjectBase(base.StatusObjectBase):
         return self.HwId
 
 class ConfigObjectBase(base.ConfigObjectBase):
-    def __init__(self):
+    def __init__(self, objtype):
         super().__init__()
         self.deleted = False
-        self.ObjType = api.ObjectTypes.NONE
+        self.ObjType = objtype
         return
 
     def __get_GrpcMsg(self, op):
@@ -118,11 +117,23 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return grpcmsg
 
 class ConfigClientBase(base.ConfigClientBase):
-    def __init__(self, objtype):
+    def __init__(self, objtype, maxlimit=0):
         super().__init__()
         self.Objs = dict()
         self.ObjType = objtype
+        self.Maxlimit = maxlimit
         return
+
+    def IsValidConfig(self):
+        count = self.GetNumObjects()
+        if  count > self.Maxlimit:
+            return False, "%s count %d exceeds allowed limit of %d" % \
+                          (self.ObjType, count, self.Maxlimit)
+        return True, ""
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml: return spec['id']
+        return spec.Id
 
     def Objects(self):
         return self.Objs.values()
@@ -184,13 +195,13 @@ class ConfigClientBase(base.ConfigClientBase):
         # split output per object
         cmdop = stdout.split("---")
         for op in cmdop:
-            yamlOp = yaml.load(op, Loader=yaml.FullLoader)
+            yamlOp = utils.LoadYaml(op)
             if not yamlOp:
                 continue
-            key = yamlOp['spec']['id']
+            key = self.GetKeyfromSpec(yamlOp['spec'], yaml=True)
             cfgObj = self.GetObjectByKey(key)
             if not utils.ValidateObject(cfgObj, yamlOp, yaml=True):
-                logger.error("GRPC read validation failed for ", op)
+                logger.error("pdsctl read validation failed for ", op)
                 cfgObj.Show()
                 return False
         return True
@@ -204,6 +215,16 @@ class ConfigClientBase(base.ConfigClientBase):
         return
 
     def ReadObjects(self):
+        logger.info("Reading %s Objects" % (self.ObjType.name))
         self.GrpcRead()
         self.PdsctlRead()
+        return
+
+    def CreateObjects(self):
+        self.ShowObjects()
+        logger.info("Creating %s Objects in agent" % (self.ObjType.name))
+        cookie = utils.GetBatchCookie()
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+        api.client.Create(self.ObjType, msgs)
+        #TODO: Add validation for create
         return

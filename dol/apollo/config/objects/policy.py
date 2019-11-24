@@ -4,7 +4,6 @@ import copy
 import enum
 import ipaddress
 import random
-import sys
 
 from infra.common.logging import logger
 
@@ -108,8 +107,7 @@ class RuleObject:
 
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, vpcid, af, direction, rules, policytype, overlaptype, level='subnet'):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.POLICY)
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
         self.VPCId = vpcid
         self.Direction = direction
@@ -146,10 +144,6 @@ class PolicyObject(base.ConfigObjectBase):
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.policy.filters)
-
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.POLICY
-        return
 
     def FillRuleSpec(self, spec, rule):
         proto = 0
@@ -259,11 +253,11 @@ class PolicyObject(base.ConfigObjectBase):
             obj.tc_rule.Show()
         return
 
-class PolicyObjectClient:
+class PolicyObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             return True
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.POLICY, resmgr.MAX_POLICY)
         self.__v4ingressobjs = {}
         self.__v6ingressobjs = {}
         self.__v4egressobjs = {}
@@ -275,18 +269,12 @@ class PolicyObjectClient:
         self.__supported = __isObjSupported()
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
-    def IsValidConfig(self):
-        count = len(self.__objs.values())
-        if  count > resmgr.MAX_POLICY:
-            return False, "Policy count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_POLICY)
-        return True, ""
+    def PdsctlRead(self):
+        # pdsctl show not supported for policy
+        return
 
     def GetPolicyObject(self, policyid):
-        return self.__objs.get(policyid, None)
+        return self.GetObjectByKey(policyid)
 
     def ModifyPolicyRules(self, policyid, subnetobj):
         if utils.IsPipelineApollo():
@@ -369,7 +357,7 @@ class PolicyObjectClient:
             self.__v4ingressobjs[vpcid].append(obj)
         else:
             self.__v4egressobjs[vpcid].append(obj)
-        self.__objs.update({obj.PolicyId: obj})
+        self.Objs.update({obj.PolicyId: obj})
         return obj.PolicyId
 
     def Add_V6Policy(self, vpcid, direction, v6rules, policytype, overlaptype, level='subnet'):
@@ -378,7 +366,7 @@ class PolicyObjectClient:
             self.__v6ingressobjs[vpcid].append(obj)
         else:
             self.__v6egressobjs[vpcid].append(obj)
-        self.__objs.update({obj.PolicyId: obj})
+        self.Objs.update({obj.PolicyId: obj})
         return obj.PolicyId
 
     def Generate_Allow_All_Rules(self, spfx, dpfx):
@@ -678,7 +666,7 @@ class PolicyObjectClient:
                 self.__v4ingressobjs[vpcid].append(obj)
             else:
                 self.__v4egressobjs[vpcid].append(obj)
-            self.__objs.update({obj.PolicyId: obj})
+            self.Objs.update({obj.PolicyId: obj})
 
         def __add_v6policy(direction, v6rules, policytype, overlaptype):
             obj = PolicyObject(vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
@@ -686,7 +674,7 @@ class PolicyObjectClient:
                 self.__v6ingressobjs[vpcid].append(obj)
             else:
                 self.__v6egressobjs[vpcid].append(obj)
-            self.__objs.update({obj.PolicyId: obj})
+            self.Objs.update({obj.PolicyId: obj})
 
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
@@ -750,49 +738,6 @@ class PolicyObjectClient:
             self.__v6epolicyiter[vpcid] = utils.rrobiniter(self.__v6egressobjs[vpcid])
 
         return
-
-    def ShowObjects(self):
-        objs = self.__objs.values()
-        for obj in objs:
-            obj.Show()
-        return
-
-    def CreateObjects(self):
-        #Show before create as policy gets modified after GenerateObjects()
-        logger.info("Creating Policy Objects in agent")
-        self.ShowObjects()
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.POLICY, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = policy_pb2.SecurityPolicyGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.POLICY, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("Policy object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("Policy get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                policy = self.GetPolicyObject(spec.Id)
-                if not utils.ValidateObject(policy, resp):
-                    logger.error("Policy validation failed for ", obj)
-                    policy.Show()
-                    return False
-        return True
 
 client = PolicyObjectClient()
 

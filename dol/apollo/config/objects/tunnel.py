@@ -14,8 +14,7 @@ import tunnel_pb2 as tunnel_pb2
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, local):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.TUNNEL)
         self.__spec = spec
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
@@ -85,10 +84,6 @@ class TunnelObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.TUNNEL
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.Id)
         return
@@ -142,6 +137,11 @@ class TunnelObject(base.ConfigObjectBase):
                     return False
         return True
 
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.Id:
+            return False
+        return True
+
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
             return True
@@ -172,23 +172,13 @@ class TunnelObject(base.ConfigObjectBase):
             return True
         return False
 
-class TunnelObjectClient:
+class TunnelObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.TUNNEL, resmgr.MAX_TUNNEL)
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
     def GetTunnelObject(self, tunnelid):
-        return self.__objs.get(tunnelid, None)
-
-    def IsValidConfig(self):
-        count = len(self.__objs)
-        if  count > resmgr.MAX_TUNNEL:
-            return False, "Tunnel count %d exceeds allowed limit of %d" % \
-                          (count, resmgr.MAX_TUNNEL)
-        return True, ""
+        return self.GetObjectByKey(tunnelid)
 
     def AssociateObjects(self):
         logger.info("Filling nexthops")
@@ -227,49 +217,13 @@ class TunnelObjectClient:
                 continue
             for c in range(t.count):
                 obj = TunnelObject(parent, t, False)
-                self.__objs.update({obj.Id: obj})
+                self.Objs.update({obj.Id: obj})
         Store.SetTunnels(self.Objects())
         resmgr.CreateInternetTunnels()
         resmgr.CreateVnicTunnels()
         resmgr.CollectSvcTunnels()
         resmgr.CreateUnderlayTunnels()
         return
-
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.TUNNEL, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = tunnel_pb2.TunnelGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.TUNNEL, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("TUNNEL object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("TUNNEL get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                tunnel = self.GetTunnelObject(spec.Id)
-                if not utils.ValidateObject(tunnel, resp):
-                    logger.error("TUNNEL validation failed for ", obj)
-                    tunnel.Show()
-                    return False
-        return True
 
 client = TunnelObjectClient()
 

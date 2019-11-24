@@ -30,8 +30,7 @@ class TagRuleObject:
 
 class TagObject(base.ConfigObjectBase):
     def __init__(self, af, rules):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.TAG)
         ################# PUBLIC ATTRIBUTES OF TAG TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.TagTblId = next(resmgr.V6TagIdAllocator)
@@ -57,10 +56,6 @@ class TagObject(base.ConfigObjectBase):
             rule.Show()
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.TAG
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.TagTblId)
         return
@@ -78,28 +73,38 @@ class TagObject(base.ConfigObjectBase):
                 utils.GetRpcIPPrefix(prefix, tagprefix)
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.TagTblId:
+            return False
+        if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        return True
 
-class TagObjectClient:
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.TagTblId:
+            return False
+        if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        return True
+
+class TagObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.TAG, resmgr.MAX_TAG)
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
     def IsValidConfig(self):
         count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
-        if  count > resmgr.MAX_TAG:
+        if  count > self.Maxlimit:
             return False, "V4 Tag Table count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_TAG)
+                          (count, self.Maxlimit)
         count = sum(list(map(lambda x: len(x.values()), self.__v6objs.values())))
-        if  count > resmgr.MAX_TAG:
+        if  count > self.Maxlimit:
             return False, "V6 Tag Table count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_TAG)
+                          (count, self.Maxlimit)
         #TODO: check route table count equals subnet count in that VPC
         #TODO: check scale of routes per route table
         return True, ""
@@ -148,7 +153,7 @@ class TagObjectClient:
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
 
-        if utils.IsPipelineArtemis() == False:
+        if not utils.IsTagSupported():
             return
 
         def __get_adjacent_routes(base, count):
@@ -174,12 +179,12 @@ class TagObjectClient:
         def __add_v4tagtable(v4rules):
             obj = TagObject(utils.IP_VERSION_4, v4rules)
             self.__v4objs[vpcid].update({obj.TagTblId: obj})
-            self.__objs.update({obj.TagTblId: obj})
+            self.Objs.update({obj.TagTblId: obj})
 
         def __add_v6tagtable(v6rules):
             obj = TagObject(utils.IP_VERSION_6, v6rules)
             self.__v6objs[vpcid].update({obj.TagTblId: obj})
-            self.__objs.update({obj.TagTblId: obj})
+            self.Objs.update({obj.TagTblId: obj})
 
         def __get_user_specified_rules(rulesspec):
             rules = []
@@ -214,32 +219,14 @@ class TagObjectClient:
 
         if self.__v4objs[vpcid]:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
-
-    def ShowObjects(self):
-        objs = self.__objs.values()
-        for obj in objs:
-            obj.Show()
         return
 
-    def CreateObjects(self):
-        if utils.IsPipelineArtemis():
-            #Show before create as tag gets modified after GenerateObjects()
-            self.ShowObjects()
-            logger.info("Creating TAG Objects in agent")
-            cookie = utils.GetBatchCookie()
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-            api.client.Create(api.ObjectTypes.TAG, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = tags_pb2.TagGetRequest()
-        return grpcmsg
-
+    """
     def ReadObjects(self):
-        if utils.IsPipelineArtemis():
-            msg = self.GetGrpcReadAllMessage()
-            api.client.Get(api.ObjectTypes.TAG, [msg])
+        msg = self.GetGrpcReadAllMessage()
+        api.client.Get(self.ObjType, [msg])
         return
+    """
 
 client = TagObjectClient()
 

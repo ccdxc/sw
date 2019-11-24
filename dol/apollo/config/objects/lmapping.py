@@ -15,11 +15,10 @@ import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, ipversion, count):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.MAPPING)
 
         self.__is_public = getattr(spec, 'public', False)
-        ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF LOCAL MAPPING OBJECT ###########
         self.MappingId = next(resmgr.LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
         self.VNIC = parent
@@ -75,10 +74,6 @@ class LocalMappingObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.MAPPING
-        return
-
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
         key.VPCId = self.VNIC.SUBNET.VPC.VPCId
@@ -121,13 +116,10 @@ class LocalMappingObject(base.ConfigObjectBase):
         return grpcmsg
 
 
-class LocalMappingObjectClient:
+class LocalMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = []
+        super().__init__(api.ObjectTypes.MAPPING)
         return
-
-    def Objects(self):
-        return self.__objs
 
     def GenerateObjects(self, parent, vnic_spec_obj):
         isV4Stack = utils.IsV4Stack(parent.SUBNET.VPC.Stack)
@@ -138,32 +130,30 @@ class LocalMappingObjectClient:
         while c < vnic_spec_obj.ipcount:
             if isV6Stack:
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6, v6c)
-                self.__objs.append(obj)
+                self.Objs.update({obj.MappingId: obj})
                 c = c + 1
                 v6c = v6c + 1
             if c < vnic_spec_obj.ipcount and isV4Stack:
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4, v4c)
-                self.__objs.append(obj)
+                self.Objs.update({obj.MappingId: obj})
                 c = c + 1
                 v4c = v4c + 1
         return
 
     def CreateObjects(self):
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
-        api.client.Create(api.ObjectTypes.MAPPING, msgs)
+        super().CreateObjects()
 
-        if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.__objs))
+        if utils.IsServiceMappingSupported():
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects()))
             api.client.Create(api.ObjectTypes.SVCMAPPING, msgs)
         return
 
     def ReadObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        api.client.Get(api.ObjectTypes.MAPPING, msgs)
+        super().ReadObjects()
 
-        if utils.IsPipelineArtemis():
-            msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.__objs))
+        if utils.IsServiceMappingSupported():
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects()))
             api.client.Get(api.ObjectTypes.SVCMAPPING, msgs)
         return
 

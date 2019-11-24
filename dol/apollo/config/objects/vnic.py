@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import pdb
-import sys
 
 from infra.common.logging import logger
 
@@ -29,8 +28,7 @@ class VnicStatusObject(base.StatusObjectBase):
 
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.VNIC)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
@@ -101,10 +99,6 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.VNIC
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.VnicId.append(self.VnicId)
         return
@@ -168,6 +162,25 @@ class VnicObject(base.ConfigObjectBase):
         # TODO: validate policyid, policer
         return True
 
+    def ValidateYamlSpec(self, spec):
+        if spec['vnicid'] != self.VnicId:
+            return False
+        if utils.IsPipelineApulu():
+            if self.HostIf:
+                if spec['hostifindex'] != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                    return False
+        if spec['vpcid'] != self.SUBNET.VPC.VPCId:
+            return False
+        if spec['macaddress'] != self.MACAddr.getnum():
+            return False
+        if spec['sourceguardenable'] != self.SourceGuard:
+            return False
+        if spec['v4meterid'] != self.V4MeterId:
+            return False
+        if spec['v6meterid'] != self.V6MeterId:
+            return False
+        return True
+
     def GetStatus(self):
         return self.Status
 
@@ -186,28 +199,17 @@ class VnicObject(base.ConfigObjectBase):
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
 
-class VnicObjectClient:
+class VnicObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.VNIC, resmgr.MAX_VNIC)
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
-    def IsValidConfig(self):
-        count = len(self.__objs.values())
-        if  count > resmgr.MAX_VNIC:
-            return False, "VNIC count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_VNIC)
-        return True, ""
-
     def GetVnicObject(self, vnicid):
-        return self.__objs.get(vnicid, None)
+        return self.GetObjectByKey(vnicid)
 
-    def GetGrpcDeleteMessage(self):
-        grpcmsg = vnic_pb2.VnicDeleteRequest()
-        grpcmsg.VnicId.append(self.VnicId)
-        return grpcmsg
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml: return spec['vnicid']
+        return spec.VnicId
 
     def AssociateObjects(self):
         # generate security policies and associate with vnic
@@ -242,57 +244,14 @@ class VnicObjectClient:
                 rxmirror = __get_rxmirror(vnic_spec_obj)
                 txmirror = __get_txmirror(vnic_spec_obj)
                 obj = VnicObject(parent, vnic_spec_obj, rxmirror, txmirror)
-                self.__objs.update({obj.VnicId: obj})
-        return
-
-    def ShowObjects(self):
-        for obj in self.Objects():
-            obj.Show()
+                self.Objs.update({obj.VnicId: obj})
         return
 
     def CreateObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        logger.info("Creating Vnic Objects in agent")
-        self.ShowObjects()
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.VNIC, msgs)
+        super().CreateObjects()
         # Create Local Mapping Objects
         lmapping.client.CreateObjects()
         return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = vnic_pb2.VnicGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.VNIC, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("VNIC object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("VNIC get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                vnic = self.GetVnicObject(spec.VnicId)
-                if not utils.ValidateObject(vnic, resp):
-                    logger.error("VNIC validation failed for ", obj)
-                    vnic.Show()
-                    return False
-                # update hw id for this vnic object
-                vnic.Status.Update(resp.Status)
-        return True
 
 client = VnicObjectClient()
 

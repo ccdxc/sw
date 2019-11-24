@@ -17,12 +17,11 @@ import types_pb2 as types_pb2
 
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.DEVICE)
         self.GID("Device1")
 
         self.stack = getattr(spec, 'stack', 'ipv4')
-        ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF DEVICE OBJECT #####################
         self.Mode = getattr(spec, 'mode', 'auto')
         if self.Mode == 'auto':
             self.Mode = utils.GetDefaultDeviceMode()
@@ -35,7 +34,7 @@ class DeviceObject(base.ConfigObjectBase):
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
 
-        ################# PRIVATE ATTRIBUTES OF SWITCH OBJECT #####################
+        ################# PRIVATE ATTRIBUTES OF DEVICE OBJECT #####################
         self.__spec = spec
         self.Show()
         tunnel.client.GenerateObjects(self, spec.tunnel)
@@ -51,11 +50,21 @@ class DeviceObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.SWITCH
+    def PopulateKey(self, grpcmsg):
         return
 
-    def PopulateKey(self, grpcmsg):
+    def PopulateSpec(self, grpcmsg):
+        grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
+        grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
+        grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
+        grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
+        grpcmsg.Request.MACAddr = self.MACAddr.getnum()
+        if self.Mode == "bitw":
+            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_BITW
+        elif self.Mode == "host":
+            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_HOST
+        grpcmsg.Request.BridgingEn = self.BridgingEnabled
+        grpcmsg.Request.LearningEn = self.LearningEnabled
         return
 
     def ValidateSpec(self, spec):
@@ -76,19 +85,15 @@ class DeviceObject(base.ConfigObjectBase):
                     return False
         return True
 
-    def PopulateSpec(self, grpcmsg):
-        grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
-        grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
-        grpcmsg.Request.MACAddr = self.MACAddr.getnum()
-        if self.Mode == "bitw":
-            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_BITW
-        elif self.Mode == "host":
-            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_HOST
-        grpcmsg.Request.BridgingEn = self.BridgingEnabled
-        grpcmsg.Request.LearningEn = self.LearningEnabled
-        return
+    def ValidateYamlSpec(self, spec):
+        if utils.IsPipelineApulu() is True:
+            if self.Mode == "bitw":
+                if spec['devopermode'] != device_pb2.DEVICE_OPER_MODE_BITW:
+                    return False
+            elif self.Mode == "host":
+                if spec['devopermode'] != device_pb2.DEVICE_OPER_MODE_HOST:
+                    return False
+        return True
 
     def GetGrpcReadMessage(self):
         grpcmsg = types_pb2.Empty()
@@ -116,61 +121,63 @@ class DeviceObject(base.ConfigObjectBase):
 
     def GetDropStats(self):
         grpcmsg = types_pb2.Empty()
-        resp = api.client.Get(api.ObjectTypes.SWITCH, [ grpcmsg ])
+        resp = api.client.Get(api.ObjectTypes.DEVICE, [ grpcmsg ])
         if resp != None:
             return resp[0]
         return None
 
-class DeviceObjectClient:
+class DeviceObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = []
+        super().__init__(api.ObjectTypes.DEVICE, resmgr.MAX_DEVICE)
         return
-
-    def Objects(self):
-        return self.__objs
-
-    def IsValidConfig(self):
-        count = len(self.__objs)
-        if  count > resmgr.MAX_DEVICE:
-            return False, "Device count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_DEVICE)
-        return True, ""
 
     def GenerateObjects(self, topospec):
         obj = DeviceObject(topospec.device)
-        self.__objs.append(obj)
+        self.Objs.update({0: obj})
         Store.SetDevice(obj)
         return
 
     def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs))
-        api.client.Create(api.ObjectTypes.SWITCH, msgs)
+        super().CreateObjects()
 
         # Create Nexthop group object before tunnel as tep impl looks up nhgroup
         NhGroupClient.CreateObjects()
         tunnel.client.CreateObjects()
         return
 
-    def ReadObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcReadMessage(), self.__objs))
-        resp = api.client.Get(api.ObjectTypes.SWITCH, msgs)
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("DEVICE object validation failed!!!")
-            sys.exit(1)
-        return
+    def GetGrpcReadAllMessage(self):
+        grpcmsg = types_pb2.Empty()
+        return grpcmsg
 
-    def ValidateObjects(self, getResp):
+    def ValidateGrpcRead(self, getResp):
         if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
-                logger.error("DEVICE get request failed for ", obj)
+                logger.error("GRPC get request failed for ", obj)
                 return False
             resp = obj.Response
-            device = self.__objs[0]
+            device = self.GetObjectByKey(0)
             if not utils.ValidateObject(device, resp):
-                logger.error("DEVICE validation failed for ", obj)
+                logger.error("GRPC read validation failed for  ", obj)
+                device.Show()
+                return False
+        return True
+
+    def ValidatePdsctlRead(self, ret, stdout):
+        if utils.IsDryRun(): return True
+        if not ret:
+            logger.error("pdsctl show cmd failed for ", self.ObjType)
+            return False
+        # split output per object
+        cmdop = stdout.split("---")
+        for op in cmdop:
+            yamlOp = utils.LoadYaml(op)
+            if not yamlOp:
+                continue
+            device = self.GetObjectByKey(0)
+            resp = yamlOp['response']
+            if not utils.ValidateObject(device, resp, yaml=True):
+                logger.error("pdsctl read validation failed for ", op)
                 device.Show()
                 return False
         return True

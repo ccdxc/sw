@@ -53,7 +53,7 @@ class ApiOps(enum.IntEnum):
 class ObjectTypes(enum.IntEnum):
     NONE = 0
     BATCH = 1
-    SWITCH = 2
+    DEVICE = 2
     VPC = 3
     SUBNET = 4
     TUNNEL = 5
@@ -165,7 +165,7 @@ class ApolloAgentClient:
         if GlobalOptions.dryrun: return
         self.__stubs[ObjectTypes.BATCH] = ClientStub(batch_pb2_grpc.BatchSvcStub,
                                                      self.__channel, 'Batch')
-        self.__stubs[ObjectTypes.SWITCH] = ClientStub(device_pb2_grpc.DeviceSvcStub,
+        self.__stubs[ObjectTypes.DEVICE] = ClientStub(device_pb2_grpc.DeviceSvcStub,
                                                       self.__channel, 'Device')
         self.__stubs[ObjectTypes.INTERFACE] = ClientStub(interface_pb2_grpc.IfSvcStub,
                                                       self.__channel, 'Interface')
@@ -198,7 +198,7 @@ class ApolloAgentClient:
         return
 
     def __create_msgreq_table(self):
-        self.__msgreqs[ObjectTypes.SWITCH] = ClientModule(device_pb2, 'Device')
+        self.__msgreqs[ObjectTypes.DEVICE] = ClientModule(device_pb2, 'Device')
         self.__msgreqs[ObjectTypes.INTERFACE] = ClientModule(interface_pb2, 'Interface')
         self.__msgreqs[ObjectTypes.MAPPING] = ClientModule(mapping_pb2, 'Mapping')
         self.__msgreqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')

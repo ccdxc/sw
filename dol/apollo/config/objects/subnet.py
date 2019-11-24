@@ -20,8 +20,7 @@ import subnet_pb2 as subnet_pb2
 
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.SUBNET)
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
@@ -119,10 +118,6 @@ class SubnetObject(base.ConfigObjectBase):
     def AllocIPv4Address(self):
         return next(self.__ip_address_pool[1])
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.SUBNET
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.SubnetId)
         return
@@ -174,6 +169,11 @@ class SubnetObject(base.ConfigObjectBase):
                     return False
         return True
 
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.SubnetId:
+            return False
+        return True
+
     def GetNaclId(self, direction, af=utils.IP_VERSION_4):
         if af == utils.IP_VERSION_4:
             if direction == 'ingress':
@@ -187,23 +187,13 @@ class SubnetObject(base.ConfigObjectBase):
                 return self.EgV6SecurityPolicyId
         return None
 
-class SubnetObjectClient:
+class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.SUBNET, resmgr.MAX_SUBNET)
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
     def GetSubnetObject(self, subnetid):
-        return self.__objs.get(subnetid, None)
-
-    def IsValidConfig(self):
-        count = len(self.__objs.values())
-        if  count > resmgr.MAX_SUBNET:
-            return False, "Subnet count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_SUBNET)
-        return True, ""
+        return self.GetObjectByKey(subnetid)
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         poolid = 0
@@ -211,48 +201,19 @@ class SubnetObjectClient:
             parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
                 obj = SubnetObject(parent, subnet_spec_obj, poolid)
-                self.__objs.update({obj.SubnetId: obj})
+                self.Objs.update({obj.SubnetId: obj})
             poolid = poolid + 1
         return
 
     def CreateObjects(self):
+        logger.info("Creating Subnet Objects in agent")
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
         api.client.Create(api.ObjectTypes.SUBNET, msgs)
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects()
         rmapping.client.CreateObjects()
         return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = subnet_pb2.SubnetGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.SUBNET, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("SUBNET object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("SUBNET get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                subnet = self.GetSubnetObject(spec.Id)
-                if not utils.ValidateObject(subnet, resp):
-                    logger.error("SUBNET validation failed for ", obj)
-                    subnet.Show()
-                    return False
-        return True
 
 client = SubnetObjectClient()
 

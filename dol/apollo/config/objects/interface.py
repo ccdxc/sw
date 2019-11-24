@@ -20,7 +20,6 @@ class InterfaceSpec_:
 
 class InterfaceInfoObject(base.ConfigObjectBase):
     def __init__(self, iftype, spec):
-        super().__init__()
         self.__type = iftype
         if (iftype == utils.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
@@ -48,8 +47,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
 
 class InterfaceObject(base.ConfigObjectBase):
     def __init__(self, spec):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.INTERFACE)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         self.InterfaceId = next(resmgr.InterfaceIdAllocator)
         self.Ifname = spec.id
@@ -79,10 +77,6 @@ class InterfaceObject(base.ConfigObjectBase):
             self.IfInfo.Show()
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.INTERFACE
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.InterfaceId)
         return
@@ -105,17 +99,14 @@ class InterfaceObject(base.ConfigObjectBase):
         self.lif.Show()
         return
 
-class InterfaceObjectClient:
+class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.INTERFACE)
         self.__uplinkl3ifs = dict()
         self.__uplinkl3ifs_iter = None
         self.__hostifs = dict()
         self.__hostifs_iter = None
         return
-
-    def Objects(self):
-        return self.__objs.values()
 
     def GetHostInterface(self):
         if self.__hostifs:
@@ -142,7 +133,7 @@ class InterfaceObjectClient:
             lifend = lifstart + obj.LifCount - 1
             spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
             ifobj = InterfaceObject(spec)
-            self.__objs.update({ifobj.InterfaceId: ifobj})
+            self.Objs.update({ifobj.InterfaceId: ifobj})
             self.__hostifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__hostifs:
@@ -161,7 +152,7 @@ class InterfaceObjectClient:
             spec.status = port.AdminState
             spec.MACAddr = resmgr.DeviceMacAllocator.get()
             ifobj = InterfaceObject(spec)
-            self.__objs.update({ifobj.InterfaceId: ifobj})
+            self.Objs.update({ifobj.InterfaceId: ifobj})
             self.__uplinkl3ifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__uplinkl3ifs:
@@ -180,13 +171,7 @@ class InterfaceObjectClient:
             self.__generate_l3_uplink_interfaces()
         return
 
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = interface_pb2.InterfaceGetRequest()
-        return grpcmsg
-
     def CreateObjects(self):
-        if utils.IsInterfaceSupported() is False:
-            return
         cookie = utils.GetBatchCookie()
         if utils.IsL3InterfaceSupported():
             # create l3 if for uplink interface
@@ -195,8 +180,6 @@ class InterfaceObjectClient:
         return
 
     def ReadObjects(self):
-        if utils.IsInterfaceSupported() is False:
-            return
         msg = self.GetGrpcReadAllMessage()
         api.client.Get(api.ObjectTypes.INTERFACE, [msg])
         return

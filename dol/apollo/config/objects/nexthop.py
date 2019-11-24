@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import pdb
-import enum
 
 from infra.common.logging import logger
 
@@ -17,8 +16,7 @@ import nh_pb2 as nh_pb2
 
 class NexthopObject(base.ConfigObjectBase):
     def __init__(self, parent, spec):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.NEXTHOP)
         ################# PUBLIC ATTRIBUTES OF NEXTHOP OBJECT #####################
         self.NexthopId = next(resmgr.NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
@@ -68,10 +66,6 @@ class NexthopObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Nexthop object:", self)
         logger.info("- %s" % repr(self))
-        return
-
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.NEXTHOP
         return
 
     def PopulateKey(self, grpcmsg):

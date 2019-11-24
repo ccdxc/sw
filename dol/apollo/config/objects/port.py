@@ -18,7 +18,6 @@ class UplinkPorts(enum.IntEnum):
 
 class PortObject(base.ConfigObjectBase):
     def __init__(self, port, mode, state='UP'):
-        super().__init__()
         ################# PUBLIC ATTRIBUTES OF PORT OBJECT #####################
         self.PortId = next(resmgr.PortIdAllocator)
         self.GID("Port ID:%s"%self.PortId)

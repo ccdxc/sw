@@ -14,9 +14,8 @@ import nh_pb2 as nh_pb2
 
 class NexthopGroupObject(base.ConfigObjectBase):
     def __init__(self, parent, spec):
-        super().__init__()
-        self.SetBaseClassAttr()
-        ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
+        super().__init__(api.ObjectTypes.NEXTHOPGROUP)
+        ################# PUBLIC ATTRIBUTES OF NEXTHOPGROUP OBJECT ############
         self.Id = next(resmgr.NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
         self.Nexthops = {}
@@ -55,10 +54,6 @@ class NexthopGroupObject(base.ConfigObjectBase):
         logger.info("- Type %s" % type)
         if self.DualEcmp:
             logger.info("- Dual ecmp")
-        return
-
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.NEXTHOPGROUP
         return
 
     def PopulateKey(self, grpcmsg):

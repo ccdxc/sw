@@ -25,8 +25,7 @@ import vpc_pb2 as vpc_pb2
 
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, spec, index, maxcount):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.VPC)
 
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
         self.VPCId = next(resmgr.VpcIdAllocator)
@@ -105,8 +104,14 @@ class VpcObject(base.ConfigObjectBase):
 
         return
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.VPC
+    def __repr__(self):
+        return "VpcID:%d|Type:%d|PfxSel:%d" %\
+               (self.VPCId, self.Type, self.PfxSel)
+
+    def Show(self):
+        logger.info("VPC Object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- Prefix:%s" %self.IPPrefix)
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
@@ -118,10 +123,6 @@ class VpcObject(base.ConfigObjectBase):
 
     def AllocIPv4SubnetPrefix(self, poolid):
         return next(self.__ip_subnet_prefix_pool[1][poolid])
-
-    def __repr__(self):
-        return "VpcID:%d|Type:%d|PfxSel:%d" %\
-               (self.VPCId, self.Type, self.PfxSel)
 
     def GetProviderIPAddr(self, count):
         assert self.Type == vpc_pb2.VPC_TYPE_UNDERLAY
@@ -185,12 +186,6 @@ class VpcObject(base.ConfigObjectBase):
             return False
         return True
 
-    def Show(self):
-        logger.info("VPC Object:", self)
-        logger.info("- %s" % repr(self))
-        logger.info("- Prefix:%s" %self.IPPrefix)
-        return
-
     def IsUnderlayVPC(self):
         if self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
             return True
@@ -201,23 +196,12 @@ class VpcObject(base.ConfigObjectBase):
 
 class VpcObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.VPC)
+        super().__init__(api.ObjectTypes.VPC, resmgr.MAX_VPC)
         return
-
-    # TODO: move to base class
-    def IsValidConfig(self):
-        count = self.GetNumObjects()
-        if  count > resmgr.MAX_VPC:
-            return False, "VPC count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_VPC)
-        return True, ""
 
     # TODO: move to GetObjectByKey
     def GetVpcObject(self, vpcid):
         return self.GetObjectByKey(vpcid)
-
-    def GetKeyfromSpec(self, spec):
-        return spec.Id
 
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()
@@ -253,9 +237,7 @@ class VpcObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
-        api.client.Create(self.ObjType, msgs)
+        super().CreateObjects()
 
         # Create Nexthop object
         NhClient.CreateObjects()

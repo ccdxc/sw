@@ -35,7 +35,7 @@ from infra.common.glopts import GlobalOptions
 ObjectInfo = [None] * agentapi.ObjectTypes.MAX
 
 def __initialize_object_info():
-    ObjectInfo[agentapi.ObjectTypes.SWITCH] = device
+    ObjectInfo[agentapi.ObjectTypes.DEVICE] = device
     ObjectInfo[agentapi.ObjectTypes.TUNNEL] = tunnel
     ObjectInfo[agentapi.ObjectTypes.VPC] = vpc
     ObjectInfo[agentapi.ObjectTypes.SUBNET] = subnet

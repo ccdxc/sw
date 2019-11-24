@@ -18,8 +18,7 @@ import types_pb2 as types_pb2
 
 class MirrorSessionObject(base.ConfigObjectBase):
     def __init__(self, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.MIRROR)
         self.Id = next(resmgr.MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
 
@@ -57,10 +56,6 @@ class MirrorSessionObject(base.ConfigObjectBase):
                         (self.VPCId, self.TunnelId, self.DstIP, self.SrcIP, self.Dscp, self.SpanID))
         else:
             assert(0)
-        return
-
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.MIRROR
         return
 
     def PopulateKey(self, grpcmsg):
@@ -110,23 +105,18 @@ class MirrorSessionObject(base.ConfigObjectBase):
             assert(0)
         return True
 
-class MirrorSessionObjectClient:
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.Id:
+            return False
+        return True
+
+class MirrorSessionObjectClient(base.ConfigClientBase):
     def __init__(self):
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.MIRROR, resmgr.MAX_MIRROR)
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
-    def IsValidConfig(self):
-        count = len(self.__objs.values())
-        if  count > resmgr.MAX_MIRROR:
-            return False, "Mirror count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_MIRROR)
-        return True, ""
-
     def GetMirrorObject(self, mirrorid):
-        return self.__objs.get(mirrorid, None)
+        return self.GetObjectByKey(mirrorid)
 
     def GenerateObjects(self, mirrorsessionspec):
         def __add_mirror_session(msspec):
@@ -146,7 +136,7 @@ class MirrorSessionObjectClient:
                 obj = MirrorSessionObject(spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip, tunnel_id)
             else:
                 assert(0)
-            self.__objs.update({obj.Id: obj})
+            self.Objs.update({obj.Id: obj})
 
         if not hasattr(mirrorsessionspec, 'mirror'):
             return
@@ -154,42 +144,6 @@ class MirrorSessionObjectClient:
         for mirror_session_spec_obj in mirrorsessionspec.mirror:
             __add_mirror_session(mirror_session_spec_obj)
         return
-
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.MIRROR, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = mirror_pb2.MirrorSessionGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.MIRROR, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("MIRROR object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("MIRROR get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                mirror = self.GetMirrorObject(spec.Id)
-                if not utils.ValidateObject(mirror, resp):
-                    logger.error("MIRROR validation failed for ", obj)
-                    mirror.Show()
-                    return False
-        return True
 
 client = MirrorSessionObjectClient()
 

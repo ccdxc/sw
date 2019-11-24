@@ -6,6 +6,7 @@ import socket
 from random import sample
 from scapy.layers.l2 import Dot1Q
 import time
+import yaml
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -232,6 +233,9 @@ def ValidateDelete(obj, resps):
                 logger.error("Deletion failed for %s" %(obj.__repr__()))
                 obj.Show()
     return
+
+def LoadYaml(cmdoutput):
+    return yaml.load(cmdoutput, Loader=yaml.FullLoader)
 
 def GetBatchCookie():
     batchClient = Store.GetBatchClient()
@@ -494,6 +498,16 @@ def IsVnicPolicySupported():
     return False
 
 def IsTagSupported():
+    if IsPipelineArtemis():
+        return True
+    return False
+
+def IsMeteringSupported():
+    if IsPipelineArtemis():
+        return True
+    return False
+
+def IsServiceMappingSupported():
     if IsPipelineArtemis():
         return True
     return False

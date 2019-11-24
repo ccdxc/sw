@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
-import sys
 
 from infra.common.logging import logger
 
@@ -20,8 +19,7 @@ import types_pb2 as types_pb2
 
 class RouteObject(base.ConfigObjectBase):
     def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
-        super().__init__()
-        self.SetBaseClassAttr()
+        super().__init__(api.ObjectTypes.ROUTE)
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
@@ -108,16 +106,11 @@ class RouteObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.route.filters)
 
-    def SetBaseClassAttr(self):
-        self.ObjType = api.ObjectTypes.ROUTE
-        return
-
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.RouteTblId)
         return
 
     def PopulateSpec(self, grpcmsg):
-        print("PopulateSpec ", self.RouteTblId, self.TepType, self.NextHopType)
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
@@ -150,16 +143,20 @@ class RouteObject(base.ConfigObjectBase):
         obj.devicecfg = Store.GetDevice()
         return
 
-class RouteObjectClient:
+class RouteObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             return utils.IsRouteTableSupported()
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.ROUTE, resmgr.MAX_ROUTE_TABLE)
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
         self.__v6iter = {}
         self.__supported = __isObjSupported()
+        return
+
+    def PdsctlRead(self):
+        # pdsctl show not supported for route table
         return
 
     def __internet_tunnel_get(self, nat, teptype=None):
@@ -180,11 +177,8 @@ class RouteObjectClient:
         else:
             return resmgr.RemoteInternetNatTunAllocator.rrnext()
 
-    def Objects(self):
-        return self.__objs.values()
-
     def GetRouteTableObject(self, routetableid):
-        return self.__objs.get(routetableid, None)
+        return self.GetObjectByKey(routetableid)
 
     def GetRouteV4Tables(self, vpcid):
         return self.__v4objs.get(vpcid, None)
@@ -194,13 +188,13 @@ class RouteObjectClient:
 
     def IsValidConfig(self):
         count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
-        if  count > resmgr.MAX_ROUTE_TABLE:
+        if  count > self.Maxlimit:
             return False, "V4 Route Table count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_ROUTE_TABLE)
+                          (count, self.Maxlimit)
         count = sum(list(map(lambda x: len(x.values()), self.__v6objs.values())))
-        if  count > resmgr.MAX_ROUTE_TABLE:
+        if  count > self.Maxlimit:
             return False, "V6 Route Table count %d exceeds allowed limit of %d" %\
-                          (count, resmgr.MAX_ROUTE_TABLE)
+                          (count, self.Maxlimit)
         #TODO: check route table count equals subnet count in that VPC
         #TODO: check scale of routes per route table
         return True, ""
@@ -280,12 +274,12 @@ class RouteObjectClient:
         def __add_v4routetable(v4routes, routetype, spec):
             obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid, spec)
             self.__v4objs[vpcid].update({obj.RouteTblId: obj})
-            self.__objs.update({obj.RouteTblId: obj})
+            self.Objs.update({obj.RouteTblId: obj})
 
         def __add_v6routetable(v6routes, routetype, spec):
             obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid, spec)
             self.__v6objs[vpcid].update({obj.RouteTblId: obj})
-            self.__objs.update({obj.RouteTblId: obj})
+            self.Objs.update({obj.RouteTblId: obj})
 
         def __get_user_specified_routes(routespec):
             routes = []
@@ -360,40 +354,6 @@ class RouteObjectClient:
 
         if self.__v4objs[vpcid]:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
-
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.ROUTE, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = route_pb2.RouteTableGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.ROUTE, [msg])
-        result = self.ValidateObjects(resp)
-        if result is False:
-            logger.critical("Route table object validation failed!!!")
-            sys.exit(1)
-        return
-
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("Route table get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                routeTable = self.GetRouteTableObject(spec.Id)
-                if not utils.ValidateObject(routeTable, resp):
-                    logger.error("Route table validation failed for ", obj)
-                    routeTable.Show()
-                    return False
-        return True
 
 client = RouteObjectClient()
 
