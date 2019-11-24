@@ -19,6 +19,630 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
+// AddBxbxintmacMetricsAPIRoutes adds routes for BxbxintmacMetrics
+func (s *RestServer) AddBxbxintmacMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getBxbxintmacMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listBxbxintmacMetricsHandler))
+}
+
+// listBxbxintmacMetricsHandler is the List Handler for BxbxintmacMetrics
+func (s *RestServer) listBxbxintmacMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewBxbxintmacMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.BxbxintmacMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("BxbxintmacMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for BxbxintmacMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getBxbxintmacMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getBxbxintmacMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getBxbxintmacMetricsHandler is the Get Handler for BxbxintmacMetrics
+func (s *RestServer) getBxbxintmacMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request BxbxintmacMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDbwaintdbMetricsAPIRoutes adds routes for DbwaintdbMetrics
+func (s *RestServer) AddDbwaintdbMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDbwaintdbMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDbwaintdbMetricsHandler))
+}
+
+// listDbwaintdbMetricsHandler is the List Handler for DbwaintdbMetrics
+func (s *RestServer) listDbwaintdbMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDbwaintdbMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.DbwaintdbMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("DbwaintdbMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for DbwaintdbMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDbwaintdbMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDbwaintdbMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDbwaintdbMetricsHandler is the Get Handler for DbwaintdbMetrics
+func (s *RestServer) getDbwaintdbMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request DbwaintdbMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDbwaintlifqstatemapMetricsAPIRoutes adds routes for DbwaintlifqstatemapMetrics
+func (s *RestServer) AddDbwaintlifqstatemapMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDbwaintlifqstatemapMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDbwaintlifqstatemapMetricsHandler))
+}
+
+// listDbwaintlifqstatemapMetricsHandler is the List Handler for DbwaintlifqstatemapMetrics
+func (s *RestServer) listDbwaintlifqstatemapMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDbwaintlifqstatemapMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.DbwaintlifqstatemapMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("DbwaintlifqstatemapMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for DbwaintlifqstatemapMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDbwaintlifqstatemapMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDbwaintlifqstatemapMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDbwaintlifqstatemapMetricsHandler is the Get Handler for DbwaintlifqstatemapMetrics
+func (s *RestServer) getDbwaintlifqstatemapMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request DbwaintlifqstatemapMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDprdpr0intfifoMetricsAPIRoutes adds routes for Dprdpr0intfifoMetrics
+func (s *RestServer) AddDprdpr0intfifoMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDprdpr0intfifoMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDprdpr0intfifoMetricsHandler))
+}
+
+// listDprdpr0intfifoMetricsHandler is the List Handler for Dprdpr0intfifoMetrics
+func (s *RestServer) listDprdpr0intfifoMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDprdpr0intfifoMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.Dprdpr0intfifoMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("Dprdpr0intfifoMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for Dprdpr0intfifoMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDprdpr0intfifoMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDprdpr0intfifoMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDprdpr0intfifoMetricsHandler is the Get Handler for Dprdpr0intfifoMetrics
+func (s *RestServer) getDprdpr0intfifoMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Dprdpr0intfifoMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDprdpr0intreg1MetricsAPIRoutes adds routes for Dprdpr0intreg1Metrics
+func (s *RestServer) AddDprdpr0intreg1MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDprdpr0intreg1MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDprdpr0intreg1MetricsHandler))
+}
+
+// listDprdpr0intreg1MetricsHandler is the List Handler for Dprdpr0intreg1Metrics
+func (s *RestServer) listDprdpr0intreg1MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDprdpr0intreg1MetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.Dprdpr0intreg1Metrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("Dprdpr0intreg1MetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for Dprdpr0intreg1Metrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDprdpr0intreg1MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDprdpr0intreg1MetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDprdpr0intreg1MetricsHandler is the Get Handler for Dprdpr0intreg1Metrics
+func (s *RestServer) getDprdpr0intreg1MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Dprdpr0intreg1Metrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDprdpr0intreg2MetricsAPIRoutes adds routes for Dprdpr0intreg2Metrics
+func (s *RestServer) AddDprdpr0intreg2MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDprdpr0intreg2MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDprdpr0intreg2MetricsHandler))
+}
+
+// listDprdpr0intreg2MetricsHandler is the List Handler for Dprdpr0intreg2Metrics
+func (s *RestServer) listDprdpr0intreg2MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDprdpr0intreg2MetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.Dprdpr0intreg2Metrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("Dprdpr0intreg2MetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for Dprdpr0intreg2Metrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDprdpr0intreg2MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDprdpr0intreg2MetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDprdpr0intreg2MetricsHandler is the Get Handler for Dprdpr0intreg2Metrics
+func (s *RestServer) getDprdpr0intreg2MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Dprdpr0intreg2Metrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddDprdpr0intsramseccMetricsAPIRoutes adds routes for Dprdpr0intsramseccMetrics
+func (s *RestServer) AddDprdpr0intsramseccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getDprdpr0intsramseccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listDprdpr0intsramseccMetricsHandler))
+}
+
+// listDprdpr0intsramseccMetricsHandler is the List Handler for Dprdpr0intsramseccMetrics
+func (s *RestServer) listDprdpr0intsramseccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewDprdpr0intsramseccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.Dprdpr0intsramseccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("Dprdpr0intsramseccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for Dprdpr0intsramseccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getDprdpr0intsramseccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getDprdpr0intsramseccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getDprdpr0intsramseccMetricsHandler is the Get Handler for Dprdpr0intsramseccMetrics
+func (s *RestServer) getDprdpr0intsramseccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Dprdpr0intsramseccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddMdhensintaxierrMetricsAPIRoutes adds routes for MdhensintaxierrMetrics
+func (s *RestServer) AddMdhensintaxierrMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getMdhensintaxierrMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listMdhensintaxierrMetricsHandler))
+}
+
+// listMdhensintaxierrMetricsHandler is the List Handler for MdhensintaxierrMetrics
+func (s *RestServer) listMdhensintaxierrMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewMdhensintaxierrMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.MdhensintaxierrMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("MdhensintaxierrMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MdhensintaxierrMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getMdhensintaxierrMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getMdhensintaxierrMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getMdhensintaxierrMetricsHandler is the Get Handler for MdhensintaxierrMetrics
+func (s *RestServer) getMdhensintaxierrMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request MdhensintaxierrMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddMdhensintdrbgcryptorameccMetricsAPIRoutes adds routes for MdhensintdrbgcryptorameccMetrics
+func (s *RestServer) AddMdhensintdrbgcryptorameccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getMdhensintdrbgcryptorameccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listMdhensintdrbgcryptorameccMetricsHandler))
+}
+
+// listMdhensintdrbgcryptorameccMetricsHandler is the List Handler for MdhensintdrbgcryptorameccMetrics
+func (s *RestServer) listMdhensintdrbgcryptorameccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewMdhensintdrbgcryptorameccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.MdhensintdrbgcryptorameccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("MdhensintdrbgcryptorameccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MdhensintdrbgcryptorameccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getMdhensintdrbgcryptorameccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getMdhensintdrbgcryptorameccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getMdhensintdrbgcryptorameccMetricsHandler is the Get Handler for MdhensintdrbgcryptorameccMetrics
+func (s *RestServer) getMdhensintdrbgcryptorameccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request MdhensintdrbgcryptorameccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddMdhensintdrbgintrameccMetricsAPIRoutes adds routes for MdhensintdrbgintrameccMetrics
+func (s *RestServer) AddMdhensintdrbgintrameccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getMdhensintdrbgintrameccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listMdhensintdrbgintrameccMetricsHandler))
+}
+
+// listMdhensintdrbgintrameccMetricsHandler is the List Handler for MdhensintdrbgintrameccMetrics
+func (s *RestServer) listMdhensintdrbgintrameccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewMdhensintdrbgintrameccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.MdhensintdrbgintrameccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("MdhensintdrbgintrameccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MdhensintdrbgintrameccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getMdhensintdrbgintrameccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getMdhensintdrbgintrameccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getMdhensintdrbgintrameccMetricsHandler is the Get Handler for MdhensintdrbgintrameccMetrics
+func (s *RestServer) getMdhensintdrbgintrameccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request MdhensintdrbgintrameccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddMdhensintpkeccMetricsAPIRoutes adds routes for MdhensintpkeccMetrics
+func (s *RestServer) AddMdhensintpkeccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getMdhensintpkeccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listMdhensintpkeccMetricsHandler))
+}
+
+// listMdhensintpkeccMetricsHandler is the List Handler for MdhensintpkeccMetrics
+func (s *RestServer) listMdhensintpkeccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewMdhensintpkeccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.MdhensintpkeccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("MdhensintpkeccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for MdhensintpkeccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getMdhensintpkeccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getMdhensintpkeccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getMdhensintpkeccMetricsHandler is the Get Handler for MdhensintpkeccMetrics
+func (s *RestServer) getMdhensintpkeccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request MdhensintpkeccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddPbpbchbmintecchbmhtMetricsAPIRoutes adds routes for PbpbchbmintecchbmhtMetrics
+func (s *RestServer) AddPbpbchbmintecchbmhtMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPbpbchbmintecchbmhtMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPbpbchbmintecchbmhtMetricsHandler))
+}
+
+// listPbpbchbmintecchbmhtMetricsHandler is the List Handler for PbpbchbmintecchbmhtMetrics
+func (s *RestServer) listPbpbchbmintecchbmhtMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPbpbchbmintecchbmhtMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.PbpbchbmintecchbmhtMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("PbpbchbmintecchbmhtMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for PbpbchbmintecchbmhtMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getPbpbchbmintecchbmhtMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPbpbchbmintecchbmhtMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getPbpbchbmintecchbmhtMetricsHandler is the Get Handler for PbpbchbmintecchbmhtMetrics
+func (s *RestServer) getPbpbchbmintecchbmhtMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request PbpbchbmintecchbmhtMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
 // AddPbpbchbmintecchbmmtuMetricsAPIRoutes adds routes for PbpbchbmintecchbmmtuMetrics
 func (s *RestServer) AddPbpbchbmintecchbmmtuMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPbpbchbmintecchbmmtuMetricsHandler))
@@ -172,6 +796,162 @@ func (s *RestServer) getPbpbchbmintecchbmwbMetricsPoints() ([]*tsdb.Point, error
 // getPbpbchbmintecchbmwbMetricsHandler is the Get Handler for PbpbchbmintecchbmwbMetrics
 func (s *RestServer) getPbpbchbmintecchbmwbMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request PbpbchbmintecchbmwbMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddPbpbchbminthbmaxierrrspMetricsAPIRoutes adds routes for PbpbchbminthbmaxierrrspMetrics
+func (s *RestServer) AddPbpbchbminthbmaxierrrspMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPbpbchbminthbmaxierrrspMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPbpbchbminthbmaxierrrspMetricsHandler))
+}
+
+// listPbpbchbminthbmaxierrrspMetricsHandler is the List Handler for PbpbchbminthbmaxierrrspMetrics
+func (s *RestServer) listPbpbchbminthbmaxierrrspMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPbpbchbminthbmaxierrrspMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.PbpbchbminthbmaxierrrspMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("PbpbchbminthbmaxierrrspMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for PbpbchbminthbmaxierrrspMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getPbpbchbminthbmaxierrrspMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPbpbchbminthbmaxierrrspMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getPbpbchbminthbmaxierrrspMetricsHandler is the Get Handler for PbpbchbminthbmaxierrrspMetrics
+func (s *RestServer) getPbpbchbminthbmaxierrrspMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request PbpbchbminthbmaxierrrspMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddPbpbchbminthbmpbusviolationinMetricsAPIRoutes adds routes for PbpbchbminthbmpbusviolationinMetrics
+func (s *RestServer) AddPbpbchbminthbmpbusviolationinMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPbpbchbminthbmpbusviolationinMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPbpbchbminthbmpbusviolationinMetricsHandler))
+}
+
+// listPbpbchbminthbmpbusviolationinMetricsHandler is the List Handler for PbpbchbminthbmpbusviolationinMetrics
+func (s *RestServer) listPbpbchbminthbmpbusviolationinMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPbpbchbminthbmpbusviolationinMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.PbpbchbminthbmpbusviolationinMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("PbpbchbminthbmpbusviolationinMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for PbpbchbminthbmpbusviolationinMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getPbpbchbminthbmpbusviolationinMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPbpbchbminthbmpbusviolationinMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getPbpbchbminthbmpbusviolationinMetricsHandler is the Get Handler for PbpbchbminthbmpbusviolationinMetrics
+func (s *RestServer) getPbpbchbminthbmpbusviolationinMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request PbpbchbminthbmpbusviolationinMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddPbpbchbminthbmpbusviolationoutMetricsAPIRoutes adds routes for PbpbchbminthbmpbusviolationoutMetrics
+func (s *RestServer) AddPbpbchbminthbmpbusviolationoutMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPbpbchbminthbmpbusviolationoutMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPbpbchbminthbmpbusviolationoutMetricsHandler))
+}
+
+// listPbpbchbminthbmpbusviolationoutMetricsHandler is the List Handler for PbpbchbminthbmpbusviolationoutMetrics
+func (s *RestServer) listPbpbchbminthbmpbusviolationoutMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPbpbchbminthbmpbusviolationoutMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.PbpbchbminthbmpbusviolationoutMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("PbpbchbminthbmpbusviolationoutMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for PbpbchbminthbmpbusviolationoutMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getPbpbchbminthbmpbusviolationoutMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPbpbchbminthbmpbusviolationoutMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getPbpbchbminthbmpbusviolationoutMetricsHandler is the Get Handler for PbpbchbminthbmpbusviolationoutMetrics
+func (s *RestServer) getPbpbchbminthbmpbusviolationoutMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request PbpbchbminthbmpbusviolationoutMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -2671,58 +3451,6 @@ func (s *RestServer) getPcrte0interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPcrte0intinfoMetricsAPIRoutes adds routes for Pcrte0intinfoMetrics
-func (s *RestServer) AddPcrte0intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte0intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte0intinfoMetricsHandler))
-}
-
-// listPcrte0intinfoMetricsHandler is the List Handler for Pcrte0intinfoMetrics
-func (s *RestServer) listPcrte0intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte0intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte0intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte0intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte0intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte0intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte0intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte0intinfoMetricsHandler is the Get Handler for Pcrte0intinfoMetrics
-func (s *RestServer) getPcrte0intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte0intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPcrte1interrMetricsAPIRoutes adds routes for Pcrte1interrMetrics
 func (s *RestServer) AddPcrte1interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte1interrMetricsHandler))
@@ -2772,58 +3500,6 @@ func (s *RestServer) getPcrte1interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPcrte1interrMetricsHandler is the Get Handler for Pcrte1interrMetrics
 func (s *RestServer) getPcrte1interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pcrte1interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPcrte1intinfoMetricsAPIRoutes adds routes for Pcrte1intinfoMetrics
-func (s *RestServer) AddPcrte1intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte1intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte1intinfoMetricsHandler))
-}
-
-// listPcrte1intinfoMetricsHandler is the List Handler for Pcrte1intinfoMetrics
-func (s *RestServer) listPcrte1intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte1intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte1intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte1intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte1intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte1intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte1intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte1intinfoMetricsHandler is the Get Handler for Pcrte1intinfoMetrics
-func (s *RestServer) getPcrte1intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte1intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -2879,58 +3555,6 @@ func (s *RestServer) getPcrte2interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPcrte2intinfoMetricsAPIRoutes adds routes for Pcrte2intinfoMetrics
-func (s *RestServer) AddPcrte2intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte2intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte2intinfoMetricsHandler))
-}
-
-// listPcrte2intinfoMetricsHandler is the List Handler for Pcrte2intinfoMetrics
-func (s *RestServer) listPcrte2intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte2intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte2intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte2intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte2intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte2intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte2intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte2intinfoMetricsHandler is the Get Handler for Pcrte2intinfoMetrics
-func (s *RestServer) getPcrte2intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte2intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPcrte3interrMetricsAPIRoutes adds routes for Pcrte3interrMetrics
 func (s *RestServer) AddPcrte3interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte3interrMetricsHandler))
@@ -2980,58 +3604,6 @@ func (s *RestServer) getPcrte3interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPcrte3interrMetricsHandler is the Get Handler for Pcrte3interrMetrics
 func (s *RestServer) getPcrte3interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pcrte3interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPcrte3intinfoMetricsAPIRoutes adds routes for Pcrte3intinfoMetrics
-func (s *RestServer) AddPcrte3intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte3intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte3intinfoMetricsHandler))
-}
-
-// listPcrte3intinfoMetricsHandler is the List Handler for Pcrte3intinfoMetrics
-func (s *RestServer) listPcrte3intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte3intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte3intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte3intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte3intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte3intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte3intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte3intinfoMetricsHandler is the Get Handler for Pcrte3intinfoMetrics
-func (s *RestServer) getPcrte3intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte3intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -3087,58 +3659,6 @@ func (s *RestServer) getPcrte4interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPcrte4intinfoMetricsAPIRoutes adds routes for Pcrte4intinfoMetrics
-func (s *RestServer) AddPcrte4intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte4intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte4intinfoMetricsHandler))
-}
-
-// listPcrte4intinfoMetricsHandler is the List Handler for Pcrte4intinfoMetrics
-func (s *RestServer) listPcrte4intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte4intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte4intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte4intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte4intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte4intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte4intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte4intinfoMetricsHandler is the Get Handler for Pcrte4intinfoMetrics
-func (s *RestServer) getPcrte4intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte4intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPcrte5interrMetricsAPIRoutes adds routes for Pcrte5interrMetrics
 func (s *RestServer) AddPcrte5interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte5interrMetricsHandler))
@@ -3188,58 +3708,6 @@ func (s *RestServer) getPcrte5interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPcrte5interrMetricsHandler is the Get Handler for Pcrte5interrMetrics
 func (s *RestServer) getPcrte5interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pcrte5interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPcrte5intinfoMetricsAPIRoutes adds routes for Pcrte5intinfoMetrics
-func (s *RestServer) AddPcrte5intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte5intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte5intinfoMetricsHandler))
-}
-
-// listPcrte5intinfoMetricsHandler is the List Handler for Pcrte5intinfoMetrics
-func (s *RestServer) listPcrte5intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte5intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte5intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte5intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte5intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte5intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte5intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte5intinfoMetricsHandler is the Get Handler for Pcrte5intinfoMetrics
-func (s *RestServer) getPcrte5intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte5intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -3295,58 +3763,6 @@ func (s *RestServer) getPcrte6interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPcrte6intinfoMetricsAPIRoutes adds routes for Pcrte6intinfoMetrics
-func (s *RestServer) AddPcrte6intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte6intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte6intinfoMetricsHandler))
-}
-
-// listPcrte6intinfoMetricsHandler is the List Handler for Pcrte6intinfoMetrics
-func (s *RestServer) listPcrte6intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte6intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte6intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte6intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte6intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte6intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte6intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte6intinfoMetricsHandler is the Get Handler for Pcrte6intinfoMetrics
-func (s *RestServer) getPcrte6intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte6intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPcrte7interrMetricsAPIRoutes adds routes for Pcrte7interrMetrics
 func (s *RestServer) AddPcrte7interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte7interrMetricsHandler))
@@ -3396,58 +3812,6 @@ func (s *RestServer) getPcrte7interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPcrte7interrMetricsHandler is the Get Handler for Pcrte7interrMetrics
 func (s *RestServer) getPcrte7interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pcrte7interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPcrte7intinfoMetricsAPIRoutes adds routes for Pcrte7intinfoMetrics
-func (s *RestServer) AddPcrte7intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPcrte7intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPcrte7intinfoMetricsHandler))
-}
-
-// listPcrte7intinfoMetricsHandler is the List Handler for Pcrte7intinfoMetrics
-func (s *RestServer) listPcrte7intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPcrte7intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pcrte7intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pcrte7intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pcrte7intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPcrte7intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPcrte7intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPcrte7intinfoMetricsHandler is the Get Handler for Pcrte7intinfoMetrics
-func (s *RestServer) getPcrte7intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pcrte7intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -4335,58 +4699,6 @@ func (s *RestServer) getPctte0interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPctte0intinfoMetricsAPIRoutes adds routes for Pctte0intinfoMetrics
-func (s *RestServer) AddPctte0intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte0intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte0intinfoMetricsHandler))
-}
-
-// listPctte0intinfoMetricsHandler is the List Handler for Pctte0intinfoMetrics
-func (s *RestServer) listPctte0intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte0intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte0intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte0intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte0intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte0intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte0intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte0intinfoMetricsHandler is the Get Handler for Pctte0intinfoMetrics
-func (s *RestServer) getPctte0intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte0intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPctte1interrMetricsAPIRoutes adds routes for Pctte1interrMetrics
 func (s *RestServer) AddPctte1interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte1interrMetricsHandler))
@@ -4436,58 +4748,6 @@ func (s *RestServer) getPctte1interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPctte1interrMetricsHandler is the Get Handler for Pctte1interrMetrics
 func (s *RestServer) getPctte1interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pctte1interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPctte1intinfoMetricsAPIRoutes adds routes for Pctte1intinfoMetrics
-func (s *RestServer) AddPctte1intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte1intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte1intinfoMetricsHandler))
-}
-
-// listPctte1intinfoMetricsHandler is the List Handler for Pctte1intinfoMetrics
-func (s *RestServer) listPctte1intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte1intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte1intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte1intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte1intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte1intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte1intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte1intinfoMetricsHandler is the Get Handler for Pctte1intinfoMetrics
-func (s *RestServer) getPctte1intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte1intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -4543,58 +4803,6 @@ func (s *RestServer) getPctte2interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPctte2intinfoMetricsAPIRoutes adds routes for Pctte2intinfoMetrics
-func (s *RestServer) AddPctte2intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte2intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte2intinfoMetricsHandler))
-}
-
-// listPctte2intinfoMetricsHandler is the List Handler for Pctte2intinfoMetrics
-func (s *RestServer) listPctte2intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte2intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte2intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte2intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte2intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte2intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte2intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte2intinfoMetricsHandler is the Get Handler for Pctte2intinfoMetrics
-func (s *RestServer) getPctte2intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte2intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPctte3interrMetricsAPIRoutes adds routes for Pctte3interrMetrics
 func (s *RestServer) AddPctte3interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte3interrMetricsHandler))
@@ -4644,58 +4852,6 @@ func (s *RestServer) getPctte3interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPctte3interrMetricsHandler is the Get Handler for Pctte3interrMetrics
 func (s *RestServer) getPctte3interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pctte3interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPctte3intinfoMetricsAPIRoutes adds routes for Pctte3intinfoMetrics
-func (s *RestServer) AddPctte3intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte3intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte3intinfoMetricsHandler))
-}
-
-// listPctte3intinfoMetricsHandler is the List Handler for Pctte3intinfoMetrics
-func (s *RestServer) listPctte3intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte3intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte3intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte3intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte3intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte3intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte3intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte3intinfoMetricsHandler is the Get Handler for Pctte3intinfoMetrics
-func (s *RestServer) getPctte3intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte3intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -4751,58 +4907,6 @@ func (s *RestServer) getPctte4interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPctte4intinfoMetricsAPIRoutes adds routes for Pctte4intinfoMetrics
-func (s *RestServer) AddPctte4intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte4intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte4intinfoMetricsHandler))
-}
-
-// listPctte4intinfoMetricsHandler is the List Handler for Pctte4intinfoMetrics
-func (s *RestServer) listPctte4intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte4intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte4intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte4intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte4intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte4intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte4intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte4intinfoMetricsHandler is the Get Handler for Pctte4intinfoMetrics
-func (s *RestServer) getPctte4intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte4intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPctte5interrMetricsAPIRoutes adds routes for Pctte5interrMetrics
 func (s *RestServer) AddPctte5interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte5interrMetricsHandler))
@@ -4852,58 +4956,6 @@ func (s *RestServer) getPctte5interrMetricsPoints() ([]*tsdb.Point, error) {
 // getPctte5interrMetricsHandler is the Get Handler for Pctte5interrMetrics
 func (s *RestServer) getPctte5interrMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request Pctte5interrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPctte5intinfoMetricsAPIRoutes adds routes for Pctte5intinfoMetrics
-func (s *RestServer) AddPctte5intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte5intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte5intinfoMetricsHandler))
-}
-
-// listPctte5intinfoMetricsHandler is the List Handler for Pctte5intinfoMetrics
-func (s *RestServer) listPctte5intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte5intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte5intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte5intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte5intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte5intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte5intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte5intinfoMetricsHandler is the Get Handler for Pctte5intinfoMetrics
-func (s *RestServer) getPctte5intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte5intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -4959,58 +5011,6 @@ func (s *RestServer) getPctte6interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPctte6intinfoMetricsAPIRoutes adds routes for Pctte6intinfoMetrics
-func (s *RestServer) AddPctte6intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte6intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte6intinfoMetricsHandler))
-}
-
-// listPctte6intinfoMetricsHandler is the List Handler for Pctte6intinfoMetrics
-func (s *RestServer) listPctte6intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte6intinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Pctte6intinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Pctte6intinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte6intinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPctte6intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte6intinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPctte6intinfoMetricsHandler is the Get Handler for Pctte6intinfoMetrics
-func (s *RestServer) getPctte6intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte6intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
 // AddPctte7interrMetricsAPIRoutes adds routes for Pctte7interrMetrics
 func (s *RestServer) AddPctte7interrMetricsAPIRoutes(r *mux.Router) {
 	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte7interrMetricsHandler))
@@ -5063,15 +5063,15 @@ func (s *RestServer) getPctte7interrMetricsHandler(r *http.Request) (interface{}
 	return nil, nil
 }
 
-// AddPctte7intinfoMetricsAPIRoutes adds routes for Pctte7intinfoMetrics
-func (s *RestServer) AddPctte7intinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPctte7intinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPctte7intinfoMetricsHandler))
+// AddPmpbmintecccol0MetricsAPIRoutes adds routes for Pmpbmintecccol0Metrics
+func (s *RestServer) AddPmpbmintecccol0MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPmpbmintecccol0MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPmpbmintecccol0MetricsHandler))
 }
 
-// listPctte7intinfoMetricsHandler is the List Handler for Pctte7intinfoMetrics
-func (s *RestServer) listPctte7intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPctte7intinfoMetricsIterator()
+// listPmpbmintecccol0MetricsHandler is the List Handler for Pmpbmintecccol0Metrics
+func (s *RestServer) listPmpbmintecccol0MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPmpbmintecccol0MetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
@@ -5081,7 +5081,7 @@ func (s *RestServer) listPctte7intinfoMetricsHandler(r *http.Request) (interface
 		return nil, nil
 	}
 
-	var mtr []goproto.Pctte7intinfoMetrics
+	var mtr []goproto.Pmpbmintecccol0Metrics
 
 	for iter.HasNext() {
 		temp := iter.Next()
@@ -5089,9 +5089,9 @@ func (s *RestServer) listPctte7intinfoMetricsHandler(r *http.Request) (interface
 			continue
 		}
 
-		objMeta := s.GetObjectMeta("Pctte7intinfoMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("Pmpbmintecccol0MetricsKey", temp.GetKey())
 		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Pctte7intinfoMetrics key %+v", temp.GetKey())
+			log.Errorf("failed to get objMeta for Pmpbmintecccol0Metrics key %+v", temp.GetKey())
 			continue
 		}
 
@@ -5102,28 +5102,28 @@ func (s *RestServer) listPctte7intinfoMetricsHandler(r *http.Request) (interface
 	return mtr, nil
 }
 
-// getPctte7intinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPctte7intinfoMetricsPoints() ([]*tsdb.Point, error) {
+// getPmpbmintecccol0MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPmpbmintecccol0MetricsPoints() ([]*tsdb.Point, error) {
 
 	return nil, nil
 
 }
 
-// getPctte7intinfoMetricsHandler is the Get Handler for Pctte7intinfoMetrics
-func (s *RestServer) getPctte7intinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Pctte7intinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
+// getPmpbmintecccol0MetricsHandler is the Get Handler for Pmpbmintecccol0Metrics
+func (s *RestServer) getPmpbmintecccol0MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Pmpbmintecccol0Metrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-// AddPpppportc4intceccMetricsAPIRoutes adds routes for Ppppportc4intceccMetrics
-func (s *RestServer) AddPpppportc4intceccMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc4intceccMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc4intceccMetricsHandler))
+// AddPmpbmintecccol1MetricsAPIRoutes adds routes for Pmpbmintecccol1Metrics
+func (s *RestServer) AddPmpbmintecccol1MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPmpbmintecccol1MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPmpbmintecccol1MetricsHandler))
 }
 
-// listPpppportc4intceccMetricsHandler is the List Handler for Ppppportc4intceccMetrics
-func (s *RestServer) listPpppportc4intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc4intceccMetricsIterator()
+// listPmpbmintecccol1MetricsHandler is the List Handler for Pmpbmintecccol1Metrics
+func (s *RestServer) listPmpbmintecccol1MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPmpbmintecccol1MetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
@@ -5133,7 +5133,7 @@ func (s *RestServer) listPpppportc4intceccMetricsHandler(r *http.Request) (inter
 		return nil, nil
 	}
 
-	var mtr []goproto.Ppppportc4intceccMetrics
+	var mtr []goproto.Pmpbmintecccol1Metrics
 
 	for iter.HasNext() {
 		temp := iter.Next()
@@ -5141,9 +5141,9 @@ func (s *RestServer) listPpppportc4intceccMetricsHandler(r *http.Request) (inter
 			continue
 		}
 
-		objMeta := s.GetObjectMeta("Ppppportc4intceccMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("Pmpbmintecccol1MetricsKey", temp.GetKey())
 		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc4intceccMetrics key %+v", temp.GetKey())
+			log.Errorf("failed to get objMeta for Pmpbmintecccol1Metrics key %+v", temp.GetKey())
 			continue
 		}
 
@@ -5154,28 +5154,28 @@ func (s *RestServer) listPpppportc4intceccMetricsHandler(r *http.Request) (inter
 	return mtr, nil
 }
 
-// getPpppportc4intceccMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc4intceccMetricsPoints() ([]*tsdb.Point, error) {
+// getPmpbmintecccol1MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPmpbmintecccol1MetricsPoints() ([]*tsdb.Point, error) {
 
 	return nil, nil
 
 }
 
-// getPpppportc4intceccMetricsHandler is the Get Handler for Ppppportc4intceccMetrics
-func (s *RestServer) getPpppportc4intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc4intceccMetrics/%s", mux.Vars(r)["Meta.Name"])
+// getPmpbmintecccol1MetricsHandler is the Get Handler for Pmpbmintecccol1Metrics
+func (s *RestServer) getPmpbmintecccol1MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Pmpbmintecccol1Metrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-// AddPpppportc4intcmacMetricsAPIRoutes adds routes for Ppppportc4intcmacMetrics
-func (s *RestServer) AddPpppportc4intcmacMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc4intcmacMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc4intcmacMetricsHandler))
+// AddPmpbmintecccol2MetricsAPIRoutes adds routes for Pmpbmintecccol2Metrics
+func (s *RestServer) AddPmpbmintecccol2MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPmpbmintecccol2MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPmpbmintecccol2MetricsHandler))
 }
 
-// listPpppportc4intcmacMetricsHandler is the List Handler for Ppppportc4intcmacMetrics
-func (s *RestServer) listPpppportc4intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc4intcmacMetricsIterator()
+// listPmpbmintecccol2MetricsHandler is the List Handler for Pmpbmintecccol2Metrics
+func (s *RestServer) listPmpbmintecccol2MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPmpbmintecccol2MetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
@@ -5185,7 +5185,7 @@ func (s *RestServer) listPpppportc4intcmacMetricsHandler(r *http.Request) (inter
 		return nil, nil
 	}
 
-	var mtr []goproto.Ppppportc4intcmacMetrics
+	var mtr []goproto.Pmpbmintecccol2Metrics
 
 	for iter.HasNext() {
 		temp := iter.Next()
@@ -5193,9 +5193,9 @@ func (s *RestServer) listPpppportc4intcmacMetricsHandler(r *http.Request) (inter
 			continue
 		}
 
-		objMeta := s.GetObjectMeta("Ppppportc4intcmacMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("Pmpbmintecccol2MetricsKey", temp.GetKey())
 		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc4intcmacMetrics key %+v", temp.GetKey())
+			log.Errorf("failed to get objMeta for Pmpbmintecccol2Metrics key %+v", temp.GetKey())
 			continue
 		}
 
@@ -5206,28 +5206,28 @@ func (s *RestServer) listPpppportc4intcmacMetricsHandler(r *http.Request) (inter
 	return mtr, nil
 }
 
-// getPpppportc4intcmacMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc4intcmacMetricsPoints() ([]*tsdb.Point, error) {
+// getPmpbmintecccol2MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPmpbmintecccol2MetricsPoints() ([]*tsdb.Point, error) {
 
 	return nil, nil
 
 }
 
-// getPpppportc4intcmacMetricsHandler is the Get Handler for Ppppportc4intcmacMetrics
-func (s *RestServer) getPpppportc4intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc4intcmacMetrics/%s", mux.Vars(r)["Meta.Name"])
+// getPmpbmintecccol2MetricsHandler is the Get Handler for Pmpbmintecccol2Metrics
+func (s *RestServer) getPmpbmintecccol2MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Pmpbmintecccol2Metrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-// AddPpppportc5intceccMetricsAPIRoutes adds routes for Ppppportc5intceccMetrics
-func (s *RestServer) AddPpppportc5intceccMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc5intceccMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc5intceccMetricsHandler))
+// AddPmpbmintecccol3MetricsAPIRoutes adds routes for Pmpbmintecccol3Metrics
+func (s *RestServer) AddPmpbmintecccol3MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPmpbmintecccol3MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPmpbmintecccol3MetricsHandler))
 }
 
-// listPpppportc5intceccMetricsHandler is the List Handler for Ppppportc5intceccMetrics
-func (s *RestServer) listPpppportc5intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc5intceccMetricsIterator()
+// listPmpbmintecccol3MetricsHandler is the List Handler for Pmpbmintecccol3Metrics
+func (s *RestServer) listPmpbmintecccol3MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPmpbmintecccol3MetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
@@ -5237,7 +5237,7 @@ func (s *RestServer) listPpppportc5intceccMetricsHandler(r *http.Request) (inter
 		return nil, nil
 	}
 
-	var mtr []goproto.Ppppportc5intceccMetrics
+	var mtr []goproto.Pmpbmintecccol3Metrics
 
 	for iter.HasNext() {
 		temp := iter.Next()
@@ -5245,9 +5245,9 @@ func (s *RestServer) listPpppportc5intceccMetricsHandler(r *http.Request) (inter
 			continue
 		}
 
-		objMeta := s.GetObjectMeta("Ppppportc5intceccMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("Pmpbmintecccol3MetricsKey", temp.GetKey())
 		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc5intceccMetrics key %+v", temp.GetKey())
+			log.Errorf("failed to get objMeta for Pmpbmintecccol3Metrics key %+v", temp.GetKey())
 			continue
 		}
 
@@ -5258,28 +5258,28 @@ func (s *RestServer) listPpppportc5intceccMetricsHandler(r *http.Request) (inter
 	return mtr, nil
 }
 
-// getPpppportc5intceccMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc5intceccMetricsPoints() ([]*tsdb.Point, error) {
+// getPmpbmintecccol3MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPmpbmintecccol3MetricsPoints() ([]*tsdb.Point, error) {
 
 	return nil, nil
 
 }
 
-// getPpppportc5intceccMetricsHandler is the Get Handler for Ppppportc5intceccMetrics
-func (s *RestServer) getPpppportc5intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc5intceccMetrics/%s", mux.Vars(r)["Meta.Name"])
+// getPmpbmintecccol3MetricsHandler is the Get Handler for Pmpbmintecccol3Metrics
+func (s *RestServer) getPmpbmintecccol3MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Pmpbmintecccol3Metrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-// AddPpppportc5intcmacMetricsAPIRoutes adds routes for Ppppportc5intcmacMetrics
-func (s *RestServer) AddPpppportc5intcmacMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc5intcmacMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc5intcmacMetricsHandler))
+// AddPmpbmintecccol4MetricsAPIRoutes adds routes for Pmpbmintecccol4Metrics
+func (s *RestServer) AddPmpbmintecccol4MetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPmpbmintecccol4MetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPmpbmintecccol4MetricsHandler))
 }
 
-// listPpppportc5intcmacMetricsHandler is the List Handler for Ppppportc5intcmacMetrics
-func (s *RestServer) listPpppportc5intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc5intcmacMetricsIterator()
+// listPmpbmintecccol4MetricsHandler is the List Handler for Pmpbmintecccol4Metrics
+func (s *RestServer) listPmpbmintecccol4MetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewPmpbmintecccol4MetricsIterator()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
@@ -5289,7 +5289,7 @@ func (s *RestServer) listPpppportc5intcmacMetricsHandler(r *http.Request) (inter
 		return nil, nil
 	}
 
-	var mtr []goproto.Ppppportc5intcmacMetrics
+	var mtr []goproto.Pmpbmintecccol4Metrics
 
 	for iter.HasNext() {
 		temp := iter.Next()
@@ -5297,9 +5297,9 @@ func (s *RestServer) listPpppportc5intcmacMetricsHandler(r *http.Request) (inter
 			continue
 		}
 
-		objMeta := s.GetObjectMeta("Ppppportc5intcmacMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("Pmpbmintecccol4MetricsKey", temp.GetKey())
 		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc5intcmacMetrics key %+v", temp.GetKey())
+			log.Errorf("failed to get objMeta for Pmpbmintecccol4Metrics key %+v", temp.GetKey())
 			continue
 		}
 
@@ -5310,640 +5310,16 @@ func (s *RestServer) listPpppportc5intcmacMetricsHandler(r *http.Request) (inter
 	return mtr, nil
 }
 
-// getPpppportc5intcmacMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc5intcmacMetricsPoints() ([]*tsdb.Point, error) {
+// getPmpbmintecccol4MetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getPmpbmintecccol4MetricsPoints() ([]*tsdb.Point, error) {
 
 	return nil, nil
 
 }
 
-// getPpppportc5intcmacMetricsHandler is the Get Handler for Ppppportc5intcmacMetrics
-func (s *RestServer) getPpppportc5intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc5intcmacMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPpppportc6intceccMetricsAPIRoutes adds routes for Ppppportc6intceccMetrics
-func (s *RestServer) AddPpppportc6intceccMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc6intceccMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc6intceccMetricsHandler))
-}
-
-// listPpppportc6intceccMetricsHandler is the List Handler for Ppppportc6intceccMetrics
-func (s *RestServer) listPpppportc6intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc6intceccMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Ppppportc6intceccMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Ppppportc6intceccMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc6intceccMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPpppportc6intceccMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc6intceccMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPpppportc6intceccMetricsHandler is the Get Handler for Ppppportc6intceccMetrics
-func (s *RestServer) getPpppportc6intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc6intceccMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPpppportc6intcmacMetricsAPIRoutes adds routes for Ppppportc6intcmacMetrics
-func (s *RestServer) AddPpppportc6intcmacMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc6intcmacMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc6intcmacMetricsHandler))
-}
-
-// listPpppportc6intcmacMetricsHandler is the List Handler for Ppppportc6intcmacMetrics
-func (s *RestServer) listPpppportc6intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc6intcmacMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Ppppportc6intcmacMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Ppppportc6intcmacMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc6intcmacMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPpppportc6intcmacMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc6intcmacMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPpppportc6intcmacMetricsHandler is the Get Handler for Ppppportc6intcmacMetrics
-func (s *RestServer) getPpppportc6intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc6intcmacMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPpppportc7intceccMetricsAPIRoutes adds routes for Ppppportc7intceccMetrics
-func (s *RestServer) AddPpppportc7intceccMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc7intceccMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc7intceccMetricsHandler))
-}
-
-// listPpppportc7intceccMetricsHandler is the List Handler for Ppppportc7intceccMetrics
-func (s *RestServer) listPpppportc7intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc7intceccMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Ppppportc7intceccMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Ppppportc7intceccMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc7intceccMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPpppportc7intceccMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc7intceccMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPpppportc7intceccMetricsHandler is the Get Handler for Ppppportc7intceccMetrics
-func (s *RestServer) getPpppportc7intceccMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc7intceccMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPpppportc7intcmacMetricsAPIRoutes adds routes for Ppppportc7intcmacMetrics
-func (s *RestServer) AddPpppportc7intcmacMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPpppportc7intcmacMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPpppportc7intcmacMetricsHandler))
-}
-
-// listPpppportc7intcmacMetricsHandler is the List Handler for Ppppportc7intcmacMetrics
-func (s *RestServer) listPpppportc7intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPpppportc7intcmacMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Ppppportc7intcmacMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Ppppportc7intcmacMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ppppportc7intcmacMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPpppportc7intcmacMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPpppportc7intcmacMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPpppportc7intcmacMetricsHandler is the Get Handler for Ppppportc7intcmacMetrics
-func (s *RestServer) getPpppportc7intcmacMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ppppportc7intcmacMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptintreg1MetricsAPIRoutes adds routes for Ptptintreg1Metrics
-func (s *RestServer) AddPtptintreg1MetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptintreg1MetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptintreg1MetricsHandler))
-}
-
-// listPtptintreg1MetricsHandler is the List Handler for Ptptintreg1Metrics
-func (s *RestServer) listPtptintreg1MetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptintreg1MetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.Ptptintreg1Metrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("Ptptintreg1MetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for Ptptintreg1Metrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptintreg1MetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptintreg1MetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptintreg1MetricsHandler is the Get Handler for Ptptintreg1Metrics
-func (s *RestServer) getPtptintreg1MetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request Ptptintreg1Metrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptpspinterrMetricsAPIRoutes adds routes for PtptpspinterrMetrics
-func (s *RestServer) AddPtptpspinterrMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptpspinterrMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptpspinterrMetricsHandler))
-}
-
-// listPtptpspinterrMetricsHandler is the List Handler for PtptpspinterrMetrics
-func (s *RestServer) listPtptpspinterrMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptpspinterrMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptpspinterrMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptpspinterrMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptpspinterrMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptpspinterrMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptpspinterrMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptpspinterrMetricsHandler is the Get Handler for PtptpspinterrMetrics
-func (s *RestServer) getPtptpspinterrMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptpspinterrMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptpspintfatalMetricsAPIRoutes adds routes for PtptpspintfatalMetrics
-func (s *RestServer) AddPtptpspintfatalMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptpspintfatalMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptpspintfatalMetricsHandler))
-}
-
-// listPtptpspintfatalMetricsHandler is the List Handler for PtptpspintfatalMetrics
-func (s *RestServer) listPtptpspintfatalMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptpspintfatalMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptpspintfatalMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptpspintfatalMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptpspintfatalMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptpspintfatalMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptpspintfatalMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptpspintfatalMetricsHandler is the Get Handler for PtptpspintfatalMetrics
-func (s *RestServer) getPtptpspintfatalMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptpspintfatalMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptpspintinfoMetricsAPIRoutes adds routes for PtptpspintinfoMetrics
-func (s *RestServer) AddPtptpspintinfoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptpspintinfoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptpspintinfoMetricsHandler))
-}
-
-// listPtptpspintinfoMetricsHandler is the List Handler for PtptpspintinfoMetrics
-func (s *RestServer) listPtptpspintinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptpspintinfoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptpspintinfoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptpspintinfoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptpspintinfoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptpspintinfoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptpspintinfoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptpspintinfoMetricsHandler is the Get Handler for PtptpspintinfoMetrics
-func (s *RestServer) getPtptpspintinfoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptpspintinfoMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptpspintlifqstatemapMetricsAPIRoutes adds routes for PtptpspintlifqstatemapMetrics
-func (s *RestServer) AddPtptpspintlifqstatemapMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptpspintlifqstatemapMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptpspintlifqstatemapMetricsHandler))
-}
-
-// listPtptpspintlifqstatemapMetricsHandler is the List Handler for PtptpspintlifqstatemapMetrics
-func (s *RestServer) listPtptpspintlifqstatemapMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptpspintlifqstatemapMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptpspintlifqstatemapMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptpspintlifqstatemapMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptpspintlifqstatemapMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptpspintlifqstatemapMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptpspintlifqstatemapMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptpspintlifqstatemapMetricsHandler is the Get Handler for PtptpspintlifqstatemapMetrics
-func (s *RestServer) getPtptpspintlifqstatemapMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptpspintlifqstatemapMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptpspintswphvmemMetricsAPIRoutes adds routes for PtptpspintswphvmemMetrics
-func (s *RestServer) AddPtptpspintswphvmemMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptpspintswphvmemMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptpspintswphvmemMetricsHandler))
-}
-
-// listPtptpspintswphvmemMetricsHandler is the List Handler for PtptpspintswphvmemMetrics
-func (s *RestServer) listPtptpspintswphvmemMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptpspintswphvmemMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptpspintswphvmemMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptpspintswphvmemMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptpspintswphvmemMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptpspintswphvmemMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptpspintswphvmemMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptpspintswphvmemMetricsHandler is the Get Handler for PtptpspintswphvmemMetrics
-func (s *RestServer) getPtptpspintswphvmemMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptpspintswphvmemMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptptdinteccMetricsAPIRoutes adds routes for PtptptdinteccMetrics
-func (s *RestServer) AddPtptptdinteccMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptptdinteccMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptptdinteccMetricsHandler))
-}
-
-// listPtptptdinteccMetricsHandler is the List Handler for PtptptdinteccMetrics
-func (s *RestServer) listPtptptdinteccMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptptdinteccMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptptdinteccMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptptdinteccMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptptdinteccMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptptdinteccMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptptdinteccMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptptdinteccMetricsHandler is the Get Handler for PtptptdinteccMetrics
-func (s *RestServer) getPtptptdinteccMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptptdinteccMetrics/%s", mux.Vars(r)["Meta.Name"])
-	return nil, nil
-}
-
-// AddPtptptdintfifoMetricsAPIRoutes adds routes for PtptptdintfifoMetrics
-func (s *RestServer) AddPtptptdintfifoMetricsAPIRoutes(r *mux.Router) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getPtptptdintfifoMetricsHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listPtptptdintfifoMetricsHandler))
-}
-
-// listPtptptdintfifoMetricsHandler is the List Handler for PtptptdintfifoMetrics
-func (s *RestServer) listPtptptdintfifoMetricsHandler(r *http.Request) (interface{}, error) {
-	iter, err := goproto.NewPtptptdintfifoMetricsIterator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
-	}
-
-	// for OSX tests
-	if iter == nil {
-		return nil, nil
-	}
-
-	var mtr []goproto.PtptptdintfifoMetrics
-
-	for iter.HasNext() {
-		temp := iter.Next()
-		if temp == nil {
-			continue
-		}
-
-		objMeta := s.GetObjectMeta("PtptptdintfifoMetricsKey", temp.GetKey())
-		if objMeta == nil {
-			log.Errorf("failed to get objMeta for PtptptdintfifoMetrics key %+v", temp.GetKey())
-			continue
-		}
-
-		temp.ObjectMeta = *objMeta
-		mtr = append(mtr, *temp)
-	}
-	iter.Free()
-	return mtr, nil
-}
-
-// getPtptptdintfifoMetricsPoints returns tags and fields to save in Venice TSDB
-func (s *RestServer) getPtptptdintfifoMetricsPoints() ([]*tsdb.Point, error) {
-
-	return nil, nil
-
-}
-
-// getPtptptdintfifoMetricsHandler is the Get Handler for PtptptdintfifoMetrics
-func (s *RestServer) getPtptptdintfifoMetricsHandler(r *http.Request) (interface{}, error) {
-	log.Infof("Got GET request PtptptdintfifoMetrics/%s", mux.Vars(r)["Meta.Name"])
+// getPmpbmintecccol4MetricsHandler is the Get Handler for Pmpbmintecccol4Metrics
+func (s *RestServer) getPmpbmintecccol4MetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request Pmpbmintecccol4Metrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
@@ -6100,6 +5476,630 @@ func (s *RestServer) getPtptptdintintfMetricsPoints() ([]*tsdb.Point, error) {
 // getPtptptdintintfMetricsHandler is the Get Handler for PtptptdintintfMetrics
 func (s *RestServer) getPtptptdintintfMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request PtptptdintintfMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsepicsintbadaddrMetricsAPIRoutes adds routes for SsepicsintbadaddrMetrics
+func (s *RestServer) AddSsepicsintbadaddrMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsepicsintbadaddrMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsepicsintbadaddrMetricsHandler))
+}
+
+// listSsepicsintbadaddrMetricsHandler is the List Handler for SsepicsintbadaddrMetrics
+func (s *RestServer) listSsepicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsepicsintbadaddrMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsepicsintbadaddrMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsepicsintbadaddrMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsepicsintbadaddrMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsepicsintbadaddrMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsepicsintbadaddrMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsepicsintbadaddrMetricsHandler is the Get Handler for SsepicsintbadaddrMetrics
+func (s *RestServer) getSsepicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsepicsintbadaddrMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsepicsintbgMetricsAPIRoutes adds routes for SsepicsintbgMetrics
+func (s *RestServer) AddSsepicsintbgMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsepicsintbgMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsepicsintbgMetricsHandler))
+}
+
+// listSsepicsintbgMetricsHandler is the List Handler for SsepicsintbgMetrics
+func (s *RestServer) listSsepicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsepicsintbgMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsepicsintbgMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsepicsintbgMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsepicsintbgMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsepicsintbgMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsepicsintbgMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsepicsintbgMetricsHandler is the Get Handler for SsepicsintbgMetrics
+func (s *RestServer) getSsepicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsepicsintbgMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsepicsintpicsMetricsAPIRoutes adds routes for SsepicsintpicsMetrics
+func (s *RestServer) AddSsepicsintpicsMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsepicsintpicsMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsepicsintpicsMetricsHandler))
+}
+
+// listSsepicsintpicsMetricsHandler is the List Handler for SsepicsintpicsMetrics
+func (s *RestServer) listSsepicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsepicsintpicsMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsepicsintpicsMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsepicsintpicsMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsepicsintpicsMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsepicsintpicsMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsepicsintpicsMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsepicsintpicsMetricsHandler is the Get Handler for SsepicsintpicsMetrics
+func (s *RestServer) getSsepicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsepicsintpicsMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsepicspiccintpiccMetricsAPIRoutes adds routes for SsepicspiccintpiccMetrics
+func (s *RestServer) AddSsepicspiccintpiccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsepicspiccintpiccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsepicspiccintpiccMetricsHandler))
+}
+
+// listSsepicspiccintpiccMetricsHandler is the List Handler for SsepicspiccintpiccMetrics
+func (s *RestServer) listSsepicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsepicspiccintpiccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsepicspiccintpiccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsepicspiccintpiccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsepicspiccintpiccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsepicspiccintpiccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsepicspiccintpiccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsepicspiccintpiccMetricsHandler is the Get Handler for SsepicspiccintpiccMetrics
+func (s *RestServer) getSsepicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsepicspiccintpiccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsipicsintbadaddrMetricsAPIRoutes adds routes for SsipicsintbadaddrMetrics
+func (s *RestServer) AddSsipicsintbadaddrMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsipicsintbadaddrMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsipicsintbadaddrMetricsHandler))
+}
+
+// listSsipicsintbadaddrMetricsHandler is the List Handler for SsipicsintbadaddrMetrics
+func (s *RestServer) listSsipicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsipicsintbadaddrMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsipicsintbadaddrMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsipicsintbadaddrMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsipicsintbadaddrMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsipicsintbadaddrMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsipicsintbadaddrMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsipicsintbadaddrMetricsHandler is the Get Handler for SsipicsintbadaddrMetrics
+func (s *RestServer) getSsipicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsipicsintbadaddrMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsipicsintbgMetricsAPIRoutes adds routes for SsipicsintbgMetrics
+func (s *RestServer) AddSsipicsintbgMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsipicsintbgMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsipicsintbgMetricsHandler))
+}
+
+// listSsipicsintbgMetricsHandler is the List Handler for SsipicsintbgMetrics
+func (s *RestServer) listSsipicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsipicsintbgMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsipicsintbgMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsipicsintbgMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsipicsintbgMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsipicsintbgMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsipicsintbgMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsipicsintbgMetricsHandler is the Get Handler for SsipicsintbgMetrics
+func (s *RestServer) getSsipicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsipicsintbgMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsipicsintpicsMetricsAPIRoutes adds routes for SsipicsintpicsMetrics
+func (s *RestServer) AddSsipicsintpicsMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsipicsintpicsMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsipicsintpicsMetricsHandler))
+}
+
+// listSsipicsintpicsMetricsHandler is the List Handler for SsipicsintpicsMetrics
+func (s *RestServer) listSsipicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsipicsintpicsMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsipicsintpicsMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsipicsintpicsMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsipicsintpicsMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsipicsintpicsMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsipicsintpicsMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsipicsintpicsMetricsHandler is the Get Handler for SsipicsintpicsMetrics
+func (s *RestServer) getSsipicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsipicsintpicsMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddSsipicspiccintpiccMetricsAPIRoutes adds routes for SsipicspiccintpiccMetrics
+func (s *RestServer) AddSsipicspiccintpiccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getSsipicspiccintpiccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listSsipicspiccintpiccMetricsHandler))
+}
+
+// listSsipicspiccintpiccMetricsHandler is the List Handler for SsipicspiccintpiccMetrics
+func (s *RestServer) listSsipicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewSsipicspiccintpiccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.SsipicspiccintpiccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("SsipicspiccintpiccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for SsipicspiccintpiccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getSsipicspiccintpiccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getSsipicspiccintpiccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getSsipicspiccintpiccMetricsHandler is the Get Handler for SsipicspiccintpiccMetrics
+func (s *RestServer) getSsipicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request SsipicspiccintpiccMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddTpcpicsintbadaddrMetricsAPIRoutes adds routes for TpcpicsintbadaddrMetrics
+func (s *RestServer) AddTpcpicsintbadaddrMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getTpcpicsintbadaddrMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listTpcpicsintbadaddrMetricsHandler))
+}
+
+// listTpcpicsintbadaddrMetricsHandler is the List Handler for TpcpicsintbadaddrMetrics
+func (s *RestServer) listTpcpicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewTpcpicsintbadaddrMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.TpcpicsintbadaddrMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("TpcpicsintbadaddrMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for TpcpicsintbadaddrMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getTpcpicsintbadaddrMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getTpcpicsintbadaddrMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getTpcpicsintbadaddrMetricsHandler is the Get Handler for TpcpicsintbadaddrMetrics
+func (s *RestServer) getTpcpicsintbadaddrMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request TpcpicsintbadaddrMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddTpcpicsintbgMetricsAPIRoutes adds routes for TpcpicsintbgMetrics
+func (s *RestServer) AddTpcpicsintbgMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getTpcpicsintbgMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listTpcpicsintbgMetricsHandler))
+}
+
+// listTpcpicsintbgMetricsHandler is the List Handler for TpcpicsintbgMetrics
+func (s *RestServer) listTpcpicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewTpcpicsintbgMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.TpcpicsintbgMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("TpcpicsintbgMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for TpcpicsintbgMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getTpcpicsintbgMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getTpcpicsintbgMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getTpcpicsintbgMetricsHandler is the Get Handler for TpcpicsintbgMetrics
+func (s *RestServer) getTpcpicsintbgMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request TpcpicsintbgMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddTpcpicsintpicsMetricsAPIRoutes adds routes for TpcpicsintpicsMetrics
+func (s *RestServer) AddTpcpicsintpicsMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getTpcpicsintpicsMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listTpcpicsintpicsMetricsHandler))
+}
+
+// listTpcpicsintpicsMetricsHandler is the List Handler for TpcpicsintpicsMetrics
+func (s *RestServer) listTpcpicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewTpcpicsintpicsMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.TpcpicsintpicsMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("TpcpicsintpicsMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for TpcpicsintpicsMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getTpcpicsintpicsMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getTpcpicsintpicsMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getTpcpicsintpicsMetricsHandler is the Get Handler for TpcpicsintpicsMetrics
+func (s *RestServer) getTpcpicsintpicsMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request TpcpicsintpicsMetrics/%s", mux.Vars(r)["Meta.Name"])
+	return nil, nil
+}
+
+// AddTpcpicspiccintpiccMetricsAPIRoutes adds routes for TpcpicspiccintpiccMetrics
+func (s *RestServer) AddTpcpicspiccintpiccMetricsAPIRoutes(r *mux.Router) {
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(s.getTpcpicspiccintpiccMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listTpcpicspiccintpiccMetricsHandler))
+}
+
+// listTpcpicspiccintpiccMetricsHandler is the List Handler for TpcpicspiccintpiccMetrics
+func (s *RestServer) listTpcpicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	iter, err := goproto.NewTpcpicspiccintpiccMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	var mtr []goproto.TpcpicspiccintpiccMetrics
+
+	for iter.HasNext() {
+		temp := iter.Next()
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.GetObjectMeta("TpcpicspiccintpiccMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for TpcpicspiccintpiccMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
+		mtr = append(mtr, *temp)
+	}
+	iter.Free()
+	return mtr, nil
+}
+
+// getTpcpicspiccintpiccMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getTpcpicspiccintpiccMetricsPoints() ([]*tsdb.Point, error) {
+
+	return nil, nil
+
+}
+
+// getTpcpicspiccintpiccMetricsHandler is the Get Handler for TpcpicspiccintpiccMetrics
+func (s *RestServer) getTpcpicspiccintpiccMetricsHandler(r *http.Request) (interface{}, error) {
+	log.Infof("Got GET request TpcpicspiccintpiccMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 

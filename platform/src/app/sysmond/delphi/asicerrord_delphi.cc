@@ -51,17 +51,11 @@ delphi::objects::ppappa1intpametrics_t ppappa1intpametrics;
 delphi::objects::ppappa1intswphvmemmetrics_t ppappa1intswphvmemmetrics;
 delphi::objects::ppappa1intintfmetrics_t ppappa1intintfmetrics;
 delphi::objects::sgite0interrmetrics_t sgite0interrmetrics;
-delphi::objects::sgite0intinfometrics_t sgite0intinfometrics;
 delphi::objects::sgite1interrmetrics_t sgite1interrmetrics;
-delphi::objects::sgite1intinfometrics_t sgite1intinfometrics;
 delphi::objects::sgite2interrmetrics_t sgite2interrmetrics;
-delphi::objects::sgite2intinfometrics_t sgite2intinfometrics;
 delphi::objects::sgite3interrmetrics_t sgite3interrmetrics;
-delphi::objects::sgite3intinfometrics_t sgite3intinfometrics;
 delphi::objects::sgite4interrmetrics_t sgite4interrmetrics;
-delphi::objects::sgite4intinfometrics_t sgite4intinfometrics;
 delphi::objects::sgite5interrmetrics_t sgite5interrmetrics;
-delphi::objects::sgite5intinfometrics_t sgite5intinfometrics;
 delphi::objects::sgimpu0interrmetrics_t sgimpu0interrmetrics;
 delphi::objects::sgimpu0intinfometrics_t sgimpu0intinfometrics;
 delphi::objects::sgimpu1interrmetrics_t sgimpu1interrmetrics;
@@ -83,17 +77,11 @@ delphi::objects::pxbpxbinttgteccmetrics_t pxbpxbinttgteccmetrics;
 delphi::objects::pxbpxbintitreccmetrics_t pxbpxbintitreccmetrics;
 delphi::objects::pxbpxbinterrmetrics_t pxbpxbinterrmetrics;
 delphi::objects::sgete0interrmetrics_t sgete0interrmetrics;
-delphi::objects::sgete0intinfometrics_t sgete0intinfometrics;
 delphi::objects::sgete1interrmetrics_t sgete1interrmetrics;
-delphi::objects::sgete1intinfometrics_t sgete1intinfometrics;
 delphi::objects::sgete2interrmetrics_t sgete2interrmetrics;
-delphi::objects::sgete2intinfometrics_t sgete2intinfometrics;
 delphi::objects::sgete3interrmetrics_t sgete3interrmetrics;
-delphi::objects::sgete3intinfometrics_t sgete3intinfometrics;
 delphi::objects::sgete4interrmetrics_t sgete4interrmetrics;
-delphi::objects::sgete4intinfometrics_t sgete4intinfometrics;
 delphi::objects::sgete5interrmetrics_t sgete5interrmetrics;
-delphi::objects::sgete5intinfometrics_t sgete5intinfometrics;
 delphi::objects::sgempu0interrmetrics_t sgempu0interrmetrics;
 delphi::objects::sgempu0intinfometrics_t sgempu0intinfometrics;
 delphi::objects::sgempu1interrmetrics_t sgempu1interrmetrics;
@@ -106,8 +94,6 @@ delphi::objects::sgempu4interrmetrics_t sgempu4interrmetrics;
 delphi::objects::sgempu4intinfometrics_t sgempu4intinfometrics;
 delphi::objects::sgempu5interrmetrics_t sgempu5interrmetrics;
 delphi::objects::sgempu5intinfometrics_t sgempu5intinfometrics;
-delphi::objects::prprintreg1metrics_t prprintreg1metrics;
-delphi::objects::prprpspintinfometrics_t prprpspintinfometrics;
 delphi::objects::prprpspinterrmetrics_t prprpspinterrmetrics;
 delphi::objects::prprpspintfatalmetrics_t prprpspintfatalmetrics;
 delphi::objects::prprpspintlifqstatemapmetrics_t prprpspintlifqstatemapmetrics;
@@ -142,8 +128,6 @@ delphi::objects::ppppportc6intcmacmetrics_t ppppportc6intcmacmetrics;
 delphi::objects::ppppportc6intceccmetrics_t ppppportc6intceccmetrics;
 delphi::objects::ppppportc7intcmacmetrics_t ppppportc7intcmacmetrics;
 delphi::objects::ppppportc7intceccmetrics_t ppppportc7intceccmetrics;
-delphi::objects::ptptintreg1metrics_t ptptintreg1metrics;
-delphi::objects::ptptpspintinfometrics_t ptptpspintinfometrics;
 delphi::objects::ptptpspinterrmetrics_t ptptpspinterrmetrics;
 delphi::objects::ptptpspintfatalmetrics_t ptptpspintfatalmetrics;
 delphi::objects::ptptpspintlifqstatemapmetrics_t ptptpspintlifqstatemapmetrics;
@@ -154,21 +138,13 @@ delphi::objects::ptptptdintgrp1metrics_t ptptptdintgrp1metrics;
 delphi::objects::ptptptdintgrp2metrics_t ptptptdintgrp2metrics;
 delphi::objects::ptptptdintintfmetrics_t ptptptdintintfmetrics;
 delphi::objects::pcrte0interrmetrics_t pcrte0interrmetrics;
-delphi::objects::pcrte0intinfometrics_t pcrte0intinfometrics;
 delphi::objects::pcrte1interrmetrics_t pcrte1interrmetrics;
-delphi::objects::pcrte1intinfometrics_t pcrte1intinfometrics;
 delphi::objects::pcrte2interrmetrics_t pcrte2interrmetrics;
-delphi::objects::pcrte2intinfometrics_t pcrte2intinfometrics;
 delphi::objects::pcrte3interrmetrics_t pcrte3interrmetrics;
-delphi::objects::pcrte3intinfometrics_t pcrte3intinfometrics;
 delphi::objects::pcrte4interrmetrics_t pcrte4interrmetrics;
-delphi::objects::pcrte4intinfometrics_t pcrte4intinfometrics;
 delphi::objects::pcrte5interrmetrics_t pcrte5interrmetrics;
-delphi::objects::pcrte5intinfometrics_t pcrte5intinfometrics;
 delphi::objects::pcrte6interrmetrics_t pcrte6interrmetrics;
-delphi::objects::pcrte6intinfometrics_t pcrte6intinfometrics;
 delphi::objects::pcrte7interrmetrics_t pcrte7interrmetrics;
-delphi::objects::pcrte7intinfometrics_t pcrte7intinfometrics;
 delphi::objects::pcrmpu0interrmetrics_t pcrmpu0interrmetrics;
 delphi::objects::pcrmpu0intinfometrics_t pcrmpu0intinfometrics;
 delphi::objects::pcrmpu1interrmetrics_t pcrmpu1interrmetrics;
@@ -189,21 +165,13 @@ delphi::objects::txstxsintschmetrics_t txstxsintschmetrics;
 delphi::objects::txstxsinttmrmetrics_t txstxsinttmrmetrics;
 delphi::objects::txstxsintsramseccmetrics_t txstxsintsramseccmetrics;
 delphi::objects::pctte0interrmetrics_t pctte0interrmetrics;
-delphi::objects::pctte0intinfometrics_t pctte0intinfometrics;
 delphi::objects::pctte1interrmetrics_t pctte1interrmetrics;
-delphi::objects::pctte1intinfometrics_t pctte1intinfometrics;
 delphi::objects::pctte2interrmetrics_t pctte2interrmetrics;
-delphi::objects::pctte2intinfometrics_t pctte2intinfometrics;
 delphi::objects::pctte3interrmetrics_t pctte3interrmetrics;
-delphi::objects::pctte3intinfometrics_t pctte3intinfometrics;
 delphi::objects::pctte4interrmetrics_t pctte4interrmetrics;
-delphi::objects::pctte4intinfometrics_t pctte4intinfometrics;
 delphi::objects::pctte5interrmetrics_t pctte5interrmetrics;
-delphi::objects::pctte5intinfometrics_t pctte5intinfometrics;
 delphi::objects::pctte6interrmetrics_t pctte6interrmetrics;
-delphi::objects::pctte6intinfometrics_t pctte6intinfometrics;
 delphi::objects::pctte7interrmetrics_t pctte7interrmetrics;
-delphi::objects::pctte7intinfometrics_t pctte7intinfometrics;
 delphi::objects::pctmpu0interrmetrics_t pctmpu0interrmetrics;
 delphi::objects::pctmpu0intinfometrics_t pctmpu0intinfometrics;
 delphi::objects::pctmpu1interrmetrics_t pctmpu1interrmetrics;
@@ -255,17 +223,9 @@ delphi::objects::pbpbchbmintecchbmmtumetrics_t pbpbchbmintecchbmmtumetrics;
 delphi::objects::pbpbchbmintecchbmrbmetrics_t pbpbchbmintecchbmrbmetrics;
 delphi::objects::pbpbchbmintecchbmwbmetrics_t pbpbchbmintecchbmwbmetrics;
 delphi::objects::pbpbchbmintecchbmhtmetrics_t pbpbchbmintecchbmhtmetrics;
-delphi::objects::pbpbchbminthbmxoffmetrics_t pbpbchbminthbmxoffmetrics;
 delphi::objects::pbpbchbminthbmpbusviolationinmetrics_t pbpbchbminthbmpbusviolationinmetrics;
 delphi::objects::pbpbchbminthbmpbusviolationoutmetrics_t pbpbchbminthbmpbusviolationoutmetrics;
-delphi::objects::pbpbchbminthbmdropmetrics_t pbpbchbminthbmdropmetrics;
-delphi::objects::pbpbchbminthbmstopmetrics_t pbpbchbminthbmstopmetrics;
 delphi::objects::pbpbchbminthbmaxierrrspmetrics_t pbpbchbminthbmaxierrrspmetrics;
-delphi::objects::pbpbchbminthbmdropemergencymetrics_t pbpbchbminthbmdropemergencymetrics;
-delphi::objects::pbpbchbminthbmdropwriteackmetrics_t pbpbchbminthbmdropwriteackmetrics;
-delphi::objects::pbpbchbminthbmdropctrlmetrics_t pbpbchbminthbmdropctrlmetrics;
-delphi::objects::pbpbchbminthbmdropthresholdmetrics_t pbpbchbminthbmdropthresholdmetrics;
-delphi::objects::pbpbchbminthbmtruncatenometrics_t pbpbchbminthbmtruncatenometrics;
 delphi::objects::pmpbmintecccol0metrics_t pmpbmintecccol0metrics;
 delphi::objects::pmpbmintecccol1metrics_t pmpbmintecccol1metrics;
 delphi::objects::pmpbmintecccol2metrics_t pmpbmintecccol2metrics;
@@ -282,7 +242,6 @@ delphi::objects::ssepicsintbadaddrmetrics_t ssepicsintbadaddrmetrics;
 delphi::objects::ssepicsintbgmetrics_t ssepicsintbgmetrics;
 delphi::objects::ssepicspiccintpiccmetrics_t ssepicspiccintpiccmetrics;
 delphi::objects::bxbxintmacmetrics_t bxbxintmacmetrics;
-delphi::objects::mdhensintipcoremetrics_t mdhensintipcoremetrics;
 delphi::objects::mdhensintpkeccmetrics_t mdhensintpkeccmetrics;
 delphi::objects::mdhensintdrbgintrameccmetrics_t mdhensintdrbgintrameccmetrics;
 delphi::objects::mdhensintdrbgcryptorameccmetrics_t mdhensintdrbgcryptorameccmetrics;
@@ -324,52 +283,22 @@ delphi::objects::mcmc6mchintmcmetrics_t mcmc6mchintmcmetrics;
 delphi::objects::mcmc7intmcmetrics_t mcmc7intmcmetrics;
 delphi::objects::mcmc7mchintmcmetrics_t mcmc7mchintmcmetrics;
 delphi::objects::dppdpp0intreg1metrics_t dppdpp0intreg1metrics;
-delphi::objects::dppdpp0intreg2metrics_t dppdpp0intreg2metrics;
 delphi::objects::dppdpp0intsramseccmetrics_t dppdpp0intsramseccmetrics;
 delphi::objects::dppdpp0intfifometrics_t dppdpp0intfifometrics;
 delphi::objects::dppdpp0intsparemetrics_t dppdpp0intsparemetrics;
 delphi::objects::dppdpp0intcreditmetrics_t dppdpp0intcreditmetrics;
 delphi::objects::dppdpp1intreg1metrics_t dppdpp1intreg1metrics;
-delphi::objects::dppdpp1intreg2metrics_t dppdpp1intreg2metrics;
 delphi::objects::dppdpp1intsramseccmetrics_t dppdpp1intsramseccmetrics;
 delphi::objects::dppdpp1intfifometrics_t dppdpp1intfifometrics;
 delphi::objects::dppdpp1intsparemetrics_t dppdpp1intsparemetrics;
 delphi::objects::dppdpp1intcreditmetrics_t dppdpp1intcreditmetrics;
-delphi::objects::semasemaintgroupsintregmetrics_t semasemaintgroupsintregmetrics;
-delphi::objects::mpmpnsintcryptometrics_t mpmpnsintcryptometrics;
 delphi::objects::msmsintmsmetrics_t msmsintmsmetrics;
 delphi::objects::msmsintmiscmetrics_t msmsintmiscmetrics;
-delphi::objects::msmsintesecuremetrics_t msmsintesecuremetrics;
 delphi::objects::msmsintprp1metrics_t msmsintprp1metrics;
 delphi::objects::msmsintprp2metrics_t msmsintprp2metrics;
 delphi::objects::msmsintprp3metrics_t msmsintprp3metrics;
 delphi::objects::msmsintprp4metrics_t msmsintprp4metrics;
 delphi::objects::msmsintprp5metrics_t msmsintprp5metrics;
-delphi::objects::msmsintgic0metrics_t msmsintgic0metrics;
-delphi::objects::msmsintgic1metrics_t msmsintgic1metrics;
-delphi::objects::msmsintgic2metrics_t msmsintgic2metrics;
-delphi::objects::msmsintgic3metrics_t msmsintgic3metrics;
-delphi::objects::msmsintgic4metrics_t msmsintgic4metrics;
-delphi::objects::msmsintgic5metrics_t msmsintgic5metrics;
-delphi::objects::msmsintgic6metrics_t msmsintgic6metrics;
-delphi::objects::msmsintgic7metrics_t msmsintgic7metrics;
-delphi::objects::msmsintgic8metrics_t msmsintgic8metrics;
-delphi::objects::msmsintgic9metrics_t msmsintgic9metrics;
-delphi::objects::msmsintgic10metrics_t msmsintgic10metrics;
-delphi::objects::msmsintgic11metrics_t msmsintgic11metrics;
-delphi::objects::msmsintgic12metrics_t msmsintgic12metrics;
-delphi::objects::msmsintgic13metrics_t msmsintgic13metrics;
-delphi::objects::msmsintgic14metrics_t msmsintgic14metrics;
-delphi::objects::msmsintgic15metrics_t msmsintgic15metrics;
-delphi::objects::msmsintgic16metrics_t msmsintgic16metrics;
-delphi::objects::msmsintgic17metrics_t msmsintgic17metrics;
-delphi::objects::msmsintgic18metrics_t msmsintgic18metrics;
-delphi::objects::msmsintgic19metrics_t msmsintgic19metrics;
-delphi::objects::msmsintgic20metrics_t msmsintgic20metrics;
-delphi::objects::msmsintgic21metrics_t msmsintgic21metrics;
-delphi::objects::msmsintgic22metrics_t msmsintgic22metrics;
-delphi::objects::msmsintgic23metrics_t msmsintgic23metrics;
-delphi::objects::msemintgroupsintregmetrics_t msemintgroupsintregmetrics;
 delphi::objects::mxmx0intmacmetrics_t mxmx0intmacmetrics;
 delphi::objects::mxmx0inteccmetrics_t mxmx0inteccmetrics;
 delphi::objects::mxmx1intmacmetrics_t mxmx1intmacmetrics;
@@ -1062,36 +991,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->ecc_correctable++;
-            break;
-        case 4:
-            reg->phv_invalid_sram++;
-            break;
-        case 5:
-            reg->phv_invalid_data++;
-            break;
-        case 6:
-            reg->phv_done0++;
-            break;
-        case 7:
-            reg->phv_done1++;
-            break;
-        case 8:
-            reg->phv_done2++;
-            break;
-        case 9:
-            reg->phv_done3++;
-            break;
-        case 10:
-            reg->phv_done4++;
-            break;
-        case 11:
-            reg->phv_done5++;
-            break;
-        case 12:
-            reg->phv_done6++;
-            break;
-        case 13:
-            reg->phv_done7++;
             break;
         default:
             break;
@@ -1837,36 +1736,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->ecc_correctable++;
             break;
-        case 4:
-            reg->phv_invalid_sram++;
-            break;
-        case 5:
-            reg->phv_invalid_data++;
-            break;
-        case 6:
-            reg->phv_done0++;
-            break;
-        case 7:
-            reg->phv_done1++;
-            break;
-        case 8:
-            reg->phv_done2++;
-            break;
-        case 9:
-            reg->phv_done3++;
-            break;
-        case 10:
-            reg->phv_done4++;
-            break;
-        case 11:
-            reg->phv_done5++;
-            break;
-        case 12:
-            reg->phv_done6++;
-            break;
-        case 13:
-            reg->phv_done7++;
-            break;
         default:
             break;
         }
@@ -1947,9 +1816,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 6:
             reg->spurious_tcam_rsp++;
             break;
-        case 7:
-            reg->te2mpu_timeout++;
-            break;
         case 8:
             reg->axi_rdrsp_err++;
             break;
@@ -1998,67 +1864,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite0interrMetrics::Publish(key, reg);
         break;
     }
-    case 40:
-    {
-        delphi::objects::sgite0intinfometrics_t *reg = &sgite0intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite0intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 42:
     {
         delphi::objects::sgite1interrmetrics_t *reg = &sgite1interrmetrics;
@@ -2077,9 +1882,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -2129,67 +1931,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite1interrMetrics::Publish(key, reg);
         break;
     }
-    case 43:
-    {
-        delphi::objects::sgite1intinfometrics_t *reg = &sgite1intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite1intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 45:
     {
         delphi::objects::sgite2interrmetrics_t *reg = &sgite2interrmetrics;
@@ -2208,9 +1949,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -2260,67 +1998,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite2interrMetrics::Publish(key, reg);
         break;
     }
-    case 46:
-    {
-        delphi::objects::sgite2intinfometrics_t *reg = &sgite2intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite2intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 48:
     {
         delphi::objects::sgite3interrmetrics_t *reg = &sgite3interrmetrics;
@@ -2339,9 +2016,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -2391,67 +2065,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite3interrMetrics::Publish(key, reg);
         break;
     }
-    case 49:
-    {
-        delphi::objects::sgite3intinfometrics_t *reg = &sgite3intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite3intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 51:
     {
         delphi::objects::sgite4interrmetrics_t *reg = &sgite4interrmetrics;
@@ -2470,9 +2083,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -2522,67 +2132,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite4interrMetrics::Publish(key, reg);
         break;
     }
-    case 52:
-    {
-        delphi::objects::sgite4intinfometrics_t *reg = &sgite4intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite4intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 54:
     {
         delphi::objects::sgite5interrmetrics_t *reg = &sgite5interrmetrics;
@@ -2601,9 +2150,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -2653,74 +2199,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgite5interrMetrics::Publish(key, reg);
         break;
     }
-    case 55:
-    {
-        delphi::objects::sgite5intinfometrics_t *reg = &sgite5intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgite5intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 57:
     {
         delphi::objects::sgimpu0interrmetrics_t *reg = &sgimpu0interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -2809,18 +2291,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu0intinfometrics_t *reg = &sgimpu0intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -2843,9 +2313,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu1interrmetrics_t *reg = &sgimpu1interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -2934,18 +2401,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu1intinfometrics_t *reg = &sgimpu1intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -2968,9 +2423,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu2interrmetrics_t *reg = &sgimpu2interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -3059,18 +2511,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu2intinfometrics_t *reg = &sgimpu2intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -3093,9 +2533,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu3interrmetrics_t *reg = &sgimpu3interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -3184,18 +2621,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu3intinfometrics_t *reg = &sgimpu3intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -3218,9 +2643,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu4interrmetrics_t *reg = &sgimpu4interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -3309,18 +2731,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu4intinfometrics_t *reg = &sgimpu4intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -3343,9 +2753,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu5interrmetrics_t *reg = &sgimpu5interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -3434,18 +2841,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgimpu5intinfometrics_t *reg = &sgimpu5intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -3476,9 +2871,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 4:
             reg->too_many_rl_sch_error++;
-            break;
-        case 5:
-            reg->picc++;
             break;
         default:
             break;
@@ -3664,12 +3056,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 8:
             reg->intr_legacy_fifo_overrun++;
             break;
-        case 9:
-            reg->int_credit_positive_after_return_interrupt++;
-            break;
-        case 10:
-            reg->int_credits_max_debug_threshold_interrupt++;
-            break;
         case 11:
             reg->intr_bresp_err++;
             break;
@@ -3850,9 +3236,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 4:
             reg->cpl_stat++;
             break;
-        case 5:
-            reg->cpl_unexp++;
-            break;
         case 6:
             reg->cpl_timeout++;
             break;
@@ -3926,9 +3309,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 6:
             reg->spurious_tcam_rsp++;
             break;
-        case 7:
-            reg->te2mpu_timeout++;
-            break;
         case 8:
             reg->axi_rdrsp_err++;
             break;
@@ -3977,67 +3357,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete0interrMetrics::Publish(key, reg);
         break;
     }
-    case 88:
-    {
-        delphi::objects::sgete0intinfometrics_t *reg = &sgete0intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete0intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 90:
     {
         delphi::objects::sgete1interrmetrics_t *reg = &sgete1interrmetrics;
@@ -4056,9 +3375,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -4108,67 +3424,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete1interrMetrics::Publish(key, reg);
         break;
     }
-    case 91:
-    {
-        delphi::objects::sgete1intinfometrics_t *reg = &sgete1intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete1intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 93:
     {
         delphi::objects::sgete2interrmetrics_t *reg = &sgete2interrmetrics;
@@ -4187,9 +3442,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -4239,67 +3491,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete2interrMetrics::Publish(key, reg);
         break;
     }
-    case 94:
-    {
-        delphi::objects::sgete2intinfometrics_t *reg = &sgete2intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete2intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 96:
     {
         delphi::objects::sgete3interrmetrics_t *reg = &sgete3interrmetrics;
@@ -4318,9 +3509,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -4370,67 +3558,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete3interrMetrics::Publish(key, reg);
         break;
     }
-    case 97:
-    {
-        delphi::objects::sgete3intinfometrics_t *reg = &sgete3intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete3intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 99:
     {
         delphi::objects::sgete4interrmetrics_t *reg = &sgete4interrmetrics;
@@ -4449,9 +3576,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -4501,67 +3625,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete4interrMetrics::Publish(key, reg);
         break;
     }
-    case 100:
-    {
-        delphi::objects::sgete4intinfometrics_t *reg = &sgete4intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete4intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 102:
     {
         delphi::objects::sgete5interrmetrics_t *reg = &sgete5interrmetrics;
@@ -4580,9 +3643,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -4632,74 +3692,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Sgete5interrMetrics::Publish(key, reg);
         break;
     }
-    case 103:
-    {
-        delphi::objects::sgete5intinfometrics_t *reg = &sgete5intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Sgete5intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 105:
     {
         delphi::objects::sgempu0interrmetrics_t *reg = &sgempu0interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -4788,18 +3784,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu0intinfometrics_t *reg = &sgempu0intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -4822,9 +3806,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu1interrmetrics_t *reg = &sgempu1interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -4913,18 +3894,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu1intinfometrics_t *reg = &sgempu1intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -4947,9 +3916,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu2interrmetrics_t *reg = &sgempu2interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -5038,18 +4004,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu2intinfometrics_t *reg = &sgempu2intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -5072,9 +4026,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu3interrmetrics_t *reg = &sgempu3interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -5163,18 +4114,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu3intinfometrics_t *reg = &sgempu3intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -5197,9 +4136,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu4interrmetrics_t *reg = &sgempu4interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -5288,18 +4224,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu4intinfometrics_t *reg = &sgempu4intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -5322,9 +4246,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu5interrmetrics_t *reg = &sgempu5interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -5413,18 +4334,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::sgempu5intinfometrics_t *reg = &sgempu5intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -5441,59 +4350,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         }
         delphi::objects::Sgempu5intinfoMetrics::Publish(key, reg);
-        break;
-    }
-    case 123:
-    {
-        delphi::objects::prprintreg1metrics_t *reg = &prprintreg1metrics;
-        switch (field_id) {
-        case 2:
-            reg->slave_prd++;
-            break;
-        case 3:
-            reg->slave_psp++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Prprintreg1Metrics::Publish(key, reg);
-        break;
-    }
-    case 125:
-    {
-        delphi::objects::prprpspintinfometrics_t *reg = &prprpspintinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->pr_pkt_ff_almost_full++;
-            break;
-        case 3:
-            reg->ptd_npv_phv_full++;
-            break;
-        case 4:
-            reg->phv_srdy_collapsed++;
-            break;
-        case 5:
-            reg->pr_resub_pkt_before_phv++;
-            break;
-        case 6:
-            reg->pb_pbus_fsm0_no_data++;
-            break;
-        case 7:
-            reg->pb_pbus_fsm1_no_data++;
-            break;
-        case 8:
-            reg->pb_pbus_fsm2_no_data++;
-            break;
-        case 9:
-            reg->pb_pbus_fsm3_no_data++;
-            break;
-        case 10:
-            reg->pb_pbus_fsm4_no_data++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PrprpspintinfoMetrics::Publish(key, reg);
         break;
     }
     case 126:
@@ -5637,9 +4493,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->ecc_correctable++;
             break;
-        case 4:
-            reg->qid_invalid++;
-            break;
         default:
             break;
         }
@@ -5655,36 +4508,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->ecc_correctable++;
-            break;
-        case 4:
-            reg->phv_invalid_sram++;
-            break;
-        case 5:
-            reg->phv_invalid_data++;
-            break;
-        case 6:
-            reg->phv_done0++;
-            break;
-        case 7:
-            reg->phv_done1++;
-            break;
-        case 8:
-            reg->phv_done2++;
-            break;
-        case 9:
-            reg->phv_done3++;
-            break;
-        case 10:
-            reg->phv_done4++;
-            break;
-        case 11:
-            reg->phv_done5++;
-            break;
-        case 12:
-            reg->phv_done6++;
-            break;
-        case 13:
-            reg->phv_done7++;
             break;
         default:
             break;
@@ -5867,9 +4690,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 10:
             reg->pkt_not_sop++;
             break;
-        case 11:
-            reg->pkt_len_calc_len_mismatch++;
-            break;
         case 12:
             reg->spurious_rd_resp++;
             break;
@@ -5950,81 +4770,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->ppsd_dbe++;
             break;
-        case 4:
-            reg->sbus_err++;
-            break;
-        case 5:
-            reg->port7_c_int++;
-            break;
-        case 6:
-            reg->port7_p_int++;
-            break;
-        case 7:
-            reg->port6_c_int++;
-            break;
-        case 8:
-            reg->port6_p_int++;
-            break;
-        case 9:
-            reg->port5_c_int++;
-            break;
-        case 10:
-            reg->port5_p_int++;
-            break;
-        case 11:
-            reg->port4_c_int++;
-            break;
-        case 12:
-            reg->port4_p_int++;
-            break;
-        case 13:
-            reg->port3_c_int++;
-            break;
-        case 14:
-            reg->port3_p_int++;
-            break;
-        case 15:
-            reg->port2_c_int++;
-            break;
-        case 16:
-            reg->port2_p_int++;
-            break;
-        case 17:
-            reg->port1_c_int++;
-            break;
-        case 18:
-            reg->port1_p_int++;
-            break;
-        case 19:
-            reg->port0_c_int++;
-            break;
-        case 20:
-            reg->port0_p_int++;
-            break;
-        case 21:
-            reg->perst7n_dn2up++;
-            break;
-        case 22:
-            reg->perst6n_dn2up++;
-            break;
-        case 23:
-            reg->perst5n_dn2up++;
-            break;
-        case 24:
-            reg->perst4n_dn2up++;
-            break;
-        case 25:
-            reg->perst3n_dn2up++;
-            break;
-        case 26:
-            reg->perst2n_dn2up++;
-            break;
-        case 27:
-            reg->perst1n_dn2up++;
-            break;
-        case 28:
-            reg->perst0n_dn2up++;
-            break;
         default:
             break;
         }
@@ -6040,9 +4785,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->replay_bfr_overflow++;
-            break;
-        case 4:
-            reg->rxtlp_err++;
             break;
         case 5:
             reg->txbuf_0_uncorrectable++;
@@ -6084,9 +4826,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->replay_bfr_overflow++;
             break;
-        case 4:
-            reg->rxtlp_err++;
-            break;
         case 5:
             reg->txbuf_0_uncorrectable++;
             break;
@@ -6126,9 +4865,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->replay_bfr_overflow++;
-            break;
-        case 4:
-            reg->rxtlp_err++;
             break;
         case 5:
             reg->txbuf_0_uncorrectable++;
@@ -6170,9 +4906,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->replay_bfr_overflow++;
             break;
-        case 4:
-            reg->rxtlp_err++;
-            break;
         case 5:
             reg->txbuf_0_uncorrectable++;
             break;
@@ -6212,9 +4945,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->replay_bfr_overflow++;
-            break;
-        case 4:
-            reg->rxtlp_err++;
             break;
         case 5:
             reg->txbuf_0_uncorrectable++;
@@ -6256,9 +4986,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->replay_bfr_overflow++;
             break;
-        case 4:
-            reg->rxtlp_err++;
-            break;
         case 5:
             reg->txbuf_0_uncorrectable++;
             break;
@@ -6298,9 +5025,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->replay_bfr_overflow++;
-            break;
-        case 4:
-            reg->rxtlp_err++;
             break;
         case 5:
             reg->txbuf_0_uncorrectable++;
@@ -6342,9 +5066,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->replay_bfr_overflow++;
             break;
-        case 4:
-            reg->rxtlp_err++;
-            break;
         case 5:
             reg->txbuf_0_uncorrectable++;
             break;
@@ -6379,62 +5100,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc0intcmacmetrics_t *reg = &ppppportc0intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6480,62 +5150,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc1intcmacmetrics_t *reg = &ppppportc1intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6581,62 +5200,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc2intcmacmetrics_t *reg = &ppppportc2intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6682,62 +5250,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc3intcmacmetrics_t *reg = &ppppportc3intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6783,62 +5300,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc4intcmacmetrics_t *reg = &ppppportc4intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6884,62 +5350,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc5intcmacmetrics_t *reg = &ppppportc5intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -6985,62 +5400,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc6intcmacmetrics_t *reg = &ppppportc6intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -7086,62 +5450,11 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::ppppportc7intcmacmetrics_t *reg = &ppppportc7intcmacmetrics;
         switch (field_id) {
-        case 2:
-            reg->link_dn2up++;
-            break;
-        case 3:
-            reg->link_up2dn++;
-            break;
-        case 4:
-            reg->sec_bus_rst++;
-            break;
-        case 5:
-            reg->rst_up2dn++;
-            break;
-        case 6:
-            reg->rst_dn2up++;
-            break;
-        case 7:
-            reg->portgate_open2close++;
-            break;
-        case 8:
-            reg->ltssm_st_changed++;
-            break;
-        case 9:
-            reg->sec_busnum_changed++;
-            break;
-        case 10:
-            reg->rc_pme++;
-            break;
-        case 11:
-            reg->rc_aerr++;
-            break;
-        case 12:
-            reg->rc_serr++;
-            break;
-        case 13:
-            reg->rc_hpe++;
-            break;
-        case 14:
-            reg->rc_eq_req++;
-            break;
-        case 15:
-            reg->rc_dpc++;
-            break;
-        case 16:
-            reg->pm_turnoff++;
-            break;
         case 17:
             reg->txbfr_overflow++;
             break;
         case 18:
             reg->rxtlp_err++;
-            break;
-        case 19:
-            reg->tl_flr_req++;
-            break;
-        case 20:
-            reg->rc_legacy_intpin_changed++;
             break;
         default:
             break;
@@ -7181,59 +5494,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         }
         delphi::objects::Ppppportc7intceccMetrics::Publish(key, reg);
-        break;
-    }
-    case 179:
-    {
-        delphi::objects::ptptintreg1metrics_t *reg = &ptptintreg1metrics;
-        switch (field_id) {
-        case 2:
-            reg->slave_ptd++;
-            break;
-        case 3:
-            reg->slave_psp++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Ptptintreg1Metrics::Publish(key, reg);
-        break;
-    }
-    case 181:
-    {
-        delphi::objects::ptptpspintinfometrics_t *reg = &ptptpspintinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->pr_pkt_ff_almost_full++;
-            break;
-        case 3:
-            reg->ptd_npv_phv_full++;
-            break;
-        case 4:
-            reg->phv_srdy_collapsed++;
-            break;
-        case 5:
-            reg->pr_resub_pkt_before_phv++;
-            break;
-        case 6:
-            reg->pb_pbus_fsm0_no_data++;
-            break;
-        case 7:
-            reg->pb_pbus_fsm1_no_data++;
-            break;
-        case 8:
-            reg->pb_pbus_fsm2_no_data++;
-            break;
-        case 9:
-            reg->pb_pbus_fsm3_no_data++;
-            break;
-        case 10:
-            reg->pb_pbus_fsm4_no_data++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PtptpspintinfoMetrics::Publish(key, reg);
         break;
     }
     case 182:
@@ -7377,9 +5637,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->ecc_correctable++;
             break;
-        case 4:
-            reg->qid_invalid++;
-            break;
         default:
             break;
         }
@@ -7395,36 +5652,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 3:
             reg->ecc_correctable++;
-            break;
-        case 4:
-            reg->phv_invalid_sram++;
-            break;
-        case 5:
-            reg->phv_invalid_data++;
-            break;
-        case 6:
-            reg->phv_done0++;
-            break;
-        case 7:
-            reg->phv_done1++;
-            break;
-        case 8:
-            reg->phv_done2++;
-            break;
-        case 9:
-            reg->phv_done3++;
-            break;
-        case 10:
-            reg->phv_done4++;
-            break;
-        case 11:
-            reg->phv_done5++;
-            break;
-        case 12:
-            reg->phv_done6++;
-            break;
-        case 13:
-            reg->phv_done7++;
             break;
         default:
             break;
@@ -7669,9 +5896,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 6:
             reg->spurious_tcam_rsp++;
             break;
-        case 7:
-            reg->te2mpu_timeout++;
-            break;
         case 8:
             reg->axi_rdrsp_err++;
             break;
@@ -7720,67 +5944,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte0interrMetrics::Publish(key, reg);
         break;
     }
-    case 194:
-    {
-        delphi::objects::pcrte0intinfometrics_t *reg = &pcrte0intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte0intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 196:
     {
         delphi::objects::pcrte1interrmetrics_t *reg = &pcrte1interrmetrics;
@@ -7799,9 +5962,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -7851,67 +6011,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte1interrMetrics::Publish(key, reg);
         break;
     }
-    case 197:
-    {
-        delphi::objects::pcrte1intinfometrics_t *reg = &pcrte1intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte1intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 199:
     {
         delphi::objects::pcrte2interrmetrics_t *reg = &pcrte2interrmetrics;
@@ -7930,9 +6029,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -7982,67 +6078,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte2interrMetrics::Publish(key, reg);
         break;
     }
-    case 200:
-    {
-        delphi::objects::pcrte2intinfometrics_t *reg = &pcrte2intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte2intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 202:
     {
         delphi::objects::pcrte3interrmetrics_t *reg = &pcrte3interrmetrics;
@@ -8061,9 +6096,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -8113,67 +6145,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte3interrMetrics::Publish(key, reg);
         break;
     }
-    case 203:
-    {
-        delphi::objects::pcrte3intinfometrics_t *reg = &pcrte3intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte3intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 205:
     {
         delphi::objects::pcrte4interrmetrics_t *reg = &pcrte4interrmetrics;
@@ -8192,9 +6163,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -8244,67 +6212,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte4interrMetrics::Publish(key, reg);
         break;
     }
-    case 206:
-    {
-        delphi::objects::pcrte4intinfometrics_t *reg = &pcrte4intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte4intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 208:
     {
         delphi::objects::pcrte5interrmetrics_t *reg = &pcrte5interrmetrics;
@@ -8323,9 +6230,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -8375,67 +6279,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte5interrMetrics::Publish(key, reg);
         break;
     }
-    case 209:
-    {
-        delphi::objects::pcrte5intinfometrics_t *reg = &pcrte5intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte5intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 211:
     {
         delphi::objects::pcrte6interrmetrics_t *reg = &pcrte6interrmetrics;
@@ -8454,9 +6297,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -8506,67 +6346,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte6interrMetrics::Publish(key, reg);
         break;
     }
-    case 212:
-    {
-        delphi::objects::pcrte6intinfometrics_t *reg = &pcrte6intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte6intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 214:
     {
         delphi::objects::pcrte7interrmetrics_t *reg = &pcrte7interrmetrics;
@@ -8585,9 +6364,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -8637,74 +6413,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pcrte7interrMetrics::Publish(key, reg);
         break;
     }
-    case 215:
-    {
-        delphi::objects::pcrte7intinfometrics_t *reg = &pcrte7intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pcrte7intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 217:
     {
         delphi::objects::pcrmpu0interrmetrics_t *reg = &pcrmpu0interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -8793,18 +6505,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu0intinfometrics_t *reg = &pcrmpu0intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -8827,9 +6527,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu1interrmetrics_t *reg = &pcrmpu1interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -8918,18 +6615,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu1intinfometrics_t *reg = &pcrmpu1intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -8952,9 +6637,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu2interrmetrics_t *reg = &pcrmpu2interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9043,18 +6725,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu2intinfometrics_t *reg = &pcrmpu2intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9077,9 +6747,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu3interrmetrics_t *reg = &pcrmpu3interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9168,18 +6835,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu3intinfometrics_t *reg = &pcrmpu3intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9202,9 +6857,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu4interrmetrics_t *reg = &pcrmpu4interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9293,18 +6945,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu4intinfometrics_t *reg = &pcrmpu4intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9327,9 +6967,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu5interrmetrics_t *reg = &pcrmpu5interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9418,18 +7055,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu5intinfometrics_t *reg = &pcrmpu5intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9452,9 +7077,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu6interrmetrics_t *reg = &pcrmpu6interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9543,18 +7165,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu6intinfometrics_t *reg = &pcrmpu6intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9577,9 +7187,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu7interrmetrics_t *reg = &pcrmpu7interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -9668,18 +7275,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pcrmpu7intinfometrics_t *reg = &pcrmpu7intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -9702,9 +7297,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::txstxsintschmetrics_t *reg = &txstxsintschmetrics;
         switch (field_id) {
-        case 2:
-            reg->sch_wid_empty++;
-            break;
         case 3:
             reg->sch_rid_empty++;
             break;
@@ -9716,9 +7308,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->sch_state_fifo_ovf++;
-            break;
-        case 7:
-            reg->sch_drb_cnt_qid_fifo++;
             break;
         case 8:
             reg->sch_hbm_byp_ovf++;
@@ -9740,27 +7329,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 14:
             reg->sch_aclr_hbm_ln_rollovr++;
-            break;
-        case 15:
-            reg->sch_txdma_msg_efull++;
-            break;
-        case 16:
-            reg->sch_hbm_re_efull++;
-            break;
-        case 17:
-            reg->sch_hbm_we_efull++;
-            break;
-        case 18:
-            reg->sch_hbm_byp_pending_efull++;
-            break;
-        case 19:
-            reg->sch_hbm_rd_pending_efull++;
-            break;
-        case 20:
-            reg->sch_hbm_wr_pending_efull++;
-            break;
-        case 21:
-            reg->sch_bresp_err++;
             break;
         case 22:
             reg->sch_bid_err++;
@@ -9790,9 +7358,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::txstxsinttmrmetrics_t *reg = &txstxsinttmrmetrics;
         switch (field_id) {
-        case 2:
-            reg->tmr_wid_empty++;
-            break;
         case 3:
             reg->tmr_rid_empty++;
             break;
@@ -9817,71 +7382,17 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 10:
             reg->stmr_ctime_wrap++;
             break;
-        case 11:
-            reg->stmr_push_out_of_wheel++;
-            break;
-        case 12:
-            reg->ftmr_push_out_of_wheel++;
-            break;
-        case 13:
-            reg->ftmr_key_not_push++;
-            break;
-        case 14:
-            reg->ftmr_key_not_found++;
-            break;
-        case 15:
-            reg->stmr_key_not_push++;
-            break;
-        case 16:
-            reg->stmr_key_not_found++;
-            break;
-        case 17:
-            reg->stmr_stall++;
-            break;
-        case 18:
-            reg->ftmr_stall++;
-            break;
         case 19:
             reg->ftmr_fifo_ovf++;
             break;
         case 20:
             reg->stmr_fifo_ovf++;
             break;
-        case 21:
-            reg->ftmr_fifo_efull++;
-            break;
-        case 22:
-            reg->stmr_fifo_efull++;
-            break;
         case 23:
             reg->tmr_rejct_drb_ovf++;
             break;
-        case 24:
-            reg->tmr_rejct_drb_efull++;
-            break;
-        case 25:
-            reg->tmr_hbm_re_efull++;
-            break;
-        case 26:
-            reg->tmr_hbm_we_efull++;
-            break;
-        case 27:
-            reg->tmr_hbm_byp_pending_efull++;
-            break;
-        case 28:
-            reg->tmr_hbm_rd_pending_efull++;
-            break;
-        case 29:
-            reg->tmr_hbm_wr_pending_efull++;
-            break;
-        case 30:
-            reg->tmr_bresp_err++;
-            break;
         case 31:
             reg->tmr_bid_err++;
-            break;
-        case 32:
-            reg->tmr_rresp_err++;
             break;
         case 33:
             reg->tmr_rid_err++;
@@ -9945,9 +7456,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 6:
             reg->spurious_tcam_rsp++;
             break;
-        case 7:
-            reg->te2mpu_timeout++;
-            break;
         case 8:
             reg->axi_rdrsp_err++;
             break;
@@ -9996,67 +7504,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte0interrMetrics::Publish(key, reg);
         break;
     }
-    case 246:
-    {
-        delphi::objects::pctte0intinfometrics_t *reg = &pctte0intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte0intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 248:
     {
         delphi::objects::pctte1interrmetrics_t *reg = &pctte1interrmetrics;
@@ -10075,9 +7522,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10127,67 +7571,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte1interrMetrics::Publish(key, reg);
         break;
     }
-    case 249:
-    {
-        delphi::objects::pctte1intinfometrics_t *reg = &pctte1intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte1intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 251:
     {
         delphi::objects::pctte2interrmetrics_t *reg = &pctte2interrmetrics;
@@ -10206,9 +7589,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10258,67 +7638,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte2interrMetrics::Publish(key, reg);
         break;
     }
-    case 252:
-    {
-        delphi::objects::pctte2intinfometrics_t *reg = &pctte2intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte2intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 254:
     {
         delphi::objects::pctte3interrmetrics_t *reg = &pctte3interrmetrics;
@@ -10337,9 +7656,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10389,67 +7705,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte3interrMetrics::Publish(key, reg);
         break;
     }
-    case 255:
-    {
-        delphi::objects::pctte3intinfometrics_t *reg = &pctte3intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte3intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 257:
     {
         delphi::objects::pctte4interrmetrics_t *reg = &pctte4interrmetrics;
@@ -10468,9 +7723,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10520,67 +7772,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte4interrMetrics::Publish(key, reg);
         break;
     }
-    case 258:
-    {
-        delphi::objects::pctte4intinfometrics_t *reg = &pctte4intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte4intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 260:
     {
         delphi::objects::pctte5interrmetrics_t *reg = &pctte5interrmetrics;
@@ -10599,9 +7790,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10651,67 +7839,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte5interrMetrics::Publish(key, reg);
         break;
     }
-    case 261:
-    {
-        delphi::objects::pctte5intinfometrics_t *reg = &pctte5intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte5intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 263:
     {
         delphi::objects::pctte6interrmetrics_t *reg = &pctte6interrmetrics;
@@ -10730,9 +7857,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10782,67 +7906,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte6interrMetrics::Publish(key, reg);
         break;
     }
-    case 264:
-    {
-        delphi::objects::pctte6intinfometrics_t *reg = &pctte6intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte6intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 266:
     {
         delphi::objects::pctte7interrmetrics_t *reg = &pctte7interrmetrics;
@@ -10861,9 +7924,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 6:
             reg->spurious_tcam_rsp++;
-            break;
-        case 7:
-            reg->te2mpu_timeout++;
             break;
         case 8:
             reg->axi_rdrsp_err++;
@@ -10913,74 +7973,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Pctte7interrMetrics::Publish(key, reg);
         break;
     }
-    case 267:
-    {
-        delphi::objects::pctte7intinfometrics_t *reg = &pctte7intinfometrics;
-        switch (field_id) {
-        case 2:
-            reg->profile_cam_hit0++;
-            break;
-        case 3:
-            reg->profile_cam_hit1++;
-            break;
-        case 4:
-            reg->profile_cam_hit2++;
-            break;
-        case 5:
-            reg->profile_cam_hit3++;
-            break;
-        case 6:
-            reg->profile_cam_hit4++;
-            break;
-        case 7:
-            reg->profile_cam_hit5++;
-            break;
-        case 8:
-            reg->profile_cam_hit6++;
-            break;
-        case 9:
-            reg->profile_cam_hit7++;
-            break;
-        case 10:
-            reg->profile_cam_hit8++;
-            break;
-        case 11:
-            reg->profile_cam_hit9++;
-            break;
-        case 12:
-            reg->profile_cam_hit10++;
-            break;
-        case 13:
-            reg->profile_cam_hit11++;
-            break;
-        case 14:
-            reg->profile_cam_hit12++;
-            break;
-        case 15:
-            reg->profile_cam_hit13++;
-            break;
-        case 16:
-            reg->profile_cam_hit14++;
-            break;
-        case 17:
-            reg->profile_cam_hit15++;
-            break;
-        case 18:
-            reg->profile_cam_miss++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Pctte7intinfoMetrics::Publish(key, reg);
-        break;
-    }
     case 269:
     {
         delphi::objects::pctmpu0interrmetrics_t *reg = &pctmpu0interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11069,18 +8065,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu0intinfometrics_t *reg = &pctmpu0intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11103,9 +8087,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu1interrmetrics_t *reg = &pctmpu1interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11194,18 +8175,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu1intinfometrics_t *reg = &pctmpu1intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11228,9 +8197,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu2interrmetrics_t *reg = &pctmpu2interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11319,18 +8285,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu2intinfometrics_t *reg = &pctmpu2intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11353,9 +8307,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu3interrmetrics_t *reg = &pctmpu3interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11444,18 +8395,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu3intinfometrics_t *reg = &pctmpu3intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11478,9 +8417,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu4interrmetrics_t *reg = &pctmpu4interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11569,18 +8505,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu4intinfometrics_t *reg = &pctmpu4intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11603,9 +8527,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu5interrmetrics_t *reg = &pctmpu5interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11694,18 +8615,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu5intinfometrics_t *reg = &pctmpu5intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11728,9 +8637,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu6interrmetrics_t *reg = &pctmpu6interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11819,18 +8725,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu6intinfometrics_t *reg = &pctmpu6intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -11853,9 +8747,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu7interrmetrics_t *reg = &pctmpu7interrmetrics;
         switch (field_id) {
-        case 2:
-            reg->results_mismatch++;
-            break;
         case 3:
             reg->sdp_mem_uncorrectable++;
             break;
@@ -11944,18 +8835,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pctmpu7intinfometrics_t *reg = &pctmpu7intinfometrics;
         switch (field_id) {
-        case 2:
-            reg->trace_full_0++;
-            break;
-        case 3:
-            reg->trace_full_1++;
-            break;
-        case 4:
-            reg->trace_full_2++;
-            break;
-        case 5:
-            reg->trace_full_3++;
-            break;
         case 6:
             reg->mpu_stop_0++;
             break;
@@ -12074,47 +8953,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite0metrics_t *reg = &pbpbcintwrite0metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12126,47 +8966,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite1metrics_t *reg = &pbpbcintwrite1metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12178,47 +8979,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite2metrics_t *reg = &pbpbcintwrite2metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12230,47 +8992,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite3metrics_t *reg = &pbpbcintwrite3metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12282,47 +9005,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite4metrics_t *reg = &pbpbcintwrite4metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12334,47 +9018,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite5metrics_t *reg = &pbpbcintwrite5metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12386,47 +9031,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite6metrics_t *reg = &pbpbcintwrite6metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12438,47 +9044,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite7metrics_t *reg = &pbpbcintwrite7metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12490,47 +9057,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite8metrics_t *reg = &pbpbcintwrite8metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12542,47 +9070,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite9metrics_t *reg = &pbpbcintwrite9metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12594,47 +9083,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite10metrics_t *reg = &pbpbcintwrite10metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12646,47 +9096,8 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::pbpbcintwrite11metrics_t *reg = &pbpbcintwrite11metrics;
         switch (field_id) {
-        case 2:
-            reg->out_of_cells++;
-            break;
-        case 3:
-            reg->out_of_credit++;
-            break;
-        case 4:
-            reg->port_disabled++;
-            break;
-        case 5:
-            reg->truncation++;
-            break;
-        case 6:
-            reg->intrinsic_drop++;
-            break;
-        case 7:
-            reg->out_of_cells1++;
-            break;
-        case 8:
-            reg->enq_err++;
-            break;
-        case 9:
-            reg->tail_drop_cpu++;
-            break;
-        case 10:
-            reg->tail_drop_span++;
-            break;
-        case 11:
-            reg->min_size_viol++;
-            break;
-        case 12:
-            reg->port_range++;
-            break;
         case 13:
             reg->credit_growth_error++;
-            break;
-        case 14:
-            reg->oq_range++;
-            break;
-        case 15:
-            reg->xoff_timeout++;
             break;
         default:
             break;
@@ -12856,9 +9267,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         switch (field_id) {
         case 2:
             reg->memory_error++;
-            break;
-        case 3:
-            reg->zero_last_error++;
             break;
         default:
             break;
@@ -13116,112 +9524,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::PbpbchbmintecchbmhtMetrics::Publish(key, reg);
         break;
     }
-    case 329:
-    {
-        delphi::objects::pbpbchbminthbmxoffmetrics_t *reg = &pbpbchbminthbmxoffmetrics;
-        switch (field_id) {
-        case 2:
-            reg->timeout_0++;
-            break;
-        case 3:
-            reg->timeout_1++;
-            break;
-        case 4:
-            reg->timeout_2++;
-            break;
-        case 5:
-            reg->timeout_3++;
-            break;
-        case 6:
-            reg->timeout_4++;
-            break;
-        case 7:
-            reg->timeout_5++;
-            break;
-        case 8:
-            reg->timeout_6++;
-            break;
-        case 9:
-            reg->timeout_7++;
-            break;
-        case 10:
-            reg->timeout_8++;
-            break;
-        case 11:
-            reg->timeout_9++;
-            break;
-        case 12:
-            reg->timeout_10++;
-            break;
-        case 13:
-            reg->timeout_11++;
-            break;
-        case 14:
-            reg->timeout_12++;
-            break;
-        case 15:
-            reg->timeout_13++;
-            break;
-        case 16:
-            reg->timeout_14++;
-            break;
-        case 17:
-            reg->timeout_15++;
-            break;
-        case 18:
-            reg->timeout_16++;
-            break;
-        case 19:
-            reg->timeout_17++;
-            break;
-        case 20:
-            reg->timeout_18++;
-            break;
-        case 21:
-            reg->timeout_19++;
-            break;
-        case 22:
-            reg->timeout_20++;
-            break;
-        case 23:
-            reg->timeout_21++;
-            break;
-        case 24:
-            reg->timeout_22++;
-            break;
-        case 25:
-            reg->timeout_23++;
-            break;
-        case 26:
-            reg->timeout_24++;
-            break;
-        case 27:
-            reg->timeout_25++;
-            break;
-        case 28:
-            reg->timeout_26++;
-            break;
-        case 29:
-            reg->timeout_27++;
-            break;
-        case 30:
-            reg->timeout_28++;
-            break;
-        case 31:
-            reg->timeout_29++;
-            break;
-        case 32:
-            reg->timeout_30++;
-            break;
-        case 33:
-            reg->timeout_31++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmxoffMetrics::Publish(key, reg);
-        break;
-    }
     case 330:
     {
         delphi::objects::pbpbchbminthbmpbusviolationinmetrics_t *reg = &pbpbchbminthbmpbusviolationinmetrics;
@@ -13362,56 +9664,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::PbpbchbminthbmpbusviolationoutMetrics::Publish(key, reg);
         break;
     }
-    case 332:
-    {
-        delphi::objects::pbpbchbminthbmdropmetrics_t *reg = &pbpbchbminthbmdropmetrics;
-        switch (field_id) {
-        case 2:
-            reg->occupancy_0++;
-            break;
-        case 3:
-            reg->occupancy_1++;
-            break;
-        case 4:
-            reg->occupancy_2++;
-            break;
-        case 5:
-            reg->occupancy_3++;
-            break;
-        case 6:
-            reg->occupancy_4++;
-            break;
-        case 7:
-            reg->occupancy_5++;
-            break;
-        case 8:
-            reg->occupancy_6++;
-            break;
-        case 9:
-            reg->occupancy_7++;
-            break;
-        case 10:
-            reg->occupancy_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmdropMetrics::Publish(key, reg);
-        break;
-    }
-    case 333:
-    {
-        delphi::objects::pbpbchbminthbmstopmetrics_t *reg = &pbpbchbminthbmstopmetrics;
-        switch (field_id) {
-        case 2:
-            reg->occupancy_9++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmstopMetrics::Publish(key, reg);
-        break;
-    }
     case 334:
     {
         delphi::objects::pbpbchbminthbmaxierrrspmetrics_t *reg = &pbpbchbminthbmaxierrrspmetrics;
@@ -13429,218 +9681,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         }
         delphi::objects::PbpbchbminthbmaxierrrspMetrics::Publish(key, reg);
-        break;
-    }
-    case 335:
-    {
-        delphi::objects::pbpbchbminthbmdropemergencymetrics_t *reg = &pbpbchbminthbmdropemergencymetrics;
-        switch (field_id) {
-        case 2:
-            reg->stop_0++;
-            break;
-        case 3:
-            reg->stop_1++;
-            break;
-        case 4:
-            reg->stop_2++;
-            break;
-        case 5:
-            reg->stop_3++;
-            break;
-        case 6:
-            reg->stop_4++;
-            break;
-        case 7:
-            reg->stop_5++;
-            break;
-        case 8:
-            reg->stop_6++;
-            break;
-        case 9:
-            reg->stop_7++;
-            break;
-        case 10:
-            reg->stop_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmdropemergencyMetrics::Publish(key, reg);
-        break;
-    }
-    case 336:
-    {
-        delphi::objects::pbpbchbminthbmdropwriteackmetrics_t *reg = &pbpbchbminthbmdropwriteackmetrics;
-        switch (field_id) {
-        case 2:
-            reg->filling_up_0++;
-            break;
-        case 3:
-            reg->filling_up_1++;
-            break;
-        case 4:
-            reg->filling_up_2++;
-            break;
-        case 5:
-            reg->filling_up_3++;
-            break;
-        case 6:
-            reg->filling_up_4++;
-            break;
-        case 7:
-            reg->filling_up_5++;
-            break;
-        case 8:
-            reg->filling_up_6++;
-            break;
-        case 9:
-            reg->filling_up_7++;
-            break;
-        case 10:
-            reg->filling_up_8++;
-            break;
-        case 11:
-            reg->full_0++;
-            break;
-        case 12:
-            reg->full_1++;
-            break;
-        case 13:
-            reg->full_2++;
-            break;
-        case 14:
-            reg->full_3++;
-            break;
-        case 15:
-            reg->full_4++;
-            break;
-        case 16:
-            reg->full_5++;
-            break;
-        case 17:
-            reg->full_6++;
-            break;
-        case 18:
-            reg->full_7++;
-            break;
-        case 19:
-            reg->full_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmdropwriteackMetrics::Publish(key, reg);
-        break;
-    }
-    case 337:
-    {
-        delphi::objects::pbpbchbminthbmdropctrlmetrics_t *reg = &pbpbchbminthbmdropctrlmetrics;
-        switch (field_id) {
-        case 2:
-            reg->full_0++;
-            break;
-        case 3:
-            reg->full_1++;
-            break;
-        case 4:
-            reg->full_2++;
-            break;
-        case 5:
-            reg->full_3++;
-            break;
-        case 6:
-            reg->full_4++;
-            break;
-        case 7:
-            reg->full_5++;
-            break;
-        case 8:
-            reg->full_6++;
-            break;
-        case 9:
-            reg->full_7++;
-            break;
-        case 10:
-            reg->full_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmdropctrlMetrics::Publish(key, reg);
-        break;
-    }
-    case 338:
-    {
-        delphi::objects::pbpbchbminthbmdropthresholdmetrics_t *reg = &pbpbchbminthbmdropthresholdmetrics;
-        switch (field_id) {
-        case 2:
-            reg->crossed_0++;
-            break;
-        case 3:
-            reg->crossed_1++;
-            break;
-        case 4:
-            reg->crossed_2++;
-            break;
-        case 5:
-            reg->crossed_3++;
-            break;
-        case 6:
-            reg->crossed_4++;
-            break;
-        case 7:
-            reg->crossed_5++;
-            break;
-        case 8:
-            reg->crossed_6++;
-            break;
-        case 9:
-            reg->crossed_7++;
-            break;
-        case 10:
-            reg->crossed_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmdropthresholdMetrics::Publish(key, reg);
-        break;
-    }
-    case 339:
-    {
-        delphi::objects::pbpbchbminthbmtruncatenometrics_t *reg = &pbpbchbminthbmtruncatenometrics;
-        switch (field_id) {
-        case 2:
-            reg->drop_0++;
-            break;
-        case 3:
-            reg->drop_1++;
-            break;
-        case 4:
-            reg->drop_2++;
-            break;
-        case 5:
-            reg->drop_3++;
-            break;
-        case 6:
-            reg->drop_4++;
-            break;
-        case 7:
-            reg->drop_5++;
-            break;
-        case 8:
-            reg->drop_6++;
-            break;
-        case 9:
-            reg->drop_7++;
-            break;
-        case 10:
-            reg->drop_8++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::PbpbchbminthbmtruncatenoMetrics::Publish(key, reg);
         break;
     }
     case 341:
@@ -13746,9 +9786,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::dbwaintdbmetrics_t *reg = &dbwaintdbmetrics;
         switch (field_id) {
-        case 2:
-            reg->db_cam_conflict++;
-            break;
         case 3:
             reg->db_pid_chk_fail++;
             break;
@@ -13785,9 +9822,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 4:
             reg->too_many_rl_sch_error++;
-            break;
-        case 5:
-            reg->picc++;
             break;
         default:
             break;
@@ -13961,9 +9995,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 4:
             reg->too_many_rl_sch_error++;
             break;
-        case 5:
-            reg->picc++;
-            break;
         default:
             break;
         }
@@ -14133,65 +10164,13 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 3:
             reg->lane_dbe++;
             break;
-        case 4:
-            reg->xdmac10_intr++;
-            break;
-        case 5:
-            reg->xdmac10_pslverr++;
-            break;
         case 6:
             reg->bxpb_pbus_drdy++;
-            break;
-        case 7:
-            reg->rx_missing_sof++;
-            break;
-        case 8:
-            reg->rx_missing_eof++;
-            break;
-        case 9:
-            reg->rx_timeout_err++;
-            break;
-        case 10:
-            reg->rx_min_size_err++;
             break;
         default:
             break;
         }
         delphi::objects::BxbxintmacMetrics::Publish(key, reg);
-        break;
-    }
-    case 364:
-    {
-        delphi::objects::mdhensintipcoremetrics_t *reg = &mdhensintipcoremetrics;
-        switch (field_id) {
-        case 2:
-            reg->xts_enc++;
-            break;
-        case 3:
-            reg->xts++;
-            break;
-        case 4:
-            reg->gcm0++;
-            break;
-        case 5:
-            reg->gcm1++;
-            break;
-        case 6:
-            reg->drbg++;
-            break;
-        case 7:
-            reg->pk++;
-            break;
-        case 8:
-            reg->cp++;
-            break;
-        case 9:
-            reg->dc++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::MdhensintipcoreMetrics::Publish(key, reg);
         break;
     }
     case 365:
@@ -14270,9 +10249,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 4:
             reg->too_many_rl_sch_error++;
-            break;
-        case 5:
-            reg->picc++;
             break;
         default:
             break;
@@ -14506,12 +10482,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 24:
             reg->err_crc_loc_gt_pkt_size++;
             break;
-        case 25:
-            reg->err_crc_mask_offset_gt_pkt_size++;
-            break;
-        case 26:
-            reg->err_pkt_eop_early++;
-            break;
         case 27:
             reg->err_ptr_ff_overflow++;
             break;
@@ -14520,9 +10490,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 29:
             reg->err_pktout_ff_overflow++;
-            break;
-        case 30:
-            reg->err_ptr_from_cfg_overflow++;
             break;
         default:
             break;
@@ -14534,12 +10501,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::dprdpr0intreg2metrics_t *reg = &dprdpr0intreg2metrics;
         switch (field_id) {
-        case 2:
-            reg->fieldC++;
-            break;
-        case 3:
-            reg->fieldD++;
-            break;
         case 4:
             reg->err_csum_start_gt_end_4++;
             break;
@@ -14979,12 +10940,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 24:
             reg->err_crc_loc_gt_pkt_size++;
             break;
-        case 25:
-            reg->err_crc_mask_offset_gt_pkt_size++;
-            break;
-        case 26:
-            reg->err_pkt_eop_early++;
-            break;
         case 27:
             reg->err_ptr_ff_overflow++;
             break;
@@ -14993,9 +10948,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 29:
             reg->err_pktout_ff_overflow++;
-            break;
-        case 30:
-            reg->err_ptr_from_cfg_overflow++;
             break;
         default:
             break;
@@ -15007,12 +10959,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
     {
         delphi::objects::dprdpr1intreg2metrics_t *reg = &dprdpr1intreg2metrics;
         switch (field_id) {
-        case 2:
-            reg->fieldC++;
-            break;
-        case 3:
-            reg->fieldD++;
-            break;
         case 4:
             reg->err_csum_start_gt_end_4++;
             break;
@@ -15672,22 +11618,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Dppdpp0intreg1Metrics::Publish(key, reg);
         break;
     }
-    case 427:
-    {
-        delphi::objects::dppdpp0intreg2metrics_t *reg = &dppdpp0intreg2metrics;
-        switch (field_id) {
-        case 2:
-            reg->fieldC++;
-            break;
-        case 3:
-            reg->fieldD++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Dppdpp0intreg2Metrics::Publish(key, reg);
-        break;
-    }
     case 428:
     {
         delphi::objects::dppdpp0intsramseccmetrics_t *reg = &dppdpp0intsramseccmetrics;
@@ -15942,22 +11872,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Dppdpp1intreg1Metrics::Publish(key, reg);
         break;
     }
-    case 434:
-    {
-        delphi::objects::dppdpp1intreg2metrics_t *reg = &dppdpp1intreg2metrics;
-        switch (field_id) {
-        case 2:
-            reg->fieldC++;
-            break;
-        case 3:
-            reg->fieldD++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Dppdpp1intreg2Metrics::Publish(key, reg);
-        break;
-    }
     case 435:
     {
         delphi::objects::dppdpp1intsramseccmetrics_t *reg = &dppdpp1intsramseccmetrics;
@@ -16151,53 +12065,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         delphi::objects::Dppdpp1intcreditMetrics::Publish(key, reg);
         break;
     }
-    case 440:
-    {
-        delphi::objects::semasemaintgroupsintregmetrics_t *reg = &semasemaintgroupsintregmetrics;
-        switch (field_id) {
-        case 2:
-            reg->sema_err++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::SemasemaintgroupsintregMetrics::Publish(key, reg);
-        break;
-    }
-    case 441:
-    {
-        delphi::objects::mpmpnsintcryptometrics_t *reg = &mpmpnsintcryptometrics;
-        switch (field_id) {
-        case 2:
-            reg->mpp0++;
-            break;
-        case 3:
-            reg->mpp1++;
-            break;
-        case 4:
-            reg->mpp2++;
-            break;
-        case 5:
-            reg->mpp3++;
-            break;
-        case 6:
-            reg->mpp4++;
-            break;
-        case 7:
-            reg->mpp5++;
-            break;
-        case 8:
-            reg->mpp6++;
-            break;
-        case 9:
-            reg->mpp7++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::MpmpnsintcryptoMetrics::Publish(key, reg);
-        break;
-    }
     case 443:
     {
         delphi::objects::msmsintmsmetrics_t *reg = &msmsintmsmetrics;
@@ -16323,62 +12190,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 11:
             reg->bl2_ram_ecc_correctable++;
             break;
-        case 12:
-            reg->int_wr_stall_hit0_interrupt++;
-            break;
-        case 13:
-            reg->int_rd_stall_hit0_interrupt++;
-            break;
-        case 14:
-            reg->int_wr_stall_hit1_interrupt++;
-            break;
-        case 15:
-            reg->int_rd_stall_hit1_interrupt++;
-            break;
-        case 16:
-            reg->int_wr_stall_hit2_interrupt++;
-            break;
-        case 17:
-            reg->int_rd_stall_hit2_interrupt++;
-            break;
-        case 18:
-            reg->int_wr_full0_interrupt++;
-            break;
-        case 19:
-            reg->int_rd_full0_interrupt++;
-            break;
-        case 20:
-            reg->int_wr_full1_interrupt++;
-            break;
-        case 21:
-            reg->int_rd_full1_interrupt++;
-            break;
-        case 22:
-            reg->int_wr_full2_interrupt++;
-            break;
-        case 23:
-            reg->int_rd_full2_interrupt++;
-            break;
         default:
             break;
         }
         delphi::objects::MsmsintmiscMetrics::Publish(key, reg);
-        break;
-    }
-    case 445:
-    {
-        delphi::objects::msmsintesecuremetrics_t *reg = &msmsintesecuremetrics;
-        switch (field_id) {
-        case 2:
-            reg->mb_rxint++;
-            break;
-        case 3:
-            reg->mb_txint++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::MsmsintesecureMetrics::Publish(key, reg);
         break;
     }
     case 446:
@@ -16393,18 +12208,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 4:
             reg->decode++;
-            break;
-        case 5:
-            reg->ack_timeout++;
-            break;
-        case 6:
-            reg->stall_timeout++;
-            break;
-        case 7:
-            reg->byte_read++;
-            break;
-        case 8:
-            reg->byte_write++;
             break;
         default:
             break;
@@ -16425,18 +12228,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 4:
             reg->decode++;
             break;
-        case 5:
-            reg->ack_timeout++;
-            break;
-        case 6:
-            reg->stall_timeout++;
-            break;
-        case 7:
-            reg->byte_read++;
-            break;
-        case 8:
-            reg->byte_write++;
-            break;
         default:
             break;
         }
@@ -16455,18 +12246,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 4:
             reg->decode++;
-            break;
-        case 5:
-            reg->ack_timeout++;
-            break;
-        case 6:
-            reg->stall_timeout++;
-            break;
-        case 7:
-            reg->byte_read++;
-            break;
-        case 8:
-            reg->byte_write++;
             break;
         default:
             break;
@@ -16487,18 +12266,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 4:
             reg->decode++;
             break;
-        case 5:
-            reg->ack_timeout++;
-            break;
-        case 6:
-            reg->stall_timeout++;
-            break;
-        case 7:
-            reg->byte_read++;
-            break;
-        case 8:
-            reg->byte_write++;
-            break;
         default:
             break;
         }
@@ -16518,347 +12285,10 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 4:
             reg->decode++;
             break;
-        case 5:
-            reg->ack_timeout++;
-            break;
-        case 6:
-            reg->stall_timeout++;
-            break;
-        case 7:
-            reg->byte_read++;
-            break;
-        case 8:
-            reg->byte_write++;
-            break;
         default:
             break;
         }
         delphi::objects::Msmsintprp5Metrics::Publish(key, reg);
-        break;
-    }
-    case 451:
-    {
-        delphi::objects::msmsintgic0metrics_t *reg = &msmsintgic0metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic0Metrics::Publish(key, reg);
-        break;
-    }
-    case 452:
-    {
-        delphi::objects::msmsintgic1metrics_t *reg = &msmsintgic1metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic1Metrics::Publish(key, reg);
-        break;
-    }
-    case 453:
-    {
-        delphi::objects::msmsintgic2metrics_t *reg = &msmsintgic2metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic2Metrics::Publish(key, reg);
-        break;
-    }
-    case 454:
-    {
-        delphi::objects::msmsintgic3metrics_t *reg = &msmsintgic3metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic3Metrics::Publish(key, reg);
-        break;
-    }
-    case 455:
-    {
-        delphi::objects::msmsintgic4metrics_t *reg = &msmsintgic4metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic4Metrics::Publish(key, reg);
-        break;
-    }
-    case 456:
-    {
-        delphi::objects::msmsintgic5metrics_t *reg = &msmsintgic5metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic5Metrics::Publish(key, reg);
-        break;
-    }
-    case 457:
-    {
-        delphi::objects::msmsintgic6metrics_t *reg = &msmsintgic6metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic6Metrics::Publish(key, reg);
-        break;
-    }
-    case 458:
-    {
-        delphi::objects::msmsintgic7metrics_t *reg = &msmsintgic7metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic7Metrics::Publish(key, reg);
-        break;
-    }
-    case 459:
-    {
-        delphi::objects::msmsintgic8metrics_t *reg = &msmsintgic8metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic8Metrics::Publish(key, reg);
-        break;
-    }
-    case 460:
-    {
-        delphi::objects::msmsintgic9metrics_t *reg = &msmsintgic9metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic9Metrics::Publish(key, reg);
-        break;
-    }
-    case 461:
-    {
-        delphi::objects::msmsintgic10metrics_t *reg = &msmsintgic10metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic10Metrics::Publish(key, reg);
-        break;
-    }
-    case 462:
-    {
-        delphi::objects::msmsintgic11metrics_t *reg = &msmsintgic11metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic11Metrics::Publish(key, reg);
-        break;
-    }
-    case 463:
-    {
-        delphi::objects::msmsintgic12metrics_t *reg = &msmsintgic12metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic12Metrics::Publish(key, reg);
-        break;
-    }
-    case 464:
-    {
-        delphi::objects::msmsintgic13metrics_t *reg = &msmsintgic13metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic13Metrics::Publish(key, reg);
-        break;
-    }
-    case 465:
-    {
-        delphi::objects::msmsintgic14metrics_t *reg = &msmsintgic14metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic14Metrics::Publish(key, reg);
-        break;
-    }
-    case 466:
-    {
-        delphi::objects::msmsintgic15metrics_t *reg = &msmsintgic15metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic15Metrics::Publish(key, reg);
-        break;
-    }
-    case 467:
-    {
-        delphi::objects::msmsintgic16metrics_t *reg = &msmsintgic16metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic16Metrics::Publish(key, reg);
-        break;
-    }
-    case 468:
-    {
-        delphi::objects::msmsintgic17metrics_t *reg = &msmsintgic17metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic17Metrics::Publish(key, reg);
-        break;
-    }
-    case 469:
-    {
-        delphi::objects::msmsintgic18metrics_t *reg = &msmsintgic18metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic18Metrics::Publish(key, reg);
-        break;
-    }
-    case 470:
-    {
-        delphi::objects::msmsintgic19metrics_t *reg = &msmsintgic19metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic19Metrics::Publish(key, reg);
-        break;
-    }
-    case 471:
-    {
-        delphi::objects::msmsintgic20metrics_t *reg = &msmsintgic20metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic20Metrics::Publish(key, reg);
-        break;
-    }
-    case 472:
-    {
-        delphi::objects::msmsintgic21metrics_t *reg = &msmsintgic21metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic21Metrics::Publish(key, reg);
-        break;
-    }
-    case 473:
-    {
-        delphi::objects::msmsintgic22metrics_t *reg = &msmsintgic22metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic22Metrics::Publish(key, reg);
-        break;
-    }
-    case 474:
-    {
-        delphi::objects::msmsintgic23metrics_t *reg = &msmsintgic23metrics;
-        switch (field_id) {
-        case 2:
-            reg->msar_int_lvl++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::Msmsintgic23Metrics::Publish(key, reg);
-        break;
-    }
-    case 476:
-    {
-        delphi::objects::msemintgroupsintregmetrics_t *reg = &msemintgroupsintregmetrics;
-        switch (field_id) {
-        case 2:
-            reg->axi++;
-            break;
-        default:
-            break;
-        }
-        delphi::objects::MsemintgroupsintregMetrics::Publish(key, reg);
         break;
     }
     case 477:
@@ -16889,12 +12319,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 9:
             reg->lane3_dbe++;
             break;
-        case 10:
-            reg->umac_CFG3_intr++;
-            break;
-        case 11:
-            reg->umac_CFG3_pslverr++;
-            break;
         case 12:
             reg->m0pb_pbus_drdy++;
             break;
@@ -16906,54 +12330,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 15:
             reg->m3pb_pbus_drdy++;
-            break;
-        case 16:
-            reg->rx0_missing_sof++;
-            break;
-        case 17:
-            reg->rx0_missing_eof++;
-            break;
-        case 18:
-            reg->rx0_timeout_err++;
-            break;
-        case 19:
-            reg->rx0_min_size_err++;
-            break;
-        case 20:
-            reg->rx1_missing_sof++;
-            break;
-        case 21:
-            reg->rx1_missing_eof++;
-            break;
-        case 22:
-            reg->rx1_timeout_err++;
-            break;
-        case 23:
-            reg->rx1_min_size_err++;
-            break;
-        case 24:
-            reg->rx2_missing_sof++;
-            break;
-        case 25:
-            reg->rx2_missing_eof++;
-            break;
-        case 26:
-            reg->rx2_timeout_err++;
-            break;
-        case 27:
-            reg->rx2_min_size_err++;
-            break;
-        case 28:
-            reg->rx3_missing_sof++;
-            break;
-        case 29:
-            reg->rx3_missing_eof++;
-            break;
-        case 30:
-            reg->rx3_timeout_err++;
-            break;
-        case 31:
-            reg->rx3_min_size_err++;
             break;
         default:
             break;
@@ -17005,12 +12381,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
         case 9:
             reg->lane3_dbe++;
             break;
-        case 10:
-            reg->umac_CFG3_intr++;
-            break;
-        case 11:
-            reg->umac_CFG3_pslverr++;
-            break;
         case 12:
             reg->m0pb_pbus_drdy++;
             break;
@@ -17022,54 +12392,6 @@ sdk_ret_t interrupt_notify (uint64_t reg_id, uint64_t field_id)
             break;
         case 15:
             reg->m3pb_pbus_drdy++;
-            break;
-        case 16:
-            reg->rx0_missing_sof++;
-            break;
-        case 17:
-            reg->rx0_missing_eof++;
-            break;
-        case 18:
-            reg->rx0_timeout_err++;
-            break;
-        case 19:
-            reg->rx0_min_size_err++;
-            break;
-        case 20:
-            reg->rx1_missing_sof++;
-            break;
-        case 21:
-            reg->rx1_missing_eof++;
-            break;
-        case 22:
-            reg->rx1_timeout_err++;
-            break;
-        case 23:
-            reg->rx1_min_size_err++;
-            break;
-        case 24:
-            reg->rx2_missing_sof++;
-            break;
-        case 25:
-            reg->rx2_missing_eof++;
-            break;
-        case 26:
-            reg->rx2_timeout_err++;
-            break;
-        case 27:
-            reg->rx2_min_size_err++;
-            break;
-        case 28:
-            reg->rx3_missing_sof++;
-            break;
-        case 29:
-            reg->rx3_missing_eof++;
-            break;
-        case 30:
-            reg->rx3_timeout_err++;
-            break;
-        case 31:
-            reg->rx3_min_size_err++;
             break;
         default:
             break;
@@ -17138,17 +12460,11 @@ void create_tables (void)
     delphi::objects::Ppappa1intswphvmemMetrics::CreateTable();
     delphi::objects::Ppappa1intintfMetrics::CreateTable();
     delphi::objects::Sgite0interrMetrics::CreateTable();
-    delphi::objects::Sgite0intinfoMetrics::CreateTable();
     delphi::objects::Sgite1interrMetrics::CreateTable();
-    delphi::objects::Sgite1intinfoMetrics::CreateTable();
     delphi::objects::Sgite2interrMetrics::CreateTable();
-    delphi::objects::Sgite2intinfoMetrics::CreateTable();
     delphi::objects::Sgite3interrMetrics::CreateTable();
-    delphi::objects::Sgite3intinfoMetrics::CreateTable();
     delphi::objects::Sgite4interrMetrics::CreateTable();
-    delphi::objects::Sgite4intinfoMetrics::CreateTable();
     delphi::objects::Sgite5interrMetrics::CreateTable();
-    delphi::objects::Sgite5intinfoMetrics::CreateTable();
     delphi::objects::Sgimpu0interrMetrics::CreateTable();
     delphi::objects::Sgimpu0intinfoMetrics::CreateTable();
     delphi::objects::Sgimpu1interrMetrics::CreateTable();
@@ -17170,17 +12486,11 @@ void create_tables (void)
     delphi::objects::PxbpxbintitreccMetrics::CreateTable();
     delphi::objects::PxbpxbinterrMetrics::CreateTable();
     delphi::objects::Sgete0interrMetrics::CreateTable();
-    delphi::objects::Sgete0intinfoMetrics::CreateTable();
     delphi::objects::Sgete1interrMetrics::CreateTable();
-    delphi::objects::Sgete1intinfoMetrics::CreateTable();
     delphi::objects::Sgete2interrMetrics::CreateTable();
-    delphi::objects::Sgete2intinfoMetrics::CreateTable();
     delphi::objects::Sgete3interrMetrics::CreateTable();
-    delphi::objects::Sgete3intinfoMetrics::CreateTable();
     delphi::objects::Sgete4interrMetrics::CreateTable();
-    delphi::objects::Sgete4intinfoMetrics::CreateTable();
     delphi::objects::Sgete5interrMetrics::CreateTable();
-    delphi::objects::Sgete5intinfoMetrics::CreateTable();
     delphi::objects::Sgempu0interrMetrics::CreateTable();
     delphi::objects::Sgempu0intinfoMetrics::CreateTable();
     delphi::objects::Sgempu1interrMetrics::CreateTable();
@@ -17193,8 +12503,6 @@ void create_tables (void)
     delphi::objects::Sgempu4intinfoMetrics::CreateTable();
     delphi::objects::Sgempu5interrMetrics::CreateTable();
     delphi::objects::Sgempu5intinfoMetrics::CreateTable();
-    delphi::objects::Prprintreg1Metrics::CreateTable();
-    delphi::objects::PrprpspintinfoMetrics::CreateTable();
     delphi::objects::PrprpspinterrMetrics::CreateTable();
     delphi::objects::PrprpspintfatalMetrics::CreateTable();
     delphi::objects::PrprpspintlifqstatemapMetrics::CreateTable();
@@ -17229,8 +12537,6 @@ void create_tables (void)
     delphi::objects::Ppppportc6intceccMetrics::CreateTable();
     delphi::objects::Ppppportc7intcmacMetrics::CreateTable();
     delphi::objects::Ppppportc7intceccMetrics::CreateTable();
-    delphi::objects::Ptptintreg1Metrics::CreateTable();
-    delphi::objects::PtptpspintinfoMetrics::CreateTable();
     delphi::objects::PtptpspinterrMetrics::CreateTable();
     delphi::objects::PtptpspintfatalMetrics::CreateTable();
     delphi::objects::PtptpspintlifqstatemapMetrics::CreateTable();
@@ -17241,21 +12547,13 @@ void create_tables (void)
     delphi::objects::Ptptptdintgrp2Metrics::CreateTable();
     delphi::objects::PtptptdintintfMetrics::CreateTable();
     delphi::objects::Pcrte0interrMetrics::CreateTable();
-    delphi::objects::Pcrte0intinfoMetrics::CreateTable();
     delphi::objects::Pcrte1interrMetrics::CreateTable();
-    delphi::objects::Pcrte1intinfoMetrics::CreateTable();
     delphi::objects::Pcrte2interrMetrics::CreateTable();
-    delphi::objects::Pcrte2intinfoMetrics::CreateTable();
     delphi::objects::Pcrte3interrMetrics::CreateTable();
-    delphi::objects::Pcrte3intinfoMetrics::CreateTable();
     delphi::objects::Pcrte4interrMetrics::CreateTable();
-    delphi::objects::Pcrte4intinfoMetrics::CreateTable();
     delphi::objects::Pcrte5interrMetrics::CreateTable();
-    delphi::objects::Pcrte5intinfoMetrics::CreateTable();
     delphi::objects::Pcrte6interrMetrics::CreateTable();
-    delphi::objects::Pcrte6intinfoMetrics::CreateTable();
     delphi::objects::Pcrte7interrMetrics::CreateTable();
-    delphi::objects::Pcrte7intinfoMetrics::CreateTable();
     delphi::objects::Pcrmpu0interrMetrics::CreateTable();
     delphi::objects::Pcrmpu0intinfoMetrics::CreateTable();
     delphi::objects::Pcrmpu1interrMetrics::CreateTable();
@@ -17276,21 +12574,13 @@ void create_tables (void)
     delphi::objects::TxstxsinttmrMetrics::CreateTable();
     delphi::objects::TxstxsintsramseccMetrics::CreateTable();
     delphi::objects::Pctte0interrMetrics::CreateTable();
-    delphi::objects::Pctte0intinfoMetrics::CreateTable();
     delphi::objects::Pctte1interrMetrics::CreateTable();
-    delphi::objects::Pctte1intinfoMetrics::CreateTable();
     delphi::objects::Pctte2interrMetrics::CreateTable();
-    delphi::objects::Pctte2intinfoMetrics::CreateTable();
     delphi::objects::Pctte3interrMetrics::CreateTable();
-    delphi::objects::Pctte3intinfoMetrics::CreateTable();
     delphi::objects::Pctte4interrMetrics::CreateTable();
-    delphi::objects::Pctte4intinfoMetrics::CreateTable();
     delphi::objects::Pctte5interrMetrics::CreateTable();
-    delphi::objects::Pctte5intinfoMetrics::CreateTable();
     delphi::objects::Pctte6interrMetrics::CreateTable();
-    delphi::objects::Pctte6intinfoMetrics::CreateTable();
     delphi::objects::Pctte7interrMetrics::CreateTable();
-    delphi::objects::Pctte7intinfoMetrics::CreateTable();
     delphi::objects::Pctmpu0interrMetrics::CreateTable();
     delphi::objects::Pctmpu0intinfoMetrics::CreateTable();
     delphi::objects::Pctmpu1interrMetrics::CreateTable();
@@ -17342,17 +12632,9 @@ void create_tables (void)
     delphi::objects::PbpbchbmintecchbmrbMetrics::CreateTable();
     delphi::objects::PbpbchbmintecchbmwbMetrics::CreateTable();
     delphi::objects::PbpbchbmintecchbmhtMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmxoffMetrics::CreateTable();
     delphi::objects::PbpbchbminthbmpbusviolationinMetrics::CreateTable();
     delphi::objects::PbpbchbminthbmpbusviolationoutMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmdropMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmstopMetrics::CreateTable();
     delphi::objects::PbpbchbminthbmaxierrrspMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmdropemergencyMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmdropwriteackMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmdropctrlMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmdropthresholdMetrics::CreateTable();
-    delphi::objects::PbpbchbminthbmtruncatenoMetrics::CreateTable();
     delphi::objects::Pmpbmintecccol0Metrics::CreateTable();
     delphi::objects::Pmpbmintecccol1Metrics::CreateTable();
     delphi::objects::Pmpbmintecccol2Metrics::CreateTable();
@@ -17369,7 +12651,6 @@ void create_tables (void)
     delphi::objects::SsepicsintbgMetrics::CreateTable();
     delphi::objects::SsepicspiccintpiccMetrics::CreateTable();
     delphi::objects::BxbxintmacMetrics::CreateTable();
-    delphi::objects::MdhensintipcoreMetrics::CreateTable();
     delphi::objects::MdhensintpkeccMetrics::CreateTable();
     delphi::objects::MdhensintdrbgintrameccMetrics::CreateTable();
     delphi::objects::MdhensintdrbgcryptorameccMetrics::CreateTable();
@@ -17411,52 +12692,22 @@ void create_tables (void)
     delphi::objects::Mcmc7intmcMetrics::CreateTable();
     delphi::objects::Mcmc7mchintmcMetrics::CreateTable();
     delphi::objects::Dppdpp0intreg1Metrics::CreateTable();
-    delphi::objects::Dppdpp0intreg2Metrics::CreateTable();
     delphi::objects::Dppdpp0intsramseccMetrics::CreateTable();
     delphi::objects::Dppdpp0intfifoMetrics::CreateTable();
     delphi::objects::Dppdpp0intspareMetrics::CreateTable();
     delphi::objects::Dppdpp0intcreditMetrics::CreateTable();
     delphi::objects::Dppdpp1intreg1Metrics::CreateTable();
-    delphi::objects::Dppdpp1intreg2Metrics::CreateTable();
     delphi::objects::Dppdpp1intsramseccMetrics::CreateTable();
     delphi::objects::Dppdpp1intfifoMetrics::CreateTable();
     delphi::objects::Dppdpp1intspareMetrics::CreateTable();
     delphi::objects::Dppdpp1intcreditMetrics::CreateTable();
-    delphi::objects::SemasemaintgroupsintregMetrics::CreateTable();
-    delphi::objects::MpmpnsintcryptoMetrics::CreateTable();
     delphi::objects::MsmsintmsMetrics::CreateTable();
     delphi::objects::MsmsintmiscMetrics::CreateTable();
-    delphi::objects::MsmsintesecureMetrics::CreateTable();
     delphi::objects::Msmsintprp1Metrics::CreateTable();
     delphi::objects::Msmsintprp2Metrics::CreateTable();
     delphi::objects::Msmsintprp3Metrics::CreateTable();
     delphi::objects::Msmsintprp4Metrics::CreateTable();
     delphi::objects::Msmsintprp5Metrics::CreateTable();
-    delphi::objects::Msmsintgic0Metrics::CreateTable();
-    delphi::objects::Msmsintgic1Metrics::CreateTable();
-    delphi::objects::Msmsintgic2Metrics::CreateTable();
-    delphi::objects::Msmsintgic3Metrics::CreateTable();
-    delphi::objects::Msmsintgic4Metrics::CreateTable();
-    delphi::objects::Msmsintgic5Metrics::CreateTable();
-    delphi::objects::Msmsintgic6Metrics::CreateTable();
-    delphi::objects::Msmsintgic7Metrics::CreateTable();
-    delphi::objects::Msmsintgic8Metrics::CreateTable();
-    delphi::objects::Msmsintgic9Metrics::CreateTable();
-    delphi::objects::Msmsintgic10Metrics::CreateTable();
-    delphi::objects::Msmsintgic11Metrics::CreateTable();
-    delphi::objects::Msmsintgic12Metrics::CreateTable();
-    delphi::objects::Msmsintgic13Metrics::CreateTable();
-    delphi::objects::Msmsintgic14Metrics::CreateTable();
-    delphi::objects::Msmsintgic15Metrics::CreateTable();
-    delphi::objects::Msmsintgic16Metrics::CreateTable();
-    delphi::objects::Msmsintgic17Metrics::CreateTable();
-    delphi::objects::Msmsintgic18Metrics::CreateTable();
-    delphi::objects::Msmsintgic19Metrics::CreateTable();
-    delphi::objects::Msmsintgic20Metrics::CreateTable();
-    delphi::objects::Msmsintgic21Metrics::CreateTable();
-    delphi::objects::Msmsintgic22Metrics::CreateTable();
-    delphi::objects::Msmsintgic23Metrics::CreateTable();
-    delphi::objects::MsemintgroupsintregMetrics::CreateTable();
     delphi::objects::Mxmx0intmacMetrics::CreateTable();
     delphi::objects::Mxmx0inteccMetrics::CreateTable();
     delphi::objects::Mxmx1intmacMetrics::CreateTable();

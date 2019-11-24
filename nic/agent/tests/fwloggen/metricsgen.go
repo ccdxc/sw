@@ -131,15 +131,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Dppdpp0intreg1Metrics")
 	}
 
-	if it, err := goproto.NewDppdpp0intreg2MetricsIterator(); err == nil {
-		n := &goproto.Dppdpp0intreg2Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Dppdpp0intreg2Metrics")
-	}
-
 	if it, err := goproto.NewDppdpp0intspareMetricsIterator(); err == nil {
 		n := &goproto.Dppdpp0intspareMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -183,15 +174,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Dppdpp1intreg1Metrics")
-	}
-
-	if it, err := goproto.NewDppdpp1intreg2MetricsIterator(); err == nil {
-		n := &goproto.Dppdpp1intreg2Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Dppdpp1intreg2Metrics")
 	}
 
 	if it, err := goproto.NewDppdpp1intspareMetricsIterator(); err == nil {
@@ -716,15 +698,6 @@ func metricsInit() {
 		fmt.Printf("failed to init MdhensintdrbgintrameccMetrics")
 	}
 
-	if it, err := goproto.NewMdhensintipcoreMetricsIterator(); err == nil {
-		n := &goproto.MdhensintipcoreMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init MdhensintipcoreMetrics")
-	}
-
 	if it, err := goproto.NewMdhensintpkeccMetricsIterator(); err == nil {
 		n := &goproto.MdhensintpkeccMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -741,249 +714,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init MgmtMacMetrics")
-	}
-
-	if it, err := goproto.NewMpmpnsintcryptoMetricsIterator(); err == nil {
-		n := &goproto.MpmpnsintcryptoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init MpmpnsintcryptoMetrics")
-	}
-
-	if it, err := goproto.NewMsemintgroupsintregMetricsIterator(); err == nil {
-		n := &goproto.MsemintgroupsintregMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init MsemintgroupsintregMetrics")
-	}
-
-	if it, err := goproto.NewMsmsintesecureMetricsIterator(); err == nil {
-		n := &goproto.MsmsintesecureMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init MsmsintesecureMetrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic0MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic0Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic0Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic10MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic10Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic10Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic11MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic11Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic11Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic12MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic12Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic12Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic13MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic13Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic13Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic14MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic14Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic14Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic15MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic15Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic15Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic16MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic16Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic16Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic17MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic17Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic17Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic18MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic18Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic18Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic19MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic19Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic19Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic1MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic1Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic1Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic20MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic20Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic20Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic21MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic21Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic21Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic22MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic22Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic22Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic23MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic23Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic23Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic2MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic2Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic2Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic3MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic3Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic3Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic4MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic4Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic4Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic5MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic5Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic5Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic6MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic6Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic6Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic7MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic7Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic7Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic8MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic8Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic8Metrics")
-	}
-
-	if it, err := goproto.NewMsmsintgic9MetricsIterator(); err == nil {
-		n := &goproto.Msmsintgic9Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Msmsintgic9Metrics")
 	}
 
 	if it, err := goproto.NewMsmsintmiscMetricsIterator(); err == nil {
@@ -1130,51 +860,6 @@ func metricsInit() {
 		fmt.Printf("failed to init PbpbchbminthbmaxierrrspMetrics")
 	}
 
-	if it, err := goproto.NewPbpbchbminthbmdropMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmdropMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmdropMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmdropctrlMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmdropctrlMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmdropctrlMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmdropemergencyMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmdropemergencyMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmdropemergencyMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmdropthresholdMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmdropthresholdMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmdropthresholdMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmdropwriteackMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmdropwriteackMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmdropwriteackMetrics")
-	}
-
 	if it, err := goproto.NewPbpbchbminthbmpbusviolationinMetricsIterator(); err == nil {
 		n := &goproto.PbpbchbminthbmpbusviolationinMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1191,33 +876,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init PbpbchbminthbmpbusviolationoutMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmstopMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmstopMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmstopMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmtruncatenoMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmtruncatenoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmtruncatenoMetrics")
-	}
-
-	if it, err := goproto.NewPbpbchbminthbmxoffMetricsIterator(); err == nil {
-		n := &goproto.PbpbchbminthbmxoffMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PbpbchbminthbmxoffMetrics")
 	}
 
 	if it, err := goproto.NewPbpbcintcreditunderflowMetricsIterator(); err == nil {
@@ -1670,15 +1328,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pcrte0interrMetrics")
 	}
 
-	if it, err := goproto.NewPcrte0intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte0intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte0intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPcrte1interrMetricsIterator(); err == nil {
 		n := &goproto.Pcrte1interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1686,15 +1335,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pcrte1interrMetrics")
-	}
-
-	if it, err := goproto.NewPcrte1intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte1intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte1intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPcrte2interrMetricsIterator(); err == nil {
@@ -1706,15 +1346,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pcrte2interrMetrics")
 	}
 
-	if it, err := goproto.NewPcrte2intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte2intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte2intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPcrte3interrMetricsIterator(); err == nil {
 		n := &goproto.Pcrte3interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1722,15 +1353,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pcrte3interrMetrics")
-	}
-
-	if it, err := goproto.NewPcrte3intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte3intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte3intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPcrte4interrMetricsIterator(); err == nil {
@@ -1742,15 +1364,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pcrte4interrMetrics")
 	}
 
-	if it, err := goproto.NewPcrte4intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte4intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte4intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPcrte5interrMetricsIterator(); err == nil {
 		n := &goproto.Pcrte5interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1758,15 +1371,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pcrte5interrMetrics")
-	}
-
-	if it, err := goproto.NewPcrte5intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte5intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte5intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPcrte6interrMetricsIterator(); err == nil {
@@ -1778,15 +1382,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pcrte6interrMetrics")
 	}
 
-	if it, err := goproto.NewPcrte6intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte6intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte6intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPcrte7interrMetricsIterator(); err == nil {
 		n := &goproto.Pcrte7interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1794,15 +1389,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pcrte7interrMetrics")
-	}
-
-	if it, err := goproto.NewPcrte7intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pcrte7intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pcrte7intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPctmpu0interrMetricsIterator(); err == nil {
@@ -1958,15 +1544,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pctte0interrMetrics")
 	}
 
-	if it, err := goproto.NewPctte0intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte0intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte0intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPctte1interrMetricsIterator(); err == nil {
 		n := &goproto.Pctte1interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -1974,15 +1551,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pctte1interrMetrics")
-	}
-
-	if it, err := goproto.NewPctte1intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte1intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte1intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPctte2interrMetricsIterator(); err == nil {
@@ -1994,15 +1562,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pctte2interrMetrics")
 	}
 
-	if it, err := goproto.NewPctte2intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte2intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte2intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPctte3interrMetricsIterator(); err == nil {
 		n := &goproto.Pctte3interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2010,15 +1569,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pctte3interrMetrics")
-	}
-
-	if it, err := goproto.NewPctte3intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte3intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte3intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPctte4interrMetricsIterator(); err == nil {
@@ -2030,15 +1580,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pctte4interrMetrics")
 	}
 
-	if it, err := goproto.NewPctte4intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte4intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte4intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPctte5interrMetricsIterator(); err == nil {
 		n := &goproto.Pctte5interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2046,15 +1587,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pctte5interrMetrics")
-	}
-
-	if it, err := goproto.NewPctte5intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte5intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte5intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPctte6interrMetricsIterator(); err == nil {
@@ -2066,15 +1598,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Pctte6interrMetrics")
 	}
 
-	if it, err := goproto.NewPctte6intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte6intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte6intinfoMetrics")
-	}
-
 	if it, err := goproto.NewPctte7interrMetricsIterator(); err == nil {
 		n := &goproto.Pctte7interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2082,15 +1605,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Pctte7interrMetrics")
-	}
-
-	if it, err := goproto.NewPctte7intinfoMetricsIterator(); err == nil {
-		n := &goproto.Pctte7intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Pctte7intinfoMetrics")
 	}
 
 	if it, err := goproto.NewPmpbmintecccol0MetricsIterator(); err == nil {
@@ -2687,15 +2201,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Ppppportp7intpeccMetrics")
 	}
 
-	if it, err := goproto.NewPrprintreg1MetricsIterator(); err == nil {
-		n := &goproto.Prprintreg1Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Prprintreg1Metrics")
-	}
-
 	if it, err := goproto.NewPrprprdinteccMetricsIterator(); err == nil {
 		n := &goproto.PrprprdinteccMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2759,15 +2264,6 @@ func metricsInit() {
 		fmt.Printf("failed to init PrprpspintfatalMetrics")
 	}
 
-	if it, err := goproto.NewPrprpspintinfoMetricsIterator(); err == nil {
-		n := &goproto.PrprpspintinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PrprpspintinfoMetrics")
-	}
-
 	if it, err := goproto.NewPrprpspintlifqstatemapMetricsIterator(); err == nil {
 		n := &goproto.PrprpspintlifqstatemapMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2786,15 +2282,6 @@ func metricsInit() {
 		fmt.Printf("failed to init PrprpspintswphvmemMetrics")
 	}
 
-	if it, err := goproto.NewPtptintreg1MetricsIterator(); err == nil {
-		n := &goproto.Ptptintreg1Metrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Ptptintreg1Metrics")
-	}
-
 	if it, err := goproto.NewPtptpspinterrMetricsIterator(); err == nil {
 		n := &goproto.PtptpspinterrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -2811,15 +2298,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init PtptpspintfatalMetrics")
-	}
-
-	if it, err := goproto.NewPtptpspintinfoMetricsIterator(); err == nil {
-		n := &goproto.PtptpspintinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init PtptpspintinfoMetrics")
 	}
 
 	if it, err := goproto.NewPtptpspintlifqstatemapMetricsIterator(); err == nil {
@@ -2957,15 +2435,6 @@ func metricsInit() {
 		fmt.Printf("failed to init RuleMetrics")
 	}
 
-	if it, err := goproto.NewSemasemaintgroupsintregMetricsIterator(); err == nil {
-		n := &goproto.SemasemaintgroupsintregMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init SemasemaintgroupsintregMetrics")
-	}
-
 	if it, err := goproto.NewSessionSummaryMetricsIterator(); err == nil {
 		n := &goproto.SessionSummaryMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3092,15 +2561,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgete0interrMetrics")
 	}
 
-	if it, err := goproto.NewSgete0intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete0intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete0intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgete1interrMetricsIterator(); err == nil {
 		n := &goproto.Sgete1interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3108,15 +2568,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgete1interrMetrics")
-	}
-
-	if it, err := goproto.NewSgete1intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete1intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete1intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSgete2interrMetricsIterator(); err == nil {
@@ -3128,15 +2579,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgete2interrMetrics")
 	}
 
-	if it, err := goproto.NewSgete2intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete2intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete2intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgete3interrMetricsIterator(); err == nil {
 		n := &goproto.Sgete3interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3144,15 +2586,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgete3interrMetrics")
-	}
-
-	if it, err := goproto.NewSgete3intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete3intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete3intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSgete4interrMetricsIterator(); err == nil {
@@ -3164,15 +2597,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgete4interrMetrics")
 	}
 
-	if it, err := goproto.NewSgete4intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete4intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete4intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgete5interrMetricsIterator(); err == nil {
 		n := &goproto.Sgete5interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3180,15 +2604,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgete5interrMetrics")
-	}
-
-	if it, err := goproto.NewSgete5intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgete5intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgete5intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSgimpu0interrMetricsIterator(); err == nil {
@@ -3308,15 +2723,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgite0interrMetrics")
 	}
 
-	if it, err := goproto.NewSgite0intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite0intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite0intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgite1interrMetricsIterator(); err == nil {
 		n := &goproto.Sgite1interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3324,15 +2730,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgite1interrMetrics")
-	}
-
-	if it, err := goproto.NewSgite1intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite1intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite1intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSgite2interrMetricsIterator(); err == nil {
@@ -3344,15 +2741,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgite2interrMetrics")
 	}
 
-	if it, err := goproto.NewSgite2intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite2intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite2intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgite3interrMetricsIterator(); err == nil {
 		n := &goproto.Sgite3interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3360,15 +2748,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgite3interrMetrics")
-	}
-
-	if it, err := goproto.NewSgite3intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite3intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite3intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSgite4interrMetricsIterator(); err == nil {
@@ -3380,15 +2759,6 @@ func metricsInit() {
 		fmt.Printf("failed to init Sgite4interrMetrics")
 	}
 
-	if it, err := goproto.NewSgite4intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite4intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite4intinfoMetrics")
-	}
-
 	if it, err := goproto.NewSgite5interrMetricsIterator(); err == nil {
 		n := &goproto.Sgite5interrMetrics{}
 		if fillKey(n.GetKey()) == true {
@@ -3396,15 +2766,6 @@ func metricsInit() {
 		}
 	} else {
 		fmt.Printf("failed to init Sgite5interrMetrics")
-	}
-
-	if it, err := goproto.NewSgite5intinfoMetricsIterator(); err == nil {
-		n := &goproto.Sgite5intinfoMetrics{}
-		if fillKey(n.GetKey()) == true {
-			it.Create(n.GetKey())
-		}
-	} else {
-		fmt.Printf("failed to init Sgite5intinfoMetrics")
 	}
 
 	if it, err := goproto.NewSsepicsintbadaddrMetricsIterator(); err == nil {

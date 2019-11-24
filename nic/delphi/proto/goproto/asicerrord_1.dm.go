@@ -8,5130 +8,6 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
-type Ppppportc4intcmacMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	LinkDn2Up metrics.Counter
-
-	LinkUp2Dn metrics.Counter
-
-	SecBusRst metrics.Counter
-
-	RstUp2Dn metrics.Counter
-
-	RstDn2Up metrics.Counter
-
-	PortgateOpen2Close metrics.Counter
-
-	LtssmStChanged metrics.Counter
-
-	SecBusnumChanged metrics.Counter
-
-	RcPme metrics.Counter
-
-	RcAerr metrics.Counter
-
-	RcSerr metrics.Counter
-
-	RcHpe metrics.Counter
-
-	RcEqReq metrics.Counter
-
-	RcDpc metrics.Counter
-
-	PmTurnoff metrics.Counter
-
-	TxbfrOverflow metrics.Counter
-
-	RxtlpErr metrics.Counter
-
-	TlFlrReq metrics.Counter
-
-	RcLegacyIntpinChanged metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc4intcmacMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc4intcmacMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.LinkDn2Up.Size()
-
-	sz += mtr.LinkUp2Dn.Size()
-
-	sz += mtr.SecBusRst.Size()
-
-	sz += mtr.RstUp2Dn.Size()
-
-	sz += mtr.RstDn2Up.Size()
-
-	sz += mtr.PortgateOpen2Close.Size()
-
-	sz += mtr.LtssmStChanged.Size()
-
-	sz += mtr.SecBusnumChanged.Size()
-
-	sz += mtr.RcPme.Size()
-
-	sz += mtr.RcAerr.Size()
-
-	sz += mtr.RcSerr.Size()
-
-	sz += mtr.RcHpe.Size()
-
-	sz += mtr.RcEqReq.Size()
-
-	sz += mtr.RcDpc.Size()
-
-	sz += mtr.PmTurnoff.Size()
-
-	sz += mtr.TxbfrOverflow.Size()
-
-	sz += mtr.RxtlpErr.Size()
-
-	sz += mtr.TlFlrReq.Size()
-
-	sz += mtr.RcLegacyIntpinChanged.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc4intcmacMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.LinkDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkDn2Up.Size()
-
-	mtr.LinkUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkUp2Dn.Size()
-
-	mtr.SecBusRst = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusRst.Size()
-
-	mtr.RstUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstUp2Dn.Size()
-
-	mtr.RstDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstDn2Up.Size()
-
-	mtr.PortgateOpen2Close = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortgateOpen2Close.Size()
-
-	mtr.LtssmStChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.LtssmStChanged.Size()
-
-	mtr.SecBusnumChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusnumChanged.Size()
-
-	mtr.RcPme = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcPme.Size()
-
-	mtr.RcAerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcAerr.Size()
-
-	mtr.RcSerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcSerr.Size()
-
-	mtr.RcHpe = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcHpe.Size()
-
-	mtr.RcEqReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcEqReq.Size()
-
-	mtr.RcDpc = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcDpc.Size()
-
-	mtr.PmTurnoff = mtr.metrics.GetCounter(offset)
-	offset += mtr.PmTurnoff.Size()
-
-	mtr.TxbfrOverflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxbfrOverflow.Size()
-
-	mtr.RxtlpErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxtlpErr.Size()
-
-	mtr.TlFlrReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.TlFlrReq.Size()
-
-	mtr.RcLegacyIntpinChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc4intcmacMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "LinkDn2Up" {
-		return offset
-	}
-	offset += mtr.LinkDn2Up.Size()
-
-	if fldName == "LinkUp2Dn" {
-		return offset
-	}
-	offset += mtr.LinkUp2Dn.Size()
-
-	if fldName == "SecBusRst" {
-		return offset
-	}
-	offset += mtr.SecBusRst.Size()
-
-	if fldName == "RstUp2Dn" {
-		return offset
-	}
-	offset += mtr.RstUp2Dn.Size()
-
-	if fldName == "RstDn2Up" {
-		return offset
-	}
-	offset += mtr.RstDn2Up.Size()
-
-	if fldName == "PortgateOpen2Close" {
-		return offset
-	}
-	offset += mtr.PortgateOpen2Close.Size()
-
-	if fldName == "LtssmStChanged" {
-		return offset
-	}
-	offset += mtr.LtssmStChanged.Size()
-
-	if fldName == "SecBusnumChanged" {
-		return offset
-	}
-	offset += mtr.SecBusnumChanged.Size()
-
-	if fldName == "RcPme" {
-		return offset
-	}
-	offset += mtr.RcPme.Size()
-
-	if fldName == "RcAerr" {
-		return offset
-	}
-	offset += mtr.RcAerr.Size()
-
-	if fldName == "RcSerr" {
-		return offset
-	}
-	offset += mtr.RcSerr.Size()
-
-	if fldName == "RcHpe" {
-		return offset
-	}
-	offset += mtr.RcHpe.Size()
-
-	if fldName == "RcEqReq" {
-		return offset
-	}
-	offset += mtr.RcEqReq.Size()
-
-	if fldName == "RcDpc" {
-		return offset
-	}
-	offset += mtr.RcDpc.Size()
-
-	if fldName == "PmTurnoff" {
-		return offset
-	}
-	offset += mtr.PmTurnoff.Size()
-
-	if fldName == "TxbfrOverflow" {
-		return offset
-	}
-	offset += mtr.TxbfrOverflow.Size()
-
-	if fldName == "RxtlpErr" {
-		return offset
-	}
-	offset += mtr.RxtlpErr.Size()
-
-	if fldName == "TlFlrReq" {
-		return offset
-	}
-	offset += mtr.TlFlrReq.Size()
-
-	if fldName == "RcLegacyIntpinChanged" {
-		return offset
-	}
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return offset
-}
-
-// SetLinkDn2Up sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetLinkDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkDn2Up"))
-	return nil
-}
-
-// SetLinkUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetLinkUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkUp2Dn"))
-	return nil
-}
-
-// SetSecBusRst sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetSecBusRst(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusRst"))
-	return nil
-}
-
-// SetRstUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRstUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstUp2Dn"))
-	return nil
-}
-
-// SetRstDn2Up sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRstDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstDn2Up"))
-	return nil
-}
-
-// SetPortgateOpen2Close sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetPortgateOpen2Close(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortgateOpen2Close"))
-	return nil
-}
-
-// SetLtssmStChanged sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetLtssmStChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LtssmStChanged"))
-	return nil
-}
-
-// SetSecBusnumChanged sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetSecBusnumChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusnumChanged"))
-	return nil
-}
-
-// SetRcPme sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcPme(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcPme"))
-	return nil
-}
-
-// SetRcAerr sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcAerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcAerr"))
-	return nil
-}
-
-// SetRcSerr sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcSerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcSerr"))
-	return nil
-}
-
-// SetRcHpe sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcHpe(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcHpe"))
-	return nil
-}
-
-// SetRcEqReq sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcEqReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcEqReq"))
-	return nil
-}
-
-// SetRcDpc sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcDpc(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcDpc"))
-	return nil
-}
-
-// SetPmTurnoff sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetPmTurnoff(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PmTurnoff"))
-	return nil
-}
-
-// SetTxbfrOverflow sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetTxbfrOverflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxbfrOverflow"))
-	return nil
-}
-
-// SetRxtlpErr sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRxtlpErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxtlpErr"))
-	return nil
-}
-
-// SetTlFlrReq sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetTlFlrReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TlFlrReq"))
-	return nil
-}
-
-// SetRcLegacyIntpinChanged sets cunter in shared memory
-func (mtr *Ppppportc4intcmacMetrics) SetRcLegacyIntpinChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChanged"))
-	return nil
-}
-
-// Ppppportc4intcmacMetricsIterator is the iterator object
-type Ppppportc4intcmacMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc4intcmacMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc4intcmacMetricsIterator) Next() *Ppppportc4intcmacMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc4intcmacMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc4intcmacMetricsIterator) Find(key uint64) (*Ppppportc4intcmacMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc4intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc4intcmacMetricsIterator) Create(key uint64) (*Ppppportc4intcmacMetrics, error) {
-	tmtr := &Ppppportc4intcmacMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc4intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc4intcmacMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc4intcmacMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc4intcmacMetricsIterator returns an iterator
-func NewPpppportc4intcmacMetricsIterator() (*Ppppportc4intcmacMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc4intcmacMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc4intcmacMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc4intceccMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	Rxbuf_0Uncorrectable metrics.Counter
-
-	Rxbuf_1Uncorrectable metrics.Counter
-
-	Rxbuf_2Uncorrectable metrics.Counter
-
-	Rxbuf_3Uncorrectable metrics.Counter
-
-	Rxbuf_0Correctable metrics.Counter
-
-	Rxbuf_1Correctable metrics.Counter
-
-	Rxbuf_2Correctable metrics.Counter
-
-	Rxbuf_3Correctable metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc4intceccMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc4intceccMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.Rxbuf_0Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_1Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_2Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_3Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_0Correctable.Size()
-
-	sz += mtr.Rxbuf_1Correctable.Size()
-
-	sz += mtr.Rxbuf_2Correctable.Size()
-
-	sz += mtr.Rxbuf_3Correctable.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc4intceccMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.Rxbuf_0Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	mtr.Rxbuf_1Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	mtr.Rxbuf_2Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	mtr.Rxbuf_3Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	mtr.Rxbuf_0Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	mtr.Rxbuf_1Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	mtr.Rxbuf_2Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	mtr.Rxbuf_3Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc4intceccMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "Rxbuf_0Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	if fldName == "Rxbuf_1Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	if fldName == "Rxbuf_2Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	if fldName == "Rxbuf_3Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	if fldName == "Rxbuf_0Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	if fldName == "Rxbuf_1Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	if fldName == "Rxbuf_2Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	if fldName == "Rxbuf_3Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return offset
-}
-
-// SetRxbuf_0Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_0Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_1Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_1Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_2Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_2Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_3Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_3Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_0Correctable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_0Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Correctable"))
-	return nil
-}
-
-// SetRxbuf_1Correctable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_1Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Correctable"))
-	return nil
-}
-
-// SetRxbuf_2Correctable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_2Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Correctable"))
-	return nil
-}
-
-// SetRxbuf_3Correctable sets cunter in shared memory
-func (mtr *Ppppportc4intceccMetrics) SetRxbuf_3Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Correctable"))
-	return nil
-}
-
-// Ppppportc4intceccMetricsIterator is the iterator object
-type Ppppportc4intceccMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc4intceccMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc4intceccMetricsIterator) Next() *Ppppportc4intceccMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc4intceccMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc4intceccMetricsIterator) Find(key uint64) (*Ppppportc4intceccMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc4intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc4intceccMetricsIterator) Create(key uint64) (*Ppppportc4intceccMetrics, error) {
-	tmtr := &Ppppportc4intceccMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc4intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc4intceccMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc4intceccMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc4intceccMetricsIterator returns an iterator
-func NewPpppportc4intceccMetricsIterator() (*Ppppportc4intceccMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc4intceccMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc4intceccMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc5intcmacMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	LinkDn2Up metrics.Counter
-
-	LinkUp2Dn metrics.Counter
-
-	SecBusRst metrics.Counter
-
-	RstUp2Dn metrics.Counter
-
-	RstDn2Up metrics.Counter
-
-	PortgateOpen2Close metrics.Counter
-
-	LtssmStChanged metrics.Counter
-
-	SecBusnumChanged metrics.Counter
-
-	RcPme metrics.Counter
-
-	RcAerr metrics.Counter
-
-	RcSerr metrics.Counter
-
-	RcHpe metrics.Counter
-
-	RcEqReq metrics.Counter
-
-	RcDpc metrics.Counter
-
-	PmTurnoff metrics.Counter
-
-	TxbfrOverflow metrics.Counter
-
-	RxtlpErr metrics.Counter
-
-	TlFlrReq metrics.Counter
-
-	RcLegacyIntpinChanged metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc5intcmacMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc5intcmacMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.LinkDn2Up.Size()
-
-	sz += mtr.LinkUp2Dn.Size()
-
-	sz += mtr.SecBusRst.Size()
-
-	sz += mtr.RstUp2Dn.Size()
-
-	sz += mtr.RstDn2Up.Size()
-
-	sz += mtr.PortgateOpen2Close.Size()
-
-	sz += mtr.LtssmStChanged.Size()
-
-	sz += mtr.SecBusnumChanged.Size()
-
-	sz += mtr.RcPme.Size()
-
-	sz += mtr.RcAerr.Size()
-
-	sz += mtr.RcSerr.Size()
-
-	sz += mtr.RcHpe.Size()
-
-	sz += mtr.RcEqReq.Size()
-
-	sz += mtr.RcDpc.Size()
-
-	sz += mtr.PmTurnoff.Size()
-
-	sz += mtr.TxbfrOverflow.Size()
-
-	sz += mtr.RxtlpErr.Size()
-
-	sz += mtr.TlFlrReq.Size()
-
-	sz += mtr.RcLegacyIntpinChanged.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc5intcmacMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.LinkDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkDn2Up.Size()
-
-	mtr.LinkUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkUp2Dn.Size()
-
-	mtr.SecBusRst = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusRst.Size()
-
-	mtr.RstUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstUp2Dn.Size()
-
-	mtr.RstDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstDn2Up.Size()
-
-	mtr.PortgateOpen2Close = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortgateOpen2Close.Size()
-
-	mtr.LtssmStChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.LtssmStChanged.Size()
-
-	mtr.SecBusnumChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusnumChanged.Size()
-
-	mtr.RcPme = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcPme.Size()
-
-	mtr.RcAerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcAerr.Size()
-
-	mtr.RcSerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcSerr.Size()
-
-	mtr.RcHpe = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcHpe.Size()
-
-	mtr.RcEqReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcEqReq.Size()
-
-	mtr.RcDpc = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcDpc.Size()
-
-	mtr.PmTurnoff = mtr.metrics.GetCounter(offset)
-	offset += mtr.PmTurnoff.Size()
-
-	mtr.TxbfrOverflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxbfrOverflow.Size()
-
-	mtr.RxtlpErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxtlpErr.Size()
-
-	mtr.TlFlrReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.TlFlrReq.Size()
-
-	mtr.RcLegacyIntpinChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc5intcmacMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "LinkDn2Up" {
-		return offset
-	}
-	offset += mtr.LinkDn2Up.Size()
-
-	if fldName == "LinkUp2Dn" {
-		return offset
-	}
-	offset += mtr.LinkUp2Dn.Size()
-
-	if fldName == "SecBusRst" {
-		return offset
-	}
-	offset += mtr.SecBusRst.Size()
-
-	if fldName == "RstUp2Dn" {
-		return offset
-	}
-	offset += mtr.RstUp2Dn.Size()
-
-	if fldName == "RstDn2Up" {
-		return offset
-	}
-	offset += mtr.RstDn2Up.Size()
-
-	if fldName == "PortgateOpen2Close" {
-		return offset
-	}
-	offset += mtr.PortgateOpen2Close.Size()
-
-	if fldName == "LtssmStChanged" {
-		return offset
-	}
-	offset += mtr.LtssmStChanged.Size()
-
-	if fldName == "SecBusnumChanged" {
-		return offset
-	}
-	offset += mtr.SecBusnumChanged.Size()
-
-	if fldName == "RcPme" {
-		return offset
-	}
-	offset += mtr.RcPme.Size()
-
-	if fldName == "RcAerr" {
-		return offset
-	}
-	offset += mtr.RcAerr.Size()
-
-	if fldName == "RcSerr" {
-		return offset
-	}
-	offset += mtr.RcSerr.Size()
-
-	if fldName == "RcHpe" {
-		return offset
-	}
-	offset += mtr.RcHpe.Size()
-
-	if fldName == "RcEqReq" {
-		return offset
-	}
-	offset += mtr.RcEqReq.Size()
-
-	if fldName == "RcDpc" {
-		return offset
-	}
-	offset += mtr.RcDpc.Size()
-
-	if fldName == "PmTurnoff" {
-		return offset
-	}
-	offset += mtr.PmTurnoff.Size()
-
-	if fldName == "TxbfrOverflow" {
-		return offset
-	}
-	offset += mtr.TxbfrOverflow.Size()
-
-	if fldName == "RxtlpErr" {
-		return offset
-	}
-	offset += mtr.RxtlpErr.Size()
-
-	if fldName == "TlFlrReq" {
-		return offset
-	}
-	offset += mtr.TlFlrReq.Size()
-
-	if fldName == "RcLegacyIntpinChanged" {
-		return offset
-	}
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return offset
-}
-
-// SetLinkDn2Up sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetLinkDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkDn2Up"))
-	return nil
-}
-
-// SetLinkUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetLinkUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkUp2Dn"))
-	return nil
-}
-
-// SetSecBusRst sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetSecBusRst(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusRst"))
-	return nil
-}
-
-// SetRstUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRstUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstUp2Dn"))
-	return nil
-}
-
-// SetRstDn2Up sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRstDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstDn2Up"))
-	return nil
-}
-
-// SetPortgateOpen2Close sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetPortgateOpen2Close(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortgateOpen2Close"))
-	return nil
-}
-
-// SetLtssmStChanged sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetLtssmStChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LtssmStChanged"))
-	return nil
-}
-
-// SetSecBusnumChanged sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetSecBusnumChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusnumChanged"))
-	return nil
-}
-
-// SetRcPme sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcPme(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcPme"))
-	return nil
-}
-
-// SetRcAerr sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcAerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcAerr"))
-	return nil
-}
-
-// SetRcSerr sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcSerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcSerr"))
-	return nil
-}
-
-// SetRcHpe sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcHpe(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcHpe"))
-	return nil
-}
-
-// SetRcEqReq sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcEqReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcEqReq"))
-	return nil
-}
-
-// SetRcDpc sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcDpc(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcDpc"))
-	return nil
-}
-
-// SetPmTurnoff sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetPmTurnoff(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PmTurnoff"))
-	return nil
-}
-
-// SetTxbfrOverflow sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetTxbfrOverflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxbfrOverflow"))
-	return nil
-}
-
-// SetRxtlpErr sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRxtlpErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxtlpErr"))
-	return nil
-}
-
-// SetTlFlrReq sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetTlFlrReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TlFlrReq"))
-	return nil
-}
-
-// SetRcLegacyIntpinChanged sets cunter in shared memory
-func (mtr *Ppppportc5intcmacMetrics) SetRcLegacyIntpinChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChanged"))
-	return nil
-}
-
-// Ppppportc5intcmacMetricsIterator is the iterator object
-type Ppppportc5intcmacMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc5intcmacMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc5intcmacMetricsIterator) Next() *Ppppportc5intcmacMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc5intcmacMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc5intcmacMetricsIterator) Find(key uint64) (*Ppppportc5intcmacMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc5intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc5intcmacMetricsIterator) Create(key uint64) (*Ppppportc5intcmacMetrics, error) {
-	tmtr := &Ppppportc5intcmacMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc5intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc5intcmacMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc5intcmacMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc5intcmacMetricsIterator returns an iterator
-func NewPpppportc5intcmacMetricsIterator() (*Ppppportc5intcmacMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc5intcmacMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc5intcmacMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc5intceccMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	Rxbuf_0Uncorrectable metrics.Counter
-
-	Rxbuf_1Uncorrectable metrics.Counter
-
-	Rxbuf_2Uncorrectable metrics.Counter
-
-	Rxbuf_3Uncorrectable metrics.Counter
-
-	Rxbuf_0Correctable metrics.Counter
-
-	Rxbuf_1Correctable metrics.Counter
-
-	Rxbuf_2Correctable metrics.Counter
-
-	Rxbuf_3Correctable metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc5intceccMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc5intceccMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.Rxbuf_0Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_1Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_2Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_3Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_0Correctable.Size()
-
-	sz += mtr.Rxbuf_1Correctable.Size()
-
-	sz += mtr.Rxbuf_2Correctable.Size()
-
-	sz += mtr.Rxbuf_3Correctable.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc5intceccMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.Rxbuf_0Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	mtr.Rxbuf_1Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	mtr.Rxbuf_2Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	mtr.Rxbuf_3Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	mtr.Rxbuf_0Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	mtr.Rxbuf_1Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	mtr.Rxbuf_2Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	mtr.Rxbuf_3Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc5intceccMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "Rxbuf_0Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	if fldName == "Rxbuf_1Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	if fldName == "Rxbuf_2Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	if fldName == "Rxbuf_3Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	if fldName == "Rxbuf_0Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	if fldName == "Rxbuf_1Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	if fldName == "Rxbuf_2Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	if fldName == "Rxbuf_3Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return offset
-}
-
-// SetRxbuf_0Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_0Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_1Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_1Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_2Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_2Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_3Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_3Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_0Correctable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_0Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Correctable"))
-	return nil
-}
-
-// SetRxbuf_1Correctable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_1Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Correctable"))
-	return nil
-}
-
-// SetRxbuf_2Correctable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_2Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Correctable"))
-	return nil
-}
-
-// SetRxbuf_3Correctable sets cunter in shared memory
-func (mtr *Ppppportc5intceccMetrics) SetRxbuf_3Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Correctable"))
-	return nil
-}
-
-// Ppppportc5intceccMetricsIterator is the iterator object
-type Ppppportc5intceccMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc5intceccMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc5intceccMetricsIterator) Next() *Ppppportc5intceccMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc5intceccMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc5intceccMetricsIterator) Find(key uint64) (*Ppppportc5intceccMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc5intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc5intceccMetricsIterator) Create(key uint64) (*Ppppportc5intceccMetrics, error) {
-	tmtr := &Ppppportc5intceccMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc5intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc5intceccMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc5intceccMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc5intceccMetricsIterator returns an iterator
-func NewPpppportc5intceccMetricsIterator() (*Ppppportc5intceccMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc5intceccMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc5intceccMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc6intcmacMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	LinkDn2Up metrics.Counter
-
-	LinkUp2Dn metrics.Counter
-
-	SecBusRst metrics.Counter
-
-	RstUp2Dn metrics.Counter
-
-	RstDn2Up metrics.Counter
-
-	PortgateOpen2Close metrics.Counter
-
-	LtssmStChanged metrics.Counter
-
-	SecBusnumChanged metrics.Counter
-
-	RcPme metrics.Counter
-
-	RcAerr metrics.Counter
-
-	RcSerr metrics.Counter
-
-	RcHpe metrics.Counter
-
-	RcEqReq metrics.Counter
-
-	RcDpc metrics.Counter
-
-	PmTurnoff metrics.Counter
-
-	TxbfrOverflow metrics.Counter
-
-	RxtlpErr metrics.Counter
-
-	TlFlrReq metrics.Counter
-
-	RcLegacyIntpinChanged metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc6intcmacMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc6intcmacMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.LinkDn2Up.Size()
-
-	sz += mtr.LinkUp2Dn.Size()
-
-	sz += mtr.SecBusRst.Size()
-
-	sz += mtr.RstUp2Dn.Size()
-
-	sz += mtr.RstDn2Up.Size()
-
-	sz += mtr.PortgateOpen2Close.Size()
-
-	sz += mtr.LtssmStChanged.Size()
-
-	sz += mtr.SecBusnumChanged.Size()
-
-	sz += mtr.RcPme.Size()
-
-	sz += mtr.RcAerr.Size()
-
-	sz += mtr.RcSerr.Size()
-
-	sz += mtr.RcHpe.Size()
-
-	sz += mtr.RcEqReq.Size()
-
-	sz += mtr.RcDpc.Size()
-
-	sz += mtr.PmTurnoff.Size()
-
-	sz += mtr.TxbfrOverflow.Size()
-
-	sz += mtr.RxtlpErr.Size()
-
-	sz += mtr.TlFlrReq.Size()
-
-	sz += mtr.RcLegacyIntpinChanged.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc6intcmacMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.LinkDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkDn2Up.Size()
-
-	mtr.LinkUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkUp2Dn.Size()
-
-	mtr.SecBusRst = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusRst.Size()
-
-	mtr.RstUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstUp2Dn.Size()
-
-	mtr.RstDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstDn2Up.Size()
-
-	mtr.PortgateOpen2Close = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortgateOpen2Close.Size()
-
-	mtr.LtssmStChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.LtssmStChanged.Size()
-
-	mtr.SecBusnumChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusnumChanged.Size()
-
-	mtr.RcPme = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcPme.Size()
-
-	mtr.RcAerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcAerr.Size()
-
-	mtr.RcSerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcSerr.Size()
-
-	mtr.RcHpe = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcHpe.Size()
-
-	mtr.RcEqReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcEqReq.Size()
-
-	mtr.RcDpc = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcDpc.Size()
-
-	mtr.PmTurnoff = mtr.metrics.GetCounter(offset)
-	offset += mtr.PmTurnoff.Size()
-
-	mtr.TxbfrOverflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxbfrOverflow.Size()
-
-	mtr.RxtlpErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxtlpErr.Size()
-
-	mtr.TlFlrReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.TlFlrReq.Size()
-
-	mtr.RcLegacyIntpinChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc6intcmacMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "LinkDn2Up" {
-		return offset
-	}
-	offset += mtr.LinkDn2Up.Size()
-
-	if fldName == "LinkUp2Dn" {
-		return offset
-	}
-	offset += mtr.LinkUp2Dn.Size()
-
-	if fldName == "SecBusRst" {
-		return offset
-	}
-	offset += mtr.SecBusRst.Size()
-
-	if fldName == "RstUp2Dn" {
-		return offset
-	}
-	offset += mtr.RstUp2Dn.Size()
-
-	if fldName == "RstDn2Up" {
-		return offset
-	}
-	offset += mtr.RstDn2Up.Size()
-
-	if fldName == "PortgateOpen2Close" {
-		return offset
-	}
-	offset += mtr.PortgateOpen2Close.Size()
-
-	if fldName == "LtssmStChanged" {
-		return offset
-	}
-	offset += mtr.LtssmStChanged.Size()
-
-	if fldName == "SecBusnumChanged" {
-		return offset
-	}
-	offset += mtr.SecBusnumChanged.Size()
-
-	if fldName == "RcPme" {
-		return offset
-	}
-	offset += mtr.RcPme.Size()
-
-	if fldName == "RcAerr" {
-		return offset
-	}
-	offset += mtr.RcAerr.Size()
-
-	if fldName == "RcSerr" {
-		return offset
-	}
-	offset += mtr.RcSerr.Size()
-
-	if fldName == "RcHpe" {
-		return offset
-	}
-	offset += mtr.RcHpe.Size()
-
-	if fldName == "RcEqReq" {
-		return offset
-	}
-	offset += mtr.RcEqReq.Size()
-
-	if fldName == "RcDpc" {
-		return offset
-	}
-	offset += mtr.RcDpc.Size()
-
-	if fldName == "PmTurnoff" {
-		return offset
-	}
-	offset += mtr.PmTurnoff.Size()
-
-	if fldName == "TxbfrOverflow" {
-		return offset
-	}
-	offset += mtr.TxbfrOverflow.Size()
-
-	if fldName == "RxtlpErr" {
-		return offset
-	}
-	offset += mtr.RxtlpErr.Size()
-
-	if fldName == "TlFlrReq" {
-		return offset
-	}
-	offset += mtr.TlFlrReq.Size()
-
-	if fldName == "RcLegacyIntpinChanged" {
-		return offset
-	}
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return offset
-}
-
-// SetLinkDn2Up sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetLinkDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkDn2Up"))
-	return nil
-}
-
-// SetLinkUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetLinkUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkUp2Dn"))
-	return nil
-}
-
-// SetSecBusRst sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetSecBusRst(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusRst"))
-	return nil
-}
-
-// SetRstUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRstUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstUp2Dn"))
-	return nil
-}
-
-// SetRstDn2Up sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRstDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstDn2Up"))
-	return nil
-}
-
-// SetPortgateOpen2Close sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetPortgateOpen2Close(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortgateOpen2Close"))
-	return nil
-}
-
-// SetLtssmStChanged sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetLtssmStChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LtssmStChanged"))
-	return nil
-}
-
-// SetSecBusnumChanged sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetSecBusnumChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusnumChanged"))
-	return nil
-}
-
-// SetRcPme sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcPme(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcPme"))
-	return nil
-}
-
-// SetRcAerr sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcAerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcAerr"))
-	return nil
-}
-
-// SetRcSerr sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcSerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcSerr"))
-	return nil
-}
-
-// SetRcHpe sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcHpe(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcHpe"))
-	return nil
-}
-
-// SetRcEqReq sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcEqReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcEqReq"))
-	return nil
-}
-
-// SetRcDpc sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcDpc(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcDpc"))
-	return nil
-}
-
-// SetPmTurnoff sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetPmTurnoff(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PmTurnoff"))
-	return nil
-}
-
-// SetTxbfrOverflow sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetTxbfrOverflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxbfrOverflow"))
-	return nil
-}
-
-// SetRxtlpErr sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRxtlpErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxtlpErr"))
-	return nil
-}
-
-// SetTlFlrReq sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetTlFlrReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TlFlrReq"))
-	return nil
-}
-
-// SetRcLegacyIntpinChanged sets cunter in shared memory
-func (mtr *Ppppportc6intcmacMetrics) SetRcLegacyIntpinChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChanged"))
-	return nil
-}
-
-// Ppppportc6intcmacMetricsIterator is the iterator object
-type Ppppportc6intcmacMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc6intcmacMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc6intcmacMetricsIterator) Next() *Ppppportc6intcmacMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc6intcmacMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc6intcmacMetricsIterator) Find(key uint64) (*Ppppportc6intcmacMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc6intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc6intcmacMetricsIterator) Create(key uint64) (*Ppppportc6intcmacMetrics, error) {
-	tmtr := &Ppppportc6intcmacMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc6intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc6intcmacMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc6intcmacMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc6intcmacMetricsIterator returns an iterator
-func NewPpppportc6intcmacMetricsIterator() (*Ppppportc6intcmacMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc6intcmacMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc6intcmacMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc6intceccMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	Rxbuf_0Uncorrectable metrics.Counter
-
-	Rxbuf_1Uncorrectable metrics.Counter
-
-	Rxbuf_2Uncorrectable metrics.Counter
-
-	Rxbuf_3Uncorrectable metrics.Counter
-
-	Rxbuf_0Correctable metrics.Counter
-
-	Rxbuf_1Correctable metrics.Counter
-
-	Rxbuf_2Correctable metrics.Counter
-
-	Rxbuf_3Correctable metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc6intceccMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc6intceccMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.Rxbuf_0Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_1Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_2Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_3Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_0Correctable.Size()
-
-	sz += mtr.Rxbuf_1Correctable.Size()
-
-	sz += mtr.Rxbuf_2Correctable.Size()
-
-	sz += mtr.Rxbuf_3Correctable.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc6intceccMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.Rxbuf_0Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	mtr.Rxbuf_1Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	mtr.Rxbuf_2Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	mtr.Rxbuf_3Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	mtr.Rxbuf_0Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	mtr.Rxbuf_1Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	mtr.Rxbuf_2Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	mtr.Rxbuf_3Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc6intceccMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "Rxbuf_0Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	if fldName == "Rxbuf_1Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	if fldName == "Rxbuf_2Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	if fldName == "Rxbuf_3Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	if fldName == "Rxbuf_0Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	if fldName == "Rxbuf_1Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	if fldName == "Rxbuf_2Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	if fldName == "Rxbuf_3Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return offset
-}
-
-// SetRxbuf_0Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_0Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_1Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_1Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_2Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_2Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_3Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_3Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_0Correctable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_0Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Correctable"))
-	return nil
-}
-
-// SetRxbuf_1Correctable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_1Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Correctable"))
-	return nil
-}
-
-// SetRxbuf_2Correctable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_2Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Correctable"))
-	return nil
-}
-
-// SetRxbuf_3Correctable sets cunter in shared memory
-func (mtr *Ppppportc6intceccMetrics) SetRxbuf_3Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Correctable"))
-	return nil
-}
-
-// Ppppportc6intceccMetricsIterator is the iterator object
-type Ppppportc6intceccMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc6intceccMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc6intceccMetricsIterator) Next() *Ppppportc6intceccMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc6intceccMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc6intceccMetricsIterator) Find(key uint64) (*Ppppportc6intceccMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc6intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc6intceccMetricsIterator) Create(key uint64) (*Ppppportc6intceccMetrics, error) {
-	tmtr := &Ppppportc6intceccMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc6intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc6intceccMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc6intceccMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc6intceccMetricsIterator returns an iterator
-func NewPpppportc6intceccMetricsIterator() (*Ppppportc6intceccMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc6intceccMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc6intceccMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc7intcmacMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	LinkDn2Up metrics.Counter
-
-	LinkUp2Dn metrics.Counter
-
-	SecBusRst metrics.Counter
-
-	RstUp2Dn metrics.Counter
-
-	RstDn2Up metrics.Counter
-
-	PortgateOpen2Close metrics.Counter
-
-	LtssmStChanged metrics.Counter
-
-	SecBusnumChanged metrics.Counter
-
-	RcPme metrics.Counter
-
-	RcAerr metrics.Counter
-
-	RcSerr metrics.Counter
-
-	RcHpe metrics.Counter
-
-	RcEqReq metrics.Counter
-
-	RcDpc metrics.Counter
-
-	PmTurnoff metrics.Counter
-
-	TxbfrOverflow metrics.Counter
-
-	RxtlpErr metrics.Counter
-
-	TlFlrReq metrics.Counter
-
-	RcLegacyIntpinChanged metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc7intcmacMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc7intcmacMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.LinkDn2Up.Size()
-
-	sz += mtr.LinkUp2Dn.Size()
-
-	sz += mtr.SecBusRst.Size()
-
-	sz += mtr.RstUp2Dn.Size()
-
-	sz += mtr.RstDn2Up.Size()
-
-	sz += mtr.PortgateOpen2Close.Size()
-
-	sz += mtr.LtssmStChanged.Size()
-
-	sz += mtr.SecBusnumChanged.Size()
-
-	sz += mtr.RcPme.Size()
-
-	sz += mtr.RcAerr.Size()
-
-	sz += mtr.RcSerr.Size()
-
-	sz += mtr.RcHpe.Size()
-
-	sz += mtr.RcEqReq.Size()
-
-	sz += mtr.RcDpc.Size()
-
-	sz += mtr.PmTurnoff.Size()
-
-	sz += mtr.TxbfrOverflow.Size()
-
-	sz += mtr.RxtlpErr.Size()
-
-	sz += mtr.TlFlrReq.Size()
-
-	sz += mtr.RcLegacyIntpinChanged.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc7intcmacMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.LinkDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkDn2Up.Size()
-
-	mtr.LinkUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.LinkUp2Dn.Size()
-
-	mtr.SecBusRst = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusRst.Size()
-
-	mtr.RstUp2Dn = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstUp2Dn.Size()
-
-	mtr.RstDn2Up = mtr.metrics.GetCounter(offset)
-	offset += mtr.RstDn2Up.Size()
-
-	mtr.PortgateOpen2Close = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortgateOpen2Close.Size()
-
-	mtr.LtssmStChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.LtssmStChanged.Size()
-
-	mtr.SecBusnumChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.SecBusnumChanged.Size()
-
-	mtr.RcPme = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcPme.Size()
-
-	mtr.RcAerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcAerr.Size()
-
-	mtr.RcSerr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcSerr.Size()
-
-	mtr.RcHpe = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcHpe.Size()
-
-	mtr.RcEqReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcEqReq.Size()
-
-	mtr.RcDpc = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcDpc.Size()
-
-	mtr.PmTurnoff = mtr.metrics.GetCounter(offset)
-	offset += mtr.PmTurnoff.Size()
-
-	mtr.TxbfrOverflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxbfrOverflow.Size()
-
-	mtr.RxtlpErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.RxtlpErr.Size()
-
-	mtr.TlFlrReq = mtr.metrics.GetCounter(offset)
-	offset += mtr.TlFlrReq.Size()
-
-	mtr.RcLegacyIntpinChanged = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc7intcmacMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "LinkDn2Up" {
-		return offset
-	}
-	offset += mtr.LinkDn2Up.Size()
-
-	if fldName == "LinkUp2Dn" {
-		return offset
-	}
-	offset += mtr.LinkUp2Dn.Size()
-
-	if fldName == "SecBusRst" {
-		return offset
-	}
-	offset += mtr.SecBusRst.Size()
-
-	if fldName == "RstUp2Dn" {
-		return offset
-	}
-	offset += mtr.RstUp2Dn.Size()
-
-	if fldName == "RstDn2Up" {
-		return offset
-	}
-	offset += mtr.RstDn2Up.Size()
-
-	if fldName == "PortgateOpen2Close" {
-		return offset
-	}
-	offset += mtr.PortgateOpen2Close.Size()
-
-	if fldName == "LtssmStChanged" {
-		return offset
-	}
-	offset += mtr.LtssmStChanged.Size()
-
-	if fldName == "SecBusnumChanged" {
-		return offset
-	}
-	offset += mtr.SecBusnumChanged.Size()
-
-	if fldName == "RcPme" {
-		return offset
-	}
-	offset += mtr.RcPme.Size()
-
-	if fldName == "RcAerr" {
-		return offset
-	}
-	offset += mtr.RcAerr.Size()
-
-	if fldName == "RcSerr" {
-		return offset
-	}
-	offset += mtr.RcSerr.Size()
-
-	if fldName == "RcHpe" {
-		return offset
-	}
-	offset += mtr.RcHpe.Size()
-
-	if fldName == "RcEqReq" {
-		return offset
-	}
-	offset += mtr.RcEqReq.Size()
-
-	if fldName == "RcDpc" {
-		return offset
-	}
-	offset += mtr.RcDpc.Size()
-
-	if fldName == "PmTurnoff" {
-		return offset
-	}
-	offset += mtr.PmTurnoff.Size()
-
-	if fldName == "TxbfrOverflow" {
-		return offset
-	}
-	offset += mtr.TxbfrOverflow.Size()
-
-	if fldName == "RxtlpErr" {
-		return offset
-	}
-	offset += mtr.RxtlpErr.Size()
-
-	if fldName == "TlFlrReq" {
-		return offset
-	}
-	offset += mtr.TlFlrReq.Size()
-
-	if fldName == "RcLegacyIntpinChanged" {
-		return offset
-	}
-	offset += mtr.RcLegacyIntpinChanged.Size()
-
-	return offset
-}
-
-// SetLinkDn2Up sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetLinkDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkDn2Up"))
-	return nil
-}
-
-// SetLinkUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetLinkUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LinkUp2Dn"))
-	return nil
-}
-
-// SetSecBusRst sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetSecBusRst(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusRst"))
-	return nil
-}
-
-// SetRstUp2Dn sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRstUp2Dn(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstUp2Dn"))
-	return nil
-}
-
-// SetRstDn2Up sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRstDn2Up(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RstDn2Up"))
-	return nil
-}
-
-// SetPortgateOpen2Close sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetPortgateOpen2Close(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortgateOpen2Close"))
-	return nil
-}
-
-// SetLtssmStChanged sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetLtssmStChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LtssmStChanged"))
-	return nil
-}
-
-// SetSecBusnumChanged sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetSecBusnumChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusnumChanged"))
-	return nil
-}
-
-// SetRcPme sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcPme(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcPme"))
-	return nil
-}
-
-// SetRcAerr sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcAerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcAerr"))
-	return nil
-}
-
-// SetRcSerr sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcSerr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcSerr"))
-	return nil
-}
-
-// SetRcHpe sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcHpe(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcHpe"))
-	return nil
-}
-
-// SetRcEqReq sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcEqReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcEqReq"))
-	return nil
-}
-
-// SetRcDpc sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcDpc(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcDpc"))
-	return nil
-}
-
-// SetPmTurnoff sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetPmTurnoff(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PmTurnoff"))
-	return nil
-}
-
-// SetTxbfrOverflow sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetTxbfrOverflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxbfrOverflow"))
-	return nil
-}
-
-// SetRxtlpErr sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRxtlpErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RxtlpErr"))
-	return nil
-}
-
-// SetTlFlrReq sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetTlFlrReq(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TlFlrReq"))
-	return nil
-}
-
-// SetRcLegacyIntpinChanged sets cunter in shared memory
-func (mtr *Ppppportc7intcmacMetrics) SetRcLegacyIntpinChanged(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChanged"))
-	return nil
-}
-
-// Ppppportc7intcmacMetricsIterator is the iterator object
-type Ppppportc7intcmacMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc7intcmacMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc7intcmacMetricsIterator) Next() *Ppppportc7intcmacMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc7intcmacMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc7intcmacMetricsIterator) Find(key uint64) (*Ppppportc7intcmacMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc7intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc7intcmacMetricsIterator) Create(key uint64) (*Ppppportc7intcmacMetrics, error) {
-	tmtr := &Ppppportc7intcmacMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc7intcmacMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc7intcmacMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc7intcmacMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc7intcmacMetricsIterator returns an iterator
-func NewPpppportc7intcmacMetricsIterator() (*Ppppportc7intcmacMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc7intcmacMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc7intcmacMetricsIterator{iter: iter}, nil
-}
-
-type Ppppportc7intceccMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	Rxbuf_0Uncorrectable metrics.Counter
-
-	Rxbuf_1Uncorrectable metrics.Counter
-
-	Rxbuf_2Uncorrectable metrics.Counter
-
-	Rxbuf_3Uncorrectable metrics.Counter
-
-	Rxbuf_0Correctable metrics.Counter
-
-	Rxbuf_1Correctable metrics.Counter
-
-	Rxbuf_2Correctable metrics.Counter
-
-	Rxbuf_3Correctable metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ppppportc7intceccMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ppppportc7intceccMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.Rxbuf_0Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_1Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_2Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_3Uncorrectable.Size()
-
-	sz += mtr.Rxbuf_0Correctable.Size()
-
-	sz += mtr.Rxbuf_1Correctable.Size()
-
-	sz += mtr.Rxbuf_2Correctable.Size()
-
-	sz += mtr.Rxbuf_3Correctable.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ppppportc7intceccMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.Rxbuf_0Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	mtr.Rxbuf_1Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	mtr.Rxbuf_2Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	mtr.Rxbuf_3Uncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	mtr.Rxbuf_0Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	mtr.Rxbuf_1Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	mtr.Rxbuf_2Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	mtr.Rxbuf_3Correctable = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ppppportc7intceccMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "Rxbuf_0Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Uncorrectable.Size()
-
-	if fldName == "Rxbuf_1Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Uncorrectable.Size()
-
-	if fldName == "Rxbuf_2Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Uncorrectable.Size()
-
-	if fldName == "Rxbuf_3Uncorrectable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Uncorrectable.Size()
-
-	if fldName == "Rxbuf_0Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_0Correctable.Size()
-
-	if fldName == "Rxbuf_1Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_1Correctable.Size()
-
-	if fldName == "Rxbuf_2Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_2Correctable.Size()
-
-	if fldName == "Rxbuf_3Correctable" {
-		return offset
-	}
-	offset += mtr.Rxbuf_3Correctable.Size()
-
-	return offset
-}
-
-// SetRxbuf_0Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_0Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_1Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_1Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_2Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_2Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_3Uncorrectable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_3Uncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Uncorrectable"))
-	return nil
-}
-
-// SetRxbuf_0Correctable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_0Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_0Correctable"))
-	return nil
-}
-
-// SetRxbuf_1Correctable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_1Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_1Correctable"))
-	return nil
-}
-
-// SetRxbuf_2Correctable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_2Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_2Correctable"))
-	return nil
-}
-
-// SetRxbuf_3Correctable sets cunter in shared memory
-func (mtr *Ppppportc7intceccMetrics) SetRxbuf_3Correctable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rxbuf_3Correctable"))
-	return nil
-}
-
-// Ppppportc7intceccMetricsIterator is the iterator object
-type Ppppportc7intceccMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ppppportc7intceccMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ppppportc7intceccMetricsIterator) Next() *Ppppportc7intceccMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ppppportc7intceccMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ppppportc7intceccMetricsIterator) Find(key uint64) (*Ppppportc7intceccMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ppppportc7intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ppppportc7intceccMetricsIterator) Create(key uint64) (*Ppppportc7intceccMetrics, error) {
-	tmtr := &Ppppportc7intceccMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ppppportc7intceccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ppppportc7intceccMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ppppportc7intceccMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPpppportc7intceccMetricsIterator returns an iterator
-func NewPpppportc7intceccMetricsIterator() (*Ppppportc7intceccMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ppppportc7intceccMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ppppportc7intceccMetricsIterator{iter: iter}, nil
-}
-
-type Ptptintreg1Metrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	SlavePtd metrics.Counter
-
-	SlavePsp metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Ptptintreg1Metrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Ptptintreg1Metrics) Size() int {
-	sz := 0
-
-	sz += mtr.SlavePtd.Size()
-
-	sz += mtr.SlavePsp.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Ptptintreg1Metrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.SlavePtd = mtr.metrics.GetCounter(offset)
-	offset += mtr.SlavePtd.Size()
-
-	mtr.SlavePsp = mtr.metrics.GetCounter(offset)
-	offset += mtr.SlavePsp.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Ptptintreg1Metrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "SlavePtd" {
-		return offset
-	}
-	offset += mtr.SlavePtd.Size()
-
-	if fldName == "SlavePsp" {
-		return offset
-	}
-	offset += mtr.SlavePsp.Size()
-
-	return offset
-}
-
-// SetSlavePtd sets cunter in shared memory
-func (mtr *Ptptintreg1Metrics) SetSlavePtd(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SlavePtd"))
-	return nil
-}
-
-// SetSlavePsp sets cunter in shared memory
-func (mtr *Ptptintreg1Metrics) SetSlavePsp(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SlavePsp"))
-	return nil
-}
-
-// Ptptintreg1MetricsIterator is the iterator object
-type Ptptintreg1MetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Ptptintreg1MetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Ptptintreg1MetricsIterator) Next() *Ptptintreg1Metrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Ptptintreg1Metrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Ptptintreg1MetricsIterator) Find(key uint64) (*Ptptintreg1Metrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Ptptintreg1Metrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Ptptintreg1MetricsIterator) Create(key uint64) (*Ptptintreg1Metrics, error) {
-	tmtr := &Ptptintreg1Metrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Ptptintreg1Metrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Ptptintreg1MetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Ptptintreg1MetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptintreg1MetricsIterator returns an iterator
-func NewPtptintreg1MetricsIterator() (*Ptptintreg1MetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Ptptintreg1Metrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Ptptintreg1MetricsIterator{iter: iter}, nil
-}
-
-type PtptpspintinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	PrPktFfAlmostFull metrics.Counter
-
-	PtdNpvPhvFull metrics.Counter
-
-	PhvSrdyCollapsed metrics.Counter
-
-	PrResubPktBeforePhv metrics.Counter
-
-	PbPbusFsm0NoData metrics.Counter
-
-	PbPbusFsm1NoData metrics.Counter
-
-	PbPbusFsm2NoData metrics.Counter
-
-	PbPbusFsm3NoData metrics.Counter
-
-	PbPbusFsm4NoData metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptpspintinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptpspintinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.PrPktFfAlmostFull.Size()
-
-	sz += mtr.PtdNpvPhvFull.Size()
-
-	sz += mtr.PhvSrdyCollapsed.Size()
-
-	sz += mtr.PrResubPktBeforePhv.Size()
-
-	sz += mtr.PbPbusFsm0NoData.Size()
-
-	sz += mtr.PbPbusFsm1NoData.Size()
-
-	sz += mtr.PbPbusFsm2NoData.Size()
-
-	sz += mtr.PbPbusFsm3NoData.Size()
-
-	sz += mtr.PbPbusFsm4NoData.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptpspintinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.PrPktFfAlmostFull = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrPktFfAlmostFull.Size()
-
-	mtr.PtdNpvPhvFull = mtr.metrics.GetCounter(offset)
-	offset += mtr.PtdNpvPhvFull.Size()
-
-	mtr.PhvSrdyCollapsed = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvSrdyCollapsed.Size()
-
-	mtr.PrResubPktBeforePhv = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubPktBeforePhv.Size()
-
-	mtr.PbPbusFsm0NoData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm0NoData.Size()
-
-	mtr.PbPbusFsm1NoData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm1NoData.Size()
-
-	mtr.PbPbusFsm2NoData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm2NoData.Size()
-
-	mtr.PbPbusFsm3NoData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm3NoData.Size()
-
-	mtr.PbPbusFsm4NoData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm4NoData.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptpspintinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "PrPktFfAlmostFull" {
-		return offset
-	}
-	offset += mtr.PrPktFfAlmostFull.Size()
-
-	if fldName == "PtdNpvPhvFull" {
-		return offset
-	}
-	offset += mtr.PtdNpvPhvFull.Size()
-
-	if fldName == "PhvSrdyCollapsed" {
-		return offset
-	}
-	offset += mtr.PhvSrdyCollapsed.Size()
-
-	if fldName == "PrResubPktBeforePhv" {
-		return offset
-	}
-	offset += mtr.PrResubPktBeforePhv.Size()
-
-	if fldName == "PbPbusFsm0NoData" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm0NoData.Size()
-
-	if fldName == "PbPbusFsm1NoData" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm1NoData.Size()
-
-	if fldName == "PbPbusFsm2NoData" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm2NoData.Size()
-
-	if fldName == "PbPbusFsm3NoData" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm3NoData.Size()
-
-	if fldName == "PbPbusFsm4NoData" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm4NoData.Size()
-
-	return offset
-}
-
-// SetPrPktFfAlmostFull sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPrPktFfAlmostFull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrPktFfAlmostFull"))
-	return nil
-}
-
-// SetPtdNpvPhvFull sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPtdNpvPhvFull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PtdNpvPhvFull"))
-	return nil
-}
-
-// SetPhvSrdyCollapsed sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPhvSrdyCollapsed(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvSrdyCollapsed"))
-	return nil
-}
-
-// SetPrResubPktBeforePhv sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPrResubPktBeforePhv(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubPktBeforePhv"))
-	return nil
-}
-
-// SetPbPbusFsm0NoData sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPbPbusFsm0NoData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm0NoData"))
-	return nil
-}
-
-// SetPbPbusFsm1NoData sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPbPbusFsm1NoData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm1NoData"))
-	return nil
-}
-
-// SetPbPbusFsm2NoData sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPbPbusFsm2NoData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm2NoData"))
-	return nil
-}
-
-// SetPbPbusFsm3NoData sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPbPbusFsm3NoData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm3NoData"))
-	return nil
-}
-
-// SetPbPbusFsm4NoData sets cunter in shared memory
-func (mtr *PtptpspintinfoMetrics) SetPbPbusFsm4NoData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm4NoData"))
-	return nil
-}
-
-// PtptpspintinfoMetricsIterator is the iterator object
-type PtptpspintinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptpspintinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptpspintinfoMetricsIterator) Next() *PtptpspintinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptpspintinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptpspintinfoMetricsIterator) Find(key uint64) (*PtptpspintinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptpspintinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptpspintinfoMetricsIterator) Create(key uint64) (*PtptpspintinfoMetrics, error) {
-	tmtr := &PtptpspintinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptpspintinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptpspintinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptpspintinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptpspintinfoMetricsIterator returns an iterator
-func NewPtptpspintinfoMetricsIterator() (*PtptpspintinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptpspintinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptpspintinfoMetricsIterator{iter: iter}, nil
-}
-
-type PtptpspinterrMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	PbPbusErr metrics.Counter
-
-	PrPbusErr metrics.Counter
-
-	PrResubPbusErr metrics.Counter
-
-	PspCsrReadAccessErr metrics.Counter
-
-	PspCsrWriteAccessErr metrics.Counter
-
-	PspPhvLargerThanTwelveFlitsErr metrics.Counter
-
-	PspPhvSopOffsetErr metrics.Counter
-
-	PspPhvEopOffsetErr metrics.Counter
-
-	MaxRecirCountErr metrics.Counter
-
-	PbPbusDummyErr metrics.Counter
-
-	PbPbusNopktErr metrics.Counter
-
-	PbPbusMinErr metrics.Counter
-
-	LbPhvAlmostFullTimeoutErr metrics.Counter
-
-	LbPktAlmostFullTimeoutErr metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptpspinterrMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptpspinterrMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.PbPbusErr.Size()
-
-	sz += mtr.PrPbusErr.Size()
-
-	sz += mtr.PrResubPbusErr.Size()
-
-	sz += mtr.PspCsrReadAccessErr.Size()
-
-	sz += mtr.PspCsrWriteAccessErr.Size()
-
-	sz += mtr.PspPhvLargerThanTwelveFlitsErr.Size()
-
-	sz += mtr.PspPhvSopOffsetErr.Size()
-
-	sz += mtr.PspPhvEopOffsetErr.Size()
-
-	sz += mtr.MaxRecirCountErr.Size()
-
-	sz += mtr.PbPbusDummyErr.Size()
-
-	sz += mtr.PbPbusNopktErr.Size()
-
-	sz += mtr.PbPbusMinErr.Size()
-
-	sz += mtr.LbPhvAlmostFullTimeoutErr.Size()
-
-	sz += mtr.LbPktAlmostFullTimeoutErr.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptpspinterrMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.PbPbusErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusErr.Size()
-
-	mtr.PrPbusErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrPbusErr.Size()
-
-	mtr.PrResubPbusErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubPbusErr.Size()
-
-	mtr.PspCsrReadAccessErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PspCsrReadAccessErr.Size()
-
-	mtr.PspCsrWriteAccessErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PspCsrWriteAccessErr.Size()
-
-	mtr.PspPhvLargerThanTwelveFlitsErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PspPhvLargerThanTwelveFlitsErr.Size()
-
-	mtr.PspPhvSopOffsetErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PspPhvSopOffsetErr.Size()
-
-	mtr.PspPhvEopOffsetErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PspPhvEopOffsetErr.Size()
-
-	mtr.MaxRecirCountErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.MaxRecirCountErr.Size()
-
-	mtr.PbPbusDummyErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusDummyErr.Size()
-
-	mtr.PbPbusNopktErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusNopktErr.Size()
-
-	mtr.PbPbusMinErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusMinErr.Size()
-
-	mtr.LbPhvAlmostFullTimeoutErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.LbPhvAlmostFullTimeoutErr.Size()
-
-	mtr.LbPktAlmostFullTimeoutErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.LbPktAlmostFullTimeoutErr.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptpspinterrMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "PbPbusErr" {
-		return offset
-	}
-	offset += mtr.PbPbusErr.Size()
-
-	if fldName == "PrPbusErr" {
-		return offset
-	}
-	offset += mtr.PrPbusErr.Size()
-
-	if fldName == "PrResubPbusErr" {
-		return offset
-	}
-	offset += mtr.PrResubPbusErr.Size()
-
-	if fldName == "PspCsrReadAccessErr" {
-		return offset
-	}
-	offset += mtr.PspCsrReadAccessErr.Size()
-
-	if fldName == "PspCsrWriteAccessErr" {
-		return offset
-	}
-	offset += mtr.PspCsrWriteAccessErr.Size()
-
-	if fldName == "PspPhvLargerThanTwelveFlitsErr" {
-		return offset
-	}
-	offset += mtr.PspPhvLargerThanTwelveFlitsErr.Size()
-
-	if fldName == "PspPhvSopOffsetErr" {
-		return offset
-	}
-	offset += mtr.PspPhvSopOffsetErr.Size()
-
-	if fldName == "PspPhvEopOffsetErr" {
-		return offset
-	}
-	offset += mtr.PspPhvEopOffsetErr.Size()
-
-	if fldName == "MaxRecirCountErr" {
-		return offset
-	}
-	offset += mtr.MaxRecirCountErr.Size()
-
-	if fldName == "PbPbusDummyErr" {
-		return offset
-	}
-	offset += mtr.PbPbusDummyErr.Size()
-
-	if fldName == "PbPbusNopktErr" {
-		return offset
-	}
-	offset += mtr.PbPbusNopktErr.Size()
-
-	if fldName == "PbPbusMinErr" {
-		return offset
-	}
-	offset += mtr.PbPbusMinErr.Size()
-
-	if fldName == "LbPhvAlmostFullTimeoutErr" {
-		return offset
-	}
-	offset += mtr.LbPhvAlmostFullTimeoutErr.Size()
-
-	if fldName == "LbPktAlmostFullTimeoutErr" {
-		return offset
-	}
-	offset += mtr.LbPktAlmostFullTimeoutErr.Size()
-
-	return offset
-}
-
-// SetPbPbusErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPbPbusErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusErr"))
-	return nil
-}
-
-// SetPrPbusErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPrPbusErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrPbusErr"))
-	return nil
-}
-
-// SetPrResubPbusErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPrResubPbusErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubPbusErr"))
-	return nil
-}
-
-// SetPspCsrReadAccessErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPspCsrReadAccessErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PspCsrReadAccessErr"))
-	return nil
-}
-
-// SetPspCsrWriteAccessErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPspCsrWriteAccessErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PspCsrWriteAccessErr"))
-	return nil
-}
-
-// SetPspPhvLargerThanTwelveFlitsErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPspPhvLargerThanTwelveFlitsErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PspPhvLargerThanTwelveFlitsErr"))
-	return nil
-}
-
-// SetPspPhvSopOffsetErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPspPhvSopOffsetErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PspPhvSopOffsetErr"))
-	return nil
-}
-
-// SetPspPhvEopOffsetErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPspPhvEopOffsetErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PspPhvEopOffsetErr"))
-	return nil
-}
-
-// SetMaxRecirCountErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetMaxRecirCountErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MaxRecirCountErr"))
-	return nil
-}
-
-// SetPbPbusDummyErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPbPbusDummyErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusDummyErr"))
-	return nil
-}
-
-// SetPbPbusNopktErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPbPbusNopktErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusNopktErr"))
-	return nil
-}
-
-// SetPbPbusMinErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetPbPbusMinErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusMinErr"))
-	return nil
-}
-
-// SetLbPhvAlmostFullTimeoutErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetLbPhvAlmostFullTimeoutErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LbPhvAlmostFullTimeoutErr"))
-	return nil
-}
-
-// SetLbPktAlmostFullTimeoutErr sets cunter in shared memory
-func (mtr *PtptpspinterrMetrics) SetLbPktAlmostFullTimeoutErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LbPktAlmostFullTimeoutErr"))
-	return nil
-}
-
-// PtptpspinterrMetricsIterator is the iterator object
-type PtptpspinterrMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptpspinterrMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptpspinterrMetricsIterator) Next() *PtptpspinterrMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptpspinterrMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptpspinterrMetricsIterator) Find(key uint64) (*PtptpspinterrMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptpspinterrMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptpspinterrMetricsIterator) Create(key uint64) (*PtptpspinterrMetrics, error) {
-	tmtr := &PtptpspinterrMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptpspinterrMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptpspinterrMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptpspinterrMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptpspinterrMetricsIterator returns an iterator
-func NewPtptpspinterrMetricsIterator() (*PtptpspinterrMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptpspinterrMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptpspinterrMetricsIterator{iter: iter}, nil
-}
-
-type PtptpspintfatalMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	PbPbusSopErr metrics.Counter
-
-	PbPbusEopErr metrics.Counter
-
-	MaSopErr metrics.Counter
-
-	MaEopErr metrics.Counter
-
-	PrPbusSopErr metrics.Counter
-
-	PrPbusEopErr metrics.Counter
-
-	PrResubPbusSopErr metrics.Counter
-
-	PrResubPbusEopErr metrics.Counter
-
-	PrResubSopErr metrics.Counter
-
-	PrResubEopErr metrics.Counter
-
-	PbPbusFsm0NoDataErr metrics.Counter
-
-	PbPbusFsm1NoDataErr metrics.Counter
-
-	PbPbusFsm2NoDataErr metrics.Counter
-
-	PbPbusFsm3NoDataErr metrics.Counter
-
-	PbPbusFsm4NoDataErr metrics.Counter
-
-	PbPbusFsm5PktTooSmallErr metrics.Counter
-
-	LifIndTableRspErr metrics.Counter
-
-	FlitCntOflowErr metrics.Counter
-
-	LbPhvSopErr metrics.Counter
-
-	DcPhvSopErr metrics.Counter
-
-	LbPktSopErr metrics.Counter
-
-	DcPktSopErr metrics.Counter
-
-	SwPhvJabberErr metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptpspintfatalMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptpspintfatalMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.PbPbusSopErr.Size()
-
-	sz += mtr.PbPbusEopErr.Size()
-
-	sz += mtr.MaSopErr.Size()
-
-	sz += mtr.MaEopErr.Size()
-
-	sz += mtr.PrPbusSopErr.Size()
-
-	sz += mtr.PrPbusEopErr.Size()
-
-	sz += mtr.PrResubPbusSopErr.Size()
-
-	sz += mtr.PrResubPbusEopErr.Size()
-
-	sz += mtr.PrResubSopErr.Size()
-
-	sz += mtr.PrResubEopErr.Size()
-
-	sz += mtr.PbPbusFsm0NoDataErr.Size()
-
-	sz += mtr.PbPbusFsm1NoDataErr.Size()
-
-	sz += mtr.PbPbusFsm2NoDataErr.Size()
-
-	sz += mtr.PbPbusFsm3NoDataErr.Size()
-
-	sz += mtr.PbPbusFsm4NoDataErr.Size()
-
-	sz += mtr.PbPbusFsm5PktTooSmallErr.Size()
-
-	sz += mtr.LifIndTableRspErr.Size()
-
-	sz += mtr.FlitCntOflowErr.Size()
-
-	sz += mtr.LbPhvSopErr.Size()
-
-	sz += mtr.DcPhvSopErr.Size()
-
-	sz += mtr.LbPktSopErr.Size()
-
-	sz += mtr.DcPktSopErr.Size()
-
-	sz += mtr.SwPhvJabberErr.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptpspintfatalMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.PbPbusSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusSopErr.Size()
-
-	mtr.PbPbusEopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusEopErr.Size()
-
-	mtr.MaSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.MaSopErr.Size()
-
-	mtr.MaEopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.MaEopErr.Size()
-
-	mtr.PrPbusSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrPbusSopErr.Size()
-
-	mtr.PrPbusEopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrPbusEopErr.Size()
-
-	mtr.PrResubPbusSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubPbusSopErr.Size()
-
-	mtr.PrResubPbusEopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubPbusEopErr.Size()
-
-	mtr.PrResubSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubSopErr.Size()
-
-	mtr.PrResubEopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PrResubEopErr.Size()
-
-	mtr.PbPbusFsm0NoDataErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm0NoDataErr.Size()
-
-	mtr.PbPbusFsm1NoDataErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm1NoDataErr.Size()
-
-	mtr.PbPbusFsm2NoDataErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm2NoDataErr.Size()
-
-	mtr.PbPbusFsm3NoDataErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm3NoDataErr.Size()
-
-	mtr.PbPbusFsm4NoDataErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm4NoDataErr.Size()
-
-	mtr.PbPbusFsm5PktTooSmallErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.PbPbusFsm5PktTooSmallErr.Size()
-
-	mtr.LifIndTableRspErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.LifIndTableRspErr.Size()
-
-	mtr.FlitCntOflowErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.FlitCntOflowErr.Size()
-
-	mtr.LbPhvSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.LbPhvSopErr.Size()
-
-	mtr.DcPhvSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.DcPhvSopErr.Size()
-
-	mtr.LbPktSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.LbPktSopErr.Size()
-
-	mtr.DcPktSopErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.DcPktSopErr.Size()
-
-	mtr.SwPhvJabberErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.SwPhvJabberErr.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptpspintfatalMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "PbPbusSopErr" {
-		return offset
-	}
-	offset += mtr.PbPbusSopErr.Size()
-
-	if fldName == "PbPbusEopErr" {
-		return offset
-	}
-	offset += mtr.PbPbusEopErr.Size()
-
-	if fldName == "MaSopErr" {
-		return offset
-	}
-	offset += mtr.MaSopErr.Size()
-
-	if fldName == "MaEopErr" {
-		return offset
-	}
-	offset += mtr.MaEopErr.Size()
-
-	if fldName == "PrPbusSopErr" {
-		return offset
-	}
-	offset += mtr.PrPbusSopErr.Size()
-
-	if fldName == "PrPbusEopErr" {
-		return offset
-	}
-	offset += mtr.PrPbusEopErr.Size()
-
-	if fldName == "PrResubPbusSopErr" {
-		return offset
-	}
-	offset += mtr.PrResubPbusSopErr.Size()
-
-	if fldName == "PrResubPbusEopErr" {
-		return offset
-	}
-	offset += mtr.PrResubPbusEopErr.Size()
-
-	if fldName == "PrResubSopErr" {
-		return offset
-	}
-	offset += mtr.PrResubSopErr.Size()
-
-	if fldName == "PrResubEopErr" {
-		return offset
-	}
-	offset += mtr.PrResubEopErr.Size()
-
-	if fldName == "PbPbusFsm0NoDataErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm0NoDataErr.Size()
-
-	if fldName == "PbPbusFsm1NoDataErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm1NoDataErr.Size()
-
-	if fldName == "PbPbusFsm2NoDataErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm2NoDataErr.Size()
-
-	if fldName == "PbPbusFsm3NoDataErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm3NoDataErr.Size()
-
-	if fldName == "PbPbusFsm4NoDataErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm4NoDataErr.Size()
-
-	if fldName == "PbPbusFsm5PktTooSmallErr" {
-		return offset
-	}
-	offset += mtr.PbPbusFsm5PktTooSmallErr.Size()
-
-	if fldName == "LifIndTableRspErr" {
-		return offset
-	}
-	offset += mtr.LifIndTableRspErr.Size()
-
-	if fldName == "FlitCntOflowErr" {
-		return offset
-	}
-	offset += mtr.FlitCntOflowErr.Size()
-
-	if fldName == "LbPhvSopErr" {
-		return offset
-	}
-	offset += mtr.LbPhvSopErr.Size()
-
-	if fldName == "DcPhvSopErr" {
-		return offset
-	}
-	offset += mtr.DcPhvSopErr.Size()
-
-	if fldName == "LbPktSopErr" {
-		return offset
-	}
-	offset += mtr.LbPktSopErr.Size()
-
-	if fldName == "DcPktSopErr" {
-		return offset
-	}
-	offset += mtr.DcPktSopErr.Size()
-
-	if fldName == "SwPhvJabberErr" {
-		return offset
-	}
-	offset += mtr.SwPhvJabberErr.Size()
-
-	return offset
-}
-
-// SetPbPbusSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusSopErr"))
-	return nil
-}
-
-// SetPbPbusEopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusEopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusEopErr"))
-	return nil
-}
-
-// SetMaSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetMaSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MaSopErr"))
-	return nil
-}
-
-// SetMaEopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetMaEopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MaEopErr"))
-	return nil
-}
-
-// SetPrPbusSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrPbusSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrPbusSopErr"))
-	return nil
-}
-
-// SetPrPbusEopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrPbusEopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrPbusEopErr"))
-	return nil
-}
-
-// SetPrResubPbusSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrResubPbusSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubPbusSopErr"))
-	return nil
-}
-
-// SetPrResubPbusEopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrResubPbusEopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubPbusEopErr"))
-	return nil
-}
-
-// SetPrResubSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrResubSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubSopErr"))
-	return nil
-}
-
-// SetPrResubEopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPrResubEopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PrResubEopErr"))
-	return nil
-}
-
-// SetPbPbusFsm0NoDataErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm0NoDataErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm0NoDataErr"))
-	return nil
-}
-
-// SetPbPbusFsm1NoDataErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm1NoDataErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm1NoDataErr"))
-	return nil
-}
-
-// SetPbPbusFsm2NoDataErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm2NoDataErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm2NoDataErr"))
-	return nil
-}
-
-// SetPbPbusFsm3NoDataErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm3NoDataErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm3NoDataErr"))
-	return nil
-}
-
-// SetPbPbusFsm4NoDataErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm4NoDataErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm4NoDataErr"))
-	return nil
-}
-
-// SetPbPbusFsm5PktTooSmallErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetPbPbusFsm5PktTooSmallErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PbPbusFsm5PktTooSmallErr"))
-	return nil
-}
-
-// SetLifIndTableRspErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetLifIndTableRspErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LifIndTableRspErr"))
-	return nil
-}
-
-// SetFlitCntOflowErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetFlitCntOflowErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FlitCntOflowErr"))
-	return nil
-}
-
-// SetLbPhvSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetLbPhvSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LbPhvSopErr"))
-	return nil
-}
-
-// SetDcPhvSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetDcPhvSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("DcPhvSopErr"))
-	return nil
-}
-
-// SetLbPktSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetLbPktSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LbPktSopErr"))
-	return nil
-}
-
-// SetDcPktSopErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetDcPktSopErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("DcPktSopErr"))
-	return nil
-}
-
-// SetSwPhvJabberErr sets cunter in shared memory
-func (mtr *PtptpspintfatalMetrics) SetSwPhvJabberErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SwPhvJabberErr"))
-	return nil
-}
-
-// PtptpspintfatalMetricsIterator is the iterator object
-type PtptpspintfatalMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptpspintfatalMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptpspintfatalMetricsIterator) Next() *PtptpspintfatalMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptpspintfatalMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptpspintfatalMetricsIterator) Find(key uint64) (*PtptpspintfatalMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptpspintfatalMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptpspintfatalMetricsIterator) Create(key uint64) (*PtptpspintfatalMetrics, error) {
-	tmtr := &PtptpspintfatalMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptpspintfatalMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptpspintfatalMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptpspintfatalMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptpspintfatalMetricsIterator returns an iterator
-func NewPtptpspintfatalMetricsIterator() (*PtptpspintfatalMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptpspintfatalMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptpspintfatalMetricsIterator{iter: iter}, nil
-}
-
-type PtptpspintlifqstatemapMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	EccUncorrectable metrics.Counter
-
-	EccCorrectable metrics.Counter
-
-	QidInvalid metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptpspintlifqstatemapMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptpspintlifqstatemapMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.EccUncorrectable.Size()
-
-	sz += mtr.EccCorrectable.Size()
-
-	sz += mtr.QidInvalid.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptpspintlifqstatemapMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.EccUncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.EccUncorrectable.Size()
-
-	mtr.EccCorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.EccCorrectable.Size()
-
-	mtr.QidInvalid = mtr.metrics.GetCounter(offset)
-	offset += mtr.QidInvalid.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptpspintlifqstatemapMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "EccUncorrectable" {
-		return offset
-	}
-	offset += mtr.EccUncorrectable.Size()
-
-	if fldName == "EccCorrectable" {
-		return offset
-	}
-	offset += mtr.EccCorrectable.Size()
-
-	if fldName == "QidInvalid" {
-		return offset
-	}
-	offset += mtr.QidInvalid.Size()
-
-	return offset
-}
-
-// SetEccUncorrectable sets cunter in shared memory
-func (mtr *PtptpspintlifqstatemapMetrics) SetEccUncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EccUncorrectable"))
-	return nil
-}
-
-// SetEccCorrectable sets cunter in shared memory
-func (mtr *PtptpspintlifqstatemapMetrics) SetEccCorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EccCorrectable"))
-	return nil
-}
-
-// SetQidInvalid sets cunter in shared memory
-func (mtr *PtptpspintlifqstatemapMetrics) SetQidInvalid(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("QidInvalid"))
-	return nil
-}
-
-// PtptpspintlifqstatemapMetricsIterator is the iterator object
-type PtptpspintlifqstatemapMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptpspintlifqstatemapMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptpspintlifqstatemapMetricsIterator) Next() *PtptpspintlifqstatemapMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptpspintlifqstatemapMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptpspintlifqstatemapMetricsIterator) Find(key uint64) (*PtptpspintlifqstatemapMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptpspintlifqstatemapMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptpspintlifqstatemapMetricsIterator) Create(key uint64) (*PtptpspintlifqstatemapMetrics, error) {
-	tmtr := &PtptpspintlifqstatemapMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptpspintlifqstatemapMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptpspintlifqstatemapMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptpspintlifqstatemapMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptpspintlifqstatemapMetricsIterator returns an iterator
-func NewPtptpspintlifqstatemapMetricsIterator() (*PtptpspintlifqstatemapMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptpspintlifqstatemapMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptpspintlifqstatemapMetricsIterator{iter: iter}, nil
-}
-
-type PtptpspintswphvmemMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	EccUncorrectable metrics.Counter
-
-	EccCorrectable metrics.Counter
-
-	PhvInvalidSram metrics.Counter
-
-	PhvInvalidData metrics.Counter
-
-	PhvDone0 metrics.Counter
-
-	PhvDone1 metrics.Counter
-
-	PhvDone2 metrics.Counter
-
-	PhvDone3 metrics.Counter
-
-	PhvDone4 metrics.Counter
-
-	PhvDone5 metrics.Counter
-
-	PhvDone6 metrics.Counter
-
-	PhvDone7 metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptpspintswphvmemMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptpspintswphvmemMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.EccUncorrectable.Size()
-
-	sz += mtr.EccCorrectable.Size()
-
-	sz += mtr.PhvInvalidSram.Size()
-
-	sz += mtr.PhvInvalidData.Size()
-
-	sz += mtr.PhvDone0.Size()
-
-	sz += mtr.PhvDone1.Size()
-
-	sz += mtr.PhvDone2.Size()
-
-	sz += mtr.PhvDone3.Size()
-
-	sz += mtr.PhvDone4.Size()
-
-	sz += mtr.PhvDone5.Size()
-
-	sz += mtr.PhvDone6.Size()
-
-	sz += mtr.PhvDone7.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptpspintswphvmemMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.EccUncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.EccUncorrectable.Size()
-
-	mtr.EccCorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.EccCorrectable.Size()
-
-	mtr.PhvInvalidSram = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvInvalidSram.Size()
-
-	mtr.PhvInvalidData = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvInvalidData.Size()
-
-	mtr.PhvDone0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone0.Size()
-
-	mtr.PhvDone1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone1.Size()
-
-	mtr.PhvDone2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone2.Size()
-
-	mtr.PhvDone3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone3.Size()
-
-	mtr.PhvDone4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone4.Size()
-
-	mtr.PhvDone5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone5.Size()
-
-	mtr.PhvDone6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone6.Size()
-
-	mtr.PhvDone7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.PhvDone7.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptpspintswphvmemMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "EccUncorrectable" {
-		return offset
-	}
-	offset += mtr.EccUncorrectable.Size()
-
-	if fldName == "EccCorrectable" {
-		return offset
-	}
-	offset += mtr.EccCorrectable.Size()
-
-	if fldName == "PhvInvalidSram" {
-		return offset
-	}
-	offset += mtr.PhvInvalidSram.Size()
-
-	if fldName == "PhvInvalidData" {
-		return offset
-	}
-	offset += mtr.PhvInvalidData.Size()
-
-	if fldName == "PhvDone0" {
-		return offset
-	}
-	offset += mtr.PhvDone0.Size()
-
-	if fldName == "PhvDone1" {
-		return offset
-	}
-	offset += mtr.PhvDone1.Size()
-
-	if fldName == "PhvDone2" {
-		return offset
-	}
-	offset += mtr.PhvDone2.Size()
-
-	if fldName == "PhvDone3" {
-		return offset
-	}
-	offset += mtr.PhvDone3.Size()
-
-	if fldName == "PhvDone4" {
-		return offset
-	}
-	offset += mtr.PhvDone4.Size()
-
-	if fldName == "PhvDone5" {
-		return offset
-	}
-	offset += mtr.PhvDone5.Size()
-
-	if fldName == "PhvDone6" {
-		return offset
-	}
-	offset += mtr.PhvDone6.Size()
-
-	if fldName == "PhvDone7" {
-		return offset
-	}
-	offset += mtr.PhvDone7.Size()
-
-	return offset
-}
-
-// SetEccUncorrectable sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetEccUncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EccUncorrectable"))
-	return nil
-}
-
-// SetEccCorrectable sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetEccCorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EccCorrectable"))
-	return nil
-}
-
-// SetPhvInvalidSram sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvInvalidSram(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvInvalidSram"))
-	return nil
-}
-
-// SetPhvInvalidData sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvInvalidData(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvInvalidData"))
-	return nil
-}
-
-// SetPhvDone0 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone0"))
-	return nil
-}
-
-// SetPhvDone1 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone1"))
-	return nil
-}
-
-// SetPhvDone2 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone2"))
-	return nil
-}
-
-// SetPhvDone3 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone3"))
-	return nil
-}
-
-// SetPhvDone4 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone4"))
-	return nil
-}
-
-// SetPhvDone5 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone5"))
-	return nil
-}
-
-// SetPhvDone6 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone6"))
-	return nil
-}
-
-// SetPhvDone7 sets cunter in shared memory
-func (mtr *PtptpspintswphvmemMetrics) SetPhvDone7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PhvDone7"))
-	return nil
-}
-
-// PtptpspintswphvmemMetricsIterator is the iterator object
-type PtptpspintswphvmemMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptpspintswphvmemMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptpspintswphvmemMetricsIterator) Next() *PtptpspintswphvmemMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptpspintswphvmemMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptpspintswphvmemMetricsIterator) Find(key uint64) (*PtptpspintswphvmemMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptpspintswphvmemMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptpspintswphvmemMetricsIterator) Create(key uint64) (*PtptpspintswphvmemMetrics, error) {
-	tmtr := &PtptpspintswphvmemMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptpspintswphvmemMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptpspintswphvmemMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptpspintswphvmemMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptpspintswphvmemMetricsIterator returns an iterator
-func NewPtptpspintswphvmemMetricsIterator() (*PtptpspintswphvmemMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptpspintswphvmemMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptpspintswphvmemMetricsIterator{iter: iter}, nil
-}
-
-type PtptptdinteccMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	RdataMemUncorrectable metrics.Counter
-
-	RdataMemCorrectable metrics.Counter
-
-	LatMemUncorrectable metrics.Counter
-
-	LatMemCorrectable metrics.Counter
-
-	WdataMemUncorrectable metrics.Counter
-
-	WdataMemCorrectable metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptptdinteccMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptptdinteccMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.RdataMemUncorrectable.Size()
-
-	sz += mtr.RdataMemCorrectable.Size()
-
-	sz += mtr.LatMemUncorrectable.Size()
-
-	sz += mtr.LatMemCorrectable.Size()
-
-	sz += mtr.WdataMemUncorrectable.Size()
-
-	sz += mtr.WdataMemCorrectable.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptptdinteccMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.RdataMemUncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.RdataMemUncorrectable.Size()
-
-	mtr.RdataMemCorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.RdataMemCorrectable.Size()
-
-	mtr.LatMemUncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.LatMemUncorrectable.Size()
-
-	mtr.LatMemCorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.LatMemCorrectable.Size()
-
-	mtr.WdataMemUncorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.WdataMemUncorrectable.Size()
-
-	mtr.WdataMemCorrectable = mtr.metrics.GetCounter(offset)
-	offset += mtr.WdataMemCorrectable.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptptdinteccMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "RdataMemUncorrectable" {
-		return offset
-	}
-	offset += mtr.RdataMemUncorrectable.Size()
-
-	if fldName == "RdataMemCorrectable" {
-		return offset
-	}
-	offset += mtr.RdataMemCorrectable.Size()
-
-	if fldName == "LatMemUncorrectable" {
-		return offset
-	}
-	offset += mtr.LatMemUncorrectable.Size()
-
-	if fldName == "LatMemCorrectable" {
-		return offset
-	}
-	offset += mtr.LatMemCorrectable.Size()
-
-	if fldName == "WdataMemUncorrectable" {
-		return offset
-	}
-	offset += mtr.WdataMemUncorrectable.Size()
-
-	if fldName == "WdataMemCorrectable" {
-		return offset
-	}
-	offset += mtr.WdataMemCorrectable.Size()
-
-	return offset
-}
-
-// SetRdataMemUncorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetRdataMemUncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RdataMemUncorrectable"))
-	return nil
-}
-
-// SetRdataMemCorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetRdataMemCorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RdataMemCorrectable"))
-	return nil
-}
-
-// SetLatMemUncorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetLatMemUncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LatMemUncorrectable"))
-	return nil
-}
-
-// SetLatMemCorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetLatMemCorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LatMemCorrectable"))
-	return nil
-}
-
-// SetWdataMemUncorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetWdataMemUncorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("WdataMemUncorrectable"))
-	return nil
-}
-
-// SetWdataMemCorrectable sets cunter in shared memory
-func (mtr *PtptptdinteccMetrics) SetWdataMemCorrectable(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("WdataMemCorrectable"))
-	return nil
-}
-
-// PtptptdinteccMetricsIterator is the iterator object
-type PtptptdinteccMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptptdinteccMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptptdinteccMetricsIterator) Next() *PtptptdinteccMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptptdinteccMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptptdinteccMetricsIterator) Find(key uint64) (*PtptptdinteccMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptptdinteccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptptdinteccMetricsIterator) Create(key uint64) (*PtptptdinteccMetrics, error) {
-	tmtr := &PtptptdinteccMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptptdinteccMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptptdinteccMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptptdinteccMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptptdinteccMetricsIterator returns an iterator
-func NewPtptptdinteccMetricsIterator() (*PtptptdinteccMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptptdinteccMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptptdinteccMetricsIterator{iter: iter}, nil
-}
-
-type PtptptdintfifoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	LatFfOvflow metrics.Counter
-
-	WdataFfOvflow metrics.Counter
-
-	RcvStgFfOvflow metrics.Counter
-
-	CmdflitFfOvflow metrics.Counter
-
-	CmdFfOvflow metrics.Counter
-
-	PktFfOvflow metrics.Counter
-
-	WrMemFfOvflow metrics.Counter
-
-	DfenceFfOvflow metrics.Counter
-
-	FfenceFfOvflow metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *PtptptdintfifoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *PtptptdintfifoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.LatFfOvflow.Size()
-
-	sz += mtr.WdataFfOvflow.Size()
-
-	sz += mtr.RcvStgFfOvflow.Size()
-
-	sz += mtr.CmdflitFfOvflow.Size()
-
-	sz += mtr.CmdFfOvflow.Size()
-
-	sz += mtr.PktFfOvflow.Size()
-
-	sz += mtr.WrMemFfOvflow.Size()
-
-	sz += mtr.DfenceFfOvflow.Size()
-
-	sz += mtr.FfenceFfOvflow.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *PtptptdintfifoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.LatFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.LatFfOvflow.Size()
-
-	mtr.WdataFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.WdataFfOvflow.Size()
-
-	mtr.RcvStgFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.RcvStgFfOvflow.Size()
-
-	mtr.CmdflitFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.CmdflitFfOvflow.Size()
-
-	mtr.CmdFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.CmdFfOvflow.Size()
-
-	mtr.PktFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.PktFfOvflow.Size()
-
-	mtr.WrMemFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.WrMemFfOvflow.Size()
-
-	mtr.DfenceFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.DfenceFfOvflow.Size()
-
-	mtr.FfenceFfOvflow = mtr.metrics.GetCounter(offset)
-	offset += mtr.FfenceFfOvflow.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *PtptptdintfifoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "LatFfOvflow" {
-		return offset
-	}
-	offset += mtr.LatFfOvflow.Size()
-
-	if fldName == "WdataFfOvflow" {
-		return offset
-	}
-	offset += mtr.WdataFfOvflow.Size()
-
-	if fldName == "RcvStgFfOvflow" {
-		return offset
-	}
-	offset += mtr.RcvStgFfOvflow.Size()
-
-	if fldName == "CmdflitFfOvflow" {
-		return offset
-	}
-	offset += mtr.CmdflitFfOvflow.Size()
-
-	if fldName == "CmdFfOvflow" {
-		return offset
-	}
-	offset += mtr.CmdFfOvflow.Size()
-
-	if fldName == "PktFfOvflow" {
-		return offset
-	}
-	offset += mtr.PktFfOvflow.Size()
-
-	if fldName == "WrMemFfOvflow" {
-		return offset
-	}
-	offset += mtr.WrMemFfOvflow.Size()
-
-	if fldName == "DfenceFfOvflow" {
-		return offset
-	}
-	offset += mtr.DfenceFfOvflow.Size()
-
-	if fldName == "FfenceFfOvflow" {
-		return offset
-	}
-	offset += mtr.FfenceFfOvflow.Size()
-
-	return offset
-}
-
-// SetLatFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetLatFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("LatFfOvflow"))
-	return nil
-}
-
-// SetWdataFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetWdataFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("WdataFfOvflow"))
-	return nil
-}
-
-// SetRcvStgFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetRcvStgFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("RcvStgFfOvflow"))
-	return nil
-}
-
-// SetCmdflitFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetCmdflitFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("CmdflitFfOvflow"))
-	return nil
-}
-
-// SetCmdFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetCmdFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("CmdFfOvflow"))
-	return nil
-}
-
-// SetPktFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetPktFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PktFfOvflow"))
-	return nil
-}
-
-// SetWrMemFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetWrMemFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("WrMemFfOvflow"))
-	return nil
-}
-
-// SetDfenceFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetDfenceFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("DfenceFfOvflow"))
-	return nil
-}
-
-// SetFfenceFfOvflow sets cunter in shared memory
-func (mtr *PtptptdintfifoMetrics) SetFfenceFfOvflow(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FfenceFfOvflow"))
-	return nil
-}
-
-// PtptptdintfifoMetricsIterator is the iterator object
-type PtptptdintfifoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *PtptptdintfifoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *PtptptdintfifoMetricsIterator) Next() *PtptptdintfifoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &PtptptdintfifoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *PtptptdintfifoMetricsIterator) Find(key uint64) (*PtptptdintfifoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &PtptptdintfifoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *PtptptdintfifoMetricsIterator) Create(key uint64) (*PtptptdintfifoMetrics, error) {
-	tmtr := &PtptptdintfifoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &PtptptdintfifoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *PtptptdintfifoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *PtptptdintfifoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPtptptdintfifoMetricsIterator returns an iterator
-func NewPtptptdintfifoMetricsIterator() (*PtptptdintfifoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("PtptptdintfifoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &PtptptdintfifoMetricsIterator{iter: iter}, nil
-}
-
 type Ptptptdintgrp1Metrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -6218,8 +1094,6 @@ type Pcrte0interrMetrics struct {
 
 	SpuriousTcamRsp metrics.Counter
 
-	Te2MpuTimeout metrics.Counter
-
 	AxiRdrspErr metrics.Counter
 
 	AxiBadRead metrics.Counter
@@ -6269,8 +1143,6 @@ func (mtr *Pcrte0interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -6323,9 +1195,6 @@ func (mtr *Pcrte0interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -6400,11 +1269,6 @@ func (mtr *Pcrte0interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -6506,12 +1370,6 @@ func (mtr *Pcrte0interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte0interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte0interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -6674,423 +1532,6 @@ func NewPcrte0interrMetricsIterator() (*Pcrte0interrMetricsIterator, error) {
 	return &Pcrte0interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte0intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte0intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte0intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte0intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte0intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte0intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte0intinfoMetricsIterator is the iterator object
-type Pcrte0intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte0intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte0intinfoMetricsIterator) Next() *Pcrte0intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte0intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte0intinfoMetricsIterator) Find(key uint64) (*Pcrte0intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte0intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte0intinfoMetricsIterator) Create(key uint64) (*Pcrte0intinfoMetrics, error) {
-	tmtr := &Pcrte0intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte0intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte0intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte0intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte0intinfoMetricsIterator returns an iterator
-func NewPcrte0intinfoMetricsIterator() (*Pcrte0intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte0intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte0intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte1interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -7105,8 +1546,6 @@ type Pcrte1interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -7157,8 +1596,6 @@ func (mtr *Pcrte1interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -7211,9 +1648,6 @@ func (mtr *Pcrte1interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -7288,11 +1722,6 @@ func (mtr *Pcrte1interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -7394,12 +1823,6 @@ func (mtr *Pcrte1interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte1interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte1interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -7562,423 +1985,6 @@ func NewPcrte1interrMetricsIterator() (*Pcrte1interrMetricsIterator, error) {
 	return &Pcrte1interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte1intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte1intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte1intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte1intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte1intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte1intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte1intinfoMetricsIterator is the iterator object
-type Pcrte1intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte1intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte1intinfoMetricsIterator) Next() *Pcrte1intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte1intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte1intinfoMetricsIterator) Find(key uint64) (*Pcrte1intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte1intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte1intinfoMetricsIterator) Create(key uint64) (*Pcrte1intinfoMetrics, error) {
-	tmtr := &Pcrte1intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte1intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte1intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte1intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte1intinfoMetricsIterator returns an iterator
-func NewPcrte1intinfoMetricsIterator() (*Pcrte1intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte1intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte1intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte2interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -7993,8 +1999,6 @@ type Pcrte2interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -8045,8 +2049,6 @@ func (mtr *Pcrte2interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -8099,9 +2101,6 @@ func (mtr *Pcrte2interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -8176,11 +2175,6 @@ func (mtr *Pcrte2interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -8282,12 +2276,6 @@ func (mtr *Pcrte2interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte2interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte2interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -8450,423 +2438,6 @@ func NewPcrte2interrMetricsIterator() (*Pcrte2interrMetricsIterator, error) {
 	return &Pcrte2interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte2intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte2intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte2intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte2intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte2intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte2intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte2intinfoMetricsIterator is the iterator object
-type Pcrte2intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte2intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte2intinfoMetricsIterator) Next() *Pcrte2intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte2intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte2intinfoMetricsIterator) Find(key uint64) (*Pcrte2intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte2intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte2intinfoMetricsIterator) Create(key uint64) (*Pcrte2intinfoMetrics, error) {
-	tmtr := &Pcrte2intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte2intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte2intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte2intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte2intinfoMetricsIterator returns an iterator
-func NewPcrte2intinfoMetricsIterator() (*Pcrte2intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte2intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte2intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte3interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -8881,8 +2452,6 @@ type Pcrte3interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -8933,8 +2502,6 @@ func (mtr *Pcrte3interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -8987,9 +2554,6 @@ func (mtr *Pcrte3interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -9064,11 +2628,6 @@ func (mtr *Pcrte3interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -9170,12 +2729,6 @@ func (mtr *Pcrte3interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte3interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte3interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -9338,423 +2891,6 @@ func NewPcrte3interrMetricsIterator() (*Pcrte3interrMetricsIterator, error) {
 	return &Pcrte3interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte3intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte3intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte3intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte3intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte3intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte3intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte3intinfoMetricsIterator is the iterator object
-type Pcrte3intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte3intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte3intinfoMetricsIterator) Next() *Pcrte3intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte3intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte3intinfoMetricsIterator) Find(key uint64) (*Pcrte3intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte3intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte3intinfoMetricsIterator) Create(key uint64) (*Pcrte3intinfoMetrics, error) {
-	tmtr := &Pcrte3intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte3intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte3intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte3intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte3intinfoMetricsIterator returns an iterator
-func NewPcrte3intinfoMetricsIterator() (*Pcrte3intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte3intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte3intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte4interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -9769,8 +2905,6 @@ type Pcrte4interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -9821,8 +2955,6 @@ func (mtr *Pcrte4interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -9875,9 +3007,6 @@ func (mtr *Pcrte4interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -9952,11 +3081,6 @@ func (mtr *Pcrte4interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -10058,12 +3182,6 @@ func (mtr *Pcrte4interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte4interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte4interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -10226,423 +3344,6 @@ func NewPcrte4interrMetricsIterator() (*Pcrte4interrMetricsIterator, error) {
 	return &Pcrte4interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte4intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte4intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte4intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte4intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte4intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte4intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte4intinfoMetricsIterator is the iterator object
-type Pcrte4intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte4intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte4intinfoMetricsIterator) Next() *Pcrte4intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte4intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte4intinfoMetricsIterator) Find(key uint64) (*Pcrte4intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte4intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte4intinfoMetricsIterator) Create(key uint64) (*Pcrte4intinfoMetrics, error) {
-	tmtr := &Pcrte4intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte4intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte4intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte4intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte4intinfoMetricsIterator returns an iterator
-func NewPcrte4intinfoMetricsIterator() (*Pcrte4intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte4intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte4intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte5interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -10657,8 +3358,6 @@ type Pcrte5interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -10709,8 +3408,6 @@ func (mtr *Pcrte5interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -10763,9 +3460,6 @@ func (mtr *Pcrte5interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -10840,11 +3534,6 @@ func (mtr *Pcrte5interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -10946,12 +3635,6 @@ func (mtr *Pcrte5interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte5interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte5interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -11114,423 +3797,6 @@ func NewPcrte5interrMetricsIterator() (*Pcrte5interrMetricsIterator, error) {
 	return &Pcrte5interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte5intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte5intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte5intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte5intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte5intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte5intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte5intinfoMetricsIterator is the iterator object
-type Pcrte5intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte5intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte5intinfoMetricsIterator) Next() *Pcrte5intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte5intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte5intinfoMetricsIterator) Find(key uint64) (*Pcrte5intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte5intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte5intinfoMetricsIterator) Create(key uint64) (*Pcrte5intinfoMetrics, error) {
-	tmtr := &Pcrte5intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte5intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte5intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte5intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte5intinfoMetricsIterator returns an iterator
-func NewPcrte5intinfoMetricsIterator() (*Pcrte5intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte5intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte5intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte6interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -11545,8 +3811,6 @@ type Pcrte6interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -11597,8 +3861,6 @@ func (mtr *Pcrte6interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -11651,9 +3913,6 @@ func (mtr *Pcrte6interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -11728,11 +3987,6 @@ func (mtr *Pcrte6interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -11834,12 +4088,6 @@ func (mtr *Pcrte6interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte6interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte6interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -12002,423 +4250,6 @@ func NewPcrte6interrMetricsIterator() (*Pcrte6interrMetricsIterator, error) {
 	return &Pcrte6interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte6intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte6intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte6intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte6intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte6intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte6intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte6intinfoMetricsIterator is the iterator object
-type Pcrte6intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte6intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte6intinfoMetricsIterator) Next() *Pcrte6intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte6intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte6intinfoMetricsIterator) Find(key uint64) (*Pcrte6intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte6intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte6intinfoMetricsIterator) Create(key uint64) (*Pcrte6intinfoMetrics, error) {
-	tmtr := &Pcrte6intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte6intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte6intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte6intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte6intinfoMetricsIterator returns an iterator
-func NewPcrte6intinfoMetricsIterator() (*Pcrte6intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte6intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte6intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrte7interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -12433,8 +4264,6 @@ type Pcrte7interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -12485,8 +4314,6 @@ func (mtr *Pcrte7interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -12539,9 +4366,6 @@ func (mtr *Pcrte7interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -12616,11 +4440,6 @@ func (mtr *Pcrte7interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -12722,12 +4541,6 @@ func (mtr *Pcrte7interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pcrte7interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pcrte7interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -12890,429 +4703,10 @@ func NewPcrte7interrMetricsIterator() (*Pcrte7interrMetricsIterator, error) {
 	return &Pcrte7interrMetricsIterator{iter: iter}, nil
 }
 
-type Pcrte7intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pcrte7intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pcrte7intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pcrte7intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pcrte7intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pcrte7intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pcrte7intinfoMetricsIterator is the iterator object
-type Pcrte7intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pcrte7intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pcrte7intinfoMetricsIterator) Next() *Pcrte7intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pcrte7intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pcrte7intinfoMetricsIterator) Find(key uint64) (*Pcrte7intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pcrte7intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pcrte7intinfoMetricsIterator) Create(key uint64) (*Pcrte7intinfoMetrics, error) {
-	tmtr := &Pcrte7intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pcrte7intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pcrte7intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pcrte7intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPcrte7intinfoMetricsIterator returns an iterator
-func NewPcrte7intinfoMetricsIterator() (*Pcrte7intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pcrte7intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pcrte7intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pcrmpu0interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
 	key uint64
-
-	ResultsMismatch metrics.Counter
 
 	SdpMemUncorrectable metrics.Counter
 
@@ -13378,8 +4772,6 @@ func (mtr *Pcrmpu0interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu0interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -13440,9 +4832,6 @@ func (mtr *Pcrmpu0interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -13528,11 +4917,6 @@ func (mtr *Pcrmpu0interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu0interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -13665,12 +5049,6 @@ func (mtr *Pcrmpu0interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu0interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -13909,14 +5287,6 @@ type Pcrmpu0intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -13937,14 +5307,6 @@ func (mtr *Pcrmpu0intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu0intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -13961,18 +5323,6 @@ func (mtr *Pcrmpu0intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -13992,26 +5342,6 @@ func (mtr *Pcrmpu0intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu0intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -14034,30 +5364,6 @@ func (mtr *Pcrmpu0intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu0intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu0intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu0intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu0intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -14164,8 +5470,6 @@ type Pcrmpu1interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -14230,8 +5534,6 @@ func (mtr *Pcrmpu1interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu1interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -14292,9 +5594,6 @@ func (mtr *Pcrmpu1interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -14380,11 +5679,6 @@ func (mtr *Pcrmpu1interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu1interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -14517,12 +5811,6 @@ func (mtr *Pcrmpu1interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu1interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -14761,14 +6049,6 @@ type Pcrmpu1intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -14789,14 +6069,6 @@ func (mtr *Pcrmpu1intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu1intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -14813,18 +6085,6 @@ func (mtr *Pcrmpu1intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -14844,26 +6104,6 @@ func (mtr *Pcrmpu1intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu1intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -14886,30 +6126,6 @@ func (mtr *Pcrmpu1intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu1intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu1intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu1intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu1intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -15016,8 +6232,6 @@ type Pcrmpu2interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -15082,8 +6296,6 @@ func (mtr *Pcrmpu2interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu2interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -15144,9 +6356,6 @@ func (mtr *Pcrmpu2interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -15232,11 +6441,6 @@ func (mtr *Pcrmpu2interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu2interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -15369,12 +6573,6 @@ func (mtr *Pcrmpu2interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu2interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -15613,14 +6811,6 @@ type Pcrmpu2intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -15641,14 +6831,6 @@ func (mtr *Pcrmpu2intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu2intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -15665,18 +6847,6 @@ func (mtr *Pcrmpu2intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -15696,26 +6866,6 @@ func (mtr *Pcrmpu2intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu2intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -15738,30 +6888,6 @@ func (mtr *Pcrmpu2intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu2intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu2intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu2intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu2intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -15868,8 +6994,6 @@ type Pcrmpu3interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -15934,8 +7058,6 @@ func (mtr *Pcrmpu3interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu3interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -15996,9 +7118,6 @@ func (mtr *Pcrmpu3interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -16084,11 +7203,6 @@ func (mtr *Pcrmpu3interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu3interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -16221,12 +7335,6 @@ func (mtr *Pcrmpu3interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu3interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -16465,14 +7573,6 @@ type Pcrmpu3intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -16493,14 +7593,6 @@ func (mtr *Pcrmpu3intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu3intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -16517,18 +7609,6 @@ func (mtr *Pcrmpu3intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -16548,26 +7628,6 @@ func (mtr *Pcrmpu3intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu3intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -16590,30 +7650,6 @@ func (mtr *Pcrmpu3intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu3intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu3intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu3intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu3intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -16720,8 +7756,6 @@ type Pcrmpu4interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -16786,8 +7820,6 @@ func (mtr *Pcrmpu4interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu4interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -16848,9 +7880,6 @@ func (mtr *Pcrmpu4interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -16936,11 +7965,6 @@ func (mtr *Pcrmpu4interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu4interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -17073,12 +8097,6 @@ func (mtr *Pcrmpu4interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu4interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -17317,14 +8335,6 @@ type Pcrmpu4intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -17345,14 +8355,6 @@ func (mtr *Pcrmpu4intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu4intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -17369,18 +8371,6 @@ func (mtr *Pcrmpu4intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -17400,26 +8390,6 @@ func (mtr *Pcrmpu4intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu4intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -17442,30 +8412,6 @@ func (mtr *Pcrmpu4intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu4intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu4intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu4intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu4intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -17572,8 +8518,6 @@ type Pcrmpu5interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -17638,8 +8582,6 @@ func (mtr *Pcrmpu5interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu5interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -17700,9 +8642,6 @@ func (mtr *Pcrmpu5interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -17788,11 +8727,6 @@ func (mtr *Pcrmpu5interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu5interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -17925,12 +8859,6 @@ func (mtr *Pcrmpu5interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu5interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -18169,14 +9097,6 @@ type Pcrmpu5intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -18197,14 +9117,6 @@ func (mtr *Pcrmpu5intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu5intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -18221,18 +9133,6 @@ func (mtr *Pcrmpu5intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -18252,26 +9152,6 @@ func (mtr *Pcrmpu5intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu5intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -18294,30 +9174,6 @@ func (mtr *Pcrmpu5intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu5intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu5intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu5intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu5intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -18424,8 +9280,6 @@ type Pcrmpu6interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -18490,8 +9344,6 @@ func (mtr *Pcrmpu6interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu6interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -18552,9 +9404,6 @@ func (mtr *Pcrmpu6interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -18640,11 +9489,6 @@ func (mtr *Pcrmpu6interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu6interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -18777,12 +9621,6 @@ func (mtr *Pcrmpu6interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu6interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -19021,14 +9859,6 @@ type Pcrmpu6intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -19049,14 +9879,6 @@ func (mtr *Pcrmpu6intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu6intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -19073,18 +9895,6 @@ func (mtr *Pcrmpu6intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -19104,26 +9914,6 @@ func (mtr *Pcrmpu6intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu6intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -19146,30 +9936,6 @@ func (mtr *Pcrmpu6intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu6intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu6intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu6intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu6intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -19276,8 +10042,6 @@ type Pcrmpu7interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -19342,8 +10106,6 @@ func (mtr *Pcrmpu7interrMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu7interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -19404,9 +10166,6 @@ func (mtr *Pcrmpu7interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -19492,11 +10251,6 @@ func (mtr *Pcrmpu7interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu7interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -19629,12 +10383,6 @@ func (mtr *Pcrmpu7interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pcrmpu7interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -19873,14 +10621,6 @@ type Pcrmpu7intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -19901,14 +10641,6 @@ func (mtr *Pcrmpu7intinfoMetrics) GetKey() uint64 {
 func (mtr *Pcrmpu7intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -19925,18 +10657,6 @@ func (mtr *Pcrmpu7intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -19956,26 +10676,6 @@ func (mtr *Pcrmpu7intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pcrmpu7intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -19998,30 +10698,6 @@ func (mtr *Pcrmpu7intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pcrmpu7intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pcrmpu7intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pcrmpu7intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pcrmpu7intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -20128,8 +10804,6 @@ type TxstxsintschMetrics struct {
 
 	key uint64
 
-	SchWidEmpty metrics.Counter
-
 	SchRidEmpty metrics.Counter
 
 	SchWrTxfifoOvf metrics.Counter
@@ -20137,8 +10811,6 @@ type TxstxsintschMetrics struct {
 	SchRdTxfifoOvf metrics.Counter
 
 	SchStateFifoOvf metrics.Counter
-
-	SchDrbCntQidFifo metrics.Counter
 
 	SchHbmBypOvf metrics.Counter
 
@@ -20153,20 +10825,6 @@ type TxstxsintschMetrics struct {
 	SchLifSgMismatch metrics.Counter
 
 	SchAclrHbmLnRollovr metrics.Counter
-
-	SchTxdmaMsgEfull metrics.Counter
-
-	SchHbmReEfull metrics.Counter
-
-	SchHbmWeEfull metrics.Counter
-
-	SchHbmBypPendingEfull metrics.Counter
-
-	SchHbmRdPendingEfull metrics.Counter
-
-	SchHbmWrPendingEfull metrics.Counter
-
-	SchBrespErr metrics.Counter
 
 	SchBidErr metrics.Counter
 
@@ -20192,8 +10850,6 @@ func (mtr *TxstxsintschMetrics) GetKey() uint64 {
 func (mtr *TxstxsintschMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.SchWidEmpty.Size()
-
 	sz += mtr.SchRidEmpty.Size()
 
 	sz += mtr.SchWrTxfifoOvf.Size()
@@ -20201,8 +10857,6 @@ func (mtr *TxstxsintschMetrics) Size() int {
 	sz += mtr.SchRdTxfifoOvf.Size()
 
 	sz += mtr.SchStateFifoOvf.Size()
-
-	sz += mtr.SchDrbCntQidFifo.Size()
 
 	sz += mtr.SchHbmBypOvf.Size()
 
@@ -20217,20 +10871,6 @@ func (mtr *TxstxsintschMetrics) Size() int {
 	sz += mtr.SchLifSgMismatch.Size()
 
 	sz += mtr.SchAclrHbmLnRollovr.Size()
-
-	sz += mtr.SchTxdmaMsgEfull.Size()
-
-	sz += mtr.SchHbmReEfull.Size()
-
-	sz += mtr.SchHbmWeEfull.Size()
-
-	sz += mtr.SchHbmBypPendingEfull.Size()
-
-	sz += mtr.SchHbmRdPendingEfull.Size()
-
-	sz += mtr.SchHbmWrPendingEfull.Size()
-
-	sz += mtr.SchBrespErr.Size()
 
 	sz += mtr.SchBidErr.Size()
 
@@ -20253,9 +10893,6 @@ func (mtr *TxstxsintschMetrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.SchWidEmpty = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchWidEmpty.Size()
-
 	mtr.SchRidEmpty = mtr.metrics.GetCounter(offset)
 	offset += mtr.SchRidEmpty.Size()
 
@@ -20267,9 +10904,6 @@ func (mtr *TxstxsintschMetrics) Unmarshal() error {
 
 	mtr.SchStateFifoOvf = mtr.metrics.GetCounter(offset)
 	offset += mtr.SchStateFifoOvf.Size()
-
-	mtr.SchDrbCntQidFifo = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchDrbCntQidFifo.Size()
 
 	mtr.SchHbmBypOvf = mtr.metrics.GetCounter(offset)
 	offset += mtr.SchHbmBypOvf.Size()
@@ -20291,27 +10925,6 @@ func (mtr *TxstxsintschMetrics) Unmarshal() error {
 
 	mtr.SchAclrHbmLnRollovr = mtr.metrics.GetCounter(offset)
 	offset += mtr.SchAclrHbmLnRollovr.Size()
-
-	mtr.SchTxdmaMsgEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchTxdmaMsgEfull.Size()
-
-	mtr.SchHbmReEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchHbmReEfull.Size()
-
-	mtr.SchHbmWeEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchHbmWeEfull.Size()
-
-	mtr.SchHbmBypPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchHbmBypPendingEfull.Size()
-
-	mtr.SchHbmRdPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchHbmRdPendingEfull.Size()
-
-	mtr.SchHbmWrPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchHbmWrPendingEfull.Size()
-
-	mtr.SchBrespErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.SchBrespErr.Size()
 
 	mtr.SchBidErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.SchBidErr.Size()
@@ -20338,11 +10951,6 @@ func (mtr *TxstxsintschMetrics) Unmarshal() error {
 func (mtr *TxstxsintschMetrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "SchWidEmpty" {
-		return offset
-	}
-	offset += mtr.SchWidEmpty.Size()
-
 	if fldName == "SchRidEmpty" {
 		return offset
 	}
@@ -20362,11 +10970,6 @@ func (mtr *TxstxsintschMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SchStateFifoOvf.Size()
-
-	if fldName == "SchDrbCntQidFifo" {
-		return offset
-	}
-	offset += mtr.SchDrbCntQidFifo.Size()
 
 	if fldName == "SchHbmBypOvf" {
 		return offset
@@ -20403,41 +11006,6 @@ func (mtr *TxstxsintschMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.SchAclrHbmLnRollovr.Size()
 
-	if fldName == "SchTxdmaMsgEfull" {
-		return offset
-	}
-	offset += mtr.SchTxdmaMsgEfull.Size()
-
-	if fldName == "SchHbmReEfull" {
-		return offset
-	}
-	offset += mtr.SchHbmReEfull.Size()
-
-	if fldName == "SchHbmWeEfull" {
-		return offset
-	}
-	offset += mtr.SchHbmWeEfull.Size()
-
-	if fldName == "SchHbmBypPendingEfull" {
-		return offset
-	}
-	offset += mtr.SchHbmBypPendingEfull.Size()
-
-	if fldName == "SchHbmRdPendingEfull" {
-		return offset
-	}
-	offset += mtr.SchHbmRdPendingEfull.Size()
-
-	if fldName == "SchHbmWrPendingEfull" {
-		return offset
-	}
-	offset += mtr.SchHbmWrPendingEfull.Size()
-
-	if fldName == "SchBrespErr" {
-		return offset
-	}
-	offset += mtr.SchBrespErr.Size()
-
 	if fldName == "SchBidErr" {
 		return offset
 	}
@@ -20471,12 +11039,6 @@ func (mtr *TxstxsintschMetrics) getOffset(fldName string) int {
 	return offset
 }
 
-// SetSchWidEmpty sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchWidEmpty(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchWidEmpty"))
-	return nil
-}
-
 // SetSchRidEmpty sets cunter in shared memory
 func (mtr *TxstxsintschMetrics) SetSchRidEmpty(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SchRidEmpty"))
@@ -20498,12 +11060,6 @@ func (mtr *TxstxsintschMetrics) SetSchRdTxfifoOvf(val metrics.Counter) error {
 // SetSchStateFifoOvf sets cunter in shared memory
 func (mtr *TxstxsintschMetrics) SetSchStateFifoOvf(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SchStateFifoOvf"))
-	return nil
-}
-
-// SetSchDrbCntQidFifo sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchDrbCntQidFifo(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchDrbCntQidFifo"))
 	return nil
 }
 
@@ -20546,48 +11102,6 @@ func (mtr *TxstxsintschMetrics) SetSchLifSgMismatch(val metrics.Counter) error {
 // SetSchAclrHbmLnRollovr sets cunter in shared memory
 func (mtr *TxstxsintschMetrics) SetSchAclrHbmLnRollovr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SchAclrHbmLnRollovr"))
-	return nil
-}
-
-// SetSchTxdmaMsgEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchTxdmaMsgEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchTxdmaMsgEfull"))
-	return nil
-}
-
-// SetSchHbmReEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchHbmReEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchHbmReEfull"))
-	return nil
-}
-
-// SetSchHbmWeEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchHbmWeEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchHbmWeEfull"))
-	return nil
-}
-
-// SetSchHbmBypPendingEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchHbmBypPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchHbmBypPendingEfull"))
-	return nil
-}
-
-// SetSchHbmRdPendingEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchHbmRdPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchHbmRdPendingEfull"))
-	return nil
-}
-
-// SetSchHbmWrPendingEfull sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchHbmWrPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchHbmWrPendingEfull"))
-	return nil
-}
-
-// SetSchBrespErr sets cunter in shared memory
-func (mtr *TxstxsintschMetrics) SetSchBrespErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SchBrespErr"))
 	return nil
 }
 
@@ -20707,8 +11221,6 @@ type TxstxsinttmrMetrics struct {
 
 	key uint64
 
-	TmrWidEmpty metrics.Counter
-
 	TmrRidEmpty metrics.Counter
 
 	TmrWrTxfifoOvf metrics.Counter
@@ -20725,49 +11237,13 @@ type TxstxsinttmrMetrics struct {
 
 	StmrCtimeWrap metrics.Counter
 
-	StmrPushOutOfWheel metrics.Counter
-
-	FtmrPushOutOfWheel metrics.Counter
-
-	FtmrKeyNotPush metrics.Counter
-
-	FtmrKeyNotFound metrics.Counter
-
-	StmrKeyNotPush metrics.Counter
-
-	StmrKeyNotFound metrics.Counter
-
-	StmrStall metrics.Counter
-
-	FtmrStall metrics.Counter
-
 	FtmrFifoOvf metrics.Counter
 
 	StmrFifoOvf metrics.Counter
 
-	FtmrFifoEfull metrics.Counter
-
-	StmrFifoEfull metrics.Counter
-
 	TmrRejctDrbOvf metrics.Counter
 
-	TmrRejctDrbEfull metrics.Counter
-
-	TmrHbmReEfull metrics.Counter
-
-	TmrHbmWeEfull metrics.Counter
-
-	TmrHbmBypPendingEfull metrics.Counter
-
-	TmrHbmRdPendingEfull metrics.Counter
-
-	TmrHbmWrPendingEfull metrics.Counter
-
-	TmrBrespErr metrics.Counter
-
 	TmrBidErr metrics.Counter
-
-	TmrRrespErr metrics.Counter
 
 	TmrRidErr metrics.Counter
 
@@ -20782,8 +11258,6 @@ func (mtr *TxstxsinttmrMetrics) GetKey() uint64 {
 // Size returns the size of the metrics object
 func (mtr *TxstxsinttmrMetrics) Size() int {
 	sz := 0
-
-	sz += mtr.TmrWidEmpty.Size()
 
 	sz += mtr.TmrRidEmpty.Size()
 
@@ -20801,49 +11275,13 @@ func (mtr *TxstxsinttmrMetrics) Size() int {
 
 	sz += mtr.StmrCtimeWrap.Size()
 
-	sz += mtr.StmrPushOutOfWheel.Size()
-
-	sz += mtr.FtmrPushOutOfWheel.Size()
-
-	sz += mtr.FtmrKeyNotPush.Size()
-
-	sz += mtr.FtmrKeyNotFound.Size()
-
-	sz += mtr.StmrKeyNotPush.Size()
-
-	sz += mtr.StmrKeyNotFound.Size()
-
-	sz += mtr.StmrStall.Size()
-
-	sz += mtr.FtmrStall.Size()
-
 	sz += mtr.FtmrFifoOvf.Size()
 
 	sz += mtr.StmrFifoOvf.Size()
 
-	sz += mtr.FtmrFifoEfull.Size()
-
-	sz += mtr.StmrFifoEfull.Size()
-
 	sz += mtr.TmrRejctDrbOvf.Size()
 
-	sz += mtr.TmrRejctDrbEfull.Size()
-
-	sz += mtr.TmrHbmReEfull.Size()
-
-	sz += mtr.TmrHbmWeEfull.Size()
-
-	sz += mtr.TmrHbmBypPendingEfull.Size()
-
-	sz += mtr.TmrHbmRdPendingEfull.Size()
-
-	sz += mtr.TmrHbmWrPendingEfull.Size()
-
-	sz += mtr.TmrBrespErr.Size()
-
 	sz += mtr.TmrBidErr.Size()
-
-	sz += mtr.TmrRrespErr.Size()
 
 	sz += mtr.TmrRidErr.Size()
 
@@ -20855,9 +11293,6 @@ func (mtr *TxstxsinttmrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TmrWidEmpty = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrWidEmpty.Size()
 
 	mtr.TmrRidEmpty = mtr.metrics.GetCounter(offset)
 	offset += mtr.TmrRidEmpty.Size()
@@ -20883,71 +11318,17 @@ func (mtr *TxstxsinttmrMetrics) Unmarshal() error {
 	mtr.StmrCtimeWrap = mtr.metrics.GetCounter(offset)
 	offset += mtr.StmrCtimeWrap.Size()
 
-	mtr.StmrPushOutOfWheel = mtr.metrics.GetCounter(offset)
-	offset += mtr.StmrPushOutOfWheel.Size()
-
-	mtr.FtmrPushOutOfWheel = mtr.metrics.GetCounter(offset)
-	offset += mtr.FtmrPushOutOfWheel.Size()
-
-	mtr.FtmrKeyNotPush = mtr.metrics.GetCounter(offset)
-	offset += mtr.FtmrKeyNotPush.Size()
-
-	mtr.FtmrKeyNotFound = mtr.metrics.GetCounter(offset)
-	offset += mtr.FtmrKeyNotFound.Size()
-
-	mtr.StmrKeyNotPush = mtr.metrics.GetCounter(offset)
-	offset += mtr.StmrKeyNotPush.Size()
-
-	mtr.StmrKeyNotFound = mtr.metrics.GetCounter(offset)
-	offset += mtr.StmrKeyNotFound.Size()
-
-	mtr.StmrStall = mtr.metrics.GetCounter(offset)
-	offset += mtr.StmrStall.Size()
-
-	mtr.FtmrStall = mtr.metrics.GetCounter(offset)
-	offset += mtr.FtmrStall.Size()
-
 	mtr.FtmrFifoOvf = mtr.metrics.GetCounter(offset)
 	offset += mtr.FtmrFifoOvf.Size()
 
 	mtr.StmrFifoOvf = mtr.metrics.GetCounter(offset)
 	offset += mtr.StmrFifoOvf.Size()
 
-	mtr.FtmrFifoEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.FtmrFifoEfull.Size()
-
-	mtr.StmrFifoEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.StmrFifoEfull.Size()
-
 	mtr.TmrRejctDrbOvf = mtr.metrics.GetCounter(offset)
 	offset += mtr.TmrRejctDrbOvf.Size()
 
-	mtr.TmrRejctDrbEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrRejctDrbEfull.Size()
-
-	mtr.TmrHbmReEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrHbmReEfull.Size()
-
-	mtr.TmrHbmWeEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrHbmWeEfull.Size()
-
-	mtr.TmrHbmBypPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrHbmBypPendingEfull.Size()
-
-	mtr.TmrHbmRdPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrHbmRdPendingEfull.Size()
-
-	mtr.TmrHbmWrPendingEfull = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrHbmWrPendingEfull.Size()
-
-	mtr.TmrBrespErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrBrespErr.Size()
-
 	mtr.TmrBidErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.TmrBidErr.Size()
-
-	mtr.TmrRrespErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.TmrRrespErr.Size()
 
 	mtr.TmrRidErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.TmrRidErr.Size()
@@ -20958,11 +11339,6 @@ func (mtr *TxstxsinttmrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *TxstxsinttmrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TmrWidEmpty" {
-		return offset
-	}
-	offset += mtr.TmrWidEmpty.Size()
 
 	if fldName == "TmrRidEmpty" {
 		return offset
@@ -21004,46 +11380,6 @@ func (mtr *TxstxsinttmrMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.StmrCtimeWrap.Size()
 
-	if fldName == "StmrPushOutOfWheel" {
-		return offset
-	}
-	offset += mtr.StmrPushOutOfWheel.Size()
-
-	if fldName == "FtmrPushOutOfWheel" {
-		return offset
-	}
-	offset += mtr.FtmrPushOutOfWheel.Size()
-
-	if fldName == "FtmrKeyNotPush" {
-		return offset
-	}
-	offset += mtr.FtmrKeyNotPush.Size()
-
-	if fldName == "FtmrKeyNotFound" {
-		return offset
-	}
-	offset += mtr.FtmrKeyNotFound.Size()
-
-	if fldName == "StmrKeyNotPush" {
-		return offset
-	}
-	offset += mtr.StmrKeyNotPush.Size()
-
-	if fldName == "StmrKeyNotFound" {
-		return offset
-	}
-	offset += mtr.StmrKeyNotFound.Size()
-
-	if fldName == "StmrStall" {
-		return offset
-	}
-	offset += mtr.StmrStall.Size()
-
-	if fldName == "FtmrStall" {
-		return offset
-	}
-	offset += mtr.FtmrStall.Size()
-
 	if fldName == "FtmrFifoOvf" {
 		return offset
 	}
@@ -21054,65 +11390,15 @@ func (mtr *TxstxsinttmrMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.StmrFifoOvf.Size()
 
-	if fldName == "FtmrFifoEfull" {
-		return offset
-	}
-	offset += mtr.FtmrFifoEfull.Size()
-
-	if fldName == "StmrFifoEfull" {
-		return offset
-	}
-	offset += mtr.StmrFifoEfull.Size()
-
 	if fldName == "TmrRejctDrbOvf" {
 		return offset
 	}
 	offset += mtr.TmrRejctDrbOvf.Size()
 
-	if fldName == "TmrRejctDrbEfull" {
-		return offset
-	}
-	offset += mtr.TmrRejctDrbEfull.Size()
-
-	if fldName == "TmrHbmReEfull" {
-		return offset
-	}
-	offset += mtr.TmrHbmReEfull.Size()
-
-	if fldName == "TmrHbmWeEfull" {
-		return offset
-	}
-	offset += mtr.TmrHbmWeEfull.Size()
-
-	if fldName == "TmrHbmBypPendingEfull" {
-		return offset
-	}
-	offset += mtr.TmrHbmBypPendingEfull.Size()
-
-	if fldName == "TmrHbmRdPendingEfull" {
-		return offset
-	}
-	offset += mtr.TmrHbmRdPendingEfull.Size()
-
-	if fldName == "TmrHbmWrPendingEfull" {
-		return offset
-	}
-	offset += mtr.TmrHbmWrPendingEfull.Size()
-
-	if fldName == "TmrBrespErr" {
-		return offset
-	}
-	offset += mtr.TmrBrespErr.Size()
-
 	if fldName == "TmrBidErr" {
 		return offset
 	}
 	offset += mtr.TmrBidErr.Size()
-
-	if fldName == "TmrRrespErr" {
-		return offset
-	}
-	offset += mtr.TmrRrespErr.Size()
 
 	if fldName == "TmrRidErr" {
 		return offset
@@ -21120,12 +11406,6 @@ func (mtr *TxstxsinttmrMetrics) getOffset(fldName string) int {
 	offset += mtr.TmrRidErr.Size()
 
 	return offset
-}
-
-// SetTmrWidEmpty sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrWidEmpty(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrWidEmpty"))
-	return nil
 }
 
 // SetTmrRidEmpty sets cunter in shared memory
@@ -21176,54 +11456,6 @@ func (mtr *TxstxsinttmrMetrics) SetStmrCtimeWrap(val metrics.Counter) error {
 	return nil
 }
 
-// SetStmrPushOutOfWheel sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetStmrPushOutOfWheel(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("StmrPushOutOfWheel"))
-	return nil
-}
-
-// SetFtmrPushOutOfWheel sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetFtmrPushOutOfWheel(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrPushOutOfWheel"))
-	return nil
-}
-
-// SetFtmrKeyNotPush sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetFtmrKeyNotPush(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrKeyNotPush"))
-	return nil
-}
-
-// SetFtmrKeyNotFound sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetFtmrKeyNotFound(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrKeyNotFound"))
-	return nil
-}
-
-// SetStmrKeyNotPush sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetStmrKeyNotPush(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("StmrKeyNotPush"))
-	return nil
-}
-
-// SetStmrKeyNotFound sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetStmrKeyNotFound(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("StmrKeyNotFound"))
-	return nil
-}
-
-// SetStmrStall sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetStmrStall(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("StmrStall"))
-	return nil
-}
-
-// SetFtmrStall sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetFtmrStall(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrStall"))
-	return nil
-}
-
 // SetFtmrFifoOvf sets cunter in shared memory
 func (mtr *TxstxsinttmrMetrics) SetFtmrFifoOvf(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrFifoOvf"))
@@ -21236,75 +11468,15 @@ func (mtr *TxstxsinttmrMetrics) SetStmrFifoOvf(val metrics.Counter) error {
 	return nil
 }
 
-// SetFtmrFifoEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetFtmrFifoEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("FtmrFifoEfull"))
-	return nil
-}
-
-// SetStmrFifoEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetStmrFifoEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("StmrFifoEfull"))
-	return nil
-}
-
 // SetTmrRejctDrbOvf sets cunter in shared memory
 func (mtr *TxstxsinttmrMetrics) SetTmrRejctDrbOvf(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TmrRejctDrbOvf"))
 	return nil
 }
 
-// SetTmrRejctDrbEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrRejctDrbEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrRejctDrbEfull"))
-	return nil
-}
-
-// SetTmrHbmReEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrHbmReEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrHbmReEfull"))
-	return nil
-}
-
-// SetTmrHbmWeEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrHbmWeEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrHbmWeEfull"))
-	return nil
-}
-
-// SetTmrHbmBypPendingEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrHbmBypPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrHbmBypPendingEfull"))
-	return nil
-}
-
-// SetTmrHbmRdPendingEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrHbmRdPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrHbmRdPendingEfull"))
-	return nil
-}
-
-// SetTmrHbmWrPendingEfull sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrHbmWrPendingEfull(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrHbmWrPendingEfull"))
-	return nil
-}
-
-// SetTmrBrespErr sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrBrespErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrBrespErr"))
-	return nil
-}
-
 // SetTmrBidErr sets cunter in shared memory
 func (mtr *TxstxsinttmrMetrics) SetTmrBidErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TmrBidErr"))
-	return nil
-}
-
-// SetTmrRrespErr sets cunter in shared memory
-func (mtr *TxstxsinttmrMetrics) SetTmrRrespErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TmrRrespErr"))
 	return nil
 }
 
@@ -21659,8 +11831,6 @@ type Pctte0interrMetrics struct {
 
 	SpuriousTcamRsp metrics.Counter
 
-	Te2MpuTimeout metrics.Counter
-
 	AxiRdrspErr metrics.Counter
 
 	AxiBadRead metrics.Counter
@@ -21710,8 +11880,6 @@ func (mtr *Pctte0interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -21764,9 +11932,6 @@ func (mtr *Pctte0interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -21841,11 +12006,6 @@ func (mtr *Pctte0interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -21947,12 +12107,6 @@ func (mtr *Pctte0interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte0interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte0interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -22115,423 +12269,6 @@ func NewPctte0interrMetricsIterator() (*Pctte0interrMetricsIterator, error) {
 	return &Pctte0interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte0intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte0intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte0intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte0intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte0intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte0intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte0intinfoMetricsIterator is the iterator object
-type Pctte0intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte0intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte0intinfoMetricsIterator) Next() *Pctte0intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte0intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte0intinfoMetricsIterator) Find(key uint64) (*Pctte0intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte0intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte0intinfoMetricsIterator) Create(key uint64) (*Pctte0intinfoMetrics, error) {
-	tmtr := &Pctte0intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte0intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte0intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte0intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte0intinfoMetricsIterator returns an iterator
-func NewPctte0intinfoMetricsIterator() (*Pctte0intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte0intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte0intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte1interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -22546,8 +12283,6 @@ type Pctte1interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -22598,8 +12333,6 @@ func (mtr *Pctte1interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -22652,9 +12385,6 @@ func (mtr *Pctte1interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -22729,11 +12459,6 @@ func (mtr *Pctte1interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -22835,12 +12560,6 @@ func (mtr *Pctte1interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte1interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte1interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -23003,423 +12722,6 @@ func NewPctte1interrMetricsIterator() (*Pctte1interrMetricsIterator, error) {
 	return &Pctte1interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte1intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte1intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte1intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte1intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte1intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte1intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte1intinfoMetricsIterator is the iterator object
-type Pctte1intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte1intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte1intinfoMetricsIterator) Next() *Pctte1intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte1intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte1intinfoMetricsIterator) Find(key uint64) (*Pctte1intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte1intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte1intinfoMetricsIterator) Create(key uint64) (*Pctte1intinfoMetrics, error) {
-	tmtr := &Pctte1intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte1intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte1intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte1intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte1intinfoMetricsIterator returns an iterator
-func NewPctte1intinfoMetricsIterator() (*Pctte1intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte1intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte1intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte2interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -23434,8 +12736,6 @@ type Pctte2interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -23486,8 +12786,6 @@ func (mtr *Pctte2interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -23540,9 +12838,6 @@ func (mtr *Pctte2interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -23617,11 +12912,6 @@ func (mtr *Pctte2interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -23723,12 +13013,6 @@ func (mtr *Pctte2interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte2interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte2interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -23891,423 +13175,6 @@ func NewPctte2interrMetricsIterator() (*Pctte2interrMetricsIterator, error) {
 	return &Pctte2interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte2intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte2intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte2intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte2intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte2intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte2intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte2intinfoMetricsIterator is the iterator object
-type Pctte2intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte2intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte2intinfoMetricsIterator) Next() *Pctte2intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte2intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte2intinfoMetricsIterator) Find(key uint64) (*Pctte2intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte2intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte2intinfoMetricsIterator) Create(key uint64) (*Pctte2intinfoMetrics, error) {
-	tmtr := &Pctte2intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte2intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte2intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte2intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte2intinfoMetricsIterator returns an iterator
-func NewPctte2intinfoMetricsIterator() (*Pctte2intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte2intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte2intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte3interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -24322,8 +13189,6 @@ type Pctte3interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -24374,8 +13239,6 @@ func (mtr *Pctte3interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -24428,9 +13291,6 @@ func (mtr *Pctte3interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -24505,11 +13365,6 @@ func (mtr *Pctte3interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -24611,12 +13466,6 @@ func (mtr *Pctte3interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte3interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte3interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -24779,423 +13628,6 @@ func NewPctte3interrMetricsIterator() (*Pctte3interrMetricsIterator, error) {
 	return &Pctte3interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte3intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte3intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte3intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte3intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte3intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte3intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte3intinfoMetricsIterator is the iterator object
-type Pctte3intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte3intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte3intinfoMetricsIterator) Next() *Pctte3intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte3intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte3intinfoMetricsIterator) Find(key uint64) (*Pctte3intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte3intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte3intinfoMetricsIterator) Create(key uint64) (*Pctte3intinfoMetrics, error) {
-	tmtr := &Pctte3intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte3intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte3intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte3intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte3intinfoMetricsIterator returns an iterator
-func NewPctte3intinfoMetricsIterator() (*Pctte3intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte3intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte3intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte4interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -25210,8 +13642,6 @@ type Pctte4interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -25262,8 +13692,6 @@ func (mtr *Pctte4interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -25316,9 +13744,6 @@ func (mtr *Pctte4interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -25393,11 +13818,6 @@ func (mtr *Pctte4interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -25499,12 +13919,6 @@ func (mtr *Pctte4interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte4interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte4interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -25667,423 +14081,6 @@ func NewPctte4interrMetricsIterator() (*Pctte4interrMetricsIterator, error) {
 	return &Pctte4interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte4intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte4intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte4intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte4intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte4intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte4intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte4intinfoMetricsIterator is the iterator object
-type Pctte4intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte4intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte4intinfoMetricsIterator) Next() *Pctte4intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte4intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte4intinfoMetricsIterator) Find(key uint64) (*Pctte4intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte4intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte4intinfoMetricsIterator) Create(key uint64) (*Pctte4intinfoMetrics, error) {
-	tmtr := &Pctte4intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte4intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte4intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte4intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte4intinfoMetricsIterator returns an iterator
-func NewPctte4intinfoMetricsIterator() (*Pctte4intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte4intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte4intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte5interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -26098,8 +14095,6 @@ type Pctte5interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -26150,8 +14145,6 @@ func (mtr *Pctte5interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -26204,9 +14197,6 @@ func (mtr *Pctte5interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -26281,11 +14271,6 @@ func (mtr *Pctte5interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -26387,12 +14372,6 @@ func (mtr *Pctte5interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte5interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte5interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -26555,423 +14534,6 @@ func NewPctte5interrMetricsIterator() (*Pctte5interrMetricsIterator, error) {
 	return &Pctte5interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte5intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte5intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte5intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte5intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte5intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte5intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte5intinfoMetricsIterator is the iterator object
-type Pctte5intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte5intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte5intinfoMetricsIterator) Next() *Pctte5intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte5intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte5intinfoMetricsIterator) Find(key uint64) (*Pctte5intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte5intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte5intinfoMetricsIterator) Create(key uint64) (*Pctte5intinfoMetrics, error) {
-	tmtr := &Pctte5intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte5intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte5intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte5intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte5intinfoMetricsIterator returns an iterator
-func NewPctte5intinfoMetricsIterator() (*Pctte5intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte5intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte5intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte6interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -26986,8 +14548,6 @@ type Pctte6interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -27038,8 +14598,6 @@ func (mtr *Pctte6interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -27092,9 +14650,6 @@ func (mtr *Pctte6interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -27169,11 +14724,6 @@ func (mtr *Pctte6interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -27275,12 +14825,6 @@ func (mtr *Pctte6interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte6interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte6interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -27443,423 +14987,6 @@ func NewPctte6interrMetricsIterator() (*Pctte6interrMetricsIterator, error) {
 	return &Pctte6interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte6intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte6intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte6intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte6intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte6intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte6intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte6intinfoMetricsIterator is the iterator object
-type Pctte6intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte6intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte6intinfoMetricsIterator) Next() *Pctte6intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte6intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte6intinfoMetricsIterator) Find(key uint64) (*Pctte6intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte6intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte6intinfoMetricsIterator) Create(key uint64) (*Pctte6intinfoMetrics, error) {
-	tmtr := &Pctte6intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte6intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte6intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte6intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte6intinfoMetricsIterator returns an iterator
-func NewPctte6intinfoMetricsIterator() (*Pctte6intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte6intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte6intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctte7interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -27874,8 +15001,6 @@ type Pctte7interrMetrics struct {
 	SpuriousAxiRsp metrics.Counter
 
 	SpuriousTcamRsp metrics.Counter
-
-	Te2MpuTimeout metrics.Counter
 
 	AxiRdrspErr metrics.Counter
 
@@ -27926,8 +15051,6 @@ func (mtr *Pctte7interrMetrics) Size() int {
 	sz += mtr.SpuriousAxiRsp.Size()
 
 	sz += mtr.SpuriousTcamRsp.Size()
-
-	sz += mtr.Te2MpuTimeout.Size()
 
 	sz += mtr.AxiRdrspErr.Size()
 
@@ -27980,9 +15103,6 @@ func (mtr *Pctte7interrMetrics) Unmarshal() error {
 
 	mtr.SpuriousTcamRsp = mtr.metrics.GetCounter(offset)
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	mtr.Te2MpuTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.Te2MpuTimeout.Size()
 
 	mtr.AxiRdrspErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.AxiRdrspErr.Size()
@@ -28057,11 +15177,6 @@ func (mtr *Pctte7interrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.SpuriousTcamRsp.Size()
-
-	if fldName == "Te2MpuTimeout" {
-		return offset
-	}
-	offset += mtr.Te2MpuTimeout.Size()
 
 	if fldName == "AxiRdrspErr" {
 		return offset
@@ -28163,12 +15278,6 @@ func (mtr *Pctte7interrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 // SetSpuriousTcamRsp sets cunter in shared memory
 func (mtr *Pctte7interrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
-	return nil
-}
-
-// SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *Pctte7interrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
@@ -28331,429 +15440,10 @@ func NewPctte7interrMetricsIterator() (*Pctte7interrMetricsIterator, error) {
 	return &Pctte7interrMetricsIterator{iter: iter}, nil
 }
 
-type Pctte7intinfoMetrics struct {
-	ObjectMeta api.ObjectMeta
-
-	key uint64
-
-	ProfileCamHit0 metrics.Counter
-
-	ProfileCamHit1 metrics.Counter
-
-	ProfileCamHit2 metrics.Counter
-
-	ProfileCamHit3 metrics.Counter
-
-	ProfileCamHit4 metrics.Counter
-
-	ProfileCamHit5 metrics.Counter
-
-	ProfileCamHit6 metrics.Counter
-
-	ProfileCamHit7 metrics.Counter
-
-	ProfileCamHit8 metrics.Counter
-
-	ProfileCamHit9 metrics.Counter
-
-	ProfileCamHit10 metrics.Counter
-
-	ProfileCamHit11 metrics.Counter
-
-	ProfileCamHit12 metrics.Counter
-
-	ProfileCamHit13 metrics.Counter
-
-	ProfileCamHit14 metrics.Counter
-
-	ProfileCamHit15 metrics.Counter
-
-	ProfileCamMiss metrics.Counter
-
-	// private state
-	metrics gometrics.Metrics
-}
-
-func (mtr *Pctte7intinfoMetrics) GetKey() uint64 {
-	return mtr.key
-}
-
-// Size returns the size of the metrics object
-func (mtr *Pctte7intinfoMetrics) Size() int {
-	sz := 0
-
-	sz += mtr.ProfileCamHit0.Size()
-
-	sz += mtr.ProfileCamHit1.Size()
-
-	sz += mtr.ProfileCamHit2.Size()
-
-	sz += mtr.ProfileCamHit3.Size()
-
-	sz += mtr.ProfileCamHit4.Size()
-
-	sz += mtr.ProfileCamHit5.Size()
-
-	sz += mtr.ProfileCamHit6.Size()
-
-	sz += mtr.ProfileCamHit7.Size()
-
-	sz += mtr.ProfileCamHit8.Size()
-
-	sz += mtr.ProfileCamHit9.Size()
-
-	sz += mtr.ProfileCamHit10.Size()
-
-	sz += mtr.ProfileCamHit11.Size()
-
-	sz += mtr.ProfileCamHit12.Size()
-
-	sz += mtr.ProfileCamHit13.Size()
-
-	sz += mtr.ProfileCamHit14.Size()
-
-	sz += mtr.ProfileCamHit15.Size()
-
-	sz += mtr.ProfileCamMiss.Size()
-
-	return sz
-}
-
-// Unmarshal unmarshal the raw counters from shared memory
-func (mtr *Pctte7intinfoMetrics) Unmarshal() error {
-	var offset int
-
-	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ProfileCamHit0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit0.Size()
-
-	mtr.ProfileCamHit1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit1.Size()
-
-	mtr.ProfileCamHit2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit2.Size()
-
-	mtr.ProfileCamHit3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit3.Size()
-
-	mtr.ProfileCamHit4 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit4.Size()
-
-	mtr.ProfileCamHit5 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit5.Size()
-
-	mtr.ProfileCamHit6 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit6.Size()
-
-	mtr.ProfileCamHit7 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit7.Size()
-
-	mtr.ProfileCamHit8 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit8.Size()
-
-	mtr.ProfileCamHit9 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit9.Size()
-
-	mtr.ProfileCamHit10 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit10.Size()
-
-	mtr.ProfileCamHit11 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit11.Size()
-
-	mtr.ProfileCamHit12 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit12.Size()
-
-	mtr.ProfileCamHit13 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit13.Size()
-
-	mtr.ProfileCamHit14 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit14.Size()
-
-	mtr.ProfileCamHit15 = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamHit15.Size()
-
-	mtr.ProfileCamMiss = mtr.metrics.GetCounter(offset)
-	offset += mtr.ProfileCamMiss.Size()
-
-	return nil
-}
-
-// getOffset returns the offset for raw counters in shared memory
-func (mtr *Pctte7intinfoMetrics) getOffset(fldName string) int {
-	var offset int
-
-	if fldName == "ProfileCamHit0" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit0.Size()
-
-	if fldName == "ProfileCamHit1" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit1.Size()
-
-	if fldName == "ProfileCamHit2" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit2.Size()
-
-	if fldName == "ProfileCamHit3" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit3.Size()
-
-	if fldName == "ProfileCamHit4" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit4.Size()
-
-	if fldName == "ProfileCamHit5" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit5.Size()
-
-	if fldName == "ProfileCamHit6" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit6.Size()
-
-	if fldName == "ProfileCamHit7" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit7.Size()
-
-	if fldName == "ProfileCamHit8" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit8.Size()
-
-	if fldName == "ProfileCamHit9" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit9.Size()
-
-	if fldName == "ProfileCamHit10" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit10.Size()
-
-	if fldName == "ProfileCamHit11" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit11.Size()
-
-	if fldName == "ProfileCamHit12" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit12.Size()
-
-	if fldName == "ProfileCamHit13" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit13.Size()
-
-	if fldName == "ProfileCamHit14" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit14.Size()
-
-	if fldName == "ProfileCamHit15" {
-		return offset
-	}
-	offset += mtr.ProfileCamHit15.Size()
-
-	if fldName == "ProfileCamMiss" {
-		return offset
-	}
-	offset += mtr.ProfileCamMiss.Size()
-
-	return offset
-}
-
-// SetProfileCamHit0 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
-	return nil
-}
-
-// SetProfileCamHit1 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
-	return nil
-}
-
-// SetProfileCamHit2 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
-	return nil
-}
-
-// SetProfileCamHit3 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
-	return nil
-}
-
-// SetProfileCamHit4 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
-	return nil
-}
-
-// SetProfileCamHit5 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
-	return nil
-}
-
-// SetProfileCamHit6 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
-	return nil
-}
-
-// SetProfileCamHit7 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
-	return nil
-}
-
-// SetProfileCamHit8 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
-	return nil
-}
-
-// SetProfileCamHit9 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
-	return nil
-}
-
-// SetProfileCamHit10 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
-	return nil
-}
-
-// SetProfileCamHit11 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
-	return nil
-}
-
-// SetProfileCamHit12 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
-	return nil
-}
-
-// SetProfileCamHit13 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
-	return nil
-}
-
-// SetProfileCamHit14 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
-	return nil
-}
-
-// SetProfileCamHit15 sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
-	return nil
-}
-
-// SetProfileCamMiss sets cunter in shared memory
-func (mtr *Pctte7intinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
-	return nil
-}
-
-// Pctte7intinfoMetricsIterator is the iterator object
-type Pctte7intinfoMetricsIterator struct {
-	iter gometrics.MetricsIterator
-}
-
-// HasNext returns true if there are more objects
-func (it *Pctte7intinfoMetricsIterator) HasNext() bool {
-	return it.iter.HasNext()
-}
-
-// Next returns the next metrics
-func (it *Pctte7intinfoMetricsIterator) Next() *Pctte7intinfoMetrics {
-	mtr := it.iter.Next()
-	if mtr == nil {
-		return nil
-	}
-
-	tmtr := &Pctte7intinfoMetrics{metrics: mtr}
-	tmtr.Unmarshal()
-	return tmtr
-}
-
-// Find finds the metrics object by key
-
-func (it *Pctte7intinfoMetricsIterator) Find(key uint64) (*Pctte7intinfoMetrics, error) {
-
-	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
-
-	if err != nil {
-		return nil, err
-	}
-	tmtr := &Pctte7intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Create creates the object in shared memory
-
-func (it *Pctte7intinfoMetricsIterator) Create(key uint64) (*Pctte7intinfoMetrics, error) {
-	tmtr := &Pctte7intinfoMetrics{}
-
-	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
-
-	tmtr = &Pctte7intinfoMetrics{metrics: mtr, key: key}
-	tmtr.Unmarshal()
-	return tmtr, nil
-}
-
-// Delete deletes the object from shared memory
-
-func (it *Pctte7intinfoMetricsIterator) Delete(key uint64) error {
-
-	return it.iter.Delete(gometrics.EncodeScalarKey(key))
-
-}
-
-// Free frees the iterator memory
-func (it *Pctte7intinfoMetricsIterator) Free() {
-	it.iter.Free()
-}
-
-// NewPctte7intinfoMetricsIterator returns an iterator
-func NewPctte7intinfoMetricsIterator() (*Pctte7intinfoMetricsIterator, error) {
-	iter, err := gometrics.NewMetricsIterator("Pctte7intinfoMetrics")
-	if err != nil {
-		return nil, err
-	}
-	// little hack to skip creating iterators on osx
-	if iter == nil {
-		return nil, nil
-	}
-
-	return &Pctte7intinfoMetricsIterator{iter: iter}, nil
-}
-
 type Pctmpu0interrMetrics struct {
 	ObjectMeta api.ObjectMeta
 
 	key uint64
-
-	ResultsMismatch metrics.Counter
 
 	SdpMemUncorrectable metrics.Counter
 
@@ -28819,8 +15509,6 @@ func (mtr *Pctmpu0interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu0interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -28881,9 +15569,6 @@ func (mtr *Pctmpu0interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -28969,11 +15654,6 @@ func (mtr *Pctmpu0interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu0interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -29106,12 +15786,6 @@ func (mtr *Pctmpu0interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu0interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -29350,14 +16024,6 @@ type Pctmpu0intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -29378,14 +16044,6 @@ func (mtr *Pctmpu0intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu0intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -29402,18 +16060,6 @@ func (mtr *Pctmpu0intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -29433,26 +16079,6 @@ func (mtr *Pctmpu0intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu0intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -29475,30 +16101,6 @@ func (mtr *Pctmpu0intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu0intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu0intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu0intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu0intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -29605,8 +16207,6 @@ type Pctmpu1interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -29671,8 +16271,6 @@ func (mtr *Pctmpu1interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu1interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -29733,9 +16331,6 @@ func (mtr *Pctmpu1interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -29821,11 +16416,6 @@ func (mtr *Pctmpu1interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu1interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -29958,12 +16548,6 @@ func (mtr *Pctmpu1interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu1interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -30202,14 +16786,6 @@ type Pctmpu1intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -30230,14 +16806,6 @@ func (mtr *Pctmpu1intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu1intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -30254,18 +16822,6 @@ func (mtr *Pctmpu1intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -30285,26 +16841,6 @@ func (mtr *Pctmpu1intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu1intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -30327,30 +16863,6 @@ func (mtr *Pctmpu1intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu1intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu1intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu1intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu1intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -30457,8 +16969,6 @@ type Pctmpu2interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -30523,8 +17033,6 @@ func (mtr *Pctmpu2interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu2interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -30585,9 +17093,6 @@ func (mtr *Pctmpu2interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -30673,11 +17178,6 @@ func (mtr *Pctmpu2interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu2interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -30810,12 +17310,6 @@ func (mtr *Pctmpu2interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu2interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -31054,14 +17548,6 @@ type Pctmpu2intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -31082,14 +17568,6 @@ func (mtr *Pctmpu2intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu2intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -31106,18 +17584,6 @@ func (mtr *Pctmpu2intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -31137,26 +17603,6 @@ func (mtr *Pctmpu2intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu2intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -31179,30 +17625,6 @@ func (mtr *Pctmpu2intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu2intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu2intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu2intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu2intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -31309,8 +17731,6 @@ type Pctmpu3interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -31375,8 +17795,6 @@ func (mtr *Pctmpu3interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu3interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -31437,9 +17855,6 @@ func (mtr *Pctmpu3interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -31525,11 +17940,6 @@ func (mtr *Pctmpu3interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu3interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -31662,12 +18072,6 @@ func (mtr *Pctmpu3interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu3interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -31906,14 +18310,6 @@ type Pctmpu3intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -31934,14 +18330,6 @@ func (mtr *Pctmpu3intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu3intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -31958,18 +18346,6 @@ func (mtr *Pctmpu3intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -31989,26 +18365,6 @@ func (mtr *Pctmpu3intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu3intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -32031,30 +18387,6 @@ func (mtr *Pctmpu3intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu3intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu3intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu3intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu3intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -32161,8 +18493,6 @@ type Pctmpu4interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -32227,8 +18557,6 @@ func (mtr *Pctmpu4interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu4interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -32289,9 +18617,6 @@ func (mtr *Pctmpu4interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -32377,11 +18702,6 @@ func (mtr *Pctmpu4interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu4interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -32514,12 +18834,6 @@ func (mtr *Pctmpu4interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu4interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -32758,14 +19072,6 @@ type Pctmpu4intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -32786,14 +19092,6 @@ func (mtr *Pctmpu4intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu4intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -32810,18 +19108,6 @@ func (mtr *Pctmpu4intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -32841,26 +19127,6 @@ func (mtr *Pctmpu4intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu4intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -32883,30 +19149,6 @@ func (mtr *Pctmpu4intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu4intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu4intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu4intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu4intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -33013,8 +19255,6 @@ type Pctmpu5interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -33079,8 +19319,6 @@ func (mtr *Pctmpu5interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu5interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -33141,9 +19379,6 @@ func (mtr *Pctmpu5interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -33229,11 +19464,6 @@ func (mtr *Pctmpu5interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu5interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -33366,12 +19596,6 @@ func (mtr *Pctmpu5interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu5interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -33610,14 +19834,6 @@ type Pctmpu5intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -33638,14 +19854,6 @@ func (mtr *Pctmpu5intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu5intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -33662,18 +19870,6 @@ func (mtr *Pctmpu5intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -33693,26 +19889,6 @@ func (mtr *Pctmpu5intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu5intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -33735,30 +19911,6 @@ func (mtr *Pctmpu5intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu5intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu5intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu5intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu5intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -33865,8 +20017,6 @@ type Pctmpu6interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -33931,8 +20081,6 @@ func (mtr *Pctmpu6interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu6interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -33993,9 +20141,6 @@ func (mtr *Pctmpu6interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -34081,11 +20226,6 @@ func (mtr *Pctmpu6interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu6interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -34218,12 +20358,6 @@ func (mtr *Pctmpu6interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu6interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -34462,14 +20596,6 @@ type Pctmpu6intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -34490,14 +20616,6 @@ func (mtr *Pctmpu6intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu6intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -34514,18 +20632,6 @@ func (mtr *Pctmpu6intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -34545,26 +20651,6 @@ func (mtr *Pctmpu6intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu6intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -34587,30 +20673,6 @@ func (mtr *Pctmpu6intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu6intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu6intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu6intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu6intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -34717,8 +20779,6 @@ type Pctmpu7interrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch metrics.Counter
-
 	SdpMemUncorrectable metrics.Counter
 
 	SdpMemCorrectable metrics.Counter
@@ -34783,8 +20843,6 @@ func (mtr *Pctmpu7interrMetrics) GetKey() uint64 {
 func (mtr *Pctmpu7interrMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.ResultsMismatch.Size()
-
 	sz += mtr.SdpMemUncorrectable.Size()
 
 	sz += mtr.SdpMemCorrectable.Size()
@@ -34845,9 +20903,6 @@ func (mtr *Pctmpu7interrMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.ResultsMismatch = mtr.metrics.GetCounter(offset)
-	offset += mtr.ResultsMismatch.Size()
 
 	mtr.SdpMemUncorrectable = mtr.metrics.GetCounter(offset)
 	offset += mtr.SdpMemUncorrectable.Size()
@@ -34933,11 +20988,6 @@ func (mtr *Pctmpu7interrMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu7interrMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "ResultsMismatch" {
-		return offset
-	}
-	offset += mtr.ResultsMismatch.Size()
 
 	if fldName == "SdpMemUncorrectable" {
 		return offset
@@ -35070,12 +21120,6 @@ func (mtr *Pctmpu7interrMetrics) getOffset(fldName string) int {
 	offset += mtr.CacheParity_3.Size()
 
 	return offset
-}
-
-// SetResultsMismatch sets cunter in shared memory
-func (mtr *Pctmpu7interrMetrics) SetResultsMismatch(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
-	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
@@ -35314,14 +21358,6 @@ type Pctmpu7intinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 metrics.Counter
-
-	TraceFull_1 metrics.Counter
-
-	TraceFull_2 metrics.Counter
-
-	TraceFull_3 metrics.Counter
-
 	MpuStop_0 metrics.Counter
 
 	MpuStop_1 metrics.Counter
@@ -35342,14 +21378,6 @@ func (mtr *Pctmpu7intinfoMetrics) GetKey() uint64 {
 func (mtr *Pctmpu7intinfoMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.TraceFull_0.Size()
-
-	sz += mtr.TraceFull_1.Size()
-
-	sz += mtr.TraceFull_2.Size()
-
-	sz += mtr.TraceFull_3.Size()
-
 	sz += mtr.MpuStop_0.Size()
 
 	sz += mtr.MpuStop_1.Size()
@@ -35366,18 +21394,6 @@ func (mtr *Pctmpu7intinfoMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
-
-	mtr.TraceFull_0 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_0.Size()
-
-	mtr.TraceFull_1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_1.Size()
-
-	mtr.TraceFull_2 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_2.Size()
-
-	mtr.TraceFull_3 = mtr.metrics.GetCounter(offset)
-	offset += mtr.TraceFull_3.Size()
 
 	mtr.MpuStop_0 = mtr.metrics.GetCounter(offset)
 	offset += mtr.MpuStop_0.Size()
@@ -35397,26 +21413,6 @@ func (mtr *Pctmpu7intinfoMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *Pctmpu7intinfoMetrics) getOffset(fldName string) int {
 	var offset int
-
-	if fldName == "TraceFull_0" {
-		return offset
-	}
-	offset += mtr.TraceFull_0.Size()
-
-	if fldName == "TraceFull_1" {
-		return offset
-	}
-	offset += mtr.TraceFull_1.Size()
-
-	if fldName == "TraceFull_2" {
-		return offset
-	}
-	offset += mtr.TraceFull_2.Size()
-
-	if fldName == "TraceFull_3" {
-		return offset
-	}
-	offset += mtr.TraceFull_3.Size()
 
 	if fldName == "MpuStop_0" {
 		return offset
@@ -35439,30 +21435,6 @@ func (mtr *Pctmpu7intinfoMetrics) getOffset(fldName string) int {
 	offset += mtr.MpuStop_3.Size()
 
 	return offset
-}
-
-// SetTraceFull_0 sets cunter in shared memory
-func (mtr *Pctmpu7intinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
-	return nil
-}
-
-// SetTraceFull_1 sets cunter in shared memory
-func (mtr *Pctmpu7intinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
-	return nil
-}
-
-// SetTraceFull_2 sets cunter in shared memory
-func (mtr *Pctmpu7intinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
-	return nil
-}
-
-// SetTraceFull_3 sets cunter in shared memory
-func (mtr *Pctmpu7intinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
-	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
@@ -36451,33 +22423,7 @@ type Pbpbcintwrite0Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -36491,33 +22437,7 @@ func (mtr *Pbpbcintwrite0Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite0Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -36528,47 +22448,8 @@ func (mtr *Pbpbcintwrite0Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -36577,160 +22458,17 @@ func (mtr *Pbpbcintwrite0Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite0Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite0Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite0Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -36814,33 +22552,7 @@ type Pbpbcintwrite1Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -36854,33 +22566,7 @@ func (mtr *Pbpbcintwrite1Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite1Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -36891,47 +22577,8 @@ func (mtr *Pbpbcintwrite1Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -36940,160 +22587,17 @@ func (mtr *Pbpbcintwrite1Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite1Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite1Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite1Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -37177,33 +22681,7 @@ type Pbpbcintwrite2Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -37217,33 +22695,7 @@ func (mtr *Pbpbcintwrite2Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite2Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -37254,47 +22706,8 @@ func (mtr *Pbpbcintwrite2Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -37303,160 +22716,17 @@ func (mtr *Pbpbcintwrite2Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite2Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite2Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite2Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -37540,33 +22810,7 @@ type Pbpbcintwrite3Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -37580,33 +22824,7 @@ func (mtr *Pbpbcintwrite3Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite3Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -37617,47 +22835,8 @@ func (mtr *Pbpbcintwrite3Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -37666,160 +22845,17 @@ func (mtr *Pbpbcintwrite3Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite3Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite3Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite3Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -37903,33 +22939,7 @@ type Pbpbcintwrite4Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -37943,33 +22953,7 @@ func (mtr *Pbpbcintwrite4Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite4Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -37980,47 +22964,8 @@ func (mtr *Pbpbcintwrite4Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -38029,160 +22974,17 @@ func (mtr *Pbpbcintwrite4Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite4Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite4Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite4Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -38266,33 +23068,7 @@ type Pbpbcintwrite5Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -38306,33 +23082,7 @@ func (mtr *Pbpbcintwrite5Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite5Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -38343,47 +23093,8 @@ func (mtr *Pbpbcintwrite5Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -38392,160 +23103,17 @@ func (mtr *Pbpbcintwrite5Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite5Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite5Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite5Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -38629,33 +23197,7 @@ type Pbpbcintwrite6Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -38669,33 +23211,7 @@ func (mtr *Pbpbcintwrite6Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite6Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -38706,47 +23222,8 @@ func (mtr *Pbpbcintwrite6Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -38755,160 +23232,17 @@ func (mtr *Pbpbcintwrite6Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite6Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite6Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite6Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -38992,33 +23326,7 @@ type Pbpbcintwrite7Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -39032,33 +23340,7 @@ func (mtr *Pbpbcintwrite7Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite7Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -39069,47 +23351,8 @@ func (mtr *Pbpbcintwrite7Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -39118,160 +23361,17 @@ func (mtr *Pbpbcintwrite7Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite7Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite7Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite7Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -39355,33 +23455,7 @@ type Pbpbcintwrite8Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -39395,33 +23469,7 @@ func (mtr *Pbpbcintwrite8Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite8Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -39432,47 +23480,8 @@ func (mtr *Pbpbcintwrite8Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -39481,160 +23490,17 @@ func (mtr *Pbpbcintwrite8Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite8Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite8Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite8Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -39718,33 +23584,7 @@ type Pbpbcintwrite9Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -39758,33 +23598,7 @@ func (mtr *Pbpbcintwrite9Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite9Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -39795,47 +23609,8 @@ func (mtr *Pbpbcintwrite9Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -39844,160 +23619,17 @@ func (mtr *Pbpbcintwrite9Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite9Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite9Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite9Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -40081,33 +23713,7 @@ type Pbpbcintwrite10Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -40121,33 +23727,7 @@ func (mtr *Pbpbcintwrite10Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite10Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -40158,47 +23738,8 @@ func (mtr *Pbpbcintwrite10Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -40207,160 +23748,17 @@ func (mtr *Pbpbcintwrite10Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite10Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite10Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite10Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -40444,33 +23842,7 @@ type Pbpbcintwrite11Metrics struct {
 
 	key uint64
 
-	OutOfCells metrics.Counter
-
-	OutOfCredit metrics.Counter
-
-	PortDisabled metrics.Counter
-
-	Truncation metrics.Counter
-
-	IntrinsicDrop metrics.Counter
-
-	OutOfCells1 metrics.Counter
-
-	EnqErr metrics.Counter
-
-	TailDropCpu metrics.Counter
-
-	TailDropSpan metrics.Counter
-
-	MinSizeViol metrics.Counter
-
-	PortRange metrics.Counter
-
 	CreditGrowthError metrics.Counter
-
-	OqRange metrics.Counter
-
-	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -40484,33 +23856,7 @@ func (mtr *Pbpbcintwrite11Metrics) GetKey() uint64 {
 func (mtr *Pbpbcintwrite11Metrics) Size() int {
 	sz := 0
 
-	sz += mtr.OutOfCells.Size()
-
-	sz += mtr.OutOfCredit.Size()
-
-	sz += mtr.PortDisabled.Size()
-
-	sz += mtr.Truncation.Size()
-
-	sz += mtr.IntrinsicDrop.Size()
-
-	sz += mtr.OutOfCells1.Size()
-
-	sz += mtr.EnqErr.Size()
-
-	sz += mtr.TailDropCpu.Size()
-
-	sz += mtr.TailDropSpan.Size()
-
-	sz += mtr.MinSizeViol.Size()
-
-	sz += mtr.PortRange.Size()
-
 	sz += mtr.CreditGrowthError.Size()
-
-	sz += mtr.OqRange.Size()
-
-	sz += mtr.XoffTimeout.Size()
 
 	return sz
 }
@@ -40521,47 +23867,8 @@ func (mtr *Pbpbcintwrite11Metrics) Unmarshal() error {
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
-	mtr.OutOfCells = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells.Size()
-
-	mtr.OutOfCredit = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCredit.Size()
-
-	mtr.PortDisabled = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortDisabled.Size()
-
-	mtr.Truncation = mtr.metrics.GetCounter(offset)
-	offset += mtr.Truncation.Size()
-
-	mtr.IntrinsicDrop = mtr.metrics.GetCounter(offset)
-	offset += mtr.IntrinsicDrop.Size()
-
-	mtr.OutOfCells1 = mtr.metrics.GetCounter(offset)
-	offset += mtr.OutOfCells1.Size()
-
-	mtr.EnqErr = mtr.metrics.GetCounter(offset)
-	offset += mtr.EnqErr.Size()
-
-	mtr.TailDropCpu = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropCpu.Size()
-
-	mtr.TailDropSpan = mtr.metrics.GetCounter(offset)
-	offset += mtr.TailDropSpan.Size()
-
-	mtr.MinSizeViol = mtr.metrics.GetCounter(offset)
-	offset += mtr.MinSizeViol.Size()
-
-	mtr.PortRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.PortRange.Size()
-
 	mtr.CreditGrowthError = mtr.metrics.GetCounter(offset)
 	offset += mtr.CreditGrowthError.Size()
-
-	mtr.OqRange = mtr.metrics.GetCounter(offset)
-	offset += mtr.OqRange.Size()
-
-	mtr.XoffTimeout = mtr.metrics.GetCounter(offset)
-	offset += mtr.XoffTimeout.Size()
 
 	return nil
 }
@@ -40570,160 +23877,17 @@ func (mtr *Pbpbcintwrite11Metrics) Unmarshal() error {
 func (mtr *Pbpbcintwrite11Metrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "OutOfCells" {
-		return offset
-	}
-	offset += mtr.OutOfCells.Size()
-
-	if fldName == "OutOfCredit" {
-		return offset
-	}
-	offset += mtr.OutOfCredit.Size()
-
-	if fldName == "PortDisabled" {
-		return offset
-	}
-	offset += mtr.PortDisabled.Size()
-
-	if fldName == "Truncation" {
-		return offset
-	}
-	offset += mtr.Truncation.Size()
-
-	if fldName == "IntrinsicDrop" {
-		return offset
-	}
-	offset += mtr.IntrinsicDrop.Size()
-
-	if fldName == "OutOfCells1" {
-		return offset
-	}
-	offset += mtr.OutOfCells1.Size()
-
-	if fldName == "EnqErr" {
-		return offset
-	}
-	offset += mtr.EnqErr.Size()
-
-	if fldName == "TailDropCpu" {
-		return offset
-	}
-	offset += mtr.TailDropCpu.Size()
-
-	if fldName == "TailDropSpan" {
-		return offset
-	}
-	offset += mtr.TailDropSpan.Size()
-
-	if fldName == "MinSizeViol" {
-		return offset
-	}
-	offset += mtr.MinSizeViol.Size()
-
-	if fldName == "PortRange" {
-		return offset
-	}
-	offset += mtr.PortRange.Size()
-
 	if fldName == "CreditGrowthError" {
 		return offset
 	}
 	offset += mtr.CreditGrowthError.Size()
 
-	if fldName == "OqRange" {
-		return offset
-	}
-	offset += mtr.OqRange.Size()
-
-	if fldName == "XoffTimeout" {
-		return offset
-	}
-	offset += mtr.XoffTimeout.Size()
-
 	return offset
-}
-
-// SetOutOfCells sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetOutOfCells(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
-	return nil
-}
-
-// SetOutOfCredit sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetOutOfCredit(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
-	return nil
-}
-
-// SetPortDisabled sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetPortDisabled(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
-	return nil
-}
-
-// SetTruncation sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetTruncation(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
-	return nil
-}
-
-// SetIntrinsicDrop sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetIntrinsicDrop(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
-	return nil
-}
-
-// SetOutOfCells1 sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetOutOfCells1(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
-	return nil
-}
-
-// SetEnqErr sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetEnqErr(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
-	return nil
-}
-
-// SetTailDropCpu sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetTailDropCpu(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
-	return nil
-}
-
-// SetTailDropSpan sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetTailDropSpan(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
-	return nil
-}
-
-// SetMinSizeViol sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetMinSizeViol(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
-	return nil
-}
-
-// SetPortRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetPortRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
-	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
 func (mtr *Pbpbcintwrite11Metrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
-	return nil
-}
-
-// SetOqRange sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetOqRange(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
-	return nil
-}
-
-// SetXoffTimeout sets cunter in shared memory
-func (mtr *Pbpbcintwrite11Metrics) SetXoffTimeout(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
 
@@ -42204,8 +25368,6 @@ type PbpbcintrplMetrics struct {
 
 	MemoryError metrics.Counter
 
-	ZeroLastError metrics.Counter
-
 	// private state
 	metrics gometrics.Metrics
 }
@@ -42220,8 +25382,6 @@ func (mtr *PbpbcintrplMetrics) Size() int {
 
 	sz += mtr.MemoryError.Size()
 
-	sz += mtr.ZeroLastError.Size()
-
 	return sz
 }
 
@@ -42233,9 +25393,6 @@ func (mtr *PbpbcintrplMetrics) Unmarshal() error {
 
 	mtr.MemoryError = mtr.metrics.GetCounter(offset)
 	offset += mtr.MemoryError.Size()
-
-	mtr.ZeroLastError = mtr.metrics.GetCounter(offset)
-	offset += mtr.ZeroLastError.Size()
 
 	return nil
 }
@@ -42249,23 +25406,12 @@ func (mtr *PbpbcintrplMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.MemoryError.Size()
 
-	if fldName == "ZeroLastError" {
-		return offset
-	}
-	offset += mtr.ZeroLastError.Size()
-
 	return offset
 }
 
 // SetMemoryError sets cunter in shared memory
 func (mtr *PbpbcintrplMetrics) SetMemoryError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MemoryError"))
-	return nil
-}
-
-// SetZeroLastError sets cunter in shared memory
-func (mtr *PbpbcintrplMetrics) SetZeroLastError(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("ZeroLastError"))
 	return nil
 }
 
@@ -44052,4 +27198,8182 @@ func NewPbpbchbmintecchbmwbMetricsIterator() (*PbpbchbmintecchbmwbMetricsIterato
 	}
 
 	return &PbpbchbmintecchbmwbMetricsIterator{iter: iter}, nil
+}
+
+type PbpbchbmintecchbmhtMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *PbpbchbmintecchbmhtMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *PbpbchbmintecchbmhtMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *PbpbchbmintecchbmhtMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *PbpbchbmintecchbmhtMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *PbpbchbmintecchbmhtMetrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *PbpbchbmintecchbmhtMetrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// PbpbchbmintecchbmhtMetricsIterator is the iterator object
+type PbpbchbmintecchbmhtMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *PbpbchbmintecchbmhtMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *PbpbchbmintecchbmhtMetricsIterator) Next() *PbpbchbmintecchbmhtMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &PbpbchbmintecchbmhtMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *PbpbchbmintecchbmhtMetricsIterator) Find(key uint64) (*PbpbchbmintecchbmhtMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &PbpbchbmintecchbmhtMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *PbpbchbmintecchbmhtMetricsIterator) Create(key uint64) (*PbpbchbmintecchbmhtMetrics, error) {
+	tmtr := &PbpbchbmintecchbmhtMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &PbpbchbmintecchbmhtMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *PbpbchbmintecchbmhtMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbmintecchbmhtMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPbpbchbmintecchbmhtMetricsIterator returns an iterator
+func NewPbpbchbmintecchbmhtMetricsIterator() (*PbpbchbmintecchbmhtMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("PbpbchbmintecchbmhtMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &PbpbchbmintecchbmhtMetricsIterator{iter: iter}, nil
+}
+
+type PbpbchbminthbmpbusviolationinMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	SopSopIn_0 metrics.Counter
+
+	SopSopIn_1 metrics.Counter
+
+	SopSopIn_2 metrics.Counter
+
+	SopSopIn_3 metrics.Counter
+
+	SopSopIn_4 metrics.Counter
+
+	SopSopIn_5 metrics.Counter
+
+	SopSopIn_6 metrics.Counter
+
+	SopSopIn_7 metrics.Counter
+
+	SopSopIn_8 metrics.Counter
+
+	SopSopIn_9 metrics.Counter
+
+	EopEopIn_0 metrics.Counter
+
+	EopEopIn_1 metrics.Counter
+
+	EopEopIn_2 metrics.Counter
+
+	EopEopIn_3 metrics.Counter
+
+	EopEopIn_4 metrics.Counter
+
+	EopEopIn_5 metrics.Counter
+
+	EopEopIn_6 metrics.Counter
+
+	EopEopIn_7 metrics.Counter
+
+	EopEopIn_8 metrics.Counter
+
+	EopEopIn_9 metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.SopSopIn_0.Size()
+
+	sz += mtr.SopSopIn_1.Size()
+
+	sz += mtr.SopSopIn_2.Size()
+
+	sz += mtr.SopSopIn_3.Size()
+
+	sz += mtr.SopSopIn_4.Size()
+
+	sz += mtr.SopSopIn_5.Size()
+
+	sz += mtr.SopSopIn_6.Size()
+
+	sz += mtr.SopSopIn_7.Size()
+
+	sz += mtr.SopSopIn_8.Size()
+
+	sz += mtr.SopSopIn_9.Size()
+
+	sz += mtr.EopEopIn_0.Size()
+
+	sz += mtr.EopEopIn_1.Size()
+
+	sz += mtr.EopEopIn_2.Size()
+
+	sz += mtr.EopEopIn_3.Size()
+
+	sz += mtr.EopEopIn_4.Size()
+
+	sz += mtr.EopEopIn_5.Size()
+
+	sz += mtr.EopEopIn_6.Size()
+
+	sz += mtr.EopEopIn_7.Size()
+
+	sz += mtr.EopEopIn_8.Size()
+
+	sz += mtr.EopEopIn_9.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.SopSopIn_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_0.Size()
+
+	mtr.SopSopIn_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_1.Size()
+
+	mtr.SopSopIn_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_2.Size()
+
+	mtr.SopSopIn_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_3.Size()
+
+	mtr.SopSopIn_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_4.Size()
+
+	mtr.SopSopIn_5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_5.Size()
+
+	mtr.SopSopIn_6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_6.Size()
+
+	mtr.SopSopIn_7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_7.Size()
+
+	mtr.SopSopIn_8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_8.Size()
+
+	mtr.SopSopIn_9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopIn_9.Size()
+
+	mtr.EopEopIn_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_0.Size()
+
+	mtr.EopEopIn_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_1.Size()
+
+	mtr.EopEopIn_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_2.Size()
+
+	mtr.EopEopIn_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_3.Size()
+
+	mtr.EopEopIn_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_4.Size()
+
+	mtr.EopEopIn_5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_5.Size()
+
+	mtr.EopEopIn_6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_6.Size()
+
+	mtr.EopEopIn_7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_7.Size()
+
+	mtr.EopEopIn_8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_8.Size()
+
+	mtr.EopEopIn_9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopIn_9.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "SopSopIn_0" {
+		return offset
+	}
+	offset += mtr.SopSopIn_0.Size()
+
+	if fldName == "SopSopIn_1" {
+		return offset
+	}
+	offset += mtr.SopSopIn_1.Size()
+
+	if fldName == "SopSopIn_2" {
+		return offset
+	}
+	offset += mtr.SopSopIn_2.Size()
+
+	if fldName == "SopSopIn_3" {
+		return offset
+	}
+	offset += mtr.SopSopIn_3.Size()
+
+	if fldName == "SopSopIn_4" {
+		return offset
+	}
+	offset += mtr.SopSopIn_4.Size()
+
+	if fldName == "SopSopIn_5" {
+		return offset
+	}
+	offset += mtr.SopSopIn_5.Size()
+
+	if fldName == "SopSopIn_6" {
+		return offset
+	}
+	offset += mtr.SopSopIn_6.Size()
+
+	if fldName == "SopSopIn_7" {
+		return offset
+	}
+	offset += mtr.SopSopIn_7.Size()
+
+	if fldName == "SopSopIn_8" {
+		return offset
+	}
+	offset += mtr.SopSopIn_8.Size()
+
+	if fldName == "SopSopIn_9" {
+		return offset
+	}
+	offset += mtr.SopSopIn_9.Size()
+
+	if fldName == "EopEopIn_0" {
+		return offset
+	}
+	offset += mtr.EopEopIn_0.Size()
+
+	if fldName == "EopEopIn_1" {
+		return offset
+	}
+	offset += mtr.EopEopIn_1.Size()
+
+	if fldName == "EopEopIn_2" {
+		return offset
+	}
+	offset += mtr.EopEopIn_2.Size()
+
+	if fldName == "EopEopIn_3" {
+		return offset
+	}
+	offset += mtr.EopEopIn_3.Size()
+
+	if fldName == "EopEopIn_4" {
+		return offset
+	}
+	offset += mtr.EopEopIn_4.Size()
+
+	if fldName == "EopEopIn_5" {
+		return offset
+	}
+	offset += mtr.EopEopIn_5.Size()
+
+	if fldName == "EopEopIn_6" {
+		return offset
+	}
+	offset += mtr.EopEopIn_6.Size()
+
+	if fldName == "EopEopIn_7" {
+		return offset
+	}
+	offset += mtr.EopEopIn_7.Size()
+
+	if fldName == "EopEopIn_8" {
+		return offset
+	}
+	offset += mtr.EopEopIn_8.Size()
+
+	if fldName == "EopEopIn_9" {
+		return offset
+	}
+	offset += mtr.EopEopIn_9.Size()
+
+	return offset
+}
+
+// SetSopSopIn_0 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_0"))
+	return nil
+}
+
+// SetSopSopIn_1 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_1"))
+	return nil
+}
+
+// SetSopSopIn_2 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_2"))
+	return nil
+}
+
+// SetSopSopIn_3 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_3"))
+	return nil
+}
+
+// SetSopSopIn_4 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_4"))
+	return nil
+}
+
+// SetSopSopIn_5 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_5"))
+	return nil
+}
+
+// SetSopSopIn_6 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_6"))
+	return nil
+}
+
+// SetSopSopIn_7 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_7"))
+	return nil
+}
+
+// SetSopSopIn_8 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_8"))
+	return nil
+}
+
+// SetSopSopIn_9 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetSopSopIn_9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_9"))
+	return nil
+}
+
+// SetEopEopIn_0 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_0"))
+	return nil
+}
+
+// SetEopEopIn_1 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_1"))
+	return nil
+}
+
+// SetEopEopIn_2 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_2"))
+	return nil
+}
+
+// SetEopEopIn_3 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_3"))
+	return nil
+}
+
+// SetEopEopIn_4 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_4"))
+	return nil
+}
+
+// SetEopEopIn_5 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_5"))
+	return nil
+}
+
+// SetEopEopIn_6 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_6"))
+	return nil
+}
+
+// SetEopEopIn_7 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_7"))
+	return nil
+}
+
+// SetEopEopIn_8 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_8"))
+	return nil
+}
+
+// SetEopEopIn_9 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationinMetrics) SetEopEopIn_9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_9"))
+	return nil
+}
+
+// PbpbchbminthbmpbusviolationinMetricsIterator is the iterator object
+type PbpbchbminthbmpbusviolationinMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) Next() *PbpbchbminthbmpbusviolationinMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &PbpbchbminthbmpbusviolationinMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) Find(key uint64) (*PbpbchbminthbmpbusviolationinMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &PbpbchbminthbmpbusviolationinMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) Create(key uint64) (*PbpbchbminthbmpbusviolationinMetrics, error) {
+	tmtr := &PbpbchbminthbmpbusviolationinMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &PbpbchbminthbmpbusviolationinMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbminthbmpbusviolationinMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPbpbchbminthbmpbusviolationinMetricsIterator returns an iterator
+func NewPbpbchbminthbmpbusviolationinMetricsIterator() (*PbpbchbminthbmpbusviolationinMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("PbpbchbminthbmpbusviolationinMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &PbpbchbminthbmpbusviolationinMetricsIterator{iter: iter}, nil
+}
+
+type PbpbchbminthbmpbusviolationoutMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	SopSopOut_0 metrics.Counter
+
+	SopSopOut_1 metrics.Counter
+
+	SopSopOut_2 metrics.Counter
+
+	SopSopOut_3 metrics.Counter
+
+	SopSopOut_4 metrics.Counter
+
+	SopSopOut_5 metrics.Counter
+
+	SopSopOut_6 metrics.Counter
+
+	SopSopOut_7 metrics.Counter
+
+	SopSopOut_8 metrics.Counter
+
+	SopSopOut_9 metrics.Counter
+
+	EopEopOut_0 metrics.Counter
+
+	EopEopOut_1 metrics.Counter
+
+	EopEopOut_2 metrics.Counter
+
+	EopEopOut_3 metrics.Counter
+
+	EopEopOut_4 metrics.Counter
+
+	EopEopOut_5 metrics.Counter
+
+	EopEopOut_6 metrics.Counter
+
+	EopEopOut_7 metrics.Counter
+
+	EopEopOut_8 metrics.Counter
+
+	EopEopOut_9 metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.SopSopOut_0.Size()
+
+	sz += mtr.SopSopOut_1.Size()
+
+	sz += mtr.SopSopOut_2.Size()
+
+	sz += mtr.SopSopOut_3.Size()
+
+	sz += mtr.SopSopOut_4.Size()
+
+	sz += mtr.SopSopOut_5.Size()
+
+	sz += mtr.SopSopOut_6.Size()
+
+	sz += mtr.SopSopOut_7.Size()
+
+	sz += mtr.SopSopOut_8.Size()
+
+	sz += mtr.SopSopOut_9.Size()
+
+	sz += mtr.EopEopOut_0.Size()
+
+	sz += mtr.EopEopOut_1.Size()
+
+	sz += mtr.EopEopOut_2.Size()
+
+	sz += mtr.EopEopOut_3.Size()
+
+	sz += mtr.EopEopOut_4.Size()
+
+	sz += mtr.EopEopOut_5.Size()
+
+	sz += mtr.EopEopOut_6.Size()
+
+	sz += mtr.EopEopOut_7.Size()
+
+	sz += mtr.EopEopOut_8.Size()
+
+	sz += mtr.EopEopOut_9.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.SopSopOut_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_0.Size()
+
+	mtr.SopSopOut_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_1.Size()
+
+	mtr.SopSopOut_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_2.Size()
+
+	mtr.SopSopOut_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_3.Size()
+
+	mtr.SopSopOut_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_4.Size()
+
+	mtr.SopSopOut_5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_5.Size()
+
+	mtr.SopSopOut_6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_6.Size()
+
+	mtr.SopSopOut_7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_7.Size()
+
+	mtr.SopSopOut_8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_8.Size()
+
+	mtr.SopSopOut_9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.SopSopOut_9.Size()
+
+	mtr.EopEopOut_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_0.Size()
+
+	mtr.EopEopOut_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_1.Size()
+
+	mtr.EopEopOut_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_2.Size()
+
+	mtr.EopEopOut_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_3.Size()
+
+	mtr.EopEopOut_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_4.Size()
+
+	mtr.EopEopOut_5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_5.Size()
+
+	mtr.EopEopOut_6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_6.Size()
+
+	mtr.EopEopOut_7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_7.Size()
+
+	mtr.EopEopOut_8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_8.Size()
+
+	mtr.EopEopOut_9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.EopEopOut_9.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "SopSopOut_0" {
+		return offset
+	}
+	offset += mtr.SopSopOut_0.Size()
+
+	if fldName == "SopSopOut_1" {
+		return offset
+	}
+	offset += mtr.SopSopOut_1.Size()
+
+	if fldName == "SopSopOut_2" {
+		return offset
+	}
+	offset += mtr.SopSopOut_2.Size()
+
+	if fldName == "SopSopOut_3" {
+		return offset
+	}
+	offset += mtr.SopSopOut_3.Size()
+
+	if fldName == "SopSopOut_4" {
+		return offset
+	}
+	offset += mtr.SopSopOut_4.Size()
+
+	if fldName == "SopSopOut_5" {
+		return offset
+	}
+	offset += mtr.SopSopOut_5.Size()
+
+	if fldName == "SopSopOut_6" {
+		return offset
+	}
+	offset += mtr.SopSopOut_6.Size()
+
+	if fldName == "SopSopOut_7" {
+		return offset
+	}
+	offset += mtr.SopSopOut_7.Size()
+
+	if fldName == "SopSopOut_8" {
+		return offset
+	}
+	offset += mtr.SopSopOut_8.Size()
+
+	if fldName == "SopSopOut_9" {
+		return offset
+	}
+	offset += mtr.SopSopOut_9.Size()
+
+	if fldName == "EopEopOut_0" {
+		return offset
+	}
+	offset += mtr.EopEopOut_0.Size()
+
+	if fldName == "EopEopOut_1" {
+		return offset
+	}
+	offset += mtr.EopEopOut_1.Size()
+
+	if fldName == "EopEopOut_2" {
+		return offset
+	}
+	offset += mtr.EopEopOut_2.Size()
+
+	if fldName == "EopEopOut_3" {
+		return offset
+	}
+	offset += mtr.EopEopOut_3.Size()
+
+	if fldName == "EopEopOut_4" {
+		return offset
+	}
+	offset += mtr.EopEopOut_4.Size()
+
+	if fldName == "EopEopOut_5" {
+		return offset
+	}
+	offset += mtr.EopEopOut_5.Size()
+
+	if fldName == "EopEopOut_6" {
+		return offset
+	}
+	offset += mtr.EopEopOut_6.Size()
+
+	if fldName == "EopEopOut_7" {
+		return offset
+	}
+	offset += mtr.EopEopOut_7.Size()
+
+	if fldName == "EopEopOut_8" {
+		return offset
+	}
+	offset += mtr.EopEopOut_8.Size()
+
+	if fldName == "EopEopOut_9" {
+		return offset
+	}
+	offset += mtr.EopEopOut_9.Size()
+
+	return offset
+}
+
+// SetSopSopOut_0 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_0"))
+	return nil
+}
+
+// SetSopSopOut_1 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_1"))
+	return nil
+}
+
+// SetSopSopOut_2 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_2"))
+	return nil
+}
+
+// SetSopSopOut_3 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_3"))
+	return nil
+}
+
+// SetSopSopOut_4 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_4"))
+	return nil
+}
+
+// SetSopSopOut_5 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_5"))
+	return nil
+}
+
+// SetSopSopOut_6 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_6"))
+	return nil
+}
+
+// SetSopSopOut_7 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_7"))
+	return nil
+}
+
+// SetSopSopOut_8 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_8"))
+	return nil
+}
+
+// SetSopSopOut_9 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetSopSopOut_9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopOut_9"))
+	return nil
+}
+
+// SetEopEopOut_0 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_0"))
+	return nil
+}
+
+// SetEopEopOut_1 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_1"))
+	return nil
+}
+
+// SetEopEopOut_2 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_2"))
+	return nil
+}
+
+// SetEopEopOut_3 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_3"))
+	return nil
+}
+
+// SetEopEopOut_4 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_4"))
+	return nil
+}
+
+// SetEopEopOut_5 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_5"))
+	return nil
+}
+
+// SetEopEopOut_6 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_6"))
+	return nil
+}
+
+// SetEopEopOut_7 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_7"))
+	return nil
+}
+
+// SetEopEopOut_8 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_8"))
+	return nil
+}
+
+// SetEopEopOut_9 sets cunter in shared memory
+func (mtr *PbpbchbminthbmpbusviolationoutMetrics) SetEopEopOut_9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopOut_9"))
+	return nil
+}
+
+// PbpbchbminthbmpbusviolationoutMetricsIterator is the iterator object
+type PbpbchbminthbmpbusviolationoutMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) Next() *PbpbchbminthbmpbusviolationoutMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &PbpbchbminthbmpbusviolationoutMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) Find(key uint64) (*PbpbchbminthbmpbusviolationoutMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &PbpbchbminthbmpbusviolationoutMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) Create(key uint64) (*PbpbchbminthbmpbusviolationoutMetrics, error) {
+	tmtr := &PbpbchbminthbmpbusviolationoutMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &PbpbchbminthbmpbusviolationoutMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbminthbmpbusviolationoutMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPbpbchbminthbmpbusviolationoutMetricsIterator returns an iterator
+func NewPbpbchbminthbmpbusviolationoutMetricsIterator() (*PbpbchbminthbmpbusviolationoutMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("PbpbchbminthbmpbusviolationoutMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &PbpbchbminthbmpbusviolationoutMetricsIterator{iter: iter}, nil
+}
+
+type PbpbchbminthbmaxierrrspMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Ctrl metrics.Counter
+
+	Pyld metrics.Counter
+
+	R2A metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *PbpbchbminthbmaxierrrspMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *PbpbchbminthbmaxierrrspMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Ctrl.Size()
+
+	sz += mtr.Pyld.Size()
+
+	sz += mtr.R2A.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *PbpbchbminthbmaxierrrspMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Ctrl = mtr.metrics.GetCounter(offset)
+	offset += mtr.Ctrl.Size()
+
+	mtr.Pyld = mtr.metrics.GetCounter(offset)
+	offset += mtr.Pyld.Size()
+
+	mtr.R2A = mtr.metrics.GetCounter(offset)
+	offset += mtr.R2A.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *PbpbchbminthbmaxierrrspMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Ctrl" {
+		return offset
+	}
+	offset += mtr.Ctrl.Size()
+
+	if fldName == "Pyld" {
+		return offset
+	}
+	offset += mtr.Pyld.Size()
+
+	if fldName == "R2A" {
+		return offset
+	}
+	offset += mtr.R2A.Size()
+
+	return offset
+}
+
+// SetCtrl sets cunter in shared memory
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetCtrl(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Ctrl"))
+	return nil
+}
+
+// SetPyld sets cunter in shared memory
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetPyld(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Pyld"))
+	return nil
+}
+
+// SetR2A sets cunter in shared memory
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetR2A(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("R2A"))
+	return nil
+}
+
+// PbpbchbminthbmaxierrrspMetricsIterator is the iterator object
+type PbpbchbminthbmaxierrrspMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Next() *PbpbchbminthbmaxierrrspMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &PbpbchbminthbmaxierrrspMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Find(key uint64) (*PbpbchbminthbmaxierrrspMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &PbpbchbminthbmaxierrrspMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Create(key uint64) (*PbpbchbminthbmaxierrrspMetrics, error) {
+	tmtr := &PbpbchbminthbmaxierrrspMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &PbpbchbminthbmaxierrrspMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPbpbchbminthbmaxierrrspMetricsIterator returns an iterator
+func NewPbpbchbminthbmaxierrrspMetricsIterator() (*PbpbchbminthbmaxierrrspMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("PbpbchbminthbmaxierrrspMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &PbpbchbminthbmaxierrrspMetricsIterator{iter: iter}, nil
+}
+
+type Pmpbmintecccol0Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Pmpbmintecccol0Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Pmpbmintecccol0Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Pmpbmintecccol0Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Pmpbmintecccol0Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol0Metrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol0Metrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// Pmpbmintecccol0MetricsIterator is the iterator object
+type Pmpbmintecccol0MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Pmpbmintecccol0MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Pmpbmintecccol0MetricsIterator) Next() *Pmpbmintecccol0Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Pmpbmintecccol0Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Pmpbmintecccol0MetricsIterator) Find(key uint64) (*Pmpbmintecccol0Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Pmpbmintecccol0Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Pmpbmintecccol0MetricsIterator) Create(key uint64) (*Pmpbmintecccol0Metrics, error) {
+	tmtr := &Pmpbmintecccol0Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Pmpbmintecccol0Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Pmpbmintecccol0MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Pmpbmintecccol0MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPmpbmintecccol0MetricsIterator returns an iterator
+func NewPmpbmintecccol0MetricsIterator() (*Pmpbmintecccol0MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Pmpbmintecccol0Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Pmpbmintecccol0MetricsIterator{iter: iter}, nil
+}
+
+type Pmpbmintecccol1Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Pmpbmintecccol1Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Pmpbmintecccol1Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Pmpbmintecccol1Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Pmpbmintecccol1Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol1Metrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol1Metrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// Pmpbmintecccol1MetricsIterator is the iterator object
+type Pmpbmintecccol1MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Pmpbmintecccol1MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Pmpbmintecccol1MetricsIterator) Next() *Pmpbmintecccol1Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Pmpbmintecccol1Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Pmpbmintecccol1MetricsIterator) Find(key uint64) (*Pmpbmintecccol1Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Pmpbmintecccol1Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Pmpbmintecccol1MetricsIterator) Create(key uint64) (*Pmpbmintecccol1Metrics, error) {
+	tmtr := &Pmpbmintecccol1Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Pmpbmintecccol1Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Pmpbmintecccol1MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Pmpbmintecccol1MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPmpbmintecccol1MetricsIterator returns an iterator
+func NewPmpbmintecccol1MetricsIterator() (*Pmpbmintecccol1MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Pmpbmintecccol1Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Pmpbmintecccol1MetricsIterator{iter: iter}, nil
+}
+
+type Pmpbmintecccol2Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Pmpbmintecccol2Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Pmpbmintecccol2Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Pmpbmintecccol2Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Pmpbmintecccol2Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol2Metrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol2Metrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// Pmpbmintecccol2MetricsIterator is the iterator object
+type Pmpbmintecccol2MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Pmpbmintecccol2MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Pmpbmintecccol2MetricsIterator) Next() *Pmpbmintecccol2Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Pmpbmintecccol2Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Pmpbmintecccol2MetricsIterator) Find(key uint64) (*Pmpbmintecccol2Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Pmpbmintecccol2Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Pmpbmintecccol2MetricsIterator) Create(key uint64) (*Pmpbmintecccol2Metrics, error) {
+	tmtr := &Pmpbmintecccol2Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Pmpbmintecccol2Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Pmpbmintecccol2MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Pmpbmintecccol2MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPmpbmintecccol2MetricsIterator returns an iterator
+func NewPmpbmintecccol2MetricsIterator() (*Pmpbmintecccol2MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Pmpbmintecccol2Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Pmpbmintecccol2MetricsIterator{iter: iter}, nil
+}
+
+type Pmpbmintecccol3Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Pmpbmintecccol3Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Pmpbmintecccol3Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Pmpbmintecccol3Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Pmpbmintecccol3Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol3Metrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol3Metrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// Pmpbmintecccol3MetricsIterator is the iterator object
+type Pmpbmintecccol3MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Pmpbmintecccol3MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Pmpbmintecccol3MetricsIterator) Next() *Pmpbmintecccol3Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Pmpbmintecccol3Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Pmpbmintecccol3MetricsIterator) Find(key uint64) (*Pmpbmintecccol3Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Pmpbmintecccol3Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Pmpbmintecccol3MetricsIterator) Create(key uint64) (*Pmpbmintecccol3Metrics, error) {
+	tmtr := &Pmpbmintecccol3Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Pmpbmintecccol3Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Pmpbmintecccol3MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Pmpbmintecccol3MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPmpbmintecccol3MetricsIterator returns an iterator
+func NewPmpbmintecccol3MetricsIterator() (*Pmpbmintecccol3MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Pmpbmintecccol3Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Pmpbmintecccol3MetricsIterator{iter: iter}, nil
+}
+
+type Pmpbmintecccol4Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Uncorrectable metrics.Counter
+
+	Correctable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Pmpbmintecccol4Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Pmpbmintecccol4Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.Uncorrectable.Size()
+
+	sz += mtr.Correctable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Pmpbmintecccol4Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Uncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Uncorrectable.Size()
+
+	mtr.Correctable = mtr.metrics.GetCounter(offset)
+	offset += mtr.Correctable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Pmpbmintecccol4Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Uncorrectable" {
+		return offset
+	}
+	offset += mtr.Uncorrectable.Size()
+
+	if fldName == "Correctable" {
+		return offset
+	}
+	offset += mtr.Correctable.Size()
+
+	return offset
+}
+
+// SetUncorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol4Metrics) SetUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
+	return nil
+}
+
+// SetCorrectable sets cunter in shared memory
+func (mtr *Pmpbmintecccol4Metrics) SetCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
+	return nil
+}
+
+// Pmpbmintecccol4MetricsIterator is the iterator object
+type Pmpbmintecccol4MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Pmpbmintecccol4MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Pmpbmintecccol4MetricsIterator) Next() *Pmpbmintecccol4Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Pmpbmintecccol4Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Pmpbmintecccol4MetricsIterator) Find(key uint64) (*Pmpbmintecccol4Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Pmpbmintecccol4Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Pmpbmintecccol4MetricsIterator) Create(key uint64) (*Pmpbmintecccol4Metrics, error) {
+	tmtr := &Pmpbmintecccol4Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Pmpbmintecccol4Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Pmpbmintecccol4MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Pmpbmintecccol4MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewPmpbmintecccol4MetricsIterator returns an iterator
+func NewPmpbmintecccol4MetricsIterator() (*Pmpbmintecccol4MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Pmpbmintecccol4Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Pmpbmintecccol4MetricsIterator{iter: iter}, nil
+}
+
+type DbwaintlifqstatemapMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	EccUncorrectable metrics.Counter
+
+	EccCorrectable metrics.Counter
+
+	QidInvalid metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *DbwaintlifqstatemapMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *DbwaintlifqstatemapMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.EccUncorrectable.Size()
+
+	sz += mtr.EccCorrectable.Size()
+
+	sz += mtr.QidInvalid.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *DbwaintlifqstatemapMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.EccUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.EccUncorrectable.Size()
+
+	mtr.EccCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.EccCorrectable.Size()
+
+	mtr.QidInvalid = mtr.metrics.GetCounter(offset)
+	offset += mtr.QidInvalid.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *DbwaintlifqstatemapMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "EccUncorrectable" {
+		return offset
+	}
+	offset += mtr.EccUncorrectable.Size()
+
+	if fldName == "EccCorrectable" {
+		return offset
+	}
+	offset += mtr.EccCorrectable.Size()
+
+	if fldName == "QidInvalid" {
+		return offset
+	}
+	offset += mtr.QidInvalid.Size()
+
+	return offset
+}
+
+// SetEccUncorrectable sets cunter in shared memory
+func (mtr *DbwaintlifqstatemapMetrics) SetEccUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EccUncorrectable"))
+	return nil
+}
+
+// SetEccCorrectable sets cunter in shared memory
+func (mtr *DbwaintlifqstatemapMetrics) SetEccCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("EccCorrectable"))
+	return nil
+}
+
+// SetQidInvalid sets cunter in shared memory
+func (mtr *DbwaintlifqstatemapMetrics) SetQidInvalid(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QidInvalid"))
+	return nil
+}
+
+// DbwaintlifqstatemapMetricsIterator is the iterator object
+type DbwaintlifqstatemapMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *DbwaintlifqstatemapMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *DbwaintlifqstatemapMetricsIterator) Next() *DbwaintlifqstatemapMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &DbwaintlifqstatemapMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *DbwaintlifqstatemapMetricsIterator) Find(key uint64) (*DbwaintlifqstatemapMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &DbwaintlifqstatemapMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *DbwaintlifqstatemapMetricsIterator) Create(key uint64) (*DbwaintlifqstatemapMetrics, error) {
+	tmtr := &DbwaintlifqstatemapMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &DbwaintlifqstatemapMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *DbwaintlifqstatemapMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *DbwaintlifqstatemapMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDbwaintlifqstatemapMetricsIterator returns an iterator
+func NewDbwaintlifqstatemapMetricsIterator() (*DbwaintlifqstatemapMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("DbwaintlifqstatemapMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &DbwaintlifqstatemapMetricsIterator{iter: iter}, nil
+}
+
+type DbwaintdbMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	DbPidChkFail metrics.Counter
+
+	DbQidOverflow metrics.Counter
+
+	HostRingAccessErr metrics.Counter
+
+	TotalRingAccessErr metrics.Counter
+
+	RrespErr metrics.Counter
+
+	BrespErr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *DbwaintdbMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *DbwaintdbMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.DbPidChkFail.Size()
+
+	sz += mtr.DbQidOverflow.Size()
+
+	sz += mtr.HostRingAccessErr.Size()
+
+	sz += mtr.TotalRingAccessErr.Size()
+
+	sz += mtr.RrespErr.Size()
+
+	sz += mtr.BrespErr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *DbwaintdbMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.DbPidChkFail = mtr.metrics.GetCounter(offset)
+	offset += mtr.DbPidChkFail.Size()
+
+	mtr.DbQidOverflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.DbQidOverflow.Size()
+
+	mtr.HostRingAccessErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.HostRingAccessErr.Size()
+
+	mtr.TotalRingAccessErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.TotalRingAccessErr.Size()
+
+	mtr.RrespErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RrespErr.Size()
+
+	mtr.BrespErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.BrespErr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *DbwaintdbMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "DbPidChkFail" {
+		return offset
+	}
+	offset += mtr.DbPidChkFail.Size()
+
+	if fldName == "DbQidOverflow" {
+		return offset
+	}
+	offset += mtr.DbQidOverflow.Size()
+
+	if fldName == "HostRingAccessErr" {
+		return offset
+	}
+	offset += mtr.HostRingAccessErr.Size()
+
+	if fldName == "TotalRingAccessErr" {
+		return offset
+	}
+	offset += mtr.TotalRingAccessErr.Size()
+
+	if fldName == "RrespErr" {
+		return offset
+	}
+	offset += mtr.RrespErr.Size()
+
+	if fldName == "BrespErr" {
+		return offset
+	}
+	offset += mtr.BrespErr.Size()
+
+	return offset
+}
+
+// SetDbPidChkFail sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetDbPidChkFail(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DbPidChkFail"))
+	return nil
+}
+
+// SetDbQidOverflow sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetDbQidOverflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DbQidOverflow"))
+	return nil
+}
+
+// SetHostRingAccessErr sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetHostRingAccessErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("HostRingAccessErr"))
+	return nil
+}
+
+// SetTotalRingAccessErr sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetTotalRingAccessErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TotalRingAccessErr"))
+	return nil
+}
+
+// SetRrespErr sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetRrespErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RrespErr"))
+	return nil
+}
+
+// SetBrespErr sets cunter in shared memory
+func (mtr *DbwaintdbMetrics) SetBrespErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("BrespErr"))
+	return nil
+}
+
+// DbwaintdbMetricsIterator is the iterator object
+type DbwaintdbMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *DbwaintdbMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *DbwaintdbMetricsIterator) Next() *DbwaintdbMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &DbwaintdbMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *DbwaintdbMetricsIterator) Find(key uint64) (*DbwaintdbMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &DbwaintdbMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *DbwaintdbMetricsIterator) Create(key uint64) (*DbwaintdbMetrics, error) {
+	tmtr := &DbwaintdbMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &DbwaintdbMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *DbwaintdbMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *DbwaintdbMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDbwaintdbMetricsIterator returns an iterator
+func NewDbwaintdbMetricsIterator() (*DbwaintdbMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("DbwaintdbMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &DbwaintdbMetricsIterator{iter: iter}, nil
+}
+
+type SsipicsintpicsMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	TooManyRlSchError metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsipicsintpicsMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsipicsintpicsMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.TooManyRlSchError.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsipicsintpicsMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.TooManyRlSchError = mtr.metrics.GetCounter(offset)
+	offset += mtr.TooManyRlSchError.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsipicsintpicsMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "TooManyRlSchError" {
+		return offset
+	}
+	offset += mtr.TooManyRlSchError.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *SsipicsintpicsMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *SsipicsintpicsMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetTooManyRlSchError sets cunter in shared memory
+func (mtr *SsipicsintpicsMetrics) SetTooManyRlSchError(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TooManyRlSchError"))
+	return nil
+}
+
+// SsipicsintpicsMetricsIterator is the iterator object
+type SsipicsintpicsMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsipicsintpicsMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsipicsintpicsMetricsIterator) Next() *SsipicsintpicsMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsipicsintpicsMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsipicsintpicsMetricsIterator) Find(key uint64) (*SsipicsintpicsMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsipicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsipicsintpicsMetricsIterator) Create(key uint64) (*SsipicsintpicsMetrics, error) {
+	tmtr := &SsipicsintpicsMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsipicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsipicsintpicsMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsipicsintpicsMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsipicsintpicsMetricsIterator returns an iterator
+func NewSsipicsintpicsMetricsIterator() (*SsipicsintpicsMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsipicsintpicsMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsipicsintpicsMetricsIterator{iter: iter}, nil
+}
+
+type SsipicsintbadaddrMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Rdreq0BadAddr metrics.Counter
+
+	Wrreq0BadAddr metrics.Counter
+
+	Rdreq1BadAddr metrics.Counter
+
+	Wrreq1BadAddr metrics.Counter
+
+	Rdreq2BadAddr metrics.Counter
+
+	Wrreq2BadAddr metrics.Counter
+
+	Rdreq3BadAddr metrics.Counter
+
+	Wrreq3BadAddr metrics.Counter
+
+	Rdreq4BadAddr metrics.Counter
+
+	Wrreq4BadAddr metrics.Counter
+
+	Rdreq5BadAddr metrics.Counter
+
+	Wrreq5BadAddr metrics.Counter
+
+	Rdreq6BadAddr metrics.Counter
+
+	Wrreq6BadAddr metrics.Counter
+
+	Rdreq7BadAddr metrics.Counter
+
+	Wrreq7BadAddr metrics.Counter
+
+	CpuBadAddr metrics.Counter
+
+	BgBadAddr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsipicsintbadaddrMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsipicsintbadaddrMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Rdreq0BadAddr.Size()
+
+	sz += mtr.Wrreq0BadAddr.Size()
+
+	sz += mtr.Rdreq1BadAddr.Size()
+
+	sz += mtr.Wrreq1BadAddr.Size()
+
+	sz += mtr.Rdreq2BadAddr.Size()
+
+	sz += mtr.Wrreq2BadAddr.Size()
+
+	sz += mtr.Rdreq3BadAddr.Size()
+
+	sz += mtr.Wrreq3BadAddr.Size()
+
+	sz += mtr.Rdreq4BadAddr.Size()
+
+	sz += mtr.Wrreq4BadAddr.Size()
+
+	sz += mtr.Rdreq5BadAddr.Size()
+
+	sz += mtr.Wrreq5BadAddr.Size()
+
+	sz += mtr.Rdreq6BadAddr.Size()
+
+	sz += mtr.Wrreq6BadAddr.Size()
+
+	sz += mtr.Rdreq7BadAddr.Size()
+
+	sz += mtr.Wrreq7BadAddr.Size()
+
+	sz += mtr.CpuBadAddr.Size()
+
+	sz += mtr.BgBadAddr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsipicsintbadaddrMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Rdreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	mtr.Wrreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	mtr.Rdreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	mtr.Wrreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	mtr.Rdreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	mtr.Wrreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	mtr.Rdreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	mtr.Wrreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	mtr.Rdreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	mtr.Wrreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	mtr.Rdreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	mtr.Wrreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	mtr.Rdreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	mtr.Wrreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	mtr.Rdreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	mtr.Wrreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	mtr.CpuBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CpuBadAddr.Size()
+
+	mtr.BgBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.BgBadAddr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsipicsintbadaddrMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Rdreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	if fldName == "Wrreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	if fldName == "Rdreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	if fldName == "Wrreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	if fldName == "Rdreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	if fldName == "Wrreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	if fldName == "Rdreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	if fldName == "Wrreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	if fldName == "Rdreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	if fldName == "Wrreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	if fldName == "Rdreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	if fldName == "Wrreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	if fldName == "Rdreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	if fldName == "Wrreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	if fldName == "Rdreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	if fldName == "Wrreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	if fldName == "CpuBadAddr" {
+		return offset
+	}
+	offset += mtr.CpuBadAddr.Size()
+
+	if fldName == "BgBadAddr" {
+		return offset
+	}
+	offset += mtr.BgBadAddr.Size()
+
+	return offset
+}
+
+// SetRdreq0BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq0BadAddr"))
+	return nil
+}
+
+// SetWrreq0BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq0BadAddr"))
+	return nil
+}
+
+// SetRdreq1BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq1BadAddr"))
+	return nil
+}
+
+// SetWrreq1BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq1BadAddr"))
+	return nil
+}
+
+// SetRdreq2BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq2BadAddr"))
+	return nil
+}
+
+// SetWrreq2BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq2BadAddr"))
+	return nil
+}
+
+// SetRdreq3BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq3BadAddr"))
+	return nil
+}
+
+// SetWrreq3BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq3BadAddr"))
+	return nil
+}
+
+// SetRdreq4BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq4BadAddr"))
+	return nil
+}
+
+// SetWrreq4BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq4BadAddr"))
+	return nil
+}
+
+// SetRdreq5BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq5BadAddr"))
+	return nil
+}
+
+// SetWrreq5BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq5BadAddr"))
+	return nil
+}
+
+// SetRdreq6BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq6BadAddr"))
+	return nil
+}
+
+// SetWrreq6BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq6BadAddr"))
+	return nil
+}
+
+// SetRdreq7BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetRdreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq7BadAddr"))
+	return nil
+}
+
+// SetWrreq7BadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetWrreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq7BadAddr"))
+	return nil
+}
+
+// SetCpuBadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetCpuBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CpuBadAddr"))
+	return nil
+}
+
+// SetBgBadAddr sets cunter in shared memory
+func (mtr *SsipicsintbadaddrMetrics) SetBgBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("BgBadAddr"))
+	return nil
+}
+
+// SsipicsintbadaddrMetricsIterator is the iterator object
+type SsipicsintbadaddrMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsipicsintbadaddrMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsipicsintbadaddrMetricsIterator) Next() *SsipicsintbadaddrMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsipicsintbadaddrMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsipicsintbadaddrMetricsIterator) Find(key uint64) (*SsipicsintbadaddrMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsipicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsipicsintbadaddrMetricsIterator) Create(key uint64) (*SsipicsintbadaddrMetrics, error) {
+	tmtr := &SsipicsintbadaddrMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsipicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsipicsintbadaddrMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsipicsintbadaddrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsipicsintbadaddrMetricsIterator returns an iterator
+func NewSsipicsintbadaddrMetricsIterator() (*SsipicsintbadaddrMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsipicsintbadaddrMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsipicsintbadaddrMetricsIterator{iter: iter}, nil
+}
+
+type SsipicsintbgMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UnfinishedBg0 metrics.Counter
+
+	UnfinishedBg1 metrics.Counter
+
+	UnfinishedBg2 metrics.Counter
+
+	UnfinishedBg3 metrics.Counter
+
+	UnfinishedBg4 metrics.Counter
+
+	UnfinishedBg5 metrics.Counter
+
+	UnfinishedBg6 metrics.Counter
+
+	UnfinishedBg7 metrics.Counter
+
+	UnfinishedBg8 metrics.Counter
+
+	UnfinishedBg9 metrics.Counter
+
+	UnfinishedBg10 metrics.Counter
+
+	UnfinishedBg11 metrics.Counter
+
+	UnfinishedBg12 metrics.Counter
+
+	UnfinishedBg13 metrics.Counter
+
+	UnfinishedBg14 metrics.Counter
+
+	UnfinishedBg15 metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsipicsintbgMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsipicsintbgMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UnfinishedBg0.Size()
+
+	sz += mtr.UnfinishedBg1.Size()
+
+	sz += mtr.UnfinishedBg2.Size()
+
+	sz += mtr.UnfinishedBg3.Size()
+
+	sz += mtr.UnfinishedBg4.Size()
+
+	sz += mtr.UnfinishedBg5.Size()
+
+	sz += mtr.UnfinishedBg6.Size()
+
+	sz += mtr.UnfinishedBg7.Size()
+
+	sz += mtr.UnfinishedBg8.Size()
+
+	sz += mtr.UnfinishedBg9.Size()
+
+	sz += mtr.UnfinishedBg10.Size()
+
+	sz += mtr.UnfinishedBg11.Size()
+
+	sz += mtr.UnfinishedBg12.Size()
+
+	sz += mtr.UnfinishedBg13.Size()
+
+	sz += mtr.UnfinishedBg14.Size()
+
+	sz += mtr.UnfinishedBg15.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsipicsintbgMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UnfinishedBg0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg0.Size()
+
+	mtr.UnfinishedBg1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg1.Size()
+
+	mtr.UnfinishedBg2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg2.Size()
+
+	mtr.UnfinishedBg3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg3.Size()
+
+	mtr.UnfinishedBg4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg4.Size()
+
+	mtr.UnfinishedBg5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg5.Size()
+
+	mtr.UnfinishedBg6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg6.Size()
+
+	mtr.UnfinishedBg7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg7.Size()
+
+	mtr.UnfinishedBg8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg8.Size()
+
+	mtr.UnfinishedBg9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg9.Size()
+
+	mtr.UnfinishedBg10 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg10.Size()
+
+	mtr.UnfinishedBg11 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg11.Size()
+
+	mtr.UnfinishedBg12 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg12.Size()
+
+	mtr.UnfinishedBg13 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg13.Size()
+
+	mtr.UnfinishedBg14 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg14.Size()
+
+	mtr.UnfinishedBg15 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg15.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsipicsintbgMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UnfinishedBg0" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg0.Size()
+
+	if fldName == "UnfinishedBg1" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg1.Size()
+
+	if fldName == "UnfinishedBg2" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg2.Size()
+
+	if fldName == "UnfinishedBg3" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg3.Size()
+
+	if fldName == "UnfinishedBg4" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg4.Size()
+
+	if fldName == "UnfinishedBg5" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg5.Size()
+
+	if fldName == "UnfinishedBg6" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg6.Size()
+
+	if fldName == "UnfinishedBg7" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg7.Size()
+
+	if fldName == "UnfinishedBg8" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg8.Size()
+
+	if fldName == "UnfinishedBg9" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg9.Size()
+
+	if fldName == "UnfinishedBg10" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg10.Size()
+
+	if fldName == "UnfinishedBg11" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg11.Size()
+
+	if fldName == "UnfinishedBg12" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg12.Size()
+
+	if fldName == "UnfinishedBg13" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg13.Size()
+
+	if fldName == "UnfinishedBg14" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg14.Size()
+
+	if fldName == "UnfinishedBg15" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg15.Size()
+
+	return offset
+}
+
+// SetUnfinishedBg0 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg0"))
+	return nil
+}
+
+// SetUnfinishedBg1 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg1"))
+	return nil
+}
+
+// SetUnfinishedBg2 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg2"))
+	return nil
+}
+
+// SetUnfinishedBg3 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg3"))
+	return nil
+}
+
+// SetUnfinishedBg4 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg4"))
+	return nil
+}
+
+// SetUnfinishedBg5 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg5"))
+	return nil
+}
+
+// SetUnfinishedBg6 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg6"))
+	return nil
+}
+
+// SetUnfinishedBg7 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg7"))
+	return nil
+}
+
+// SetUnfinishedBg8 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg8"))
+	return nil
+}
+
+// SetUnfinishedBg9 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg9"))
+	return nil
+}
+
+// SetUnfinishedBg10 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg10(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg10"))
+	return nil
+}
+
+// SetUnfinishedBg11 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg11(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg11"))
+	return nil
+}
+
+// SetUnfinishedBg12 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg12(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg12"))
+	return nil
+}
+
+// SetUnfinishedBg13 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg13(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg13"))
+	return nil
+}
+
+// SetUnfinishedBg14 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg14(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg14"))
+	return nil
+}
+
+// SetUnfinishedBg15 sets cunter in shared memory
+func (mtr *SsipicsintbgMetrics) SetUnfinishedBg15(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg15"))
+	return nil
+}
+
+// SsipicsintbgMetricsIterator is the iterator object
+type SsipicsintbgMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsipicsintbgMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsipicsintbgMetricsIterator) Next() *SsipicsintbgMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsipicsintbgMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsipicsintbgMetricsIterator) Find(key uint64) (*SsipicsintbgMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsipicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsipicsintbgMetricsIterator) Create(key uint64) (*SsipicsintbgMetrics, error) {
+	tmtr := &SsipicsintbgMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsipicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsipicsintbgMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsipicsintbgMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsipicsintbgMetricsIterator returns an iterator
+func NewSsipicsintbgMetricsIterator() (*SsipicsintbgMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsipicsintbgMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsipicsintbgMetricsIterator{iter: iter}, nil
+}
+
+type SsipicspiccintpiccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	CacheStgAwlenErr metrics.Counter
+
+	CacheHbmRrespSlverr metrics.Counter
+
+	CacheHbmRrespDecerr metrics.Counter
+
+	CacheHbmBrespSlverr metrics.Counter
+
+	CacheHbmBrespDecerr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsipicspiccintpiccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsipicspiccintpiccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.CacheStgAwlenErr.Size()
+
+	sz += mtr.CacheHbmRrespSlverr.Size()
+
+	sz += mtr.CacheHbmRrespDecerr.Size()
+
+	sz += mtr.CacheHbmBrespSlverr.Size()
+
+	sz += mtr.CacheHbmBrespDecerr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsipicspiccintpiccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.CacheStgAwlenErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	mtr.CacheHbmRrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	mtr.CacheHbmRrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	mtr.CacheHbmBrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	mtr.CacheHbmBrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsipicspiccintpiccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "CacheStgAwlenErr" {
+		return offset
+	}
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	if fldName == "CacheHbmRrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	if fldName == "CacheHbmRrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	if fldName == "CacheHbmBrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	if fldName == "CacheHbmBrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetCacheStgAwlenErr sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCacheStgAwlenErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheStgAwlenErr"))
+	return nil
+}
+
+// SetCacheHbmRrespSlverr sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCacheHbmRrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmRrespDecerr sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCacheHbmRrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespDecerr"))
+	return nil
+}
+
+// SetCacheHbmBrespSlverr sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCacheHbmBrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmBrespDecerr sets cunter in shared memory
+func (mtr *SsipicspiccintpiccMetrics) SetCacheHbmBrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespDecerr"))
+	return nil
+}
+
+// SsipicspiccintpiccMetricsIterator is the iterator object
+type SsipicspiccintpiccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsipicspiccintpiccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsipicspiccintpiccMetricsIterator) Next() *SsipicspiccintpiccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsipicspiccintpiccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsipicspiccintpiccMetricsIterator) Find(key uint64) (*SsipicspiccintpiccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsipicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsipicspiccintpiccMetricsIterator) Create(key uint64) (*SsipicspiccintpiccMetrics, error) {
+	tmtr := &SsipicspiccintpiccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsipicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsipicspiccintpiccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsipicspiccintpiccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsipicspiccintpiccMetricsIterator returns an iterator
+func NewSsipicspiccintpiccMetricsIterator() (*SsipicspiccintpiccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsipicspiccintpiccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsipicspiccintpiccMetricsIterator{iter: iter}, nil
+}
+
+type SsepicsintpicsMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	TooManyRlSchError metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsepicsintpicsMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsepicsintpicsMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.TooManyRlSchError.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsepicsintpicsMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.TooManyRlSchError = mtr.metrics.GetCounter(offset)
+	offset += mtr.TooManyRlSchError.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsepicsintpicsMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "TooManyRlSchError" {
+		return offset
+	}
+	offset += mtr.TooManyRlSchError.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *SsepicsintpicsMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *SsepicsintpicsMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetTooManyRlSchError sets cunter in shared memory
+func (mtr *SsepicsintpicsMetrics) SetTooManyRlSchError(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TooManyRlSchError"))
+	return nil
+}
+
+// SsepicsintpicsMetricsIterator is the iterator object
+type SsepicsintpicsMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsepicsintpicsMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsepicsintpicsMetricsIterator) Next() *SsepicsintpicsMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsepicsintpicsMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsepicsintpicsMetricsIterator) Find(key uint64) (*SsepicsintpicsMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsepicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsepicsintpicsMetricsIterator) Create(key uint64) (*SsepicsintpicsMetrics, error) {
+	tmtr := &SsepicsintpicsMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsepicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsepicsintpicsMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsepicsintpicsMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsepicsintpicsMetricsIterator returns an iterator
+func NewSsepicsintpicsMetricsIterator() (*SsepicsintpicsMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsepicsintpicsMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsepicsintpicsMetricsIterator{iter: iter}, nil
+}
+
+type SsepicsintbadaddrMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Rdreq0BadAddr metrics.Counter
+
+	Wrreq0BadAddr metrics.Counter
+
+	Rdreq1BadAddr metrics.Counter
+
+	Wrreq1BadAddr metrics.Counter
+
+	Rdreq2BadAddr metrics.Counter
+
+	Wrreq2BadAddr metrics.Counter
+
+	Rdreq3BadAddr metrics.Counter
+
+	Wrreq3BadAddr metrics.Counter
+
+	Rdreq4BadAddr metrics.Counter
+
+	Wrreq4BadAddr metrics.Counter
+
+	Rdreq5BadAddr metrics.Counter
+
+	Wrreq5BadAddr metrics.Counter
+
+	Rdreq6BadAddr metrics.Counter
+
+	Wrreq6BadAddr metrics.Counter
+
+	Rdreq7BadAddr metrics.Counter
+
+	Wrreq7BadAddr metrics.Counter
+
+	CpuBadAddr metrics.Counter
+
+	BgBadAddr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsepicsintbadaddrMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsepicsintbadaddrMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Rdreq0BadAddr.Size()
+
+	sz += mtr.Wrreq0BadAddr.Size()
+
+	sz += mtr.Rdreq1BadAddr.Size()
+
+	sz += mtr.Wrreq1BadAddr.Size()
+
+	sz += mtr.Rdreq2BadAddr.Size()
+
+	sz += mtr.Wrreq2BadAddr.Size()
+
+	sz += mtr.Rdreq3BadAddr.Size()
+
+	sz += mtr.Wrreq3BadAddr.Size()
+
+	sz += mtr.Rdreq4BadAddr.Size()
+
+	sz += mtr.Wrreq4BadAddr.Size()
+
+	sz += mtr.Rdreq5BadAddr.Size()
+
+	sz += mtr.Wrreq5BadAddr.Size()
+
+	sz += mtr.Rdreq6BadAddr.Size()
+
+	sz += mtr.Wrreq6BadAddr.Size()
+
+	sz += mtr.Rdreq7BadAddr.Size()
+
+	sz += mtr.Wrreq7BadAddr.Size()
+
+	sz += mtr.CpuBadAddr.Size()
+
+	sz += mtr.BgBadAddr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsepicsintbadaddrMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Rdreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	mtr.Wrreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	mtr.Rdreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	mtr.Wrreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	mtr.Rdreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	mtr.Wrreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	mtr.Rdreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	mtr.Wrreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	mtr.Rdreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	mtr.Wrreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	mtr.Rdreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	mtr.Wrreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	mtr.Rdreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	mtr.Wrreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	mtr.Rdreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	mtr.Wrreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	mtr.CpuBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CpuBadAddr.Size()
+
+	mtr.BgBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.BgBadAddr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsepicsintbadaddrMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Rdreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	if fldName == "Wrreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	if fldName == "Rdreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	if fldName == "Wrreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	if fldName == "Rdreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	if fldName == "Wrreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	if fldName == "Rdreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	if fldName == "Wrreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	if fldName == "Rdreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	if fldName == "Wrreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	if fldName == "Rdreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	if fldName == "Wrreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	if fldName == "Rdreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	if fldName == "Wrreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	if fldName == "Rdreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	if fldName == "Wrreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	if fldName == "CpuBadAddr" {
+		return offset
+	}
+	offset += mtr.CpuBadAddr.Size()
+
+	if fldName == "BgBadAddr" {
+		return offset
+	}
+	offset += mtr.BgBadAddr.Size()
+
+	return offset
+}
+
+// SetRdreq0BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq0BadAddr"))
+	return nil
+}
+
+// SetWrreq0BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq0BadAddr"))
+	return nil
+}
+
+// SetRdreq1BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq1BadAddr"))
+	return nil
+}
+
+// SetWrreq1BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq1BadAddr"))
+	return nil
+}
+
+// SetRdreq2BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq2BadAddr"))
+	return nil
+}
+
+// SetWrreq2BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq2BadAddr"))
+	return nil
+}
+
+// SetRdreq3BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq3BadAddr"))
+	return nil
+}
+
+// SetWrreq3BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq3BadAddr"))
+	return nil
+}
+
+// SetRdreq4BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq4BadAddr"))
+	return nil
+}
+
+// SetWrreq4BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq4BadAddr"))
+	return nil
+}
+
+// SetRdreq5BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq5BadAddr"))
+	return nil
+}
+
+// SetWrreq5BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq5BadAddr"))
+	return nil
+}
+
+// SetRdreq6BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq6BadAddr"))
+	return nil
+}
+
+// SetWrreq6BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq6BadAddr"))
+	return nil
+}
+
+// SetRdreq7BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq7BadAddr"))
+	return nil
+}
+
+// SetWrreq7BadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq7BadAddr"))
+	return nil
+}
+
+// SetCpuBadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetCpuBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CpuBadAddr"))
+	return nil
+}
+
+// SetBgBadAddr sets cunter in shared memory
+func (mtr *SsepicsintbadaddrMetrics) SetBgBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("BgBadAddr"))
+	return nil
+}
+
+// SsepicsintbadaddrMetricsIterator is the iterator object
+type SsepicsintbadaddrMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsepicsintbadaddrMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsepicsintbadaddrMetricsIterator) Next() *SsepicsintbadaddrMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsepicsintbadaddrMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsepicsintbadaddrMetricsIterator) Find(key uint64) (*SsepicsintbadaddrMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsepicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsepicsintbadaddrMetricsIterator) Create(key uint64) (*SsepicsintbadaddrMetrics, error) {
+	tmtr := &SsepicsintbadaddrMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsepicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsepicsintbadaddrMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsepicsintbadaddrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsepicsintbadaddrMetricsIterator returns an iterator
+func NewSsepicsintbadaddrMetricsIterator() (*SsepicsintbadaddrMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsepicsintbadaddrMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsepicsintbadaddrMetricsIterator{iter: iter}, nil
+}
+
+type SsepicsintbgMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UnfinishedBg0 metrics.Counter
+
+	UnfinishedBg1 metrics.Counter
+
+	UnfinishedBg2 metrics.Counter
+
+	UnfinishedBg3 metrics.Counter
+
+	UnfinishedBg4 metrics.Counter
+
+	UnfinishedBg5 metrics.Counter
+
+	UnfinishedBg6 metrics.Counter
+
+	UnfinishedBg7 metrics.Counter
+
+	UnfinishedBg8 metrics.Counter
+
+	UnfinishedBg9 metrics.Counter
+
+	UnfinishedBg10 metrics.Counter
+
+	UnfinishedBg11 metrics.Counter
+
+	UnfinishedBg12 metrics.Counter
+
+	UnfinishedBg13 metrics.Counter
+
+	UnfinishedBg14 metrics.Counter
+
+	UnfinishedBg15 metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsepicsintbgMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsepicsintbgMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UnfinishedBg0.Size()
+
+	sz += mtr.UnfinishedBg1.Size()
+
+	sz += mtr.UnfinishedBg2.Size()
+
+	sz += mtr.UnfinishedBg3.Size()
+
+	sz += mtr.UnfinishedBg4.Size()
+
+	sz += mtr.UnfinishedBg5.Size()
+
+	sz += mtr.UnfinishedBg6.Size()
+
+	sz += mtr.UnfinishedBg7.Size()
+
+	sz += mtr.UnfinishedBg8.Size()
+
+	sz += mtr.UnfinishedBg9.Size()
+
+	sz += mtr.UnfinishedBg10.Size()
+
+	sz += mtr.UnfinishedBg11.Size()
+
+	sz += mtr.UnfinishedBg12.Size()
+
+	sz += mtr.UnfinishedBg13.Size()
+
+	sz += mtr.UnfinishedBg14.Size()
+
+	sz += mtr.UnfinishedBg15.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsepicsintbgMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UnfinishedBg0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg0.Size()
+
+	mtr.UnfinishedBg1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg1.Size()
+
+	mtr.UnfinishedBg2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg2.Size()
+
+	mtr.UnfinishedBg3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg3.Size()
+
+	mtr.UnfinishedBg4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg4.Size()
+
+	mtr.UnfinishedBg5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg5.Size()
+
+	mtr.UnfinishedBg6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg6.Size()
+
+	mtr.UnfinishedBg7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg7.Size()
+
+	mtr.UnfinishedBg8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg8.Size()
+
+	mtr.UnfinishedBg9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg9.Size()
+
+	mtr.UnfinishedBg10 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg10.Size()
+
+	mtr.UnfinishedBg11 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg11.Size()
+
+	mtr.UnfinishedBg12 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg12.Size()
+
+	mtr.UnfinishedBg13 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg13.Size()
+
+	mtr.UnfinishedBg14 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg14.Size()
+
+	mtr.UnfinishedBg15 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg15.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsepicsintbgMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UnfinishedBg0" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg0.Size()
+
+	if fldName == "UnfinishedBg1" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg1.Size()
+
+	if fldName == "UnfinishedBg2" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg2.Size()
+
+	if fldName == "UnfinishedBg3" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg3.Size()
+
+	if fldName == "UnfinishedBg4" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg4.Size()
+
+	if fldName == "UnfinishedBg5" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg5.Size()
+
+	if fldName == "UnfinishedBg6" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg6.Size()
+
+	if fldName == "UnfinishedBg7" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg7.Size()
+
+	if fldName == "UnfinishedBg8" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg8.Size()
+
+	if fldName == "UnfinishedBg9" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg9.Size()
+
+	if fldName == "UnfinishedBg10" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg10.Size()
+
+	if fldName == "UnfinishedBg11" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg11.Size()
+
+	if fldName == "UnfinishedBg12" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg12.Size()
+
+	if fldName == "UnfinishedBg13" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg13.Size()
+
+	if fldName == "UnfinishedBg14" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg14.Size()
+
+	if fldName == "UnfinishedBg15" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg15.Size()
+
+	return offset
+}
+
+// SetUnfinishedBg0 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg0"))
+	return nil
+}
+
+// SetUnfinishedBg1 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg1"))
+	return nil
+}
+
+// SetUnfinishedBg2 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg2"))
+	return nil
+}
+
+// SetUnfinishedBg3 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg3"))
+	return nil
+}
+
+// SetUnfinishedBg4 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg4"))
+	return nil
+}
+
+// SetUnfinishedBg5 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg5"))
+	return nil
+}
+
+// SetUnfinishedBg6 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg6"))
+	return nil
+}
+
+// SetUnfinishedBg7 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg7"))
+	return nil
+}
+
+// SetUnfinishedBg8 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg8"))
+	return nil
+}
+
+// SetUnfinishedBg9 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg9"))
+	return nil
+}
+
+// SetUnfinishedBg10 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg10(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg10"))
+	return nil
+}
+
+// SetUnfinishedBg11 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg11(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg11"))
+	return nil
+}
+
+// SetUnfinishedBg12 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg12(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg12"))
+	return nil
+}
+
+// SetUnfinishedBg13 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg13(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg13"))
+	return nil
+}
+
+// SetUnfinishedBg14 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg14(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg14"))
+	return nil
+}
+
+// SetUnfinishedBg15 sets cunter in shared memory
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg15(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg15"))
+	return nil
+}
+
+// SsepicsintbgMetricsIterator is the iterator object
+type SsepicsintbgMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsepicsintbgMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsepicsintbgMetricsIterator) Next() *SsepicsintbgMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsepicsintbgMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsepicsintbgMetricsIterator) Find(key uint64) (*SsepicsintbgMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsepicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsepicsintbgMetricsIterator) Create(key uint64) (*SsepicsintbgMetrics, error) {
+	tmtr := &SsepicsintbgMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsepicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsepicsintbgMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsepicsintbgMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsepicsintbgMetricsIterator returns an iterator
+func NewSsepicsintbgMetricsIterator() (*SsepicsintbgMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsepicsintbgMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsepicsintbgMetricsIterator{iter: iter}, nil
+}
+
+type SsepicspiccintpiccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	CacheStgAwlenErr metrics.Counter
+
+	CacheHbmRrespSlverr metrics.Counter
+
+	CacheHbmRrespDecerr metrics.Counter
+
+	CacheHbmBrespSlverr metrics.Counter
+
+	CacheHbmBrespDecerr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *SsepicspiccintpiccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *SsepicspiccintpiccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.CacheStgAwlenErr.Size()
+
+	sz += mtr.CacheHbmRrespSlverr.Size()
+
+	sz += mtr.CacheHbmRrespDecerr.Size()
+
+	sz += mtr.CacheHbmBrespSlverr.Size()
+
+	sz += mtr.CacheHbmBrespDecerr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *SsepicspiccintpiccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.CacheStgAwlenErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	mtr.CacheHbmRrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	mtr.CacheHbmRrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	mtr.CacheHbmBrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	mtr.CacheHbmBrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *SsepicspiccintpiccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "CacheStgAwlenErr" {
+		return offset
+	}
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	if fldName == "CacheHbmRrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	if fldName == "CacheHbmRrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	if fldName == "CacheHbmBrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	if fldName == "CacheHbmBrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetCacheStgAwlenErr sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCacheStgAwlenErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheStgAwlenErr"))
+	return nil
+}
+
+// SetCacheHbmRrespSlverr sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCacheHbmRrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmRrespDecerr sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCacheHbmRrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespDecerr"))
+	return nil
+}
+
+// SetCacheHbmBrespSlverr sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCacheHbmBrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmBrespDecerr sets cunter in shared memory
+func (mtr *SsepicspiccintpiccMetrics) SetCacheHbmBrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespDecerr"))
+	return nil
+}
+
+// SsepicspiccintpiccMetricsIterator is the iterator object
+type SsepicspiccintpiccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *SsepicspiccintpiccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *SsepicspiccintpiccMetricsIterator) Next() *SsepicspiccintpiccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &SsepicspiccintpiccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *SsepicspiccintpiccMetricsIterator) Find(key uint64) (*SsepicspiccintpiccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &SsepicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *SsepicspiccintpiccMetricsIterator) Create(key uint64) (*SsepicspiccintpiccMetrics, error) {
+	tmtr := &SsepicspiccintpiccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &SsepicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *SsepicspiccintpiccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *SsepicspiccintpiccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewSsepicspiccintpiccMetricsIterator returns an iterator
+func NewSsepicspiccintpiccMetricsIterator() (*SsepicspiccintpiccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("SsepicspiccintpiccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &SsepicspiccintpiccMetricsIterator{iter: iter}, nil
+}
+
+type BxbxintmacMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	LaneSbe metrics.Counter
+
+	LaneDbe metrics.Counter
+
+	BxpbPbusDrdy metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *BxbxintmacMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *BxbxintmacMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.LaneSbe.Size()
+
+	sz += mtr.LaneDbe.Size()
+
+	sz += mtr.BxpbPbusDrdy.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *BxbxintmacMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.LaneSbe = mtr.metrics.GetCounter(offset)
+	offset += mtr.LaneSbe.Size()
+
+	mtr.LaneDbe = mtr.metrics.GetCounter(offset)
+	offset += mtr.LaneDbe.Size()
+
+	mtr.BxpbPbusDrdy = mtr.metrics.GetCounter(offset)
+	offset += mtr.BxpbPbusDrdy.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *BxbxintmacMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "LaneSbe" {
+		return offset
+	}
+	offset += mtr.LaneSbe.Size()
+
+	if fldName == "LaneDbe" {
+		return offset
+	}
+	offset += mtr.LaneDbe.Size()
+
+	if fldName == "BxpbPbusDrdy" {
+		return offset
+	}
+	offset += mtr.BxpbPbusDrdy.Size()
+
+	return offset
+}
+
+// SetLaneSbe sets cunter in shared memory
+func (mtr *BxbxintmacMetrics) SetLaneSbe(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LaneSbe"))
+	return nil
+}
+
+// SetLaneDbe sets cunter in shared memory
+func (mtr *BxbxintmacMetrics) SetLaneDbe(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LaneDbe"))
+	return nil
+}
+
+// SetBxpbPbusDrdy sets cunter in shared memory
+func (mtr *BxbxintmacMetrics) SetBxpbPbusDrdy(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("BxpbPbusDrdy"))
+	return nil
+}
+
+// BxbxintmacMetricsIterator is the iterator object
+type BxbxintmacMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *BxbxintmacMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *BxbxintmacMetricsIterator) Next() *BxbxintmacMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &BxbxintmacMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *BxbxintmacMetricsIterator) Find(key uint64) (*BxbxintmacMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &BxbxintmacMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *BxbxintmacMetricsIterator) Create(key uint64) (*BxbxintmacMetrics, error) {
+	tmtr := &BxbxintmacMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &BxbxintmacMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *BxbxintmacMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *BxbxintmacMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewBxbxintmacMetricsIterator returns an iterator
+func NewBxbxintmacMetricsIterator() (*BxbxintmacMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("BxbxintmacMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &BxbxintmacMetricsIterator{iter: iter}, nil
+}
+
+type MdhensintpkeccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	CorrectableErr metrics.Counter
+
+	UncorrectableErr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *MdhensintpkeccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *MdhensintpkeccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.CorrectableErr.Size()
+
+	sz += mtr.UncorrectableErr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *MdhensintpkeccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.CorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableErr.Size()
+
+	mtr.UncorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableErr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *MdhensintpkeccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "CorrectableErr" {
+		return offset
+	}
+	offset += mtr.CorrectableErr.Size()
+
+	if fldName == "UncorrectableErr" {
+		return offset
+	}
+	offset += mtr.UncorrectableErr.Size()
+
+	return offset
+}
+
+// SetCorrectableErr sets cunter in shared memory
+func (mtr *MdhensintpkeccMetrics) SetCorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableErr"))
+	return nil
+}
+
+// SetUncorrectableErr sets cunter in shared memory
+func (mtr *MdhensintpkeccMetrics) SetUncorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableErr"))
+	return nil
+}
+
+// MdhensintpkeccMetricsIterator is the iterator object
+type MdhensintpkeccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *MdhensintpkeccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *MdhensintpkeccMetricsIterator) Next() *MdhensintpkeccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &MdhensintpkeccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *MdhensintpkeccMetricsIterator) Find(key uint64) (*MdhensintpkeccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &MdhensintpkeccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *MdhensintpkeccMetricsIterator) Create(key uint64) (*MdhensintpkeccMetrics, error) {
+	tmtr := &MdhensintpkeccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &MdhensintpkeccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *MdhensintpkeccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *MdhensintpkeccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewMdhensintpkeccMetricsIterator returns an iterator
+func NewMdhensintpkeccMetricsIterator() (*MdhensintpkeccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("MdhensintpkeccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &MdhensintpkeccMetricsIterator{iter: iter}, nil
+}
+
+type MdhensintdrbgintrameccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	CorrectableErr metrics.Counter
+
+	UncorrectableErr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *MdhensintdrbgintrameccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *MdhensintdrbgintrameccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.CorrectableErr.Size()
+
+	sz += mtr.UncorrectableErr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *MdhensintdrbgintrameccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.CorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableErr.Size()
+
+	mtr.UncorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableErr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *MdhensintdrbgintrameccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "CorrectableErr" {
+		return offset
+	}
+	offset += mtr.CorrectableErr.Size()
+
+	if fldName == "UncorrectableErr" {
+		return offset
+	}
+	offset += mtr.UncorrectableErr.Size()
+
+	return offset
+}
+
+// SetCorrectableErr sets cunter in shared memory
+func (mtr *MdhensintdrbgintrameccMetrics) SetCorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableErr"))
+	return nil
+}
+
+// SetUncorrectableErr sets cunter in shared memory
+func (mtr *MdhensintdrbgintrameccMetrics) SetUncorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableErr"))
+	return nil
+}
+
+// MdhensintdrbgintrameccMetricsIterator is the iterator object
+type MdhensintdrbgintrameccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *MdhensintdrbgintrameccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *MdhensintdrbgintrameccMetricsIterator) Next() *MdhensintdrbgintrameccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &MdhensintdrbgintrameccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *MdhensintdrbgintrameccMetricsIterator) Find(key uint64) (*MdhensintdrbgintrameccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &MdhensintdrbgintrameccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *MdhensintdrbgintrameccMetricsIterator) Create(key uint64) (*MdhensintdrbgintrameccMetrics, error) {
+	tmtr := &MdhensintdrbgintrameccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &MdhensintdrbgintrameccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *MdhensintdrbgintrameccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *MdhensintdrbgintrameccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewMdhensintdrbgintrameccMetricsIterator returns an iterator
+func NewMdhensintdrbgintrameccMetricsIterator() (*MdhensintdrbgintrameccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("MdhensintdrbgintrameccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &MdhensintdrbgintrameccMetricsIterator{iter: iter}, nil
+}
+
+type MdhensintdrbgcryptorameccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	CorrectableErr metrics.Counter
+
+	UncorrectableErr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *MdhensintdrbgcryptorameccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *MdhensintdrbgcryptorameccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.CorrectableErr.Size()
+
+	sz += mtr.UncorrectableErr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *MdhensintdrbgcryptorameccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.CorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableErr.Size()
+
+	mtr.UncorrectableErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableErr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *MdhensintdrbgcryptorameccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "CorrectableErr" {
+		return offset
+	}
+	offset += mtr.CorrectableErr.Size()
+
+	if fldName == "UncorrectableErr" {
+		return offset
+	}
+	offset += mtr.UncorrectableErr.Size()
+
+	return offset
+}
+
+// SetCorrectableErr sets cunter in shared memory
+func (mtr *MdhensintdrbgcryptorameccMetrics) SetCorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableErr"))
+	return nil
+}
+
+// SetUncorrectableErr sets cunter in shared memory
+func (mtr *MdhensintdrbgcryptorameccMetrics) SetUncorrectableErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableErr"))
+	return nil
+}
+
+// MdhensintdrbgcryptorameccMetricsIterator is the iterator object
+type MdhensintdrbgcryptorameccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *MdhensintdrbgcryptorameccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *MdhensintdrbgcryptorameccMetricsIterator) Next() *MdhensintdrbgcryptorameccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &MdhensintdrbgcryptorameccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *MdhensintdrbgcryptorameccMetricsIterator) Find(key uint64) (*MdhensintdrbgcryptorameccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &MdhensintdrbgcryptorameccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *MdhensintdrbgcryptorameccMetricsIterator) Create(key uint64) (*MdhensintdrbgcryptorameccMetrics, error) {
+	tmtr := &MdhensintdrbgcryptorameccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &MdhensintdrbgcryptorameccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *MdhensintdrbgcryptorameccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *MdhensintdrbgcryptorameccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewMdhensintdrbgcryptorameccMetricsIterator returns an iterator
+func NewMdhensintdrbgcryptorameccMetricsIterator() (*MdhensintdrbgcryptorameccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("MdhensintdrbgcryptorameccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &MdhensintdrbgcryptorameccMetricsIterator{iter: iter}, nil
+}
+
+type MdhensintaxierrMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	WrspErr metrics.Counter
+
+	RrspErr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *MdhensintaxierrMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *MdhensintaxierrMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.WrspErr.Size()
+
+	sz += mtr.RrspErr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *MdhensintaxierrMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.WrspErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.WrspErr.Size()
+
+	mtr.RrspErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.RrspErr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *MdhensintaxierrMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "WrspErr" {
+		return offset
+	}
+	offset += mtr.WrspErr.Size()
+
+	if fldName == "RrspErr" {
+		return offset
+	}
+	offset += mtr.RrspErr.Size()
+
+	return offset
+}
+
+// SetWrspErr sets cunter in shared memory
+func (mtr *MdhensintaxierrMetrics) SetWrspErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("WrspErr"))
+	return nil
+}
+
+// SetRrspErr sets cunter in shared memory
+func (mtr *MdhensintaxierrMetrics) SetRrspErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RrspErr"))
+	return nil
+}
+
+// MdhensintaxierrMetricsIterator is the iterator object
+type MdhensintaxierrMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *MdhensintaxierrMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *MdhensintaxierrMetricsIterator) Next() *MdhensintaxierrMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &MdhensintaxierrMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *MdhensintaxierrMetricsIterator) Find(key uint64) (*MdhensintaxierrMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &MdhensintaxierrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *MdhensintaxierrMetricsIterator) Create(key uint64) (*MdhensintaxierrMetrics, error) {
+	tmtr := &MdhensintaxierrMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &MdhensintaxierrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *MdhensintaxierrMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *MdhensintaxierrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewMdhensintaxierrMetricsIterator returns an iterator
+func NewMdhensintaxierrMetricsIterator() (*MdhensintaxierrMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("MdhensintaxierrMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &MdhensintaxierrMetricsIterator{iter: iter}, nil
+}
+
+type TpcpicsintpicsMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	TooManyRlSchError metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *TpcpicsintpicsMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *TpcpicsintpicsMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.TooManyRlSchError.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *TpcpicsintpicsMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.TooManyRlSchError = mtr.metrics.GetCounter(offset)
+	offset += mtr.TooManyRlSchError.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *TpcpicsintpicsMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "TooManyRlSchError" {
+		return offset
+	}
+	offset += mtr.TooManyRlSchError.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *TpcpicsintpicsMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *TpcpicsintpicsMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetTooManyRlSchError sets cunter in shared memory
+func (mtr *TpcpicsintpicsMetrics) SetTooManyRlSchError(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TooManyRlSchError"))
+	return nil
+}
+
+// TpcpicsintpicsMetricsIterator is the iterator object
+type TpcpicsintpicsMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *TpcpicsintpicsMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *TpcpicsintpicsMetricsIterator) Next() *TpcpicsintpicsMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &TpcpicsintpicsMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *TpcpicsintpicsMetricsIterator) Find(key uint64) (*TpcpicsintpicsMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &TpcpicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *TpcpicsintpicsMetricsIterator) Create(key uint64) (*TpcpicsintpicsMetrics, error) {
+	tmtr := &TpcpicsintpicsMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &TpcpicsintpicsMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *TpcpicsintpicsMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *TpcpicsintpicsMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewTpcpicsintpicsMetricsIterator returns an iterator
+func NewTpcpicsintpicsMetricsIterator() (*TpcpicsintpicsMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("TpcpicsintpicsMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &TpcpicsintpicsMetricsIterator{iter: iter}, nil
+}
+
+type TpcpicsintbadaddrMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Rdreq0BadAddr metrics.Counter
+
+	Wrreq0BadAddr metrics.Counter
+
+	Rdreq1BadAddr metrics.Counter
+
+	Wrreq1BadAddr metrics.Counter
+
+	Rdreq2BadAddr metrics.Counter
+
+	Wrreq2BadAddr metrics.Counter
+
+	Rdreq3BadAddr metrics.Counter
+
+	Wrreq3BadAddr metrics.Counter
+
+	Rdreq4BadAddr metrics.Counter
+
+	Wrreq4BadAddr metrics.Counter
+
+	Rdreq5BadAddr metrics.Counter
+
+	Wrreq5BadAddr metrics.Counter
+
+	Rdreq6BadAddr metrics.Counter
+
+	Wrreq6BadAddr metrics.Counter
+
+	Rdreq7BadAddr metrics.Counter
+
+	Wrreq7BadAddr metrics.Counter
+
+	CpuBadAddr metrics.Counter
+
+	BgBadAddr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *TpcpicsintbadaddrMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *TpcpicsintbadaddrMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Rdreq0BadAddr.Size()
+
+	sz += mtr.Wrreq0BadAddr.Size()
+
+	sz += mtr.Rdreq1BadAddr.Size()
+
+	sz += mtr.Wrreq1BadAddr.Size()
+
+	sz += mtr.Rdreq2BadAddr.Size()
+
+	sz += mtr.Wrreq2BadAddr.Size()
+
+	sz += mtr.Rdreq3BadAddr.Size()
+
+	sz += mtr.Wrreq3BadAddr.Size()
+
+	sz += mtr.Rdreq4BadAddr.Size()
+
+	sz += mtr.Wrreq4BadAddr.Size()
+
+	sz += mtr.Rdreq5BadAddr.Size()
+
+	sz += mtr.Wrreq5BadAddr.Size()
+
+	sz += mtr.Rdreq6BadAddr.Size()
+
+	sz += mtr.Wrreq6BadAddr.Size()
+
+	sz += mtr.Rdreq7BadAddr.Size()
+
+	sz += mtr.Wrreq7BadAddr.Size()
+
+	sz += mtr.CpuBadAddr.Size()
+
+	sz += mtr.BgBadAddr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *TpcpicsintbadaddrMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Rdreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	mtr.Wrreq0BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	mtr.Rdreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	mtr.Wrreq1BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	mtr.Rdreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	mtr.Wrreq2BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	mtr.Rdreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	mtr.Wrreq3BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	mtr.Rdreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	mtr.Wrreq4BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	mtr.Rdreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	mtr.Wrreq5BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	mtr.Rdreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	mtr.Wrreq6BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	mtr.Rdreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	mtr.Wrreq7BadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	mtr.CpuBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CpuBadAddr.Size()
+
+	mtr.BgBadAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.BgBadAddr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Rdreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq0BadAddr.Size()
+
+	if fldName == "Wrreq0BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq0BadAddr.Size()
+
+	if fldName == "Rdreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq1BadAddr.Size()
+
+	if fldName == "Wrreq1BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq1BadAddr.Size()
+
+	if fldName == "Rdreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq2BadAddr.Size()
+
+	if fldName == "Wrreq2BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq2BadAddr.Size()
+
+	if fldName == "Rdreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq3BadAddr.Size()
+
+	if fldName == "Wrreq3BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq3BadAddr.Size()
+
+	if fldName == "Rdreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq4BadAddr.Size()
+
+	if fldName == "Wrreq4BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq4BadAddr.Size()
+
+	if fldName == "Rdreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq5BadAddr.Size()
+
+	if fldName == "Wrreq5BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq5BadAddr.Size()
+
+	if fldName == "Rdreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq6BadAddr.Size()
+
+	if fldName == "Wrreq6BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq6BadAddr.Size()
+
+	if fldName == "Rdreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Rdreq7BadAddr.Size()
+
+	if fldName == "Wrreq7BadAddr" {
+		return offset
+	}
+	offset += mtr.Wrreq7BadAddr.Size()
+
+	if fldName == "CpuBadAddr" {
+		return offset
+	}
+	offset += mtr.CpuBadAddr.Size()
+
+	if fldName == "BgBadAddr" {
+		return offset
+	}
+	offset += mtr.BgBadAddr.Size()
+
+	return offset
+}
+
+// SetRdreq0BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq0BadAddr"))
+	return nil
+}
+
+// SetWrreq0BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq0BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq0BadAddr"))
+	return nil
+}
+
+// SetRdreq1BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq1BadAddr"))
+	return nil
+}
+
+// SetWrreq1BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq1BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq1BadAddr"))
+	return nil
+}
+
+// SetRdreq2BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq2BadAddr"))
+	return nil
+}
+
+// SetWrreq2BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq2BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq2BadAddr"))
+	return nil
+}
+
+// SetRdreq3BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq3BadAddr"))
+	return nil
+}
+
+// SetWrreq3BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq3BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq3BadAddr"))
+	return nil
+}
+
+// SetRdreq4BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq4BadAddr"))
+	return nil
+}
+
+// SetWrreq4BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq4BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq4BadAddr"))
+	return nil
+}
+
+// SetRdreq5BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq5BadAddr"))
+	return nil
+}
+
+// SetWrreq5BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq5BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq5BadAddr"))
+	return nil
+}
+
+// SetRdreq6BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq6BadAddr"))
+	return nil
+}
+
+// SetWrreq6BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq6BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq6BadAddr"))
+	return nil
+}
+
+// SetRdreq7BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetRdreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq7BadAddr"))
+	return nil
+}
+
+// SetWrreq7BadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetWrreq7BadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq7BadAddr"))
+	return nil
+}
+
+// SetCpuBadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetCpuBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CpuBadAddr"))
+	return nil
+}
+
+// SetBgBadAddr sets cunter in shared memory
+func (mtr *TpcpicsintbadaddrMetrics) SetBgBadAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("BgBadAddr"))
+	return nil
+}
+
+// TpcpicsintbadaddrMetricsIterator is the iterator object
+type TpcpicsintbadaddrMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *TpcpicsintbadaddrMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *TpcpicsintbadaddrMetricsIterator) Next() *TpcpicsintbadaddrMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &TpcpicsintbadaddrMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *TpcpicsintbadaddrMetricsIterator) Find(key uint64) (*TpcpicsintbadaddrMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &TpcpicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *TpcpicsintbadaddrMetricsIterator) Create(key uint64) (*TpcpicsintbadaddrMetrics, error) {
+	tmtr := &TpcpicsintbadaddrMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &TpcpicsintbadaddrMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *TpcpicsintbadaddrMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *TpcpicsintbadaddrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewTpcpicsintbadaddrMetricsIterator returns an iterator
+func NewTpcpicsintbadaddrMetricsIterator() (*TpcpicsintbadaddrMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("TpcpicsintbadaddrMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &TpcpicsintbadaddrMetricsIterator{iter: iter}, nil
+}
+
+type TpcpicsintbgMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UnfinishedBg0 metrics.Counter
+
+	UnfinishedBg1 metrics.Counter
+
+	UnfinishedBg2 metrics.Counter
+
+	UnfinishedBg3 metrics.Counter
+
+	UnfinishedBg4 metrics.Counter
+
+	UnfinishedBg5 metrics.Counter
+
+	UnfinishedBg6 metrics.Counter
+
+	UnfinishedBg7 metrics.Counter
+
+	UnfinishedBg8 metrics.Counter
+
+	UnfinishedBg9 metrics.Counter
+
+	UnfinishedBg10 metrics.Counter
+
+	UnfinishedBg11 metrics.Counter
+
+	UnfinishedBg12 metrics.Counter
+
+	UnfinishedBg13 metrics.Counter
+
+	UnfinishedBg14 metrics.Counter
+
+	UnfinishedBg15 metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *TpcpicsintbgMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *TpcpicsintbgMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UnfinishedBg0.Size()
+
+	sz += mtr.UnfinishedBg1.Size()
+
+	sz += mtr.UnfinishedBg2.Size()
+
+	sz += mtr.UnfinishedBg3.Size()
+
+	sz += mtr.UnfinishedBg4.Size()
+
+	sz += mtr.UnfinishedBg5.Size()
+
+	sz += mtr.UnfinishedBg6.Size()
+
+	sz += mtr.UnfinishedBg7.Size()
+
+	sz += mtr.UnfinishedBg8.Size()
+
+	sz += mtr.UnfinishedBg9.Size()
+
+	sz += mtr.UnfinishedBg10.Size()
+
+	sz += mtr.UnfinishedBg11.Size()
+
+	sz += mtr.UnfinishedBg12.Size()
+
+	sz += mtr.UnfinishedBg13.Size()
+
+	sz += mtr.UnfinishedBg14.Size()
+
+	sz += mtr.UnfinishedBg15.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *TpcpicsintbgMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UnfinishedBg0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg0.Size()
+
+	mtr.UnfinishedBg1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg1.Size()
+
+	mtr.UnfinishedBg2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg2.Size()
+
+	mtr.UnfinishedBg3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg3.Size()
+
+	mtr.UnfinishedBg4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg4.Size()
+
+	mtr.UnfinishedBg5 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg5.Size()
+
+	mtr.UnfinishedBg6 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg6.Size()
+
+	mtr.UnfinishedBg7 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg7.Size()
+
+	mtr.UnfinishedBg8 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg8.Size()
+
+	mtr.UnfinishedBg9 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg9.Size()
+
+	mtr.UnfinishedBg10 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg10.Size()
+
+	mtr.UnfinishedBg11 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg11.Size()
+
+	mtr.UnfinishedBg12 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg12.Size()
+
+	mtr.UnfinishedBg13 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg13.Size()
+
+	mtr.UnfinishedBg14 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg14.Size()
+
+	mtr.UnfinishedBg15 = mtr.metrics.GetCounter(offset)
+	offset += mtr.UnfinishedBg15.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *TpcpicsintbgMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UnfinishedBg0" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg0.Size()
+
+	if fldName == "UnfinishedBg1" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg1.Size()
+
+	if fldName == "UnfinishedBg2" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg2.Size()
+
+	if fldName == "UnfinishedBg3" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg3.Size()
+
+	if fldName == "UnfinishedBg4" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg4.Size()
+
+	if fldName == "UnfinishedBg5" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg5.Size()
+
+	if fldName == "UnfinishedBg6" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg6.Size()
+
+	if fldName == "UnfinishedBg7" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg7.Size()
+
+	if fldName == "UnfinishedBg8" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg8.Size()
+
+	if fldName == "UnfinishedBg9" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg9.Size()
+
+	if fldName == "UnfinishedBg10" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg10.Size()
+
+	if fldName == "UnfinishedBg11" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg11.Size()
+
+	if fldName == "UnfinishedBg12" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg12.Size()
+
+	if fldName == "UnfinishedBg13" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg13.Size()
+
+	if fldName == "UnfinishedBg14" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg14.Size()
+
+	if fldName == "UnfinishedBg15" {
+		return offset
+	}
+	offset += mtr.UnfinishedBg15.Size()
+
+	return offset
+}
+
+// SetUnfinishedBg0 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg0"))
+	return nil
+}
+
+// SetUnfinishedBg1 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg1"))
+	return nil
+}
+
+// SetUnfinishedBg2 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg2"))
+	return nil
+}
+
+// SetUnfinishedBg3 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg3"))
+	return nil
+}
+
+// SetUnfinishedBg4 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg4"))
+	return nil
+}
+
+// SetUnfinishedBg5 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg5(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg5"))
+	return nil
+}
+
+// SetUnfinishedBg6 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg6(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg6"))
+	return nil
+}
+
+// SetUnfinishedBg7 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg7(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg7"))
+	return nil
+}
+
+// SetUnfinishedBg8 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg8(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg8"))
+	return nil
+}
+
+// SetUnfinishedBg9 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg9(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg9"))
+	return nil
+}
+
+// SetUnfinishedBg10 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg10(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg10"))
+	return nil
+}
+
+// SetUnfinishedBg11 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg11(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg11"))
+	return nil
+}
+
+// SetUnfinishedBg12 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg12(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg12"))
+	return nil
+}
+
+// SetUnfinishedBg13 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg13(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg13"))
+	return nil
+}
+
+// SetUnfinishedBg14 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg14(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg14"))
+	return nil
+}
+
+// SetUnfinishedBg15 sets cunter in shared memory
+func (mtr *TpcpicsintbgMetrics) SetUnfinishedBg15(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg15"))
+	return nil
+}
+
+// TpcpicsintbgMetricsIterator is the iterator object
+type TpcpicsintbgMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *TpcpicsintbgMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *TpcpicsintbgMetricsIterator) Next() *TpcpicsintbgMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &TpcpicsintbgMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *TpcpicsintbgMetricsIterator) Find(key uint64) (*TpcpicsintbgMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &TpcpicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *TpcpicsintbgMetricsIterator) Create(key uint64) (*TpcpicsintbgMetrics, error) {
+	tmtr := &TpcpicsintbgMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &TpcpicsintbgMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *TpcpicsintbgMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *TpcpicsintbgMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewTpcpicsintbgMetricsIterator returns an iterator
+func NewTpcpicsintbgMetricsIterator() (*TpcpicsintbgMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("TpcpicsintbgMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &TpcpicsintbgMetricsIterator{iter: iter}, nil
+}
+
+type TpcpicspiccintpiccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	UncorrectableEcc metrics.Counter
+
+	CorrectableEcc metrics.Counter
+
+	CacheStgAwlenErr metrics.Counter
+
+	CacheHbmRrespSlverr metrics.Counter
+
+	CacheHbmRrespDecerr metrics.Counter
+
+	CacheHbmBrespSlverr metrics.Counter
+
+	CacheHbmBrespDecerr metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *TpcpicspiccintpiccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *TpcpicspiccintpiccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.UncorrectableEcc.Size()
+
+	sz += mtr.CorrectableEcc.Size()
+
+	sz += mtr.CacheStgAwlenErr.Size()
+
+	sz += mtr.CacheHbmRrespSlverr.Size()
+
+	sz += mtr.CacheHbmRrespDecerr.Size()
+
+	sz += mtr.CacheHbmBrespSlverr.Size()
+
+	sz += mtr.CacheHbmBrespDecerr.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *TpcpicspiccintpiccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.UncorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.UncorrectableEcc.Size()
+
+	mtr.CorrectableEcc = mtr.metrics.GetCounter(offset)
+	offset += mtr.CorrectableEcc.Size()
+
+	mtr.CacheStgAwlenErr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	mtr.CacheHbmRrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	mtr.CacheHbmRrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	mtr.CacheHbmBrespSlverr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	mtr.CacheHbmBrespDecerr = mtr.metrics.GetCounter(offset)
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "UncorrectableEcc" {
+		return offset
+	}
+	offset += mtr.UncorrectableEcc.Size()
+
+	if fldName == "CorrectableEcc" {
+		return offset
+	}
+	offset += mtr.CorrectableEcc.Size()
+
+	if fldName == "CacheStgAwlenErr" {
+		return offset
+	}
+	offset += mtr.CacheStgAwlenErr.Size()
+
+	if fldName == "CacheHbmRrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespSlverr.Size()
+
+	if fldName == "CacheHbmRrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmRrespDecerr.Size()
+
+	if fldName == "CacheHbmBrespSlverr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespSlverr.Size()
+
+	if fldName == "CacheHbmBrespDecerr" {
+		return offset
+	}
+	offset += mtr.CacheHbmBrespDecerr.Size()
+
+	return offset
+}
+
+// SetUncorrectableEcc sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetUncorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
+	return nil
+}
+
+// SetCorrectableEcc sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCorrectableEcc(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
+	return nil
+}
+
+// SetCacheStgAwlenErr sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCacheStgAwlenErr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheStgAwlenErr"))
+	return nil
+}
+
+// SetCacheHbmRrespSlverr sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCacheHbmRrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmRrespDecerr sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCacheHbmRrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmRrespDecerr"))
+	return nil
+}
+
+// SetCacheHbmBrespSlverr sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCacheHbmBrespSlverr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespSlverr"))
+	return nil
+}
+
+// SetCacheHbmBrespDecerr sets cunter in shared memory
+func (mtr *TpcpicspiccintpiccMetrics) SetCacheHbmBrespDecerr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CacheHbmBrespDecerr"))
+	return nil
+}
+
+// TpcpicspiccintpiccMetricsIterator is the iterator object
+type TpcpicspiccintpiccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *TpcpicspiccintpiccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *TpcpicspiccintpiccMetricsIterator) Next() *TpcpicspiccintpiccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &TpcpicspiccintpiccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *TpcpicspiccintpiccMetricsIterator) Find(key uint64) (*TpcpicspiccintpiccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &TpcpicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *TpcpicspiccintpiccMetricsIterator) Create(key uint64) (*TpcpicspiccintpiccMetrics, error) {
+	tmtr := &TpcpicspiccintpiccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &TpcpicspiccintpiccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *TpcpicspiccintpiccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *TpcpicspiccintpiccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewTpcpicspiccintpiccMetricsIterator returns an iterator
+func NewTpcpicspiccintpiccMetricsIterator() (*TpcpicspiccintpiccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("TpcpicspiccintpiccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &TpcpicspiccintpiccMetricsIterator{iter: iter}, nil
+}
+
+type Dprdpr0intreg1Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	ErrPhvSopNoEop metrics.Counter
+
+	ErrPhvEopNoSop metrics.Counter
+
+	ErrOhiSopNoEop metrics.Counter
+
+	ErrOhiEopNoSop metrics.Counter
+
+	ErrPktinSopNoEop metrics.Counter
+
+	ErrPktinEopNoSop metrics.Counter
+
+	ErrCsumOffsetGtPktSize_4 metrics.Counter
+
+	ErrCsumOffsetGtPktSize_3 metrics.Counter
+
+	ErrCsumOffsetGtPktSize_2 metrics.Counter
+
+	ErrCsumOffsetGtPktSize_1 metrics.Counter
+
+	ErrCsumOffsetGtPktSize_0 metrics.Counter
+
+	ErrCsumPhdrOffsetGtPktSize_4 metrics.Counter
+
+	ErrCsumPhdrOffsetGtPktSize_3 metrics.Counter
+
+	ErrCsumPhdrOffsetGtPktSize_2 metrics.Counter
+
+	ErrCsumPhdrOffsetGtPktSize_1 metrics.Counter
+
+	ErrCsumPhdrOffsetGtPktSize_0 metrics.Counter
+
+	ErrCsumLocGtPktSize_4 metrics.Counter
+
+	ErrCsumLocGtPktSize_3 metrics.Counter
+
+	ErrCsumLocGtPktSize_2 metrics.Counter
+
+	ErrCsumLocGtPktSize_1 metrics.Counter
+
+	ErrCsumLocGtPktSize_0 metrics.Counter
+
+	ErrCrcOffsetGtPktSize metrics.Counter
+
+	ErrCrcLocGtPktSize metrics.Counter
+
+	ErrPtrFfOverflow metrics.Counter
+
+	ErrCsumFfOverflow metrics.Counter
+
+	ErrPktoutFfOverflow metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Dprdpr0intreg1Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Dprdpr0intreg1Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.ErrPhvSopNoEop.Size()
+
+	sz += mtr.ErrPhvEopNoSop.Size()
+
+	sz += mtr.ErrOhiSopNoEop.Size()
+
+	sz += mtr.ErrOhiEopNoSop.Size()
+
+	sz += mtr.ErrPktinSopNoEop.Size()
+
+	sz += mtr.ErrPktinEopNoSop.Size()
+
+	sz += mtr.ErrCsumOffsetGtPktSize_4.Size()
+
+	sz += mtr.ErrCsumOffsetGtPktSize_3.Size()
+
+	sz += mtr.ErrCsumOffsetGtPktSize_2.Size()
+
+	sz += mtr.ErrCsumOffsetGtPktSize_1.Size()
+
+	sz += mtr.ErrCsumOffsetGtPktSize_0.Size()
+
+	sz += mtr.ErrCsumPhdrOffsetGtPktSize_4.Size()
+
+	sz += mtr.ErrCsumPhdrOffsetGtPktSize_3.Size()
+
+	sz += mtr.ErrCsumPhdrOffsetGtPktSize_2.Size()
+
+	sz += mtr.ErrCsumPhdrOffsetGtPktSize_1.Size()
+
+	sz += mtr.ErrCsumPhdrOffsetGtPktSize_0.Size()
+
+	sz += mtr.ErrCsumLocGtPktSize_4.Size()
+
+	sz += mtr.ErrCsumLocGtPktSize_3.Size()
+
+	sz += mtr.ErrCsumLocGtPktSize_2.Size()
+
+	sz += mtr.ErrCsumLocGtPktSize_1.Size()
+
+	sz += mtr.ErrCsumLocGtPktSize_0.Size()
+
+	sz += mtr.ErrCrcOffsetGtPktSize.Size()
+
+	sz += mtr.ErrCrcLocGtPktSize.Size()
+
+	sz += mtr.ErrPtrFfOverflow.Size()
+
+	sz += mtr.ErrCsumFfOverflow.Size()
+
+	sz += mtr.ErrPktoutFfOverflow.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Dprdpr0intreg1Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.ErrPhvSopNoEop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPhvSopNoEop.Size()
+
+	mtr.ErrPhvEopNoSop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPhvEopNoSop.Size()
+
+	mtr.ErrOhiSopNoEop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrOhiSopNoEop.Size()
+
+	mtr.ErrOhiEopNoSop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrOhiEopNoSop.Size()
+
+	mtr.ErrPktinSopNoEop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPktinSopNoEop.Size()
+
+	mtr.ErrPktinEopNoSop = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPktinEopNoSop.Size()
+
+	mtr.ErrCsumOffsetGtPktSize_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumOffsetGtPktSize_4.Size()
+
+	mtr.ErrCsumOffsetGtPktSize_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumOffsetGtPktSize_3.Size()
+
+	mtr.ErrCsumOffsetGtPktSize_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumOffsetGtPktSize_2.Size()
+
+	mtr.ErrCsumOffsetGtPktSize_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumOffsetGtPktSize_1.Size()
+
+	mtr.ErrCsumOffsetGtPktSize_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumOffsetGtPktSize_0.Size()
+
+	mtr.ErrCsumPhdrOffsetGtPktSize_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_4.Size()
+
+	mtr.ErrCsumPhdrOffsetGtPktSize_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_3.Size()
+
+	mtr.ErrCsumPhdrOffsetGtPktSize_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_2.Size()
+
+	mtr.ErrCsumPhdrOffsetGtPktSize_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_1.Size()
+
+	mtr.ErrCsumPhdrOffsetGtPktSize_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_0.Size()
+
+	mtr.ErrCsumLocGtPktSize_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumLocGtPktSize_4.Size()
+
+	mtr.ErrCsumLocGtPktSize_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumLocGtPktSize_3.Size()
+
+	mtr.ErrCsumLocGtPktSize_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumLocGtPktSize_2.Size()
+
+	mtr.ErrCsumLocGtPktSize_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumLocGtPktSize_1.Size()
+
+	mtr.ErrCsumLocGtPktSize_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumLocGtPktSize_0.Size()
+
+	mtr.ErrCrcOffsetGtPktSize = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCrcOffsetGtPktSize.Size()
+
+	mtr.ErrCrcLocGtPktSize = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCrcLocGtPktSize.Size()
+
+	mtr.ErrPtrFfOverflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPtrFfOverflow.Size()
+
+	mtr.ErrCsumFfOverflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumFfOverflow.Size()
+
+	mtr.ErrPktoutFfOverflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrPktoutFfOverflow.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Dprdpr0intreg1Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "ErrPhvSopNoEop" {
+		return offset
+	}
+	offset += mtr.ErrPhvSopNoEop.Size()
+
+	if fldName == "ErrPhvEopNoSop" {
+		return offset
+	}
+	offset += mtr.ErrPhvEopNoSop.Size()
+
+	if fldName == "ErrOhiSopNoEop" {
+		return offset
+	}
+	offset += mtr.ErrOhiSopNoEop.Size()
+
+	if fldName == "ErrOhiEopNoSop" {
+		return offset
+	}
+	offset += mtr.ErrOhiEopNoSop.Size()
+
+	if fldName == "ErrPktinSopNoEop" {
+		return offset
+	}
+	offset += mtr.ErrPktinSopNoEop.Size()
+
+	if fldName == "ErrPktinEopNoSop" {
+		return offset
+	}
+	offset += mtr.ErrPktinEopNoSop.Size()
+
+	if fldName == "ErrCsumOffsetGtPktSize_4" {
+		return offset
+	}
+	offset += mtr.ErrCsumOffsetGtPktSize_4.Size()
+
+	if fldName == "ErrCsumOffsetGtPktSize_3" {
+		return offset
+	}
+	offset += mtr.ErrCsumOffsetGtPktSize_3.Size()
+
+	if fldName == "ErrCsumOffsetGtPktSize_2" {
+		return offset
+	}
+	offset += mtr.ErrCsumOffsetGtPktSize_2.Size()
+
+	if fldName == "ErrCsumOffsetGtPktSize_1" {
+		return offset
+	}
+	offset += mtr.ErrCsumOffsetGtPktSize_1.Size()
+
+	if fldName == "ErrCsumOffsetGtPktSize_0" {
+		return offset
+	}
+	offset += mtr.ErrCsumOffsetGtPktSize_0.Size()
+
+	if fldName == "ErrCsumPhdrOffsetGtPktSize_4" {
+		return offset
+	}
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_4.Size()
+
+	if fldName == "ErrCsumPhdrOffsetGtPktSize_3" {
+		return offset
+	}
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_3.Size()
+
+	if fldName == "ErrCsumPhdrOffsetGtPktSize_2" {
+		return offset
+	}
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_2.Size()
+
+	if fldName == "ErrCsumPhdrOffsetGtPktSize_1" {
+		return offset
+	}
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_1.Size()
+
+	if fldName == "ErrCsumPhdrOffsetGtPktSize_0" {
+		return offset
+	}
+	offset += mtr.ErrCsumPhdrOffsetGtPktSize_0.Size()
+
+	if fldName == "ErrCsumLocGtPktSize_4" {
+		return offset
+	}
+	offset += mtr.ErrCsumLocGtPktSize_4.Size()
+
+	if fldName == "ErrCsumLocGtPktSize_3" {
+		return offset
+	}
+	offset += mtr.ErrCsumLocGtPktSize_3.Size()
+
+	if fldName == "ErrCsumLocGtPktSize_2" {
+		return offset
+	}
+	offset += mtr.ErrCsumLocGtPktSize_2.Size()
+
+	if fldName == "ErrCsumLocGtPktSize_1" {
+		return offset
+	}
+	offset += mtr.ErrCsumLocGtPktSize_1.Size()
+
+	if fldName == "ErrCsumLocGtPktSize_0" {
+		return offset
+	}
+	offset += mtr.ErrCsumLocGtPktSize_0.Size()
+
+	if fldName == "ErrCrcOffsetGtPktSize" {
+		return offset
+	}
+	offset += mtr.ErrCrcOffsetGtPktSize.Size()
+
+	if fldName == "ErrCrcLocGtPktSize" {
+		return offset
+	}
+	offset += mtr.ErrCrcLocGtPktSize.Size()
+
+	if fldName == "ErrPtrFfOverflow" {
+		return offset
+	}
+	offset += mtr.ErrPtrFfOverflow.Size()
+
+	if fldName == "ErrCsumFfOverflow" {
+		return offset
+	}
+	offset += mtr.ErrCsumFfOverflow.Size()
+
+	if fldName == "ErrPktoutFfOverflow" {
+		return offset
+	}
+	offset += mtr.ErrPktoutFfOverflow.Size()
+
+	return offset
+}
+
+// SetErrPhvSopNoEop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPhvSopNoEop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvSopNoEop"))
+	return nil
+}
+
+// SetErrPhvEopNoSop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPhvEopNoSop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvEopNoSop"))
+	return nil
+}
+
+// SetErrOhiSopNoEop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrOhiSopNoEop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiSopNoEop"))
+	return nil
+}
+
+// SetErrOhiEopNoSop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrOhiEopNoSop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiEopNoSop"))
+	return nil
+}
+
+// SetErrPktinSopNoEop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPktinSopNoEop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktinSopNoEop"))
+	return nil
+}
+
+// SetErrPktinEopNoSop sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPktinEopNoSop(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktinEopNoSop"))
+	return nil
+}
+
+// SetErrCsumOffsetGtPktSize_4 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumOffsetGtPktSize_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_4"))
+	return nil
+}
+
+// SetErrCsumOffsetGtPktSize_3 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumOffsetGtPktSize_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_3"))
+	return nil
+}
+
+// SetErrCsumOffsetGtPktSize_2 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumOffsetGtPktSize_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_2"))
+	return nil
+}
+
+// SetErrCsumOffsetGtPktSize_1 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumOffsetGtPktSize_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_1"))
+	return nil
+}
+
+// SetErrCsumOffsetGtPktSize_0 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumOffsetGtPktSize_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_0"))
+	return nil
+}
+
+// SetErrCsumPhdrOffsetGtPktSize_4 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_4"))
+	return nil
+}
+
+// SetErrCsumPhdrOffsetGtPktSize_3 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_3"))
+	return nil
+}
+
+// SetErrCsumPhdrOffsetGtPktSize_2 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_2"))
+	return nil
+}
+
+// SetErrCsumPhdrOffsetGtPktSize_1 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_1"))
+	return nil
+}
+
+// SetErrCsumPhdrOffsetGtPktSize_0 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_0"))
+	return nil
+}
+
+// SetErrCsumLocGtPktSize_4 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumLocGtPktSize_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_4"))
+	return nil
+}
+
+// SetErrCsumLocGtPktSize_3 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumLocGtPktSize_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_3"))
+	return nil
+}
+
+// SetErrCsumLocGtPktSize_2 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumLocGtPktSize_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_2"))
+	return nil
+}
+
+// SetErrCsumLocGtPktSize_1 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumLocGtPktSize_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_1"))
+	return nil
+}
+
+// SetErrCsumLocGtPktSize_0 sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumLocGtPktSize_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_0"))
+	return nil
+}
+
+// SetErrCrcOffsetGtPktSize sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCrcOffsetGtPktSize(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcOffsetGtPktSize"))
+	return nil
+}
+
+// SetErrCrcLocGtPktSize sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCrcLocGtPktSize(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcLocGtPktSize"))
+	return nil
+}
+
+// SetErrPtrFfOverflow sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPtrFfOverflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPtrFfOverflow"))
+	return nil
+}
+
+// SetErrCsumFfOverflow sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrCsumFfOverflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumFfOverflow"))
+	return nil
+}
+
+// SetErrPktoutFfOverflow sets cunter in shared memory
+func (mtr *Dprdpr0intreg1Metrics) SetErrPktoutFfOverflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktoutFfOverflow"))
+	return nil
+}
+
+// Dprdpr0intreg1MetricsIterator is the iterator object
+type Dprdpr0intreg1MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Dprdpr0intreg1MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Dprdpr0intreg1MetricsIterator) Next() *Dprdpr0intreg1Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Dprdpr0intreg1Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Dprdpr0intreg1MetricsIterator) Find(key uint64) (*Dprdpr0intreg1Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Dprdpr0intreg1Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Dprdpr0intreg1MetricsIterator) Create(key uint64) (*Dprdpr0intreg1Metrics, error) {
+	tmtr := &Dprdpr0intreg1Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Dprdpr0intreg1Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Dprdpr0intreg1MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Dprdpr0intreg1MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDprdpr0intreg1MetricsIterator returns an iterator
+func NewDprdpr0intreg1MetricsIterator() (*Dprdpr0intreg1MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Dprdpr0intreg1Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Dprdpr0intreg1MetricsIterator{iter: iter}, nil
+}
+
+type Dprdpr0intreg2Metrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	ErrCsumStartGtEnd_4 metrics.Counter
+
+	ErrCsumStartGtEnd_3 metrics.Counter
+
+	ErrCsumStartGtEnd_2 metrics.Counter
+
+	ErrCsumStartGtEnd_1 metrics.Counter
+
+	ErrCsumStartGtEnd_0 metrics.Counter
+
+	ErrCrcStartGtEnd metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Dprdpr0intreg2Metrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Dprdpr0intreg2Metrics) Size() int {
+	sz := 0
+
+	sz += mtr.ErrCsumStartGtEnd_4.Size()
+
+	sz += mtr.ErrCsumStartGtEnd_3.Size()
+
+	sz += mtr.ErrCsumStartGtEnd_2.Size()
+
+	sz += mtr.ErrCsumStartGtEnd_1.Size()
+
+	sz += mtr.ErrCsumStartGtEnd_0.Size()
+
+	sz += mtr.ErrCrcStartGtEnd.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Dprdpr0intreg2Metrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.ErrCsumStartGtEnd_4 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumStartGtEnd_4.Size()
+
+	mtr.ErrCsumStartGtEnd_3 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumStartGtEnd_3.Size()
+
+	mtr.ErrCsumStartGtEnd_2 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumStartGtEnd_2.Size()
+
+	mtr.ErrCsumStartGtEnd_1 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumStartGtEnd_1.Size()
+
+	mtr.ErrCsumStartGtEnd_0 = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCsumStartGtEnd_0.Size()
+
+	mtr.ErrCrcStartGtEnd = mtr.metrics.GetCounter(offset)
+	offset += mtr.ErrCrcStartGtEnd.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Dprdpr0intreg2Metrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "ErrCsumStartGtEnd_4" {
+		return offset
+	}
+	offset += mtr.ErrCsumStartGtEnd_4.Size()
+
+	if fldName == "ErrCsumStartGtEnd_3" {
+		return offset
+	}
+	offset += mtr.ErrCsumStartGtEnd_3.Size()
+
+	if fldName == "ErrCsumStartGtEnd_2" {
+		return offset
+	}
+	offset += mtr.ErrCsumStartGtEnd_2.Size()
+
+	if fldName == "ErrCsumStartGtEnd_1" {
+		return offset
+	}
+	offset += mtr.ErrCsumStartGtEnd_1.Size()
+
+	if fldName == "ErrCsumStartGtEnd_0" {
+		return offset
+	}
+	offset += mtr.ErrCsumStartGtEnd_0.Size()
+
+	if fldName == "ErrCrcStartGtEnd" {
+		return offset
+	}
+	offset += mtr.ErrCrcStartGtEnd.Size()
+
+	return offset
+}
+
+// SetErrCsumStartGtEnd_4 sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCsumStartGtEnd_4(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_4"))
+	return nil
+}
+
+// SetErrCsumStartGtEnd_3 sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCsumStartGtEnd_3(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_3"))
+	return nil
+}
+
+// SetErrCsumStartGtEnd_2 sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCsumStartGtEnd_2(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_2"))
+	return nil
+}
+
+// SetErrCsumStartGtEnd_1 sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCsumStartGtEnd_1(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_1"))
+	return nil
+}
+
+// SetErrCsumStartGtEnd_0 sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCsumStartGtEnd_0(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_0"))
+	return nil
+}
+
+// SetErrCrcStartGtEnd sets cunter in shared memory
+func (mtr *Dprdpr0intreg2Metrics) SetErrCrcStartGtEnd(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcStartGtEnd"))
+	return nil
+}
+
+// Dprdpr0intreg2MetricsIterator is the iterator object
+type Dprdpr0intreg2MetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Dprdpr0intreg2MetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Dprdpr0intreg2MetricsIterator) Next() *Dprdpr0intreg2Metrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Dprdpr0intreg2Metrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Dprdpr0intreg2MetricsIterator) Find(key uint64) (*Dprdpr0intreg2Metrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Dprdpr0intreg2Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Dprdpr0intreg2MetricsIterator) Create(key uint64) (*Dprdpr0intreg2Metrics, error) {
+	tmtr := &Dprdpr0intreg2Metrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Dprdpr0intreg2Metrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Dprdpr0intreg2MetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Dprdpr0intreg2MetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDprdpr0intreg2MetricsIterator returns an iterator
+func NewDprdpr0intreg2MetricsIterator() (*Dprdpr0intreg2MetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Dprdpr0intreg2Metrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Dprdpr0intreg2MetricsIterator{iter: iter}, nil
+}
+
+type Dprdpr0intsramseccMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	DprPktinFifoUncorrectable metrics.Counter
+
+	DprPktinFifoCorrectable metrics.Counter
+
+	DprCsumFifoUncorrectable metrics.Counter
+
+	DprCsumFifoCorrectable metrics.Counter
+
+	DprPhvFifoUncorrectable metrics.Counter
+
+	DprPhvFifoCorrectable metrics.Counter
+
+	DprOhiFifoUncorrectable metrics.Counter
+
+	DprOhiFifoCorrectable metrics.Counter
+
+	DprPtrFifoUncorrectable metrics.Counter
+
+	DprPtrFifoCorrectable metrics.Counter
+
+	DprPktoutFifoUncorrectable metrics.Counter
+
+	DprPktoutFifoCorrectable metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Dprdpr0intsramseccMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Dprdpr0intsramseccMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.DprPktinFifoUncorrectable.Size()
+
+	sz += mtr.DprPktinFifoCorrectable.Size()
+
+	sz += mtr.DprCsumFifoUncorrectable.Size()
+
+	sz += mtr.DprCsumFifoCorrectable.Size()
+
+	sz += mtr.DprPhvFifoUncorrectable.Size()
+
+	sz += mtr.DprPhvFifoCorrectable.Size()
+
+	sz += mtr.DprOhiFifoUncorrectable.Size()
+
+	sz += mtr.DprOhiFifoCorrectable.Size()
+
+	sz += mtr.DprPtrFifoUncorrectable.Size()
+
+	sz += mtr.DprPtrFifoCorrectable.Size()
+
+	sz += mtr.DprPktoutFifoUncorrectable.Size()
+
+	sz += mtr.DprPktoutFifoCorrectable.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Dprdpr0intsramseccMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.DprPktinFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPktinFifoUncorrectable.Size()
+
+	mtr.DprPktinFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPktinFifoCorrectable.Size()
+
+	mtr.DprCsumFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprCsumFifoUncorrectable.Size()
+
+	mtr.DprCsumFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprCsumFifoCorrectable.Size()
+
+	mtr.DprPhvFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPhvFifoUncorrectable.Size()
+
+	mtr.DprPhvFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPhvFifoCorrectable.Size()
+
+	mtr.DprOhiFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprOhiFifoUncorrectable.Size()
+
+	mtr.DprOhiFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprOhiFifoCorrectable.Size()
+
+	mtr.DprPtrFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPtrFifoUncorrectable.Size()
+
+	mtr.DprPtrFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPtrFifoCorrectable.Size()
+
+	mtr.DprPktoutFifoUncorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPktoutFifoUncorrectable.Size()
+
+	mtr.DprPktoutFifoCorrectable = mtr.metrics.GetCounter(offset)
+	offset += mtr.DprPktoutFifoCorrectable.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "DprPktinFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprPktinFifoUncorrectable.Size()
+
+	if fldName == "DprPktinFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprPktinFifoCorrectable.Size()
+
+	if fldName == "DprCsumFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprCsumFifoUncorrectable.Size()
+
+	if fldName == "DprCsumFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprCsumFifoCorrectable.Size()
+
+	if fldName == "DprPhvFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprPhvFifoUncorrectable.Size()
+
+	if fldName == "DprPhvFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprPhvFifoCorrectable.Size()
+
+	if fldName == "DprOhiFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprOhiFifoUncorrectable.Size()
+
+	if fldName == "DprOhiFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprOhiFifoCorrectable.Size()
+
+	if fldName == "DprPtrFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprPtrFifoUncorrectable.Size()
+
+	if fldName == "DprPtrFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprPtrFifoCorrectable.Size()
+
+	if fldName == "DprPktoutFifoUncorrectable" {
+		return offset
+	}
+	offset += mtr.DprPktoutFifoUncorrectable.Size()
+
+	if fldName == "DprPktoutFifoCorrectable" {
+		return offset
+	}
+	offset += mtr.DprPktoutFifoCorrectable.Size()
+
+	return offset
+}
+
+// SetDprPktinFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPktinFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktinFifoUncorrectable"))
+	return nil
+}
+
+// SetDprPktinFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPktinFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktinFifoCorrectable"))
+	return nil
+}
+
+// SetDprCsumFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprCsumFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumFifoUncorrectable"))
+	return nil
+}
+
+// SetDprCsumFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprCsumFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumFifoCorrectable"))
+	return nil
+}
+
+// SetDprPhvFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPhvFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPhvFifoUncorrectable"))
+	return nil
+}
+
+// SetDprPhvFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPhvFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPhvFifoCorrectable"))
+	return nil
+}
+
+// SetDprOhiFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprOhiFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprOhiFifoUncorrectable"))
+	return nil
+}
+
+// SetDprOhiFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprOhiFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprOhiFifoCorrectable"))
+	return nil
+}
+
+// SetDprPtrFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPtrFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPtrFifoUncorrectable"))
+	return nil
+}
+
+// SetDprPtrFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPtrFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPtrFifoCorrectable"))
+	return nil
+}
+
+// SetDprPktoutFifoUncorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPktoutFifoUncorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktoutFifoUncorrectable"))
+	return nil
+}
+
+// SetDprPktoutFifoCorrectable sets cunter in shared memory
+func (mtr *Dprdpr0intsramseccMetrics) SetDprPktoutFifoCorrectable(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktoutFifoCorrectable"))
+	return nil
+}
+
+// Dprdpr0intsramseccMetricsIterator is the iterator object
+type Dprdpr0intsramseccMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Dprdpr0intsramseccMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Dprdpr0intsramseccMetricsIterator) Next() *Dprdpr0intsramseccMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Dprdpr0intsramseccMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Dprdpr0intsramseccMetricsIterator) Find(key uint64) (*Dprdpr0intsramseccMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Dprdpr0intsramseccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Dprdpr0intsramseccMetricsIterator) Create(key uint64) (*Dprdpr0intsramseccMetrics, error) {
+	tmtr := &Dprdpr0intsramseccMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Dprdpr0intsramseccMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Dprdpr0intsramseccMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Dprdpr0intsramseccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDprdpr0intsramseccMetricsIterator returns an iterator
+func NewDprdpr0intsramseccMetricsIterator() (*Dprdpr0intsramseccMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Dprdpr0intsramseccMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Dprdpr0intsramseccMetricsIterator{iter: iter}, nil
+}
+
+type Dprdpr0intfifoMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	PhvFfOvflow metrics.Counter
+
+	OhiFfOvflow metrics.Counter
+
+	PktinFfOvflow metrics.Counter
+
+	PktoutFfUndflow metrics.Counter
+
+	CsumFfOvflow metrics.Counter
+
+	PtrFfOvflow metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *Dprdpr0intfifoMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *Dprdpr0intfifoMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.PhvFfOvflow.Size()
+
+	sz += mtr.OhiFfOvflow.Size()
+
+	sz += mtr.PktinFfOvflow.Size()
+
+	sz += mtr.PktoutFfUndflow.Size()
+
+	sz += mtr.CsumFfOvflow.Size()
+
+	sz += mtr.PtrFfOvflow.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *Dprdpr0intfifoMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.PhvFfOvflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.PhvFfOvflow.Size()
+
+	mtr.OhiFfOvflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.OhiFfOvflow.Size()
+
+	mtr.PktinFfOvflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.PktinFfOvflow.Size()
+
+	mtr.PktoutFfUndflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.PktoutFfUndflow.Size()
+
+	mtr.CsumFfOvflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.CsumFfOvflow.Size()
+
+	mtr.PtrFfOvflow = mtr.metrics.GetCounter(offset)
+	offset += mtr.PtrFfOvflow.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *Dprdpr0intfifoMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "PhvFfOvflow" {
+		return offset
+	}
+	offset += mtr.PhvFfOvflow.Size()
+
+	if fldName == "OhiFfOvflow" {
+		return offset
+	}
+	offset += mtr.OhiFfOvflow.Size()
+
+	if fldName == "PktinFfOvflow" {
+		return offset
+	}
+	offset += mtr.PktinFfOvflow.Size()
+
+	if fldName == "PktoutFfUndflow" {
+		return offset
+	}
+	offset += mtr.PktoutFfUndflow.Size()
+
+	if fldName == "CsumFfOvflow" {
+		return offset
+	}
+	offset += mtr.CsumFfOvflow.Size()
+
+	if fldName == "PtrFfOvflow" {
+		return offset
+	}
+	offset += mtr.PtrFfOvflow.Size()
+
+	return offset
+}
+
+// SetPhvFfOvflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetPhvFfOvflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PhvFfOvflow"))
+	return nil
+}
+
+// SetOhiFfOvflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetOhiFfOvflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OhiFfOvflow"))
+	return nil
+}
+
+// SetPktinFfOvflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetPktinFfOvflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PktinFfOvflow"))
+	return nil
+}
+
+// SetPktoutFfUndflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetPktoutFfUndflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PktoutFfUndflow"))
+	return nil
+}
+
+// SetCsumFfOvflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetCsumFfOvflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CsumFfOvflow"))
+	return nil
+}
+
+// SetPtrFfOvflow sets cunter in shared memory
+func (mtr *Dprdpr0intfifoMetrics) SetPtrFfOvflow(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PtrFfOvflow"))
+	return nil
+}
+
+// Dprdpr0intfifoMetricsIterator is the iterator object
+type Dprdpr0intfifoMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *Dprdpr0intfifoMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *Dprdpr0intfifoMetricsIterator) Next() *Dprdpr0intfifoMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &Dprdpr0intfifoMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *Dprdpr0intfifoMetricsIterator) Find(key uint64) (*Dprdpr0intfifoMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &Dprdpr0intfifoMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *Dprdpr0intfifoMetricsIterator) Create(key uint64) (*Dprdpr0intfifoMetrics, error) {
+	tmtr := &Dprdpr0intfifoMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &Dprdpr0intfifoMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *Dprdpr0intfifoMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *Dprdpr0intfifoMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewDprdpr0intfifoMetricsIterator returns an iterator
+func NewDprdpr0intfifoMetricsIterator() (*Dprdpr0intfifoMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("Dprdpr0intfifoMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &Dprdpr0intfifoMetricsIterator{iter: iter}, nil
 }

@@ -244,16 +244,6 @@ message Ppappa0intswphvmemMetrics {
   fixed64 Key = 1;
   delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
-  delphi.Counter phv_invalid_sram = 4 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_invalid_sram" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_invalid_data = 5 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_invalid_data" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done0 = 6 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done1 = 7 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done2 = 8 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done3 = 9 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done4 = 10 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done5 = 11 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done6 = 12 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done7 = 13 [ (venice.metricsField) = { DisplayName: "ppa_ppa_0_int_sw_phv_mem_phv_done7" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppappa0intintfMetrics {
@@ -514,16 +504,6 @@ message Ppappa1intswphvmemMetrics {
   fixed64 Key = 1;
   delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
-  delphi.Counter phv_invalid_sram = 4 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_invalid_sram" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_invalid_data = 5 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_invalid_data" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done0 = 6 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done1 = 7 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done2 = 8 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done3 = 9 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done4 = 10 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done5 = 11 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done6 = 12 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter phv_done7 = 13 [ (venice.metricsField) = { DisplayName: "ppa_ppa_1_int_sw_phv_mem_phv_done7" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppappa1intintfMetrics {
@@ -552,7 +532,6 @@ message Sgite0interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -569,27 +548,6 @@ message Sgite0interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite0intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_0_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgite1interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -597,7 +555,6 @@ message Sgite1interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -614,27 +571,6 @@ message Sgite1interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite1intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_1_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgite2interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -642,7 +578,6 @@ message Sgite2interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -659,27 +594,6 @@ message Sgite2interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite2intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_2_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgite3interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -687,7 +601,6 @@ message Sgite3interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -704,27 +617,6 @@ message Sgite3interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite3intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_3_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgite4interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -732,7 +624,6 @@ message Sgite4interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -749,27 +640,6 @@ message Sgite4interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite4intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_4_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgite5interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -777,7 +647,6 @@ message Sgite5interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -794,30 +663,8 @@ message Sgite5interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgite5intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sgi_te_5_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgimpu0interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -848,10 +695,6 @@ message Sgimpu0interrMetrics {
 
 message Sgimpu0intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_0_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -860,7 +703,6 @@ message Sgimpu0intinfoMetrics {
 
 message Sgimpu1interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -891,10 +733,6 @@ message Sgimpu1interrMetrics {
 
 message Sgimpu1intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_1_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -903,7 +741,6 @@ message Sgimpu1intinfoMetrics {
 
 message Sgimpu2interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -934,10 +771,6 @@ message Sgimpu2interrMetrics {
 
 message Sgimpu2intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_2_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -946,7 +779,6 @@ message Sgimpu2intinfoMetrics {
 
 message Sgimpu3interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -977,10 +809,6 @@ message Sgimpu3interrMetrics {
 
 message Sgimpu3intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_3_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -989,7 +817,6 @@ message Sgimpu3intinfoMetrics {
 
 message Sgimpu4interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1020,10 +847,6 @@ message Sgimpu4interrMetrics {
 
 message Sgimpu4intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_4_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1032,7 +855,6 @@ message Sgimpu4intinfoMetrics {
 
 message Sgimpu5interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1063,10 +885,6 @@ message Sgimpu5interrMetrics {
 
 message Sgimpu5intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sgi_mpu_5_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1078,7 +896,6 @@ message RpcpicsintpicsMetrics {
   delphi.Counter uncorrectable_ecc = 2 [ (venice.metricsField) = { DisplayName: "rpc_pics_int_pics_uncorrectable_ecc" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter correctable_ecc = 3 [ (venice.metricsField) = { DisplayName: "rpc_pics_int_pics_correctable_ecc" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter too_many_rl_sch_error = 4 [ (venice.metricsField) = { DisplayName: "rpc_pics_int_pics_too_many_rl_sch_error" Description: "SW programming error" Units: Count } ];
-  delphi.Counter picc = 5 [ (venice.metricsField) = { DisplayName: "rpc_pics_int_pics_picc" Description: "Info only, no action" Units: Count } ];
 }
 
 message RpcpicsintbadaddrMetrics {
@@ -1143,8 +960,6 @@ message IntrintrintintreccMetrics {
   delphi.Counter intr_coalesce_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_intr_coalesce_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter intr_coalesce_correctable = 7 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_intr_coalesce_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter intr_legacy_fifo_overrun = 8 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_intr_legacy_fifo_overrun" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter int_credit_positive_after_return_interrupt = 9 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_int_credit_positive_after_return_interrupt" Description: "" Units: Count } ];
-  delphi.Counter int_credits_max_debug_threshold_interrupt = 10 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_int_credits_max_debug_threshold_interrupt" Description: "Info only, no action" Units: Count } ];
   delphi.Counter intr_bresp_err = 11 [ (venice.metricsField) = { DisplayName: "intr_intr_int_intr_ecc_intr_bresp_err" Description: "" Units: Count } ];
 }
 
@@ -1207,7 +1022,6 @@ message PxbpxbinterrMetrics {
   delphi.Counter cpl_ecrc = 2 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_ecrc" Description: "" Units: Count } ];
   delphi.Counter cpl_rxbuf_err = 3 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_rxbuf_err" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter cpl_stat = 4 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_stat" Description: "" Units: Count } ];
-  delphi.Counter cpl_unexp = 5 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_unexp" Description: "" Units: Count } ];
   delphi.Counter cpl_timeout = 6 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_timeout" Description: "Completion timeout for initiator requests, maybe link issue or host is hung or something fatal across pcie link" Units: Count } ];
   delphi.Counter cpl_len = 7 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_len" Description: "" Units: Count } ];
   delphi.Counter cpl_poison = 8 [ (venice.metricsField) = { DisplayName: "pxb_pxb_int_err_cpl_poison" Description: "" Units: Count } ];
@@ -1233,7 +1047,6 @@ message Sgete0interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1250,27 +1063,6 @@ message Sgete0interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete0intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_0_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgete1interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -1278,7 +1070,6 @@ message Sgete1interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1295,27 +1086,6 @@ message Sgete1interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete1intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_1_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgete2interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -1323,7 +1093,6 @@ message Sgete2interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1340,27 +1109,6 @@ message Sgete2interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete2intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_2_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgete3interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -1368,7 +1116,6 @@ message Sgete3interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1385,27 +1132,6 @@ message Sgete3interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete3intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_3_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgete4interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -1413,7 +1139,6 @@ message Sgete4interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1430,27 +1155,6 @@ message Sgete4interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete4intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_4_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgete5interrMetrics {
   fixed64 Key = 1;
   delphi.Counter miss_sop = 2 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_miss_sop" Description: "previous stage error" Units: Count } ];
@@ -1458,7 +1162,6 @@ message Sgete5interrMetrics {
   delphi.Counter phv_max_size = 4 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_phv_max_size" Description: "invalid" Units: Count } ];
   delphi.Counter spurious_axi_rsp = 5 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_spurious_axi_rsp" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_tcam_rsp = 6 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_spurious_tcam_rsp" Description: "bad tcam response" Units: Count } ];
-  delphi.Counter te2mpu_timeout = 7 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_te2mpu_timeout" Description: "impossible, should be disabled" Units: Count } ];
   delphi.Counter axi_rdrsp_err = 8 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_axi_rdrsp_err" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter axi_bad_read = 9 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_axi_bad_read" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter tcam_req_idx_fifo = 10 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_tcam_req_idx_fifo" Description: "pop empty fifo" Units: Count } ];
@@ -1475,30 +1178,8 @@ message Sgete5interrMetrics {
   delphi.Counter loaded_but_no_proc_tbl_vld = 21 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_err_loaded_but_no_proc_tbl_vld" Description: "mpu error" Units: Count } ];
 }
 
-message Sgete5intinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter profile_cam_hit0 = 2 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit0" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit1 = 3 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit1" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit2 = 4 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit2" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit3 = 5 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit3" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit4 = 6 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit4" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit5 = 7 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit5" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit6 = 8 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit6" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit7 = 9 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit7" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit8 = 10 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit8" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit9 = 11 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit9" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit10 = 12 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit10" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit11 = 13 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit11" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit12 = 14 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit12" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit13 = 15 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit13" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit14 = 16 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit14" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_hit15 = 17 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_hit15" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter profile_cam_miss = 18 [ (venice.metricsField) = { DisplayName: "sge_te_5_int_info_profile_cam_miss" Description: "Info only, no action" Units: Count } ];
-}
-
 message Sgempu0interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1529,10 +1210,6 @@ message Sgempu0interrMetrics {
 
 message Sgempu0intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_0_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1541,7 +1218,6 @@ message Sgempu0intinfoMetrics {
 
 message Sgempu1interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1572,10 +1248,6 @@ message Sgempu1interrMetrics {
 
 message Sgempu1intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_1_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1584,7 +1256,6 @@ message Sgempu1intinfoMetrics {
 
 message Sgempu2interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1615,10 +1286,6 @@ message Sgempu2interrMetrics {
 
 message Sgempu2intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_2_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1627,7 +1294,6 @@ message Sgempu2intinfoMetrics {
 
 message Sgempu3interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1658,10 +1324,6 @@ message Sgempu3interrMetrics {
 
 message Sgempu3intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_3_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1670,7 +1332,6 @@ message Sgempu3intinfoMetrics {
 
 message Sgempu4interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1701,10 +1362,6 @@ message Sgempu4interrMetrics {
 
 message Sgempu4intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_4_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
@@ -1713,7 +1370,6 @@ message Sgempu4intinfoMetrics {
 
 message Sgempu5interrMetrics {
   fixed64 Key = 1;
-  delphi.Counter results_mismatch = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_err_results_mismatch" Description: "mask this interrupt, not fully implemented" Units: Count } ];
   delphi.Counter sdp_mem_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_err_sdp_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter sdp_mem_correctable = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_err_sdp_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter illegal_op_0 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_err_illegal_op_0" Description: "MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA)" Units: Count } ];
@@ -1744,33 +1400,10 @@ message Sgempu5interrMetrics {
 
 message Sgempu5intinfoMetrics {
   fixed64 Key = 1;
-  delphi.Counter trace_full_0 = 2 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_trace_full_0" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_1 = 3 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_trace_full_1" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_2 = 4 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_trace_full_2" Description: "MPU debug trace buffer has filled" Units: Count } ];
-  delphi.Counter trace_full_3 = 5 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_trace_full_3" Description: "MPU debug trace buffer has filled" Units: Count } ];
   delphi.Counter mpu_stop_0 = 6 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_mpu_stop_0" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_1 = 7 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_mpu_stop_1" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_2 = 8 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_mpu_stop_2" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
   delphi.Counter mpu_stop_3 = 9 [ (venice.metricsField) = { DisplayName: "sge_mpu_5_int_info_mpu_stop_3" Description: "MPU stopped, in debug mode, pipeline frozen until start" Units: Count } ];
-}
-
-message Prprintreg1Metrics {
-  fixed64 Key = 1;
-  delphi.Counter slave_prd = 2 [ (venice.metricsField) = { DisplayName: "pr_pr_int_reg1_slave_prd" Description: "" Units: Count } ];
-  delphi.Counter slave_psp = 3 [ (venice.metricsField) = { DisplayName: "pr_pr_int_reg1_slave_psp" Description: "" Units: Count } ];
-}
-
-message PrprpspintinfoMetrics {
-  fixed64 Key = 1;
-  delphi.Counter pr_pkt_ff_almost_full = 2 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pr_pkt_ff_almost_full" Description: "almost full flow control was asserted" Units: Count } ];
-  delphi.Counter ptd_npv_phv_full = 3 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_ptd_npv_phv_full" Description: "almost full flow control was asserted" Units: Count } ];
-  delphi.Counter phv_srdy_collapsed = 4 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_phv_srdy_collapsed" Description: "collapsed multiple idential PHVs" Units: Count } ];
-  delphi.Counter pr_resub_pkt_before_phv = 5 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pr_resub_pkt_before_phv" Description: "received the PKT before the PHV on the resub busses" Units: Count } ];
-  delphi.Counter pb_pbus_fsm0_no_data = 6 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pb_pbus_fsm0_no_data" Description: "received PHV with no data" Units: Count } ];
-  delphi.Counter pb_pbus_fsm1_no_data = 7 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pb_pbus_fsm1_no_data" Description: "received PHV with no data" Units: Count } ];
-  delphi.Counter pb_pbus_fsm2_no_data = 8 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pb_pbus_fsm2_no_data" Description: "received PHV with no data" Units: Count } ];
-  delphi.Counter pb_pbus_fsm3_no_data = 9 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pb_pbus_fsm3_no_data" Description: "received PHV with no data" Units: Count } ];
-  delphi.Counter pb_pbus_fsm4_no_data = 10 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_info_pb_pbus_fsm4_no_data" Description: "received PHV with no data" Units: Count } ];
 }
 
 message PrprpspinterrMetrics {
@@ -1822,23 +1455,12 @@ message PrprpspintlifqstatemapMetrics {
   fixed64 Key = 1;
   delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_lif_qstate_map_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_lif_qstate_map_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
-  delphi.Counter qid_invalid = 4 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_lif_qstate_map_qid_invalid" Description: "lookup in lif table missed" Units: Count } ];
 }
 
 message PrprpspintswphvmemMetrics {
   fixed64 Key = 1;
   delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
-  delphi.Counter phv_invalid_sram = 4 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_invalid_sram" Description: "bad SW PHV sram programming" Units: Count } ];
-  delphi.Counter phv_invalid_data = 5 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_invalid_data" Description: "bad SW PHV sram programming" Units: Count } ];
-  delphi.Counter phv_done0 = 6 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done0" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done1 = 7 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done1" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done2 = 8 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done2" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done3 = 9 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done3" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done4 = 10 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done4" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done5 = 11 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done5" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done6 = 12 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done6" Description: "SW PHV done info" Units: Count } ];
-  delphi.Counter phv_done7 = 13 [ (venice.metricsField) = { DisplayName: "pr_pr_psp_int_sw_phv_mem_phv_done7" Description: "SW PHV done info" Units: Count } ];
 }
 
 message PrprprdinteccMetrics {
@@ -1902,7 +1524,6 @@ message Prprprdintgrp2Metrics {
   delphi.Counter rdrsp_axi = 8 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_rdrsp_axi" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter wrrsp_axi = 9 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_wrrsp_axi" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter pkt_not_sop = 10 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_pkt_not_sop" Description: "hardware error" Units: Count } ];
-  delphi.Counter pkt_len_calc_len_mismatch = 11 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_pkt_len_calc_len_mismatch" Description: "Info only, no action" Units: Count } ];
   delphi.Counter spurious_rd_resp = 12 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_spurious_rd_resp" Description: "unexpected read response received. Check interrupts in other blocks." Units: Count } ];
   delphi.Counter rdrsp_axi_id_out_of_range = 13 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_rdrsp_axi_id_out_of_range" Description: "Access to invalid address, missing address range in the NOC, or slave sent back an error" Units: Count } ];
   delphi.Counter spurious_wr_resp = 14 [ (venice.metricsField) = { DisplayName: "pr_pr_prd_int_grp2_spurious_wr_resp" Description: "unexpected read response received. Check interrupts in other blocks." Units: Count } ];
@@ -1931,38 +1552,12 @@ message PpppintppMetrics {
   fixed64 Key = 1;
   delphi.Counter ppsd_sbe = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_sbe" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter ppsd_dbe = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_ppsd_dbe" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
-  delphi.Counter sbus_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_sbus_err" Description: "" Units: Count } ];
-  delphi.Counter port7_c_int = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port7_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port7_p_int = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port7_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port6_c_int = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port6_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port6_p_int = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port6_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port5_c_int = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port5_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port5_p_int = 10 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port5_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port4_c_int = 11 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port4_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port4_p_int = 12 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port4_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port3_c_int = 13 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port3_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port3_p_int = 14 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port3_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port2_c_int = 15 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port2_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port2_p_int = 16 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port2_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port1_c_int = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port1_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port1_p_int = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port1_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port0_c_int = 19 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port0_c_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter port0_p_int = 20 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_port0_p_int" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst7n_dn2up = 21 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst7n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst6n_dn2up = 22 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst6n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst5n_dn2up = 23 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst5n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst4n_dn2up = 24 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst4n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst3n_dn2up = 25 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst3n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst2n_dn2up = 26 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst2n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst1n_dn2up = 27 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst1n_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter perst0n_dn2up = 28 [ (venice.metricsField) = { DisplayName: "pp_pp_int_pp_perst0n_dn2up" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppppportp0intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_0_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -1977,7 +1572,6 @@ message Ppppportp1intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_1_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -1992,7 +1586,6 @@ message Ppppportp2intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_2_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2007,7 +1600,6 @@ message Ppppportp3intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_3_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2022,7 +1614,6 @@ message Ppppportp4intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_4_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2037,7 +1628,6 @@ message Ppppportp5intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_5_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2052,7 +1642,6 @@ message Ppppportp6intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_6_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2067,7 +1656,6 @@ message Ppppportp7intpeccMetrics {
   fixed64 Key = 1;
   delphi.Counter rxbfr_overflow = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_rxbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter replay_bfr_overflow = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_replay_bfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
-  delphi.Counter rxtlp_err = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_rxtlp_err" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbuf_0_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_txbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_1_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_txbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
   delphi.Counter txbuf_2_uncorrectable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_p_7_int_p_ecc_txbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
@@ -2080,25 +1668,8 @@ message Ppppportp7intpeccMetrics {
 
 message Ppppportc0intcmacMetrics {
   fixed64 Key = 1;
-  delphi.Counter link_dn2up = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_link_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter link_up2dn = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_link_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_bus_rst = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_sec_bus_rst" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_up2dn = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rst_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_dn2up = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rst_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter portgate_open2close = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_portgate_open2close" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter ltssm_st_changed = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_ltssm_st_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_busnum_changed = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_sec_busnum_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_pme = 10 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_pme" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_aerr = 11 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_aerr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_serr = 12 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_serr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_hpe = 13 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_hpe" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_eq_req = 14 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_eq_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_dpc = 15 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_dpc" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter pm_turnoff = 16 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_pm_turnoff" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
-  delphi.Counter tl_flr_req = 19 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_tl_flr_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_legacy_intpin_changed = 20 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_0_int_c_mac_rc_legacy_intpin_changed" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppppportc0intceccMetrics {
@@ -2115,25 +1686,8 @@ message Ppppportc0intceccMetrics {
 
 message Ppppportc1intcmacMetrics {
   fixed64 Key = 1;
-  delphi.Counter link_dn2up = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_link_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter link_up2dn = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_link_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_bus_rst = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_sec_bus_rst" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_up2dn = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rst_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_dn2up = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rst_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter portgate_open2close = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_portgate_open2close" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter ltssm_st_changed = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_ltssm_st_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_busnum_changed = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_sec_busnum_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_pme = 10 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_pme" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_aerr = 11 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_aerr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_serr = 12 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_serr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_hpe = 13 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_hpe" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_eq_req = 14 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_eq_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_dpc = 15 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_dpc" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter pm_turnoff = 16 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_pm_turnoff" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
-  delphi.Counter tl_flr_req = 19 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_tl_flr_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_legacy_intpin_changed = 20 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_1_int_c_mac_rc_legacy_intpin_changed" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppppportc1intceccMetrics {
@@ -2150,25 +1704,8 @@ message Ppppportc1intceccMetrics {
 
 message Ppppportc2intcmacMetrics {
   fixed64 Key = 1;
-  delphi.Counter link_dn2up = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_link_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter link_up2dn = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_link_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_bus_rst = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_sec_bus_rst" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_up2dn = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rst_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_dn2up = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rst_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter portgate_open2close = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_portgate_open2close" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter ltssm_st_changed = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_ltssm_st_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_busnum_changed = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_sec_busnum_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_pme = 10 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_pme" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_aerr = 11 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_aerr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_serr = 12 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_serr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_hpe = 13 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_hpe" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_eq_req = 14 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_eq_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_dpc = 15 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_dpc" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter pm_turnoff = 16 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_pm_turnoff" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
-  delphi.Counter tl_flr_req = 19 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_tl_flr_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_legacy_intpin_changed = 20 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_2_int_c_mac_rc_legacy_intpin_changed" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppppportc2intceccMetrics {
@@ -2185,25 +1722,8 @@ message Ppppportc2intceccMetrics {
 
 message Ppppportc3intcmacMetrics {
   fixed64 Key = 1;
-  delphi.Counter link_dn2up = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_link_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter link_up2dn = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_link_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_bus_rst = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_sec_bus_rst" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_up2dn = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rst_up2dn" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rst_dn2up = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rst_dn2up" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter portgate_open2close = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_portgate_open2close" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter ltssm_st_changed = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_ltssm_st_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter sec_busnum_changed = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_sec_busnum_changed" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_pme = 10 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_pme" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_aerr = 11 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_aerr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_serr = 12 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_serr" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_hpe = 13 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_hpe" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_eq_req = 14 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_eq_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_dpc = 15 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_dpc" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter pm_turnoff = 16 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_pm_turnoff" Description: "Info only, no action" Units: Count } ];
   delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
   delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
-  delphi.Counter tl_flr_req = 19 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_tl_flr_req" Description: "Info only, no action" Units: Count } ];
-  delphi.Counter rc_legacy_intpin_changed = 20 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_mac_rc_legacy_intpin_changed" Description: "Info only, no action" Units: Count } ];
 }
 
 message Ppppportc3intceccMetrics {
@@ -2216,5 +1736,157 @@ message Ppppportc3intceccMetrics {
   delphi.Counter rxbuf_1_correctable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_ecc_rxbuf_1_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter rxbuf_2_correctable = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_ecc_rxbuf_2_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
   delphi.Counter rxbuf_3_correctable = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_3_int_c_ecc_rxbuf_3_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message Ppppportc4intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
+  delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
+}
+
+message Ppppportc4intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_uncorrectable = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_3_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_0_correctable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_0_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_correctable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_1_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_correctable = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_2_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_correctable = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_4_int_c_ecc_rxbuf_3_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message Ppppportc5intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
+  delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
+}
+
+message Ppppportc5intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_uncorrectable = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_3_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_0_correctable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_0_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_correctable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_1_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_correctable = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_2_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_correctable = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_5_int_c_ecc_rxbuf_3_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message Ppppportc6intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
+  delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
+}
+
+message Ppppportc6intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_uncorrectable = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_3_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_0_correctable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_0_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_correctable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_1_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_correctable = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_2_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_correctable = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_6_int_c_ecc_rxbuf_3_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message Ppppportc7intcmacMetrics {
+  fixed64 Key = 1;
+  delphi.Counter txbfr_overflow = 17 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_mac_txbfr_overflow" Description: "Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer" Units: Count } ];
+  delphi.Counter rxtlp_err = 18 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_mac_rxtlp_err" Description: "" Units: Count } ];
+}
+
+message Ppppportc7intceccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rxbuf_0_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_0_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_uncorrectable = 3 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_1_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_uncorrectable = 4 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_2_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_uncorrectable = 5 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_3_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_0_correctable = 6 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_0_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_1_correctable = 7 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_1_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_2_correctable = 8 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_2_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter rxbuf_3_correctable = 9 [ (venice.metricsField) = { DisplayName: "pp_pp_port_c_7_int_c_ecc_rxbuf_3_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message PtptpspinterrMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_pbus_err = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pb_pbus_err" Description: "error bit received ont the input PKT bus" Units: Count } ];
+  delphi.Counter pr_pbus_err = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pr_pbus_err" Description: "error bit sent on the output PKT bus" Units: Count } ];
+  delphi.Counter pr_resub_pbus_err = 4 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pr_resub_pbus_err" Description: "error bit received ont the input PKT bus" Units: Count } ];
+  delphi.Counter psp_csr_read_access_err = 5 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_psp_csr_read_access_err" Description: "psp_csr_read_access && psp_csr_ready && psp_csr_error" Units: Count } ];
+  delphi.Counter psp_csr_write_access_err = 6 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_psp_csr_write_access_err" Description: "psp_csr_write_access && psp_csr_ready && psp_csr_error" Units: Count } ];
+  delphi.Counter psp_phv_larger_than_twelve_flits_err = 7 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_psp_phv_larger_than_twelve_flits_err" Description: "PHV over the max 12 flits received and truncated" Units: Count } ];
+  delphi.Counter psp_phv_sop_offset_err = 8 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_psp_phv_sop_offset_err" Description: "EOP seen before reaching PHV offset in SOP flit" Units: Count } ];
+  delphi.Counter psp_phv_eop_offset_err = 9 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_psp_phv_eop_offset_err" Description: "EOP seen before reaching PHV offset" Units: Count } ];
+  delphi.Counter max_recir_count_err = 10 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_max_recir_count_err" Description: "a packet was recirculated through P4+ more than the cfg_profile_recirc_max" Units: Count } ];
+  delphi.Counter pb_pbus_dummy_err = 11 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pb_pbus_dummy_err" Description: "there was a missing PKT after the PHV, so the HW generated a dummy PKT" Units: Count } ];
+  delphi.Counter pb_pbus_nopkt_err = 12 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pb_pbus_nopkt_err" Description: "PKT smaller than 12 flits received from the input PKT bus, PKT data was dropped" Units: Count } ];
+  delphi.Counter pb_pbus_min_err = 13 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_pb_pbus_min_err" Description: "PKT smaller than cfg_profile_phv_min received from the input PKT bus" Units: Count } ];
+  delphi.Counter lb_phv_almost_full_timeout_err = 14 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_lb_phv_almost_full_timeout_err" Description: "the PHV state machine waited for longer than cfg_profile_almost_full_timer_max" Units: Count } ];
+  delphi.Counter lb_pkt_almost_full_timeout_err = 15 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_err_lb_pkt_almost_full_timeout_err" Description: "the PKT state machine waited for longer than cfg_profile_almost_full_timer_max" Units: Count } ];
+}
+
+message PtptpspintfatalMetrics {
+  fixed64 Key = 1;
+  delphi.Counter pb_pbus_sop_err = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_eop_err = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_eop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter ma_sop_err = 4 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_ma_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter ma_eop_err = 5 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_ma_eop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_pbus_sop_err = 6 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_pbus_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_pbus_eop_err = 7 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_pbus_eop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_resub_pbus_sop_err = 8 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_resub_pbus_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_resub_pbus_eop_err = 9 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_resub_pbus_eop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_resub_sop_err = 10 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_resub_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pr_resub_eop_err = 11 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pr_resub_eop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm0_no_data_err = 12 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm0_no_data_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm1_no_data_err = 13 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm1_no_data_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm2_no_data_err = 14 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm2_no_data_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm3_no_data_err = 15 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm3_no_data_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm4_no_data_err = 16 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm4_no_data_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter pb_pbus_fsm5_pkt_too_small_err = 17 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_pb_pbus_fsm5_pkt_too_small_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter lif_ind_table_rsp_err = 18 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_lif_ind_table_rsp_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter flit_cnt_oflow_err = 19 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_flit_cnt_oflow_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter lb_phv_sop_err = 20 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_lb_phv_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter dc_phv_sop_err = 21 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_dc_phv_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter lb_pkt_sop_err = 22 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_lb_pkt_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter dc_pkt_sop_err = 23 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_dc_pkt_sop_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+  delphi.Counter sw_phv_jabber_err = 24 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_fatal_sw_phv_jabber_err" Description: "fatal HW fsm error, no HW handling" Units: Count } ];
+}
+
+message PtptpspintlifqstatemapMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_lif_qstate_map_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_lif_qstate_map_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message PtptpspintswphvmemMetrics {
+  fixed64 Key = 1;
+  delphi.Counter ecc_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_sw_phv_mem_ecc_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter ecc_correctable = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_psp_int_sw_phv_mem_ecc_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message PtptptdinteccMetrics {
+  fixed64 Key = 1;
+  delphi.Counter rdata_mem_uncorrectable = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_rdata_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter rdata_mem_correctable = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_rdata_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter lat_mem_uncorrectable = 4 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_lat_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter lat_mem_correctable = 5 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_lat_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+  delphi.Counter wdata_mem_uncorrectable = 6 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_wdata_mem_uncorrectable" Description: "ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip" Units: Count } ];
+  delphi.Counter wdata_mem_correctable = 7 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_ecc_wdata_mem_correctable" Description: "ecc correctable single bit SOFT error, expect once per 25 years per chip" Units: Count } ];
+}
+
+message PtptptdintfifoMetrics {
+  fixed64 Key = 1;
+  delphi.Counter lat_ff_ovflow = 2 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_lat_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter wdata_ff_ovflow = 3 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_wdata_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter rcv_stg_ff_ovflow = 4 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_rcv_stg_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter cmdflit_ff_ovflow = 5 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_cmdflit_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter cmd_ff_ovflow = 6 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_cmd_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter pkt_ff_ovflow = 7 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_pkt_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter wr_mem_ff_ovflow = 8 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_wr_mem_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter dfence_ff_ovflow = 9 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_dfence_ff_ovflow" Description: "hardware error" Units: Count } ];
+  delphi.Counter ffence_ff_ovflow = 10 [ (venice.metricsField) = { DisplayName: "pt_pt_ptd_int_fifo_ffence_ff_ovflow" Description: "hardware error" Units: Count } ];
 }
 
