@@ -69,10 +69,18 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
                     pds_encap2str(&spec->encap));
     memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     this->type_ = spec->type;
-    this->remote_svc_ = spec->remote_svc;
     this->remote_ip_ = spec->remote_ip;
+    this->remote_svc_ = spec->remote_svc;
     if (is_mac_set(spec->mac)) {
         memcpy(mac_, spec->mac, ETH_ADDR_LEN);
+    }
+    nh_type_ = spec->nh_type;
+    if (nh_type_ == PDS_NH_TYPE_UNDERLAY) {
+        nh_ = spec->nh;
+    } else if (nh_type_ == PDS_NH_TYPE_UNDERLAY_ECMP) {
+        nh_group_ = spec->nh_group;
+    } else if (nh_type_ == PDS_NH_TYPE_OVERLAY) {
+        tep_ = spec->tep;
     }
     return SDK_RET_OK;
 }

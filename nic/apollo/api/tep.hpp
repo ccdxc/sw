@@ -153,6 +153,22 @@ public:
     /// \return    ethernet MAC address of this TEP (configured/learnt)
     mac_addr_t& mac(void) { return mac_; }
 
+    /// \brief    return the nexthop type
+    /// \return    type of the nexthop this TEP is pointing to
+    pds_nh_type_t nh_type(void) const { return nh_type_; }
+
+    /// \brief    return the nexthop of this TEP
+    /// \return    nexthop this TEP is pointing to
+    pds_nexthop_key_t nh(void) const { return nh_; }
+
+    /// \brief    return the nexthop group of this TEP
+    /// \return    nexthop group this TEP is pointing to
+    pds_nexthop_group_key_t nh_group(void) const { return nh_group_; }
+
+    /// \brief    return the TEP this TEP points to
+    /// \return    TEP this TEP is pointing to
+    pds_tep_key_t tep(void) const { return tep_; }
+
     /// \brief    return impl instance of this TEP object
     /// \return    impl instance of the TEP object
     impl_base *impl(void) { return impl_; }
@@ -178,6 +194,13 @@ private:
     ip_addr_t      remote_ip_;  ///< TEP IP
     bool           remote_svc_; ///< true if this is remote (service) TEP
     mac_addr_t     mac_;        ///< (learnt/configured) MAC address of this TEP
+    pds_nh_type_t  nh_type_;    ///< type of the nexthop for this TEP
+    ///< one of possible nexthop types
+    union {
+        pds_nexthop_key_t nh_;
+        pds_nexthop_group_key_t nh_group_;
+        pds_tep_key_t tep_;
+    };
     ht_ctxt_t      ht_ctxt_;    ///< hash table context
     impl_base      *impl_;      ///< impl object instance
     friend class   tep_state;   ///< tep_state is friend of tep_entry
