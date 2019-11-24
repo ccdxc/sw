@@ -230,6 +230,10 @@ func (ctx *bufferCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *bufferCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Buffer = obj.(*bufferCtx).obj.Buffer
+}
+
 func (ctx *bufferCtx) Lock() {
 	ctx.obj.Lock()
 }

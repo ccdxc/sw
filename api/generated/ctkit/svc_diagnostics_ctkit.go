@@ -230,6 +230,10 @@ func (ctx *moduleCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *moduleCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Module = obj.(*moduleCtx).obj.Module
+}
+
 func (ctx *moduleCtx) Lock() {
 	ctx.obj.Lock()
 }

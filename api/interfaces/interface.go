@@ -240,6 +240,7 @@ type CtkitObject interface {
 	SetEvent(kvstore.WatchEventType)
 	SetNewObj(newObj CtkitObject)
 	GetNewObj() CtkitObject
+	Copy(CtkitObject)
 	RuntimeObject() runtime.Object
 	References() map[string]ReferenceObj
 }

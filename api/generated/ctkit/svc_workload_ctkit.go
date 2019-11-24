@@ -230,6 +230,10 @@ func (ctx *endpointCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *endpointCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Endpoint = obj.(*endpointCtx).obj.Endpoint
+}
+
 func (ctx *endpointCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *workloadCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *workloadCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *workloadCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Workload = obj.(*workloadCtx).obj.Workload
 }
 
 func (ctx *workloadCtx) Lock() {

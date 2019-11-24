@@ -230,6 +230,10 @@ func (ctx *eventpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *eventpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.EventPolicy = obj.(*eventpolicyCtx).obj.EventPolicy
+}
+
 func (ctx *eventpolicyCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *statspolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *statspolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *statspolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.StatsPolicy = obj.(*statspolicyCtx).obj.StatsPolicy
 }
 
 func (ctx *statspolicyCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *fwlogpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *fwlogpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.FwlogPolicy = obj.(*fwlogpolicyCtx).obj.FwlogPolicy
+}
+
 func (ctx *fwlogpolicyCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2463,6 +2475,10 @@ func (ctx *flowexportpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *flowexportpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *flowexportpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.FlowExportPolicy = obj.(*flowexportpolicyCtx).obj.FlowExportPolicy
 }
 
 func (ctx *flowexportpolicyCtx) Lock() {
@@ -3210,6 +3226,10 @@ func (ctx *alertCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *alertCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Alert = obj.(*alertCtx).obj.Alert
+}
+
 func (ctx *alertCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3953,6 +3973,10 @@ func (ctx *alertpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *alertpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *alertpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.AlertPolicy = obj.(*alertpolicyCtx).obj.AlertPolicy
 }
 
 func (ctx *alertpolicyCtx) Lock() {
@@ -4700,6 +4724,10 @@ func (ctx *alertdestinationCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *alertdestinationCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.AlertDestination = obj.(*alertdestinationCtx).obj.AlertDestination
+}
+
 func (ctx *alertdestinationCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -5443,6 +5471,10 @@ func (ctx *mirrorsessionCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *mirrorsessionCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *mirrorsessionCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.MirrorSession = obj.(*mirrorsessionCtx).obj.MirrorSession
 }
 
 func (ctx *mirrorsessionCtx) Lock() {
@@ -6190,6 +6222,10 @@ func (ctx *troubleshootingsessionCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *troubleshootingsessionCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.TroubleshootingSession = obj.(*troubleshootingsessionCtx).obj.TroubleshootingSession
+}
+
 func (ctx *troubleshootingsessionCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -6933,6 +6969,10 @@ func (ctx *techsupportrequestCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *techsupportrequestCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *techsupportrequestCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.TechSupportRequest = obj.(*techsupportrequestCtx).obj.TechSupportRequest
 }
 
 func (ctx *techsupportrequestCtx) Lock() {

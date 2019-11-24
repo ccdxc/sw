@@ -105,8 +105,7 @@ func (ctx *ResolveCtx) IsInProgress() bool {
 
 //IsOperationPending operation is pending
 func (ctx *ResolveCtx) IsOperationPending() bool {
-	return (ctx.InProgress() || ctx.IsAddUnResolved() ||
-		ctx.IsUpdateUnResolved() || ctx.IsDelUnResolved() || ctx.IsMarkedForDelete())
+	return (ctx.InProgress() || ctx.IsDelUnResolved() || ctx.IsMarkedForDelete())
 }
 
 //SetDeleted  objected deleted

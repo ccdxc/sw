@@ -230,6 +230,10 @@ func (ctx *orderCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *orderCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Order = obj.(*orderCtx).obj.Order
+}
+
 func (ctx *orderCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *bookCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *bookCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *bookCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Book = obj.(*bookCtx).obj.Book
 }
 
 func (ctx *bookCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *publisherCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *publisherCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Publisher = obj.(*publisherCtx).obj.Publisher
+}
+
 func (ctx *publisherCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2463,6 +2475,10 @@ func (ctx *storeCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *storeCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *storeCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Store = obj.(*storeCtx).obj.Store
 }
 
 func (ctx *storeCtx) Lock() {
@@ -3210,6 +3226,10 @@ func (ctx *couponCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *couponCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Coupon = obj.(*couponCtx).obj.Coupon
+}
+
 func (ctx *couponCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3953,6 +3973,10 @@ func (ctx *customerCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *customerCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *customerCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Customer = obj.(*customerCtx).obj.Customer
 }
 
 func (ctx *customerCtx) Lock() {

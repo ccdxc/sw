@@ -230,6 +230,10 @@ func (ctx *orchestratorCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *orchestratorCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Orchestrator = obj.(*orchestratorCtx).obj.Orchestrator
+}
+
 func (ctx *orchestratorCtx) Lock() {
 	ctx.obj.Lock()
 }

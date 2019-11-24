@@ -230,6 +230,10 @@ func (ctx *securitygroupCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *securitygroupCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.SecurityGroup = obj.(*securitygroupCtx).obj.SecurityGroup
+}
+
 func (ctx *securitygroupCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *networksecuritypolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *networksecuritypolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *networksecuritypolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.NetworkSecurityPolicy = obj.(*networksecuritypolicyCtx).obj.NetworkSecurityPolicy
 }
 
 func (ctx *networksecuritypolicyCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *appCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *appCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.App = obj.(*appCtx).obj.App
+}
+
 func (ctx *appCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2463,6 +2475,10 @@ func (ctx *firewallprofileCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *firewallprofileCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *firewallprofileCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.FirewallProfile = obj.(*firewallprofileCtx).obj.FirewallProfile
 }
 
 func (ctx *firewallprofileCtx) Lock() {
@@ -3210,6 +3226,10 @@ func (ctx *certificateCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *certificateCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Certificate = obj.(*certificateCtx).obj.Certificate
+}
+
 func (ctx *certificateCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3953,6 +3973,10 @@ func (ctx *trafficencryptionpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *trafficencryptionpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *trafficencryptionpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.TrafficEncryptionPolicy = obj.(*trafficencryptionpolicyCtx).obj.TrafficEncryptionPolicy
 }
 
 func (ctx *trafficencryptionpolicyCtx) Lock() {

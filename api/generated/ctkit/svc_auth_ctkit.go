@@ -230,6 +230,10 @@ func (ctx *userCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *userCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.User = obj.(*userCtx).obj.User
+}
+
 func (ctx *userCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *authenticationpolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *authenticationpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *authenticationpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.AuthenticationPolicy = obj.(*authenticationpolicyCtx).obj.AuthenticationPolicy
 }
 
 func (ctx *authenticationpolicyCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *roleCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *roleCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Role = obj.(*roleCtx).obj.Role
+}
+
 func (ctx *roleCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2465,6 +2477,10 @@ func (ctx *rolebindingCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *rolebindingCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.RoleBinding = obj.(*rolebindingCtx).obj.RoleBinding
+}
+
 func (ctx *rolebindingCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3208,6 +3224,10 @@ func (ctx *userpreferenceCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *userpreferenceCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *userpreferenceCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.UserPreference = obj.(*userpreferenceCtx).obj.UserPreference
 }
 
 func (ctx *userpreferenceCtx) Lock() {

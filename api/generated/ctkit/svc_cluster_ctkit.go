@@ -230,6 +230,10 @@ func (ctx *clusterCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *clusterCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Cluster = obj.(*clusterCtx).obj.Cluster
+}
+
 func (ctx *clusterCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *nodeCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *nodeCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *nodeCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Node = obj.(*nodeCtx).obj.Node
 }
 
 func (ctx *nodeCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *hostCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *hostCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Host = obj.(*hostCtx).obj.Host
+}
+
 func (ctx *hostCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2463,6 +2475,10 @@ func (ctx *distributedservicecardCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *distributedservicecardCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *distributedservicecardCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.DistributedServiceCard = obj.(*distributedservicecardCtx).obj.DistributedServiceCard
 }
 
 func (ctx *distributedservicecardCtx) Lock() {
@@ -3210,6 +3226,10 @@ func (ctx *tenantCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *tenantCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Tenant = obj.(*tenantCtx).obj.Tenant
+}
+
 func (ctx *tenantCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3953,6 +3973,10 @@ func (ctx *versionCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *versionCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *versionCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Version = obj.(*versionCtx).obj.Version
 }
 
 func (ctx *versionCtx) Lock() {
@@ -4700,6 +4724,10 @@ func (ctx *configurationsnapshotCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *configurationsnapshotCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.ConfigurationSnapshot = obj.(*configurationsnapshotCtx).obj.ConfigurationSnapshot
+}
+
 func (ctx *configurationsnapshotCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -5443,6 +5471,10 @@ func (ctx *snapshotrestoreCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *snapshotrestoreCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *snapshotrestoreCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.SnapshotRestore = obj.(*snapshotrestoreCtx).obj.SnapshotRestore
 }
 
 func (ctx *snapshotrestoreCtx) Lock() {

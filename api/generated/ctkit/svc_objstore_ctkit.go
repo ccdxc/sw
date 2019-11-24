@@ -230,6 +230,10 @@ func (ctx *bucketCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *bucketCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Bucket = obj.(*bucketCtx).obj.Bucket
+}
+
 func (ctx *bucketCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *objectCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *objectCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *objectCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Object = obj.(*objectCtx).obj.Object
 }
 
 func (ctx *objectCtx) Lock() {

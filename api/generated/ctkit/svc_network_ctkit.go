@@ -230,6 +230,10 @@ func (ctx *networkCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *networkCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Network = obj.(*networkCtx).obj.Network
+}
+
 func (ctx *networkCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *serviceCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *serviceCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *serviceCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Service = obj.(*serviceCtx).obj.Service
 }
 
 func (ctx *serviceCtx) Lock() {
@@ -1720,6 +1728,10 @@ func (ctx *lbpolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *lbpolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.LbPolicy = obj.(*lbpolicyCtx).obj.LbPolicy
+}
+
 func (ctx *lbpolicyCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -2463,6 +2475,10 @@ func (ctx *virtualrouterCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *virtualrouterCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *virtualrouterCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.VirtualRouter = obj.(*virtualrouterCtx).obj.VirtualRouter
 }
 
 func (ctx *virtualrouterCtx) Lock() {
@@ -3210,6 +3226,10 @@ func (ctx *networkinterfaceCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *networkinterfaceCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.NetworkInterface = obj.(*networkinterfaceCtx).obj.NetworkInterface
+}
+
 func (ctx *networkinterfaceCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -3953,6 +3973,10 @@ func (ctx *ipampolicyCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *ipampolicyCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *ipampolicyCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.IPAMPolicy = obj.(*ipampolicyCtx).obj.IPAMPolicy
 }
 
 func (ctx *ipampolicyCtx) Lock() {
@@ -4700,6 +4724,10 @@ func (ctx *routingconfigCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *routingconfigCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.RoutingConfig = obj.(*routingconfigCtx).obj.RoutingConfig
+}
+
 func (ctx *routingconfigCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -5443,6 +5471,10 @@ func (ctx *routetableCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *routetableCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *routetableCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.RouteTable = obj.(*routetableCtx).obj.RouteTable
 }
 
 func (ctx *routetableCtx) Lock() {

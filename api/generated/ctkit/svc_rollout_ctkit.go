@@ -230,6 +230,10 @@ func (ctx *rolloutCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
 }
 
+func (ctx *rolloutCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.Rollout = obj.(*rolloutCtx).obj.Rollout
+}
+
 func (ctx *rolloutCtx) Lock() {
 	ctx.obj.Lock()
 }
@@ -973,6 +977,10 @@ func (ctx *rolloutactionCtx) SetNewObj(newObj apiintf.CtkitObject) {
 
 func (ctx *rolloutactionCtx) GetNewObj() apiintf.CtkitObject {
 	return ctx.newObj
+}
+
+func (ctx *rolloutactionCtx) Copy(obj apiintf.CtkitObject) {
+	ctx.obj.RolloutAction = obj.(*rolloutactionCtx).obj.RolloutAction
 }
 
 func (ctx *rolloutactionCtx) Lock() {
