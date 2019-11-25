@@ -201,15 +201,27 @@ ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 		comp->words[i] = ioread32(&idev->dev_cmd_regs->comp.words[i]);
 }
 
+static bool
+ionic_dev_cmd_is_exempt(union dev_cmd *cmd)
+{
+	return (cmd->cmd.opcode == CMD_OPCODE_LIF_RESET ||
+		cmd->cmd.opcode == CMD_OPCODE_PORT_RESET ||
+		cmd->cmd.opcode == CMD_OPCODE_RDMA_RESET_LIF ||
+		cmd->cmd.opcode == CMD_OPCODE_RESET);
+}
+
 void
 ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 {
 	int i;
 
 	/* Bail out if the interface was disabled in response to an error */
-	if (unlikely(cmd->lif_init.opcode != CMD_OPCODE_LIF_RESET &&
-	    ionic_dev_cmd_disabled(idev)))
+	if (ionic_dev_cmd_disabled(idev) &&
+	    !ionic_dev_cmd_is_exempt(cmd))
 		return;
+
+	KASSERT(!idev->dev_cmd_pending, ("dev_cmd already pending"));
+	idev->dev_cmd_pending = true;
 
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
 		iowrite32(cmd->words[i], &idev->dev_cmd_regs->cmd.words[i]);
@@ -536,11 +548,11 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait,
     bool sleepable_ctx)
 {
 	unsigned long cmd_start, cmd_timo, msecs;
-	int done, waits = 0;
+	int done, waits = 0, err = 0;
 
 	/* Bail out if the interface was disabled in response to an error */
-	if (unlikely(ionic_dev_cmd_disabled(idev)))
-		return (ENXIO);
+	if (!idev->dev_cmd_pending)
+		return (-ENXIO);
 
 	cmd_start = ticks;
 	cmd_timo = cmd_start + max_wait;
@@ -555,7 +567,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait,
 				IONIC_INFO("DEVCMD took %lums (%d waits)\n",
 				    msecs, waits);
 			}
-			return (0);
+			goto out;
 		}
 
 		/* Either sleep for 100ms or spin for 1ms */
@@ -579,12 +591,15 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait,
 			IONIC_INFO("DEVCMD took %lums (%d waits)\n",
 			    msecs, waits);
 		}
-		return (0);
+		goto out;
 	}
 
 	IONIC_ERROR("DEVCMD timeout after %lums (%d waits)\n", msecs, waits);
+	err = -ETIMEDOUT;
 
-	return (ETIMEDOUT);
+out:
+	idev->dev_cmd_pending = false;
+	return (err);
 }
 
 int
@@ -596,7 +611,7 @@ ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 	err = ionic_dev_cmd_wait(idev, max_wait, false);
 	if (!err)
 		err = ionic_dev_cmd_check_error(idev);
-	if (err == ETIMEDOUT)
+	if (err == -ETIMEDOUT)
 		ionic_dev_cmd_disable(idev);
 
 	return (err);
@@ -610,7 +625,7 @@ ionic_dev_cmd_sleep_check(struct ionic_dev *idev, unsigned long max_wait)
 	err = ionic_dev_cmd_wait(idev, max_wait, true);
 	if (!err)
 		err = ionic_dev_cmd_check_error(idev);
-	if (err == ETIMEDOUT)
+	if (err == -ETIMEDOUT)
 		ionic_dev_cmd_disable(idev);
 
 	return (err);

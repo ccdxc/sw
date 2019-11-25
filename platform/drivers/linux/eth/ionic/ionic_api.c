@@ -29,7 +29,7 @@ EXPORT_SYMBOL_GPL(get_netdev_ionic_lif);
 
 void ionic_api_request_reset(struct ionic_lif *lif)
 {
-	dev_warn(&lif->netdev->dev, "not implemented\n");
+	dev_warn(&lif->netdev->dev, "request_reset: not implemented\n");
 }
 EXPORT_SYMBOL_GPL(ionic_api_request_reset);
 

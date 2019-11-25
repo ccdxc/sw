@@ -90,18 +90,6 @@ static inline void rdma_ah_set_dgid_raw(struct ib_ah_attr *attr, void *dgid)
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
-static inline int kstrtobool(const char *s, bool *res)
-{
-	int rc, val;
-
-	rc = kstrtoint(s, 0, &val);
-
-	if (!rc)
-		*res = val;
-
-	return rc;
-}
-
 extern const struct sysfs_ops kobj_sysfs_ops;
 
 static inline int

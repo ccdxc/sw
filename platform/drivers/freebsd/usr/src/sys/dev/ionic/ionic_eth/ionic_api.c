@@ -82,7 +82,7 @@ void
 ionic_api_request_reset(struct ionic_lif *lif)
 {
 
-	netdev_warn(lif->netdev, "not implemented\n");
+	netdev_warn(lif->netdev, "request_reset: not implemented\n");
 }
 EXPORT_SYMBOL_GPL(ionic_api_request_reset);
 
@@ -252,6 +252,7 @@ ionic_api_put_dbid(struct ionic_lif *lif, int dbid)
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
 /* External users: post commands using dev_cmds */
+#define IONIC_API_ADMINQ_WAIT_SEC 10
 int
 ionic_api_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -268,9 +269,9 @@ ionic_api_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 		    &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
-	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
+	ionic_dev_cmd_go(idev, (union dev_cmd *)&ctx->cmd);
 
-	err = ionic_dev_cmd_wait_check(idev, HZ * 10);
+	err = ionic_dev_cmd_wait_check(idev, IONIC_API_ADMINQ_WAIT_SEC * HZ);
 	if (err)
 		goto err_out;
 

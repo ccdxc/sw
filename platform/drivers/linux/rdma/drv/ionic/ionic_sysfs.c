@@ -256,7 +256,6 @@ static ssize_t ionic_dev_reset_write(struct file *fp, const char __user *ubuf,
 {
 	struct ionic_ibdev *dev = fp->private_data;
 	char buf[16] = {};
-	bool reset_enable = false;
 	int rc = 0;
 
 	if (count > sizeof(buf))
@@ -266,14 +265,11 @@ static ssize_t ionic_dev_reset_write(struct file *fp, const char __user *ubuf,
 	if (rc)
 		return rc;
 
-	if (kstrtobool(buf, &reset_enable))
+	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
 		return -EINVAL;
 
-	if (reset_enable) {
-		dev_warn(&dev->ibdev.dev, "resetting...\n");
-		ionic_ibdev_reset(dev);
-	}
-
+	dev_warn(&dev->ibdev.dev, "resetting...\n");
+	ionic_ibdev_reset(dev);
 	return count;
 }
 

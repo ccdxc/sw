@@ -1493,8 +1493,8 @@ if args.host is not None:
 setHostOS()
 
 if HOST_OS == 'FreeBSD':
-    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.{aqid}.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
-    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.{aqid}.dbg_wr_data > {out}'
+    CTRL_FMT='sysctl dev.ionic.{lif}.rdma.aq.{aqid}.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
+    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma.aq.{aqid}.dbg_wr_data > {out}'
 else:
     CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/{aqid}/dbg_wr_ctrl'
     DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/{aqid}/dbg_wr_data > {out}'

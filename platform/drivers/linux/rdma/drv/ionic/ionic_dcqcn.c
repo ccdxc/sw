@@ -360,18 +360,13 @@ static ssize_t dcqcn_profile_reset(struct kobject *kobj,
 {
 	struct dcqcn_profile *prof = to_dcqcn_prof(kobj);
 	struct ionic_ibdev *dev = prof->dev;
-	int rc, prof_i = prof - dev->dcqcn->profiles;
-	bool val;
+	int prof_i = prof - dev->dcqcn->profiles;
 
-	rc = kstrtobool(buf, &val);
-	if (rc < 0)
-		return rc;
+	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
+		return -EINVAL;
 
-	if (val) {
-		prof->vals = *dcqcn_get_defaults(prof_i);
-		dcqcn_set_profile(prof);
-	}
-
+	prof->vals = *dcqcn_get_defaults(prof_i);
+	dcqcn_set_profile(prof);
 	return count;
 }
 

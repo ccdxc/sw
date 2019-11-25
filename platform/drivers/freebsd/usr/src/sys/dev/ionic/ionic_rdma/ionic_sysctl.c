@@ -405,7 +405,7 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
 	ctx = &dev->debug_ctx;
 	sysctl_ctx_init(ctx);
 
-	oidp = ionic_node(ctx, parent, "rdma_dbg", "RDMA Driver Debug");
+	oidp = ionic_node(ctx, parent, "rdma", "RDMA Device");
 	if (!oidp)
 		return;
 
@@ -423,16 +423,12 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
 static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 {
 	struct ionic_ibdev *dev = context;
-	bool reset_enable = false;
 
-	if (kstrtobool(buf, &reset_enable))
+	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
 		return -EINVAL;
 
-	if (reset_enable) {
-		dev_warn(&dev->ibdev.dev, "resetting...\n");
-		ionic_ibdev_reset(dev);
-	}
-
+	dev_warn(&dev->ibdev.dev, "resetting...\n");
+	ionic_ibdev_reset(dev);
 	return 0;
 }
 
