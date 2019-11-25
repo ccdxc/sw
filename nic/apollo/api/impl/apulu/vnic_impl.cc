@@ -87,8 +87,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     }
 
     if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) ||
-        (spec->host_ifindex == IFINDEX_INVALID) ||
-        (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM)) {
+        (spec->host_ifindex == IFINDEX_INVALID)) {
         // allocate hw id for this vnic
         if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to allocate hw id for vnic %u, err %u",

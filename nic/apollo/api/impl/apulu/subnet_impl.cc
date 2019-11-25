@@ -234,12 +234,6 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     if (spec->host_ifindex != IFINDEX_INVALID) {
         lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         lif = lif_impl_db()->find(&lif_key);
-        if (lif == NULL) {
-            // TODO: temporary for scale test
-            PDS_TRACE_WARN("Skipping lif 0x%x update on subnet %u create",
-                           spec->host_ifindex, spec->key.id);
-            return ret;
-        }
         ret = program_lif_table(lif_key, vpc->hw_id(), hw_id_,
                                 lif->vnic_hw_id());
         if (ret != SDK_RET_OK) {

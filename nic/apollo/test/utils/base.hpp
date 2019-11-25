@@ -15,6 +15,30 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
+static const std::string k_sim_arch = "x86";
+static const std::string k_hw_arch = "arm";
+
+// Returns target arch string
+static inline std::string
+aarch_get (void)
+{
+#ifdef __x86_64__
+    return k_sim_arch;
+#elif __aarch64__
+    return k_hw_arch;
+#else
+    SDK_ASSERT(0);
+    return NULL;
+#endif
+}
+
+// Returns true on hw
+static inline bool
+hw (void)
+{
+    return (aarch_get() == k_hw_arch);
+}
+
 // Returns pipeline string
 static inline std::string
 pipeline_get (void)

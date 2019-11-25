@@ -546,7 +546,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 if (v6_meter_id > (2 * num_meter)) {
                     v6_meter_id = num_meter+1;
                 }
-                if (apulu() &&
+                if (apulu() && hw() &&
                     (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
                     pds_vnic.host_ifindex = LIF_IFINDEX(lif_id++);
                     if (lif_id > HOST_LIF_ID_MAX) {
@@ -629,7 +629,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_subnet.fabric_encap.val.vnid =
                 num_vpcs + (vpc_id - 1) * num_subnets + i;
-            if (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST) {
+            if (hw() && (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
                 pds_subnet.host_ifindex = LIF_IFINDEX(lif_id++);
                 if (lif_id > HOST_LIF_ID_MAX) {
                     lif_id = HOST_LIF_ID_MIN;
