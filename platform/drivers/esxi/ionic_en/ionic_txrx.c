@@ -1032,6 +1032,56 @@ ionic_tx_linearize_pkt(struct queue *q,
         return status;
 }
 
+/* Is any MSS size chunk spanning more than the supported number of SGLs? */
+static inline vmk_Bool
+ionic_tso_is_sparse(vmk_PktHandle *pkt, ionic_tx_ctx *ctx)
+{
+        vmk_uint32 frag_cnt = 0, frag_len = 0;
+        vmk_uint32 seg_rem = 0, seg_idx = 0;
+        vmk_uint32 tso_rem = 0, tcp_seg_rem = 0, hdrlen = 0;
+
+        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS + 1) {
+                return VMK_FALSE;
+        }
+
+        tso_rem = ctx->frame_len;
+        /* first tcp segment descriptor has header + mss_payload */
+        hdrlen = ctx->l4_hdr_entry->nextHdrOffset;
+        tcp_seg_rem = ctx->mss + hdrlen;
+        seg_rem = vmk_PktSgElemGet(pkt, seg_idx)->length;
+        /* until all data in tso is exhausted */
+        while (tso_rem > 0) {
+                /* until a full tcp segment can be created */
+                while (tcp_seg_rem > 0 && tso_rem > 0) {
+                        frag_cnt++;
+                        /* is this tcp segment too fragmented? */
+                        if (frag_cnt > IONIC_TX_MAX_SG_ELEMS + 1)
+                                return VMK_TRUE;
+                        /* is the mbuf segment is exhausted? */
+                        if (seg_rem == 0) {
+                                seg_idx++;
+                                /* we ran out of mbufs before all tso data is exhausted?
+                                   may be length is wrong in mbuf */
+                                if (seg_idx == ctx->nr_frags) {
+                                        return VMK_TRUE;
+                                }
+                                /* use the next mbuf segment */
+                                seg_rem = vmk_PktSgElemGet(pkt, seg_idx)->length;
+                        }
+                        frag_len = IONIC_MIN(seg_rem, tcp_seg_rem);
+                        seg_rem -= frag_len;
+                        tcp_seg_rem -= frag_len;
+                        tso_rem -= frag_len;
+                }
+                /* move to the next tcp segment */
+                frag_cnt = 0;
+                /* subsequent tcp segment descriptor only has mss_payload */
+                tcp_seg_rem = ctx->mss;
+        }
+
+        return VMK_FALSE;
+}
+
 
 void
 ionic_tx_descs_needed(vmk_PktHandle *pkt,
@@ -1039,7 +1089,7 @@ ionic_tx_descs_needed(vmk_PktHandle *pkt,
                       ionic_tx_ctx *ctx,
                       vmk_Bool *is_linearize_needed)
 {
-        ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(pkt);
+        ctx->is_tso_needed = ctx->offload_flags & IONIC_TX_TSO;
         ctx->nr_frags = vmk_PktSgArrayGet(pkt)->numElems;
         ctx->frame_len = vmk_PktFrameLenGet(pkt);
 
@@ -1052,11 +1102,7 @@ ionic_tx_descs_needed(vmk_PktHandle *pkt,
                 /* we need one additional descriptor per tso segment */
                 *num_tx_descs += (ctx->frame_len / ctx->mss);
 
-                /* todo: need to linearize only if number of frags in
-                 * mss is greater than MAX_SG_ELEMS*/
-                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
-                        *is_linearize_needed = VMK_TRUE;
-                }
+                *is_linearize_needed = ionic_tso_is_sparse(pkt, ctx);
         } else {
                 if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
                         *is_linearize_needed = VMK_TRUE;
@@ -1091,6 +1137,25 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         vmk_Memset(&ctx, 0, sizeof(ionic_tx_ctx));
 
+        ctx.offload_flags |= vmk_PktIsLargeTcpPacket(pkt) ? IONIC_TX_TSO : 0;
+        ctx.offload_flags |= vmk_PktIsMustCsum(pkt) ? IONIC_TX_CSO : 0;
+
+        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) {
+                if (vmk_PktMustVlanTag(pkt)) {
+                        ctx.offload_flags |= IONIC_TX_VLAN;
+                        ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
+                        ctx.priority   = vmk_PktPriorityGet(pkt);
+                }
+        }
+
+        status = ionic_pkt_header_parse(pkt,
+                                        &ctx);
+        if (status != VMK_OK) {
+                ionic_en_err("ionic_pkt_header_parse() failed, status: %s",
+                             vmk_StatusToString(status));
+                goto err_out_drop;
+        }
+
         ionic_tx_descs_needed(pkt,
                               &ndescs,
                               &ctx,
@@ -1124,25 +1189,6 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                                      vmk_StatusToString(status));
                         goto err_out_drop;
                 }
-        }
-
-        ctx.offload_flags |= vmk_PktIsLargeTcpPacket(pkt) ? IONIC_TX_TSO : 0;
-        ctx.offload_flags |= vmk_PktIsMustCsum(pkt) ? IONIC_TX_CSO : 0;
-
-        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) {
-                if (vmk_PktMustVlanTag(pkt)) {
-                        ctx.offload_flags |= IONIC_TX_VLAN;
-                        ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
-                        ctx.priority   = vmk_PktPriorityGet(pkt);
-                }
-        }
-
-        status = ionic_pkt_header_parse(pkt,
-                                        &ctx);
-        if (status != VMK_OK) {
-                ionic_en_err("ionic_pkt_header_parse() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto err_out_drop;
         }
 
         ctx.mapped_len = vmk_PktFrameMappedLenGet(pkt);
