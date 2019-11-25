@@ -115,7 +115,7 @@ ln -s "../../../drivers/rdma/drv/ionic/uapi/rdma/ionic-abi.h" \
     "$GEN_DIR/rdma-core/kernel-headers/rdma/ionic-abi.h"
 
 # Copy krping sources to gen dir
-rsync -r --delete --delete-excluded --exclude=".git/" \
+rsync -r --delete --delete-excluded --exclude=".git/" --exclude="freebsd/" \
   "$KRPING_SRC/" "$GEN_DIR/krping"
 
 # Copy perftest sources to gen dir

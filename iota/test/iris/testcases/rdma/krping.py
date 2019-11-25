@@ -135,17 +135,21 @@ def Trigger(tc):
         options = options + "count={},".format(count)
         client_options = options
 
+    # If the client fails to connect or otherwise misbehaves, IOTA
+    # can get stuck with a server waiting forever. This causes
+    # module unload to fail and cascading failures after that.
+    # Tell the server to only wait this long before giving up.
+    server_options = options + "wait=30,"
+
     cmd = "sudo echo -n 'server,addr={addr},{opstr}' > {kfile}".format(
               addr = w1.ip_address,
-              opstr = options,
+              opstr = server_options,
               kfile = krpfile)
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd,
                            background = True)
 
-    # On Naples-Mellanox setups, with Mellanox as server, it takes a few
-    # seconds before the server starts listening.
-    # Sleep for a few seconds before trying to start the client.
-    cmd = 'sleep 2'
+    # It takes a few seconds before the server starts listening.
+    cmd = 'sleep 3'
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
 
     # Right now on some setups it's taking longer, so use 150secs timeout.

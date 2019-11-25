@@ -9,7 +9,7 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${SONIC_DRIVERS_SRC:="$TOP/storage/offload"}
 : ${PERFTEST_SRC:="$RDMA/perftest"}
 : ${QPERF_SRC:="$RDMA/qperf"}
-: ${KRPING_SRC:="$RDMA/krping/freebsd/krping"}
+: ${KRPING_SRC:="$RDMA/krping/freebsd"}
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-freebsd"}
@@ -120,7 +120,7 @@ rsync -r --delete --delete-excluded \
   "$QPERF_SRC/" "$GEN_DIR/qperf"
 
 # Copy krping sources to gen dir
-rsync -r --delete --delete-excluded \
+rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude="*.o" \
   --exclude="*.ko" \
