@@ -10,12 +10,20 @@ import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterConfigurationSnapshotRequest, ClusterSnapshotRestore, IApiStatus, IClusterConfigurationSnapshotRequest, IClusterSnapshotRestore } from '@sdk/v1/models/generated/cluster';
+import { ClusterConfigurationSnapshotRequest, ClusterSnapshotRestore, IApiStatus, IClusterConfigurationSnapshotRequest, IClusterSnapshotRestore, IClusterConfigurationSnapshot, ClusterConfigurationSnapshot } from '@sdk/v1/models/generated/cluster';
 import { IObjstoreObject, IObjstoreObjectList, ObjstoreObject } from '@sdk/v1/models/generated/objstore';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
 import { AUTH_KEY } from '@app/core';
 
+/**
+ * This component let user run CRUD operations on snapshot configurations.
+ *
+ * 1. When page starts up, UI will check if Venice has ClusterConfigurationSnapshot object. If not, creates it.
+ * 2. List all snapshots by fetching them from objectstore.  see getSnapshots()
+ * 3. User can run save snapshot and restore snapshot.
+ *
+ */
 
 @Component({
   selector: 'app-snapshots',
@@ -82,8 +90,10 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   }
 
   postNgInit(): void {
+    this.checkAndMakeSnapshotPolicy();
     this.getSnapshots();
   }
+
 
   setDefaultToolbar() {
     const buttons = [];
@@ -118,6 +128,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     const clusterConfigurationSnapshotRequest: IClusterConfigurationSnapshotRequest = new ClusterConfigurationSnapshotRequest();
     this.clusterService.Save(clusterConfigurationSnapshotRequest).subscribe(
       (response) => {
+        this.controllerService.invokeSuccessToaster('Success.', 'Saved configuration snapshot.' );
         this.refresh();
       },
       (error) => {
@@ -151,6 +162,56 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     return '/objstore/v1/downloads/snapshots/' + instanceId;
   }
 
+  /**
+   * This API check if backend already has Snapshot config policy.
+   * If not, create one.  // Per VS-904
+   */
+  checkAndMakeSnapshotPolicy() {
+    const sub = this.clusterService.GetConfigurationSnapshot().subscribe(
+      (response) => {
+          //  We found existing Snapshot config.  So do nonthing.
+      },
+      (error) => {
+        console.error(this.getClassName() +  'checkAndMakeSnapshotPolicy(). Found not snapshot policy. Create one');
+        this.generateConfigSnapshot();
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * ClusterConfigurationSnapshot is a singleton object in Venice.
+   * At 2019-11-26, we only have one configuration as below. It means configure snapshot will be saved in objectstore.
+   */
+  generateConfigSnapshot() {
+    const config =   {
+      'kind': 'ConfigSnapshot',
+      'meta': {
+        'name': 'GlobalSnapshot'
+      },
+      'spec': {
+        'periodicity': '2h',
+        'destination': {
+          'Type': 'objectstore',
+          'object-store': {
+            'bucket': 'snapshots'
+          }
+        }
+      }
+    };
+    const myConfigurationSnapshot: IClusterConfigurationSnapshot = new ClusterConfigurationSnapshot(config);
+    const sub = this.clusterService.AddConfigurationSnapshot(myConfigurationSnapshot).subscribe(
+      (response) => {
+          //  We found existing Snapshot config.  So do nonthing.
+      },
+      (error) => {
+        this.controllerService.invokeErrorToaster('Creating Snapshot Failed', 'Failed to generate Global Configuration Policy, Please contact system administrator.');
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+
   getSnapshots() {
     const sub = this.objstoreService.ListObject(SnapshotsComponent.SNAPSHOT_NAMESPACES).subscribe(
       (response) => {
@@ -163,6 +224,10 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
 
   deleteRecord(object: ObjstoreObject): Observable<{ body: ObjstoreObject | IApiStatus | Error, statusCode: number }> {
     return this.objstoreService.DeleteObject(SnapshotsComponent.SNAPSHOT_NAMESPACES, object.meta.name);
+  }
+
+  postDeleteRecord() {
+    this.refresh();
   }
 
 
@@ -202,7 +267,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
 
     const sub = this.clusterService.Restore(clusterSnapshotRestore).subscribe(
       (response) => {
-        this.controllerService.invokeSuccessToaster('Invoked config restore.', 'Venice will be unavailable. You will be log out.');
+        this.controllerService.invokeSuccessToaster('Invoked config restore.', 'Venice will be unavailable. You will be logged out. Please refresh browser to login again.');
         const setTime1 = window.setTimeout(() => {
           this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Restoring Venice configuration.' });
           window.clearTimeout(setTime1);

@@ -103,7 +103,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 22 },
     { field: 'action', header: 'Action', class: 'sgpolicy-action', width: 24 },
     { field: 'protocolPort', header: 'Protocol/Ports', class: 'sgpolicy-port', width: 20 },
-    { field: 'TotalHits', header: 'Total Hits', class: 'sgpolicy-rule-stat', width: 10 },
+    { field: 'TotalHits', header: 'Total Connection Hits', class: 'sgpolicy-rule-stat', width: 10 },
   ];
 
   ruleHitItems: SelectItem[] = [
