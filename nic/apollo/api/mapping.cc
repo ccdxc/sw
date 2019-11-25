@@ -7,10 +7,12 @@
  */
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 
 namespace api {
 
@@ -24,6 +26,7 @@ mapping_entry::mapping_entry() {
     stateless_ = true;
     is_local_ = false;
     public_ip_valid_ = false;
+    ht_ctxt_.reset();
 }
 
 mapping_entry *
@@ -84,12 +87,16 @@ mapping_entry::soft_delete(mapping_entry *mapping) {
     if (mapping->impl_) {
         impl_base::soft_delete(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
     }
+    mapping->del_from_db();
     mapping->~mapping_entry();
     mapping_db()->free(mapping);
 }
 
 sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_mapping_spec_t *spec = &api_ctxt->api_params->mapping_spec;
+
+    memcpy(&key_, &spec->key, sizeof(pds_mapping_key_t));
     return SDK_RET_OK;
 }
 
@@ -146,17 +153,20 @@ mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-
+// even though mapping object is stateless, we need to temporarily insert
+// into the db as back-to-back operations on the same object can be issued
+// in same batch
 sdk_ret_t
 mapping_entry::add_to_db(void) {
-    // mappings are not added to s/w db, so its a no-op
-    return SDK_RET_OK;
+    return mapping_db()->insert(this);
 }
 
 sdk_ret_t
 mapping_entry::del_from_db(void) {
-    // mappings are not added to s/w db, so its a no-op
-    return SDK_RET_OK;
+    if (mapping_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

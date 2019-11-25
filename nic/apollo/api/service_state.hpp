@@ -42,11 +42,32 @@ public:
      */
     svc_mapping *alloc(void);
 
+    /// \brief     insert given svc mapping instance into the svc mapping db
+    /// \param[in] mapping svc mapping entry to be added to the db
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(svc_mapping *mapping);
+
+    /// \brief     remove the given instance of svc mapping object from db
+    /// \param[in] mapping svc mapping entry to be deleted from the db
+    /// \return    pointer to the removed svc mapping instance or NULL, if not found
+    svc_mapping *remove(svc_mapping *mapping);
+
     /**
      * @brief      free service mapping instance back to slab
      * @param[in]  mapping   pointer to the allocated service mapping
      */
     void free(svc_mapping *mapping);
+
+    /// \brief     lookup a svc mapping in database given the key
+    /// \param[in] key key for the svc mapping object
+    /// \return    pointer to the svc mapping instance found or NULL
+    svc_mapping *find(pds_svc_mapping_key_t *key) const;
+
+    /// \brief API to walk all the db elements
+    /// \param[in] walk_cb    callback to be invoked for every node
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -57,9 +78,11 @@ public:
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
+    ht *svc_mapping_ht(void) const { return svc_mapping_ht_; }
     slab *svc_mapping_slab(void) const { return svc_mapping_slab_; }
 
 private:
+    ht *svc_mapping_ht_;        /**< mapping databse */
     slab *svc_mapping_slab_;    /**< slab to allocate service mapping entry */
 };
 

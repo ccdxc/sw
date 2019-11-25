@@ -162,6 +162,14 @@ public:
     ///\return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info);
 
+    /// \brief     helper function to get key given svc mapping entry
+    /// \param[in] entry    pointer to svc mapping instance
+    /// \return    pointer to the mapping instance's key
+    static void *svc_mapping_key_func_get(void *entry) {
+        svc_mapping *mapping = (svc_mapping *)entry;
+        return (void *)&(mapping->key_);
+    }
+
     /// \brief     return impl instance of this service mapping object
     /// \return    impl instance of the service mapping object
     impl_base *impl(void) { return impl_; }
@@ -179,7 +187,11 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    impl_base    *impl_;            ///< impl object instance
+    pds_svc_mapping_key_t key_; ///< key of this service mapping
+    ht_ctxt_t ht_ctxt_;         ///< hash table context
+    impl_base    *impl_;        ///< impl object instance
+    /// svc_mapping_state is friend of svc_mapping
+    friend class svc_mapping_state;
 } __PACK__;
 
 /// @}     // end of PDS_SVC_MAPPING

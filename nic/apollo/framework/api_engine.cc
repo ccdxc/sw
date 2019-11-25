@@ -19,6 +19,12 @@
 
 #define PDS_API_PREPROCESS_CREATE_COUNTER_INC(cntr_, val)    \
             counters_.preprocess.create.cntr_ += (val)
+#define PDS_API_PREPROCESS_DELETE_COUNTER_INC(cntr_, val)    \
+            counters_.preprocess.del.cntr_ += (val)
+#define PDS_API_PREPROCESS_UPDATE_COUNTER_INC(cntr_, val)    \
+            counters_.preprocess.upd.cntr_ += (val)
+
+// TODO: is there a need to clone a stateless obj ? can we reuse built obj ?
 
 namespace api {
 
@@ -85,7 +91,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
             PDS_API_PREPROCESS_CREATE_COUNTER_INC(oom_err, 1);
             return SDK_RET_ERR;
         }
-        PDS_TRACE_VERBOSE("allocated api obj %p, api op %u, obj id %u",
+        PDS_TRACE_VERBOSE("Allocated api obj %p, api op %u, obj id %u",
                           api_obj, api_ctxt->api_op, api_ctxt->obj_id);
         // add it to dirty object list
         obj_ctxt.api_op = API_OP_CREATE;
@@ -107,7 +113,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want
         // to support idempotency)
         if (unlikely(api_obj->in_dirty_list() == false)) {
-            // attemping a CREATED on already created object
+            // attemping a CREATE on already created object
             PDS_TRACE_ERR("Creating an obj that exists already, obj %s",
                           api_obj->key2str().c_str());
             PDS_API_PREPROCESS_CREATE_COUNTER_INC(obj_exists_err, 1);
@@ -201,32 +207,50 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
     obj_ctxt_t    obj_ctxt;
     api_base      *api_obj;
 
-    if (api_base::stateless(api_ctxt->obj_id)) {
-        // TODO: we have to look at framework's internal DB for these stateless
-        //       objects, otherwise if same object is being operated on
-        //       in same batch, we can't de-dup operations
-        api_obj = api_base::build(api_ctxt);
-    } else {
-        api_obj = api_base::find_obj(api_ctxt);
-    }
-    if (api_obj) {
-        if (api_obj->in_dirty_list()) {
-            // note that we could have cloned_obj as non-NULL in this case
-            // (e.g., UPD-XXX-DEL), but that doesn't matter here
-            batch_ctxt_.dirty_obj_map[api_obj].api_op =
-                api_op_(batch_ctxt_.dirty_obj_map[api_obj].api_op,
-                        API_OP_DELETE);
-            SDK_ASSERT(batch_ctxt_.dirty_obj_map[api_obj].api_op !=
-                       API_OP_INVALID);
+    // look for the object in the cfg db
+    api_obj = api_base::find_obj(api_ctxt);
+    if (api_obj == nullptr) {
+        if (api_base::stateless(api_ctxt->obj_id)) {
+            // build stateless objects on the fly
+            api_obj = api_base::build(api_ctxt);
+            if (api_obj) {
+                // and temporarily add to the db (these must be removed during
+                // commit/rollback operation)
+                api_obj->add_to_db();
+            } else {
+                PDS_TRACE_ERR("Failed to find/build stateless obj %u",
+                              api_ctxt->obj_id);
+                PDS_API_PREPROCESS_DELETE_COUNTER_INC(obj_build_err, 1);
+                return sdk::SDK_RET_ENTRY_NOT_FOUND;
+            }
         } else {
-            // add the object to dirty list
-            obj_ctxt.api_op = API_OP_DELETE;
-            obj_ctxt.obj_id = api_ctxt->obj_id;
-            add_to_dirty_list_(api_obj, obj_ctxt);
+            PDS_TRACE_ERR("Failed to preprocess delete on obj %u",
+                          api_ctxt->obj_id);
+            PDS_API_PREPROCESS_DELETE_COUNTER_INC(not_found_err, 1);
+            return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
-    } else {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
+
+    // by now either we built the object (and added to db) or found the object
+    // that is in the db
+    if (api_obj->in_dirty_list()) {
+        // NOTE.
+        // 1. for stateful objects, this probably is a cloned obj
+        // (e.g., UPD-XXX-DEL), but that doesn't matter here
+        // 2. if this is a stateless obj, we probably built this object, either
+        //    due to ADD/UPD before and added to the db
+        batch_ctxt_.dirty_obj_map[api_obj].api_op =
+            api_op_(batch_ctxt_.dirty_obj_map[api_obj].api_op,
+                    API_OP_DELETE);
+        SDK_ASSERT(batch_ctxt_.dirty_obj_map[api_obj].api_op !=
+                   API_OP_INVALID);
+    } else {
+        // add the object to dirty list
+        obj_ctxt.api_op = API_OP_DELETE;
+        obj_ctxt.obj_id = api_ctxt->obj_id;
+        add_to_dirty_list_(api_obj, obj_ctxt);
+    }
+    PDS_API_PREPROCESS_DELETE_COUNTER_INC(ok, 1);
    return SDK_RET_OK;
 }
 
@@ -237,39 +261,65 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
     api_base      *api_obj;
 
     api_obj = api_base::find_obj(api_ctxt);
-    if (api_obj) {
-        if (api_obj->in_dirty_list()) {
-            obj_ctxt_t& octxt =
-                batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-            octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
-            SDK_ASSERT(octxt.api_op != API_OP_INVALID);
-            if (octxt.cloned_obj == NULL) {
-                // XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
-                // re-init the object with new config and continue with de-duped
-                // operation as ADD
-                octxt.api_params = api_ctxt->api_params;
-                ret = api_obj->init_config(api_ctxt);
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    if (api_obj == nullptr) {
+        if (api_base::stateless(api_ctxt->obj_id)) {
+            // build stateless objects on the fly
+            api_obj = api_base::build(api_ctxt);
+            if (api_obj) {
+                // and temporarily add to the db (these must be removed during
+                // commit/rollback operation)
+                api_obj->add_to_db();
             } else {
-                // XXX-UPD-XXX-UPD scenario, update the cloned obj
-                octxt.api_params = api_ctxt->api_params;
-                ret = octxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+                PDS_TRACE_ERR("Failed to find/build stateless obj %u",
+                              api_ctxt->obj_id);
+                PDS_API_PREPROCESS_UPDATE_COUNTER_INC(obj_build_err, 1);
+                return sdk::SDK_RET_ENTRY_NOT_FOUND;
             }
         } else {
-            // UPD-XXX scenario, update operation is seen 1st time on this
-            // object in this batch
-            obj_ctxt.api_op = API_OP_UPDATE;
-            obj_ctxt.obj_id = api_ctxt->obj_id;
-            obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
-            obj_ctxt.api_params = api_ctxt->api_params;
-            add_to_dirty_list_(api_obj, obj_ctxt);
-            ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
-            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(not_found_err, 1);
+            return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        }
+    }
+
+    if (api_obj->in_dirty_list()) {
+        obj_ctxt_t& octxt =
+            batch_ctxt_.dirty_obj_map.find(api_obj)->second;
+        octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
+        SDK_ASSERT(octxt.api_op != API_OP_INVALID);
+        if (octxt.cloned_obj == NULL) {
+            // XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
+            // re-init the object with new config and continue with de-duped
+            // operation as ADD
+            octxt.api_params = api_ctxt->api_params;
+            ret = api_obj->init_config(api_ctxt);
+            if (ret != SDK_RET_OK) {
+                PDS_API_PREPROCESS_UPDATE_COUNTER_INC(init_cfg_err, 1);
+                return ret;
+            }
+        } else {
+            // XXX-UPD-XXX-UPD scenario, update the cloned obj
+            octxt.api_params = api_ctxt->api_params;
+            ret = octxt.cloned_obj->init_config(api_ctxt);
+            if (ret != SDK_RET_OK) {
+                PDS_API_PREPROCESS_UPDATE_COUNTER_INC(init_cfg_err, 1);
+                return ret;
+            }
         }
     } else {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        // UPD-XXX scenario, update operation is seen 1st time on this
+        // object in this batch
+        obj_ctxt.api_op = API_OP_UPDATE;
+        obj_ctxt.obj_id = api_ctxt->obj_id;
+        obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
+        obj_ctxt.api_params = api_ctxt->api_params;
+        add_to_dirty_list_(api_obj, obj_ctxt);
+        ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
+        if (ret != SDK_RET_OK) {
+            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(init_cfg_err, 1);
+            return ret;
+        }
     }
+    PDS_API_PREPROCESS_UPDATE_COUNTER_INC(ok, 1);
     return SDK_RET_OK;
 }
 
@@ -675,10 +725,11 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 
     case API_OP_DELETE:
         // so far we did the following for the API_OP_DELETE:
-        // 1. added the object to the dirty list
-        // 2. potentially cloned the original object (UPD-XXX-DEL case)
-        // 3. potentially called cleanup_config() to clear entries in hw and
-        // 4. called set_hw_dirty()
+        // 1. for stateless objs, we built the object and added to db
+        // 2. added the object to the dirty list
+        // 3. potentially cloned the original object (UPD-XXX-DEL case)
+        // 4. potentially called cleanup_config() to clear entries in hw and
+        // 5. called set_hw_dirty()
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
             //api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
@@ -688,15 +739,21 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
             obj_ctxt->cloned_obj->delay_delete();
         }
         del_from_dirty_list_(it, api_obj);
+        if (api_obj->stateless()) {
+            PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
+                              api_obj->key2str().c_str());
+            api_base::soft_delete(obj_ctxt->obj_id, api_obj);
+        }
         break;
 
     case API_OP_UPDATE:
         // so far we did the following for the API_OP_UPDATE:
-        // 1. cloned the original object
-        // 2. added original object to dirty list
-        // 3. updated cloned obj's s/w cfg to cfg specified in latest update
-        // 4. called update_config() on cloned obj
-        // 5. called set_hw_dirty() on original object
+        // 1. for stateless objs, we built the object and added to db
+        // 2. cloned the original object
+        // 3. added original object to dirty list
+        // 4. updated cloned obj's s/w cfg to cfg specified in latest update
+        // 5. called update_config() on cloned obj
+        // 6. called set_hw_dirty() on original object
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
@@ -705,6 +762,11 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         }
         obj_ctxt->cloned_obj->delay_delete();
         del_from_dirty_list_(it, api_obj);
+        if (api_obj->stateless()) {
+            PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
+                              api_obj->key2str().c_str());
+            api_base::soft_delete(obj_ctxt->obj_id, api_obj);
+        }
         break;
 
     default:

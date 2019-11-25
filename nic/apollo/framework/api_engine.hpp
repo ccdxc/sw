@@ -132,6 +132,17 @@ typedef struct api_counters_s {
             uint64_t obj_exists_err;
             uint64_t invalid_op_err;
         } create;
+        struct {
+            uint64_t ok;
+            uint64_t obj_build_err;
+            uint64_t not_found_err;
+        } del;
+        struct {
+            uint64_t ok;
+            uint64_t obj_build_err;
+            uint64_t init_cfg_err;
+            uint64_t not_found_err;
+        } upd;
     } preprocess;
 } api_counters_t;
 

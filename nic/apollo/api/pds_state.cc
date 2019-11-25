@@ -44,6 +44,7 @@ pds_state::init(void) {
     state_[PDS_STATE_MIRROR] = new mirror_session_state();
     state_[PDS_STATE_METER] = new meter_state();
     state_[PDS_STATE_TAG] = new tag_state();
+    state_[PDS_STATE_MAPPING] = new mapping_state();
     state_[PDS_STATE_SVC_MAPPING] = new svc_mapping_state();
     state_[PDS_STATE_VPC_PEER] = new vpc_peer_state();
     state_[PDS_STATE_NEXTHOP] = new nexthop_state();
@@ -72,7 +73,7 @@ pds_state::destroy(pds_state *ps) {
 sdk_ret_t
 pds_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     for (uint32_t i = PDS_STATE_MIN; i < PDS_STATE_MAX; i ++) {
-        state_[i]->slab_walk(walk_cb, ctxt); 
+        state_[i]->slab_walk(walk_cb, ctxt);
     }
     return SDK_RET_OK;
 }

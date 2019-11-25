@@ -209,6 +209,14 @@ public:
      */
     sdk_ret_t read(pds_mapping_key_t *key, pds_mapping_info_t *info);
 
+    /// \brief     helper function to get key given mapping entry
+    /// \param[in] entry    pointer to mapping instance
+    /// \return    pointer to the mapping instance's key
+    static void *mapping_key_func_get(void *entry) {
+        mapping_entry *mapping = (mapping_entry *)entry;
+        return (void *)&(mapping->key_);
+    }
+
     /**
      * @brief    return true of false based on whether mapping is local or not
      * @return    true if mapping is local or else false
@@ -273,7 +281,11 @@ private:
     bool public_ip_valid_;  /**< true if public IP is valid */
     ip_addr_t public_ip_;   /**< public IP, if its valid */
     bool is_local_;         /**< is it local or remote object */
+    ht_ctxt_t ht_ctxt_;     /**< hash table context */
     impl_base *impl_;       /**< impl object instance */
+
+    /**< mapping_state is friend of mapping_entry */
+    friend class mapping_state;
 } __PACK__;
 
 

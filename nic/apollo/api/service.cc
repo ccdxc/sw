@@ -7,10 +7,12 @@
  */
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 
 namespace api {
 
@@ -22,6 +24,7 @@ namespace api {
 
 svc_mapping::svc_mapping() {
     stateless_ = true;
+    ht_ctxt_.reset();
     impl_ = NULL;
 }
 
@@ -64,6 +67,7 @@ svc_mapping::build(pds_svc_mapping_key_t *key) {
     mapping = svc_mapping_db()->alloc();
     if (mapping) {
         new (mapping) svc_mapping();
+        memcpy(&mapping->key_, key, sizeof(*key));
         mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_SVC_MAPPING,
                                           key, mapping);
         if (mapping->impl_ == NULL) {
@@ -79,12 +83,16 @@ svc_mapping::soft_delete(svc_mapping *mapping) {
     if (mapping->impl_) {
         impl_base::soft_delete(impl::IMPL_OBJ_ID_SVC_MAPPING, mapping->impl_);
     }
+    mapping->del_from_db();
     mapping->~svc_mapping();
     svc_mapping_db()->free(mapping);
 }
 
 sdk_ret_t
 svc_mapping::init_config(api_ctxt_t *api_ctxt) {
+    pds_svc_mapping_spec_t *spec = &api_ctxt->api_params->svc_mapping_spec;
+
+    memcpy(&key_, &spec->key, sizeof(pds_svc_mapping_key_t));
     return SDK_RET_OK;
 }
 
@@ -137,16 +145,20 @@ svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
+// even though mapping object is stateless, we need to temporarily insert
+// into the db as back-to-back operations on the same object can be issued
+// in same batch
 sdk_ret_t
 svc_mapping::add_to_db(void) {
-    // service mappings are not added to s/w db, so its a no-op
-    return SDK_RET_OK;
+    return svc_mapping_db()->insert(this);
 }
 
 sdk_ret_t
 svc_mapping::del_from_db(void) {
-    // service mappings are not added to s/w db, so its a no-op
-    return SDK_RET_OK;
+    if (svc_mapping_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

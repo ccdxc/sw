@@ -67,17 +67,17 @@ sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
-    memcpy(&this->key_, &spec->key, sizeof(pds_vnic_key_t));
-    this->subnet_ = spec->subnet;
-    this->v4_meter_ = spec->v4_meter;
-    this->v6_meter_ = spec->v6_meter;
-    this->vnic_encap_ = spec->vnic_encap;
-    this->fabric_encap_ = spec->fabric_encap;
-    this->switch_vnic_ = spec->switch_vnic;
+    memcpy(&key_, &spec->key, sizeof(pds_vnic_key_t));
+    subnet_ = spec->subnet;
+    v4_meter_ = spec->v4_meter;
+    v6_meter_ = spec->v6_meter;
+    vnic_encap_ = spec->vnic_encap;
+    fabric_encap_ = spec->fabric_encap;
+    switch_vnic_ = spec->switch_vnic;
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
-    this->host_ifindex_ = spec->host_ifindex;
+    host_ifindex_ = spec->host_ifindex;
     return SDK_RET_OK;
 }
 
