@@ -14,7 +14,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, ISearchPolicySearchResponse, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
-import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap, CustomExportFunctionOpts } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, FieldsRequirement_operator } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
@@ -193,7 +193,32 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   isTabComponent: boolean = false;
 
   exportFilename: string = 'Venice-sgpolicy';
-  exportMap: CustomExportMap = {};
+
+  /** Define exportMap for table export.  Basicially, it is following how displayColumn() **/
+  exportMap: CustomExportMap = {
+    'ruleNum': (opts: CustomExportFunctionOpts) => {
+      return opts.data.order + 1;
+    },
+    'sourceIPs': (opts: CustomExportFunctionOpts) => {
+      return opts.data.rule['from-ip-addresses'].join(', ');
+    },
+    'destIPs': (opts: CustomExportFunctionOpts) => {
+      return opts.data.rule['to-ip-addresses'].join(', ');
+    },
+    'action': (opts: CustomExportFunctionOpts) => {
+      return SecuritySGRule_action_uihint[opts.data.rule.action];
+    },
+    'protocolPort': (opts: CustomExportFunctionOpts) => {
+      return this.formatApp(opts.data.rule);
+    },
+    'TotalHits': (opts: CustomExportFunctionOpts) => {
+      const entry = this.ruleMetrics[opts.data.ruleHash];
+        if (entry == null) {
+          return '';
+        }
+        return String(entry.TotalHits); // to return string
+    }
+  };
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,

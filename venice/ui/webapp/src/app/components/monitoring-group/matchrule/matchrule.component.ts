@@ -90,16 +90,18 @@ export class MatchruleComponent extends BaseComponent implements OnInit {
 
   isValid(): boolean {
      if (! this.customizeValidFunc) {
-       return this.validateAllRulesEmpty();
+       return this.isValidDefaltImpl();
      } else {
        return this.customizeValidFunc();
      }
   }
 
   /**
-   * Check wheter all rules are empty
+   * Default isValid implementation
+   * 1. If all only one emtpy rule, it is OK
+   * 2. If there is at least one non-empty rule, it is OK
    */
-  validateAllRulesEmpty(): boolean {
+  isValidDefaltImpl(): boolean {
     let rules = this.getValues();
     rules = Utility.TrimDefaultsAndEmptyFields(rules);
     let countEmptyRule: number = 0;
@@ -108,7 +110,15 @@ export class MatchruleComponent extends BaseComponent implements OnInit {
         countEmptyRule  += 1;
       }
     }
-    return (countEmptyRule === rules.length);
+    // If all only one emtpy rule, it is OK
+    if (countEmptyRule === rules.length && rules.length === 1 ) {
+      return true;
+    }
+    // If there is at least one non-empty rule, it is OK
+    if (countEmptyRule < rules.length) {
+      return true;
+    }
+    return false;
   }
 
 

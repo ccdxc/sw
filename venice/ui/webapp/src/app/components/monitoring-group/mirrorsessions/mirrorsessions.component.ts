@@ -16,7 +16,7 @@ import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { SelectItem } from 'primeng/api';
 
 @Component({
@@ -27,6 +27,7 @@ import { SelectItem } from 'primeng/api';
   encapsulation: ViewEncapsulation.None
 })
 export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMirrorSession, MonitoringMirrorSession> implements OnInit {
+  exportMap: CustomExportMap = {};
   dataObjects: ReadonlyArray<MonitoringMirrorSession> = [];
 
   mirrorsessonsEventUtility: HttpEventUtility<MonitoringMirrorSession>;
