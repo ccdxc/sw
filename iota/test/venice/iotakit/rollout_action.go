@@ -3,10 +3,10 @@
 package iotakit
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -24,20 +24,13 @@ import (
 // PerformImageUpload triggers image upgrade
 func (act *ActionCtx) PerformImageUpload() error {
 
-	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
-
-	fileBuf, err := ioutil.ReadFile(rolloutFile)
-	if err != nil {
-		log.Infof("Error (%+v) reading file /go/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", err)
-		return fmt.Errorf("Error (%+v) reading file /go/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", err)
-	}
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
 	ctx, err := act.model.VeniceLoggedInCtx(bkCtx)
 	if err != nil {
 		return err
 	}
-	_, err = act.UploadBundle(ctx, "bundle.tar", fileBuf)
+	_, err = act.UploadBundle(ctx, "bundle.tar")
 	if err != nil {
 		log.Infof("Error (%+v) uploading bundle.", err)
 		return err
@@ -46,25 +39,30 @@ func (act *ActionCtx) PerformImageUpload() error {
 }
 
 // UploadBundle performs a rollout in the cluster
-func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content []byte) (int, error) {
+func (act *ActionCtx) UploadBundle(ctx context.Context, filename string) (int, error) {
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filename)
-	if err != nil {
-		return 0, fmt.Errorf("CreateFormFile failed %v", err)
-	}
-	written, err := part.Write(content)
-	if err != nil {
-		return 0, fmt.Errorf("writing form %v", err)
-	}
+	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
+	r, w := io.Pipe()
+	m := multipart.NewWriter(w)
+	go func() {
+		defer w.Close()
+		defer m.Close()
+		part, err := m.CreateFormFile("file", filename)
+		if err != nil {
+			return
+		}
+		file, err := os.Open(rolloutFile)
+		if err != nil {
+			return
+		}
+		defer file.Close()
+		if _, err = io.Copy(part, file); err != nil {
+			return
+		}
+	}()
 
-	err = writer.Close()
-	if err != nil {
-		return 0, fmt.Errorf("closing writer %v", err)
-	}
 	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", act.model.GetVeniceURL()[0])
-	req, err := http.NewRequest("POST", uri, body)
+	req, err := http.NewRequest("POST", uri, r)
 	if err != nil {
 		return 0, fmt.Errorf("http.newRequest failed %v", err)
 	}
@@ -73,7 +71,7 @@ func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content
 		return 0, fmt.Errorf("no authorization header in context")
 	}
 	req.Header.Set("Authorization", authzHeader)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Content-Type", m.FormDataContentType())
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: transport}
 	resp, err := client.Do(req)
@@ -86,9 +84,10 @@ func (act *ActionCtx) UploadBundle(ctx context.Context, filename string, content
 		log.Errorf("Did not get a success on upload [%v]", string(body))
 		return 0, fmt.Errorf("failed to get upload [%v][%v]", resp.Status, string(body))
 	}
-	return written, nil
+	return 0, nil
 
 }
+
 var names []string
 
 // VerifyRolloutStatus verifies status of rollout in the iota cluster
@@ -209,34 +208,38 @@ outerLoop:
 		status := r1.Status.GetDSCsStatus()
 		log.Infof("ts:%s Precheck smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
 		var numNodes int
-		if len(status) == 0 || r1.Status.OperationalState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String(){
+		if len(status) == 0 || r1.Status.OperationalState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String() {
 			log.Infof("ts:%s Precheck smartNIC in progress", time.Now().String())
 			time.Sleep(time.Second * 5)
 			continue
 		}
 		if r1.Status.OperationalState == rollout.RolloutStatus_PROGRESSING.String() ||
-					r1.Status.OperationalState == rollout.RolloutStatus_FAILURE.String() ||
-					r1.Status.OperationalState == rollout.RolloutStatus_SUCCESS.String() {
+			r1.Status.OperationalState == rollout.RolloutStatus_FAILURE.String() ||
+			r1.Status.OperationalState == rollout.RolloutStatus_SUCCESS.String() {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
-	        numRetries = 0
-		    break
-	    }
+			numRetries = 0
+			break
+		}
 
 		for i := 0; i < len(status); i++ {
 			log.Errorf("ts:%s. Naples Pre Install %+v", time.Now().String(), status[i])
-			if status[i].Phase == rollout.RolloutPhase_WAITING_FOR_TURN.String() {
+			if status[i].Phase == rollout.RolloutPhase_WAITING_FOR_TURN.String() || status[i].Phase == rollout.RolloutPhase_COMPLETE.String() {
 				numNodes++
 			}
 		}
-
+		if r1.Status.OperationalState == rollout.RolloutStatus_PRECHECK_IN_PROGRESS.String() {
+			log.Errorf("ts:%s Pre-install in progress:completed for %d naples", time.Now().String(), numNodes)
+			time.Sleep(time.Second * 5)
+			continue
+		}
 		if numNodes < len(act.model.Naples().nodes) {
 			log.Errorf("ts:%s Pre-install completed for : %d naples", time.Now().String(), numNodes)
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		log.Infof("ts:%s Naples Pre-install Status: Complete", time.Now().String())
+		log.Infof("ts:%s Naples Pre-install Complete. Status ", time.Now().String(), r1.Status.OperationalState)
 		numRetries = 0
-		break outerLoop
+		break
 	}
 
 	if numRetries != 0 {
@@ -351,7 +354,9 @@ outerLoop:
 			continue
 		}
 		status := r1.Status.GetDSCsStatus()
+		log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 		log.Infof("ts:%s Rollout smartNIC status len %d: status:  %+v", time.Now().String(), len(status), status)
+
 		var numNodes int
 		if len(status) == 0 {
 			log.Infof("ts:%s Rollout smartNIC status: not found", time.Now().String())
@@ -361,7 +366,7 @@ outerLoop:
 
 		for i := 0; i < len(status); i++ {
 			log.Infof("ts:%s SmartNIC Rollout status %s", time.Now().String(), status[i].Phase)
-			if status[i].Phase == rollout.RolloutPhase_COMPLETE.String() {
+			if status[i].Phase == rollout.RolloutPhase_COMPLETE.String() || status[i].Reason != "success" {
 				numNodes++
 			}
 		}
@@ -372,13 +377,15 @@ outerLoop:
 			continue
 		}
 
-		if r1.Status.OperationalState != rollout.RolloutStatus_PROGRESSING.String() {
+		if r1.Status.OperationalState == rollout.RolloutStatus_SCHEDULED_FOR_RETRY.String() ||
+			r1.Status.OperationalState == rollout.RolloutStatus_SUCCESS.String() ||
+			r1.Status.OperationalState == rollout.RolloutStatus_FAILURE.String() {
 			log.Infof("ts:%s Overall Rollout status: %s", time.Now().String(), r1.Status.OperationalState)
 			numRetries = 0
 			break
 		}
 
-		if numNodes != len(status) {
+		if numNodes != len(status) || r1.Status.OperationalState == rollout.RolloutStatus_PROGRESSING.String() {
 			log.Infof("ts:%s SmartNIC Rollout completed for : %d nodes", time.Now().String(), numNodes)
 			time.Sleep(time.Second * 5)
 			continue
@@ -427,7 +434,7 @@ outerLoop:
 		}()
 
 		log.Infof("Rollout is scheduled for retry.. Going to precheck SmartNIC")
-		time.Sleep(5*time.Minute)//wait for rollout to trigger retry
+		time.Sleep(5 * time.Minute) //wait for rollout to trigger retry
 		goto outerLoop
 	}
 	// Verify rollout overall status
@@ -503,7 +510,7 @@ outerLoop:
 }
 
 // PerformRollout performs a rollout in the cluster
-func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout) error {
+func (act *ActionCtx) PerformRollout(rollout *rollout.Rollout, scaleData bool) error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
 	ctx, err := act.model.VeniceLoggedInCtx(bkCtx)

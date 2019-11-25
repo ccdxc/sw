@@ -43,7 +43,7 @@ var _ = Describe("rollout tests", func() {
 			log.Infof(" Length workloadPairs %v", len(workloadPairs.ListIPAddr()))
 			Expect(len(workloadPairs.ListIPAddr()) != 0).Should(BeTrue())
 
-			err = ts.model.Action().PerformRollout(rollout)
+			err = ts.model.Action().PerformRollout(rollout, ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())
 			rerr := make(chan bool)
 			go func() {
