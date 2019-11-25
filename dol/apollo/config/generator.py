@@ -171,9 +171,8 @@ def Main():
     logger.info("Creating objects in Agent")
     __create()
 
-    if not utils.IsPipelineApulu():
-        logger.info("Reading objects via Agent")
-        __read()
+    logger.info("Reading objects via Agent")
+    __read()
 
     timeprofiler.ConfigTimeProfiler.Stop()
 

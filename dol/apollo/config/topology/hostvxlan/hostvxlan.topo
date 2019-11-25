@@ -126,11 +126,35 @@ vpc:
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
-            - count   : 1             # VNICs per subnet
+            - count   : 1             # 1 untagged VNIC
               ipcount : 4             # Local IP mapping per vnic
               srcguard: false         # true or false (default false)
-              public  : true
+              public  : false
               tagged  : false         # true or false (default true)
+
+            - count   : 1
+              ipcount : 2
+              srcguard: true
+              public  : false
+              tagged  : true
+
+            - count   : 1
+              ipcount : 2
+              srcguard: true
+              public  : true
+              tagged  : true
+
+            - count   : 1
+              ipcount : 2
+              srcguard: false
+              public  : false
+              tagged  : true
+
+            - count   : 1
+              ipcount : 2
+              srcguard: false
+              public  : true
+              tagged  : true
           rmap:                       # Remote IP mappings per subnet
             - count : 4
         - count     : 1

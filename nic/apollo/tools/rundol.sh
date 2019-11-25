@@ -27,7 +27,7 @@ fi
 set -x
 echo $NICDIR
 
-function cleanup() {
+function finish () {
     if [ $START_VPP == 1 ]; then
         sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
     fi
@@ -37,14 +37,13 @@ function cleanup() {
     echo "===== Collecting logs ====="
     ${NICDIR}/apollo/test/tools/savelogs.sh
 }
+trap finish EXIT
 
-trap cleanup EXIT
-
-NICMGR_FILE="$NICDIR/nicmgr.log"
-if [ -f "$NICMGR_FILE" ]; then
-    echo "Removing $NICMGR_FILE"
-    command rm -f $NICMGR_FILE
-fi
+function setup () {
+    # remove stale files from older runs
+    rm -f ${NICDIR}/*log* ${NICDIR}/core* $NICDIR/out.sh
+}
+setup
 
 if [ $PIPELINE == 'apollo' ];then
     $NICDIR/apollo/tools/start-agent-sim.sh > agent.log 2>&1 &

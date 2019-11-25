@@ -268,8 +268,9 @@ def DeleteObject(obj, objType):
     cookie = GetBatchCookie()
     msg = obj.GetGrpcDeleteMessage(cookie)
     resps = api.client.Delete(objType, [msg])
-    ValidateDelete(obj, resps)
     batchClient.Commit()
+    ValidateDelete(obj, resps)
+    return
 
 def GetIPProtoByName(protoname):
     """

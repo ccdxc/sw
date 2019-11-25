@@ -25,7 +25,7 @@ function finish () {
 trap finish EXIT
 
 function setup () {
-    rm -f *log* core*
+    rm -f ${NICDIR}/*log* ${NICDIR}/core*
     rm -f ${NICDIR}/conf/pipeline.json
     ln -s ${NICDIR}/conf/${PIPELINE}/pipeline.json ${NICDIR}/conf/pipeline.json
 }
