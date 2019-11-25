@@ -32,7 +32,7 @@ const (
 	VlansPerTestBed = 64
 
 	// MaxVlanRange max vlan range to be used for allocation
-	MaxVlanRange = 4000
+	MaxVlanRange = 3700
 
 	// SSHPort captures the port where SSH is running
 	SSHPort = 22
