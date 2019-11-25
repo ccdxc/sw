@@ -120,6 +120,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
 
     // notify sysmgr that we are up
     hal::svc::hal_init_done();
+    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

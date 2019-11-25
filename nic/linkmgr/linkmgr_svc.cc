@@ -616,7 +616,11 @@ port_info_get (PortInfoGetRequest& req, PortInfoGetResponseMsg *rsp)
     if (!req.has_key_or_handle()) {
         for (fp_port = 1; fp_port <= num_fp_ports();
                               ++fp_port) {
-            populate_port_info_response(fp_port, rsp);
+            // mgmt port is created internally in IRIS.
+            // Dont send it for agent to create
+            if (port_type_fp(fp_port) != port_type_t::PORT_TYPE_MGMT) {
+                populate_port_info_response(fp_port, rsp);
+            }
         }
         return ret;
     }

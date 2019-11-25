@@ -17,6 +17,8 @@
 #include "platform/drivers/xcvr.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
+#include "nic/include/hal_cfg_db.hpp"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -236,6 +238,56 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
     xcvr_event_port_enable(xcvr_event_info);
 }
 
+static hal_ret_t
+linkmgr_create_mgmt_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
+{
+    uint32_t fp_port;
+    uint32_t ifindex;
+    uint32_t logical_port;
+    hal_ret_t ret = HAL_RET_OK;
+    port_args_t port_args = { 0 };
+    sdk::lib::catalog *catalog = sdk_cfg->catalog;
+    hal_handle_t  hal_handle = 0;
+    uint32_t num_fp_ports = catalog->num_fp_ports();
+
+    for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
+        if (catalog->port_type_fp(fp_port) == port_type_t::PORT_TYPE_MGMT) {
+            sdk::linkmgr::port_args_init(&port_args);
+
+            ifindex = ETH_IFINDEX(
+                    catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+            logical_port = port_args.port_num =
+                sdk::lib::catalog::ifindex_to_logical_port(ifindex);
+            port_args.port_type = catalog->port_type_fp(fp_port);
+            port_args.port_speed = port_speed_t::PORT_SPEED_1G;
+            port_args.fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+            port_args.num_lanes = catalog->num_lanes_fp(fp_port);
+            port_args.mac_id = catalog->mac_id(logical_port, 0);
+            port_args.mac_ch = catalog->mac_ch(logical_port, 0);
+            port_args.debounce_time = 0;
+            port_args.mtu = 0;    /**< default will be set to max mtu */
+            port_args.pause = port_pause_type_t::PORT_PAUSE_TYPE_NONE;
+            port_args.loopback_mode = port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
+            for (uint32_t i = 0; i < port_args.num_lanes; i++) {
+                port_args.sbus_addr[i] =
+                catalog->sbus_addr(logical_port, i);
+            }
+
+            hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+
+            ret = port_create(&port_args, &hal_handle);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to create port {}", logical_port);
+            }
+
+            hal::hal_cfg_db_close();
+        }
+    }
+
+    return ret;
+}
+
 hal_ret_t
 linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 {
@@ -258,6 +310,8 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
+
+    linkmgr_create_mgmt_ports(sdk_cfg);
 
     svc_reg((ServerBuilder *)sdk_cfg->server_builder,
             sdk_cfg->process_mode);

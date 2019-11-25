@@ -12,6 +12,9 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/hal.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -85,7 +88,9 @@ hal_cpu_if_create (uint32_t lif_id)
 }
 
 static hal_ret_t inline
-hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
+hal_uplink_if_create (uint64_t if_id, 
+                      uint32_t port_num,
+                      bool is_oob)
 {
     InterfaceSpec        spec;
     InterfaceResponse    response;
@@ -95,6 +100,7 @@ hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
     spec.set_type(::intf::IfType::IF_TYPE_UPLINK);
     spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec.mutable_if_uplink_info()->set_port_num(port_num);
+    spec.mutable_if_uplink_info()->set_is_oob_management(is_oob);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = interface_create(spec, &response);
@@ -106,6 +112,26 @@ hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
                       if_id, port_num, ret);
     }
     hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t hal_uplink_ifs_create (hal_cfg_t *hal_cfg)
+{
+    uint32_t ifindex;
+    uint32_t fp_port;
+    uint32_t if_id = NETAGENT_IF_ID_UPLINK_MIN;
+    uint32_t logical_port;
+    sdk::lib::catalog *catalog = hal_cfg->catalog;
+    uint32_t num_fp_ports = catalog->num_fp_ports();
+
+    for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
+        ifindex = ETH_IFINDEX(catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+        logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
+        hal_uplink_if_create(if_id, logical_port,
+                             (catalog->port_type_fp(fp_port) == port_type_t::PORT_TYPE_MGMT) ? true : false);
+        if_id++;
+    }
 
     return HAL_RET_OK;
 }
@@ -151,6 +177,12 @@ init (hal_cfg_t *hal_cfg)
     if (hal_cfg->device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) {
         // create cpu interface
         ret = hal_cpu_if_create(HAL_LIF_CPU);
+        HAL_ABORT(ret == HAL_RET_OK);
+    }
+
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
+        // create uplink interfaces
+        ret = hal_uplink_ifs_create(hal_cfg);
         HAL_ABORT(ret == HAL_RET_OK);
     }
 

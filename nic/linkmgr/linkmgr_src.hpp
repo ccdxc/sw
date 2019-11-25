@@ -116,8 +116,11 @@ static inline port_t *
 find_port_by_id (port_num_t port_num)
 {
     hal_handle_id_ht_entry_t   *entry;
-    port_t                     *pi_p;
+    port_t                     *pi_p= NULL;
 
+    if (g_linkmgr_state == NULL || g_linkmgr_state->port_id_ht() == NULL) {
+        return pi_p;
+    }
     entry = (hal_handle_id_ht_entry_t *)
             g_linkmgr_state->port_id_ht()->lookup(&port_num);
 
