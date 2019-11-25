@@ -134,7 +134,8 @@ if_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         }
         // program LIF table
         lif_data.action_id = LIF_LIF_INFO_ID;
-        lif_data.lif_action.lif_type = P4_LIF_TYPE_UPLINK;
+        lif_data.lif_action.direction = P4_LIF_DIR_UPLINK;
+        //lif_data.lif_action.lif_type = P4_LIF_TYPE_UPLINK;
         lif_data.lif_action.vnic_id = PDS_IMPL_RSVD_VNIC_HW_ID;
         lif_data.lif_action.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
         lif_data.lif_action.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;

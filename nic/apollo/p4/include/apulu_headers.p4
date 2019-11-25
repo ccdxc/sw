@@ -35,7 +35,8 @@ header_type apulu_txdma_to_p4e_header_t {
 header_type apulu_p4_to_arm_header_t {
     fields {
         packet_len          : 16;
-        flags               : 16;
+        data                : 8;
+        flags               : 8;
         ingress_bd_id       : 16;
         flow_hash           : 32;
 

@@ -509,7 +509,7 @@ lif_table_init (void)
     lif_info->vpc_id = g_vpc_id;
     lif_info->bd_id = g_bd_id;
     lif_info->vnic_id = g_vnic_id;
-    lif_info->lif_type = false;
+    lif_info->direction = P4_LIF_DIR_HOST;
     entry_write(tbl_id, g_lif0, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
@@ -517,7 +517,7 @@ lif_table_init (void)
     lif_info->vpc_id = g_vpc_id;
     lif_info->bd_id = 0;
     lif_info->vnic_id = 0;
-    lif_info->lif_type = true;
+    lif_info->direction = P4_LIF_DIR_UPLINK;
     entry_write(tbl_id, g_lif1, 0, 0, &data, false, 0);
 }
 

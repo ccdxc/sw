@@ -30,6 +30,7 @@ nacl_redirect_to_arm:
                         d.u.nacl_redirect_to_arm_d.nexthop_type
     phvwr           p.p4i_i2e_copp_policer_id, \
                         d.u.nacl_redirect_to_arm_d.copp_policer_id
+    phvwr           p.p4i_to_arm_data, d.u.nacl_redirect_to_arm_d.data
     phvwr.e         p.p4i_i2e_nexthop_id, d.u.nacl_redirect_to_arm_d.nexthop_id
     phvwr.f         p.control_metadata_redirect_to_arm, TRUE
 

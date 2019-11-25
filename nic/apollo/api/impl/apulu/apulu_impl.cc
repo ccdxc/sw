@@ -799,7 +799,8 @@ program_lif_table (uint16_t lif_hw_id, uint16_t vpc_hw_id, uint16_t bd_hw_id,
 
     // program the LIF table
     lif_data.action_id = LIF_LIF_INFO_ID;
-    lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
+    lif_data.lif_action.direction = P4_LIF_DIR_HOST;
+    //lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
     lif_data.lif_action.vnic_id = vnic_hw_id;
     lif_data.lif_action.bd_id = bd_hw_id;
     lif_data.lif_action.vpc_id = vpc_hw_id;

@@ -65,6 +65,7 @@ header_type control_metadata_t {
         apply_nat               : 1;
         apply_nat2              : 1;
         apply_tunnel2           : 1;
+        lif_type                : 3;
     }
 }
 

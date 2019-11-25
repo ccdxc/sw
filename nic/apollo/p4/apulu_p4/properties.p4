@@ -1,16 +1,16 @@
 /******************************************************************************/
 /* LIF info                                                                   */
 /******************************************************************************/
-action lif_info(lif_type, vnic_id, bd_id, vpc_id,
-                pinned_lif, pinned_qtype, pinned_qid) {
+action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id,
+                pinned_nexthop_type, pinned_nexthop_id) {
     modify_field(control_metadata.rx_packet, lif_type);
-    modify_field(p4i_i2e.rx_packet, lif_type);
+    modify_field(p4i_i2e.rx_packet, direction);
+    modify_field(control_metadata.lif_type, lif_type);
     modify_field(vnic_metadata.vnic_id, vnic_id);
     modify_field(vnic_metadata.bd_id, bd_id);
     modify_field(vnic_metadata.vpc_id, vpc_id);
-    modify_field(control_metadata.pinned_lif, pinned_lif);
-    modify_field(control_metadata.pinned_qtype, pinned_qtype);
-    modify_field(control_metadata.pinned_qid, pinned_qid);
+    modify_field(p4i_i2e.nexthop_type, pinned_nexthop_type);
+    modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
 }
 
 @pragma stage 0

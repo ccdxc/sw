@@ -20,10 +20,10 @@
 #define APULU_SERVICE_LIF               34
 
 /*****************************************************************************/
-/* Lif types                                                                 */
+/* Direction (lif connected to host or uplink)                               */
 /*****************************************************************************/
-#define P4_LIF_TYPE_HOST                0
-#define P4_LIF_TYPE_UPLINK              1
+#define P4_LIF_DIR_HOST                 0
+#define P4_LIF_DIR_UPLINK               1
 
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
