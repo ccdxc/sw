@@ -42,7 +42,8 @@ rnr_timeout:
     // comment out this check for model as cur_timestamp
     // is not populated in r4
 #if defined (HAPS) || defined (HW)
-    blt            r1, r2, restart_timer
+    slt            c3, r1, r2
+    bcf            [c3], restart_timer
 #endif
  
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
@@ -79,7 +80,8 @@ local_ack_timeout:
     // is not populated in r4
   
 #if defined (HAPS) || defined (HW)
-    blt            r1, r2, restart_timer
+    slt            c3, r1, r2
+    bcf            [c3], restart_timer
 #endif
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
                    CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_local_ack), 1 //BD Slot
@@ -121,10 +123,8 @@ process_expiry:
 
 restart_timer:
     CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 100)
-    //phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_2_VALID(0)
-    nop.e
-    nop
+    CAPRI_SET_TABLE_2_VALID_CE(c0, 0)
+    phvwr.c3   p.common.p4_intr_global_drop, 1 // Exit Slot
 
 spurious_expiry:
     tblwr          d.timer_on, 0
