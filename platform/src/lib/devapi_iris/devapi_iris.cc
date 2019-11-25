@@ -372,6 +372,12 @@ devapi_iris::qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
 }
 
 sdk_ret_t
+devapi_iris::qos_class_set_global_pause_type(uint8_t pause_type)
+{
+    return devapi_qos::qos_class_set_global_pause_type(pause_type);
+}
+
+sdk_ret_t
 devapi_iris::set_fwd_mode(fwd_mode_t fwd_mode)
 {
     fwd_mode_ = fwd_mode;

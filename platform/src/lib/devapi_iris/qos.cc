@@ -209,4 +209,41 @@ end:
     return ret;
 }
 
+sdk_ret_t
+devapi_qos::qos_class_set_global_pause_type(uint8_t pause_type)
+{
+    sdk_ret_t                                  ret = SDK_RET_OK;
+    grpc::Status                               status;
+    qos::QosClassSetGlobalPauseTypeRequestMsg  req_msg;
+    qos::QosClassSetGlobalPauseTypeResponseMsg rsp_msg;
+
+    auto req = req_msg.add_request();
+
+    pause_type &= PORT_CFG_PAUSE_TYPE_MASK;
+
+    if ( (pause_type != sdk::platform::PAUSE_TYPE_LINK_LEVEL) &&
+         (pause_type != sdk::platform::PAUSE_TYPE_PFC) &&
+         (pause_type != sdk::platform::PAUSE_TYPE_NONE) ) {
+        NIC_LOG_ERR("Unknown pause type {}", pause_type);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+
+    req->set_pause_type((qos::QosPauseType) pause_type);
+
+    VERIFY_HAL();
+    status = hal->qos_class_set_global_pause_type(req_msg, rsp_msg);
+    if (status.ok()) {
+        NIC_LOG_DEBUG("set GlobalPauseType to {}", pause_type);
+    } else {
+        NIC_LOG_ERR("FAILED to set GlobalPauseType to {} ; err: {}:{}",
+                    pause_type, status.error_code(), status.error_message());
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
 }    // namespace iris

@@ -1294,6 +1294,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     sdk_ret_t ret = SDK_RET_OK;
     port_config_t cfg = {0};
     struct port_setattr_cmd *cmd = (struct port_setattr_cmd *)req;
+    bool pause_config = FALSE;
 
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
         cmd->attr);
@@ -1328,6 +1329,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         break;
     case IONIC_PORT_ATTR_PAUSE:
         cfg.pause_type = cmd->pause_type;
+        pause_config = TRUE;
         break;
     case IONIC_PORT_ATTR_LOOPBACK:
         cfg.loopback_mode = cmd->loopback_mode;
@@ -1352,6 +1354,20 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to set port config", spec->name);
         return (IONIC_RC_ERROR);
+    }
+
+    // if there is a change in the pause config between LINK-LEVEL and PFC,
+    // update the global_pause_type
+    if(pause_config) {
+        NIC_LOG_DEBUG("Invoking dev_api call to set global pause_type {}",
+                      cmd->pause_type);
+        ret = dev_api->qos_class_set_global_pause_type(cmd->pause_type);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: failed to set global_pause_type to {} ret {}", 
+                        spec->name, cmd->pause_type, ret);
+        } else {
+            NIC_LOG_DEBUG("set global pause_type to {}", cmd->pause_type);
+        }
     }
 
     memcpy(port_config, &cfg, sizeof(*port_config));
@@ -1534,6 +1550,7 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
     } else if (cfg->pause_type == PORT_PAUSE_TYPE_PFC) {
         info.pause_type = sdk::platform::PAUSE_TYPE_PFC;
     }
+    info.pause_dot1q_pcp = cfg->pfc_cos;
 
     info.sched_type = cfg->sched_type;
     if (info.sched_type == sdk::platform::QOS_SCHED_TYPE_STRICT) {

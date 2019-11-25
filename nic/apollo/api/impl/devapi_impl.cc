@@ -230,6 +230,12 @@ devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
 }
 
 sdk_ret_t
+devapi_impl::qos_class_set_global_pause_type(uint8_t pause_type) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
                            pds_ifindex_t ifidx, bool is_oob) {
     return SDK_RET_OK;

@@ -245,6 +245,10 @@ qos_class_set_global_pause_type (
     pd::pd_qos_class_set_global_pause_type_args_t pd_qos_class_args;
     pd::pd_func_args_t pd_func_args = {0};
 
+    HAL_TRACE_DEBUG("invoked to update global_pause_type "
+                    "g_pause_type {} req.pause_type() {}", 
+                    g_pause_type, req.pause_type());
+
     if (g_pause_type != req.pause_type()) {
         g_pause_type = req.pause_type();
 

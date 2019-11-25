@@ -306,6 +306,19 @@ hal_grpc::qos_class_delete(QosClassDeleteRequestMsg& req_msg,
     return status;
 }
 
+Status
+hal_grpc::qos_class_set_global_pause_type(
+                                QosClassSetGlobalPauseTypeRequestMsg& req_msg,
+                                QosClassSetGlobalPauseTypeResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = qos_stub_->QosClassSetGlobalPauseType(&context, req_msg, &rsp_msg);
+    return status;
+}
+
 // Accel Calls
 Status
 hal_grpc::accel_rgroup_add(AccelRGroupAddRequestMsg& req_msg,

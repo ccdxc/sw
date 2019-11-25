@@ -161,6 +161,7 @@ struct ionic_qos_tc {
 	uint8_t dot1q_pcp;
 	uint8_t dwrr_weight;
 	uint32_t mtu;
+	uint8_t pfc_cos;
 };
 
 struct ionic {

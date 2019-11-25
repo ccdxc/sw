@@ -2748,6 +2748,8 @@ ionic_qos_config_sysctl(struct ionic_qos_tc *tc, int num, struct sysctl_ctx_list
 			&tc->dot1q_pcp, 0, "802.1q TCI pcp value");
 	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "weight", CTLFLAG_RW,
 			&tc->dwrr_weight, 0, "DWRR weight");
+	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "pfc_cos", CTLFLAG_RW,
+			&tc->pfc_cos, 0, "pfc cos value");
 }
 
 static int
@@ -2772,6 +2774,12 @@ ionic_qos_validate(struct ionic_lif *lif, int qnum)
 		IONIC_NETDEV_ERROR(lif->netdev, "tc%d mtu value: %d invalid\n",
 		    qnum, swtc->mtu);
 		return (EINVAL);
+	}
+
+	if (swtc->pfc_cos >= IONIC_QOS_CLASS_MAX) {
+		IONIC_NETDEV_ERROR(ifp, "tc%d pfc_cos value: %d invalid\n",
+		    qnum, swtc->pfc_cos);
+			return (EINVAL);
 	}
 
 	return (0);
@@ -2842,14 +2850,23 @@ ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
 		qos->mtu = swtc->mtu;
 		qos->dot1q_pcp = swtc->dot1q_pcp;
 		qos->dwrr_weight = swtc->dwrr_weight;
-		qos->pause_type = PORT_PAUSE_TYPE_LINK;
+
+		if ((ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK) != PORT_PAUSE_TYPE_PFC)
+			qos->pause_type = PORT_PAUSE_TYPE_LINK;  // default
+		else
+			qos->pause_type = (ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK);
+
 		qos->class_type = QOS_CLASS_TYPE_PCP;
 		qos->sched_type = QOS_SCHED_TYPE_DWRR;
 
+		qos->pfc_cos = swtc->pfc_cos;
+
 		IONIC_NETDEV_DEBUG(lif->netdev,
-		    "TC%d pcp: %d weight: %d drop: %s class: %d\n",
+		    "TC: %d pcp: %d weight: %d drop: %s class: %d pause_type:%d pfc_cos: %d "
+		    "flags: %#x\n",
 		    i, qos->dot1q_pcp, qos->dwrr_weight,
-		    swtc->drop ? "true" : "false", qos->class_type);
+		    swtc->drop ? "true" : "false", qos->class_type, qos->pause_type,
+		    qos->pfc_cos, qos->flags);
 
 		err = ionic_qos_class_init(ionic, i, qos);
 		if (err) {
