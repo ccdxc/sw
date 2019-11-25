@@ -42,7 +42,7 @@ mirror_impl::soft_delete(mirror_impl *impl) {
 }
 
 mirror_impl *
-mirror_impl::build(pds_mirror_session_key_t *key) {
+mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
     mirror_impl *impl;
     p4pd_error_t p4pd_ret;
     uint32_t hw_id = key->id - 1;

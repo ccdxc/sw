@@ -59,9 +59,12 @@ public:
 
     /// \brief Instantiate an impl object based on current state (sw and/or hw
     //         state) given its key
-    /// \param[in] obj_id Object id
-    /// \param[in] args Args (not interpreted by this class)
-    static impl_base *build(impl_obj_id_t obj_id, void *args);
+    /// \param[in] obj_id object id
+    /// \param[in] key key to build the object (not interpreted by this class)
+    /// \params[in] api_obj    API object corresponding to the impl instance to
+    ///                        be built
+    static impl_base *build(impl_obj_id_t obj_id, void *key,
+                            api_base *api_obj);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will

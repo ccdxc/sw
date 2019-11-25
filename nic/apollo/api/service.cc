@@ -64,7 +64,8 @@ svc_mapping::build(pds_svc_mapping_key_t *key) {
     mapping = svc_mapping_db()->alloc();
     if (mapping) {
         new (mapping) svc_mapping();
-        mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_SVC_MAPPING, key);
+        mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_SVC_MAPPING,
+                                          key, mapping);
         if (mapping->impl_ == NULL) {
             svc_mapping::destroy(mapping);
             return NULL;

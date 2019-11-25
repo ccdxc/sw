@@ -68,7 +68,7 @@ mirror_session::build(pds_mirror_session_key_t *key) {
     ms = mirror_session_db()->alloc();
     if (ms) {
         new (ms) mirror_session();
-        ms->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MIRROR_SESSION, key);
+        ms->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MIRROR_SESSION, key, ms);
         if (ms->impl_ == NULL) {
             mirror_session::destroy(ms);
             return NULL;

@@ -16,7 +16,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/apollo/api/vpc.hpp"
+#include "nic/apollo/api/vpc_peer.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 
 using sdk::table::handle_t;
@@ -44,8 +44,10 @@ public:
     /// \brief     instantiate a vpc peering impl object based on current state
     ///            (sw and/or hw) given its key
     /// \param[in] key    vpc peering entry's key
+    /// \param[in] vpc_peer    vpc peer API object
     /// \return    new instance of vpc peering implementation object or NULL
-    static vpc_peer_impl *build(pds_vpc_peer_key_t *key);
+    static vpc_peer_impl *build(pds_vpc_peer_key_t *key,
+                                vpc_peer_entry *vpc_peer);
 
     /// \brief     free a stateless entry's temporary s/w only resources like
     ///            memory etc., for a stateless entry calling destroy() will

@@ -50,8 +50,9 @@ public:
     /// \brief     instantiate a mapping impl object based on current state
     ///            (sw and/or hw) given its key
     /// \param[in] key mapping entry's key
+    /// \param[in] mapping mapping entry's API object
     /// \return    new instance of mapping implementation object or NULL
-    static mapping_impl *build(pds_mapping_key_t *key);
+    static mapping_impl *build(pds_mapping_key_t *key, mapping_entry *mapping);
 
     /// \brief     free a stateless entry's temporary s/w only resources like
     ///            memory etc., for a stateless entry calling destroy() will
@@ -223,15 +224,18 @@ private:
     sdk_ret_t release_remote_mapping_resources_(api_base *api_obj);
 
     /// \brief     deactivate mapping entry for a given overlay or public ip
-    /// \param[in] ip addr pointer to overlay or public ip
+    /// \param[in] vpc    vpc id of the mapping
+    /// \param[in] ip     pointer to the (overlay/public) IP address
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t deactivate_ip_mapping_entry_(ip_addr_t *ip);
+    sdk_ret_t deactivate_ip_mapping_entry_(pds_vpc_key_t vpc, ip_addr_t *ip);
 
     /// \brief     deactivate local mapping and mapping entries for a given
     ///            overlay or public ip
-    /// \param[in] ip addr pointer to overlay or public ip
+    /// \param[in] vpc    vpc id of the mapping
+    /// \param[in] ip     pointer to the (overlay/public) IP address
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t deactivate_ip_local_mapping_entry_(ip_addr_t *ip);
+    sdk_ret_t deactivate_ip_local_mapping_entry_(pds_vpc_key_t vpc,
+                                                 ip_addr_t *ip);
 
 private:
     bool              is_local_;
@@ -240,10 +244,6 @@ private:
     uint32_t          vnic_hw_id_;
     uint32_t          vpc_hw_id_;
     uint32_t          subnet_hw_id_;
-    pds_mapping_key_t key_;
-    pds_encap_t       fabric_encap_;
-    bool              public_ip_valid_;
-    ip_addr_t         public_ip_;
 
     // handles or indices for NAT table
     uint32_t    to_public_ip_nat_idx_;

@@ -210,11 +210,43 @@ public:
     sdk_ret_t read(pds_mapping_key_t *key, pds_mapping_info_t *info);
 
     /**
-     * @brief set object is local or remote
-     * @param[in] local ture if it is local false otherwise
+     * @brief    return true of false based on whether mapping is local or not
+     * @return    true if mapping is local or else false
      */
-    void set_local(bool local) { local_ = local; }
-    bool is_local() { return local_; }
+    bool is_local(void) const { return is_local_; }
+
+    /**
+     * @brief    return the mapping object's key
+     * @return    key of the mapping object
+     */
+    pds_mapping_key_t& key(void) { return key_; }
+
+    /**
+     * @brief set object is local or remote
+     * @param[in] local    true if it is local false otherwise
+     */
+    void set_local(bool local) { is_local_ = local; }
+
+    /**
+     * @brief    return whether public IP of this mapping is valid or not
+     * @return     true if public IP is valid for the mapping, false otherwise
+     */
+    bool is_public_ip_valid(void) const { return public_ip_valid_; }
+
+    /**
+     * @brief     return public IP of the mapping
+     * @return    public IP of the mapping
+     */
+    ip_addr_t& public_ip(void) { return public_ip_; }
+
+    /**
+     * @brief set the public IP of this mappping
+     * @param[in] ip_addr    pointer to public IP of the mapping
+     */
+    void set_public_ip(ip_addr_t *ip_addr) {
+        memcpy(&public_ip_, ip_addr, sizeof(*ip_addr));
+        public_ip_valid_ = true;
+    }
 
     /**
      * @brief     return impl instance of this vnic object
@@ -237,8 +269,11 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    impl_base        *impl_;      /**< impl object instance */
-    bool             local_;      /**< is it local or remote object */
+    pds_mapping_key_t key_; /**< key of this mapping */
+    bool public_ip_valid_;  /**< true if public IP is valid */
+    ip_addr_t public_ip_;   /**< public IP, if its valid */
+    bool is_local_;         /**< is it local or remote object */
+    impl_base *impl_;       /**< impl object instance */
 } __PACK__;
 
 

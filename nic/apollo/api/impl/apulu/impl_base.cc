@@ -118,16 +118,19 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 }
 
 impl_base *
-impl_base::build(impl_obj_id_t obj_id, void *args) {
+impl_base::build(impl_obj_id_t obj_id, void *key, api_base *api_obj) {
     switch (obj_id) {
     case IMPL_OBJ_ID_MAPPING:
-        return mapping_impl::build((pds_mapping_key_t *)args);
+        return mapping_impl::build((pds_mapping_key_t *)key,
+                                   (mapping_entry *)api_obj);
 
     case IMPL_OBJ_ID_SVC_MAPPING:
-        return svc_mapping_impl::build((pds_svc_mapping_key_t *)args);
+        return svc_mapping_impl::build((pds_svc_mapping_key_t *)key,
+                                       (svc_mapping *)api_obj);
 
     case IMPL_OBJ_ID_MIRROR_SESSION:
-        return mirror_impl::build((pds_mirror_session_key_t *)args);
+        return mirror_impl::build((pds_mirror_session_key_t *)key,
+                                  (mirror_session *)api_obj);
 
     default:
         break;

@@ -120,8 +120,9 @@ public:
     /// \brief     instantiate a mapping impl object based on current state
     ///            (sw and/or hw) given its key
     /// \param[in] key mapping entry's key
+    /// \param[in] mapping mapping entry's API object
     /// \return    new instance of mapping implementation object or NULL
-    static mapping_impl *build(pds_mapping_key_t *key);
+    static mapping_impl *build(pds_mapping_key_t *key, mapping_entry *mapping);
 
     /// \brief     free a stateless entry's temporary s/w only resources like
     ///            memory etc., for a stateless entry calling destroy() will

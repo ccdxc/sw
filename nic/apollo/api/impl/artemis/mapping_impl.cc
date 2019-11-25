@@ -112,7 +112,7 @@ mapping_impl::set_is_local(bool val) {
 }
 
 mapping_impl *
-mapping_impl::build(pds_mapping_key_t *key) {
+mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     mapping_impl *impl;

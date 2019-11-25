@@ -47,11 +47,6 @@ mapping_impl::factory(pds_mapping_spec_t *spec) {
     }
     new (impl) mapping_impl();
     device = device_db()->find();
-    if (spec->is_local) {
-        impl->is_local_ = true;
-    } else {
-        impl->is_local_ = false;
-    }
     return impl;
 }
 
@@ -67,7 +62,7 @@ mapping_impl::destroy(mapping_impl *impl) {
 }
 
 mapping_impl *
-mapping_impl::build(pds_mapping_key_t *key) {
+mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     sdk_ret_t ret;
     device_entry *device;
     vpc_entry *vpc;
@@ -114,7 +109,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
             return NULL;
         }
         public_ip_valid = (local_mapping_data.xlate_id !=
-                           PDS_IMPL_RSVD_NAT_HW_ID);
+                               PDS_IMPL_RSVD_NAT_HW_ID);
     }
 
     // if public mapping exists, NAT table provides the public IP
@@ -148,16 +143,16 @@ mapping_impl::build(pds_mapping_key_t *key) {
     }
     new (impl) mapping_impl();
 
-    impl->is_local_ = is_local;
+    mapping->set_local(is_local);
     if (is_local) {
         impl->vnic_hw_id_ = local_mapping_data.vnic_id;
+    } else {
+        impl->vnic_hw_id_ = PDS_IMPL_RSVD_VNIC_HW_ID;
     }
     impl->vpc_hw_id_ = vpc->hw_id();
     impl->subnet_hw_id_ = mapping_data.egress_bd_id;
-    memcpy(&impl->key_, key, sizeof(impl->key_));
-    impl->public_ip_valid_ = public_ip_valid;
     if (public_ip_valid) {
-        impl->public_ip_ = public_ip;
+        mapping->set_public_ip(&public_ip);
         impl->to_public_ip_nat_idx_ = local_mapping_data.xlate_id;
         impl->to_overlay_ip_nat_idx_ = pub_ip_local_mapping_data.xlate_id;
     }
@@ -313,11 +308,11 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
-    if (is_local_) {
+    if (spec->is_local) {
         PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
                         "local %u, subnet %u, vnic %u, pub_ip_valid %u, "
                         "pub_ip %s", spec->key.vpc.id,
-                        ipaddr2str(&spec->key.ip_addr), is_local_,
+                        ipaddr2str(&spec->key.ip_addr), spec->is_local,
                         spec->subnet.id, spec->vnic.id,
                         spec->public_ip_valid, ipaddr2str(&spec->public_ip));
         // reserve all local IP mapping resources
@@ -326,8 +321,8 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // reserve all remote MAC or IP mapping resources
     PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
                     "local %u, subnet %u, nh type %u, %s %u", spec->key.vpc.id,
-                    ipaddr2str(&spec->key.ip_addr), is_local_, spec->subnet.id,
-                    spec->nh_type,
+                    ipaddr2str(&spec->key.ip_addr), spec->is_local,
+                    spec->subnet.id, spec->nh_type,
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
                         spec->tep.id : spec->nh_group.id);
@@ -338,63 +333,69 @@ sdk_ret_t
 mapping_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
-    local_mapping_swkey_t local_mapping_key;
     sdk_table_api_params_t tparams;
+    mapping_entry *mapping = (mapping_entry *)api_obj;
+    local_mapping_swkey_t local_mapping_key;
 
     // remove mapping entry for overlay ip
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_, &key_.ip_addr);
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
+                                   &mapping->key().ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to remove entry in MAPPING table (vpc %u, ip %s),"
-                      " err %u", vpc_hw_id_, ipaddr2str(&key_.ip_addr), ret);
+                      " err %u", vpc_hw_id_,
+                      ipaddr2str(&mapping->key().ip_addr), ret);
         return ret;
     }
 
-    // nothing else to do if there is no local mapping
-    if (!is_local_)
+    if (mapping->is_local() == false) {
+        // nothing else to do if there is no local mapping
         return ret;
+    }
 
     // delete local mapping entry for overlay ip
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
-                                         &key_.ip_addr);
+                                         &mapping->key().ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table "
                       "(vpc %u, ip %s), err %u", vpc_hw_id_,
-                      ipaddr2str(&key_.ip_addr), ret);
+                      ipaddr2str(&mapping->key().ip_addr), ret);
         return ret;
     }
 
     // nothing else to do if public ip is not configured
-    if (!public_ip_valid_) {
+    if (!mapping->is_public_ip_valid()) {
         return SDK_RET_OK;
     }
 
     // remove public ip mapping
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_, &public_ip_);
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
+                                   &mapping->public_ip());
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to remove entry in MAPPING table (vpc %u, ip %s),"
-                      " err %u", vpc_hw_id_, ipaddr2str(&public_ip_), ret);
+                      " err %u", vpc_hw_id_, ipaddr2str(&mapping->public_ip()),
+                      ret);
         return ret;
     }
 
     // remove public ip local mapping
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
-                                         &public_ip_);
+                                         &mapping->public_ip());
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table "
                       "(vpc %u, ip %s), err %u", vpc_hw_id_,
-                      ipaddr2str(&public_ip_));
+                      ipaddr2str(&mapping->public_ip()));
         return ret;
     }
 
@@ -452,7 +453,8 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
 
 sdk_ret_t
 mapping_impl::release_resources(api_base *api_obj) {
-    if (is_local_) {
+    mapping_entry *mapping = (mapping_entry *)api_obj;
+    if (mapping->is_local()) {
         return release_local_mapping_resources_(api_obj);
     }
     return release_remote_mapping_resources_(api_obj);
@@ -495,7 +497,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t *spec;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    if (is_local_ && spec->public_ip_valid) {
+    if (spec->is_local && spec->public_ip_valid) {
         return add_nat_entries_(spec);
     }
     return SDK_RET_OK;
@@ -659,7 +661,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
                     spec->subnet.id, spec->tep.id,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
-    if (is_local_) {
+    if (spec->is_local) {
         ret = add_local_mapping_entries_(vpc, spec);
         if (ret != SDK_RET_OK) {
             goto error;
@@ -681,33 +683,33 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::deactivate_ip_mapping_entry_(ip_addr_t *ip) {
+mapping_impl::deactivate_ip_mapping_entry_(pds_vpc_key_t vpc, ip_addr_t *ip) {
     sdk_ret_t ret;
-    sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key;
-    mapping_appdata_t mapping_data = {0};
+    sdk_table_api_params_t tparams;
+    mapping_appdata_t mapping_data = { 0 };
 
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_, ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update mapping (vpc %u, ip %s)",
-                      key_.vpc.id, ipaddr2str(ip));
+        PDS_TRACE_ERR("Failed to deactivate mapping (vpc %u, ip %s)",
+                      vpc.id, ipaddr2str(ip));
     }
-
     return ret;
 }
 
 sdk_ret_t
-mapping_impl::deactivate_ip_local_mapping_entry_(ip_addr_t *ip) {
+mapping_impl::deactivate_ip_local_mapping_entry_(pds_vpc_key_t vpc,
+                                                 ip_addr_t *ip) {
     sdk_ret_t ret;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
-    mapping_appdata_t local_mapping_data = {0};
+    mapping_appdata_t local_mapping_data = { 0 };
 
     // deactivate mapping entry
-    ret = deactivate_ip_mapping_entry_(ip);
+    ret = deactivate_ip_mapping_entry_(vpc, ip);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -720,28 +722,27 @@ mapping_impl::deactivate_ip_local_mapping_entry_(ip_addr_t *ip) {
     ret = mapping_impl_db()->local_mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update mapping (vpc %u, ip %s)",
-                      key_.vpc.id, ipaddr2str(ip));
+                      vpc.id, ipaddr2str(ip));
     }
-
     return ret;
 }
 
 sdk_ret_t
 mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
     sdk_ret_t ret;
-    if (!is_local_) {
-        return deactivate_ip_mapping_entry_(&key_.ip_addr);
+    if (!mapping->is_local()) {
+        return deactivate_ip_mapping_entry_(mapping->key().vpc,
+                                            &mapping->key().ip_addr);
     }
-
-    ret = deactivate_ip_local_mapping_entry_(&key_.ip_addr);
+    ret = deactivate_ip_local_mapping_entry_(mapping->key().vpc,
+                                             &mapping->key().ip_addr);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
-    if (public_ip_valid_) {
-        ret = deactivate_ip_local_mapping_entry_(&public_ip_);
+    if (mapping->is_public_ip_valid()) {
+        ret = deactivate_ip_local_mapping_entry_(mapping->key().vpc,
+                                                 &mapping->public_ip());
     }
-
     return ret;
 }
 
@@ -828,14 +829,14 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
 
 sdk_ret_t
 mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
-    sdk_ret_t                           ret;
-    local_mapping_swkey_t               local_mapping_key;
-    local_mapping_appdata_t             local_mapping_data;
-    sdk_table_api_params_t              tparams;
-    nat_actiondata_t                    nat_data;
-    pds_mapping_spec_t                  *spec = &info->spec;
-    pds_mapping_status_t                *status = &info->status;
-    p4pd_error_t                        p4pd_ret;
+    sdk_ret_t               ret;
+    local_mapping_swkey_t   local_mapping_key;
+    local_mapping_appdata_t local_mapping_data;
+    sdk_table_api_params_t  tparams;
+    nat_actiondata_t        nat_data;
+    pds_mapping_spec_t      *spec = &info->spec;
+    pds_mapping_status_t    *status = &info->status;
+    p4pd_error_t            p4pd_ret;
 
     // first read the remote mapping, it can provide all the info except vnic id
     ret = read_remote_mapping_(vpc, info);
@@ -881,10 +882,9 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;
     mapping_entry *mapping = (mapping_entry *)api_obj;
 
-    is_local_ = mapping->is_local();
     vpc = vpc_db()->find(&mkey->vpc);
     memcpy(&minfo->spec.key, mkey, sizeof(pds_mapping_key_t));
-    if (is_local_) {
+    if (mapping->is_local()) {
         ret = read_local_mapping_(vpc, minfo);
     } else {
         ret = read_remote_mapping_(vpc, minfo);

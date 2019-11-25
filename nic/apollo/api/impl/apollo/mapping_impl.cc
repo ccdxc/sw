@@ -73,7 +73,7 @@ mapping_impl::destroy(mapping_impl *impl) {
 }
 
 mapping_impl *
-mapping_impl::build(pds_mapping_key_t *key) {
+mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     sdk_ret_t                             ret;
     device_entry                          *device;
     vpc_entry                             *vpc;

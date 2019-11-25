@@ -50,8 +50,10 @@ public:
     ///             state
     ///             (sw and/or hw) given its key
     /// \param[in]  key service mapping entry's key
+    /// \param[in]  mapping service mapping's API object
     /// \return     new instance of service mapping implementation object or NULL
-    static svc_mapping_impl *build(pds_svc_mapping_key_t *key);
+    static svc_mapping_impl *build(pds_svc_mapping_key_t *key,
+                                   svc_mapping *mapping);
 
     /// \brief      free a stateless entry's temporary s/w only resources like
     ///             memory etc., for a stateless entry calling destroy() will

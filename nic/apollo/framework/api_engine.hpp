@@ -44,7 +44,7 @@ typedef enum api_batch_stage_e {
 } api_batch_stage_t;
 
 /// \brief Per API object context
-/// Transient information maintained while a batch of APIs are being processed
+/// transient information maintained while a batch of APIs are being processed
 ///
 /// \remark
 ///   api_params is not owned by this structure, so don't free it ... it
@@ -57,7 +57,7 @@ struct obj_ctxt_s {
     api_params_t    *api_params;    ///< API specific parameters
     api_base        *cloned_obj;    ///< cloned object, for UPD processing
 
-    ///< Object handlers can save arbitrary state across callbacks here and it
+    ///< object handlers can save arbitrary state across callbacks here and it
     ///< is opaque to the api engine
     struct {
         void        *cb_ctxt;
@@ -73,6 +73,7 @@ struct obj_ctxt_s {
         api_params = NULL;
         cloned_obj = NULL;
         cb_ctxt = NULL;
+        upd_bmap = 0;
     }
 
     bool operator==(const obj_ctxt_s& rhs) const {

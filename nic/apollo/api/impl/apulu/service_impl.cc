@@ -76,7 +76,7 @@ svc_mapping_impl::destroy(svc_mapping_impl *impl) {
 }
 
 svc_mapping_impl *
-svc_mapping_impl::build(pds_svc_mapping_key_t *key) {
+svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
     return NULL;
 }
 

@@ -22,6 +22,8 @@ namespace api {
 
 mapping_entry::mapping_entry() {
     stateless_ = true;
+    is_local_ = false;
+    public_ip_valid_ = false;
 }
 
 mapping_entry *
@@ -32,6 +34,9 @@ mapping_entry::factory(pds_mapping_spec_t *spec) {
     mapping = mapping_db()->alloc();
     if (mapping) {
         new (mapping) mapping_entry();
+        if (spec->is_local) {
+            mapping->is_local_ = true;
+        }
         mapping->impl_ =
             impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, spec);
         if (mapping->impl_ == NULL) {
@@ -63,7 +68,9 @@ mapping_entry::build(pds_mapping_key_t *key) {
     mapping = mapping_db()->alloc();
     if (mapping) {
         new (mapping) mapping_entry();
-        mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MAPPING, key);
+        memcpy(&mapping->key_, key, sizeof(*key));
+        mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MAPPING,
+                                          key, mapping);
         if (mapping->impl_ == NULL) {
             mapping_entry::destroy(mapping);
             return NULL;
