@@ -7,7 +7,7 @@ import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -86,6 +86,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: 10 },
     { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: 10 },
   ];
+  exportMap: CustomExportMap = {};
 
   advSearchCols: TableCol[] = [];
 

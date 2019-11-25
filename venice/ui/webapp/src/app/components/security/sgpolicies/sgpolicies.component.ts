@@ -8,7 +8,7 @@ import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus } from '@sdk/v1/models/generated/security';
 import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
@@ -22,6 +22,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   disableTableWhenRowExpanded: boolean  = true;
   dataObjects: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
   exportFilename: string = 'Venice-sgpolicies';
+  exportMap: CustomExportMap = {};
 
 
   // Holds all policy objects

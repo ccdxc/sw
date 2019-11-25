@@ -19,7 +19,7 @@ import { TablevieweditHTMLComponent, TablevieweditAbstract, CreationForm } from 
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol } from '.';
+import { TableCol, CustomExportMap } from '.';
 import { RoleGuardDirective } from '../directives/roleGuard.directive';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
@@ -183,6 +183,7 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
   @Input() dataObjects: ReadonlyArray<DummyObj> = [];
 
   exportFilename = 'test-export';
+  exportMap: CustomExportMap = {};
 
   cols: TableCol[] = [
     { field: 'name', header: 'Name', width: 50 },

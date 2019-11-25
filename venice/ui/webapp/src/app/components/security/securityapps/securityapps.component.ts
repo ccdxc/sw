@@ -11,7 +11,7 @@ import { Table } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Animations } from '@app/animations';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
@@ -41,6 +41,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   subscriptions: Subscription[] = [];
   isTabComponent = false;
   exportFilename: string = 'Apps';
+  exportMap: CustomExportMap = {};
 
   selectedSecurityApp: SecurityApp = null;
 

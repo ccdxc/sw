@@ -11,7 +11,7 @@ import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { WorkloadWorkload, IWorkloadWorkload, IApiStatus } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription, Observable } from 'rxjs';
-import { TableCol } from '../shared/tableviewedit';
+import { TableCol, CustomExportMap } from '../shared/tableviewedit';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
 import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
@@ -100,6 +100,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
   exportFilename: string = 'Venice-workloads';
+  exportMap: CustomExportMap = {};
 
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];

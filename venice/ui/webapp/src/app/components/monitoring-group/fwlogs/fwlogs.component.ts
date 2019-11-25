@@ -112,6 +112,21 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   timeRangeOptions: TimeRangeOption[] = citadelTimeOptions;
   maxTimePeriod = citadelMaxTimePeriod;
 
+  exportMap: CustomExportMap = {
+    'reporter-id': (opts) => {
+      return this.getNaplesNameFromReporterID(opts.data);
+    },
+    'time': (opts) => {
+      const dataObj = opts.data as ITelemetry_queryFwlog;
+      const time = dataObj.time as any;
+      return new PrettyDatePipe('en-US').transform(time, 'ns');
+    },
+    'policy': (opts) => {
+      const dataObj = opts.data as ITelemetry_queryFwlog;
+      return this.displayPolicyName(dataObj);
+    },
+  };
+
   constructor(
     protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -220,27 +235,6 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       name = data['reporter-id'];
     }
     return name;
-  }
-
-  /**
-   * Overriding one in tableviewedit
-   */
-  exportTableData() {
-    const exportMap: CustomExportMap = {};
-    exportMap['reporter-id'] = (opts) => {
-      return this.getNaplesNameFromReporterID(opts.data);
-    };
-    exportMap['time'] = (opts) => {
-      const dataObj = opts.data as ITelemetry_queryFwlog;
-      const time = dataObj.time as any;
-      return new PrettyDatePipe('en-US').transform(time, 'ns');
-    };
-    exportMap['policy'] = (opts) => {
-      const dataObj = opts.data as ITelemetry_queryFwlog;
-      return this.displayPolicyName(dataObj);
-    };
-    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, exportMap);
-    this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
 
   clearSearch() {

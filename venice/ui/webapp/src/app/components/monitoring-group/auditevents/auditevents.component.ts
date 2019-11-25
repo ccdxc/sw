@@ -89,6 +89,13 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 14},
   ];
 
+  exportMap: CustomExportMap = {
+    'client-ips': (opts) => {
+      const value = Utility.getObjectValueByPropertyPath(opts.data, opts.field);
+      return Array.isArray(opts.data) ? value.join(',') : value;
+    },
+  };
+
   constructor(
     protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
@@ -121,20 +128,6 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       ],
       breadcrumb: [{ label: 'Audit Events', url: Utility.getBaseUIUrl() + 'monitoring/auditevents' }]
     });
-  }
-
-  /**
-   * Overiding from tableview component
-   */
-  exportTableData() {
-    // TODO: Setting hard limit of maxRecords for now, Export should be moved to the backend eventually
-    const exportMap: CustomExportMap = {};
-    exportMap['client-ips'] = (opts) => {
-      const value = Utility.getObjectValueByPropertyPath(opts.data, opts.field);
-      return Array.isArray(opts.data) ? value.join(',') : value;
-    };
-    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, exportMap);
-    this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
 
   toCSVJSON() {

@@ -10,7 +10,7 @@ import { IApiStatus, IMonitoringTechSupportRequest, MonitoringTechSupportRequest
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol, RowClickEvent } from '@app/components/shared/tableviewedit';
+import { TableCol, RowClickEvent, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 
 
@@ -50,6 +50,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   ];
 
   exportFilename: string = 'Venice-tech-support-requests';
+  exportMap: CustomExportMap = {};
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

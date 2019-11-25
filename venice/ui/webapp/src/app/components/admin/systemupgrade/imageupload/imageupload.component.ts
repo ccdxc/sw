@@ -13,7 +13,7 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
 import { RolloutUtil } from '@app/components/admin/systemupgrade/rollouts/RolloutUtil';
 import { RolloutImageLabel } from '@app/components/admin/systemupgrade/rollouts/';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { RolloutRollout } from '@sdk/v1/models/generated/rollout';
@@ -50,6 +50,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
 
   dataObjects: ReadonlyArray<ObjstoreObject> = [];
   isTabComponent: boolean = false;
+  exportMap: CustomExportMap = {};
   disableTableWhenRowExpanded: boolean = true;
   loading: boolean = false;
 

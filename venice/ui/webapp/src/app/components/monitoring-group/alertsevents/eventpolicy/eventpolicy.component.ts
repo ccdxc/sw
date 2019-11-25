@@ -11,7 +11,7 @@ import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventP
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 
 @Component({
   selector: 'app-eventpolicy',
@@ -50,6 +50,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   ];
 
   exportFilename: string = 'Venice-event-policies';
+  exportMap: CustomExportMap = {};
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

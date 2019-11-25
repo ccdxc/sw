@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 
 @Component({
@@ -40,6 +40,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
   ];
 
   exportFilename: string = 'Venice-flow-export-policies';
+  exportMap: CustomExportMap = {};
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
   maxNewTargets: number = FlowexportpolicyComponent.MAX_TARGETS_PER_POLICY;

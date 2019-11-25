@@ -12,7 +12,7 @@ import { LazyLoadEvent } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { TabcontentInterface } from 'web-app-framework';
-import { RowClickEvent, TableCol } from '.';
+import { RowClickEvent, TableCol, CustomExportMap  } from '.';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
@@ -336,13 +336,19 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
   ];
 
 
+  // Objects that will be rendered in the table
   abstract dataObjects: ReadonlyArray<T> = [];
-  // Whether or not this component is a tab
+  // Whether or not this component is a tab, used for setting toolbar buttons
   abstract isTabComponent: boolean;
   abstract disableTableWhenRowExpanded: boolean;
 
   abstract exportFilename: string;
   abstract cols: TableCol[];
+  // When the table export file is being created,
+  // each field will be looked up in the map to determine the value
+  // formatting. If an entry doesn't exist, it will apply
+  // default formatting
+  abstract exportMap: CustomExportMap;
 
   abstract setDefaultToolbar(): void;
 
@@ -438,7 +444,7 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
   }
 
   exportTableData() {
-    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename);
+    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, this.exportMap);
     this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
 

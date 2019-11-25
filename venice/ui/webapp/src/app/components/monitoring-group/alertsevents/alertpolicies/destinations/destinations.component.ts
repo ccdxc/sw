@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 
 
 @Component({
@@ -42,6 +42,7 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
   ];
 
   exportFilename: string = 'Venice-alert-destinations';
+  exportMap: CustomExportMap = {};
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,

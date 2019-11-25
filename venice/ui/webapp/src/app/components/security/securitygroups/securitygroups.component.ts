@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { ObjectsRelationsUtility, SecuritygroupWorkloadPolicyTuple } from '@app/common/ObjectsRelationsUtility';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
@@ -48,6 +48,7 @@ export class SecuritygroupsComponent extends TablevieweditAbstract<ISecuritySecu
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<SecuritySecurityGroup>;
   exportFilename: string = 'Venice-securitygroups';
+  exportMap: CustomExportMap = {};
 
   // It is important to set values.
   isTabComponent: boolean = false;

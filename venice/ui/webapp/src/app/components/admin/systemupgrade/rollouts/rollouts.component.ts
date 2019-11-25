@@ -11,7 +11,7 @@ import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
 import {HttpEventUtility} from '@common/HttpEventUtility';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { RolloutUtil } from '@app/components/admin/systemupgrade/rollouts/RolloutUtil.ts';
@@ -35,6 +35,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   pastRollouts: RolloutRollout[] = [];
 
   isTabComponent: boolean = true;
+  exportMap: CustomExportMap = {};
   disableTableWhenRowExpanded: boolean = true;
   selectedRollOut: RolloutRollout;
   rolloutImages: IObjstoreObjectList ;

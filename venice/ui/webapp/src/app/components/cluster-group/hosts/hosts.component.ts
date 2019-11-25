@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -66,6 +66,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   ];
 
   exportFilename: string = 'Venice-hosts';
+  exportMap: CustomExportMap = {};
 
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
   hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; };

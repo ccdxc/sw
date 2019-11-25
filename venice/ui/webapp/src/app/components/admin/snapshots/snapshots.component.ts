@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -70,6 +70,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
 
   shouldEnable_takesnapshot_button: boolean = true;
   shouldEnable_refresh_button: boolean = true;
+  exportMap: CustomExportMap = {};
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
