@@ -86,7 +86,8 @@ var _ = Describe("audit tests", func() {
 		})
 		It("check audit log file", func() {
 			var buf bytes.Buffer
-			for _, ip := range ts.tu.VeniceNodeIPs {
+			for _, node := range ts.tu.QuorumNodes {
+				ip := ts.tu.NameToIPMap[node]
 				logs := ts.tu.CommandOutput(ip, "cat /var/log/pensando/audit.log")
 				buf.WriteString(logs)
 			}
