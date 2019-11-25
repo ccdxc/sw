@@ -4,6 +4,7 @@ feature:
     sub         : negative
     package     : test.networking
     module      : networking
+    runorder    : 1000
     enable      : True
     ignore      : False
 

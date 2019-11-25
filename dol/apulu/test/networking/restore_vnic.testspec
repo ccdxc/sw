@@ -1,0 +1,15 @@
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+    route: filter://any
+
+trigger:
+    configs:
+        - object: ref://testcase/config/localmapping/VNIC
+          method: Create
+
+expect:
+    configs:
+        - object: ref://testcase/config/localmapping/VNIC
+          method: Read

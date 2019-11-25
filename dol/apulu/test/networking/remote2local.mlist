@@ -4,6 +4,7 @@ feature:
     sub         : remote2local
     package     : test.networking
     module      : networking
+    runorder    : 200
     enable      : True
     ignore      : True
 

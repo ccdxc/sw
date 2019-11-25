@@ -1,0 +1,47 @@
+feature:
+    id          : networking
+    sub         : delete_tunnel
+    package     : test.networking
+    module      : networking
+    runorder    : 10000
+    enable      : True
+    ignore      : True
+
+modules:
+# specify all the filters that are used in the packet testcases that will follow
+    - module:
+        name    : TUNNEL_WORKFLOW_START
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    - module:
+        name    : DEL_TUNNEL
+        spec    : delete_tunnel.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : LOCAL2IGW
+        mlist   : local2igw.mlist
+        ignore  : True
+
+    - module:
+        name    : RESTORE_TUNNEL
+        spec    : restore_tunnel.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : LOCAL2IGW
+        mlist   : local2igw.mlist
+        ignore  : True
+
+    - module:
+        name    : TUNNEL_WORKFLOW_END
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
