@@ -40,14 +40,18 @@ copy_files() {
     pack_apollo+='platform/src/lib/rdmamgr_apollo '
 
     protobuf=" "
+    metaswitch=" "
     if [ $agent == 1 ];then
         export AGENT_MODE=1
         protobuf+='vendor/github.com vendor/golang.org vendor/google.golang.org vendor/gopkg.in '
-        protobuf+='venice/utils/log venice/utils/testenv '
+        protobuf+='venice/utils/log venice/utils/testenv venice/utils/apigen/annotations venice/Makefile.proto '
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '
         protobuf+='nic/third-party/gflags/include nic/hal/third-party/openssl/include '
         protobuf+='nic/third-party/libz nic/third-party/liblmdb/include '
         protobuf+='bin/upx '
+        metaswitch+='nic/metaswitch nic/third-party/metaswitch nic/third-party/libxml2 '
+        metaswitch+='nic/third-party/libicuuc nic/third-party/liblzma nic/third-party/libz '
+
         mkdir -p $DST/proto_bin
         cp -r /usr/bin/proto* $DST/proto_bin
         cp -r /usr/local/go $DST/
@@ -56,8 +60,6 @@ copy_files() {
     miscd='nic/upgrade_manager/meta nic/utils/trace nic/utils/ftl nic/utils/ftlv4 '
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
-
-    metaswitch='nic/metaswitch nic/third-party/metaswitch nic/third-party/libxml2 nic/third-party/libicuuc nic/third-party/liblzma nic/third-party/libz '
 
     files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf $metaswitch"
 
