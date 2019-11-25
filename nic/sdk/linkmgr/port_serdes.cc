@@ -7,6 +7,7 @@
 #include "linkmgr_internal.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "third-party/avago/build/include/aapl/aapl.h"
+#include "platform/pal/include/pal.h"
 
 namespace sdk {
 namespace linkmgr {
@@ -282,6 +283,8 @@ sbus_access (uint32_t sbus_addr,
     //0: reset
     //sbus_data: Pointer to the SBus data to write. Results of SBus read operations will be placed here.
 
+    pal_wr_lock(SBUSLOCK);
+
     switch (command) {
     case 0x0:   // sbus reset
         /*
@@ -346,6 +349,8 @@ sbus_access (uint32_t sbus_addr,
         status = 0;
         break;
     }
+
+    pal_wr_unlock(SBUSLOCK);
 
     return status;
 }

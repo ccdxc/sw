@@ -10,6 +10,7 @@
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/fru/fru.hpp"
+#include "platform/pal/include/pal.h"
 #include "lib/pal/pal.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "linkmgr_periodic.hpp"
@@ -1752,6 +1753,8 @@ port::port_init(linkmgr_cfg_t *cfg)
         SDK_TRACE_ERR("port mac init failed");
     }
 
+    pal_wr_lock(SBUSLOCK);
+
     // TODO move back to serdes_fn_init
     serdes_get_ip_info(1);
 
@@ -1784,6 +1787,8 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sbus_addr,
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
+
+    pal_wr_unlock(SBUSLOCK);
 
     srand(time(NULL));
     return rc;
