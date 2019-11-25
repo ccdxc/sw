@@ -2380,7 +2380,9 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         const pds::Route &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix,
                                      proto_route.prefix());
-        api_spec->routes[i].prio = proto_route.priority();
+        if (api_spec->enable_pbr) {
+            api_spec->routes[i].prio = proto_route.priority();
+        }
         switch (proto_route.nh_case()) {
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
@@ -2455,7 +2457,9 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         pds::Route *route = proto_spec->add_routes();
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
                                      &api_spec->routes[i].prefix);
-        route->set_priority(api_spec->routes[i].prio);
+        if (api_spec->enable_pbr) {
+            route->set_priority(api_spec->routes[i].prio);
+        }
         switch (api_spec->routes[i].nh_type) {
         case PDS_NH_TYPE_OVERLAY:
             route->set_tunnelid(api_spec->routes[i].tep.id);
