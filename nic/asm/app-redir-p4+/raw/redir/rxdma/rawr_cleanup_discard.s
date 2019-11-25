@@ -19,15 +19,10 @@ struct s5_tbl_k         k;
  */
 rawr_cleanup_discard:
 
-    // Bubble up to RAWR_CLEANUP_STAGE
-    mfspr       r_stage, spr_mpuid
-    slt         c1, r_stage[4:2], RAWR_CLEANUP_STAGE
-    nop.c1.e
-    
     /*
      * Free ppage via ASCQ (ARM Send Completion Queue)
      */
-    seq         c2, RAWR_KIVEC1_PPAGE, r0       // delay slot
+    seq         c2, RAWR_KIVEC0_PPAGE, r0       // delay slot
     nop.c2.e
     CAPRI_CLEAR_TABLE0_VALID                    // delay slot
     
@@ -35,7 +30,7 @@ rawr_cleanup_discard:
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP_e(0, rawr_ppage_free)
     
 _ppage_free_launch:
-    CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS,
+    CAPRI_NEXT_TABLE_READ_e(3, TABLE_LOCK_DIS,
                             rawr_ppage_free,
                             RAWR_KIVEC1_ASCQ_SEM_INF_ADDR,
                             TABLE_SIZE_64_BITS)

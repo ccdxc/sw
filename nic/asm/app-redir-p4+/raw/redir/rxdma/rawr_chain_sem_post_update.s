@@ -2,8 +2,8 @@
 #include "../../../../cpu-p4plus/include/cpu-macros.h"
 
 struct phv_                     p;
-struct s5_tbl_k                 k;
-struct s5_tbl_post_update_d     d;
+struct s5_tbl1_k                k;
+struct s5_tbl1_post_update_d    d;
 
 /*
  * Registers usage
@@ -22,7 +22,7 @@ struct s5_tbl_post_update_d     d;
 rawr_chain_sem_pindex_post_update:
 
     /*
-     * Table0 valid will be cleared by rawr_chain_xfer or rawr_cleanup_discard
+     * Table1 valid will be cleared by rawr_chain_xfer or rawr_cleanup_discard
      */
     
     sne         c1, d.arq_full, r0

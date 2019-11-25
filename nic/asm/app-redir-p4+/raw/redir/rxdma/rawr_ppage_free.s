@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
 struct phv_                     p;
-struct s6_tbl_k                 k;
-struct s6_tbl_ppage_free_d      d;
+struct s6_tbl3_k                k;
+struct s6_tbl3_ppage_free_d     d;
 
 /*
  * Registers usage
@@ -15,7 +15,7 @@ struct s6_tbl_ppage_free_d      d;
 
 rawr_ppage_free:
 
-    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE3_VALID
     sne         c1, RAWR_KIVEC0_PKT_FREEQ_NOT_CFG, r0
     nop.c1.e
     RAWR_METRICS_SET_c(c1, pkt_free_errors)
@@ -28,7 +28,7 @@ rawr_ppage_free:
     RAWR_METRICS_SET_c(c2, pkt_free_errors)            // delay slot
 
     CPU_TX_ASCQ_ENQUEUE(r_ascq_entry,
-                        RAWR_KIVEC1_PPAGE,
+                        RAWR_KIVEC0_PPAGE,
                         d.{ascq_pindex}.wx,
                         RAWR_KIVEC3_ASCQ_BASE,
                         ring_entry_descr_addr,

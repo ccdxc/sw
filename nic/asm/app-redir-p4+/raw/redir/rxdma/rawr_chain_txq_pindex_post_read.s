@@ -1,8 +1,8 @@
 #include "app_redir_common.h"
 
 struct phv_                     p;
-struct s5_tbl_k                 k;
-struct s5_tbl_txq_post_read_d   d;
+struct s5_tbl1_k                k;
+struct s5_tbl1_txq_post_read_d  d;
 
 /*
  * Registers usage
@@ -26,7 +26,7 @@ struct s5_tbl_txq_post_read_d   d;
 rawr_chain_txq_pindex_post_read:
 
     /*
-     * Table0 valid will be cleared by rawr_chain_xfer or rawr_cleanup_discard
+     * Table1 valid will be cleared by rawr_chain_xfer or rawr_cleanup_discard
      */
         
     /*

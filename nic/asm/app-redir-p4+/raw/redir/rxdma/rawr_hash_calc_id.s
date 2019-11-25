@@ -1,6 +1,6 @@
 #include "app_redir_common.h"
 
-struct phv_             p;
+struct phv_     p;
 
 /*
  * Registers usage

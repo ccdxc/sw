@@ -29,5 +29,5 @@ rawr_ppage_post_alloc:
 #endif
 
     seq.e       c1, RAWR_KIVEC0_PPAGE_SEM_PINDEX_FULL, r0
-    phvwr.c1    p.rawr_kivec1_ppage, d.page     // delay slot
+    phvwr.c1    p.rawr_kivec0_ppage, d.page     // delay slot
     

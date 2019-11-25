@@ -1,7 +1,7 @@
 #include "app_redir_common.h"
 
 struct phv_             p;
-struct s5_tbl_k         k;
+struct s5_tbl1_k        k;
 
 #define r_chain_pindex                  r1  // must match rawr_chain_sem_pindex_post_update
 #define r_rawrcb_flags                  r2
@@ -37,7 +37,7 @@ struct s5_tbl_k         k;
  */
 rawr_chain_xfer:
 
-    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE1_VALID
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr,\
                 CAPRI_PHV_START_OFFSET(dma_cpu_pkt_dma_cmd_type) / 16
     /*
@@ -68,7 +68,7 @@ rawr_chain_xfer:
      * and the packet content. They are guaranteed by rawr_rx_start to fit
      * entirely in one pppage.
      */
-    add         r_desc, r0, RAWR_KIVEC1_PPAGE
+    add         r_desc, r0, RAWR_KIVEC0_PPAGE
     add         r_page_addr, r_desc, RAWR_RNMDPR_PAGE_OFFSET
                                                      
     /*

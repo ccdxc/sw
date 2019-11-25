@@ -21,7 +21,9 @@
 #define rx_table_s2_t0          s2_tbl
 #define rx_table_s4_t0          s4_tbl
 #define rx_table_s5_t0          s5_tbl
+#define rx_table_s5_t1          s5_tbl1
 #define rx_table_s6_t0          s6_tbl
+#define rx_table_s6_t3          s6_tbl3
 #define rx_table_s7_t0          s7_tbl
 
 #define rx_table_s7_t2          s7_tbl2
@@ -39,6 +41,9 @@
 
 /*
  * Stage 3 is for hash defined in common rxdma
+ * WARNING: Toeplitz structures are overlaid over multiple to_stateN
+ * structures in the PHV so Rxdma programs which depend on Toeplitz
+ * (such as this program) must use only tN_s2s and global keys.
  */
 
 /*
@@ -49,15 +54,16 @@
 /*
  * L7 Raw Redirect stage 5
  */
-#define rx_table_s5_t0_action   chain_xfer
-#define rx_table_s5_t0_action1  txq_post_read
-#define rx_table_s5_t0_action2  post_update
-#define rx_table_s5_t0_action3  cleanup_discard
+#define rx_table_s5_t0_action   cleanup_discard
+
+#define rx_table_s5_t1_action   chain_xfer
+#define rx_table_s5_t1_action1  txq_post_read
+#define rx_table_s5_t1_action2  post_update
 
 /*
  * L7 Raw Redirect stage 6
  */
-#define rx_table_s6_t0_action   ppage_free
+#define rx_table_s6_t3_action   ppage_free
 
 /*
  * L7 Raw Redirect stage 7
@@ -195,6 +201,7 @@ header_type rawr_kivec0_t {
         rawrcb_flags                    : 16;
         packet_len                      : 16;
         qstate_addr                     : 34;
+        ppage                           : 40;
         chain_to_rxq                    : 1;
         redir_span_instance             : 1;
         ppage_sem_pindex_full           : 1;
@@ -209,6 +216,7 @@ header_type rawr_kivec0_t {
     modify_field(scratch.rawrcb_flags, kivec.rawrcb_flags); \
     modify_field(scratch.packet_len, kivec.packet_len); \
     modify_field(scratch.qstate_addr, kivec.qstate_addr); \
+    modify_field(scratch.ppage, kivec.ppage); \
     modify_field(scratch.chain_to_rxq, kivec.chain_to_rxq); \
     modify_field(scratch.redir_span_instance, kivec.redir_span_instance); \
     modify_field(scratch.ppage_sem_pindex_full, kivec.ppage_sem_pindex_full); \
@@ -222,17 +230,15 @@ header_type rawr_kivec1_t {
     fields {
         chain_ring_indices_addr         : 64;
         ascq_sem_inf_addr               : 40;
-        ppage                           : 40;
     }
 }
 
 #define RAWR_KIVEC1_USE(scratch, kivec)	\
     modify_field(scratch.chain_ring_indices_addr, kivec.chain_ring_indices_addr); \
     modify_field(scratch.ascq_sem_inf_addr, kivec.ascq_sem_inf_addr); \
-    modify_field(scratch.ppage, kivec.ppage); \
     
 /*
- * kivec2: header union with to_stage5 (128 bits max)
+ * kivec1: header union with stage_2_stage for table 1 (160 bits max)
  */
 header_type rawr_kivec2_t {
     fields {
@@ -252,11 +258,11 @@ header_type rawr_kivec2_t {
     modify_field(scratch.chain_entry_size_shift, kivec.chain_entry_size_shift); \
     
 /*
- * kivec3: header union with to_stage6 (128 bits max)
+ * kivec1: header union with stage_2_stage for table 3 (160 bits max)
  */
 header_type rawr_kivec3_t {
     fields {
-        ascq_base                       : 40;
+        ascq_base                       : 64;
     }
 }
 
@@ -340,12 +346,12 @@ metadata rawr_kivec1_t                  rawr_kivec1;
 @pragma scratch_metadata
 metadata rawr_kivec1_t                  rawr_kivec1_scratch;
 
-@pragma pa_header_union ingress         to_stage_5
+@pragma pa_header_union ingress         common_t1_s2s
 metadata rawr_kivec2_t                  rawr_kivec2;
 @pragma scratch_metadata
 metadata rawr_kivec2_t                  rawr_kivec2_scratch;
 
-@pragma pa_header_union ingress         to_stage_6
+@pragma pa_header_union ingress         common_t3_s2s
 metadata rawr_kivec3_t                  rawr_kivec3;
 @pragma scratch_metadata
 metadata rawr_kivec3_t                  rawr_kivec3_scratch;
@@ -520,7 +526,6 @@ action chain_pindex_pre_alloc() {
 action post_update(ARQ_PI_PARAMS) {
 
     RAWR_KIVEC0_USE(rawr_kivec0_scratch, rawr_kivec0)
-    RAWR_KIVEC1_USE(rawr_kivec1_scratch, rawr_kivec1)
     RAWR_KIVEC2_USE(rawr_kivec2_scratch, rawr_kivec2)
 
     GENERATE_ARQ_PI_D(qidxr_chain_d)
@@ -532,7 +537,6 @@ action post_update(ARQ_PI_PARAMS) {
 action txq_post_read(pi_curr, ci_curr) {
 
     RAWR_KIVEC0_USE(rawr_kivec0_scratch, rawr_kivec0)
-    RAWR_KIVEC1_USE(rawr_kivec1_scratch, rawr_kivec1)
     RAWR_KIVEC2_USE(rawr_kivec2_scratch, rawr_kivec2)
 
     modify_field(chain_txq_ring_indices_d.pi_curr, pi_curr);
@@ -556,7 +560,6 @@ action cleanup_discard() {
 action chain_xfer() {
 
     RAWR_KIVEC0_USE(rawr_kivec0_scratch, rawr_kivec0)
-    RAWR_KIVEC1_USE(rawr_kivec1_scratch, rawr_kivec1)
     RAWR_KIVEC2_USE(rawr_kivec2_scratch, rawr_kivec2)
 }
 
@@ -567,7 +570,6 @@ action chain_xfer() {
 action ppage_free(ascq_pindex, ascq_full) {
     
     RAWR_KIVEC0_USE(rawr_kivec0_scratch, rawr_kivec0)
-    RAWR_KIVEC1_USE(rawr_kivec1_scratch, rawr_kivec1)
     RAWR_KIVEC3_USE(rawr_kivec3_scratch, rawr_kivec3)
 
     modify_field(sem_ascq_d.ascq_pindex, ascq_pindex);

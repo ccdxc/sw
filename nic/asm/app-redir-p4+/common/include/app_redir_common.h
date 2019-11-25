@@ -257,7 +257,9 @@
 #define RAWR_KIVEC0_PACKET_LEN                                                  \
     k.{rawr_kivec0_packet_len}
 #define RAWR_KIVEC0_QSTATE_ADDR                                                 \
-    k.{rawr_kivec0_qstate_addr}
+    k.{rawr_kivec0_qstate_addr_sbit0_ebit31...rawr_kivec0_qstate_addr_sbit32_ebit33}
+#define RAWR_KIVEC0_PPAGE                                                       \
+    k.{rawr_kivec0_ppage_sbit0_ebit5...rawr_kivec0_ppage_sbit38_ebit39}
 #define RAWR_KIVEC0_CHAIN_TO_RXQ                                                \
     k.{rawr_kivec0_chain_to_rxq}
 #define RAWR_KIVEC0_REDIR_SPAN_INSTANCE                                         \
@@ -271,8 +273,6 @@
 
 #define RAWR_KIVEC1_CHAIN_RING_INDICES_ADDR                                     \
     k.{rawr_kivec1_chain_ring_indices_addr}
-#define RAWR_KIVEC1_PPAGE                                                       \
-    k.{rawr_kivec1_ppage}
 #define RAWR_KIVEC1_ASCQ_SEM_INF_ADDR                                           \
     k.{rawr_kivec1_ascq_sem_inf_addr}
     
@@ -288,7 +288,7 @@
     k.{rawr_kivec2_chain_entry_size_shift_sbit0_ebit1...rawr_kivec2_chain_entry_size_shift_sbit2_ebit4}
 
 #define RAWR_KIVEC3_ASCQ_BASE                                                   \
-    k.{rawr_kivec3_ascq_base_sbit0_ebit31...rawr_kivec3_ascq_base_sbit32_ebit39}
+    k.{rawr_kivec3_ascq_base}
     
 #define RAWR_KIVEC9_REDIR_PKTS                                                  \
     k.{rawr_kivec9_redir_pkts}

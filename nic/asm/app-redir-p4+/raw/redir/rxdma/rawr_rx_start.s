@@ -75,8 +75,9 @@ rawr_rx_start:
                                   rawr_app_header_packet_len_sbit6_ebit13} // delay slot
     ble.s       r_pkt_len, r0, _packet_len_err_discard
     addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ // delay slot
+    bgti        r_pkt_len, RAWR_RNMDPR_USABLE_PAGE_SIZE, _packet_len_err_discard
     phvwrpair   p.rawr_kivec0_packet_len, r_pkt_len, \
-                p.rawr_kivec0_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
+                p.rawr_kivec0_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR // delay slot
     /*
      * qid is our flow ID context
      */
@@ -134,7 +135,6 @@ _page_alloc_prep:
     /*
      * Fetch/update memory page pindex for storing packet
      */
-    bgti        r_pkt_len, RAWR_RNMDPR_USABLE_PAGE_SIZE, _packet_len_err_discard
     addi        r_alloc_inf_addr, r0, RAWR_RNMDPR_ALLOC_IDX  // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           rawr_ppage_sem_pindex_post_update,
@@ -145,20 +145,12 @@ _page_alloc_prep:
      */                          
     add         r_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, \
                 RAWRCB_TABLE_EXTRA_OFFSET
-    CAPRI_NEXT_TABLE_READ(1,
-                          TABLE_LOCK_DIS,
-                          rawr_cb_extra_read,
-                          r_qstate_addr,
-                          TABLE_SIZE_512_BITS)
-
-_metrics_launch:
-
-    /*
-     * Initiate launch of metrics tables update/commit here. Subsequent stages
-     * launched for the same tables would be required to relaunch the
-     * the affected metrics tables update.
-     */
-    RAWR_METRICS0_TABLE2_COMMIT_e(CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR)
+    CAPRI_NEXT_TABLE_READ_e(1,
+                            TABLE_LOCK_DIS,
+                            rawr_cb_extra_read,
+                            r_qstate_addr,
+                            TABLE_SIZE_512_BITS)
+    nop
 
 /*
  * Discard packet due to invalid packet length;
@@ -166,7 +158,7 @@ _metrics_launch:
 _packet_len_err_discard:
 
     RAWR_METRICS_SET(pkt_len_discards)
-    b           _metrics_launch
+    b           _error_metrics_launch
     CAPRI_CLEAR_TABLE0_VALID                    // delay slot
 
 /*
@@ -175,7 +167,7 @@ _packet_len_err_discard:
 _qstate_cfg_err_discard:
 
     RAWR_METRICS_SET(qstate_cfg_discards)
-    b           _metrics_launch
+    b           _error_metrics_launch
     CAPRI_CLEAR_TABLE0_VALID                    // delay slot
 
 
@@ -185,6 +177,20 @@ _qstate_cfg_err_discard:
 _rawrcb_not_ready:     
 
     RAWR_METRICS_SET(cb_not_ready_discards)
-    b           _metrics_launch
+    b           _error_metrics_launch
     CAPRI_CLEAR_TABLE0_VALID                    // delay slot
+
+_error_metrics_launch:
+
+    /*
+     * On any of the above errors, there would have been no tables launched.
+     * Hence, we must launch of metrics tables update/commit here. (Subsequent
+     * stages launched for the same tables would be required to relaunch the
+     * the affected metrics tables update.)
+     *
+     * NOTE: due to the use of HW toeplitz hash which reserves stage 3 to
+     * handle the callback from rx_table_cpu_hash, any normal launches of
+     * metrics tables update/commit must start from or after stage 3.
+     */
+    RAWR_METRICS0_TABLE2_COMMIT_e(CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR)
 
