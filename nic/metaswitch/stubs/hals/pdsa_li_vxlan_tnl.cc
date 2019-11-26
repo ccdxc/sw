@@ -4,6 +4,7 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pdsa_stub {
@@ -22,9 +23,43 @@ void li_vxlan_tnl::fetch_store_info_(pdsa_stub::state_t* state) {
     }
 }
 
-void 
-li_vxlan_tnl::cache_obj_in_cookie_for_create_op_ (void)
-{
+pds_tep_spec_t li_vxlan_tnl::make_pds_tep_spec_(void) {
+    pds_tep_spec_t spec = {0};
+    auto& tep_prop = store_info_.tep_obj->properties();
+    spec.key = make_pds_tep_key_();
+    spec.remote_ip = tep_prop.tep_ip;
+    spec.ip_addr = ips_info_.src_ip;
+    spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+    spec.nh_group.id = tep_prop.hal_uecmp_idx;
+    spec.type = PDS_TEP_TYPE_WORKLOAD;
+    spec.nat = false;
+    return spec;
+}
+
+pds_nexthop_group_spec_t li_vxlan_tnl::make_pds_nhgroup_spec_(void) {
+    pds_nexthop_group_spec_t spec = {0};
+    auto& tep_prop = store_info_.tep_obj->properties();
+    spec.key = make_pds_nhgroup_key_();
+    spec.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+    spec.num_nexthops = 1;
+    spec.nexthops[0].key.id = 1; // Unused for NHs pointing to TEPs
+    spec.nexthops[0].type = PDS_NH_TYPE_OVERLAY;
+    // Use the TEP MS IfIndex as the TEP Index
+    spec.nexthops[0].tep.id = tep_prop.hal_tep_idx;
+    return spec;
+}
+
+void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
+    ips_info_.if_index = vxlan_tnl_add_upd->id.if_index;
+    ATG_INET_ADDRESS& ms_dest_ip = vxlan_tnl_add_upd->vxlan_settings.dest_ip;
+    pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_dest_ip, &ips_info_.tep_ip);
+    ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd->vxlan_settings.source_ip;
+    pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
+    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd->id.hw_correlator);
+    ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
+}
+
+void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     if (likely (store_info_.tun_if_obj == nullptr)) {
         // Create new If Object but do not save it in the Global State yet
         std::unique_ptr<if_obj_t> new_if_obj 
@@ -57,8 +92,7 @@ li_vxlan_tnl::cache_obj_in_cookie_for_create_op_ (void)
 }
 
 bool 
-li_vxlan_tnl::cache_obj_in_cookie_for_update_op_ (void)
-{
+li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
     // Updating existing tunnel - check all properties to see what has changed
     auto& tnl_if_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
     // Dest IP cannot change for existing tunnel
@@ -85,8 +119,7 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_ (void)
 }
 
 void 
-li_vxlan_tnl::cache_obj_in_cookie_for_delete_op_ (void)
-{
+li_vxlan_tnl::cache_obj_in_cookie_for_delete_op_(void) {
     // Do not delete the object from the store until PDS Async response is received
     // Cache a copy of the object in the cookie to revisit and delete asynchronously
     if (store_info_.tep_obj != nullptr) {
@@ -99,9 +132,7 @@ li_vxlan_tnl::cache_obj_in_cookie_for_delete_op_ (void)
     }
 }
 
-pds_batch_ctxt_guard_t
-li_vxlan_tnl::make_batch_pds_spec_ ()
-{
+pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
     pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
@@ -146,9 +177,7 @@ li_vxlan_tnl::make_batch_pds_spec_ ()
     return bctxt_guard_;
 }
 
-bool
-li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) 
-{
+bool li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
 
     parse_ips_info_(vxlan_tnl_add_upd);
@@ -168,14 +197,13 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
             // No change
             return false;
         } 
-        pds_bctxt_guard = make_batch_pds_spec_(); 
     } else {
         // Create Tunnel
         SDK_TRACE_INFO ("TEP %s: Create IPS", ips_info_.tep_ip_str.c_str());
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
-        pds_bctxt_guard = make_batch_pds_spec_(); 
     }
+    pds_bctxt_guard = make_batch_pds_spec_(); 
 
     // If we have batched multiple IPS earlier flush it now
     // Cannot add a Tunnel create to an existing batch
@@ -196,9 +224,7 @@ li_vxlan_tnl::handle_add_upd_ips (ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd)
     return true;
 }
 
-bool
-li_vxlan_tnl::handle_delete (NBB_ULONG tnl_ifindex) 
-{
+bool li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 

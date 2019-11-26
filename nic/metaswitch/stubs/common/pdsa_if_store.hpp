@@ -19,7 +19,7 @@ namespace pdsa_stub {
 
 enum class ms_iftype_t
 {
-    PHYSICAL_INTERFACE,
+    PHYSICAL_PORT,
     LOOPBACK,
     VXLAN_TUNNEL,
     VXLAN_PORT,
@@ -34,6 +34,14 @@ public:
     // Ensure that ifindex is always the first member in any of the 
     // xxx_properties_t struct below sinhce the key() member function 
     // directly accesses this without checking for the struct type
+    struct phy_port_properties_t {
+        ms_ifindex_t ifindex;
+        bool         admin_state;
+        mac_addr_t   mac_addr;
+        uint32_t     lnx_ifindex;
+        bool         hal_created; // Has this intf already been created 
+                                  // in HAL
+    };
     struct vxlan_tunnel_properties_t {
         ms_ifindex_t ifindex;
         ip_addr_t tep_ip;
@@ -47,6 +55,8 @@ public:
         ms_bd_id_t bd_id;
     };
 
+    if_obj_t(const phy_port_properties_t& port)
+        : prop_(port) {};
     if_obj_t(const vxlan_tunnel_properties_t& vxt)
         : prop_(vxt) {};
     if_obj_t(const vxlan_port_properties_t& vxp)
@@ -55,15 +65,19 @@ public:
         : prop_(irb) {};
 
     ms_iftype_t type(void) {return prop_.iftype_;}
-    const vxlan_tunnel_properties_t& vxlan_tunnel_properties() const {
+    phy_port_properties_t& phy_port_properties() {
+        SDK_ASSERT (prop_.iftype_ == ms_iftype_t::PHYSICAL_PORT);
+        return prop_.phy_port_;
+    }
+    vxlan_tunnel_properties_t& vxlan_tunnel_properties() {
         SDK_ASSERT (prop_.iftype_ == ms_iftype_t::VXLAN_TUNNEL);
         return prop_.vxt_;
     }
-    const vxlan_port_properties_t& vxlan_port_properties() const {
+    vxlan_port_properties_t& vxlan_port_properties() {
         SDK_ASSERT (prop_.iftype_ == ms_iftype_t::VXLAN_PORT);
         return prop_.vxp_;
     }
-    const irb_properties_t& irb_properties() const {
+    irb_properties_t& irb_properties() {
         SDK_ASSERT (prop_.iftype_ == ms_iftype_t::IRB);
         return prop_.irb_;
     }
@@ -71,17 +85,19 @@ public:
                                                           // should be fine since this is always
                                                           // the first member
     void update_store(state_t* state, bool op_delete) override;
-    std::string debug_str(void) override {return std::string();}
-    void print_debug_str(void) override {};
+    void print_debug_str(void) override;
 
 private:
     struct properties_t {
         ms_iftype_t  iftype_ = ms_iftype_t::UNKNOWN;
         union {
+            phy_port_properties_t      phy_port_;
             vxlan_tunnel_properties_t  vxt_;
             vxlan_port_properties_t    vxp_;
             irb_properties_t           irb_;
         };
+        properties_t(const phy_port_properties_t& phy_port)
+            : iftype_(ms_iftype_t::PHYSICAL_PORT), phy_port_(phy_port) {};
         properties_t(const vxlan_tunnel_properties_t& vxt)
             : iftype_(ms_iftype_t::VXLAN_TUNNEL), vxt_(vxt) {};
         properties_t(const vxlan_port_properties_t& vxp)
@@ -116,7 +132,6 @@ public:
     void set_properties(const properties_t& prop) {prop_ = prop;}
     pds_lif_key_t key (void) const {return prop_.host_lif;}
     void update_store(state_t* state, bool op_delete) override;
-    std::string debug_str(void) override {return std::string();}
     void print_debug_str(void) override {};
 
 private:

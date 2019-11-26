@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 
 namespace pdsa_stub {
 
@@ -23,11 +24,33 @@ li_integ_subcomp_t* li_is ()
 
 NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd)
 {
+    try {
+        pdsa_stub::li_intf_t intf;
+        if (intf.handle_add_upd_ips (port_add_upd)) {
+#if 0 // TODO: wait for async support from MS
+            return ATG_ASYNC_COMPLETION;
+#else
+            return ATG_OK;
+#endif
+        }
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
+        return ATG_UNSUCCESSFUL;
+    }
     return ATG_OK;
 }
 
 NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex)
 {
+    try {
+        pdsa_stub::li_intf_t intf;
+        intf.handle_delete (port_ifindex);
+        // TODO: Need to change this API to include the IPS 
+        // TODO: For now send synchronous response to MS for deletes
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Interface Delete processing failed %s", e.what());
+        return ATG_UNSUCCESSFUL;
+    }
     return ATG_OK;
 }
 

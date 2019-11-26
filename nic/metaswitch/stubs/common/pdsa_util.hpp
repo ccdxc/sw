@@ -24,10 +24,12 @@ constexpr size_t VRF_PREF_LEN = 4;
 static inline unsigned long 
 vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 {
-    if (len == 0) return 0;
-    auto vrf_id = strtol(((const char*)vrfname), nullptr, 10);
+    auto vrfname_ = (const char*) vrfname;
+    if (len == 0) {return 0;}
+    auto vrf_id = strtol(vrfname_, nullptr, 10);
     if (vrf_id == 0) {
-        throw Error("Invalid VRF Name from Metaswitch");
+        throw Error(std::string("Invalid VRF Name from Metaswitch - ")
+                    .append(vrfname_));
     }
     return vrf_id;
 }
@@ -74,6 +76,7 @@ convert_ipaddr_pdsa_to_ms (const ip_addr_t&   in_ip,
     NBB_MEMCPY (&(out_ip->address), &(in_ip.addr), out_ip->length);
     return;
 }
+
 // Wrapper struct to use MAC as key in STL
 struct mac_addr_wr_t {
     mac_addr_t m_mac;
@@ -129,10 +132,6 @@ public:
 private:
     pds_batch_ctxt_t bctxt_ = 0;
 };
-
-// Utility function to get MAC address for interface from Linux
-bool 
-get_interface_mac_address (const std::string& if_name, mac_addr_t& if_mac);
 
 } // End namespace
 #endif

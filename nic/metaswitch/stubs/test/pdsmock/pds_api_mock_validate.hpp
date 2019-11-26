@@ -13,6 +13,9 @@ pds_tep_mock_validate(const spec_t&  expected_pds,
 bool
 pds_nhgroup_mock_validate(const spec_t&  expected_pds,
                           const spec_t&  rcvd_pds);
+bool
+pds_if_mock_validate(const spec_t&  expected_pds,
+                     const spec_t&  rcvd_pds);
 
 } // End namespace pdsa_test
 #endif

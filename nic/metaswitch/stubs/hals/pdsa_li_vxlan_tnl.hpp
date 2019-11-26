@@ -7,7 +7,6 @@
 #define __PDSA_LI_VXLAN_TNL_HPP__
 
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
@@ -59,15 +58,9 @@ private:
     pds_batch_ctxt_guard_t make_batch_pds_spec_ (void);
     void fetch_store_info_(pdsa_stub::state_t* state);
 
-    void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
-        ips_info_.if_index = vxlan_tnl_add_upd->id.if_index;
-        ATG_INET_ADDRESS& ms_dest_ip = vxlan_tnl_add_upd->vxlan_settings.dest_ip;
-        pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_dest_ip, &ips_info_.tep_ip);
-        ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd->vxlan_settings.source_ip;
-        pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
-        NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd->id.hw_correlator);
-        ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
-    }
+    void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
+    pds_tep_spec_t make_pds_tep_spec_(void);
+    pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void);
 
     pds_tep_key_t make_pds_tep_key_(void) {
         pds_tep_key_t key; 
@@ -75,38 +68,11 @@ private:
         key.id = tep_prop.hal_tep_idx;
         return key;
     }
-
     pds_nexthop_group_key_t make_pds_nhgroup_key_(void) {
         pds_nexthop_group_key_t key; 
         auto& tep_prop = store_info_.tep_obj->properties();
         key.id = tep_prop.hal_oecmp_idx;
         return key;
-    }
-
-    pds_tep_spec_t make_pds_tep_spec_(void) {
-        pds_tep_spec_t spec = {0};
-        auto& tep_prop = store_info_.tep_obj->properties();
-        spec.key = make_pds_tep_key_();
-        spec.remote_ip = tep_prop.tep_ip;
-        spec.ip_addr = ips_info_.src_ip;
-        spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-        spec.nh_group.id = tep_prop.hal_uecmp_idx;
-        spec.type = PDS_TEP_TYPE_WORKLOAD;
-        spec.nat = false;
-        return spec;
-    }
-
-    pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void) {
-        pds_nexthop_group_spec_t spec = {0};
-        auto& tep_prop = store_info_.tep_obj->properties();
-        spec.key = make_pds_nhgroup_key_();
-        spec.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
-        spec.num_nexthops = 1;
-        spec.nexthops[0].key.id = 1; // Unused for NHs pointing to TEPs
-        spec.nexthops[0].type = PDS_NH_TYPE_OVERLAY;
-        // Use the TEP MS IfIndex as the TEP Index
-        spec.nexthops[0].tep.id = tep_prop.hal_tep_idx;
-        return spec;
     }
 };
 

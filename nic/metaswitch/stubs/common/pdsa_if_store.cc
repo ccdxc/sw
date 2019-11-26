@@ -49,8 +49,7 @@ host_lif_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
     host_lif_obj_t::set_slab(slabs_[slab_id].get());
 }
 
-void if_obj_t::update_store (state_t* state, bool op_delete)
-{
+void if_obj_t::update_store(state_t* state, bool op_delete) {
     if (!op_delete) {
         state->if_store().add_upd(this->key(), this);
     } else { 
@@ -58,8 +57,7 @@ void if_obj_t::update_store (state_t* state, bool op_delete)
     }
 }
 
-void host_lif_obj_t::update_store (state_t* state, bool op_delete)
-{
+void host_lif_obj_t::update_store(state_t* state, bool op_delete) {
     if (!op_delete) {
         state->host_lif_store().add_upd(this->key(), this);
     } else { 
@@ -67,5 +65,19 @@ void host_lif_obj_t::update_store (state_t* state, bool op_delete)
     }
 }
 
+void if_obj_t::print_debug_str(void) {
+    switch(prop_.iftype_) {
+        case ms_iftype_t::PHYSICAL_PORT:    
+            SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for L3 uplink", 
+                             prop_.phy_port_.ifindex);
+            break;    
+        case ms_iftype_t::VXLAN_TUNNEL:
+            SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for VXLAN Tunnel", 
+                             prop_.vxt_.ifindex);
+            break;    
+        default:
+            break;
+    };
 }
 
+} // End namespace

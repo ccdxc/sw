@@ -6,9 +6,6 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
-#include <net/if.h>
-#include <ifaddrs.h>
-#include <netpacket/packet.h>
 
 namespace pdsa_stub {
 
@@ -16,7 +13,7 @@ uint32_t
 ms_to_pds_ifindex (uint32_t ms_ifindex)
 {
     // Add back Type and Slot bits
-    if (ms_ifindex > 0xFFFF) {
+    if (ms_ifindex_to_pds_type(ms_ifindex) == IF_TYPE_L3) {
         // Assumption: Uplinks have parent port ID set in the 17th bit
         ms_ifindex |= ((api::g_pds_state.catalogue()->slot() << ETH_IF_SLOT_SHIFT) 
                        & (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
@@ -25,6 +22,17 @@ ms_to_pds_ifindex (uint32_t ms_ifindex)
         // Assumption: Everything else is a LIF
         return LIF_IFINDEX(ms_ifindex);
     }
+}
+
+uint32_t 
+ms_to_pds_eth_ifindex (uint32_t ms_ifindex)
+{
+    // Add back Type and Slot bits
+    SDK_ASSERT (ms_ifindex_to_pds_type(ms_ifindex) == IF_TYPE_L3);
+    // Assumption: Uplinks have parent port ID set in the 17th bit
+    ms_ifindex |= ((api::g_pds_state.catalogue()->slot() << ETH_IF_SLOT_SHIFT) 
+                   & (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
+    return ((IF_TYPE_ETH << IF_TYPE_SHIFT) | ms_ifindex);
 }
 
 static std::string 
@@ -49,32 +57,14 @@ pds_ifindex_to_ifname (uint32_t pds_ifindex)
 NBB_LONG 
 ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
 {
-    auto pds_ifindex = ms_to_pds_ifindex(ms_ifindex);
-    if (IFINDEX_TO_IFTYPE(pds_ifindex) != IF_TYPE_L3) {
-        // Linux conversion is only needed for L3 IfIndex
-        SDK_TRACE_ERR ("Request to convert invalid Iftype to Linux IfIndex 0x%lx", pds_ifindex);
-        return ms_ifindex;
-    }
-
-    // Check if the mapping can be found in the state cache
-    {
-        auto state_thr_ctxt = state_t::thread_context();
-        auto lnx_ifindex = state_thr_ctxt.state()->lnx_ifindex(pds_ifindex);
-        if (lnx_ifindex != 0) {return lnx_ifindex;}
-    }
-
-    // Fetch mapping based on Interface name
-    std::string ifname = pds_ifindex_to_ifname (pds_ifindex);
-    auto lnx_ifindex = if_nametoindex(ifname.c_str());
-    SDK_TRACE_VERBOSE ("MS UserExit: Cache MS IfIndex = %ld -> Linux Ifname %s, Linux IfIndex = %ld", 
-                       ms_ifindex, ifname.c_str(), lnx_ifindex);
-
-    // Save the mapping in state cache
-    if (lnx_ifindex != 0) {
-        auto state_thr_ctxt = state_t::thread_context();
-        state_thr_ctxt.state()->set_lnx_ifindex(pds_ifindex, lnx_ifindex);
-        if (lnx_ifindex != 0) {return lnx_ifindex;}
-    }
+    auto state_thr_ctxt = state_t::thread_context();
+    auto phy_port_if_obj = state_thr_ctxt.state()->if_store().get(ms_ifindex);
+    SDK_ASSERT (phy_port_if_obj != nullptr);
+    // Linux ifindex is cached in the store at the time 
+    // of L3 interface creation
+    auto lnx_ifindex = phy_port_if_obj->phy_port_properties().lnx_ifindex;
+    SDK_TRACE_VERBOSE ("MS UserExit: MS IfIndex = %ld -> Linux IfIndex = %ld", 
+                       ms_ifindex, lnx_ifindex);
     return lnx_ifindex; 
 }
 

@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -95,12 +94,6 @@ TEST_F(bd_store_test, delete_store) {
     auto bd_obj = state->bd_store().get (100);
     ASSERT_TRUE (bd_obj == nullptr);
     ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 0);
-}
-
-TEST(util_test, mac_get) {
-   mac_addr_t if_mac;
-   pdsa_stub::get_interface_mac_address ("eth0", if_mac);
-   std::cout << "Found MAC " << macaddr2str(if_mac) << std::endl;
 }
 
 } // namespace api_test

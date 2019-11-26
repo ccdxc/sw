@@ -62,7 +62,6 @@ class base_obj_t {
 public:
     virtual ~base_obj_t(void) {};
     virtual void update_store(state_t* state, bool op_delete) = 0;
-    virtual std::string debug_str(void) = 0;
     virtual void print_debug_str(void) = 0;
 };
 

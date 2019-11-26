@@ -31,7 +31,6 @@ public:
     const properties_t& properties(void) const {return prop_;}
     ms_bd_id_t key(void) const {return prop_.bd_id;}
     void update_store(state_t* state, bool op_delete) override;
-    std::string debug_str(void) override {return std::string();}
     void print_debug_str(void) override {};
 
 private:  

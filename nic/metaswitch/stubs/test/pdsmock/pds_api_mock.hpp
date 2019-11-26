@@ -32,6 +32,7 @@ struct spec_t {
         pds_tep_spec_t          tep;
         pds_vnic_spec_t         vnic;
         pds_vpc_spec_t          vpc;
+        pds_if_spec_t           intf;
     };
     spec_t (obj_id_t oid, api_op_t o) : obj_id(oid), op(o) {};
 };

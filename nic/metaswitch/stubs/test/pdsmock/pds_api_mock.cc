@@ -24,13 +24,16 @@
 #include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
 
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
 {
     auto pds_mock = dynamic_cast<pdsa_test::pds_mock_t*>(pdsa_test::test_params()->test_output);
     if (pds_mock == nullptr) {
         // Not running in mock test mode - return dummy
-        return ((uint64_t) new pdsa_test::pds_mock_t(true));
+        auto pds_mock = new pdsa_test::pds_mock_t(true);
+        pds_mock->cookie = (void*) batch_params->cookie;
+        return (uint64_t) pds_mock;
     }
     pds_mock->cookie = (void*) batch_params->cookie;
     return ((pds_batch_ctxt_t) pds_mock);
@@ -44,6 +47,8 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
     auto& pds_ret_status =  pds_mock->pds_ret_status;
 
     if (pds_mock->sim) {
+        ((pdsa_stub::cookie_t*)pds_mock->cookie)->ips = nullptr;
+        pdsa_stub::hal_callback(true, (uint64_t)pds_mock->cookie);
         return SDK_RET_OK;
     }
 
@@ -82,6 +87,14 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             }
             break;
         }
+        case OBJ_ID_IF: 
+        {
+            if (!pdsa_test::pds_if_mock_validate (expected_pds, rcvd_pds)) {
+                pds_ret_status = false;
+                return SDK_RET_OK;
+            }
+            break;
+        }
         default:
             break;
         }
@@ -101,6 +114,12 @@ sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
 
 sdk_ret_t pds_if_create(pds_if_spec_s *spec,
                         pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_IF, API_OP_CREATE);
+    pds_mock->rcvd_pds.back().intf = *spec;
     return SDK_RET_OK;
 }
 
@@ -114,11 +133,20 @@ sdk_ret_t pds_if_read_all(if_read_cb_t cb, void *ctxt) {
 
 sdk_ret_t pds_if_update(pds_if_spec_s *spec,
                         pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_IF, API_OP_UPDATE);
+    pds_mock->rcvd_pds.back().intf = *spec;
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_if_delete(pds_if_key_t *key,
                         pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_IF, API_OP_DELETE);
+    pds_mock->rcvd_pds.back().intf.key = *key;
     return SDK_RET_OK;
 }
 

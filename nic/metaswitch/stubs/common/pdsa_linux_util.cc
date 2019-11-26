@@ -1,17 +1,21 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Common Utilities used by all PDSA stub components
+// Utilities to interface with Linux OS
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
+#include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
+#include <net/if.h>
 #include <ifaddrs.h>
 #include <netpacket/packet.h>
+#include <cstring>
 
 namespace pdsa_stub {
 
 // Utility function to get MAC address for interface from Linux
-bool 
-get_interface_mac_address (const std::string& if_name, mac_addr_t& if_mac)
+static bool 
+get_linux_intf_mac_addr (const std::string& if_name, mac_addr_t& if_mac)
 {
     struct ifaddrs *ifaddr = NULL;
     struct ifaddrs *ifa = NULL;
@@ -41,6 +45,16 @@ get_interface_mac_address (const std::string& if_name, mac_addr_t& if_mac)
 exit:
     freeifaddrs(ifaddr);
     return ret;
+}
+
+bool
+get_linux_intf_params (const char* ifname,
+                       uint32_t*   lnx_ifindex,
+                       mac_addr_t& mac)
+{
+    *lnx_ifindex = if_nametoindex(ifname);
+    if (*lnx_ifindex == 0) return false;
+    return get_linux_intf_mac_addr(ifname, mac);
 }
 
 } // End namespace

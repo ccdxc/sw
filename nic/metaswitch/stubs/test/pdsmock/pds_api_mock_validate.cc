@@ -7,8 +7,8 @@
 namespace pdsa_test {
 
 bool
-pds_tep_mock_validate(const spec_t&  expected_pds,
-                      const spec_t&  rcvd_pds)
+pds_tep_mock_validate (const spec_t&  expected_pds,
+                       const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
         if (expected_pds.tep.key.id != rcvd_pds.tep.key.id) {
@@ -30,8 +30,8 @@ pds_tep_mock_validate(const spec_t&  expected_pds,
 }
 
 bool
-pds_nhgroup_mock_validate(const spec_t&  expected_pds,
-                          const spec_t&  rcvd_pds)
+pds_nhgroup_mock_validate (const spec_t&  expected_pds,
+                           const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
         if (expected_pds.nhgroup.key.id != rcvd_pds.nhgroup.key.id) {
@@ -47,6 +47,29 @@ pds_nhgroup_mock_validate(const spec_t&  expected_pds,
         std::cout << "NH Group compare failed" << std::endl;
         std::cout << "Expected: " << &(feeder.spec) <<std::endl;
         std::cout << "Rcvd: " << &(rcvd_pds.nhgroup) << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool
+pds_if_mock_validate (const spec_t&  expected_pds,
+                      const spec_t&  rcvd_pds)
+{
+    if (rcvd_pds.op == API_OP_DELETE) {
+        if (expected_pds.intf.key.id != rcvd_pds.intf.key.id) {
+            std::cout << "IF delete key compare failed" << std::endl;
+            std::cout << "Expected: " << expected_pds.intf.key.id <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.intf.key.id << std::endl;
+            return false;
+        }
+    }
+    api_test::if_feeder feeder;
+    feeder.spec_feeder = expected_pds.intf; 
+    if (!feeder.spec_compare (&rcvd_pds.intf)) {
+        std::cout << "IF compare failed" << std::endl;
+        std::cout << "Expected: " << &(feeder.spec_feeder) <<std::endl;
+        std::cout << "Rcvd: " << &(rcvd_pds.intf) << std::endl;
         return false;
     }
     return true;
