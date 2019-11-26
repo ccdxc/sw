@@ -152,10 +152,8 @@ def Trigger(tc):
     cmd = 'sleep 3'
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd)
 
-    # Right now on some setups it's taking longer, so use 150secs timeout.
-    # 150s should address 2K count taking about 70secs for 1000 pkts
-    # on a very slow server.
-    wait_secs = 150
+    # Wait 3min before declaring test timeout
+    wait_secs = 180
 
     # cmd for client
     cmd = "sudo echo -n 'client,addr={addr},{opstr}' > {kfile}".format(

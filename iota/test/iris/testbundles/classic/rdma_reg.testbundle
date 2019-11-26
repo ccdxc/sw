@@ -313,7 +313,7 @@ testcases:
             duplex  : ['yes']
             size    : [64,128,256,1024,4096,16384,65535,131072]
             txdepth : [128,256,512]
-            count   : [10000000]
+            count   : [1000000]
 
     -   name    : KRping_Wlat
         testcase: testcases.rdma.krping
