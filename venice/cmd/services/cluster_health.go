@@ -577,6 +577,8 @@ func (c *ClusterHealthMonitor) processNodeEvent(et kvstore.WatchEventType, node 
 func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventType, ds *k8sv1beta1.DaemonSet) {
 	c.servicesHealth.Lock()
 
+	c.logger.Infof("daemonset watcher received event: %v, name: %s, spec: %+v", eventType, ds.Name, ds.Spec)
+
 	switch eventType {
 	case k8swatch.Added:
 		if c.servicesHealth.services[ds.Name] != nil {
@@ -599,6 +601,8 @@ func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventTyp
 // helper to process deployment watch events
 func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventType, deploy *k8sv1beta1.Deployment) {
 	c.servicesHealth.Lock()
+
+	c.logger.Infof("deployment watcher received event: %v, name: %s, spec: %+v", eventType, deploy.Name, deploy.Spec)
 
 	switch eventType {
 	case k8swatch.Added:
@@ -623,7 +627,7 @@ func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventTy
 func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod *v1.Pod) {
 	c.servicesHealth.Lock()
 
-	c.logger.Infof("pod watcher received event:%v, name: %s running: %v, pod conditions: %+v",
+	c.logger.Infof("pod watcher received event: %v, name: %s running: %v, pod conditions: %+v",
 		eventType, pod.Name, isPodRunning(pod), pod.Status.Conditions)
 
 	var refName string // reference/owner (ds or deploy)

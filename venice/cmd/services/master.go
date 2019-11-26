@@ -461,6 +461,7 @@ func (m *masterService) Stop() {
 func (m *masterService) stopLeaderServices() {
 	if m.clusterHealthMonitor != nil {
 		m.clusterHealthMonitor.Stop()
+		m.clusterHealthMonitor = nil
 	}
 	go performQuorumDefrag(false)
 
@@ -471,6 +472,7 @@ func (m *masterService) stopLeaderServices() {
 
 	if env.ServiceRolloutClient != nil {
 		env.ServiceRolloutClient.Stop()
+		env.ServiceRolloutClient = nil
 	}
 
 	m.k8sSvc.Stop()
