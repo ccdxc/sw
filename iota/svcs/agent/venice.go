@@ -19,6 +19,10 @@ type veniceNode struct {
 	commandNode
 }
 
+type veniceBMNode struct {
+	commandNode
+}
+
 type venicePeerNode struct {
 	hostname string
 	ip       string
@@ -117,4 +121,18 @@ func (venice *veniceNode) AddWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, er
 func (venice *veniceNode) DeleteWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	venice.logger.Println("Delete workload on venice not supported.")
 	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+}
+
+func (venice *veniceBMNode) Init(in *iota.Node) (*iota.Node, error) {
+	venice.commandNode.Init(in)
+	venice.iotaNode.name = in.GetName()
+	venice.iotaNode.nodeMsg = in
+	venice.logger.Printf("Bring up request received for BM Venice node : %v. Req: %+v", in.GetName(), in)
+
+	dir := Common.DstIotaEntitiesDir + "/" + in.GetName()
+	os.Mkdir(dir, 0765)
+	os.Chmod(dir, 0777)
+
+	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, NodeUuid: "", Type: in.GetType(),
+		NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }

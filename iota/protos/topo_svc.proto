@@ -125,6 +125,7 @@ enum PersonalityType {
     PERSONALITY_INTEL                   = 11;
     // Node just run commands
     PERSONALITY_COMMAND_NODE            = 12;
+    PERSONALITY_VENICE_BM               = 13;
 }
 
 enum EntityType {
@@ -681,6 +682,7 @@ enum TestBedNodeType {
     TESTBED_NODE_TYPE_HW         = 2;
     //Run multiple sim on HW
     TESTBED_NODE_TYPE_MULTI_SIM  = 3;
+    TESTBED_NODE_TYPE_VENICE_BM  = 4;
 }
 
 enum TestBedNodeOs {

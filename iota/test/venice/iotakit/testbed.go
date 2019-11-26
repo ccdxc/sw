@@ -54,6 +54,7 @@ type InstanceParams struct {
 	NicMgmtIP      string // NIC's oob mgmt port address
 	NodeCimcIP     string // CIMC ip address of the server
 	NodeServer     string // NodeServer whether server is ucs/hpe
+	Tag            string // Tag to have some clue of the instance
 	Resource       struct {
 		NICType    string // NIC type (naples, intel, mellanox etc)
 		NICUuid    string // NIC's mac address
@@ -301,12 +302,17 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 				return inst
 			}
 		case iota.TestBedNodeType_TESTBED_NODE_TYPE_HW:
-			if inst.Type == "bm" && inst.Resource.Network.Address == "" {
+			if inst.Type == "bm" && inst.Resource.Network.Address == "" && inst.Tag != "venice" {
 				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
 				return inst
 			}
 		case iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM:
-			if inst.Type == "bm" && inst.Resource.Network.Address != "" {
+			if inst.Type == "bm" && inst.Resource.Network.Address != "" && inst.Tag != "venice" {
+				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
+				return inst
+			}
+		case iota.TestBedNodeType_TESTBED_NODE_TYPE_VENICE_BM:
+			if inst.Type == "bm" && inst.Resource.Network.Address != "" && inst.Tag == "venice" {
 				tb.unallocatedInstances = append(tb.unallocatedInstances[:idx], tb.unallocatedInstances[idx+1:]...)
 				return inst
 			}

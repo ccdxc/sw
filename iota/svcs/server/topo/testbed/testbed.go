@@ -197,9 +197,9 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []
 	runner := runner.NewRunner(c)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	if err := runner.Run(addr, "sudo rm -rf /tmp/iota", constants.RunCommandForeground); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | StartAgent on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
-		return fmt.Errorf("StartAgent on node failed. TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+	if err := runner.Run(addr, "sudo mkdir -p /pensando", constants.RunCommandForeground); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to create /pensando dir on %v : %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		return fmt.Errorf("Failed to create /pensando dir:. TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
 
 	// Copy Agent Binary to the remote node
