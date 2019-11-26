@@ -109,6 +109,34 @@ pds_policer_read (pds_policer_key_t *key, pds_policer_info_t *info)
     return sdk::SDK_RET_OK;
 }
 
+typedef struct pds_policer_read_args_s {
+    policer_read_cb_t cb;
+    void *ctxt;
+} pds_policer_read_args_t;
+
+bool
+pds_policer_info_from_entry (void *entry, void *ctxt)
+{
+    policer_entry *policer = (policer_entry *)entry;
+    pds_policer_read_args_t *args = (pds_policer_read_args_t *)ctxt;
+    pds_policer_info_t info = { 0 };
+
+    pds_policer_spec_fill(&info.spec, policer);
+    pds_policer_status_fill(&info.status, policer);
+    pds_policer_stats_fill(&info.stats, policer);
+    args->cb(&info, args->ctxt);
+    return false;
+}
+
+sdk::sdk_ret_t
+pds_policer_read_all (policer_read_cb_t cb, void *ctxt)
+{
+    pds_policer_read_args_t args = {0};
+    args.ctxt = ctxt;
+    args.cb = cb;
+    return policer_db()->walk(pds_policer_info_from_entry, &args);
+}
+
 sdk::sdk_ret_t
 pds_policer_update (_In_ pds_policer_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {

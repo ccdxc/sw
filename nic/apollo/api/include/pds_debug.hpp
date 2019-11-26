@@ -92,13 +92,15 @@ typedef struct cmd_args_s {
 typedef enum cli_cmd_e {
     CLI_CMD_START = 0,
     CLI_CMD_MAPPING_DUMP = CLI_CMD_START,
+    CLI_CMD_INTR_DUMP,
+    CLI_CMD_INTR_CLEAR,
     CLI_CMD_MAX = 255,
 } cli_cmd_t;
 
 typedef struct cmd_ctxt_s {
     int fd;           // File descriptor
     cli_cmd_t cmd;    // CLI command
-    cmd_args_t args; // Command arguments
+    cmd_args_t args;  // Command arguments
 } cmd_ctxt_t;
 
 namespace debug {
@@ -131,7 +133,8 @@ sdk_ret_t pds_fte_api_stats_clear(void);
 sdk_ret_t pds_fte_table_stats_get(void);
 sdk_ret_t pds_fte_table_stats_clear(void);
 sdk_ret_t pds_slab_get(api::state_walk_cb_t cb, void *ctxt);
-
+sdk_ret_t dump_interrupts(int fd);
+sdk_ret_t clear_interrupts(int fd);
 /**
  * @brief    start aacs server
  * @param[in]    aacs_server_port     AACS server port

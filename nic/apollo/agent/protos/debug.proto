@@ -397,6 +397,8 @@ message QueueCreditsGetResponse {
 enum Command {
   CMD_NONE         = 0;
   CMD_MAPPING_DUMP = 1;
+  CMD_INTR_DUMP    = 2;
+  CMD_INTR_CLEAR   = 3;
 }
 
 enum MappingDumpType {

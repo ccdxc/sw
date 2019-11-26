@@ -611,6 +611,10 @@ pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
     switch (proto_cmd) {
     case pds::CMD_MAPPING_DUMP:
         return CLI_CMD_MAPPING_DUMP;
+    case pds::CMD_INTR_DUMP:
+        return CLI_CMD_INTR_DUMP;
+    case pds::CMD_INTR_CLEAR:
+        return CLI_CMD_INTR_CLEAR;
     default:
         return CLI_CMD_MAX;
     }
@@ -788,7 +792,7 @@ pds_policer_api_stats_to_proto (pds::PolicerStats *proto_stats,
 
 // populate proto buf from policer API info
 static inline void
-pds_policer_api_info_to_proto (const pds_policer_info_t *api_info, void *ctxt)
+pds_policer_api_info_to_proto (pds_policer_info_t *api_info, void *ctxt)
 {
     pds::PolicerGetResponse *proto_rsp = (pds::PolicerGetResponse *)ctxt;
     auto policer = proto_rsp->add_response();

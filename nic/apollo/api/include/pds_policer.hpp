@@ -80,6 +80,14 @@ sdk_ret_t pds_policer_create(pds_policer_spec_t *spec,
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policer_read(pds_policer_key_t *key, pds_policer_info_t *info);
 
+typedef void (*policer_read_cb_t)(pds_policer_info_t *info, void *ctxt);
+
+/// \brief      read all policer
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policer_read_all(policer_read_cb_t cb, void *ctxt);
+
 /// \brief     update policer
 /// \param[in] spec new config specification of the policer
 /// \param[in] bctxt batch context if API is invoked in a batch

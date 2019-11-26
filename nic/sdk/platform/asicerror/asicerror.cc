@@ -13,7 +13,8 @@ static intr_cfg_t intr_cfg;
 
 static void
 walk_interrupts (intr_reg_t &reg,
-                 intr_walk_cb_t intr_walk_cb)
+                 intr_walk_cb_t intr_walk_cb,
+                 void *ctxt)
 {
     intr_field_t *field;
 
@@ -21,17 +22,40 @@ walk_interrupts (intr_reg_t &reg,
         field = &reg.fields[i];
 
         if (intr_walk_cb) {
-            intr_walk_cb(&reg, field);
+            intr_walk_cb(&reg, field, ctxt);
         }
         if(field->next_ptr) {
-            walk_interrupts(*field->next_ptr, intr_walk_cb);
+            walk_interrupts(*field->next_ptr, intr_walk_cb, ctxt);
         }
+    }
+}
+
+void
+intr_dump_cb (intr_reg_t *reg, intr_field_t *field, void *ctxt)
+{
+    int fd = *(int *)ctxt;
+
+    if (field->count == 0) {
+        return;
+    }
+
+    std::string name = std::string(reg->name) + "_" + std::string(field->name);
+
+    if (fd == -1) {
+        SDK_TRACE_ERR("name %s, count %lu, severity %s, desc %s",
+                      name.c_str(), field->count,
+                      get_severity_str(field->severity).c_str(), field->desc);
+    } else {
+        dprintf(fd, "%-50s%-10lu%-9s%-11s\n",
+                name.c_str(), field->count,
+                get_severity_str(field->severity).c_str(), field->desc);
     }
 }
 
 static void
 intr_clear_cb (intr_reg_t *reg,
-               intr_field_t *field)
+               intr_field_t *field,
+               void *ctxt)
 {
     field->count = 0;
 }
@@ -122,14 +146,14 @@ traverse_interrupts (void)
 }
 
 void
-walk_interrupts (intr_walk_cb_t intr_walk_cb)
+walk_interrupts (intr_walk_cb_t intr_walk_cb, void *ctxt)
 {
-    walk_interrupts(cap0, intr_walk_cb);
-    walk_interrupts(all_csrs, intr_walk_cb);
+    walk_interrupts(cap0, intr_walk_cb, ctxt);
+    walk_interrupts(all_csrs, intr_walk_cb, ctxt);
 }
 
 void
 clear_interrupts (void)
 {
-    walk_interrupts(intr_clear_cb);
+    walk_interrupts(intr_clear_cb, NULL);
 }

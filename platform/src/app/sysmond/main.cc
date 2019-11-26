@@ -20,11 +20,10 @@
 #define THREAD_ID_AGENT_CMD_SERVER 1
 
 static sdk::event_thread::event_thread *g_cmd_server_thread;
-int g_print_fd = -1;
 
 void
 handle_cmd (cmd_ctxt_t *cmd_ctxt) {
-    g_print_fd = cmd_ctxt->fd;
+    int fd = cmd_ctxt->fd;
 
     switch (cmd_ctxt->cmd) {
     case sysmon::CLI_CMD_CLEAR_INTR:
@@ -32,13 +31,11 @@ handle_cmd (cmd_ctxt_t *cmd_ctxt) {
         break;
 
     default:
-        dprintf(g_print_fd, "%-50s %-10s %-9s %-s\n",
-                "NAME", "COUNT", "SEVERITY", "DESCRIPTION");
-        walk_interrupts(intr_dump_cb);
+        dprintf(fd, "%-50s%-10s%-9s%-s\n",
+                "Name", "Count", "Severity", "Description");
+        walk_interrupts(intr_dump_cb, &fd);
         break;
     }
-
-    g_print_fd = -1;
 }
 
 //------------------------------------------------------------------------------

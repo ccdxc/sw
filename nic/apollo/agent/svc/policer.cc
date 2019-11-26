@@ -181,7 +181,6 @@ Status
 PolicerSvcImpl::PolicerGet(ServerContext *context,
                            const pds::PolicerGetRequest *proto_req,
                            pds::PolicerGetResponse *proto_rsp) {
-#if 0
     sdk_ret_t ret;
     pds_policer_key_t key = { 0 };
     pds_policer_info_t info = { 0 };
@@ -192,24 +191,17 @@ PolicerSvcImpl::PolicerGet(ServerContext *context,
     }
     if (proto_req->id_size() == 0) {
         // get all
-        ret = core::policer_get_all(pds_policer_api_info_to_proto, proto_rsp);
+        ret = pds_policer_read_all(pds_policer_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         key.id = proto_req->id(i);
-        ret = core::policer_get(&key, &info);
+        ret = pds_policer_read(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
-        auto response = proto_rsp->add_response();
-        pds_policer_api_spec_to_proto(
-                response->mutable_spec(), &info.spec);
-        pds_policer_api_status_to_proto(
-                response->mutable_status(), &info.status);
-        pds_policer_api_stats_to_proto(
-                response->mutable_stats(), &info.stats);
+        pds_policer_api_info_to_proto(&info, proto_rsp);
     }
-#endif
     return Status::OK;
 }

@@ -21,9 +21,9 @@ service PolicerSvc {
 // packet policer
 message PacketPolicerSpec {
   // packets per second
-  uint32 PacketsPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64 PacketsPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // number/burst of packets to absorb
-  uint32 Burst            = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64 Burst            = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // byte policer

@@ -43,7 +43,7 @@ struct intr_reg_t {
         intr_field_t fields[];
 };
 
-typedef void (*intr_walk_cb_t)(intr_reg_t *reg, intr_field_t *field);
+typedef void (*intr_walk_cb_t)(intr_reg_t *reg, intr_field_t *field, void *ctxt);
 typedef void (*intr_event_cb_t)(const intr_reg_t *reg,
                                 const intr_field_t *field);
 typedef struct intr_cfg_s {
@@ -79,9 +79,12 @@ int intr_init(intr_cfg_t *intr_cfg);
 void traverse_interrupts(void);
 
 // walk all interrupts
-void walk_interrupts(intr_walk_cb_t intr_walk_cb);
+void walk_interrupts(intr_walk_cb_t intr_walk_cb, void *ctxt);
 
 // clear sw state for all interrupts
 void clear_interrupts(void);
+
+// callback to print all interrupts
+void intr_dump_cb(intr_reg_t *reg, intr_field_t *field, void *ctxt);
 
 #endif    // __SDK_INTERRUPTS_HPP__

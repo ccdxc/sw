@@ -9,6 +9,7 @@
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/platform/asicerror/interrupts.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/port.hpp"
@@ -72,6 +73,25 @@ pds_table_stats_get (debug::table_stats_get_cb_t cb, void *ctxt)
     return impl_base::pipeline_impl()->table_stats(cb, ctxt);
 }
 
+sdk_ret_t
+dump_interrupts (int fd)
+{
+    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+    dprintf(fd, "%-50s%-10s%-9s%-11s\n",
+            "Name", "Count", "Severity", "Description");
+    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+    ::walk_interrupts(intr_dump_cb, &fd);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+clear_interrupts (int fd)
+{
+    ::clear_interrupts();
+    dprintf(fd, "Interrupts cleared\n");
+    return SDK_RET_OK;
+}
+
 /**
  * @brief       Handles command based on ctxt
  * @param[in]   ctxt  Context for CLI handler
@@ -80,7 +100,19 @@ pds_table_stats_get (debug::table_stats_get_cb_t cb, void *ctxt)
 sdk_ret_t
 pds_handle_cmd (cmd_ctxt_t *ctxt)
 {
-    return impl_base::pipeline_impl()->handle_cmd(ctxt);
+    switch (ctxt->cmd) {
+    case CLI_CMD_MAPPING_DUMP:
+        return impl_base::pipeline_impl()->handle_cmd(ctxt);
+    case CLI_CMD_INTR_DUMP:
+        dump_interrupts(ctxt->fd);
+        break;
+    case CLI_CMD_INTR_CLEAR:
+        clear_interrupts(ctxt->fd);
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
 }
 
 /**
