@@ -272,6 +272,7 @@ class capri_table:
         self.policer_colors = 0 # 2-color/3-color
         self.is_rate_limit_en = False
         self.token_refresh_profile = 0 # Token refresh profile id for policer/rate-limit
+        self.token_refresh_rate = 4000 #Token refresh rate, 4,000 times/sec
         self.is_multi_threaded = False
         self.num_threads = 1
         # flit numbers from which key(K+I) is built, Lookup can be
@@ -5142,6 +5143,17 @@ class capri_gress_tm:
                         ctable.token_refresh_profile = self.next_free_refresh_profile
                         self.next_free_refresh_profile += 1
 
+
+                    if ctable.is_policer or ctable.is_rate_limit_en:
+                        if t._parsed_pragmas and 'token_refresh_rate' in t._parsed_pragmas:
+                            ctable.token_refresh_rate = int(t._parsed_pragmas['token_refresh_rate'].keys()[0])
+                            ncc_assert(ctable.token_refresh_rate > 4000, \
+                                       "token refresh rate should be less than 4000/sec")
+                    else:
+                        if t._parsed_pragmas and 'token_refresh_rate' in t._parsed_pragmas:
+                            self.tm.logger("%s:%s pragma token_refresh_rate has no effect.. ignored" % \
+                                           (self.d.name, t.name))
+
                     if t._parsed_pragmas and 'numthreads' in t._parsed_pragmas:
                         ctable.num_threads = int(t._parsed_pragmas['numthreads'].keys()[0])
                         ncc_assert(ctable.num_threads > 0 and ctable.num_threads <= 4, \
@@ -6115,6 +6127,7 @@ class capri_table_mapper:
 
             if 'sram' in table_spec.keys():
                 ctable = self.tmgr.gress_tm[xgress_from_string(table_spec['region'])].tables[table_spec['name']]
+                table_mapping['token_refresh_rate'] = ctable.token_refresh_rate
                 if table_spec['overflow_parent']:
                     # Overflow SRAMs are appended to their parent SRAMs. Create layout using parent's layout
                     for table in self.tables['sram'][table_spec['region']]:
@@ -6281,31 +6294,36 @@ class capri_table_manager:
         return table_specs
 
     def compute_token_refresh_timer_value(self):
-        timers = {'value':[],'scale':[]}
-        timers['value'] = [0 for d in xgress]
-        timers['scale'] = [0 for d in xgress]
         for d in xgress:
-            num_entries = 0
-            cycles_per_250us = int(float(capri_model['match_action']['te_consts']['base_clock_freq']) * 0.000250)
+            max_refresh_rate = 1 # Initialize to one packet per second
+            tot_entries = 0 # Total of all policer entries
             for ctable in self.gress_tm[d].tables.values():
                 if ctable.is_rate_limit_en or ctable.is_policer:
-                    num_entries = num_entries + ctable.num_entries
-            min_cycles_reqd = num_entries * 16
-            ncc_assert(min_cycles_reqd < cycles_per_250us, "Too many policer/rate-limiter entries to support 250us refresh")
-            cycles_per_250us = cycles_per_250us >> 1
-            timers['scale'][d] = 0
-            while cycles_per_250us & 0xFFFFFFFFFFFF0000L:
-                cycles_per_250us = cycles_per_250us >> 1
-                timers['scale'][d] = timers['scale'][d] + 1
-            timers['value'][d] = cycles_per_250us
+                    # Initialize token refresh timers for the table
+                    ctable.token_refresh_timers = {'value':0,'scale':0}
+                    # Compute and store the timer values for this table
+                    clocks_per_cycle = capri_model['match_action']['te_consts']['base_clock_freq'] / ctable.token_refresh_rate
+                    clocks_per_cycle = clocks_per_cycle >> 1
+                    while clocks_per_cycle & 0xFFFFFFFFFFFF0000L:
+                        ctable.token_refresh_timers['scale'] += 1
+                        clocks_per_cycle >>= 1
+                    ctable.token_refresh_timers['value'] = clocks_per_cycle
+                    # Accumulate the total number of entries and max refresh rate
+                    tot_entries = tot_entries + ctable.num_entries
+                    if  max_refresh_rate < ctable.token_refresh_rate:
+                        max_refresh_rate = ctable.token_refresh_rate
 
-        return timers
+            clocks_reqd = tot_entries * 16
+            clocks_available = capri_model['match_action']['te_consts']['base_clock_freq'] / max_refresh_rate
+            ncc_assert(clocks_reqd < clocks_available, "Too many policer/rate-limiter entries to support %d refresh/sec" % (max_refresh_rate))
+
+        return
 
     def generate_cap_pic_output(self):
 
         self.logger.info("Generating cap pics ...")
 
-        tmr = self.compute_token_refresh_timer_value()
+        self.compute_token_refresh_timer_value()
         pic = capri_pic_csr_load(self) # Load the templates
 
         for mem_type in self.mapper.tables:
@@ -6377,8 +6395,8 @@ class capri_table_manager:
                             opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_oprd3']) << 8)
                             opcode |= ((1)  << 10) # Policer or Rate-Limit
                             bg_upd_profile['opcode']['value'] = "0x%x" % (opcode)
-                            bg_upd_profile['timer']['value'] = "0x%x" % (tmr['value'][direction])
-                            bg_upd_profile['scale']['value'] = "0x%x" % (tmr['scale'][direction])
+                            bg_upd_profile['timer']['value'] = "0x%x" % (ctable.token_refresh_timers['value'])
+                            bg_upd_profile['scale']['value'] = "0x%x" % (ctable.token_refresh_timers['scale'])
                             bg_upd_profile['_modified'] = True
 
                             bg_upd_profile_en_name = 'cap_pics_csr_cfg_bg_update_profile_enable'
