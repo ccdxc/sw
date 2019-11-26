@@ -4,7 +4,6 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
@@ -17,17 +16,18 @@ import { MetricsPollingQuery, MetricsqueryService, TelemetryPollingMetricQueries
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { IClusterDistributedServiceCard, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IClusterDistributedServiceCard, ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode,
+         ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesConditionValues } from '.';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
+import * as _ from 'lodash';
 
 
 @Component({
@@ -76,15 +76,16 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   cols: TableCol[] = [
     { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
     { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
-    { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: 3 },
-    { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: 15 },
-    { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: 5 },
+    { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: '80px' },
+    { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: '160px' },
+    { field: 'spec.admit', header: 'Admit', class: '', sortable: false, width: 5 },
+    { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: '120px' },
     { field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10},
     { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10},
     { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7},
     { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 10 },
-    { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: 10 },
-    { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: 10 },
+    { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: '160px' },
+    { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: '180px' },
   ];
   exportMap: CustomExportMap = {};
 
@@ -653,4 +654,68 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
      }
      return wltips.join(' , ');
   }
+
+  onDecommissionCard(event, object: ClusterDistributedServiceCard) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.controllerService.invokeConfirm({
+      header: 'Are you sure that you want to decommission the card?',
+      message: 'Once the card is decommissioned, it can not be brought back through UI.',
+      acceptLabel: 'Decommission',
+      accept: () => {
+        const updatedObject: ClusterDistributedServiceCard = _.cloneDeep(object);
+        updatedObject.spec['mgmt-mode'] = ClusterDistributedServiceCardSpec_mgmt_mode.host;
+        this.invokeUpdateCard(updatedObject, object,
+          'Successfully decommissioned ' + object.meta.name, 'Decommision Service');
+      }
+    });
+  }
+
+  onAdmitCard(event, object: ClusterDistributedServiceCard) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.controllerService.invokeConfirm({
+      header: 'Are you sure that you want to admit the card?',
+      message: 'Once the card is admitted, This action can not be undone.',
+      acceptLabel: 'Admit',
+      accept: () => {
+        const updatedObject: ClusterDistributedServiceCard = _.cloneDeep(object);
+        updatedObject.spec.admit = true;
+        this.invokeUpdateCard(updatedObject, object,
+          'Successfully admitted ' + object.meta.name, 'Admit Service');
+      }
+    });
+  }
+
+  invokeUpdateCard(updatedObject: ClusterDistributedServiceCard,
+                  oldObject: ClusterDistributedServiceCard,
+                  successMsg: string,
+                  actionType: string) {
+    const sub = this.clusterService.UpdateDistributedServiceCard(oldObject.meta.name, updatedObject, null, oldObject).subscribe(
+      () => {
+        this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
+          successMsg);
+      },
+      (error) => {
+        if (error.body instanceof Error) {
+          console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+        this.controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+  showAdmissionButton(rowData: ClusterDistributedServiceCard): boolean {
+    return !rowData.spec.admit;
+  }
+
+  showDecommissionButton(rowData: ClusterDistributedServiceCard): boolean {
+    return rowData.spec.admit && rowData.status['admission-phase'] ===
+        ClusterDistributedServiceCardStatus_admission_phase.admitted;
+  }
 }

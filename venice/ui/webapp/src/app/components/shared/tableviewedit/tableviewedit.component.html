@@ -36,7 +36,7 @@
 
       <ng-template pTemplate="header" let-columns>
         <tr fxLayout="row" #headerRow>
-          <th [style.width]="checkboxWidth + 'px'"
+          <th [style.min-width]="checkboxWidth + 'px'"
               *ngIf="enableCheckbox && selectedcolumns.length > 0">
             <p-tableHeaderCheckbox matTooltip="Select/Deselect All Records In Current Page">
             </p-tableHeaderCheckbox>
@@ -76,7 +76,8 @@
             [style.min-height]="virtualRowHeight + 'px'"
             fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
-          <td *ngIf="enableCheckbox  && selectedcolumns.length > 0">
+          <td [style.min-width]="checkboxWidth + 'px'"
+              *ngIf="enableCheckbox  && selectedcolumns.length > 0">
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
           <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"

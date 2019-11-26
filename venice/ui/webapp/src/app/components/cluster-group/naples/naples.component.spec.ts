@@ -44,7 +44,8 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
     'spec': {
-      'id': 'naples1-host'
+      'id': 'naples1-host',
+      'admit': true
     },
     'status': {
       'host': 'naples-host-1',
@@ -67,7 +68,8 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'id': 'naples2-host'
+      'id': 'naples2-host',
+      'admit': true
     },
     'status': {
       'host': 'naples-host-2',
@@ -90,7 +92,8 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'id': 'naples3-host'
+      'id': 'naples3-host',
+      'admit': true
     },
     'status': {
       'host': 'naples-host-3',

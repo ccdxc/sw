@@ -141,6 +141,8 @@ export class ControllerService {
 
     this.matIconRegistry.addSvgIcon('drag_indicator', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/baseline-drag_indicator-24px.svg'));
 
+    this.matIconRegistry.addSvgIcon('card_admit', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/networkgraph/ico-admission.svg'));
+    this.matIconRegistry.addSvgIcon('card_decommision', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/networkgraph/ico-deactivate.svg'));
   }
 
   /**

@@ -27,6 +27,7 @@
                      [sortOrder]="-1"
                      [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
                      [enableCheckbox]="true">
   </app-tableviewedit>
 </app-pagebody>
@@ -73,7 +74,9 @@
   <ng-container>
     <ng-container [ngSwitch]="col.field">
       <ng-container *ngSwitchCase="'spec.id'">
-        <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>
+        <div class="ellipsisText" title="{{rowData.spec.id}}">
+          <a routerLink="./{{rowData.meta.name}}">{{rowData.spec.id}}</a>
+        </div>
       </ng-container>
       <ng-container *ngSwitchCase="'meta.mod-time'">
         {{rowData.meta['mod-time'] | PrettyDate }}
@@ -81,11 +84,10 @@
       <ng-container *ngSwitchCase="'meta.creation-time'">
         {{rowData.meta['creation-time'] | PrettyDate }}
       </ng-container>
-      <ng-container *ngSwitchCase="'status.DSCVersion'">
-        {{rowData.status["DSCVersion"]}}
-      </ng-container>
       <ng-container *ngSwitchCase="'status.host'">
-        <a routerLink="/cluster/hosts"> {{rowData.status["host"]}}</a>
+        <div class="ellipsisText" title="{{ rowData.status.host }}">
+          <a routerLink="/cluster/hosts">{{rowData.status.host}}</a>
+        </div>
       </ng-container>
       <ng-container *ngSwitchCase="'status.admission-phase'">
         <div
@@ -124,8 +126,28 @@
         </div>
       </ng-container>
       <ng-container *ngSwitchDefault>
-        {{displayColumn(rowData, col)}}
+        <div class="ellipsisText" title="{{displayColumn(rowData, col)}}">
+          {{displayColumn(rowData, col)}}
+        </div>
       </ng-container>
     </ng-container>
   </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div *roleGuard="'clusterdistributedservicecard_update'"
+       class="global-column-action-icon-container naples-action-icon-container" fxLayout="row"
+       fxLayoutGap="5px">
+    <button mat-icon-button *ngIf="showAdmissionButton(rowData)">
+      <mat-icon matTooltip="Admit Card" svgIcon="card_admit"
+                class="global-table-action-icon naples-action-icon"
+                (click)="onAdmitCard($event, rowData)"></mat-icon>
+    </button>
+    <button mat-icon-button *ngIf="showDecommissionButton(rowData)">
+      <mat-icon matTooltip="Decommision Card" svgIcon="card_decommision"
+                class="global-table-action-icon naples-action-icon"
+                (click)="onDecommissionCard($event, rowData)">
+      </mat-icon>
+    </button>
+  </div>
 </ng-template>
