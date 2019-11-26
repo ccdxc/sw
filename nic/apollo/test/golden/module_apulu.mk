@@ -3,6 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apulu_test.gtest
 MODULE_PIPELINE = apulu
+MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   pal pack_bytes \
