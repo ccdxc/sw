@@ -20,6 +20,7 @@ testcases:
             proto              : [ 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             coales_period        : 3
             max_coales_interval  : 192
             type           : remote_only
@@ -33,6 +34,7 @@ testcases:
            # for rest of runs.
             legacy             : ['on', 'off']
         args    :
+            timeout : 7200
             test-type    : host
             iperfthreads     :  1
             #capture_pcap : true
@@ -49,6 +51,7 @@ testcases:
             proto              : [ 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type         : remote_only
             iperfthreads     : 16
             #capture_pcap : True
@@ -64,6 +67,7 @@ testcases:
             proto              : [ 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -78,6 +82,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -92,6 +97,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -106,6 +112,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -120,6 +127,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -139,6 +147,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -155,6 +164,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -170,6 +180,7 @@ testcases:
             indirection_table  : [ 'equal', 'w1', 'w2', 'default']
             rx-flow-hash       : [ 'tcp4', 'udp4', 'udp6', 'tcp6']
         args    :
+            timeout : 7200
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
@@ -183,6 +194,7 @@ testcases:
         enable : true
         iterators :
         args      :
+            timeout : 7200
             loops     : 100
 
     -   name    : DriverWatchdog
