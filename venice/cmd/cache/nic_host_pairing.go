@@ -49,7 +49,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 					host.Status.AdmittedDSCs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedDSCs)
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
-					sm.UpdateSmartNIC(nic, true, false)
+					sm.UpdateSmartNIC(nic, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Spec.ID, nic.Name, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("DSC %s(%s) matches Spec IDs of host %s but is already associated with host"+
@@ -93,7 +93,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 			if oldNIC != nil && oldNIC.Spec.ID != newNIC.Spec.ID {
 				handleDelete(oldNIC)
 				newNIC.Status.Host = ""
-				sm.UpdateSmartNIC(newNIC, true, false)
+				sm.UpdateSmartNIC(newNIC, true)
 			}
 			if newNIC.Status.Host == "" {
 				handleCreate(newNIC)
@@ -125,7 +125,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 					host.Status.AdmittedDSCs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedDSCs)
 					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
-					sm.UpdateSmartNIC(nic.DistributedServiceCard, true, false)
+					sm.UpdateSmartNIC(nic.DistributedServiceCard, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.ID, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("DSC %s(%s) matches Spec IDs of host %s but is already associated with host"+
@@ -169,7 +169,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 			} else {
 				log.Errorf("Error getting list of Host objects: %v", err)
 			}
-			sm.UpdateSmartNIC(nic.DistributedServiceCard, true, false)
+			sm.UpdateSmartNIC(nic.DistributedServiceCard, true)
 			nic.Unlock()
 		}
 	}

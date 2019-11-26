@@ -294,7 +294,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*clu
 		refObj.Status.Conditions = updObj.Status.Conditions
 	}
 
-	err = s.stateMgr.UpdateSmartNIC(refObj, updateAPIServer, false)
+	err = s.stateMgr.UpdateSmartNIC(refObj, updateAPIServer)
 	if err != nil {
 		log.Errorf("Error updating statemgr state for NIC %s: %v", nicName, err)
 	}
@@ -512,7 +512,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		// Create or update SmartNIC object in ApiServer
 		if smartNICObjExists {
-			err = s.stateMgr.UpdateSmartNIC(nicObj, true, true)
+			err = s.stateMgr.UpdateSmartNIC(nicObj, true)
 		} else {
 			var sns *cache.SmartNICState
 			sns, err = s.stateMgr.CreateSmartNIC(nicObj, true)
@@ -775,7 +775,7 @@ func (s *RPCServer) MonitorHealth() {
 								nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 								nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
 								// push the update back to ApiServer
-								err := s.stateMgr.UpdateSmartNIC(nic, true, false)
+								err := s.stateMgr.UpdateSmartNIC(nic, true)
 								if err != nil {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}

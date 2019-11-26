@@ -47,13 +47,22 @@ func (sm *Statemgr) UpdateClusterStatus(clusterObj *cluster.Cluster) error {
 			time.Sleep(apiClientRetryInterval)
 			continue
 		}
-		_, err := sm.APIClient().Cluster().UpdateStatus(ctx, clusterObj)
+		_, err := sm.APIClient().Cluster().Update(ctx, clusterObj)
 		if err == nil {
 			cancel()
 			log.Infof("Updated Cluster object in ApiServer: %+v", clusterObj)
 			return nil
 		}
 		log.Errorf("Error updating Cluster object: %v", err)
+		// Write error -- fetch updated Spec + Meta and retry
+		updObj, err := sm.APIClient().Cluster().Get(ctx, &clusterObj.ObjectMeta)
+		if err == nil {
+			// only override leader and quorum status because health is owned by cluster health monitor
+			updObj.Status.QuorumStatus = clusterObj.Status.QuorumStatus
+			updObj.Status.Leader = clusterObj.Status.Leader
+			updObj.Status.LastLeaderTransitionTime = clusterObj.Status.LastLeaderTransitionTime
+			clusterObj = updObj
+		}
 		cancel()
 	}
 	return fmt.Errorf("Unable to update Cluster object, number of retries exhausted")
