@@ -13,6 +13,7 @@ testcases:
             type: remote_only
             ipv4: True
             ipv6: False
+            timeout : 7200
 
     -   name    : MacValidation_Subifs
         testcase: testcases.subifs.unimac_validation_subif
@@ -22,6 +23,7 @@ testcases:
             type: remote_only
             ipv4: True
             ipv6: False
+            timeout : 7200
 
     -   name    : MacChange_Subifs
         testcase: testcases.subifs.unimac_change_subif
@@ -32,6 +34,7 @@ testcases:
             type : simple
         args    :
             type: remote_only
+            timeout : 7200
 
     -   name    : Multiple_Subifs_Stress
         testcase: testcases.subifs.subif
@@ -42,6 +45,7 @@ testcases:
             loop_count: 3
             ipv4: True
             ipv6: False
+            timeout : 7200
 
 
 

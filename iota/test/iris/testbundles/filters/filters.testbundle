@@ -16,16 +16,22 @@ testcases:
             pktsize    : [ 128 ]
             ipaf       : [ ipv4 ]
             #ipaf       : [ ipv6, ipv4 ]
+        args :
+            timeout : 7200
 
     -   name    : Broadcast_MAC_Filter
         testcase: testcases.filters.broadcast_mac_filter
         stress  : True
         disable : False
         ignore  : False
+        args :
+            timeout : 7200
 
     -   name    : Multicast_MAC_Filter
         testcase: testcases.filters.multicast_mac_filter
         stress  : True
         disable : False
         ignore  : False
+        args :
+            timeout : 7200
 
