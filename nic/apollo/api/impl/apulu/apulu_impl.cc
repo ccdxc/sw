@@ -268,16 +268,18 @@ apulu_impl::nacl_init_(void) {
         return ret;
     }
 
-    // allow encapped TCP traffic
+    // allow encapped TCP traffic from uplinks
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     key.control_metadata_rx_packet = 1;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
     key.control_metadata_tunneled_packet = 1;
     key.key_metadata_proto = IP_PROTO_TCP;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_proto_mask = ~0;
     data.action_id = NACL_NACL_PERMIT_ID;
@@ -291,7 +293,7 @@ apulu_impl::nacl_init_(void) {
         goto error;
     }
 
-    // allow encapped UDP traffic
+    // allow encapped UDP traffic from uplinks
     key.key_metadata_proto = IP_PROTO_UDP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_PERMIT_ID,
@@ -303,7 +305,7 @@ apulu_impl::nacl_init_(void) {
         goto error;
     }
 
-    // allow encapped ICMP traffic
+    // allow encapped ICMP traffic from uplinks
     key.key_metadata_proto = IP_PROTO_ICMP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_PERMIT_ID,
@@ -320,8 +322,10 @@ apulu_impl::nacl_init_(void) {
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     key.control_metadata_rx_packet = 1;
+    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
     key.control_metadata_tunneled_packet = 1;
     mask.control_metadata_rx_packet_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
@@ -334,17 +338,21 @@ apulu_impl::nacl_init_(void) {
         goto error;
     }
 
+#if 0
+    // TODO: we need this for EP aging probes !!!
     // drop all ARP responses seen coming on host lifs
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
+    //key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 2;    // ARP response
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
@@ -358,6 +366,7 @@ apulu_impl::nacl_init_(void) {
                       "host lifs, err %u", ret);
         goto error;
     }
+#endif
 
     // drop all DHCP responses from host lifs (i.e., prevent DHCP server
     // spoofing of workloads)
@@ -366,11 +375,13 @@ apulu_impl::nacl_init_(void) {
     memset(&data, 0, sizeof(data));
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_sport = 67;
     key.key_metadata_proto = 17;    // UDP
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
     mask.key_metadata_proto_mask = ~0;
@@ -786,8 +797,8 @@ apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
 
 #define lif_action              action_u.lif_lif_info
 sdk_ret_t
-program_lif_table (uint16_t lif_hw_id, uint16_t vpc_hw_id, uint16_t bd_hw_id,
-                   uint16_t vnic_hw_id)
+program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
+                   vpc_hw_id, uint16_t bd_hw_id, uint16_t vnic_hw_id)
 {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
