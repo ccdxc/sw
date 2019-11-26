@@ -260,8 +260,8 @@ EXIT_LABEL:
 }
 
 NBB_VOID 
-pdsa_ctm_send_row_update_common (pdsa_config_t          *conf,
-                                 pdsa_amb_fill_fnptr_t  fill_api)
+pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
+                                 pdsa_amb_fill_fnptr_t      fill_api)
 {
     ATG_CPI_ROW_UPDATE  *row_update = NULL; 
     AMB_GEN_IPS         *mib_msg = NULL;

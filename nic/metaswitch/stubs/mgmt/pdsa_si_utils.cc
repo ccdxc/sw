@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace pdsa_stub {
+
 // Fill siNode: AMB_YSS_SI_NODE
 NBB_VOID
 pdsa_fill_amb_si_node (AMB_GEN_IPS      *mib_msg,
@@ -69,4 +71,5 @@ pdsa_test_row_update_si (pdsa_config_t *conf)
 
     NBB_TRC_EXIT();
     return;
+}
 }

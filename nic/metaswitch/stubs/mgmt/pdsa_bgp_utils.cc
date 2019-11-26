@@ -5,6 +5,8 @@
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "qb0mib.h"
 
+namespace pdsa_stub {
+
 // Fill bgpRmEntTable: AMB_BGP_RM_ENT
 NBB_VOID
 pdsa_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
@@ -459,9 +461,9 @@ pdsa_test_row_update_bgp_rm (pdsa_config_t *conf)
 
 // row_update for BGP-NM
 NBB_VOID
-pdsa_test_row_update_bgp_nm (pdsa_config_t *conf)
+pdsa_row_update_bgp_nm (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_bgp_nm");
+    NBB_TRC_ENTRY ("pdsa_row_update_bgp_nm");
 
     // Set params
     conf->oid_len       = AMB_BGP_NM_OID_LEN;
@@ -526,12 +528,12 @@ pdsa_test_row_update_bgp_nm_listen (pdsa_config_t *conf)
 
 // row_update for bgpRmAfmJoinTable
 NBB_VOID
-pdsa_test_row_update_bgp_rm_afm_join (pdsa_config_t *conf,
+pdsa_row_update_bgp_rm_afm_join (pdsa_config_t *conf,
                                       NBB_LONG      join,
                                       NBB_LONG      afi,
                                       NBB_LONG      safi)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_bgp_rm_afm_join");
+    NBB_TRC_ENTRY ("pdsa_row_update_bgp_rm_afm_join");
 
     // Set params
     conf->oid_len       = AMB_BGP_AFM_OID_LEN;
@@ -605,4 +607,5 @@ pdsa_test_row_update_bgp_peer_afi_safi (pdsa_config_t *conf,
 
     NBB_TRC_EXIT();
     return;
+}
 }

@@ -26,6 +26,7 @@ enum pdsa_tep_slab_id_e {
     PDSA_IF_SLAB_ID,
     PDSA_HOST_LIF_SLAB_ID,
     PDSA_BD_SLAB_ID,
+    PDSA_VPC_SLAB_ID,
     PDSA_COOKIE_SLAB_ID,
     PDSA_MAX_SLAB_ID
 };

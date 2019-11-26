@@ -3,6 +3,7 @@
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -91,7 +92,7 @@ nbase_init ()
     SMSI_HALS_INITIALIZE();
     SMSI_L2_INITIALIZE();
     SMSI_FTM_INITIALIZE();
-    
+
     // Register user callback to convert MS IfIndex to Linux IfIndex
     A0_USER_REG_LOCAL_IF_MAP_FN (pdsa_stub::ms_to_lnx_ifindex);
 
@@ -154,9 +155,9 @@ nbase_init ()
 
     if (smsi_sm_pid == NBB_NULL_PROC_ID)
     {
-      NBB_TRC_FLOW((NBB_FORMAT "Failed to create System Manager."));
-      NBB_PRINTF("Failed to create System Manager.\n");
-      goto EXIT_LABEL;
+        NBB_TRC_FLOW((NBB_FORMAT "Failed to create System Manager."));
+        NBB_PRINTF("Failed to create System Manager.\n");
+        goto EXIT_LABEL;
     }
 
     /***************************************************************************/
@@ -180,54 +181,57 @@ nbase_init ()
     NBB_TRC_EXIT();
     NBS_EXIT_SHARED_CONTEXT();
     cout << "N-Base Initialized\n";
+
+    /***************************************************************************/
+    /* Spin N-Base                                                             */
+    /***************************************************************************/
     NBS_SPIN_START();
 
     /*************************************************************************/
-    /* PDSA Init Sequence                                                    */
+    /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pdsa_test_init();
+    pdsa_stub::pdsa_stubs_create ();
 
-    /*************************************************************************/
-    /* TODO: Starting N-Base Spin again, this should be removed after       */
-    /* MS-591011 is resolved*/
-    /*************************************************************************/
+    /***************************************************************************/
+    /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
+    /***************************************************************************/
     NBS_SPIN_START();
 
 EXIT_LABEL:
     if (nbase_init)
     {
-      /*************************************************************************/
-      /* FLOW TRACING NOT REQUIRED    Reason: Performance.                     */
-      /*************************************************************************/
+        /*************************************************************************/
+        /* FLOW TRACING NOT REQUIRED    Reason: Performance.                     */
+        /*************************************************************************/
 
-      /*************************************************************************/
-      /* Enter N-BASE root context.                                            */
-      /*************************************************************************/
-      NBS_ENTER_SHARED_CONTEXT(NBS_ROOT_PROCESS);
+        /*************************************************************************/
+        /* Enter N-BASE root context.                                            */
+        /*************************************************************************/
+        NBS_ENTER_SHARED_CONTEXT(NBS_ROOT_PROCESS);
 
-      NBB_TRC_ENTRY("smsi_main");
+        NBB_TRC_ENTRY("smsi_main");
 
-      NBB_TRC_FLOW((NBB_FORMAT "Terminate N-BASE"));
-      /*************************************************************************/
-      /* We guarantee the N-BASE has been initialized at this point.           */
-      /*************************************************************************/
+        NBB_TRC_FLOW((NBB_FORMAT "Terminate N-BASE"));
+        /*************************************************************************/
+        /* We guarantee the N-BASE has been initialized at this point.           */
+        /*************************************************************************/
 
-      /*************************************************************************/
-      /* Terminate the systems that started successfully.                      */
-      /*************************************************************************/
-      //smsi_terminate(NBB_CXT);
+        /*************************************************************************/
+        /* Terminate the systems that started successfully.                      */
+        /*************************************************************************/
+        //smsi_terminate(NBB_CXT);
 
-      NBB_TRC_EXIT();
+        NBB_TRC_EXIT();
 
-      /*************************************************************************/
-      /* Exit N-BASE root context.                                             */
-      /*************************************************************************/
-      NBS_EXIT_SHARED_CONTEXT();
+        /*************************************************************************/
+        /* Exit N-BASE root context.                                             */
+        /*************************************************************************/
+        NBS_EXIT_SHARED_CONTEXT();
 
-      /*************************************************************************/
-      /* Terminate the N-BASE.                                                 */
-      /*************************************************************************/
-      NBS_TERMINATE();
+        /*************************************************************************/
+        /* Terminate the N-BASE.                                                 */
+        /*************************************************************************/
+        NBS_TERMINATE();
     }
     return;
 }

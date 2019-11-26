@@ -8,20 +8,21 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 #include "include/sdk/ip.hpp"
 
-typedef NBB_VOID (*pdsa_amb_fill_fnptr_t)(AMB_GEN_IPS *, pdsa_config_t *);
+typedef NBB_VOID (*pdsa_amb_fill_fnptr_t)(AMB_GEN_IPS *, 
+                                          pdsa_stub::pdsa_config_t *);
 
 NBB_VOID pdsa_ctm_send_transaction_start (NBB_ULONG correlator);
 NBB_VOID pdsa_ctm_send_transaction_abort (NBB_ULONG correlator);
 NBB_VOID pdsa_ctm_send_transaction_end (NBB_ULONG correlator);
 NBB_VOID pdsa_ctm_rcv_ips (NBB_IPS *ips NBB_CCXT NBB_CXT);
-NBB_VOID pdsa_ctm_send_row_update_common (pdsa_config_t         *conf, 
-                                          pdsa_amb_fill_fnptr_t fill_api);
 ATG_CPI_ROW_UPDATE *
 pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
                                  NBB_LONG        data_len,
                                  NBB_LONG        oid_len,
                                  NBB_LONG        row_status,
                                  NBB_ULONG       correlator);
+NBB_VOID pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t  *conf, 
+                                          pdsa_amb_fill_fnptr_t     fill_api);
 
 #define PDSA_START_TXN(correlator) NBB_TRC_ENTRY("PDSA_START_TXN"); \
                           NBS_ENTER_SHARED_CONTEXT(sms_our_pid); \

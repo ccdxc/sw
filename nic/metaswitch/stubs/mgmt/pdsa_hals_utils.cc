@@ -4,6 +4,8 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "hals_mib.h"
 
+namespace pdsa_stub {
+
 // Fill halsEntTable: AMB_STUBS_HALS_ENT
 NBB_VOID
 pdsa_fill_amb_hals_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
@@ -45,15 +47,14 @@ pdsa_fill_amb_hals_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_hals (pdsa_config_t *conf)
+pdsa_row_update_hals (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_hals");
+    NBB_TRC_ENTRY ("pdsa_row_update_hals");
 
     // Set params
     conf->oid_len       = AMB_HALS_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_HALS_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
     conf->stateful      = AMB_FALSE;
 
     // Convert to row_update and send
@@ -61,4 +62,5 @@ pdsa_test_row_update_hals (pdsa_config_t *conf)
 
     NBB_TRC_EXIT();
     return;
+}
 }

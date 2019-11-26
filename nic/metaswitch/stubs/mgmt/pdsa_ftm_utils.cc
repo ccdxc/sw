@@ -4,6 +4,8 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "ftm_mgmt_if.h"
 
+namespace pdsa_stub {
+
 // Fill ftmEntTable: AMB_FTM_ENT
 NBB_VOID
 pdsa_fill_amb_ftm_ent (AMB_GEN_IPS *mib_msg,  pdsa_config_t *conf)
@@ -87,15 +89,14 @@ pdsa_fill_amb_ftm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_ftm (pdsa_config_t *conf)
+pdsa_row_update_ftm (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_ftm");
+    NBB_TRC_ENTRY ("pdsa_row_update_ftm");
     
     // Set params
     conf->oid_len       = AMB_FTM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_FTM_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_ftm_ent); 
@@ -105,19 +106,18 @@ pdsa_test_row_update_ftm (pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_ftm_mj (pdsa_config_t  *conf,
-                             NBB_ULONG      interface_id,
-                             NBB_ULONG      partner_type,
-                             NBB_ULONG      partner_index,
-                             NBB_ULONG      sub_index)
+pdsa_row_update_ftm_mj (pdsa_config_t  *conf,
+                        NBB_ULONG      interface_id,
+                        NBB_ULONG      partner_type,
+                        NBB_ULONG      partner_index,
+                        NBB_ULONG      sub_index)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_ftm_mj");
+    NBB_TRC_ENTRY ("pdsa_row_update_ftm_mj");
 
     // Set params
     conf->oid_len       = AMB_FTM_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_FTM_MJ);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
     conf->interface_id  = interface_id;
     conf->partner_type  = partner_type;
     conf->partner_index = partner_index;
@@ -128,4 +128,5 @@ pdsa_test_row_update_ftm_mj (pdsa_config_t  *conf,
 
     NBB_TRC_EXIT();
     return;
+}
 }

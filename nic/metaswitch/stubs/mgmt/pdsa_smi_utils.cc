@@ -4,6 +4,8 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "smi_mib.h"
 
+namespace pdsa_stub {
+
 // Fill smiTable: AMB_STUBS_SMI_ENT
 NBB_VOID
 pdsa_fill_amb_smi_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
@@ -39,19 +41,19 @@ pdsa_fill_amb_smi_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 
 NBB_VOID
-pdsa_test_row_update_smi (pdsa_config_t *conf)
+pdsa_row_update_smi (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_smi");
+    NBB_TRC_ENTRY ("pdsa_row_update_smi");
 
     // Set params
     conf->oid_len       = AMB_SMI_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_SMI_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_smi_ent); 
 
     NBB_TRC_EXIT();
     return;
+}
 }

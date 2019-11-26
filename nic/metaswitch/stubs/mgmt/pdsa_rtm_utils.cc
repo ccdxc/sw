@@ -4,6 +4,8 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "qc0rtmib.h"
 
+namespace pdsa_stub {
+
 // Fill rtmEntityTable: AMB_CIPR_RTM_ENTITY 
 NBB_VOID 
 pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
@@ -203,9 +205,9 @@ pdsa_fill_amb_cipr_rtm_redist (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 } 
 
 NBB_VOID
-pdsa_test_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status)
+pdsa_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_rtm");
+    NBB_TRC_ENTRY ("pdsa_row_update_rtm");
 
     // Set params
     conf->oid_len       = AMB_QCR_ENT_OID_LEN;
@@ -224,15 +226,14 @@ pdsa_test_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status)
 }
 
 NBB_VOID
-pdsa_test_row_update_fts (pdsa_config_t *conf, NBB_LONG  admin_status)
+pdsa_row_update_fts (pdsa_config_t *conf, NBB_LONG  admin_status)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_fts");
+    NBB_TRC_ENTRY ("pdsa_row_update_fts");
 
     // Set params
     conf->oid_len       = AMB_FTS_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_CIPR_FTS_ENTITY);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
     conf->admin_status  = admin_status;
 
     // Convert to row_update and send
@@ -243,9 +244,9 @@ pdsa_test_row_update_fts (pdsa_config_t *conf, NBB_LONG  admin_status)
 }
 
 NBB_VOID
-pdsa_test_row_update_rtm_mj (pdsa_config_t *conf, NBB_LONG slave_type)
+pdsa_row_update_rtm_mj (pdsa_config_t *conf, NBB_LONG slave_type)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_rtm_mj");
+    NBB_TRC_ENTRY ("pdsa_row_update_rtm_mj");
     
     // Set params
     conf->oid_len               = AMB_QRPM_MJ_OID_LEN;
@@ -276,3 +277,4 @@ NBB_VOID pdsa_rtm_redis_connected (pdsa_config_t *conf)
     return;
 }
 
+}

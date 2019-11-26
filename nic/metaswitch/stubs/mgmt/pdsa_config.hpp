@@ -19,6 +19,8 @@ extern "C" {
 }
 #include "include/sdk/ip.hpp"
 
+namespace pdsa_stub {
+
 typedef struct pdsa_config_s {
     NBB_ULONG   oid_len;
     NBB_ULONG   data_len;
@@ -72,6 +74,7 @@ typedef struct pdsa_config_s {
     NBB_ULONG   evi_index;
     NBB_ULONG   vni;
     NBB_LONG    vrf_name_len;
+    NBB_LONG    rd_len;
     NBB_LONG    vlan;
     NBB_LONG    if_type;
     NBB_BYTE    cfg_rd[AMB_EVPN_EXT_COMM_LENGTH];
@@ -88,4 +91,5 @@ typedef struct pdsa_config_s {
     unsigned int g_evpn_if_index;
 }__PACK__ pdsa_config_t;
 
+}
 #endif /*__PDSA_CONFIG_HPP__*/

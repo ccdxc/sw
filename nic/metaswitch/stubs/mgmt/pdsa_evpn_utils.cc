@@ -1,8 +1,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //Purpose: Helper APIs for metaswitch EVPN component
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_evpn_utils.hpp"
 #include "evpn_mgmt_if.h"
+
+namespace pdsa_stub {
 
 // Fill evpnEntTable: AMB_EVPN_ENT 
 NBB_VOID
@@ -283,9 +285,12 @@ pdsa_fill_amb_evpn_ip_vrf (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
         data->vni = conf->vni;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_VNI);
 
-        NBB_MEMCPY (data->route_distinguisher, conf->route_distinguisher, 
-                    AMB_EVPN_EXT_COMM_LENGTH);
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_RD);
+        if (conf->rd_len)
+        {
+            NBB_MEMCPY (data->route_distinguisher, conf->route_distinguisher,
+                        AMB_EVPN_EXT_COMM_LENGTH);
+            AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_RD);
+        }
     }
 
     NBB_TRC_EXIT ();
@@ -297,9 +302,9 @@ pdsa_fill_amb_evpn_ip_vrf (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // row_update for evpnEntTable
 NBB_VOID
-pdsa_test_row_update_evpn (pdsa_config_t *conf)
+pdsa_row_update_evpn (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_evpn");
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn");
 
     // Set params
     conf->oid_len       = AMB_EVPN_ENT_OID_LEN;
@@ -307,7 +312,7 @@ pdsa_test_row_update_evpn (pdsa_config_t *conf)
     conf->entity_index  = 1;
     conf->row_status    = AMB_ROW_ACTIVE;
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);
+    //pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_ent); 
@@ -317,13 +322,13 @@ pdsa_test_row_update_evpn (pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_evpn_mj (pdsa_config_t *conf,
+pdsa_row_update_evpn_mj (pdsa_config_t *conf,
                               NBB_ULONG     interface_id,
                               NBB_ULONG     partner_type,
                               NBB_ULONG     partner_index,
                               NBB_ULONG     sub_index)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_evpn_mj");
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn_mj");
 
     // Set params
     conf->oid_len       = AMB_EVPN_MJ_OID_LEN;
@@ -344,22 +349,30 @@ pdsa_test_row_update_evpn_mj (pdsa_config_t *conf,
 
 // row_update for evpnEviTable
 NBB_VOID
-pdsa_test_row_update_evpn_evi (pdsa_config_t *conf)
+pdsa_row_update_evpn_evi (pds_subnet_id_t   evi,
+                          pds_encap_type_t  encap_type,
+                          NBB_LONG          row_status,
+                          NBB_ULONG         correlator)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_evpn_evi");
+    // Local variables
+    pdsa_config_t   conf = {0};
+
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn_evi");
 
     // Set params
-    conf->oid_len           = AMB_EVPN_EVI_OID_LEN;;
-    conf->data_len          = sizeof (AMB_EVPN_EVI);
-    conf->entity_index      = 1;
-    conf->row_status        = AMB_ROW_ACTIVE;
-    conf->evi_index         = 1;
-    conf->rd_cfg_or_auto    = AMB_EVPN_AUTO; 
-    conf->encapsulation     = AMB_EVPN_ENCAPS_VXLAN;
-
+    conf.oid_len           = AMB_EVPN_EVI_OID_LEN;;
+    conf.data_len          = sizeof (AMB_EVPN_EVI);
+    conf.entity_index      = 1;
+    conf.row_status        = row_status;;
+    conf.evi_index         = evi;
+    conf.rd_cfg_or_auto    = AMB_EVPN_AUTO; // TODO: RD and CFG
+    conf.correlator        = correlator;
+    conf.encapsulation     = (encap_type == PDS_ENCAP_TYPE_VXLAN) ? 
+                               AMB_EVPN_ENCAPS_VXLAN :
+                               AMB_EVPN_ENCAPS_MPLS;
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_evi); 
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_evpn_evi); 
 
     NBB_TRC_EXIT();
     return;
@@ -368,20 +381,27 @@ pdsa_test_row_update_evpn_evi (pdsa_config_t *conf)
 
 // row_update for evpnBdTable
 NBB_VOID
-pdsa_test_row_update_evpn_bd (pdsa_config_t *conf)
+pdsa_row_update_evpn_bd (pds_subnet_id_t    evi,
+                         pds_vnid_id_t      vni,
+                         NBB_LONG           row_status,
+                         NBB_ULONG          correlator)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_evpn_bd");
+    // Local variables
+    pdsa_config_t   conf = {0};
+
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn_bd");
 
     // Set params
-    conf->oid_len       = AMB_EVPN_BD_OID_LEN;
-    conf->data_len      = sizeof (AMB_EVPN_BD);
-    conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
-    conf->evi_index     = 1;
-    conf->vni           = 100;
+    conf.oid_len       = AMB_EVPN_BD_OID_LEN;
+    conf.data_len      = sizeof (AMB_EVPN_BD);
+    conf.entity_index  = 1;
+    conf.row_status    = row_status;
+    conf.evi_index     = evi;
+    conf.vni           = vni;
+    conf.correlator    = correlator;
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_bd); 
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_evpn_bd); 
 
     NBB_TRC_EXIT();
     return;
@@ -389,21 +409,63 @@ pdsa_test_row_update_evpn_bd (pdsa_config_t *conf)
 
 // row_update for evpnIfBindCfgTable
 NBB_VOID
-pdsa_test_row_update_evpn_if_bind_cfg (pdsa_config_t *conf)
+pdsa_row_update_evpn_if_bind_cfg (pds_subnet_id_t   evi,
+                                  pds_vnic_id_t     vnic_id,
+                                  NBB_LONG          row_status,
+                                  NBB_ULONG         correlator)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_evpn_if_bind_cfg");
+    // Local variables
+    pdsa_config_t   conf = {0};
+
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn_if_bind_cfg");
 
     // Set params
-    conf->oid_len       = AMB_EVPN_IF_BIND_CFG_OID_LEN;
-    conf->data_len      = sizeof (AMB_EVPN_IF_BIND_CFG);
-    conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
-    conf->if_index      = 7;
-    conf->evi_index     = 1;
+    conf.oid_len       = AMB_EVPN_IF_BIND_CFG_OID_LEN;
+    conf.data_len      = sizeof (AMB_EVPN_IF_BIND_CFG);
+    conf.entity_index  = 1;
+    conf.row_status    = row_status;
+    conf.if_index      = vnic_id;
+    conf.evi_index     = evi;
+    conf.correlator    = correlator;
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_if_bind_cfg); 
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_evpn_if_bind_cfg); 
 
     NBB_TRC_EXIT();
     return;
+}
+
+
+// Row update for evpnIpVrfTable
+NBB_VOID
+pdsa_row_update_evpn_ip_vrf (pds_vpc_id_t   vpc_id,
+                             pds_vnid_id_t  vni,
+                             NBB_LONG       row_status,
+                             NBB_ULONG      correlator)
+{
+    // Local variables
+    pdsa_config_t   conf = {0};
+    std::string     vrf_name; 
+
+    NBB_TRC_ENTRY ("pdsa_row_update_evpn_ip_vrf");
+
+    // Set params
+    vrf_name           = std::to_string (vpc_id);
+    conf.oid_len       = AMB_EVPN_IP_VRF_OID_LEN;
+    conf.data_len      = sizeof (AMB_EVPN_IP_VRF);
+    conf.entity_index  = 1;
+    conf.row_status    = row_status;
+    conf.correlator    = correlator;
+    conf.vrf_name_len  = vrf_name.length();
+    conf.vni           = vni;
+    conf.rd_len        = 0;
+
+    NBB_MEMCPY (conf.vrf_name, vrf_name.c_str(), AMB_VRF_NAME_MAX_LEN);
+
+    // Convert to row_update and send
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_evpn_ip_vrf); 
+
+    NBB_TRC_EXIT();
+    return;
+}
 }

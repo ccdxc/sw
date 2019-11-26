@@ -1,9 +1,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch LIM stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_lim_utils.hpp"
 #include "lim_mgmt_if.h"
+
+namespace pdsa_stub {
 
 // Fill limInterfaceCfgTable: AMB_LIM_IF_CFG
 NBB_VOID
@@ -286,17 +287,100 @@ pdsa_fill_amb_lim_sw_if (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     return;
 }
 
+// Fill limVrfTable: AMB_LIM_VRF
+NBB_VOID
+pdsa_fill_amb_lim_vrf (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+{
+    // Local variables
+    NBB_ULONG       *oid = NULL;
+    AMB_LIM_VRF     *data = NULL;  
+    NBB_ULONG       ii = 0;
+
+    NBB_TRC_ENTRY ("pdsa_fill_amb_lim_vrf");
+
+    // Get oid and data offset 
+    oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+    data    = (AMB_LIM_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    // Set all fields absent
+    AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
+
+    // Set OID len and family
+    oid[0] = AMB_LIM_VRF_OID_LEN;
+    oid[1] = AMB_FAM_LIM_VRF;
+
+    // Set all incoming fields
+    oid[AMB_LIM_VRF_ENT_IX_INDEX]   = conf->entity_index;
+    data->entity_index              = conf->entity_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_ENT_IX);
+
+    oid[AMB_LIM_VRF_NAME_LEN_INDEX]     = conf->vrf_name_len;
+    data->vrf_name_len                  = conf->vrf_name_len;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME_LEN);
+
+    for (ii = 0; ii < conf->vrf_name_len; ii++)
+    {
+        oid[AMB_LIM_VRF_NAME_INDEX+ ii] = (NBB_ULONG)conf->vrf_name[ii];
+    }
+    NBB_MEMCPY (data->vrf_name, conf->vrf_name, conf->vrf_name_len);
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME);
+
+    data->row_status = conf->row_status;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_ROW_ST);
+
+    NBB_TRC_EXIT ();
+    return;
+}
 
 NBB_VOID
-pdsa_test_row_update_lim (pdsa_config_t *conf)
+pdsa_fill_amb_lim_gen_irb_if (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_lim");
+    // Local variables
+    NBB_ULONG           *oid = NULL;
+    AMB_LIM_GEN_IRB_IF  *data = NULL;  
+
+    NBB_TRC_ENTRY ("pdsa_fill_amb_lim_gen_irb_if");
+
+    // Get oid and data offset 
+    oid  = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+    data = (AMB_LIM_GEN_IRB_IF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
+
+    // Set all fields absent
+    AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
+
+    // Set OID len and family
+    oid[0] = AMB_LIM_GEN_IRB_INTF_OID_LEN;
+    oid[1] = AMB_FAM_LIM_GEN_IRB_IF;
+
+    // Set all incoming fields
+    oid[AMB_LIM_GEN_IRB_IF_ENT_IX_INDEX]    = conf->entity_index;
+    data->entity_index                      = conf->entity_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_GEN_IRB_IF_ENT_IX);
+
+    oid[AMB_LIM_GEN_IRB_IF_BD_TYPE]     = conf->bd_type;
+    data->bd_type                       = conf->bd_type;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_GEN_IRB_IF_BD_TYPE);
+
+    oid[AMB_LIM_GEN_IRB_IF_BD_INDEX]    = conf->bd_index;
+    data->bd_index                      = conf->bd_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_GEN_IRB_IF_BD_ID);
+
+    data->row_status = conf->row_status;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_GEN_IRB_IF_RW_ST);
+
+    NBB_TRC_EXIT ();
+    return;
+}
+
+NBB_VOID
+pdsa_row_update_lim (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_row_update_lim");
 
     // Set params
     conf->oid_len       = AMB_LIM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_LIM_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_lim_ent); 
@@ -306,19 +390,18 @@ pdsa_test_row_update_lim (pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_lim_mj (pdsa_config_t  *conf,
-                             NBB_ULONG      interface_id,
-                             NBB_ULONG      partner_type,
-                             NBB_ULONG      partner_index,
-                             NBB_ULONG      sub_index)
+pdsa_row_update_lim_mj (pdsa_config_t  *conf,
+                        NBB_ULONG      interface_id,
+                        NBB_ULONG      partner_type,
+                        NBB_ULONG      partner_index,
+                        NBB_ULONG      sub_index)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_lim_mj");
+    NBB_TRC_ENTRY ("pdsa_row_update_lim_mj");
 
     // Set params
     conf->oid_len       = AMB_LIM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_LIM_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
     conf->interface_id  = interface_id;
     conf->partner_type  = partner_type;
     conf->partner_index = partner_index;
@@ -381,4 +464,61 @@ pdsa_test_row_update_lim_if_addr (pdsa_config_t *conf)
 
     NBB_TRC_EXIT();
     return;
+}
+// End of test-config
+
+NBB_VOID
+pdsa_row_update_lim_vrf (pds_vpc_id_t   vpc_id,
+                         NBB_LONG       row_status,
+                         NBB_ULONG      correlator)
+{
+    // Local variables
+    pdsa_config_t   conf = {0};
+    std::string     vrf_name; 
+
+    NBB_TRC_ENTRY ("pdsa_row_update_lim_vrf");
+
+    // Set params
+    vrf_name           = std::to_string (vpc_id);
+    conf.oid_len       = AMB_LIM_VRF_OID_LEN;
+    conf.data_len      = sizeof (AMB_LIM_VRF);
+    conf.entity_index  = 1;
+    conf.row_status    = row_status;
+    conf.correlator    = correlator;
+    conf.vrf_name_len  = vrf_name.length();
+    
+    NBB_MEMCPY (conf.vrf_name, vrf_name.c_str(), AMB_VRF_NAME_MAX_LEN);
+
+    // Convert to row_update and send
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_lim_vrf); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_row_update_lim_gen_irb_if (pds_subnet_id_t bd_index,
+                                NBB_LONG        row_status,
+                                NBB_ULONG       correlator)
+{
+    // Local variables
+    pdsa_config_t   conf = {0};
+
+    NBB_TRC_ENTRY ("pdsa_row_update_lim_vrf");
+
+    // Set params
+    conf.oid_len        = AMB_LIM_GEN_IRB_INTF_OID_LEN;
+    conf.data_len       = sizeof (AMB_LIM_GEN_IRB_IF);
+    conf.entity_index   = 1;
+    conf.bd_index       = bd_index;
+    conf.bd_type        = AMB_LIM_BRIDGE_DOMAIN_EVPN;
+    conf.row_status     = row_status;
+    conf.correlator     = correlator;
+    
+    // Convert to row_update and send
+    pdsa_ctm_send_row_update_common (&conf, pdsa_fill_amb_lim_gen_irb_if); 
+
+    NBB_TRC_EXIT();
+    return;
+}
 }

@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace pdsa_stub {
+
 // Fill l2fEntTable: AMB_STUBS_L2F_ENT
 NBB_VOID
 pdsa_fill_amb_l2f_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
@@ -123,14 +125,13 @@ pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_test_row_update_l2f (pdsa_config_t *conf)
+pdsa_row_update_l2f (pdsa_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_test_row_update_l2f");
+    NBB_TRC_ENTRY ("pdsa_row_update_l2f");
 
     conf->oid_len       = AMB_L2F_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_L2F_ENT);
     conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
     conf->stateful      = AMB_FALSE;
 
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_l2f_ent); 
@@ -139,7 +140,7 @@ pdsa_test_row_update_l2f (pdsa_config_t *conf)
     return;
 }
 
-
+// TODO: Test Config
 NBB_VOID
 pdsa_test_row_update_l2f_mac_ip_cfg (pdsa_config_t *conf)
 {
@@ -166,4 +167,5 @@ pdsa_test_row_update_l2f_mac_ip_cfg (pdsa_config_t *conf)
 
     NBB_TRC_EXIT();
     return;
+}
 }
