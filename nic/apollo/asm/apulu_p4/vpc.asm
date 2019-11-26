@@ -8,6 +8,7 @@ struct phv_     p;
 %%
 
 vpc_info:
+    phvwr           p.rewrite_metadata_tunnel_tos, d.vpc_info_d.tos
     phvwr.e         p.rewrite_metadata_vni, d.vpc_info_d.vni
     phvwr.f         p.rewrite_metadata_vrmac, d.vpc_info_d.vrmac
 

@@ -121,6 +121,7 @@ action ipv4_vxlan_encap(dmac, smac) {
 
     modify_field(ipv4_0.version, 4);
     modify_field(ipv4_0.ihl, 5);
+    modify_field(ipv4_0.diffserv, rewrite_metadata.tunnel_tos);
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_0.ttl, 64);
     modify_field(ipv4_0.protocol, IP_PROTO_UDP);
@@ -169,6 +170,7 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(ethernet_00.srcAddr, smac);
 
     modify_field(ipv6_0.version, 6);
+    modify_field(ipv6_0.trafficClass, rewrite_metadata.tunnel_tos);
     modify_field(ipv6_0.payloadLen, scratch_metadata.ip_totallen);
     modify_field(ipv6_0.hopLimit, 64);
     modify_field(ipv6_0.nextHdr, IP_PROTO_UDP);

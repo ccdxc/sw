@@ -193,9 +193,10 @@ control input_properties {
 /******************************************************************************/
 /* VPC info                                                                   */
 /******************************************************************************/
-action vpc_info(vni, vrmac) {
+action vpc_info(vni, vrmac, tos) {
     modify_field(rewrite_metadata.vni, vni);
     modify_field(rewrite_metadata.vrmac, vrmac);
+    modify_field(rewrite_metadata.tunnel_tos, tos);
 }
 
 @pragma stage 2
@@ -213,13 +214,14 @@ table vpc {
 /******************************************************************************/
 /* BD info                                                                    */
 /******************************************************************************/
-action bd_info(vni, vrmac) {
+action bd_info(vni, vrmac, tos) {
     if (vnic_metadata.egress_bd_id == 0) {
         // return;
     }
 
     modify_field(rewrite_metadata.vni, vni);
     modify_field(rewrite_metadata.vrmac, vrmac);
+    modify_field(rewrite_metadata.tunnel_tos, tos);
 }
 
 @pragma stage 3

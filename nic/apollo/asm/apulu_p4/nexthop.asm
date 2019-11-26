@@ -95,7 +95,8 @@ ipv4_vxlan_encap:
     phvwr           p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwr           p.ethernet_0_etherType, ETHERTYPE_IPV4
     add             r1, r1, 36
-    phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
+    add             r7, k.rewrite_metadata_tunnel_tos, 0x45, 8
+    phvwr           p.{ipv4_0_version,ipv4_0_ihl,ipv4_0_diffserv}, r7
     phvwr           p.ipv4_0_srcAddr, k.rewrite_metadata_device_ipv4_addr
     phvwr           p.ipv4_0_ttl, 64
     phvwr           p.ipv4_0_protocol, IP_PROTO_UDP
@@ -128,7 +129,8 @@ ipv6_vxlan_encap:
                         ethernet_0_valid}, 0x1C1
     phvwr           p.ethernet_0_etherType, ETHERTYPE_IPV6
     add             r1, r1, 16
-    phvwr           p.ipv6_0_version, 0x6
+    add             r7, k.rewrite_metadata_tunnel_tos, 0x6, 8
+    phvwr           p.{ipv6_0_version,ipv6_0_trafficClass}, r7
     phvwr           p.ipv6_0_srcAddr, k.rewrite_metadata_device_ipv6_addr
     phvwr           p.{ipv6_0_nextHdr,ipv6_0_hopLimit}, (IP_PROTO_UDP << 8) | 64
     phvwr           p.ipv6_0_payloadLen, r1
