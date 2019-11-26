@@ -64,6 +64,8 @@ message VPCSpec {
 
 // operational status of a VPC, if any
 message VPCStatus {
+    // vpc hw id
+    uint32 HwId = 1;
 }
 
 // stats for a VPC, if any

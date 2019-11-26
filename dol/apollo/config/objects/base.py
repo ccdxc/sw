@@ -176,6 +176,8 @@ class ConfigClientBase(base.ConfigClientBase):
                     logger.error("GRPC read validation failed for ", obj)
                     cfgObj.Show()
                     return False
+                if hasattr(cfgObj, 'Status'):
+                    cfgObj.Status.Update(resp.Status)
         return True
 
     def GrpcRead(self):

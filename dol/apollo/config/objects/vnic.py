@@ -17,7 +17,7 @@ import apollo.config.utils as utils
 import vnic_pb2 as vnic_pb2
 import types_pb2 as types_pb2
 
-class VnicStatusObject(base.StatusObjectBase):
+class VnicStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VNIC)
         return
@@ -50,7 +50,7 @@ class VnicObject(base.ConfigObjectBase):
         self.IngV6SecurityPolicyIds = []
         self.EgV4SecurityPolicyIds = []
         self.EgV6SecurityPolicyIds = []
-        self.Status = VnicStatusObject()
+        self.Status = VnicStatus()
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
         # get num of policies [0-5] in rrob order if needed

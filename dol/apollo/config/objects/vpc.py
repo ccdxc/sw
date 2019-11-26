@@ -23,6 +23,16 @@ import apollo.config.utils as utils
 
 import vpc_pb2 as vpc_pb2
 
+class VpcStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.VPC)
+        self.HwId = None
+        return
+
+    def Update(self, status):
+        self.HwId = status.HwId
+        return
+
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, spec, index, maxcount):
         super().__init__(api.ObjectTypes.VPC)
@@ -59,6 +69,7 @@ class VpcObject(base.ConfigObjectBase):
             self.PfxSel = 0
         self.Vnid = next(resmgr.VpcVxlanIdAllocator)
         self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+        self.Status = VpcStatus()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}

@@ -41,7 +41,6 @@ class ConfigObjectBase(objects.FrameworkObject):
     def __str__(self):
         return str(self.ID())
 
-
     def ToJson(self):
         return ToJsonCovereter(self)
         #Ignoring private attributes and complex objects for now.

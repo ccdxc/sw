@@ -18,6 +18,16 @@ import apollo.config.utils as utils
 
 import subnet_pb2 as subnet_pb2
 
+class SubnetStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.SUBNET)
+        self.HwId = None
+        return
+
+    def Update(self, status):
+        self.HwId = status.HwId
+        return
+
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
         super().__init__(api.ObjectTypes.SUBNET)
@@ -41,6 +51,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         self.Vnid = next(resmgr.VxlanIdAllocator)
         self.HostIf = InterfaceClient.GetHostInterface()
+        self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
         self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])

@@ -67,6 +67,8 @@ message SubnetSpec {
 
 // operational status of the subnet, if any
 message SubnetStatus {
+    // subnet hw id
+    uint32  HwId = 1;
 }
 
 // stats of the subnet, if any

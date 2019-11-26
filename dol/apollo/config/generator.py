@@ -114,6 +114,7 @@ def __create():
 
 def __read():
     # Read all objects
+    interface.client.ReadObjects()
     device.client.ReadObjects()
     vpc.client.ReadObjects()
     subnet.client.ReadObjects()

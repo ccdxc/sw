@@ -15,6 +15,17 @@ from apollo.config.objects.port import client as PortClient
 
 import interface_pb2 as interface_pb2
 
+class InterfaceStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.INTERFACE)
+        self.LifId = None
+        return
+
+    def Update(self, iftype, status):
+        if iftype == utils.InterfaceTypes.UPLINK:
+            self.LifId = status.UplinkStatus.LifId
+        return
+
 class InterfaceSpec_:
     pass
 
@@ -59,8 +70,8 @@ class InterfaceObject(base.ConfigObjectBase):
             self.obj_helper_lif = lif.LifObjectHelper()
             self.__create_lifs(spec)
         info = InterfaceInfoObject(self.Type, spec)
-        # TODO: Add support for UPLINKPC and L3_INTERFACE
         self.IfInfo = info
+        self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
         self.Show()
@@ -91,6 +102,20 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.InterfaceId:
+            return False
+        if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
+            return False
+        if self.Type == utils.InterfaceTypes.L3:
+            if spec.Type != interface_pb2.IF_TYPE_L3:
+                return False
+            if spec.L3IfSpec.PortId != self.IfInfo.port_num:
+                return False
+            #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():
+            #    return False
+        return True
+
     def __create_lifs(self, spec):
         self.obj_helper_lif.Generate(spec.ifinfo, spec.lifspec, self.lifns)
         self.obj_helper_lif.Configure()
@@ -107,6 +132,9 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__hostifs = dict()
         self.__hostifs_iter = None
         return
+
+    def GetInterfaceObject(self, infid):
+        return self.GetObjectByKey(infid)
 
     def GetHostInterface(self):
         if self.__hostifs:
@@ -181,8 +209,31 @@ class InterfaceObjectClient(base.ConfigClientBase):
 
     def ReadObjects(self):
         msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.INTERFACE, [msg])
+        resp = api.client.Get(api.ObjectTypes.INTERFACE, [msg])
+        result = self.ValidateObjects(resp)
+        if result is False:
+            logger.critical("INTERFACE object validation failed!!!")
+            assert(0)
         return
+
+    def ValidateObjects(self, getResp):
+        if utils.IsDryRun(): return True
+        for obj in getResp:
+            if not utils.ValidateGrpcResponse(obj):
+                logger.error("INTERFACE get request failed for ", obj)
+                return False
+            for resp in obj.Response:
+                spec = resp.Spec
+                inf = self.GetInterfaceObject(spec.Id)
+                if inf is not None:
+                    if not utils.ValidateObject(inf, resp):
+                        logger.error("INTERFACE validation failed for ", resp.Spec)
+                        inf.Show()
+                        return False
+                    # update status for this interface object
+                    inf.Status.Update(inf.Type, resp.Status)
+        return True
+
 
 client = InterfaceObjectClient()
 def GetMatchingObjects(selectors):

@@ -3057,6 +3057,7 @@ static inline void
 pds_subnet_api_status_to_proto (pds::SubnetStatus *proto_status,
                                 const pds_subnet_status_t *api_status)
 {
+    proto_status->set_hwid(api_status->hw_id);
 }
 
 // populate proto buf stats from subnet API stats
@@ -3160,6 +3161,7 @@ static inline void
 pds_vpc_api_status_to_proto (pds::VPCStatus *proto_status,
                              const pds_vpc_status_t *api_status)
 {
+    proto_status->set_hwid(api_status->hw_id);
 }
 
 // populate proto buf stats from vpc API stats
