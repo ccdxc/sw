@@ -133,19 +133,19 @@ private:
         ht_ctxt_t         *ht_ctxt;       // pointer to first entry
     } ht_bucket_t;
 
-    uint32_t                  num_buckets_;          // number of buckets
-    ht_bucket_t               *ht_buckets_;          // actual hash table buckets
-    bool                      thread_safe_;          // TRUE for thread safety
-    bool                      key_string_;           // TRUE if key is a string
-    sdk_spinlock_t            slock_;                // lock for thread safety
-    ht_get_key_func_t         get_key_func_;         // get key function
-    uint32_t                  key_size_;             // key size
-    uint32_t                  num_entries_;          // total no. of entries in the table
-    uint32_t                  num_inserts_;          // no. of insert operations so far
-    uint32_t                  num_insert_err_;       // no. of insert errors
-    uint32_t                  num_removals_;         // no. of remove operations so far
-    uint32_t                  num_removal_err_;      // no. of remove errors
-    uint32_t                  num_lookups_;          // no. of lookup operations so far
+    uint32_t              num_buckets_;          // number of buckets
+    ht_bucket_t           *ht_buckets_;          // actual hash table buckets
+    bool                  thread_safe_;          // TRUE for thread safety
+    bool                  key_string_;           // TRUE if key is a string
+    sdk_spinlock_t        slock_;                // lock for thread safety
+    ht_get_key_func_t     get_key_func_;         // get key function
+    uint32_t              key_size_;             // key size
+    uint32_t              num_entries_;          // total no. of entries in the table
+    uint32_t              num_inserts_;          // no. of insert operations so far
+    uint32_t              num_insert_err_;       // no. of insert errors
+    uint32_t              num_removals_;         // no. of remove operations so far
+    uint32_t              num_removal_err_;      // no. of remove errors
+    uint32_t              num_lookups_;          // no. of lookup operations so far
 
 private:
     ht() { }

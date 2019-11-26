@@ -107,7 +107,8 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                           api_ctxt->api_op, ret);
             return ret;
         }
-        api_obj->add_to_db();
+        ret = api_obj->add_to_db();
+        SDK_ASSERT(ret == SDK_RET_OK);
     } else {
         // this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want

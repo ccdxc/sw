@@ -40,10 +40,9 @@ public:
     /// \brief  insert given device instance into the device db
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(device_entry *device) {
-        if (device_cfg_) {
+        if (device_cfg_ && (device_cfg_ != device)) {
             return sdk::SDK_RET_ENTRY_EXISTS;
         }
-        device_cfg_ = device;
         return SDK_RET_OK;
     }
 
