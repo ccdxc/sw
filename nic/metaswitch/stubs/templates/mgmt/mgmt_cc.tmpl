@@ -12,7 +12,7 @@
 
 {{$fileName := .GetName}}
 {{$pkgName := .Package}}
-#include "nic/metaswitch/stubs/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL

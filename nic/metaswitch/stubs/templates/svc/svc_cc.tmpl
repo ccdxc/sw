@@ -8,8 +8,8 @@
 {{$fileName := .GetName}}
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
-#include "nic/metaswitch/stubs/mgmt/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 
 {{range .Services}}
 {{$svcname := .Name}}

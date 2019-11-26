@@ -1,4 +1,4 @@
- basepath: "github.com/pensando/sw/nic/metaswitch/stubs/mgmt/templates"
+ basepath: "github.com/pensando/sw/nic/metaswitch/stubs/templates/mgmt"
  templates:
    - template: "mgmt_hpp.tmpl"
      outputpath: "pdsa_{FILE}_utils_gen.hpp"

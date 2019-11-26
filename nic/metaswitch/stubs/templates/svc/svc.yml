@@ -1,4 +1,4 @@
- basepath: "github.com/pensando/sw/nic/metaswitch/stubs/mgmt/svc/templates"
+ basepath: "github.com/pensando/sw/nic/metaswitch/stubs/templates/svc"
  templates:
    - template: "svc_hpp.tmpl"
      outputpath: "{FILE}_gen.hpp"

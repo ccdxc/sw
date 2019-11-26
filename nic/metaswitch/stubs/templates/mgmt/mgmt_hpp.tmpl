@@ -21,7 +21,7 @@ extern "C" {
 #include "include/sdk/ip.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
-#include "nic/metaswitch/stubs/mgmt/svc/{{TrimSuffix .GetName ".proto" | ToLower}}_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix .GetName ".proto" | ToLower}}_gen.hpp"
 #include "qb0mib.h"
 
 {{$cam := getMetaswitchMibTablesInfo}} 
