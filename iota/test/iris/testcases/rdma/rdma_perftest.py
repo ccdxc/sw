@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import re
+import iota.test.iris.utils.naples_host as host
 
 def Setup(tc):
  
@@ -265,6 +266,15 @@ def Trigger(tc):
                                w1.node_name,
                                w1.workload_name,
                                cmd, timeout = (bkg_timeout+5))
+
+    # print the next_qpid
+    if api.GetNodeOs(w1.node_name) == host.OS_TYPE_BSD:
+        cmd = 'sysctl dev.' + host.GetNaplesSysctl(w1.interface) + '.rdma.info.next_qpid'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd, timeout = (bkg_timeout+5))
+    # TODO add code for linux
 
     #==============================================================
     # trigger the request
