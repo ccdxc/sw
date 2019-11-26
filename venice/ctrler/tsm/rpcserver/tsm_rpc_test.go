@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/labels"
@@ -47,6 +48,11 @@ func (wr *APISrvWriter) WriteTechSupportRequest(ms *monitoring.TechSupportReques
 // Close stops the client and releases resources
 func (wr *APISrvWriter) Close() error {
 	return nil
+}
+
+// GetAPIClient gets API client
+func (wr *APISrvWriter) GetAPIClient() (apiclient.Services, error) {
+	return nil, nil
 }
 
 // createRPCServerClient creates rpc client and server

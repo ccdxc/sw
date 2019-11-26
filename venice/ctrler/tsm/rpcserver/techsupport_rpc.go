@@ -190,6 +190,15 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 				goto exit
 			}
 		}
+
+		if len(tsr.Status.ControllerNodeResults) > 0 {
+			log.Infof("Techsupport for controller nodes completed. Collecting config snapshot.")
+			err = r.stateMgr.CreateSnapshot(tsr)
+			if err != nil {
+				log.Errorf("Failed to create snapshot. Err : %v", err)
+			}
+		}
+
 		tsr.Status.Status = monitoring.TechSupportJobStatus_Completed.String()
 		if err != nil {
 			log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)

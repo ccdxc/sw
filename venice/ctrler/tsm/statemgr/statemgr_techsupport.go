@@ -3,8 +3,11 @@
 package statemgr
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -234,6 +237,7 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 	var err error
 	obj := evt.Object.(TechSupportObject)
 	state, _ := sm.GetTechSupportObjectState(obj)
+	log.Infof("Handling techsupport event. EVT : %v", evt)
 
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
@@ -273,7 +277,7 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 		}
 
 		if err == nil && update {
-			err = sm.writer.WriteTechSupportRequest(tsr)
+			sm.writer.WriteTechSupportRequest(tsr)
 		}
 
 	case kvstore.Deleted:
@@ -292,7 +296,6 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 	if err != nil {
 		log.Errorf("Error handling TechSupport Event: %+v, err: %v", evt, err)
 	}
-
 }
 
 // FindTechSupportObject gets state of a TechSupport object by name and kind
@@ -399,4 +402,82 @@ func (sm *Statemgr) PurgeDeletedTechSupportObjects(objList interface{}) {
 			sm.deleteTechSupportObjectState(objState)
 		}
 	}
+}
+
+// CreateSnapshot creates config snapshot
+func (sm *Statemgr) CreateSnapshot(ms *monitoring.TechSupportRequest) error {
+	ctx := context.Background()
+
+	restcl, err := sm.writer.GetAPIClient()
+	if err != nil {
+		return err
+	}
+
+	cfg := cluster.ConfigurationSnapshot{
+		ObjectMeta: api.ObjectMeta{
+			Name: "GlobalSnapshot",
+		},
+		Spec: cluster.ConfigurationSnapshotSpec{
+			Destination: cluster.SnapshotDestination{
+				Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+			},
+		},
+	}
+
+	if _, err := restcl.ClusterV1().ConfigurationSnapshot().Get(ctx, &api.ObjectMeta{}); err != nil {
+		_, err = restcl.ClusterV1().ConfigurationSnapshot().Create(ctx, &cfg)
+		if err != nil {
+			return err
+		}
+	}
+
+	req := &cluster.ConfigurationSnapshotRequest{}
+	req.Name = fmt.Sprintf("%s-snapshot", ms.Name)
+	_, err = restcl.ClusterV1().ConfigurationSnapshot().Save(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	snaps, err := restcl.ClusterV1().ConfigurationSnapshot().Get(ctx, &api.ObjectMeta{})
+	if err != nil {
+		return err
+	}
+
+	snapshotURI := snaps.Status.LastSnapshot.URI[strings.LastIndex(snaps.Status.LastSnapshot.URI, "/")+1:]
+	var ret bytes.Buffer
+
+	snapshotFr, err := sm.snapshotObjstoreCl.GetObject(context.Background(), snapshotURI)
+	if err == nil {
+		buf := make([]byte, 10*1024)
+		totsize := 0
+		for {
+			n, err := snapshotFr.Read(buf)
+			if err != nil && err != io.EOF {
+				return err
+			}
+
+			if n == 0 {
+				idSplit := strings.Split(ms.Status.InstanceID, "-")
+				vosTarget := fmt.Sprintf("%s-%s-%s.json", ms.Name, idSplit[0], snapshotURI)
+				log.Infof("Uploading object to object store. %v", vosTarget)
+				meta := map[string]string{
+					"techsupport": vosTarget,
+				}
+
+				b := bytes.NewBuffer(buf)
+				_, err = sm.objstoreClient.PutObject(context.Background(), vosTarget, b, meta)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+
+			totsize += n
+			if _, err = ret.Write(buf[:n]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return err
 }

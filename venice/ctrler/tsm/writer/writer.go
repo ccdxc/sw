@@ -19,6 +19,7 @@ import (
 type Writer interface {
 	WriteMirrorSession(ms *monitoring.MirrorSession) error
 	WriteTechSupportRequest(ms *monitoring.TechSupportRequest) error
+	GetAPIClient() (apiclient.Services, error)
 	Close() error
 }
 
@@ -40,8 +41,8 @@ func NewAPISrvWriter(apiSrvURL string, resolver resolver.Interface) (Writer, err
 	return &wr, nil
 }
 
-// getAPIClient gets an rpc client
-func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
+// GetAPIClient gets an rpc client
+func (wr *APISrvWriter) GetAPIClient() (apiclient.Services, error) {
 	// if we already have a client, just return it
 	if wr.apicl != nil {
 		return wr.apicl, nil
@@ -67,7 +68,7 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	}
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (wr *APISrvWriter) WriteTechSupportRequest(tsr *monitoring.TechSupportReque
 	}
 
 	// get the api client
-	apicl, err := wr.getAPIClient()
+	apicl, err := wr.GetAPIClient()
 	if err != nil {
 		return err
 	}

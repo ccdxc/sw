@@ -25,10 +25,11 @@ type syncFlag struct {
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	waitGrp        sync.WaitGroup // wait group to wait on all go routines to exit
-	memDB          *memdb.Memdb   // database of all objects
-	writer         writer.Writer  // writer to ApiServer
-	objstoreClient objstore.Client
+	waitGrp            sync.WaitGroup // wait group to wait on all go routines to exit
+	memDB              *memdb.Memdb   // database of all objects
+	writer             writer.Writer  // writer to ApiServer
+	objstoreClient     objstore.Client
+	snapshotObjstoreCl objstore.Client
 
 	// Channels to receive events from api server and internal timers
 	MirrorSessionWatcher chan kvstore.WatchEvent // mirror session object watcher
@@ -201,6 +202,7 @@ func NewStatemgr(wr writer.Writer, rslvr resolver.Interface) (*Statemgr, error) 
 		memDB:                    memdb.NewMemdb(),
 		writer:                   wr,
 		objstoreClient:           nil,
+		snapshotObjstoreCl:       nil,
 		MirrorSessionWatcher:     make(chan kvstore.WatchEvent, watcherQueueLen),
 		mirrorTimerWatcher:       make(chan MirrorTimerEvent, watcherQueueLen),
 		TechSupportWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
@@ -231,6 +233,11 @@ func NewStatemgr(wr writer.Writer, rslvr resolver.Interface) (*Statemgr, error) 
 		if err != nil {
 			stateMgr.objstoreClient = nil
 			log.Errorf("Failed to create objstore client. Err : %v", err)
+		}
+
+		stateMgr.snapshotObjstoreCl, err = objstore.NewClient("default", "snapshots", rslvr, objstore.WithTLSConfig(tlsc))
+		if err != nil {
+			stateMgr.snapshotObjstoreCl = nil
 		}
 	}
 
