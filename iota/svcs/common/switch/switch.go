@@ -138,6 +138,12 @@ func (sw *nexus3k) runConfigCommands(port string, cmds []string) error {
 
 func (sw *nexus3k) SetNativeVlan(port string, vlan int) error {
 
+	//first create vlan
+	err := sw.ConfigureVlans(strconv.Itoa(vlan), true)
+	if err != nil {
+		return err
+	}
+
 	cmds := []string{
 		"switchport trunk native vlan " + strconv.Itoa(vlan),
 	}

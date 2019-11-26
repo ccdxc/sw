@@ -378,6 +378,8 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string,
 		if err := dataSwitch.SetTrunkMode(port); err != nil {
 			return errors.Wrapf(err, "Setting switch trunk mode failed %v", port)
 		}
+
+		vlanRange = strconv.Itoa(nativeVlan) + "," + vlanRange
 		if err := dataSwitch.SetTrunkVlanRange(port, vlanRange); err != nil {
 			return errors.Wrapf(err, "Setting Vlan trunk range failed %v", port)
 		}
@@ -492,7 +494,7 @@ func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed datas
 			for _, m := range strings.Split(buf, "\r\n") {
 				log.Printf("%v", m)
 			}
-			return errors.Wrapf(err, "Checking switch config failed for port %s", port)
+			return errors.Wrapf(err, "Checking switch config failed for port %s %v ", port, buf)
 		}
 	}
 
@@ -581,11 +583,17 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 		return nil, nil
 	}
 
-	startVlan := (switchPortID * constants.VlansPerTestBed) % constants.MaxVlanRange
-	if startVlan == 0 {
-		startVlan = 1
+	//First one will always be native vlan
+	inBandVlans := constants.InbandVlanEnd - constants.InbandVlanStart
+	nativeVlan := constants.InbandVlanStart + (switchPortID % (uint32)(inBandVlans))
+	vlans = append(vlans, nativeVlan)
+
+	startTrunkVlan := (switchPortID * constants.VlansPerTestBed) % constants.MaxDataVlanRange
+	if startTrunkVlan == 0 {
+		startTrunkVlan = 1
 	}
-	for i := startVlan; i < startVlan+constants.VlansPerTestBed; i++ {
+	endTrunkVlan := startTrunkVlan + constants.VlansPerTestBed
+	for i := startTrunkVlan; i <= endTrunkVlan; i++ {
 		vlans = append(vlans, i)
 	}
 
@@ -599,9 +607,9 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 		clearSwitchPortConfig(n3k, ds.GetPorts())
 
 		speed := getSpeed(ds.GetSpeed())
-		vlanRange := strconv.Itoa(int(vlans[0])) + "-" + strconv.Itoa(int(vlans[len(vlans)-1]))
-		log.Infof("Reserving vlans %v", vlanRange)
-		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(vlans[0]), vlanRange,
+		trunkVlanRange := strconv.Itoa(int(startTrunkVlan)) + "-" + strconv.Itoa(int(endTrunkVlan))
+		log.Infof("Reserving vlans native vlan %v trunk vlans %v", nativeVlan, trunkVlanRange)
+		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(nativeVlan), trunkVlanRange,
 			ds.GetIgmpDisabled(), speed, ds.Mtu, ds.FlowControlReceive, ds.FlowControlSend); err != nil {
 			return nil, errors.Wrap(err, "Configuring switch failed")
 

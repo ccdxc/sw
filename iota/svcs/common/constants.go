@@ -29,7 +29,7 @@ const (
 	NicFinderConfFileName = "nic.conf"
 
 	// VlansPerTestBed vlans that a testbed can manage
-	VlansPerTestBed = 64
+	VlansPerTestBed = 36
 
 	// MaxVlanRange max vlan range to be used for allocation
 	MaxVlanRange = 3700
@@ -122,6 +122,12 @@ const (
 	EsxIotaNaplesMgmtSwitch      = "iota-naples-mgmt-switch"
 	EsxDefaultNetworkVlan        = 4093
 	EsxVMNetworkVlan             = 4092
+
+	InbandVlanStart = 3700
+	InbandVlanEnd   = 3799
+
+	// MaxVlanRange max vlan range to be used for allocation
+	MaxDataVlanRange = 3700
 
 	// UserPassword is test user password
 	UserPassword = "Pensando0$"

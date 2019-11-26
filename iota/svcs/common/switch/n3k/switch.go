@@ -14,15 +14,15 @@ import (
 )
 
 var (
-	exitTimeout     = 500 * time.Millisecond
-	promptRegex     = regexp.MustCompile("# ")
-	configRegex     = regexp.MustCompile(`\(config\)\# `)
-	configIfRegex   = regexp.MustCompile(`\(config-if\)\# `)
-	configVlanRegex = regexp.MustCompile(`\(config-vlan\)\# `)
+	exitTimeout        = 500 * time.Millisecond
+	promptRegex        = regexp.MustCompile("# ")
+	configRegex        = regexp.MustCompile(`\(config\)\# `)
+	configIfRegex      = regexp.MustCompile(`\(config-if\)\# `)
+	configVlanRegex    = regexp.MustCompile(`\(config-vlan\)\# `)
 	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
-	configPmapQos   = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
-	configClassQos  = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
-	configSystemQos = regexp.MustCompile(`\(config-sys-qos\)\# `)
+	configPmapQos      = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
+	configClassQos     = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
+	configSystemQos    = regexp.MustCompile(`\(config-sys-qos\)\# `)
 )
 
 //QosClass qos classes
@@ -389,7 +389,7 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 		return buf.String(), err
 	}
 
-	//try twice
+	buf.Reset()
 	for i := 0; i < 5; i++ {
 		err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
 		if err == nil {
