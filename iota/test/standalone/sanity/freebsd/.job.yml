@@ -24,8 +24,10 @@ e2e-targets:
        resources:
          # Freebsd works with only server-d
          server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         # nic-type can be naples, mellanox, or raw
          nic-type: naples
+         constraints:
+           same-switch: true
    provision:
        username: vm
        password: vm

@@ -209,11 +209,15 @@ def Verify(tc):
             result = api.types.status.FAILURE
 
     for cmd in tc.stats_results:
-        statline = cmd.stdout.splitlines()[-1]
         # [...] krping: stats_out 820 ionic_0 0 Sn 64000 4000 Rc 64000 4000 W 128000 2000 R 128000 2000
-        (idx,dev,rc,stats) = statline.split('stats_out')[-1].strip().split(' ', 3)
-        if int(rc) != 0:
-            api.Logger.info("test failed: '%s'" % (statline))
+        try:
+            statline = cmd.stdout.splitlines()[-1]
+            (idx,dev,rc,stats) = statline.split('stats_out')[-1].strip().split(' ', 3)
+            if int(rc) != 0:
+                api.Logger.info("test failed: '%s'" % (statline))
+                result = api.types.status.FAILURE
+        except:
+            api.Logger.info("unexpected test output: '%s'" % (cmd.stdout))
             result = api.types.status.FAILURE
 
     return result

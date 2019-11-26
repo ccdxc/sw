@@ -23,10 +23,12 @@ e2e-targets:
      - image: build-7
        count: 2
        resources:
-         # Freebsd works with only server-d
          server-type: server-a
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         # nic-type can be naples, mellanox, or raw
          nic-type: naples
+         # Required when RDMA is reenabled
+         #constraints:
+         #  same-switch: true
    provision:
        username: vm
        password: vm
