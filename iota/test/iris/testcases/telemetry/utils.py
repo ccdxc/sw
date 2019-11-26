@@ -93,12 +93,15 @@ def VerifyVlan():
     return result
 
 def VerifyTimeStamp(command):
+    global g_time
     result = api.types.status.SUCCESS
     dir_path = os.path.dirname(os.path.realpath(__file__))
     mirrorscapy = dir_path + '/' + "mirror.pcap"
     api.Logger.info("File Name: %s" % (mirrorscapy))
     pkts = rdpcap(mirrorscapy)
     spanpktsfound = False
+    g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
+    api.Logger.info("Current Global time {}".format(g_time))
     for pkt in pkts:
         if pkt.haslayer('GRE'):
             spanpktsfound = True
@@ -151,7 +154,6 @@ def GetDestPort(port):
 def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, action, feature):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
-    global g_time
     
     # Add the ping commands from collector to source and dest workload
     # to avoid flooding on the vswitch
@@ -173,8 +175,6 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
-    g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
-    api.Logger.info("Current Global time {}".format(g_time))
 
     trig_resp = api.Trigger(req)
     if feature == 'flowmon':
