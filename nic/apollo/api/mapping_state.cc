@@ -7,6 +7,7 @@
  */
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/mapping_state.hpp"
 
 namespace api {
@@ -47,12 +48,26 @@ mapping_state::alloc(void) {
 
 sdk_ret_t
 mapping_state::insert(mapping_entry *mapping) {
+    PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%u, %s) to db",
+                      mapping->key().type,
+                      (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
+                          mapping->key().subnet.id : mapping->key().vpc.id,
+                      (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
+                          macaddr2str(mapping->key().mac_addr) :
+                          ipaddr2str(&mapping->key().ip_addr));
     return mapping_ht_->insert_with_key(&mapping->key_, mapping,
                                         &mapping->ht_ctxt_);
 }
 
 mapping_entry *
 mapping_state::remove(mapping_entry *mapping) {
+    PDS_TRACE_VERBOSE("Removing mapping - type %u, (%u, %s) to db",
+                      mapping->key().type,
+                      (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
+                          mapping->key().subnet.id : mapping->key().vpc.id,
+                      (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
+                          macaddr2str(mapping->key().mac_addr) :
+                          ipaddr2str(&mapping->key().ip_addr));
     return (mapping_entry *)(mapping_ht_->remove(&mapping->key_));
 }
 
@@ -62,8 +77,15 @@ mapping_state::free(mapping_entry *mapping) {
 }
 
 mapping_entry *
-mapping_state::find(pds_mapping_key_t *mapping_key) const {
-    return (mapping_entry *)(mapping_ht_->lookup(mapping_key));
+mapping_state::find(pds_mapping_key_t *key) const {
+    PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%u, %s) to db",
+                      key->type,
+                      (key->type == PDS_MAPPING_TYPE_L2) ?
+                          key->subnet.id : key->vpc.id,
+                      (key->type == PDS_MAPPING_TYPE_L2) ?
+                          macaddr2str(key->mac_addr) :
+                          ipaddr2str(&key->ip_addr));
+    return (mapping_entry *)(mapping_ht_->lookup(key));
 }
 
 sdk_ret_t

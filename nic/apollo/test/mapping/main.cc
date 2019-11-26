@@ -181,7 +181,7 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
 
 /// \brief Local mappings WF_1
 /// \ref WF_1
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_1) {
+TEST_F(mapping_test, local_mapping_workflow_1) {
     local_mapping_feeder feeders[1];
 
     create_local_mapping_feeders(feeders, 1);
@@ -190,7 +190,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_1) {
 
 /// \brief Local mappings WF_2
 /// \ref WF_2
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_2) {
+TEST_F(mapping_test, local_mapping_workflow_2) {
     local_mapping_feeder feeders[1];
 
     create_local_mapping_feeders(feeders, 1);

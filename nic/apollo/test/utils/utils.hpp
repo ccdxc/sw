@@ -42,6 +42,7 @@ extract_ipv4_addr (const char *ip, ipv4_addr_t *ip_addr)
     int af;
     ip_prefix_t pfx;
 
+    *ip_addr = 0;
     af = ip_version(ip);
     if (af == IP_AF_IPV4) {
         SDK_ASSERT(str2ipv4pfx((char *)ip, &pfx) == 0);
@@ -56,6 +57,7 @@ extract_ip_addr (const char *ip, ip_addr_t *ip_addr)
 {
     int af;
     ip_prefix_t pfx;
+
     memset(&pfx, 0x0, sizeof(ip_prefix_t));
     af = ip_version(ip);
     if (af == IP_AF_IPV4) {
@@ -76,6 +78,7 @@ extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
     char *slash;
     int af;
 
+    memset(ip_pfx, 0, sizeof(*ip_pfx));
     // Input may get modified. Copying hence
     strncpy(ip, str, sizeof(ip) - 1);
     slash = strchr(ip, '/');

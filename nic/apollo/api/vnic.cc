@@ -91,9 +91,9 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, v4 meter id %u, "
-                    "v6 meter id %u, mac %s, vnic encap %s, fabric encap %s, "
+                    "v6 meter id %u, mac %s\nvnic encap %s, fabric encap %s, "
                     "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
-                    "host ifindex 0x%x",
+                    "host if 0x%x",
                     key_.id, spec->vpc.id, spec->subnet.id,
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),

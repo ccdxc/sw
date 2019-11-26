@@ -179,15 +179,17 @@ typedef enum pds_mapping_type_e {
 /// \brief    mapping key
 typedef struct pds_mapping_key_s {
     pds_mapping_type_t type;
-    ///< L3 key
-    struct {
-        pds_vpc_key_t vpc;    ///< VPC this IP belongs to
-        ip_addr_t ip_addr;    ///< IP address of the mapping
-    };
-    ///< L2 key
-    struct {
-        pds_subnet_key_t subnet;    ///< subnet of the mapping
-        mac_addr_t mac_addr;        ///< MAC address of the mapping
+    union {
+        ///< L3 key
+        struct {
+            pds_vpc_key_t vpc;    ///< VPC this IP belongs to
+            ip_addr_t ip_addr;    ///< IP address of the mapping
+        };
+        ///< L2 key
+        struct {
+            pds_subnet_key_t subnet;    ///< subnet of the mapping
+            mac_addr_t mac_addr;        ///< MAC address of the mapping
+        };
     };
 } __PACK__ pds_mapping_key_t;
 

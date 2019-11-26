@@ -205,8 +205,18 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_spec.key);
 
     case OBJ_ID_MAPPING:
-    case OBJ_ID_MIRROR_SESSION:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return mapping_db()->find(&api_ctxt->api_params->mapping_key);
+        }
+        return mapping_db()->find(&api_ctxt->api_params->mapping_spec.key);
+
     case OBJ_ID_SVC_MAPPING:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_key);
+        }
+        return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_spec.key);
+
+    case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_VPC_PEER:
         return NULL;
 

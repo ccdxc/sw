@@ -79,7 +79,7 @@ sdk_ret_t
 nexthop::program_config(obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
-    PDS_TRACE_DEBUG("Programming nexthop %u, type %u", key_, type_);
+    PDS_TRACE_VERBOSE("Programming nexthop %u, type %u", key_, type_);
     if (type_ == PDS_NH_TYPE_IP) {
         PDS_TRACE_DEBUG("nexthop vpc %u, ip %s, vlan %u, mac %s",
                         spec->vpc.id, ipaddr2str(&spec->ip),
@@ -117,7 +117,7 @@ nexthop::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 nexthop::activate_config(pds_epoch_t epoch, api_op_t api_op,
                          obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating nexthop %u config", key_);
+    PDS_TRACE_VERBOSE("Activating nexthop %u config", key_);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
