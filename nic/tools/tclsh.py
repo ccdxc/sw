@@ -114,7 +114,7 @@ if __name__ == "__main__":
     cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/nic.tar.gz'
     ret = os.system(cmd)
     if (ret != 0):
-        copyToHost('/vol/asic_dump/kinjal/asic5/ip/cosim/diag/nic.tar.gz', '/tmp', args.host)
+        copyToHost('/home/arun/tcl/nic.tar.gz', '/tmp', args.host)
 
     # verify that ping works between arm and host thru mnic intf
     mnic_intf = dev['if2']
@@ -155,13 +155,12 @@ if __name__ == "__main__":
         logging.info("ping successful through MNIC interface\n")
 
     # ssh to host
-    cmd = 'ssh root@' + args.host
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host
     ch = pexpect.spawn (cmd)
     fileName = getLogFileName()
     fout = open(fileName,'a')
     ch.logfile = fout
-    ch.expect('[Pp]assword.*')
-    op = sendCmd(ch, 'docker', '#')
+    ch.expect('#')
 
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
 
@@ -170,33 +169,21 @@ if __name__ == "__main__":
 
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
     
-    op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar.gz', '#')
-    if ("No such file or directory" in op):
-        logging.info("Copying nic.tar.gz\n")
-        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/nic.tar.gz /', '[Pp]assword.*')
-        sendCmd(ch, 'docker', '#')
-        sendCmd(ch, 'mkdir /asic_tclsh', '#')
-        sendCmd(ch, 'cd /asic_tclsh', '#')
-        sendCmd(ch, 'mv /nic.tar.gz .', '#')
-    else:
-        logging.info("Found existing nic.tar.gz\n")
+    logging.info("Copying nic.tar.gz\n")
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/nic.tar.gz /data/', '[Pp]assword.*')
+    sendCmd(ch, 'docker', '#')
 
-    op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar', '#')
-    if ("No such file or directory" in op):
-        logging.info("Extracting nic.tar\n")
-        sendCmd(ch, 'gunzip nic.tar.gz', '#')
-    else:
-        logging.info("Found existing nic.tar\n")
+    sendCmd(ch, 'rm -rf /data/asic_tclsh', '#')
+    sendCmd(ch, 'mkdir /data/asic_tclsh', '#')
+    sendCmd(ch, 'cp /data/nic.tar.gz /data/asic_tclsh', '#')
+    sendCmd(ch, 'cd /data/asic_tclsh', '#')
+    logging.info("Extracting nic.tar\n")
+    sendCmd(ch, 'gunzip nic.tar.gz', '#')
 
-    op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic', '#')
-    if ("No such file or directory" in op):
-        logging.info("Extracting nic\n")
-        sendCmd(ch, 'tar xvf nic.tar', '#')
-    else:
-        logging.info("Found existing nic\n")
+    logging.info("Extracting nic\n")
+    sendCmd(ch, 'tar xvf nic.tar', '#')
 
-    sendCmd(ch, 'cd /asic_tclsh/nic/', '#')
-    sendCmd(ch, 'cd fake_root_target/nic/', '#')
+    sendCmd(ch, 'cd nic/fake_root_target/nic/', '#')
     sendCmd(ch, 'export ASIC_LIB_BUNDLE=`pwd`', '#')
     sendCmd(ch, 'export ASIC_SRC=$ASIC_LIB_BUNDLE/asic_src', '#')
     sendCmd(ch, 'cd asic_lib/', '#')
