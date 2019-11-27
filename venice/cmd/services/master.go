@@ -472,7 +472,6 @@ func (m *masterService) stopLeaderServices() {
 
 	if env.ServiceRolloutClient != nil {
 		env.ServiceRolloutClient.Stop()
-		env.ServiceRolloutClient = nil
 	}
 
 	m.k8sSvc.Stop()
