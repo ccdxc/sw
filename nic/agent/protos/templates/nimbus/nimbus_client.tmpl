@@ -118,7 +118,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 			}
 			evtWork(evt)
 		// periodic resync (Disabling as we have aggregate watch support)
-		/*case <-time.After(resyncInterval):
+		case <-time.After(resyncInterval):
             //Give priority to evt work
             //Wait for batch interval for inflight work
             time.Sleep(5 * DefaultWatchHoldInterval)
@@ -145,7 +145,6 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 				// perform a diff of the states
 				client.diff{{$crudObject}}s(objList, reactor, ostream)
 			}
-			*/
 		}
 	}
 }

@@ -101,35 +101,34 @@ func (client *NimbusClient) WatchTenants(ctx context.Context, reactor TenantReac
 				return
 			}
 			evtWork(evt)
-			// periodic resync (Disabling as we have aggregate watch support)
-			/*case <-time.After(resyncInterval):
-			            //Give priority to evt work
-			            //Wait for batch interval for inflight work
-			            time.Sleep(5 * DefaultWatchHoldInterval)
-			            select {
-			            case evt, ok := <-recvCh:
-			                if !ok {
-			                    log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
-			                    return
-			                }
-			                evtWork(evt)
-							continue
-			            default:
-			            }
-						// get a list of objects
-						objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
-						if err != nil {
-							st, ok := status.FromError(err)
-							if !ok || st.Code() == codes.Unavailable {
-								log.Errorf("Error getting Tenant list. Err: %v", err)
-								return
-							}
-						} else {
-							client.debugStats.AddInt("TenantWatchResyncs", 1)
-							// perform a diff of the states
-							client.diffTenants(objList, reactor, ostream)
-						}
-			*/
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Tenant Watch channel closed. Exisint TenantWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := tenantRPCClient.ListTenants(ctx, &ometa)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Tenant list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("TenantWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffTenants(objList, reactor, ostream)
+			}
 		}
 	}
 }

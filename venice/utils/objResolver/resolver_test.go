@@ -448,7 +448,7 @@ func TestObjResolverDepAddTest_1(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure we receive no objects
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	Assert(t, err == nil, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
@@ -457,7 +457,7 @@ func TestObjResolverDepAddTest_1(t *testing.T) {
 	//Make sure we receive objects of b as it has no deps
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -482,14 +482,14 @@ func TestObjResolverDepAddTest_2(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure we receive no objects
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	Assert(t, err == nil, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
 
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj)
@@ -497,7 +497,7 @@ func TestObjResolverDepAddTest_2(t *testing.T) {
 
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -523,18 +523,18 @@ func TestObjResolverDepAddTest_3(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure we receive no objects
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	Assert(t, err == nil, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
 
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "d", 0, maxObj)
@@ -543,7 +543,7 @@ func TestObjResolverDepAddTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -568,25 +568,25 @@ func TestObjResolverDepAddTest_4(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure we receive no objects
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	Assert(t, err == nil, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
 
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, 50)
 	AssertOk(t, err, "Error creating object")
 	evtsExp.evKindMap[kvstore.Created]["c"] = 50
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 50, 99)
 	AssertOk(t, err, "Error creating object")
 	evtsExp.evKindMap[kvstore.Created]["c"] = 99
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 99, 100)
@@ -594,7 +594,7 @@ func TestObjResolverDepAddTest_4(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -620,14 +620,14 @@ func TestObjResolverDepAddTest_5(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure we receive no objects
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	Assert(t, err == nil, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "d", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
 
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj)
@@ -635,7 +635,7 @@ func TestObjResolverDepAddTest_5(t *testing.T) {
 
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
@@ -645,7 +645,7 @@ func TestObjResolverDepAddTest_5(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -678,12 +678,12 @@ func TestObjResolverDepDelTest_1(t *testing.T) {
 	//Make sure we receive objects of b as it has no deps
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	//Make sure we receive objects of b as it has no deps
@@ -693,7 +693,7 @@ func TestObjResolverDepDelTest_1(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -724,22 +724,22 @@ func TestObjResolverDepDelTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "d", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "a", 0, maxObj)
@@ -749,7 +749,7 @@ func TestObjResolverDepDelTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Deleted]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["c"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["d"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -782,17 +782,17 @@ func TestObjResolverDepAddDelTest_1(t *testing.T) {
 	//Make sure we receive objects of b as it has no deps
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	//Make sure we receive objects of b as it has no deps
@@ -803,7 +803,7 @@ func TestObjResolverDepAddDelTest_1(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj * 2
 	evtsExp.evKindMap[kvstore.Deleted]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -841,27 +841,27 @@ func TestObjResolverDepAddDelTest_2(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	//Make sure we receive objects of b as it has no deps
@@ -874,7 +874,7 @@ func TestObjResolverDepAddDelTest_2(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Deleted]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -917,37 +917,37 @@ func TestObjResolverDepAddDelTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["d"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "d", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "d", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(100*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	//Make sure we receive objects of b as it has no deps
@@ -994,7 +994,7 @@ func TestMemdbAddUpdateTest_1(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure no objects recvd
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", maxObj/2, maxObj)
@@ -1004,7 +1004,7 @@ func TestMemdbAddUpdateTest_1(t *testing.T) {
 	//evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	//evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	initObjectStore()
@@ -1022,7 +1022,7 @@ func TestMemdbAddUpdateTest_1(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -1054,7 +1054,7 @@ func TestMemdbAddUpdateTest_2(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure no objects recvd
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", maxObj/2, maxObj)
@@ -1064,7 +1064,7 @@ func TestMemdbAddUpdateTest_2(t *testing.T) {
 	//evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	//evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	initObjectStore()
@@ -1082,7 +1082,7 @@ func TestMemdbAddUpdateTest_2(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -1114,7 +1114,7 @@ func TestMemdbAddUpdateTest_3(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure no objects recvd
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj/2)
@@ -1124,7 +1124,7 @@ func TestMemdbAddUpdateTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	initObjectStore()
@@ -1138,7 +1138,7 @@ func TestMemdbAddUpdateTest_3(t *testing.T) {
 
 	err = sendObjects(kvstore.Updated, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", maxObj/2, maxObj)
@@ -1148,7 +1148,7 @@ func TestMemdbAddUpdateTest_3(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Updated]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }
@@ -1180,7 +1180,7 @@ func TestMemdbAddUpdateTest_4(t *testing.T) {
 	AssertOk(t, err, "Error creating object")
 
 	//Make sure no objects recvd
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Created, "c", 0, maxObj/2)
@@ -1190,7 +1190,7 @@ func TestMemdbAddUpdateTest_4(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["b"] = maxObj
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj / 2
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	initObjectStore()
@@ -1204,12 +1204,12 @@ func TestMemdbAddUpdateTest_4(t *testing.T) {
 
 	err = sendObjects(kvstore.Updated, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "b", 0, maxObj)
 	AssertOk(t, err, "Error creating object")
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 	err = sendObjects(kvstore.Deleted, "a", 0, maxObj)
@@ -1224,7 +1224,7 @@ func TestMemdbAddUpdateTest_4(t *testing.T) {
 	evtsExp.evKindMap[kvstore.Created]["c"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["a"] = maxObj
 	evtsExp.evKindMap[kvstore.Deleted]["b"] = maxObj
-	err = verifyObjects(t, &evtsExp, time.Duration(500*time.Millisecond))
+	err = verifyObjects(t, &evtsExp, time.Duration(1*time.Second))
 	AssertOk(t, err, "Error verifying objects")
 
 }

@@ -101,35 +101,34 @@ func (client *NimbusClient) WatchSecurityGroups(ctx context.Context, reactor Sec
 				return
 			}
 			evtWork(evt)
-			// periodic resync (Disabling as we have aggregate watch support)
-			/*case <-time.After(resyncInterval):
-			            //Give priority to evt work
-			            //Wait for batch interval for inflight work
-			            time.Sleep(5 * DefaultWatchHoldInterval)
-			            select {
-			            case evt, ok := <-recvCh:
-			                if !ok {
-			                    log.Warnf("SecurityGroup Watch channel closed. Exisint SecurityGroupWatch")
-			                    return
-			                }
-			                evtWork(evt)
-							continue
-			            default:
-			            }
-						// get a list of objects
-						objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
-						if err != nil {
-							st, ok := status.FromError(err)
-							if !ok || st.Code() == codes.Unavailable {
-								log.Errorf("Error getting SecurityGroup list. Err: %v", err)
-								return
-							}
-						} else {
-							client.debugStats.AddInt("SecurityGroupWatchResyncs", 1)
-							// perform a diff of the states
-							client.diffSecurityGroups(objList, reactor, ostream)
-						}
-			*/
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("SecurityGroup Watch channel closed. Exisint SecurityGroupWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := securitygroupRPCClient.ListSecurityGroups(ctx, &ometa)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting SecurityGroup list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("SecurityGroupWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffSecurityGroups(objList, reactor, ostream)
+			}
 		}
 	}
 }

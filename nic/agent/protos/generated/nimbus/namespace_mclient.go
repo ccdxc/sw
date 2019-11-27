@@ -101,35 +101,34 @@ func (client *NimbusClient) WatchNamespaces(ctx context.Context, reactor Namespa
 				return
 			}
 			evtWork(evt)
-			// periodic resync (Disabling as we have aggregate watch support)
-			/*case <-time.After(resyncInterval):
-			            //Give priority to evt work
-			            //Wait for batch interval for inflight work
-			            time.Sleep(5 * DefaultWatchHoldInterval)
-			            select {
-			            case evt, ok := <-recvCh:
-			                if !ok {
-			                    log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
-			                    return
-			                }
-			                evtWork(evt)
-							continue
-			            default:
-			            }
-						// get a list of objects
-						objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
-						if err != nil {
-							st, ok := status.FromError(err)
-							if !ok || st.Code() == codes.Unavailable {
-								log.Errorf("Error getting Namespace list. Err: %v", err)
-								return
-							}
-						} else {
-							client.debugStats.AddInt("NamespaceWatchResyncs", 1)
-							// perform a diff of the states
-							client.diffNamespaces(objList, reactor, ostream)
-						}
-			*/
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Namespace Watch channel closed. Exisint NamespaceWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := namespaceRPCClient.ListNamespaces(ctx, &ometa)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Namespace list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("NamespaceWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffNamespaces(objList, reactor, ostream)
+			}
 		}
 	}
 }

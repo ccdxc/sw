@@ -101,35 +101,34 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 				return
 			}
 			evtWork(evt)
-			// periodic resync (Disabling as we have aggregate watch support)
-			/*case <-time.After(resyncInterval):
-			            //Give priority to evt work
-			            //Wait for batch interval for inflight work
-			            time.Sleep(5 * DefaultWatchHoldInterval)
-			            select {
-			            case evt, ok := <-recvCh:
-			                if !ok {
-			                    log.Warnf("App Watch channel closed. Exisint AppWatch")
-			                    return
-			                }
-			                evtWork(evt)
-							continue
-			            default:
-			            }
-						// get a list of objects
-						objList, err := appRPCClient.ListApps(ctx, &ometa)
-						if err != nil {
-							st, ok := status.FromError(err)
-							if !ok || st.Code() == codes.Unavailable {
-								log.Errorf("Error getting App list. Err: %v", err)
-								return
-							}
-						} else {
-							client.debugStats.AddInt("AppWatchResyncs", 1)
-							// perform a diff of the states
-							client.diffApps(objList, reactor, ostream)
-						}
-			*/
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("App Watch channel closed. Exisint AppWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := appRPCClient.ListApps(ctx, &ometa)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting App list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("AppWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffApps(objList, reactor, ostream)
+			}
 		}
 	}
 }

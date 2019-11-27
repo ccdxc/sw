@@ -101,35 +101,34 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 				return
 			}
 			evtWork(evt)
-			// periodic resync (Disabling as we have aggregate watch support)
-			/*case <-time.After(resyncInterval):
-			            //Give priority to evt work
-			            //Wait for batch interval for inflight work
-			            time.Sleep(5 * DefaultWatchHoldInterval)
-			            select {
-			            case evt, ok := <-recvCh:
-			                if !ok {
-			                    log.Warnf("Endpoint Watch channel closed. Exisint EndpointWatch")
-			                    return
-			                }
-			                evtWork(evt)
-							continue
-			            default:
-			            }
-						// get a list of objects
-						objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
-						if err != nil {
-							st, ok := status.FromError(err)
-							if !ok || st.Code() == codes.Unavailable {
-								log.Errorf("Error getting Endpoint list. Err: %v", err)
-								return
-							}
-						} else {
-							client.debugStats.AddInt("EndpointWatchResyncs", 1)
-							// perform a diff of the states
-							client.diffEndpoints(objList, reactor, ostream)
-						}
-			*/
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("Endpoint Watch channel closed. Exisint EndpointWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting Endpoint list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("EndpointWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffEndpoints(objList, reactor, ostream)
+			}
 		}
 	}
 }
