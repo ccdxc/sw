@@ -23,6 +23,7 @@
 #include "nic/sdk/linkmgr/linkmgr_internal.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -5078,12 +5079,59 @@ port_event_cb (port_event_info_t *port_event_info)
                              false);
 }
 
+// update admin state of all ports
+static void
+port_update_admin_state (port_admin_state_t admin_state)
+{
+    uint32_t fp_port;
+    uint32_t ifindex;
+    uint32_t logical_port;
+    hal_ret_t ret = HAL_RET_OK;
+    port_args_t port_args = { 0 };
+    sdk::lib::catalog *catalog = g_hal_state->catalog();
+    uint32_t num_fp_ports = catalog->num_fp_ports();
+    uint64_t stats_data[MAX_MAC_STATS];
+
+    memset(stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
+
+    for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
+        sdk::linkmgr::port_args_init(&port_args);
+
+        ifindex = ETH_IFINDEX(
+                catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+        logical_port = port_args.port_num =
+            sdk::lib::catalog::ifindex_to_logical_port(ifindex);
+
+        port_args.port_num = logical_port;
+        port_args.stats_data = stats_data;
+
+        ret = linkmgr::port_get(&port_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("port_get failed for {}", logical_port);
+            continue;
+        }
+        port_args.admin_state = admin_state;
+
+        hal_cfg_db_open(CFG_OP_WRITE);
+
+        // update the port params
+        ret = linkmgr::port_update(&port_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("port_update failed for {}", logical_port);
+        }
+
+        hal_cfg_db_close();
+    }
+}
+
 //------------------------------------------------------------------------------
 // port event cb
 //------------------------------------------------------------------------------
 sdk_ret_t
 port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
+    static bool update_admin_state = true;
+
     if_port_timer_ctxt_t *port_ctxt = (if_port_timer_ctxt_t *)ctxt;
     port_event_info_t port_event_info;
 
@@ -5093,6 +5141,16 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     port_event_info.type  = port_ctxt->port_type;
     port_event_info.num_lanes = port_ctxt->num_lanes;
     port_event_info.oper_status = port_ctxt->oper_status;
+
+    if ((update_admin_state == true) &&
+        (port_ctxt->port_num == 9) &&
+        (port_ctxt->event == port_event_t::PORT_EVENT_LINK_UP) &&
+        (sdk::linkmgr::port_default_admin_state() ==
+                port_admin_state_t::PORT_ADMIN_STATE_UP))  {
+        HAL_TRACE_DEBUG("Updating admin state for all ports");
+        port_update_admin_state(port_admin_state_t::PORT_ADMIN_STATE_UP);
+        update_admin_state = false;
+    }
 
     HAL_TRACE_DEBUG("Timer fired. Port: {}, Event: {}, Speed: {}",
                     port_ctxt->port_num, (uint32_t)port_ctxt->event,

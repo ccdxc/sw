@@ -245,6 +245,12 @@ hal_init (hal_cfg_t *hal_cfg)
                             "HAL PD layer initialization failure");
     HAL_TRACE_DEBUG("Platform initialization done");
 
+    // pal_init done in hal_pd_init
+    sdk::lib::pal_program_marvell(0, 0x8140);
+
+    // linkmgr init
+    hal_linkmgr_init(hal_cfg, hal::port_event_cb);
+
     // init fte and hal plugins
     init_plugins(hal_cfg);
 
@@ -297,9 +303,6 @@ hal_init (hal_cfg_t *hal_cfg)
         // FTE disabled
         fte::disable_fte();
     }
-
-    // linkmgr init
-    hal_linkmgr_init(hal_cfg, hal::port_event_cb);
 
     // vmotion thread init
     hal_vmotion_init(hal_cfg);

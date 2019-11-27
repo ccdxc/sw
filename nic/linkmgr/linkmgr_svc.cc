@@ -218,7 +218,16 @@ PortServiceImpl::PortCreate(ServerContext *context,
         populate_port_create_args(spec, &port_args);
         // create the port
         hal_ret = linkmgr::port_create(&port_args, &hal_handle);
+
+        // ports are created internally in linkmgr.
+        // When Agent tries to creates ports again, HAL_RET_ENTRY_EXISTS
+        // is returned. Ignore until Agent is cleaned up
+        if (hal_ret == HAL_RET_ENTRY_EXISTS) {
+            hal_ret = HAL_RET_OK;
+        }
+
         response->set_api_status(hal_ret_to_api_status(hal_ret));
+
         if (hal_ret == HAL_RET_OK) {
             port_status = std::make_shared<dobj::PortStatus>(response->status());
             port_status->mutable_key_or_handle()->set_port_id(spec.key_or_handle().port_id());
@@ -616,11 +625,7 @@ port_info_get (PortInfoGetRequest& req, PortInfoGetResponseMsg *rsp)
     if (!req.has_key_or_handle()) {
         for (fp_port = 1; fp_port <= num_fp_ports();
                               ++fp_port) {
-            // mgmt port is created internally in IRIS.
-            // Dont send it for agent to create
-            if (port_type_fp(fp_port) != port_type_t::PORT_TYPE_MGMT) {
-                populate_port_info_response(fp_port, rsp);
-            }
+            populate_port_info_response(fp_port, rsp);
         }
         return ret;
     }

@@ -251,38 +251,47 @@ linkmgr_create_mgmt_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
     uint32_t num_fp_ports = catalog->num_fp_ports();
 
     for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
-        if (catalog->port_type_fp(fp_port) == port_type_t::PORT_TYPE_MGMT) {
-            sdk::linkmgr::port_args_init(&port_args);
+        sdk::linkmgr::port_args_init(&port_args);
 
-            ifindex = ETH_IFINDEX(
-                    catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
-            logical_port = port_args.port_num =
-                sdk::lib::catalog::ifindex_to_logical_port(ifindex);
-            port_args.port_type = catalog->port_type_fp(fp_port);
+        ifindex = ETH_IFINDEX(
+                catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+        logical_port = port_args.port_num =
+            sdk::lib::catalog::ifindex_to_logical_port(ifindex);
+
+        port_args.port_type = catalog->port_type_fp(fp_port);
+        port_args.num_lanes = catalog->num_lanes_fp(fp_port);
+        port_args.mac_id = catalog->mac_id(logical_port, 0);
+        port_args.mac_ch = catalog->mac_ch(logical_port, 0);
+        port_args.debounce_time = 0;
+        port_args.mtu = 0;    /**< default will be set to max mtu */
+        port_args.loopback_mode = port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
+        port_args.tx_pause_enable = true;
+        port_args.rx_pause_enable = true;
+        port_args.pause = port_pause_type_t::PORT_PAUSE_TYPE_LINK;
+
+        for (uint32_t i = 0; i < port_args.num_lanes; i++) {
+            port_args.sbus_addr[i] = catalog->sbus_addr(logical_port, i);
+        }
+
+        if (catalog->port_type_fp(fp_port) == port_type_t::PORT_TYPE_MGMT) {
             port_args.port_speed = port_speed_t::PORT_SPEED_1G;
             port_args.fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
-            port_args.num_lanes = catalog->num_lanes_fp(fp_port);
-            port_args.mac_id = catalog->mac_id(logical_port, 0);
-            port_args.mac_ch = catalog->mac_ch(logical_port, 0);
-            port_args.debounce_time = 0;
-            port_args.mtu = 0;    /**< default will be set to max mtu */
-            port_args.pause = port_pause_type_t::PORT_PAUSE_TYPE_NONE;
-            port_args.loopback_mode = port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
-            for (uint32_t i = 0; i < port_args.num_lanes; i++) {
-                port_args.sbus_addr[i] =
-                catalog->sbus_addr(logical_port, i);
-            }
-
-            hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-
-            ret = port_create(&port_args, &hal_handle);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to create port {}", logical_port);
-            }
-
-            hal::hal_cfg_db_close();
+        } else {
+            port_args.port_speed = port_speed_t::PORT_SPEED_100G;
+            port_args.fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+            port_args.auto_neg_enable = true;
         }
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+
+        ret = port_create(&port_args, &hal_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to create port {}", logical_port);
+        }
+
+        hal::hal_cfg_db_close();
     }
 
     return ret;
