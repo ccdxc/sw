@@ -116,7 +116,7 @@ def triggerArping(w1, w2, tc):
         statsCount[ethIntf] = txrxbcframes
 
     #do arping
-    cmd_cookie = "arping -W 0.01 -c %d %s" %(arping_count, w1.ip_address)
+    cmd_cookie = "/usr/local/sbin/arping -W 0.01 -c %d %s" %(arping_count, w1.ip_address)
     api.Trigger_AddHostCommand(tc.req, w2.node_name, cmd_cookie)
     tc.cmd_cookies.append(cmd_cookie)
 
