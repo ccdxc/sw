@@ -1086,11 +1086,18 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	err = createApps(t, stateMgr, apps)
 	AssertOk(t, err, "Error creating Apps")
 
-	time.Sleep(100 * time.Millisecond)
-
-	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
-	Assert(t, len(ag.apps) == 3, "received apps group by agent")
-	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) != 3 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityGroups), ag)
+		}
+		if len(ag.apps) != 3 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.apps), ag)
+		}
+		if len(ag.securityPolicies) != 3 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityPolicies), ag)
+		}
+		return true, nil
+	}, fmt.Sprintf("Expected number of security groups, or apps or policies not found. %v", ag), "100ms", "1s")
 
 	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")

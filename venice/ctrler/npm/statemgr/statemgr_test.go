@@ -935,6 +935,12 @@ func TestSgAttachEndpoint(t *testing.T) {
 	// verify endpoint is associated with the sg
 	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
 	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(eps.Endpoint.Status.SecurityGroups) == 1 {
+			return true, nil
+		}
+		return false, fmt.Sprintf("expected : %d, got : %v. Endpoint Object : %v", 1, len(eps.Endpoint.Status.SecurityGroups), eps)
+	}, "Sg was not linked to endpoint", "100ms", "2s")
 	Assert(t, (len(eps.Endpoint.Status.SecurityGroups) == 1), "Sg was not linked to endpoint", eps)
 	Assert(t, (len(eps.groups) == 1), "Sg was not linked to endpoint", eps)
 	Assert(t, (eps.Endpoint.Status.SecurityGroups[0] == sg.SecurityGroup.Name), "Sg was not linked to endpoint", eps)
