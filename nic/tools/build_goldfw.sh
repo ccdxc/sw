@@ -9,8 +9,8 @@ TOPDIR=$(dirname `pwd`)
 USERNAME=$(id -nu)
 BUILDROOT_HASH=`grep buildroot $TOPDIR/minio/VERSIONS | cut -d' ' -f2`
 
-#max goldimg size is 60*1024*1024 i.e. 60M
-max_gold_img_sz=62914560
+#max goldimg size is 59*1024*1024 i.e. 60M
+max_gold_img_sz=61865984
 
 echo "BUILDROOT_HASH is: $BUILDROOT_HASH"
 
