@@ -195,7 +195,12 @@ func validateCluster() {
 	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
 
 	Eventually(func() string {
-		return ts.tu.LocalCommandOutput(`kubectl get pods --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name'`)
+		// TODO: remove workaround for following Kubernetes issues when move to a version with proper fixes:
+		// https://github.com/kubernetes/kubernetes/issues/80968
+		// https://github.com/kubernetes/kubernetes/issues/82346
+		// refer PR https://github.com/pensando/sw/pull/15711
+		// Ignore condition Ready == false (i.e. consider the pod good assuming all other conditions are True)
+		return ts.tu.LocalCommandOutput(`kubectl get pods --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type != "Ready" and .status == "False") ] | length ) > 0 ) | .metadata.namespace + "/" + .metadata.name'`)
 	}, 95, 1).Should(BeEmpty(), "All pods should be in Ready state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
