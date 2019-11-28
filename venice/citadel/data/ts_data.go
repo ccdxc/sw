@@ -294,6 +294,12 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 
 	dn.logger.Debugf("%s Received PointsReplicate req %+v", dn.nodeUUID, req)
 
+	// check if datanode is already stopped
+	if dn.isStopped {
+		dn.logger.Errorf("Received PointsWrite on stopped datanode %s", dn.nodeUUID)
+		return &resp, errors.New("Datanode is stopped")
+	}
+
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
