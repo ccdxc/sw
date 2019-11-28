@@ -25,8 +25,8 @@ const (
 	indexRetryIntvl = (100 * time.Millisecond)
 	indexMaxRetries = 5
 	// Time in minutes to tolerate continuous write failures
-	// before we restart indexer
-	failedWriteTimeout = 5 * time.Minute
+	// before we drop the request
+	failedWriteTimeout = 1 * time.Minute
 )
 
 type service interface {
@@ -268,11 +268,12 @@ func (idr *Indexer) startWriter(id int) {
 	bulkTimeout := int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
 	for {
 
-		// If we fail to write for 5 min, we restart indexer
+		// If we fail to write for 5 min, we drop the request
 		if failedBulkCount == bulkTimeout {
-			idr.doneCh <- fmt.Errorf("elastic write failed for %d minutes", bulkTimeout)
-			// We should be shutting down now
-			return
+			idr.logger.Errorf("elastic write failed for %d seconds. so, dropping the request", bulkTimeout)
+			failedBulkCount = 0
+			idr.resVersionUpdater[id] = nil
+			idr.requests[id] = nil
 		}
 
 		if len(idr.requests[id]) == idr.batchSize {

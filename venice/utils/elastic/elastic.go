@@ -573,7 +573,7 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 				for index, item := range bulkResp.Items {
 					for key, val := range item {
 						if val.Error != nil {
-							e.logger.Debugf("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
+							e.logger.Infof("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
 							errs = append(errs, val.Error.Reason)
 						}
 					}
@@ -591,7 +591,7 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 				for index, item := range bulkResp.Items {
 					for key, val := range item {
 						if val.Error != nil {
-							e.logger.Debugf("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
+							e.logger.Infof("[%+v] request {%s} failed with err: %+v", objs[index], key, val.Error)
 							errs = append(errs, val.Error.Reason)
 						}
 					}

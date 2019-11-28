@@ -27,7 +27,7 @@ type queryTestCase struct {
 }
 
 var (
-	dummyObjName = uuid.NewV4().String()
+	dummyObjName = fmt.Sprintf("st-%s", uuid.NewV4().String()) // search test object
 )
 
 func auditEventResultCheck(resp interface{}, tc queryTestCase) error {
@@ -136,6 +136,7 @@ var _ = Describe("search test", func() {
 })
 
 func createDummyObj() {
+	By(fmt.Sprintf("ts=%s creating alert policy {%s}", time.Now().String(), dummyObjName))
 	dummyPolicy := &monitoring.AlertPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AlertPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -151,6 +152,7 @@ func createDummyObj() {
 }
 
 func deleteDummyObj() {
+	By(fmt.Sprintf("ts=%s deleting alert policy {%s}", time.Now().String(), dummyObjName))
 	dummyPolicyMeta := &api.ObjectMeta{
 		Name:   dummyObjName,
 		Tenant: globals.DefaultTenant,
@@ -180,5 +182,5 @@ func testQueries(testCases []*queryTestCase) {
 
 		return true
 
-	}, 120, 10).Should(BeTrue(), fmt.Sprintf("ts: %s Query tests failed", time.Now().String()))
+	}, 180, 10).Should(BeTrue(), fmt.Sprintf("ts: %s Query tests failed", time.Now().String()))
 }

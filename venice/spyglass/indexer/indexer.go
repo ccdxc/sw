@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
-	elastic "github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -260,10 +260,10 @@ func (idr *Indexer) Start() error {
 	idr.requests = make([][]*elastic.BulkRequest, idr.maxWriters)
 	idr.resVersionUpdater = make([]func(), idr.maxWriters)
 
-	err = idr.initializeAndStartWatchers()
-	if err != nil {
-		return err
-	}
+	go func() {
+		idr.Add(1)
+		idr.initializeAndStartWatchers()
+	}()
 
 	// start the Elastic Writer Pool
 	idr.logger.Infof("Starting %d writers", idr.maxWriters)
@@ -281,36 +281,54 @@ func (idr *Indexer) Start() error {
 	return err
 }
 
-func (idr *Indexer) initializeAndStartWatchers() error {
-	idr.Lock()
-	idr.watcherDone = make(chan bool)
-	idr.Unlock()
-	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return func() (interface{}, error) {
-			return nil, idr.createWatchers()
-		}()
-	}, apiSrvWaitIntvl, maxAPISrvRetries)
+func (idr *Indexer) initializeAndStartWatchers() {
+	defer idr.Done()
 
-	if err != nil {
-		idr.logger.Errorf("Failed to create watchers, err: %v", err)
-		// stop and cleanup watchers
-		idr.stopWatchers()
-		return err
+	if err := idr.initialize(); err != nil {
+		idr.doneCh <- err // context cancelled
+		return
 	}
+
 	// start the watchers
 	idr.SetRunningStatus(true)
 	idr.startWatchers()
-	return nil
+}
+
+func (idr *Indexer) initialize() error {
+	idr.Lock()
+	idr.watcherDone = make(chan bool)
+	idr.Unlock()
+
+	for {
+		select {
+		case <-idr.ctx.Done():
+			err := errors.New("context cancelled, exiting initialize watchers")
+			idr.logger.Error(err)
+			return err
+		default:
+			_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+				return func() (interface{}, error) {
+					return nil, idr.createWatchers()
+				}()
+			}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+			if err == nil {
+				return nil
+			}
+			idr.logger.Errorf("Failed to create watchers, err: %v", err)
+			idr.stopWatchers()
+			time.Sleep(10 * time.Second)
+		}
+	}
 }
 
 func (idr *Indexer) restartWatchers() {
 	idr.logger.Info("Restarting watchers")
 	idr.stopWatchers()
-	err := idr.initializeAndStartWatchers()
-	if err != nil {
-		// Failed to connect to api server, shutting down
-		idr.doneCh <- err
-	}
+	go func() {
+		idr.Add(1)
+		idr.initializeAndStartWatchers()
+	}()
 }
 
 // Stop stops all the watchers and writers for API-server objects
