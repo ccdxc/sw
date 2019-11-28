@@ -238,6 +238,24 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  metaswitch/hals_test:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/metaswitch_hals_test"]
+    owners: ["email:vijasrin@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
+  metaswitch/store_test:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/metaswitch_store_test"]
+    owners: ["email:vijasrin@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

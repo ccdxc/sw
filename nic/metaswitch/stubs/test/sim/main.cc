@@ -134,6 +134,7 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     // Destory the thread context
     NBB_DESTROY_THREAD_CONTEXT;
 
+
 }
 
 static int
