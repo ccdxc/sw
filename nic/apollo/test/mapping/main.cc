@@ -119,6 +119,8 @@ protected:
     }
 };
 
+//#define SCALE_DOWN_FOR_DEBUG
+
 /// helper functions to create feeders
 static void create_local_mapping_feeders(local_mapping_feeder feeders[],
                                          int num_feeders)
@@ -128,18 +130,23 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
     if (num_feeders < 1 || num_feeders > 4)
         return;
 
-    int num_vnics = k_max_vnic/num_feeders;
-
+#ifndef SCALE_DOWN_FOR_DEBUG
+     int num_vnics = k_max_vnic/num_feeders;
+    int num_ips = PDS_MAX_VNIC_IP;
+#else
+    // debug
+    int num_vnics = 2;
+    int num_ips = 2;
+#endif
     // first set
     feeders[0].init(k_vpc_key.id, k_subnet_key.id, "10.0.0.2/8",
                 0x000000030b020a01, g_encap_type, g_encap_val, 1, true,
-                "12.0.0.0/16", num_vnics, PDS_MAX_VNIC_IP,
-                PDS_MAPPING_TYPE_L3);
+                "12.0.0.0/16", num_vnics, num_ips, PDS_MAPPING_TYPE_L3);
 
     // subsequent sets can be copied from first set and iterated to
     // required position.
     for (i = 1; i < num_feeders; i++) {
-        feeders[i] = feeders[0];
+        feeders[i] = feeders[i - 1];
         feeders[i].iter_next(num_vnics * PDS_MAX_VNIC_IP);
     }
 }
@@ -152,18 +159,24 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
     if (num_feeders < 1 || num_feeders > 4)
         return;
 
+#ifndef SCALE_DOWN_FOR_DEBUG
     int num_teps = PDS_MAX_TEP/num_feeders;
+    int num_vnics = k_max_vnic;
+#else
+    int num_teps = 2;
+    int num_vnics = 2;
+#endif
 
     // first set
     feeders[0].init(k_vpc_key.id, k_subnet_key.id, "10.80.0.2/8",
                 0x000000140b020a01, g_encap_type, g_encap_val,
-                PDS_NH_TYPE_OVERLAY, 2, num_teps, k_max_vnic,
+                PDS_NH_TYPE_OVERLAY, 2, num_teps, num_vnics,
                 PDS_MAPPING_TYPE_L3);
 
     // subsequent sets can be copied from first set and iterated to
     // required position.
     for (i = 1; i < num_feeders; i++) {
-        feeders[i] = feeders[0];
+        feeders[i] = feeders[i - 1];
         feeders[i].iter_next(num_teps * PDS_MAX_TEP_VNIC);
     }
 }
@@ -199,7 +212,7 @@ TEST_F(mapping_test, local_mapping_workflow_2) {
 
 /// \brief Local mappings WF_3
 /// \ref WF_3
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
+TEST_F(mapping_test, local_mapping_workflow_3) {
     local_mapping_feeder feeders[3];
 
     create_local_mapping_feeders(feeders, 3);
@@ -217,7 +230,7 @@ TEST_F(mapping_test, local_mapping_workflow_4) {
 
 /// \brief Local mappings WF_5
 /// \ref WF_5
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_5) {
+TEST_F(mapping_test, local_mapping_workflow_5) {
     local_mapping_feeder feeders[3];
 
     create_local_mapping_feeders(feeders, 3);
@@ -380,7 +393,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_8) {
 
 /// \brief Remote mappings WF_1
 /// \ref WF_1
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_1) {
+TEST_F(mapping_test, remote_mapping_workflow_1) {
     remote_mapping_feeder feeders[1];
 
     create_remote_mapping_feeders(feeders, 1);
@@ -389,7 +402,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_1) {
 
 /// \brief Remote mappings WF_2
 /// \ref WF_2
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_2) {
+TEST_F(mapping_test, remote_mapping_workflow_2) {
     remote_mapping_feeder feeders[1];
 
     create_remote_mapping_feeders(feeders, 1);
@@ -398,7 +411,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_2) {
 
 /// \brief Remote mappings WF_3
 /// \ref WF_3
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_3) {
+TEST_F(mapping_test, remote_mapping_workflow_3) {
     remote_mapping_feeder feeders[3];
 
     create_remote_mapping_feeders(feeders, 3);
@@ -416,7 +429,7 @@ TEST_F(mapping_test, remote_mapping_workflow_4) {
 
 /// \brief Remote mappings WF_5
 /// \ref WF_5
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_5) {
+TEST_F(mapping_test, remote_mapping_workflow_5) {
     remote_mapping_feeder feeders[3];
 
     create_remote_mapping_feeders(feeders, 3);

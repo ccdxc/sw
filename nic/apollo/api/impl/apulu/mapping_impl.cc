@@ -156,7 +156,6 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         impl->to_public_ip_nat_idx_ = local_mapping_data.xlate_id;
         impl->to_overlay_ip_nat_idx_ = pub_ip_local_mapping_data.xlate_id;
     }
-
     return impl;
 }
 
@@ -334,8 +333,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
-    mapping_entry *mapping = (mapping_entry *)api_obj;
     local_mapping_swkey_t local_mapping_key;
+    mapping_entry *mapping = (mapping_entry *)api_obj;
 
     // remove mapping entry for overlay ip
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
@@ -344,9 +343,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remove entry in MAPPING table (vpc %u, ip %s),"
-                      " err %u", vpc_hw_id_,
-                      ipaddr2str(&mapping->key().ip_addr), ret);
+        PDS_TRACE_ERR("Failed to remove entry in MAPPING table for %s, err %u",
+                      mapping->key2str(), ret);
         return ret;
     }
 
@@ -362,9 +360,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table "
-                      "(vpc %u, ip %s), err %u", vpc_hw_id_,
-                      ipaddr2str(&mapping->key().ip_addr), ret);
+        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table %s, "
+                      "err %u", mapping->key2str(), ret);
         return ret;
     }
 
@@ -380,9 +377,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remove entry in MAPPING table (vpc %u, ip %s),"
-                      " err %u", vpc_hw_id_, ipaddr2str(&mapping->public_ip()),
-                      ret);
+        PDS_TRACE_ERR("Failed to remove entry in MAPPING table for %s, err %u",
+                      mapping->key2str(), ret);
         return ret;
     }
 
@@ -393,9 +389,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                    NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table "
-                      "(vpc %u, ip %s), err %u", vpc_hw_id_,
-                      ipaddr2str(&mapping->public_ip()));
+        PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table for %s, "
+                      "err %u", mapping->key2str(), ret);
         return ret;
     }
 
@@ -534,8 +529,6 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc,
             tep = (tep_impl *)tep_db()->find(&spec->tep)->impl();
             mapping_data.nexthop_type = NEXTHOP_TYPE_TUNNEL;
             mapping_data.nexthop_id = tep->hw_id();
-            //PDS_TRACE_DEBUG("nh type %u, nh id %u",
-                            //NEXTHOP_TYPE_TUNNEL, mapping_data.nexthop_id);
             break;
 
         case PDS_NH_TYPE_OVERLAY_ECMP:
@@ -654,11 +647,10 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
 
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
-    PDS_TRACE_DEBUG("Activating mapping (vpc %u, ip %s), subnet %u, tep %u, "
+    PDS_TRACE_DEBUG("Activating %s, subnet %u, tep %u, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, spec->tep.id,
+                    mapping->key2str(), spec->subnet.id, spec->tep.id,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
     if (spec->is_local) {
@@ -677,8 +669,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
 error:
 
     // TODO: take care of MAC entries also while printing !!
-    PDS_TRACE_ERR("Failed to program mapping (vpc %u, ip %s)",
-                  spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr));
+    PDS_TRACE_ERR("Failed to program %s, err %u", mapping->key2str(), ret);
     return ret;
 }
 
@@ -730,6 +721,7 @@ mapping_impl::deactivate_ip_local_mapping_entry_(pds_vpc_key_t vpc,
 sdk_ret_t
 mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
     sdk_ret_t ret;
+
     if (!mapping->is_local()) {
         return deactivate_ip_mapping_entry_(mapping->key().vpc,
                                             &mapping->key().ip_addr);

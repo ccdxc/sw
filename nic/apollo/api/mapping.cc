@@ -100,7 +100,7 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;
 }
 
- sdk_ret_t
+sdk_ret_t
 mapping_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }

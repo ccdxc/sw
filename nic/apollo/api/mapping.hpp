@@ -198,7 +198,13 @@ public:
          * class will only increase temporary usage of memory (and some cycles
          * to copy key bytes into this class)
          */
-        return "mapping-";
+        if (key_.type == PDS_MAPPING_TYPE_L3) {
+            return "mapping-(" + std::to_string(key_.vpc.id) + ", " +
+                       std::string(ipaddr2str(&key_.ip_addr)) + ")";
+        } else {
+            return "mapping-(" + std::to_string(key_.subnet.id) + ", " +
+                       std::string(macaddr2str(key_.mac_addr)) + ")";
+        }
     }
 
     /**

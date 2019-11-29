@@ -252,7 +252,7 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
         add_to_dirty_list_(api_obj, obj_ctxt);
     }
     PDS_API_PREPROCESS_DELETE_COUNTER_INC(ok, 1);
-   return SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
