@@ -4,4 +4,4 @@ default: configure
 	make -C $(MS_ROOT) -j28
 
 configure: 
-	cd $(MS_ROOT); ./configure --static --platform $(GMK_TARGETOS) --mode $(MODE); cd -
+	cd $(MS_ROOT); ./configure --static --platform $(GMK_TARGETOS) --mode $(MODE) --without-openssl; cd -
