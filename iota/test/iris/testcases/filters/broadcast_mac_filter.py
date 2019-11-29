@@ -116,7 +116,8 @@ def triggerArping(w1, w2, tc):
         statsCount[ethIntf] = txrxbcframes
 
     #do arping
-    cmd_cookie = "/usr/local/sbin/arping -W 0.01 -c %d %s" %(arping_count, w1.ip_address)
+
+    cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpPrefix, arping_count, w1.ip_address)
     api.Trigger_AddHostCommand(tc.req, w2.node_name, cmd_cookie)
     tc.cmd_cookies.append(cmd_cookie)
 
@@ -194,6 +195,20 @@ def Trigger(tc):
         debug_utils.collect_showtech(result)
         return result
 
+    #first, find the right arp (we rely on -W option)
+    tc.req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+ 
+    ArpPrefix = "/usr/local/sbin/"
+
+    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls /usr/local/sbin/arping")
+    resp = api.Trigger(tc.req)
+
+    for cmd in resp.commands:
+        if cmd.stdout.find("No such file or directory"):
+            ArpPrefix = ""
+
+    tc.ArpPrefix = ArpPrefix
+    
     #Trigger arping and get interface BC stats pre & post trigger
     triggerBCtraffic(tc)
 
