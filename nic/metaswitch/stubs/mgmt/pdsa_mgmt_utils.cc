@@ -116,32 +116,32 @@ pdsa_set_address_oid(NBB_ULONG *oid,
     NBB_ULONG       ii = 0;
 
     if (strcmp(fieldName, "remote_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PAS_REMOTE_ADD_TYP_IX;
             oidAddrIdx = AMB_BGP_PAS_REMOTE_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PER_REMOTE_ADD_TYP_IX;
             oidAddrIdx = AMB_BGP_PER_REMOTE_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerAfiSafiStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PAST_REMOTE_ADDR_TYP_IX;
             oidAddrIdx = AMB_BGP_PAST_REMOTE_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PRST_LOCAL_ADDR_TYP_IX;
             oidAddrIdx = AMB_BGP_PRST_LOCAL_ADDR_INDEX;
         } else {
             assert(0);
         }
     } else if (strcmp(fieldName, "local_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX;
             oidAddrIdx = AMB_BGP_PAS_LOCAL_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PER_LOCAL_ADD_TYP_INDEX;
             oidAddrIdx = AMB_BGP_PER_LOCAL_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerAfiSafiStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PAST_LOCAL_ADDR_TYP_IX;
             oidAddrIdx = AMB_BGP_PAST_LOCAL_ADDR_INDEX;
-        } else if (strcmp(fieldName, "bgpPeerStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             oidAddrTypeIdx = AMB_BGP_PRST_REMOTE_ADDR_TYP_IX;
             oidAddrIdx = AMB_BGP_PRST_REMOTE_ADDR_INDEX;
         } else {
@@ -178,7 +178,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     ip_addr_spec_to_ip_addr(addr, &outAddr);
 
     if (strcmp(fieldName, "remote_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI *data = (AMB_BGP_PEER_AFI_SAFI *)dest;
             pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
@@ -186,7 +186,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
                                                 data->remote_addr);
             addrIdx = AMB_OID_BGP_PAS_REMOTE_ADDR;
             addrType = AMB_OID_BGP_PAS_REMOTE_ADDR_TYP;
-        } else if (strcmp(fieldName, "bgpPeerTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             AMB_BGP_PEER *data = (AMB_BGP_PEER *)dest;
             pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
@@ -198,7 +198,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
             assert(0);
         }
     } else if (strcmp(fieldName, "local_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI *data = (AMB_BGP_PEER_AFI_SAFI *)dest;
             pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
@@ -206,7 +206,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
                                                 data->local_addr);
             addrIdx = AMB_OID_BGP_PAS_LOCAL_ADDR;
             addrType = AMB_OID_BGP_PAS_LOCAL_ADDR_TYP;
-        } else if (strcmp(fieldName, "bgpPeerTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             AMB_BGP_PEER *data = (AMB_BGP_PEER *)dest;
             pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
@@ -242,13 +242,13 @@ pdsa_get_address(const NBB_CHAR  *tableName,
     ip_addr_t          pdsa_ip_addr;
 
     if (strcmp(fieldName, "remote_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiStatusTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI_STAT *data = (AMB_BGP_PEER_AFI_SAFI_STAT *)src;
             pdsa_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
                                                 data->remote_addr_type,
                                                 data->remote_addr_len,
                                                 &pdsa_ip_addr);
-        } else if (strcmp(fieldName, "bgpPeerStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             AMB_BGP_PEER_STATUS *data = (AMB_BGP_PEER_STATUS *)src;
             pdsa_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
                                                 data->remote_addr_type,
@@ -258,13 +258,13 @@ pdsa_get_address(const NBB_CHAR  *tableName,
             assert(0);
         }
     } else if (strcmp(fieldName, "local_addr") == 0) {
-        if (strcmp(fieldName, "bgpPeerAfiSafiStatusTable") == 0) {
+        if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI_STAT *data = (AMB_BGP_PEER_AFI_SAFI_STAT *)src;
             pdsa_convert_amb_ip_addr_to_ip_addr(data->local_addr,
                                                 data->local_addr_type,
                                                 data->local_addr_len,
                                                 &pdsa_ip_addr);
-        } else if (strcmp(fieldName, "bgpPeerStatusTable") == 0) {
+        } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             AMB_BGP_PEER_STATUS *data = (AMB_BGP_PEER_STATUS *)src;
             pdsa_convert_amb_ip_addr_to_ip_addr(data->local_addr,
                                                 data->local_addr_type,
