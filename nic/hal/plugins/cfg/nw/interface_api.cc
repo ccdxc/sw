@@ -116,7 +116,9 @@ is_l2seg_native (l2seg_t *l2seg, if_t *pi_if)
             pi_if->if_type == intf::IF_TYPE_UPLINK_PC) &&
             (pi_if->native_l2seg == l2seg->seg_id ||
              (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q &&
-              l2seg->wire_encap.val == NATIVE_VLAN_ID))) {
+              (l2seg->wire_encap.val == NATIVE_VLAN_ID || 
+               (l2seg->wire_encap.val >= NATIVE_TELEMETRY_VLAN_ID_START && 
+                l2seg->wire_encap.val <= NATIVE_TELEMETRY_VLAN_ID_END))))) {
         return TRUE;
     }
 
