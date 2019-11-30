@@ -217,7 +217,7 @@ testcases:
 
     -   name    : DriverFlowCtrl
         testcase: testcases.drivers.driverflowctrl
-        disable : False
+        disable : True
         iterators :
 
     -   name    : DriverLifReset
