@@ -8,6 +8,14 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <nbase.h>
+#include <ntl_remote_object.hpp>
+extern "C"
+{
+#include <lipi.h>
+}
+#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
@@ -157,6 +165,45 @@ TEST_F(pdsa_hals_test, vxlan_test) {
     test_output->validate();
 }
 
+TEST(pdsa_loopback_test, test) {
+   
+    ip_addr_t in_ip;
+    inet_aton ("39.0.0.1", (in_addr*) &(in_ip.addr.v4_addr));
+    in_ip.af = IP_AF_IPV4;
+    ATG_LIPI_L3_IP_ADDR ip_addr = {0};
+    pdsa_stub::convert_ipaddr_pdsa_to_ms (in_ip, &ip_addr.inet_addr);
+
+    std::cout << "=== Loopback IP Add test ===" << std::endl;
+    pdsa_stub::li_is()->softwif_addr_set("lo1", &ip_addr,
+                                         nullptr);
+    sleep(1);
+    auto fp = popen ("ip addr show dev lo to 39.0.0.1 | grep 39.0.0.1", "r");
+    if (!fp) {
+        throw std::runtime_error ("ERROR Fetching linux loopback IP");
+    }
+    char buf[100];
+    buf[0] = 0;
+    while (std::fgets(buf, sizeof buf, fp) != NULL) {
+        std::cout << '"' << buf << '"' << '\n';
+    }
+    pclose (fp);
+    ASSERT_TRUE (strcmp (buf,"") != 0) ;
+
+    std::cout << "=== Loopback IP Delete test ===" << std::endl;
+    pdsa_stub::li_is()->softwif_addr_del("lo1", &ip_addr,
+                                         nullptr);
+    sleep(1);
+    buf[0] = 0;
+    fp = popen ("ip addr show dev lo to 39.0.0.1", "r");
+    if (!fp) {
+        throw std::runtime_error ("ERROR Fetching linux loopback IP");
+    }
+    while (std::fgets(buf, sizeof buf, fp) != NULL) {
+        std::cout << '"' << buf << '"' << '\n';
+    }
+    pclose (fp);
+    ASSERT_TRUE (strcmp (buf,"") == 0) ;
+}
 //----------------------------------------------------------------------------
 // Entry point
 //----------------------------------------------------------------------------

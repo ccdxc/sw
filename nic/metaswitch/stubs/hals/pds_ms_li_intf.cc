@@ -100,7 +100,9 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state = 
         (port_prop.admin_state) ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
-    spec.l3_if_info.port_num = ms_to_pds_eth_ifindex (ips_info_.ifindex);
+    // TODO: Change this to eth IfIndex when HAL supports it
+    auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
+    spec.l3_if_info.port_num = ETH_IFINDEX_TO_PARENT_PORT(ifindex)-1;
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
     return spec;
 }
@@ -143,6 +145,11 @@ bool li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
 
     if (ms_ifindex_to_pds_type (ips_info_.ifindex) != IF_TYPE_L3) {
         // Nothing to do for non-L3 interfaces
+        return false;
+    }
+    if (port_add_upd->port_settings.no_switch_port == ATG_NO) {
+        // Not an IP interface
+        // IP to non-IP transition is not supported
         return false;
     }
 

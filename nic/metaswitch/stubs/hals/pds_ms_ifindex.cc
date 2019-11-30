@@ -72,7 +72,7 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
 uint32_t pds_port_to_ms_ifindex_and_ifname (uint32_t port, std::string* ifname) 
 {
     // Simulate an Ifindex that would come from NetAgent
-    auto pds_ifindex = IFINDEX(IF_TYPE_UPLINK, 0, port, 0);
+    auto pds_ifindex = IFINDEX(IF_TYPE_UPLINK, 0, port, ETH_IF_DEFAULT_CHILD_PORT);
     *ifname = pds_ifindex_to_ifname (pds_ifindex);
     // Convert to MS IfIndex
     return pds_to_ms_ifindex(pds_ifindex);

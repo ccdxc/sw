@@ -60,4 +60,26 @@ NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex)
     return ATG_OK;
 }
 
+NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* softwif_add_upd) {
+    return ATG_OK;
+}
+
+NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG softwif_ifindex, 
+                                            const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN], 
+                                            NBB_ULONG softw_iftype) {
+    return ATG_OK;
+}
+
+NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
+                                              ATG_LIPI_L3_IP_ADDR *ip_addr,
+                                              NBB_BYTE *vrf_name) {
+    return ATG_OK;
+}
+
+NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
+                                              ATG_LIPI_L3_IP_ADDR *ip_addr,
+                                              NBB_BYTE *vrf_name) {
+    return ATG_OK;
+}
+
 } // End namespace

@@ -25,7 +25,9 @@ public:
         add_upd.id.if_index = phy_port_ifindex;
         strcpy (add_upd.id.if_name, "eth0");
         add_upd.port_settings.port_enabled = (admin_state)? ATG_YES:ATG_NO;
-        add_upd.port_settings.port_enabled_updated = true;
+        add_upd.port_settings.port_enabled_updated = ATG_YES;
+        add_upd.port_settings.no_switch_port = ATG_YES;
+        add_upd.port_settings.no_switch_port_updated = ATG_YES;
         return add_upd;
     }
 

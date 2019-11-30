@@ -19,8 +19,8 @@ class li_integ_subcomp_t {
 public:
     ~li_integ_subcomp_t() {};
       // Physical interface 
-    NBB_BYTE port_add_update (ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
-    NBB_BYTE port_delete (NBB_ULONG port_ifindex);
+    NBB_BYTE port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
+    NBB_BYTE port_delete(NBB_ULONG port_ifindex);
 
     NBB_BYTE vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
     NBB_BYTE vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_len);
@@ -33,6 +33,22 @@ public:
 
     NBB_BYTE irb_add_update(ATG_LIPI_IRB_ADD_UPDATE* irb_add_upd);
     NBB_BYTE irb_delete(NBB_ULONG irb_ifindex);
+
+    NBB_BYTE softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* softwif_add_upd);
+    NBB_BYTE softwif_delete(NBB_ULONG softwif_ifindex, 
+                            const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN], 
+                            NBB_ULONG softw_iftype);
+
+    NBB_BYTE softwif_addr_set(const NBB_CHAR *if_name,
+                              ATG_LIPI_L3_IP_ADDR *ip_addr,
+                              NBB_BYTE *vrf_name);
+    NBB_BYTE softwif_addr_del(const NBB_CHAR *if_name,
+                              ATG_LIPI_L3_IP_ADDR *ip_addr,
+                              NBB_BYTE *vrf_name);
+    NBB_BYTE softwif_addr_clear(const NBB_CHAR *if_name) {
+        if_name = if_name; return ATG_OK;
+    };
+
 };
 
 li_integ_subcomp_t* li_is (void);

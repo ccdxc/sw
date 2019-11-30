@@ -7,6 +7,7 @@
 #define __PDSA_LINUX_UTIL_HPP__
 
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include <string>
 
 namespace pdsa_stub {
@@ -15,6 +16,9 @@ namespace pdsa_stub {
 bool get_linux_intf_params(const char* ifname,      // In
                            uint32_t*   lnx_ifindex, // Out
                            mac_addr_t& mac);        // Out
+
+void config_linux_loopback_ip (const ip_addr_t& ip, uint32_t prefix_len, 
+                               bool del = false);
 
 } // End namespace
 #endif

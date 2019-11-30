@@ -42,7 +42,9 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
     pclose (fp);    
 
     mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
-    spec.l3_if_info.port_num = (uint8_t) ETH_IFINDEX (1,1,0);
+    // TODO: Change to EthIfIndex when HAL supports it 
+    // spec.l3_if_info.port_num = (uint8_t) ETH_IFINDEX (1,1,0);
+    spec.l3_if_info.port_num = 0;
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE; 
     spec.l3_if_info.encap.val.vnid = 0;
     spec.l3_if_info.vpc.id = 0;
