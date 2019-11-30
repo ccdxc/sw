@@ -707,8 +707,10 @@ func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
 	switch resp.GetSpec().GetType() {
 	case halproto.IfType_IF_TYPE_ENIC:
 		// Get name from Lif
-		lifID := resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId()
-		return lifIDGetName(lifID)
+		// lifID := resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId()
+		// return lifIDGetName(lifID)
+		return fmt.Sprintf("Enic-%d",
+		                   resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 	case halproto.IfType_IF_TYPE_UPLINK:
 		return fmt.Sprintf("Uplink-%d",
 			// resp.GetSpec().GetIfUplinkInfo().GetPortNum())
