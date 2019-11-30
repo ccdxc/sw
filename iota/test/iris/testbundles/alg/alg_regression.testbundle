@@ -66,7 +66,8 @@ testcases:
             count: 10 
 
     -   name     : FTP_EPSV
-        testcase : testcases.alg.ftp.ftp_epsv
+        testcase : tesucases.alg.ftp.ftp_epsv
+        disable  : true 
         args     :
            type : local_only
 
