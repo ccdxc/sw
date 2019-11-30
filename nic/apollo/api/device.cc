@@ -53,6 +53,16 @@ device_entry::destroy(device_entry *device) {
 }
 
 sdk_ret_t
+device_entry::free(device_entry *device) {
+    if (device->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_DEVICE, device->impl_);
+    }
+    device->~device_entry();
+    device_db()->free(device);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 device_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_device_spec_t *spec = &api_ctxt->api_params->device_spec;
 
@@ -66,16 +76,16 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-device_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
 device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                              obj_ctxt_t *obj_ctxt) {
+                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for device cfg, so this is a no-op
     PDS_TRACE_DEBUG("Activating device config");
-    impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     return SDK_RET_OK;
 }
 

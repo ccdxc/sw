@@ -142,7 +142,7 @@ tag_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tag_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+tag_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                       api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     return SDK_RET_OK;

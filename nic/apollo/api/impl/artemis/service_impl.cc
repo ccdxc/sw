@@ -274,8 +274,9 @@ svc_mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
 }
 
 sdk_ret_t
-svc_mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                              api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                              pds_epoch_t epoch, api_op_t api_op,
+                              obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

@@ -21,6 +21,11 @@ namespace api {
 // forward declaration
 class subnet_state;
 
+// attribute update bits for subnet object
+#define PDS_SUBNET_UPD_ROUTE_TABLE         0x1
+#define PDS_SUBNET_UPD_POLICY              0x2
+#define PDS_SUBNET_UPD_HOST_IFINDEX        0x4
+
 /// \defgroup PDS_SUBNET_ENTRY - subnet entry functionality
 /// \ingroup PDS_SUBNET
 /// @{
@@ -56,15 +61,13 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in] api_op    API operation
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief          free h/w resources used by this object, if any
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -77,20 +80,42 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///            bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] subnet    subnet to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(subnet_entry *subnet);
+
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
     ///                 with latest epoch#
     /// \param[in]      orig_obj    old version of the unmodified object
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_config(api_base *orig_obj,
+    virtual sdk_ret_t program_update(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
     /// \param[in]      epoch       epoch being activated
     /// \param[in]      api_op      api operation
     /// \param[in]      obj_ctxt    transient state associated with this API
+    /// \param[in]      orig_obj old/original version of the unmodified object
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
@@ -177,12 +202,34 @@ public:
     /// \brief      return fabric encap of this subnet
     /// \return     fabric encap of this subnet
     pds_encap_t fabric_encap(void) const { return fabric_encap_; }
+
+    /// \brief      return IPv4 route table configured on the subnet
+    /// \return     IPv4 route table this subnet
     pds_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
+
+    /// \brief      return IPv6 route table configured on the subnet
+    /// \return     IPv6 route table this subnet
     pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
+
+    /// \brief      return ingress IPv4 security policy of the subnet
+    /// \return     ingress IPv4 security policy of the subnet
     pds_policy_key_t ing_v4_policy(void) const { return ing_v4_policy_; }
+
+    /// \brief      return ingress IPv6 security policy of the subnet
+    /// \return     ingress IPv6 security policy of the subnet
     pds_policy_key_t ing_v6_policy(void) const { return ing_v6_policy_; }
+
+    /// \brief      return egress IPv4 security policy of the subnet
+    /// \return     egress IPv4 security policy of the subnet
     pds_policy_key_t egr_v4_policy(void) const { return egr_v4_policy_; }
+
+    /// \brief      return egress IPv6 security policy of the subnet
+    /// \return     egress IPv6 security policy of the subnet
     pds_policy_key_t egr_v6_policy(void) const { return egr_v6_policy_; }
+
+    /// \brief      return host interface on which this subnet is deployed
+    /// \return     host interface on which this subnet is deployed
+    pds_ifindex_t host_ifindex(void) const { return host_ifindex_; }
 
     /// \brief     return impl instance of this subnet object
     /// \return    impl instance of the subnet object
@@ -211,6 +258,8 @@ private:
     pds_policy_key_t egr_v4_policy_;          ///< ingress IPv4 policy id
     pds_policy_key_t egr_v6_policy_;          ///< ingress IPv6 policy id
     mac_addr_t vr_mac_;                       ///< virtual router MAC
+    pds_ifindex_t host_ifindex_;              ///< PF/VF attached to this subnet
+
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
     // P4 datapath specific state

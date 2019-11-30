@@ -142,19 +142,29 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
 
         // update the config, by cloning the object, if needed
         if (octxt.cloned_obj == NULL) {
-            // XXX-DEL-ADD or ADD-XXX-DEL-XXX-ADD scenarios, we need to
+            // XXX-DEL-XXX-ADD or ADD-XXX-DEL-XXX-ADD scenarios, we need to
             // differentiate between these two
             if (octxt.api_op == API_OP_UPDATE) {
-                // XXX-DEL-ADD scenario, clone & re-init cfg
+                // XXX-DEL-XXX-ADD scenario, clone & re-init cfg
                 octxt.api_params = api_ctxt->api_params;
                 octxt.cloned_obj = api_obj->clone(api_ctxt);
-                ret = octxt.cloned_obj->init_config(api_ctxt);
+                //ret = octxt.cloned_obj->init_config(api_ctxt);
+                if (unlikely(octxt.cloned_obj == NULL)) {
+                    PDS_TRACE_ERR("Clone failed for obj %s, api op %u",
+                                  api_obj->key2str().c_str(),
+                                  octxt.api_op);
+                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(obj_clone_err, 1);
+                    return SDK_RET_OBJ_CLONE_ERR;
+                }
+                ret = api_obj->compute_update(&octxt);
                 if (unlikely(ret != SDK_RET_OK)) {
-                    PDS_TRACE_ERR("Config initialization failed for obj %s, "
-                                  "id %u, api op %u, err %u",
-                                  api_obj->key2str().c_str(), api_ctxt->obj_id,
-                                  octxt.api_op, ret);
-                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+                    // this create operation resulted in an update of existing
+                    // object, but the update is invalid (e.g., modifying an
+                    // immutable attribute)
+                    PDS_TRACE_ERR("Failed to compute update on %s during create"
+                                  "preprocessing, err %u",
+                                  api_obj->key2str().c_str(), ret);
+                    PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_upd_err, 1);
                     return ret;
                 }
             } else {
@@ -195,6 +205,17 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                               api_obj->key2str().c_str(), api_ctxt->obj_id,
                               octxt.api_op, ret);
                 PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+                return ret;
+            }
+            ret = api_obj->compute_update(&octxt);
+            if (unlikely(ret != SDK_RET_OK)) {
+                // this create operation resulted in an update of existing
+                // object, but the update is invalid (e.g., modifying an
+                // immutable attribute)
+                PDS_TRACE_ERR("Failed to compute update on %s during create"
+                              "preprocessing, err %u",
+                              api_obj->key2str().c_str(), ret);
+                PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_upd_err, 1);
                 return ret;
             }
         }
@@ -286,7 +307,13 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
         obj_ctxt_t& octxt =
             batch_ctxt_.dirty_obj_map.find(api_obj)->second;
         octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
-        SDK_ASSERT(octxt.api_op != API_OP_INVALID);
+        if (octxt.api_op == API_OP_INVALID) {
+            PDS_TRACE_ERR("Unexpected API_OP_INVALID encountered while "
+                          "processing API_OP_UPDATE, obj %s, id %u",
+                          api_obj->key2str().c_str(), api_ctxt->obj_id);
+            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(invalid_op_err, 1);
+            return sdk::SDK_RET_INVALID_OP;
+        }
         if (octxt.cloned_obj == NULL) {
             // XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
             // re-init the object with new config and continue with de-duped
@@ -305,18 +332,35 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
                 PDS_API_PREPROCESS_UPDATE_COUNTER_INC(init_cfg_err, 1);
                 return ret;
             }
+            // compute the updated attrs
+            ret = api_obj->compute_update(&octxt);
+            if (unlikely(ret != SDK_RET_OK)) {
+                // update is invalid (e.g., modifying an immutable attribute)
+                PDS_TRACE_ERR("Failed to compute update on %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                PDS_API_PREPROCESS_UPDATE_COUNTER_INC(invalid_upd_err, 1);
+                return ret;
+            }
         }
     } else {
         // UPD-XXX scenario, update operation is seen 1st time on this
         // object in this batch
         obj_ctxt.api_op = API_OP_UPDATE;
         obj_ctxt.obj_id = api_ctxt->obj_id;
-        obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
         obj_ctxt.api_params = api_ctxt->api_params;
+        obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
+        //ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
+        if (obj_ctxt.cloned_obj == NULL) {
+            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(obj_clone_err, 1);
+            return SDK_RET_OBJ_CLONE_ERR;
+        }
         add_to_dirty_list_(api_obj, obj_ctxt);
-        ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
-        if (ret != SDK_RET_OK) {
-            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(init_cfg_err, 1);
+        ret = api_obj->compute_update(&obj_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            // update is invalid (e.g., modifying an immutable attribute)
+            PDS_TRACE_ERR("Failed to compute update on %s, err %u",
+                          api_obj->key2str().c_str(), ret);
+            PDS_API_PREPROCESS_UPDATE_COUNTER_INC(invalid_upd_err, 1);
             return ret;
         }
     }
@@ -425,10 +469,10 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         break;
 
     case API_OP_CREATE:
-        // call program_config() callback on the object, note that the object
+        // call program_create() callback on the object, note that the object
         // should have been in the s/w db already by this time marked as dirty
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        ret = api_obj->program_config(obj_ctxt);
+        ret = api_obj->program_create(obj_ctxt);
         break;
 
     case API_OP_DELETE:
@@ -446,15 +490,16 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         break;
 
     case API_OP_UPDATE:
-        // call update_config() callback on the cloned object so new config
+        // call program_update() callback on the cloned object so new config
         // can be programmed in the h/w everywhere except stage0, which will
         // be programmed during commit() stage later
         // NOTE: during commit() stage, for update case, we will swap new
         //       obj with old/current one in the all the dbs as well before
         //       activating epoch is activated in h/w stage 0 (and old
         //       object should be freed back)
+        // TODO: we may need to pass the original object also here ??
         SDK_ASSERT(obj_ctxt->cloned_obj != NULL);
-        ret = obj_ctxt->cloned_obj->update_config(api_obj, obj_ctxt);
+        ret = obj_ctxt->cloned_obj->program_update(api_obj, obj_ctxt);
         break;
 
     default:
@@ -593,7 +638,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // programming and clear the dirty flag on the object
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_CREATE,
-                                       obj_ctxt);
+                                       api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         obj_ctxt->hw_dirty = 0;
         del_from_dirty_list_(it, api_obj);
@@ -615,13 +660,14 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // (note that s/w can't access this obj anymore from this point
         //  onwards by doing lookups)
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_DELETE,
-                                       obj_ctxt);
+                                       api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
         if (obj_ctxt->cloned_obj) {
-            obj_ctxt->cloned_obj->delay_delete();
+            api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
+            //obj_ctxt->cloned_obj->delay_delete();
         }
         break;
 
@@ -633,7 +679,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         ret = obj_ctxt->cloned_obj->update_db(api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         ret = obj_ctxt->cloned_obj->activate_config(batch_ctxt_.epoch,
-                                                    API_OP_UPDATE, obj_ctxt);
+                                                    API_OP_UPDATE, api_obj,
+                                                    obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         // enqueue the current (i.e., old) object for delay deletion, note that
         // the current obj is already deleted from the s/w db and swapped with
@@ -647,6 +694,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                 api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
             }
         }
+        // TODO: this shouldn't be soft_delete() as that removes the obj from db
+        // api_base::free(obj_ctxt->obj_id, api_obj);
         api_base::soft_delete(obj_ctxt->obj_id, api_obj);
         break;
 
@@ -733,7 +782,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         // 5. called set_hw_dirty()
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
-            //api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
+            //api_obj->program_create(obj_ctxt);  // TODO: don't see a need for this !!
             obj_ctxt->hw_dirty = 0;
         }
         if (obj_ctxt->cloned_obj) {
@@ -753,15 +802,15 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         // 2. cloned the original object
         // 3. added original object to dirty list
         // 4. updated cloned obj's s/w cfg to cfg specified in latest update
-        // 5. called update_config() on cloned obj
+        // 5. called program_update() on cloned obj
         // 6. called set_hw_dirty() on original object
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
-            // api_obj->program_config(obj_ctxt);
+            // api_obj->program_create(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
-        obj_ctxt->cloned_obj->delay_delete();
+        api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         del_from_dirty_list_(it, api_obj);
         if (api_obj->stateless()) {
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
@@ -849,14 +898,17 @@ api_engine::batch_commit(batch_info_t *batch) {
     impl_base::pipeline_impl()->table_transaction_begin();
 
     PDS_TRACE_INFO("Starting resource reservation phase");
+    // NOTE: by this time, all updates per object are already
+    //       computed and hence we should be able to reserve
+    //       all necessary resources
     ret = resource_reservation_stage_();
     PDS_TRACE_INFO("Finished resource reservation phase");
     if (ret != SDK_RET_OK) {
         goto error;
     }
 
-    // walk over the dirty object list and compute the (aka. puppet) objects
-    // that could be effected because of dirty list objects
+    // walk over the dirty object list and compute the objects that could be
+    // effected because of dirty list objects
     PDS_TRACE_INFO("Starting object dependency computation stage for epoch %u",
                    batch_ctxt_.epoch);
     ret = obj_dependency_computation_stage_();

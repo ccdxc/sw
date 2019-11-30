@@ -101,7 +101,7 @@ mirror_session::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-mirror_session::program_config(obj_ctxt_t *obj_ctxt) {
+mirror_session::program_create(obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -121,20 +121,21 @@ mirror_session::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-mirror_session::read(pds_mirror_session_key_t *key, pds_mirror_session_info_t *info) {
+mirror_session::read(pds_mirror_session_key_t *key,
+                     pds_mirror_session_info_t *info) {
     return impl_->read_hw(this, (impl::obj_key_t *)key,
                           (impl::obj_info_t *)info);
 }
 
 sdk_ret_t
-mirror_session::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mirror_session::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // impl->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mirror_session::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                obj_ctxt_t *obj_ctxt) {
+                                api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 h/w programming for mapping , so nothing to activate
     return sdk::SDK_RET_OK;
 }

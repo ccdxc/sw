@@ -168,8 +168,9 @@ vpc_peer_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
 }
 
 sdk_ret_t
-vpc_peer_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+vpc_peer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                           pds_epoch_t epoch, api_op_t api_op,
+                           obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc1, *vpc2;
     pds_vpc_peer_spec_t *vpc_peer_spec;

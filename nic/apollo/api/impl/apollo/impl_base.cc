@@ -89,6 +89,38 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     return NULL;
 }
 
+sdk_ret_t
+impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
+#if 0
+    switch (obj_id) {
+    case IMPL_OBJ_ID_DEVICE:
+        return device_impl::free((device_impl *)impl);
+
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::free((tep_impl *)impl);
+
+    case IMPL_OBJ_ID_VNIC:
+        return vnic_impl::free((vnic_impl *)impl);
+
+    case IMPL_OBJ_ID_MAPPING:
+        return mapping_impl::free((mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_ROUTE_TABLE:
+        return route_table_impl::free((route_table_impl *)impl);
+
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::free((security_policy_impl *)impl);
+
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        return mirror_impl::free((mirror_impl *)impl);
+
+    default:
+        break;
+    }
+#endif
+    return SDK_RET_INVALID_OP;
+}
+
 impl_base *
 impl_base::build(impl_obj_id_t obj_id, void *key, api_base *api_obj) {
     switch (obj_id) {

@@ -122,7 +122,7 @@ if_entry::nuke_resources_(void) {
 }
 
 sdk_ret_t
-if_entry::program_config(obj_ctxt_t *obj_ctxt) {
+if_entry::program_create(obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -143,15 +143,15 @@ if_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-if_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+if_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;
 }

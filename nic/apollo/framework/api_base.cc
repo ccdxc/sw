@@ -138,6 +138,67 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
     }
 }
 
+sdk_ret_t
+api_base::free(obj_id_t obj_id, api_base *api_obj) {
+    switch (obj_id) {
+#if 0
+    case OBJ_ID_DEVICE:
+        return device_entry::free((device_entry *)api_obj);
+
+    case OBJ_ID_IF:
+        return if_entry::free((if_entry *)api_obj);
+
+    case OBJ_ID_VPC:
+        return vpc_entry::free((vpc_entry *)api_obj);
+#endif
+
+    case OBJ_ID_SUBNET:
+        return subnet_entry::free((subnet_entry *)api_obj);
+
+#if 0
+    case OBJ_ID_TEP:
+        return tep_entry::free((tep_entry *)api_obj);
+
+    case OBJ_ID_VNIC:
+        return vnic_entry::free((vnic_entry *)api_obj);
+
+    case OBJ_ID_MAPPING:
+        return mapping_entry::free((mapping_entry *)api_obj);
+
+    case OBJ_ID_ROUTE_TABLE:
+        return route_table::free((route_table *)api_obj);
+
+    case OBJ_ID_POLICY:
+        return policy::free((policy *)api_obj);
+
+    case OBJ_ID_MIRROR_SESSION:
+        return mirror_session::free((mirror_session *)api_obj);
+
+    case OBJ_ID_METER:
+        return meter_entry::free((meter_entry *)api_obj);
+
+    case OBJ_ID_TAG:
+        return tag_entry::free((tag_entry *)api_obj);
+
+    case OBJ_ID_SVC_MAPPING:
+        return svc_mapping::free((svc_mapping *)api_obj);
+
+    case OBJ_ID_VPC_PEER:
+        return vpc_peer_entry::free((vpc_peer_entry *)api_obj);
+
+    case OBJ_ID_NEXTHOP:
+        return nexthop::free((nexthop *)api_obj);
+
+    case OBJ_ID_NEXTHOP_GROUP:
+        return nexthop_group::free((nexthop_group *)api_obj);
+#endif
+
+    default:
+        break;
+    }
+    return SDK_RET_INVALID_OP;
+}
+
 api_base *
 api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     switch (api_ctxt->obj_id) {

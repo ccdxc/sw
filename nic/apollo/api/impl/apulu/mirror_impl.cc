@@ -202,8 +202,9 @@ mirror_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 }
 
 sdk_ret_t
-mirror_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                         api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+mirror_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                         pds_epoch_t epoch, api_op_t api_op,
+                         obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

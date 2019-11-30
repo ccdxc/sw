@@ -181,7 +181,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
 
 /// \brief VNIC WF_9
 /// \ref WF_9
-TEST_F(vnic_test, vnic_workflow_9) {
+TEST_F(vnic_test, DISABLED_vnic_workflow_9) {
     // todo: enable for artemis when delete is supported
     if (artemis()) return;
 

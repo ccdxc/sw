@@ -155,8 +155,9 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 }
 
 sdk_ret_t
-device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                         api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                         pds_epoch_t epoch, api_op_t api_op,
+                         obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_device_spec_t *spec;
     p4i_device_info_actiondata_t p4i_device_info_data = { 0 };

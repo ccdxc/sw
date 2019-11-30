@@ -117,6 +117,61 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     return NULL;
 }
 
+sdk_ret_t
+impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
+    switch (obj_id) {
+#if 0
+    case IMPL_OBJ_ID_DEVICE:
+        return device_impl::free((device_impl *)impl);
+
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::free((tep_impl *)impl);
+
+    case IMPL_OBJ_ID_IF:
+        return if_impl::free((if_impl *)impl);
+
+    case IMPL_OBJ_ID_VPC:
+        return vpc_impl::free((vpc_impl *)impl);
+#endif
+
+    case IMPL_OBJ_ID_SUBNET:
+        return subnet_impl::free((subnet_impl *)impl);
+
+#if 0
+    case IMPL_OBJ_ID_VNIC:
+        return vnic_impl::free((vnic_impl *)impl);
+
+    case IMPL_OBJ_ID_MAPPING:
+        return mapping_impl::free((mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_ROUTE_TABLE:
+        return route_table_impl::free((route_table_impl *)impl);
+
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::free((security_policy_impl *)impl);
+
+    case IMPL_OBJ_ID_SVC_MAPPING:
+        return svc_mapping_impl::free((svc_mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        return mirror_impl::free((mirror_impl *)impl);
+
+    case IMPL_OBJ_ID_NEXTHOP:
+        return nexthop_impl::free((nexthop_impl *)impl);
+
+    case IMPL_OBJ_ID_NEXTHOP_GROUP:
+        return nexthop_group_impl::free((nexthop_group_impl *)impl);
+
+    case IMPL_OBJ_ID_POLICER:
+        return policer_impl::free((policer_impl *)impl);
+#endif
+
+    default:
+        break;
+    }
+    return SDK_RET_INVALID_OP;
+}
+
 impl_base *
 impl_base::build(impl_obj_id_t obj_id, void *key, api_base *api_obj) {
     switch (obj_id) {

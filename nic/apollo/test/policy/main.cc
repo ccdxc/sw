@@ -258,7 +258,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
 
 /// \brief POLICY WF_9
 /// \ref WF_9
-TEST_F(policy, policy_workflow_9) {
+TEST_F(policy, DISABLED_policy_workflow_9) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A;
 

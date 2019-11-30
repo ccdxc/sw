@@ -60,7 +60,7 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -80,16 +80,18 @@ public:
     /// \param[in]      orig_obj    old version of the unmodified object
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_config(api_base *orig_obj,
+    virtual sdk_ret_t program_update(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          activate the epoch in the dataplane by programming
     ///                 stage 0 tables, if any
     /// \param[in]      epoch       epoch being activated
     /// \param[in]      api_op      api operation
+    /// \param[in]      orig_obj old/original version of the unmodified object
     /// \param          obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add given tag to the database

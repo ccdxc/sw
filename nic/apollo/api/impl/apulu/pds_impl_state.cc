@@ -16,6 +16,12 @@ namespace impl {
 // (singleton) instance of all PDS state in one place
 pds_impl_state g_pds_impl_state;
 
+lif_impl_state *
+lif_impl_db (void)
+{
+    return g_pds_impl_state.lif_impl_db();
+}
+
 /// \defgroup PDS_IMPL_STATE - internal state
 /// \@{
 

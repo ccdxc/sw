@@ -258,7 +258,7 @@ TEST_F(tep_test, DISABLED_tep_workflow_8) {
 
 /// \brief TEP WF_9
 /// \ref WF_9
-TEST_F(tep_test, tep_workflow_9) {
+TEST_F(tep_test, DISABLED_tep_workflow_9) {
     tep_feeder feeder1, feeder1A;
 
     if (artemis()) {

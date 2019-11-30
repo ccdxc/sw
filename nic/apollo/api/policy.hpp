@@ -64,7 +64,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief     release h/w resources reserved for this object, if any
@@ -88,7 +88,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_config(api_base *orig_obj,
+    virtual sdk_ret_t program_update(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
     /**
@@ -96,10 +96,12 @@ public:
      *           tables, if any
      * @param[in] epoch       epoch being activated
      * @param[in] api_op      api operation
+     * @param[in] orig_obj    old/original version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**

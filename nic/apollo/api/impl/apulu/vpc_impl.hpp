@@ -43,6 +43,12 @@ public:
     //       impl->cleanup_hw() before calling this
     static void destroy(vpc_impl *impl);
 
+    /// \brief    clone this object by copying all the h/w resources
+    ///           allocated for this object into new object and return the
+    ///           cloned object
+    /// \return    cloned impl instance
+    virtual impl_base *clone(void) override;
+
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  orig_obj old version of the unmodified object
     /// \param[in]  obj_ctxt transient state associated with this API
@@ -97,13 +103,14 @@ public:
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
+    /// \param[in]  api_obj  (cloned) API object being activated
+    /// \param[in]  orig_obj previous/original unmodified object
     /// \param[in]  epoch    epoch being activated
     /// \param[in]  api_op   api operation
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  pds_epoch_t epoch,
-                                  api_op_t api_op,
+    virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
+                                  pds_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      re-activate config in the hardware stage 0 tables relevant
@@ -144,6 +151,15 @@ private:
     /// \return     #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
                                pds_vpc_spec_t *spec);
+
+    /// \brief      program vpc related tables during vpc update by enabling
+    ///             stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  vpc    vpc obj being programmed
+    /// \param[in]  obj_ctxt transient state associated with this API
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
+                               obj_ctxt_t *obj_ctxt);
 
     /// \brief      program vpc related tables during vpc delete by disabling
     ///             stage0 tables corresponding to the new epoch

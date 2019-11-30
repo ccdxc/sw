@@ -81,7 +81,7 @@ route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-route_table::program_config(obj_ctxt_t *obj_ctxt) {
+route_table::program_create(obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -97,15 +97,15 @@ route_table::release_resources(void) {
 }
 
 sdk_ret_t
-route_table::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+route_table::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                            obj_ctxt_t *obj_ctxt) {
+                             api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating route table %u config", key_.id);
-    return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 void

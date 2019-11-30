@@ -85,7 +85,7 @@ vpc_peer_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_peer_entry::program_config(obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::program_create(obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -105,17 +105,17 @@ vpc_peer_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_peer_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 vpc_peer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                obj_ctxt_t *obj_ctxt) {
+                                api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     pds_vpc_peer_spec_t *spec = &obj_ctxt->api_params->vpc_peer_spec;
     PDS_TRACE_DEBUG("Activating vpc peering (%u, %u) config",
                     spec->vpc1.id, spec->vpc2.id);
-    return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t

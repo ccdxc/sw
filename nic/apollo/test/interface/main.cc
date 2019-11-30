@@ -97,7 +97,7 @@ TEST_F(if_test, DISABLED_if_workflow_8) {
 
 /// \brief Interface WF_9
 /// \ref WF_9
-TEST_F(if_test, if_workflow_9) {
+TEST_F(if_test, DISABLED_if_workflow_9) {
     if_feeder feeder1, feeder1A;
     feeder1.init(1, "80.1.1.1");
     feeder1A.init(1, "80.1.2.1");

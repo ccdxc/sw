@@ -274,7 +274,7 @@ tep_impl::activate_delete_(pds_epoch_t epoch, tep_entry *tep) {
 }
 
 sdk_ret_t
-tep_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+tep_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                       api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;

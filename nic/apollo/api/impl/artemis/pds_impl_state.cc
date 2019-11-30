@@ -16,6 +16,12 @@ namespace impl {
 // (singleton) instance of all PDS state in one place
 pds_impl_state g_pds_impl_state;
 
+lif_impl_state *
+lif_impl_db (void)
+{
+    return g_pds_impl_state.lif_impl_db();
+}
+
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
     artemis_impl_db_ = new artemis_impl_state(state);

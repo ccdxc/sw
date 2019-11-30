@@ -120,6 +120,8 @@ private:
     directmap    *tx_rate_limiter_tbl_;
 };
 
+lif_impl_state *lif_impl_db(void);
+
 /// \@}
 
 }    // namespace impl

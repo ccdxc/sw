@@ -97,7 +97,7 @@ tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 //       and come back and do this h/w programming later, but until that control
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 sdk_ret_t
-tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
+tep_entry::program_create(obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -129,16 +129,16 @@ tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // impl->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           obj_ctxt_t *obj_ctxt) {
+                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+        impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return sdk::SDK_RET_OK;
 }

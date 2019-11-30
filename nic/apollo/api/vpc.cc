@@ -92,37 +92,12 @@ vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_UPDATE:
         return SDK_RET_OK;
-        break;
 
     case API_OP_DELETE:
     default:
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    if (impl_) {
-        return impl_->program_hw(this, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    if (impl_) {
-        return impl_->cleanup_hw(this, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_entry::reprogram_config(api_op_t api_op) {
-    if (impl_) {
-        return impl_->reprogram_hw(this, api_op);
-    }
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -149,44 +124,95 @@ vpc_entry::nuke_resources_(void) {
     return this->release_resources();
 }
 
-sdk_ret_t
-vpc_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+api_base *
+vpc_entry::clone(api_ctxt_t *api_ctxt) {
+    vpc_entry *cloned_vpc;
+
+    cloned_vpc = vpc_db()->alloc();
+    if (cloned_vpc) {
+        new (cloned_vpc) vpc_entry();
+        if (impl_) {
+            cloned_vpc->impl_ = impl_->clone();
+            if (unlikely(cloned_vpc->impl_ == NULL)) {
+                PDS_TRACE_ERR("Failed to clone vpc %u impl", key_.id);
+                goto error;
+            }
+        }
+        cloned_vpc->init_config(api_ctxt);
+        cloned_vpc->hw_id_ = hw_id_;
+    }
+    return cloned_vpc;
+
+error:
+
+    cloned_vpc->~vpc_entry();
+    vpc_db()->free(cloned_vpc);
+    return NULL;
 }
 
 sdk_ret_t
-vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           obj_ctxt_t *obj_ctxt) {
+vpc_entry::program_create(obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
-        return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+        return impl_->program_hw(this, obj_ctxt);
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-vpc_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-vpc_entry::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding vpc %u to db", key_.id);
-    return vpc_db()->insert(this);
-}
-
-sdk_ret_t
-vpc_entry::del_from_db(void) {
-    PDS_TRACE_VERBOSE("Deleting vpc %u from db", key_.id);
-    if (vpc_db()->remove(this)) {
-        return SDK_RET_OK;
+vpc_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->cleanup_hw(this, obj_ctxt);
     }
-    return SDK_RET_ENTRY_NOT_FOUND;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::reprogram_config(api_op_t api_op) {
+    if (impl_) {
+        return impl_->reprogram_hw(this, api_op);
+    }
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+vpc_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
+
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
+                      "on vpc %s", type_, spec->type, key2str());
+        return SDK_RET_INVALID_ARG;
+    }
+    if ((fabric_encap_.type != spec->fabric_encap.type) ||
+        (fabric_encap_.val.value != spec->fabric_encap.val.value)) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"fabric encap\" "
+                      "from %u to %u on vpc %s", pds_encap2str(&fabric_encap_),
+                      pds_encap2str(&spec->fabric_encap));
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->update_hw(orig_obj, this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
+        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_entry::delay_delete(void) {
-    PDS_TRACE_VERBOSE("Delay delete vpc %u", key_.id);
     return delay_delete_to_slab(PDS_SLAB_ID_VPC, this);
 }
 
@@ -197,6 +223,25 @@ vpc_entry::read(pds_vpc_key_t *key, pds_vpc_info_t *info) {
                           (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::add_to_db(void) {
+    return vpc_db()->insert(this);
+}
+
+sdk_ret_t
+vpc_entry::del_from_db(void) {
+    if (vpc_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+vpc_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // TODO: FIXME
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 }    // namespace api

@@ -74,6 +74,21 @@ public:
     /// \param[in] impl      api object being freed
     static void soft_delete(impl_obj_id_t obj_id, impl_base *impl);
 
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] obj_id     object identifier
+    /// \param[in] impl       impl instance object being freed
+    /// \return   SDK_RET_OK or error code
+    static sdk_ret_t free(impl_obj_id_t obj_id, impl_base *impl);
+
+    /// \brief    clone this object by copying all the h/w resources
+    ///           allocated for this object into new object and return the
+    ///           cloned object
+    /// \return    cloned impl instance
+    virtual impl_base *clone(void) {
+        return NULL;
+    }
+
     /// \brief Allocate/reserve h/w resources for this object
     ///
     /// \param[in] orig_obj Old version of the unmodified object
@@ -156,14 +171,14 @@ public:
     /// \brief Activate hardware
     /// Activate the epoch in the dataplane by programming stage 0 tables,
     /// if any
-    /// \param[in] api_obj API object being activated
+    /// \param[in] api_obj cloned API object being activated
+    /// \param[in] orig_obj previous/original unmodified object
     /// \param[in] epoch Epoch being activated
     /// \param[in] api_op API operation
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  pds_epoch_t epoch,
-                                  api_op_t api_op,
+    virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
+                                  pds_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }

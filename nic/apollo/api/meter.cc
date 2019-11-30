@@ -81,7 +81,7 @@ meter_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-meter_entry::program_config(obj_ctxt_t *obj_ctxt) {
+meter_entry::program_create(obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming meter %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -97,14 +97,14 @@ meter_entry::release_resources(void) {
 }
 
 sdk_ret_t
-meter_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+meter_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 meter_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                            obj_ctxt_t *obj_ctxt) {
-    return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+                             api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t

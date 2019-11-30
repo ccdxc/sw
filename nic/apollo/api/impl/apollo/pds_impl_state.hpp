@@ -86,12 +86,6 @@ apollo_impl_db (void)
     return  g_pds_impl_state.apollo_impl_db();
 }
 
-static inline lif_impl_state *
-lif_impl_db (void)
-{
-    return g_pds_impl_state.lif_impl_db();
-}
-
 static inline tep_impl_state *
 tep_impl_db (void)
 {

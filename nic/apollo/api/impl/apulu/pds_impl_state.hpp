@@ -132,12 +132,6 @@ apulu_impl_db (void)
     return  g_pds_impl_state.apulu_impl_db();
 }
 
-static inline lif_impl_state *
-lif_impl_db (void)
-{
-    return g_pds_impl_state.lif_impl_db();
-}
-
 static inline if_impl_state *
 if_impl_db (void)
 {

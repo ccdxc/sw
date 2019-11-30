@@ -104,12 +104,6 @@ artemis_impl_db (void)
     return  g_pds_impl_state.artemis_impl_db();
 }
 
-static inline lif_impl_state *
-lif_impl_db (void)
-{
-    return g_pds_impl_state.lif_impl_db();
-}
-
 static inline vpc_impl_state *
 vpc_impl_db (void)
 {

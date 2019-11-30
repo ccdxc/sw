@@ -260,8 +260,9 @@ cleanup:
 }
 
 sdk_ret_t
-route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                              api_op_t api_op, obj_ctxt_t *obj_ctxt)
+route_table_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                              pds_epoch_t epoch, api_op_t api_op,
+                              obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
     case API_OP_CREATE:

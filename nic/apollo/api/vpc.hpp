@@ -60,7 +60,7 @@ public:
     ///            stage 0 table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object and
     ///                 dependent on other objects except stage 0 table(s),
@@ -76,22 +76,38 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///            bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
     /// \brief     update all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
     ///            with latest epoch#
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_config(api_base *orig_obj,
+    virtual sdk_ret_t program_update(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     activate the epoch in the dataplane by programming
     ///            stage 0 tables, if any
     /// \param[in] epoch    epoch being activated
     /// \param[in] api_op   api operation
+    /// \param[in] orig_obj old/original version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  add given VPC to the database

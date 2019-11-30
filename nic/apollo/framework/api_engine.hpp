@@ -126,22 +126,27 @@ typedef struct api_batch_ctxt_s {
 typedef struct api_counters_s {
     struct {
         struct {
-            uint64_t ok;
-            uint64_t oom_err;
-            uint64_t init_cfg_err;
-            uint64_t obj_exists_err;
-            uint64_t invalid_op_err;
+            uint32_t ok;
+            uint32_t oom_err;
+            uint32_t init_cfg_err;
+            uint32_t obj_clone_err;
+            uint32_t obj_exists_err;
+            uint32_t invalid_op_err;
+            uint32_t invalid_upd_err;
         } create;
         struct {
-            uint64_t ok;
-            uint64_t obj_build_err;
-            uint64_t not_found_err;
+            uint32_t ok;
+            uint32_t obj_build_err;
+            uint32_t not_found_err;
         } del;
         struct {
-            uint64_t ok;
-            uint64_t obj_build_err;
-            uint64_t init_cfg_err;
-            uint64_t not_found_err;
+            uint32_t ok;
+            uint32_t obj_build_err;
+            uint32_t init_cfg_err;
+            uint32_t obj_clone_err;
+            uint32_t not_found_err;
+            uint32_t invalid_op_err;
+            uint32_t invalid_upd_err;
         } upd;
     } preprocess;
 } api_counters_t;

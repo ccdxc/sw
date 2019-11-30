@@ -149,7 +149,7 @@ vpc_impl::activate_vpc_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
 }
 
 sdk_ret_t
-vpc_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                        api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;

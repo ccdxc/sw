@@ -175,8 +175,9 @@ device_impl::program_mytep_(device_entry *device) {
 }
 
 sdk_ret_t
-device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
-                         api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+                         pds_epoch_t epoch, api_op_t api_op,
+                         obj_ctxt_t *obj_ctxt) {
     device_entry *device;
     ip_addr_t ip_addr;
     sdk_ret_t ret = SDK_RET_OK;

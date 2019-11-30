@@ -37,11 +37,16 @@ public:
     ///            impl->cleanup_hw() before calling this
     static void destroy(device_entry *device);
 
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] api_obj    api object being freed
+    /// \return   SDK_RET_OK or error code
+    static sdk_ret_t free(device_entry *api_obj);
+
     /// \brief     initialize device entry with the given config
     /// \param[in] api_ctxt API context carrying the configuration
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
 
     /// \brief     allocate/reserve h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
@@ -58,7 +63,7 @@ public:
     ///            table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override {
         // all configuration is programmed only during activate stage
         // for this object, hence this is a no-op
         return SDK_RET_OK;
@@ -80,7 +85,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        // as program_config() is no-op, cleanup_config() is no-op as well
+        // as program_create() is no-op, cleanup_config() is no-op as well
         return SDK_RET_OK;
     }
 
@@ -89,16 +94,18 @@ public:
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_config(api_base *orig_obj,
+    virtual sdk_ret_t program_update(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
-    /// \param[in] epoch    epoch being activated
+    /// \param[in] epoch epoch/version of new config
     /// \param[in] api_op   api operation
+    /// \param[in] orig_obj old/original version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  add device object to the database

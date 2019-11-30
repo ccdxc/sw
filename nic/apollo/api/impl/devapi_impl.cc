@@ -23,11 +23,12 @@
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
-#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
-
+#include "nic/apollo/api/impl/lif_impl_state.hpp"
 
 namespace api {
 namespace impl {
+
+extern lif_impl_state *lif_impl_db(void);
 
 #define MAX_FILTERS_CLASSIC 32
 

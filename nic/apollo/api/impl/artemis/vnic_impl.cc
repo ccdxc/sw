@@ -480,7 +480,7 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
 }
 
 sdk_ret_t
-vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
+vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                        api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t          ret;
     pds_vnic_spec_t    *spec;

@@ -159,7 +159,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_8) {
 
 /// \brief Subnet WF_9
 /// \ref WF_9
-TEST_F(subnet, subnet_workflow_9) {
+TEST_F(subnet, DISABLED_subnet_workflow_9) {
     pds_subnet_key_t key = {.id = 1};
     subnet_feeder feeder1, feeder1A;
 
@@ -267,7 +267,8 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_6) {
 
 /// \brief Subnet WF_N_7
 /// \ref WF_N_7
-TEST_F(subnet, subnet_workflow_neg_7) {
+/// TODO: enalbe this only for apollo
+TEST_F(subnet, DISABLED_subnet_workflow_neg_7) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
     subnet_feeder feeder1, feeder1A, feeder2;
 

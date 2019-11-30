@@ -313,7 +313,7 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
 
 /// \brief Route table WF_9
 /// \ref WF_9
-TEST_F(route_test, v4v6_route_table_workflow_9) {
+TEST_F(route_test, DISABLED_v4v6_route_table_workflow_9) {
     route_table_feeder feeder1, feeder1A;
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
