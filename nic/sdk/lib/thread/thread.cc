@@ -318,10 +318,8 @@ thread::wait_until_complete(void)
     if (rv != 0) {
         SDK_TRACE_ERR("pthread cancel failed on thread %s", name_);
     }
-    if (res != PTHREAD_CANCELED) {
-        SDK_TRACE_ERR("ptread cancel failed on thread %s", name_);
-    }
-
+    SDK_TRACE_DEBUG("pthread exit code for thread %s is %s", name_,
+                    res == PTHREAD_CANCELED ? "cancelled" : "exit");
     return SDK_RET_OK;
 }
 

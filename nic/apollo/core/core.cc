@@ -352,12 +352,13 @@ threads_stop (void)
     for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
         if (g_thread_store[thread_id] != NULL) {
             // stop the thread
+            PDS_TRACE_DEBUG("Stopping thread %s", g_thread_store[thread_id]->name());
             g_thread_store[thread_id]->stop();
-            PDS_TRACE_DEBUG("Stoppig thread %s", g_thread_store[thread_id]->name());
         }
     }
     for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
         if (g_thread_store[thread_id] != NULL) {
+            PDS_TRACE_DEBUG("Waiting thread %s to exit", g_thread_store[thread_id]->name());
             g_thread_store[thread_id]->wait();
             // free the allocated thread
             sdk::lib::thread::destroy(g_thread_store[thread_id]);

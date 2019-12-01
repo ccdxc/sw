@@ -98,7 +98,9 @@ void
 periodic_thread_cleanup (void *arg)
 {
     // destroy timer wheel
-    sdk::lib::twheel::destroy(g_twheel);
+    // as g_twheel is accessed from linkmgr-ctrl thread,
+    // should move the cleanup after exiting both threads TODO
+    // sdk::lib::twheel::destroy(g_twheel);
 }
 
 //------------------------------------------------------------------------------

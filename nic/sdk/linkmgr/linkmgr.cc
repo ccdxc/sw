@@ -596,11 +596,13 @@ linkmgr_threads_stop (void)
     for (thread_id = 0; thread_id < LINKMGR_THREAD_ID_MAX; thread_id++) {
         if (g_linkmgr_threads[thread_id] != NULL) {
             // stop the thread
+            SDK_TRACE_DEBUG("Stopping thread %s", g_linkmgr_threads[thread_id]->name());
             g_linkmgr_threads[thread_id]->stop();
         }
     }
     for (thread_id = 0; thread_id < LINKMGR_THREAD_ID_MAX; thread_id++) {
         if (g_linkmgr_threads[thread_id] != NULL) {
+            SDK_TRACE_DEBUG("Waiting thread %s to exit", g_linkmgr_threads[thread_id]->name());
             g_linkmgr_threads[thread_id]->wait();
             // free the allocated thread
             sdk::lib::thread::destroy(g_linkmgr_threads[thread_id]);

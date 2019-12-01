@@ -16,7 +16,6 @@
 // user enabled traces at what level, it always prints the traces
 // but with a simple header prepended that tells what level the
 // trace is spwed at ... in reality, you call your favorite logger here
-static char logbuf[2048];
 sdk_trace_level_e g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
 static int
 trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
@@ -24,6 +23,7 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
     va_list args;
     const char *pfx;
     struct timespec tp_;
+    char logbuf[1024];
 
     if (trace_level == sdk::lib::SDK_TRACE_LEVEL_NONE) {
         return 0;

@@ -98,7 +98,9 @@ void
 periodic_thread_cleanup (void *arg)
 {
     // destroy timer wheel
-    sdk::lib::twheel::destroy(g_twheel);
+    // As g_twheel is accessed across threads, cleanup should be
+    // done only after all dependent threads exits. TODO
+    //sdk::lib::twheel::destroy(g_twheel);
 }
 
 //------------------------------------------------------------------------------
