@@ -710,7 +710,7 @@ func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
 		// lifID := resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId()
 		// return lifIDGetName(lifID)
 		return fmt.Sprintf("Enic-%d",
-		                   resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 	case halproto.IfType_IF_TYPE_UPLINK:
 		return fmt.Sprintf("Uplink-%d",
 			// resp.GetSpec().GetIfUplinkInfo().GetPortNum())
