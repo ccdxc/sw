@@ -41,6 +41,28 @@ mirror_impl::soft_delete(mirror_impl *impl) {
     mirror_impl_db()->free(impl);
 }
 
+impl_base *
+mirror_impl::clone(void) {
+    mirror_impl *cloned_impl;
+
+    cloned_impl = mirror_impl_db()->alloc();
+    new (cloned_impl) mirror_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+void
+mirror_impl::destroy(mirror_impl *impl) {
+    mirror_impl::soft_delete(impl);
+}
+
+sdk_ret_t
+mirror_impl::free(mirror_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 mirror_impl *
 mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
     mirror_impl *impl;
@@ -66,11 +88,6 @@ mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
     new (impl) mirror_impl();
     impl->hw_id_ = hw_id;
     return impl;
-}
-
-void
-mirror_impl::destroy(mirror_impl *impl) {
-    mirror_impl::soft_delete(impl);
 }
 
 sdk_ret_t

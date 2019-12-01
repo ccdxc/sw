@@ -43,6 +43,24 @@ tep_impl::destroy(tep_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_TEP_IMPL, impl);
 }
 
+impl_base *
+tep_impl::clone(void) {
+    tep_impl *cloned_impl;
+
+    cloned_impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TEP_IMPL,
+                                         sizeof(tep_impl));
+    new (cloned_impl) tep_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+tep_impl::free(tep_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;

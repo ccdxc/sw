@@ -41,6 +41,24 @@ if_impl::destroy(if_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_IF_IMPL_IMPL, impl);
 }
 
+impl_base *
+if_impl::clone(void) {
+    if_impl *cloned_impl;
+
+    cloned_impl = (if_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_IF_IMPL,
+                                        sizeof(if_impl));
+    new (cloned_impl) if_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+if_impl::free(if_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;

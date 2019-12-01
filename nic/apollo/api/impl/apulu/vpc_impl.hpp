@@ -49,6 +49,12 @@ public:
     /// \return    cloned impl instance
     virtual impl_base *clone(void) override;
 
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] impl impl instance to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(vpc_impl *impl);
+
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  orig_obj old version of the unmodified object
     /// \param[in]  obj_ctxt transient state associated with this API

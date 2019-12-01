@@ -58,6 +58,24 @@ vnic_impl::destroy(vnic_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_VNIC_IMPL, impl);
 }
 
+impl_base *
+vnic_impl::clone(void) {
+    vnic_impl *cloned_impl;
+
+    cloned_impl = (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VNIC_IMPL,
+                                          sizeof(vnic_impl));
+    new (cloned_impl) vnic_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+vnic_impl::free(vnic_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;

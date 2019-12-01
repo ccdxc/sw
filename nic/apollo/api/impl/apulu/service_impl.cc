@@ -75,6 +75,23 @@ svc_mapping_impl::destroy(svc_mapping_impl *impl) {
     svc_mapping_impl::soft_delete(impl);
 }
 
+impl_base *
+svc_mapping_impl::clone(void) {
+    svc_mapping_impl *cloned_impl;
+
+    cloned_impl = svc_mapping_impl_db()->alloc();
+    new (cloned_impl) svc_mapping_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+svc_mapping_impl::free(svc_mapping_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 svc_mapping_impl *
 svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
     return NULL;

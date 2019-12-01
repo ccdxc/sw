@@ -123,6 +123,7 @@ impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
 #if 0
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::free((device_impl *)impl);
+#endif
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::free((tep_impl *)impl);
@@ -132,12 +133,10 @@ impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_VPC:
         return vpc_impl::free((vpc_impl *)impl);
-#endif
 
     case IMPL_OBJ_ID_SUBNET:
         return subnet_impl::free((subnet_impl *)impl);
 
-#if 0
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::free((vnic_impl *)impl);
 
@@ -164,7 +163,6 @@ impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_POLICER:
         return policer_impl::free((policer_impl *)impl);
-#endif
 
     default:
         break;

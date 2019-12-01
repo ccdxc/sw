@@ -65,6 +65,12 @@ vpc_impl::clone(void) {
 }
 
 sdk_ret_t
+vpc_impl::free(vpc_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;

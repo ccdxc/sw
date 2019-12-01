@@ -52,6 +52,25 @@ route_table_impl::destroy(route_table_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
 }
 
+impl_base *
+route_table_impl::clone(void) {
+    route_table_impl*cloned_impl;
+
+    cloned_impl = (route_table_impl *)
+                      SDK_CALLOC(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL,
+                                 sizeof(route_table_impl));
+    new (cloned_impl) route_table_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+route_table_impl::free(route_table_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 // NOTE: reserve_resources() logic is same for both API_OP_CREATE and
 //       API_OP_UPDATE as update doesn't reuse any of the existing resources
 //       for this object

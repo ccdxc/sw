@@ -61,6 +61,23 @@ mapping_impl::destroy(mapping_impl *impl) {
     mapping_impl::soft_delete(impl);
 }
 
+impl_base *
+mapping_impl::clone(void) {
+    mapping_impl *cloned_impl;
+
+    cloned_impl = mapping_impl_db()->alloc();
+    new (cloned_impl) mapping_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+mapping_impl::free(mapping_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     sdk_ret_t ret;

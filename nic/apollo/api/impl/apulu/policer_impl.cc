@@ -62,6 +62,24 @@ policer_impl::destroy(policer_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_POLICER_IMPL, impl);
 }
 
+impl_base *
+policer_impl::clone(void) {
+    policer_impl *cloned_impl;
+
+    cloned_impl = (policer_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_POLICER_IMPL,
+                                             sizeof(policer_impl));
+    new (cloned_impl) policer_impl();
+    // deep copy is not needed as we don't store pointers
+    *cloned_impl = *this;
+    return cloned_impl;
+}
+
+sdk_ret_t
+policer_impl::free(policer_impl *impl) {
+    destroy(impl);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 policer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;

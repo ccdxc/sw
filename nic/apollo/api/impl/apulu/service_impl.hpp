@@ -46,6 +46,18 @@ public:
     //       impl->cleanup_hw() before calling this
     static void destroy(svc_mapping_impl *impl);
 
+    /// \brief    clone this object by copying all the h/w resources
+    ///           allocated for this object into new object and return the
+    ///           cloned object
+    /// \return    cloned impl instance
+    virtual impl_base *clone(void) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] impl impl instance to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(svc_mapping_impl *impl);
+
     /// \brief      instantiate a service mapping impl object based on current
     ///             state
     ///             (sw and/or hw) given its key
