@@ -201,16 +201,18 @@ def Trigger(tc):
  
     ArpPrefix = "/usr/local/sbin/"
 
-    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls /usr/local/sbin/arping")
+    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls %sarping" % ArpPrefix)
     resp = api.Trigger(tc.req)
 
     for cmd in resp.commands:
-        api.Logger.info (cmd.stdout)
-        if cmd.stdout.find("No such file or directory"):
+        api.Logger.info("ls %sarping output stdout: %s, stderr: %s" % (ArpPrefix, cmd.stdout,cmd.stderr))
+        if cmd.stderr.find("No such file or directory")!=-1:
             ArpPrefix = ""
             api.Logger.info("Using the default arping")
+        else:
+            api.Logger.info("Using  %sarping" % ArpPrefix)
 
-    api.Logger.info ("Using the following: %s arping" % ArpPrefix)
+    api.Logger.info("Using the following: %s arping" % ArpPrefix)
 
     tc.ArpPrefix = ArpPrefix
     
