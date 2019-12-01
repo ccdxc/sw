@@ -117,6 +117,7 @@ def triggerArping(w1, w2, tc):
 
     #do arping
 
+    api.Logger.info ("ArpPrefix: %s" %tc.ArpPrefix)
     cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpPrefix, arping_count, w1.ip_address)
     api.Trigger_AddHostCommand(tc.req, w2.node_name, cmd_cookie)
     tc.cmd_cookies.append(cmd_cookie)
@@ -204,8 +205,12 @@ def Trigger(tc):
     resp = api.Trigger(tc.req)
 
     for cmd in resp.commands:
+        api.Logger.info (cmd.stdout)
         if cmd.stdout.find("No such file or directory"):
             ArpPrefix = ""
+            api.Logger.info("Using the default arping")
+
+    api.Logger.info ("Using the following: %s arping" % ArpPrefix)
 
     tc.ArpPrefix = ArpPrefix
     
