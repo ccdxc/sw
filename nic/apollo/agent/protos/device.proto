@@ -35,19 +35,21 @@ enum DeviceOperMode {
 // device configuration
 message DeviceSpec {
   // local IP address in the underlay (i.e. MyTEP IP)
-  types.IPAddress IPAddr      = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress IPAddr           = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // system MAC
-  uint64          MACAddr     = 2;
+  uint64          MACAddr          = 2;
   // IP address of the gateway in the underlay
-  types.IPAddress GatewayIP   = 3;
+  types.IPAddress GatewayIP        = 3;
   // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
-  DeviceProfile   Profile     = 4;
+  DeviceProfile   Profile          = 4;
   // if BridgingEn is true, L2 functionality based on MAC addresses kicks in
-  bool            BridgingEn  = 5;
+  bool            BridgingEn       = 5;
   // if LearningEn is true, MAC and IP learning is enabled
-  bool            LearningEn  = 6;
+  bool            LearningEn       = 6;
+  // enable the control plane stack for overlay routing
+  bool            OverlayRoutingEn = 7;
   // operational mode of the device
-  DeviceOperMode  DevOperMode = 7;
+  DeviceOperMode  DevOperMode      = 8;
 }
 
 // device operational status

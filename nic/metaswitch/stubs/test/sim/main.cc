@@ -222,6 +222,6 @@ main (int argc, char **argv)
     }
 
     // This will start nbase
-    pdsa_stub::init();
+    pdsa_stub::pdsa_init();
 
 }

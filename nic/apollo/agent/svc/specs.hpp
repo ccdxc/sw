@@ -2945,6 +2945,7 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
                                   &api_spec->gateway_ip_addr);
     proto_spec->set_bridgingen(api_spec->bridging_en);
     proto_spec->set_learningen(api_spec->learning_en);
+    proto_spec->set_overlayroutingen(api_spec->overlay_routing_en);
     switch (api_spec->dev_oper_mode) {
     case PDS_DEV_OPER_MODE_BITW:
         proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_BITW);
@@ -3010,6 +3011,7 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     }
     api_spec->bridging_en = proto_spec.bridgingen();
     api_spec->learning_en = proto_spec.learningen();
+    api_spec->overlay_routing_en = proto_spec.overlayroutingen();
     switch (proto_spec.devopermode()) {
     case pds::DEVICE_OPER_MODE_BITW:
         api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;

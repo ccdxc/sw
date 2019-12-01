@@ -32,12 +32,14 @@ typedef enum pds_device_oper_mode_e {
 
 /// \brief device specification
 typedef struct pds_device_s {
-    ip_addr_t              device_ip_addr;  ///< device IP address
-    mac_addr_t             device_mac_addr; ///< device MAC address
-    ip_addr_t              gateway_ip_addr; ///< gateway IP address
-    bool                   bridging_en;     ///< enable or disable L2 functionality
-    bool                   learning_en;     ///< enable or disable L2/IP learning
-    pds_device_oper_mode_t dev_oper_mode;   ///< device operational mode
+    ip_addr_t              device_ip_addr;     ///< device IP address
+    mac_addr_t             device_mac_addr;    ///< device MAC address
+    ip_addr_t              gateway_ip_addr;    ///< gateway IP address
+    bool                   bridging_en;        ///< enable or disable L2 functionality
+    bool                   learning_en;        ///< enable or disable L2/IP learning
+    bool                   overlay_routing_en; ///< enable or disable control plane stack
+                                               ///  for overlay routing
+    pds_device_oper_mode_t dev_oper_mode;      ///< device operational mode
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status

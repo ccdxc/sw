@@ -4,6 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -190,7 +191,14 @@ nbase_init ()
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pdsa_stub::pdsa_stubs_create ();
+    pdsa_stub::pdsa_stubs_create();
+
+    /*************************************************************************/
+    /* Set the thread ready before spinning up nabse                         */
+    /*************************************************************************/
+    if (sdk::lib::thread::current_thread()) {
+        sdk::lib::thread::current_thread()->set_ready(true);
+    }
 
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */

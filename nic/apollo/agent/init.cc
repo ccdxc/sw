@@ -57,7 +57,6 @@ pds_sig_handler (int sig, siginfo_t *info, void *ptr)
         break;
 
     case SIGUSR1:
-        spawn_routing_thread();
         break;
 
     case SIGUSR2:
@@ -305,13 +304,13 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     }
     
     // spawn metaswitch control plane thread
-    // TODO: Triggerred from sig handler for now
-#if 0
     ret = spawn_routing_thread();
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#endif
+    while (!g_routing_thread->ready()) {
+         pthread_yield();
+    }
 
     if (std::getenv("PDS_MOCK_MODE")) {
         agent_state::state()->pds_mock_mode_set(true);

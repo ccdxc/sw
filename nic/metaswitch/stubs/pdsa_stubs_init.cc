@@ -6,11 +6,13 @@
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 
 namespace pdsa_stub {
 
-int init ()
+int pdsa_init ()
 {
     if (!pdsa_stub::state_init()) {
         return -1;
@@ -32,9 +34,13 @@ error:
 
 void *pdsa_thread_init (void *ctxt)
 {
-    if (init() < 0) {
-        SDK_ASSERT("pdsa init failed!");
+    // opting for graceful termination
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+
+    if (pdsa_init() < 0) {
+        SDK_ASSERT("pdsa_init failed!");
     }
+
     return NULL;
 }
 
