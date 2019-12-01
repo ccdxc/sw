@@ -54,6 +54,42 @@ vpc_entry::destroy(vpc_entry *vpc) {
     vpc_db()->free(vpc);
 }
 
+api_base *
+vpc_entry::clone(api_ctxt_t *api_ctxt) {
+    vpc_entry *cloned_vpc;
+
+    cloned_vpc = vpc_db()->alloc();
+    if (cloned_vpc) {
+        new (cloned_vpc) vpc_entry();
+        if (impl_) {
+            cloned_vpc->impl_ = impl_->clone();
+            if (unlikely(cloned_vpc->impl_ == NULL)) {
+                PDS_TRACE_ERR("Failed to clone vpc %u impl", key_.id);
+                goto error;
+            }
+        }
+        cloned_vpc->init_config(api_ctxt);
+        cloned_vpc->hw_id_ = hw_id_;
+    }
+    return cloned_vpc;
+
+error:
+
+    cloned_vpc->~vpc_entry();
+    vpc_db()->free(cloned_vpc);
+    return NULL;
+}
+
+sdk_ret_t
+vpc_entry::free(vpc_entry *vpc) {
+    if (vpc->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_VPC, vpc->impl_);
+    }
+    vpc->~vpc_entry();
+    vpc_db()->free(vpc);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_spec_t *spec = &api_ctxt->api_params->vpc_spec;
@@ -122,32 +158,6 @@ vpc_entry::nuke_resources_(void) {
         impl_->nuke_resources(this);
     }
     return this->release_resources();
-}
-
-api_base *
-vpc_entry::clone(api_ctxt_t *api_ctxt) {
-    vpc_entry *cloned_vpc;
-
-    cloned_vpc = vpc_db()->alloc();
-    if (cloned_vpc) {
-        new (cloned_vpc) vpc_entry();
-        if (impl_) {
-            cloned_vpc->impl_ = impl_->clone();
-            if (unlikely(cloned_vpc->impl_ == NULL)) {
-                PDS_TRACE_ERR("Failed to clone vpc %u impl", key_.id);
-                goto error;
-            }
-        }
-        cloned_vpc->init_config(api_ctxt);
-        cloned_vpc->hw_id_ = hw_id_;
-    }
-    return cloned_vpc;
-
-error:
-
-    cloned_vpc->~vpc_entry();
-    vpc_db()->free(cloned_vpc);
-    return NULL;
 }
 
 sdk_ret_t

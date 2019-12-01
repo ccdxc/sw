@@ -61,6 +61,39 @@ nexthop::destroy(nexthop *nh) {
     nexthop_db()->free(nh);
 }
 
+api_base *
+nexthop::clone(api_ctxt_t *api_ctxt) {
+    nexthop *cloned_nh;
+
+    cloned_nh = nexthop_db()->alloc();
+    if (cloned_nh) {
+        new (cloned_nh) nexthop();
+        cloned_nh->impl_ = impl_->clone();
+        if (unlikely(cloned_nh->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone nexthop %u impl", key_.id);
+            goto error;
+        }
+        cloned_nh->init_config(api_ctxt);
+    }
+    return cloned_nh;
+
+error:
+
+    cloned_nh->~nexthop();
+    nexthop_db()->free(cloned_nh);
+    return NULL;
+}
+
+sdk_ret_t
+nexthop::free(nexthop *nh) {
+    if (nh->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_NEXTHOP, nh->impl_);
+    }
+    nh->~nexthop();
+    nexthop_db()->free(nh);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 nexthop::init_config(api_ctxt_t *api_ctxt) {
     pds_nexthop_spec_t *spec = &api_ctxt->api_params->nexthop_spec;

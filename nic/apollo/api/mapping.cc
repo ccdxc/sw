@@ -63,6 +63,39 @@ mapping_entry::destroy(mapping_entry *mapping) {
     mapping_db()->free(mapping);
 }
 
+api_base *
+mapping_entry::clone(api_ctxt_t *api_ctxt) {
+    mapping_entry *cloned_mapping;
+
+    cloned_mapping = mapping_db()->alloc();
+    if (cloned_mapping) {
+        new (cloned_mapping) mapping_entry();
+        cloned_mapping->impl_ = impl_->clone();
+        if (unlikely(cloned_mapping->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone mapping %s impl", key2str());
+            goto error;
+        }
+        cloned_mapping->init_config(api_ctxt);
+    }
+    return cloned_mapping;
+
+error:
+
+    cloned_mapping->~mapping_entry();
+    mapping_db()->free(cloned_mapping);
+    return NULL;
+}
+
+sdk_ret_t
+mapping_entry::free(mapping_entry *mapping) {
+    if (mapping->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
+    }
+    mapping->~mapping_entry();
+    mapping_db()->free(mapping);
+    return SDK_RET_OK;
+}
+
 mapping_entry *
 mapping_entry::build(pds_mapping_key_t *key) {
     mapping_entry *mapping;

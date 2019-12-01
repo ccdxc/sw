@@ -60,6 +60,39 @@ tep_entry::destroy(tep_entry *tep) {
     tep_db()->free(tep);
 }
 
+api_base *
+tep_entry::clone(api_ctxt_t *api_ctxt) {
+    tep_entry *cloned_tep;
+
+    cloned_tep = tep_db()->alloc();
+    if (cloned_tep) {
+        new (cloned_tep) tep_entry();
+        cloned_tep->impl_ = impl_->clone();
+        if (unlikely(cloned_tep->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone tep %u impl", key_.id);
+            goto error;
+        }
+        cloned_tep->init_config(api_ctxt);
+    }
+    return cloned_tep;
+
+error:
+
+    cloned_tep->~tep_entry();
+    tep_db()->free(cloned_tep);
+    return NULL;
+}
+
+sdk_ret_t
+tep_entry::free(tep_entry *tep) {
+    if (tep->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_TEP, tep->impl_);
+    }
+    tep->~tep_entry();
+    tep_db()->free(tep);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;

@@ -61,6 +61,39 @@ nexthop_group::destroy(nexthop_group *nh_group) {
     nexthop_group_db()->free(nh_group);
 }
 
+api_base *
+nexthop_group::clone(api_ctxt_t *api_ctxt) {
+    nexthop_group *cloned_nh_group;
+
+    cloned_nh_group = nexthop_group_db()->alloc();
+    if (cloned_nh_group) {
+        new (cloned_nh_group) nexthop_group();
+        cloned_nh_group->impl_ = impl_->clone();
+        if (unlikely(cloned_nh_group->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone nexthop group %u impl", key_.id);
+            goto error;
+        }
+        cloned_nh_group->init_config(api_ctxt);
+    }
+    return cloned_nh_group;
+
+error:
+
+    cloned_nh_group->~nexthop_group();
+    nexthop_group_db()->free(cloned_nh_group);
+    return NULL;
+}
+
+sdk_ret_t
+nexthop_group::free(nexthop_group *nh_group) {
+    if (nh_group->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_NEXTHOP_GROUP, nh_group->impl_);
+    }
+    nh_group->~nexthop_group();
+    nexthop_group_db()->free(nh_group);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 nexthop_group::init_config(api_ctxt_t *api_ctxt) {
     pds_nexthop_group_spec_t *spec = &api_ctxt->api_params->nexthop_group_spec;

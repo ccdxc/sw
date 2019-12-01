@@ -40,6 +40,17 @@ public:
     ///        impl->cleanup_hw() before calling this
     static void destroy(meter_entry *meter);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] meter    meter entry to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(meter_entry *meter);
+
     /// \brief          initialize meter entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error

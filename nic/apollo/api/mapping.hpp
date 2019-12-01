@@ -84,6 +84,17 @@ public:
      */
     static void destroy(mapping_entry *mapping);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] mapping    mapping to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(mapping_entry *mapping);
+
     /**
      * @brief    build object given its key from the (sw and/or hw state we
      *           have) and return an instance of the object (this is useful for

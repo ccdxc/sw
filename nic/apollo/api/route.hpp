@@ -46,6 +46,17 @@ public:
      */
     static void destroy(route_table *table);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] table    route table to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(route_table *table);
+
     /**
      * @brief     initialize route table instance with the given config
      * @param[in] api_ctxt API context carrying the configuration

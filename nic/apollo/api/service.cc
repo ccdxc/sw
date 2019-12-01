@@ -59,6 +59,39 @@ svc_mapping::destroy(svc_mapping *mapping) {
     svc_mapping_db()->free(mapping);
 }
 
+api_base *
+svc_mapping::clone(api_ctxt_t *api_ctxt) {
+    svc_mapping *cloned_mapping;
+
+    cloned_mapping = svc_mapping_db()->alloc();
+    if (cloned_mapping) {
+        new (cloned_mapping) svc_mapping();
+        cloned_mapping->impl_ = impl_->clone();
+        if (unlikely(cloned_mapping->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone mapping %s impl", key2str());
+            goto error;
+        }
+        cloned_mapping->init_config(api_ctxt);
+    }
+    return cloned_mapping;
+
+error:
+
+    cloned_mapping->~svc_mapping();
+    svc_mapping_db()->free(cloned_mapping);
+    return NULL;
+}
+
+sdk_ret_t
+svc_mapping::free(svc_mapping *mapping) {
+    if (mapping->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_SVC_MAPPING, mapping->impl_);
+    }
+    mapping->~svc_mapping();
+    svc_mapping_db()->free(mapping);
+    return SDK_RET_OK;
+}
+
 svc_mapping *
 svc_mapping::build(pds_svc_mapping_key_t *key) {
     svc_mapping *mapping;

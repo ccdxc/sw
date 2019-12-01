@@ -39,6 +39,17 @@ public:
     ///        impl->cleanup_hw() before calling this
     static void destroy(mirror_session *ms);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] session    mirror session to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(mirror_session *session);
+
     ///
     /// \brief    build object given its key from the (sw and/or hw state we
     ///           have) and return an instance of the object (this is useful for

@@ -55,6 +55,39 @@ vpc_peer_entry::destroy(vpc_peer_entry *vpc_peer) {
     vpc_peer_db()->free(vpc_peer);
 }
 
+api_base *
+vpc_peer_entry::clone(api_ctxt_t *api_ctxt) {
+    vpc_peer_entry *cloned_vpc_peer;
+
+    cloned_vpc_peer = vpc_peer_db()->alloc();
+    if (cloned_vpc_peer) {
+        new (cloned_vpc_peer) vpc_peer_entry();
+        cloned_vpc_peer->impl_ = impl_->clone();
+        if (unlikely(cloned_vpc_peer->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone vpc peer obj %u impl", key_.id);
+            goto error;
+        }
+        cloned_vpc_peer->init_config(api_ctxt);
+    }
+    return cloned_vpc_peer;
+
+error:
+
+    cloned_vpc_peer->~vpc_peer_entry();
+    vpc_peer_db()->free(cloned_vpc_peer);
+    return NULL;
+}
+
+sdk_ret_t
+vpc_peer_entry::free(vpc_peer_entry *vpc_peer) {
+    if (vpc_peer->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_VPC_PEER, vpc_peer->impl_);
+    }
+    vpc_peer->~vpc_peer_entry();
+    vpc_peer_db()->free(vpc_peer);
+    return SDK_RET_OK;
+}
+
 vpc_peer_entry *
 vpc_peer_entry::build(pds_vpc_peer_key_t *key) {
     return NULL;

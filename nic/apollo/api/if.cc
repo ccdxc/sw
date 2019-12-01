@@ -68,6 +68,39 @@ if_entry::destroy(if_entry *intf) {
     if_db()->free(intf);
 }
 
+api_base *
+if_entry::clone(api_ctxt_t *api_ctxt) {
+    if_entry *cloned_if;
+
+    cloned_if = if_db()->alloc();
+    if (cloned_if) {
+        new (cloned_if) if_entry();
+        cloned_if->impl_ = impl_->clone();
+        if (unlikely(cloned_if->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone intf %u impl", key_.id);
+            goto error;
+        }
+        cloned_if->init_config(api_ctxt);
+    }
+    return cloned_if;
+
+error:
+
+    cloned_if->~if_entry();
+    if_db()->free(cloned_if);
+    return NULL;
+}
+
+sdk_ret_t
+if_entry::free(if_entry *intf) {
+    if (intf->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_IF, intf->impl_);
+    }
+    intf->~if_entry();
+    if_db()->free(intf);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 if_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;

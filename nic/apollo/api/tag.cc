@@ -65,6 +65,39 @@ tag_entry::destroy(tag_entry *tag) {
     tag_db()->free(tag);
 }
 
+api_base *
+tag_entry::clone(api_ctxt_t *api_ctxt) {
+    tag_entry *cloned_tag;
+
+    cloned_tag = tag_db()->alloc();
+    if (cloned_tag) {
+        new (cloned_tag) tag_entry();
+        cloned_tag->impl_ = impl_->clone();
+        if (unlikely(cloned_tag->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone tag %u impl", key_.id);
+            goto error;
+        }
+        cloned_tag->init_config(api_ctxt);
+    }
+    return cloned_tag;
+
+error:
+
+    cloned_tag->~tag_entry();
+    tag_db()->free(cloned_tag);
+    return NULL;
+}
+
+sdk_ret_t
+tag_entry::free(tag_entry *tag) {
+    if (tag->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_TAG, tag->impl_);
+    }
+    tag->~tag_entry();
+    tag_db()->free(tag);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tag_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tag_spec_t    *spec;

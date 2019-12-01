@@ -58,6 +58,39 @@ policer_entry::destroy(policer_entry *policer) {
     policer_db()->free(policer);
 }
 
+api_base *
+policer_entry::clone(api_ctxt_t *api_ctxt) {
+    policer_entry *cloned_policer;
+
+    cloned_policer = policer_db()->alloc();
+    if (cloned_policer) {
+        new (cloned_policer) policer_entry();
+        cloned_policer->impl_ = impl_->clone();
+        if (unlikely(cloned_policer->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone policer %u impl", key_.id);
+            goto error;
+        }
+        cloned_policer->init_config(api_ctxt);
+    }
+    return cloned_policer;
+
+error:
+
+    cloned_policer->~policer_entry();
+    policer_db()->free(cloned_policer);
+    return NULL;
+}
+
+sdk_ret_t
+policer_entry::free(policer_entry *policer) {
+    if (policer->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_POLICER, policer->impl_);
+    }
+    policer->~policer_entry();
+    policer_db()->free(policer);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 policer_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_policer_spec_t *spec = &api_ctxt->api_params->policer_spec;

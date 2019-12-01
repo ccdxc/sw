@@ -61,6 +61,39 @@ mirror_session::destroy(mirror_session *ms) {
     mirror_session_db()->free(ms);
 }
 
+api_base *
+mirror_session::clone(api_ctxt_t *api_ctxt) {
+    mirror_session *cloned_session;
+
+    cloned_session = mirror_session_db()->alloc();
+    if (cloned_session) {
+        new (cloned_session) mirror_session();
+        cloned_session->impl_ = impl_->clone();
+        if (unlikely(cloned_session->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone mirror session %u impl", key_.id);
+            goto error;
+        }
+        cloned_session->init_config(api_ctxt);
+    }
+    return cloned_session;
+
+error:
+
+    cloned_session->~mirror_session();
+    mirror_session_db()->free(cloned_session);
+    return NULL;
+}
+
+sdk_ret_t
+mirror_session::free(mirror_session *session) {
+    if (session->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_MIRROR_SESSION, session->impl_);
+    }
+    session->~mirror_session();
+    mirror_session_db()->free(session);
+    return SDK_RET_OK;
+}
+
 mirror_session *
 mirror_session::build(pds_mirror_session_key_t *key) {
     mirror_session *ms;

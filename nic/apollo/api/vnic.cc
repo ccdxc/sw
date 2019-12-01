@@ -63,6 +63,38 @@ vnic_entry::destroy(vnic_entry *vnic) {
     vnic_db()->free(vnic);
 }
 
+api_base *
+vnic_entry::clone(api_ctxt_t *api_ctxt) {
+    vnic_entry *cloned_vnic;
+
+    cloned_vnic = vnic_db()->alloc();
+    if (cloned_vnic) {
+        new (cloned_vnic) vnic_entry();
+        cloned_vnic->impl_ = impl_->clone();
+        if (unlikely(cloned_vnic->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone vnic %u impl", key_.id);
+            goto error;
+        }
+        cloned_vnic->init_config(api_ctxt);
+    }
+    return cloned_vnic;
+
+error:
+
+    cloned_vnic->~vnic_entry();
+    vnic_db()->free(cloned_vnic);
+    return NULL;
+}
+
+sdk_ret_t
+vnic_entry::free(vnic_entry *vnic) {
+    if (vnic->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_VNIC, vnic->impl_);
+    }
+    vnic->~vnic_entry();
+    vnic_db()->free(vnic);
+    return SDK_RET_OK;
+}
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;

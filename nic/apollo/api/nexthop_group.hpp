@@ -38,6 +38,17 @@ public:
     /// \param[in] nh_group    nexthop group to be freed
     static void destroy(nexthop_group *nh_group);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] nh_group    nexthop group to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(nexthop_group *nh_group);
+
     /// \brief     initialize a nexthop group with the given config
     /// \param[in] api_ctxt API context carrying the configuration
     /// \return    SDK_RET_OK on success, failure status code on error

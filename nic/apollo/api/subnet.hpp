@@ -45,6 +45,17 @@ public:
     ///        impl->cleanup_hw() before calling this
     static void destroy(subnet_entry *subnet);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] subnet    subnet to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(subnet_entry *subnet);
+
     /// \brief          initialize subnet entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -88,17 +99,6 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief    clone this object and return cloned object
-    /// \param[in]    api_ctxt API context carrying object related configuration
-    /// \return       new object instance of current object
-    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
-
-    /// \brief    free all the memory associated with this object without
-    ///           touching any of the databases or h/w etc.
-    /// \param[in] subnet    subnet to be freed
-    /// \return   sdk_ret_ok or error code
-    static sdk_ret_t free(subnet_entry *subnet);
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries

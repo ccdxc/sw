@@ -65,6 +65,39 @@ meter_entry::destroy(meter_entry *meter) {
     meter_db()->free(meter);
 }
 
+api_base *
+meter_entry::clone(api_ctxt_t *api_ctxt) {
+    meter_entry *cloned_meter;
+
+    cloned_meter = meter_db()->alloc();
+    if (cloned_meter) {
+        new (cloned_meter) meter_entry();
+        cloned_meter->impl_ = impl_->clone();
+        if (unlikely(cloned_meter->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone meter %u impl", key_.id);
+            goto error;
+        }
+        cloned_meter->init_config(api_ctxt);
+    }
+    return cloned_meter;
+
+error:
+
+    cloned_meter->~meter_entry();
+    meter_db()->free(cloned_meter);
+    return NULL;
+}
+
+sdk_ret_t
+meter_entry::free(meter_entry *meter) {
+    if (meter->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_METER, meter->impl_);
+    }
+    meter->~meter_entry();
+    meter_db()->free(meter);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 meter_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_meter_spec_t    *spec;

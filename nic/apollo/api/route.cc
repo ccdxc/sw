@@ -65,6 +65,39 @@ route_table::destroy(route_table *rtable) {
     route_table_db()->free(rtable);
 }
 
+api_base *
+route_table::clone(api_ctxt_t *api_ctxt) {
+    route_table *rtable;
+
+    rtable = route_table_db()->alloc();
+    if (rtable) {
+        new (rtable) route_table();
+        rtable->impl_ = impl_->clone();
+        if (unlikely(rtable->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone route table %u impl", key_.id);
+            goto error;
+        }
+        rtable->init_config(api_ctxt);
+    }
+    return rtable;
+
+error:
+
+    rtable->~route_table();
+    route_table_db()->free(rtable);
+    return NULL;
+}
+
+sdk_ret_t
+route_table::free(route_table *rtable) {
+    if (rtable->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_ROUTE_TABLE, rtable->impl_);
+    }
+    rtable->~route_table();
+    route_table_db()->free(rtable);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 route_table::init_config(api_ctxt_t *api_ctxt) {
     pds_route_table_spec_t    *spec;

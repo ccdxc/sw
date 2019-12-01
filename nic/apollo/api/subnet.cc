@@ -65,6 +65,30 @@ subnet_entry::destroy(subnet_entry *subnet) {
     subnet_db()->free(subnet);
 }
 
+api_base *
+subnet_entry::clone(api_ctxt_t *api_ctxt) {
+    subnet_entry *cloned_subnet;
+
+    cloned_subnet = subnet_db()->alloc();
+    if (cloned_subnet) {
+        new (cloned_subnet) subnet_entry();
+        cloned_subnet->impl_ = impl_->clone();
+        if (unlikely(cloned_subnet->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone subnet %u impl", key_.id);
+            goto error;
+        }
+        cloned_subnet->init_config(api_ctxt);
+        cloned_subnet->hw_id_ = hw_id_;
+    }
+    return cloned_subnet;
+
+error:
+
+    cloned_subnet->~subnet_entry();
+    subnet_db()->free(cloned_subnet);
+    return NULL;
+}
+
 sdk_ret_t
 subnet_entry::free(subnet_entry *subnet) {
     if (subnet->impl_) {
@@ -152,30 +176,6 @@ subnet_entry::nuke_resources_(void) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
-}
-
-api_base *
-subnet_entry::clone(api_ctxt_t *api_ctxt) {
-    subnet_entry *cloned_subnet;
-
-    cloned_subnet = subnet_db()->alloc();
-    if (cloned_subnet) {
-        new (cloned_subnet) subnet_entry();
-        cloned_subnet->impl_ = impl_->clone();
-        if (unlikely(cloned_subnet->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone subnet %u impl", key_.id);
-            goto error;
-        }
-        cloned_subnet->init_config(api_ctxt);
-        cloned_subnet->hw_id_ = hw_id_;
-    }
-    return cloned_subnet;
-
-error:
-
-    cloned_subnet->~subnet_entry();
-    subnet_db()->free(cloned_subnet);
-    return NULL;
 }
 
 sdk_ret_t

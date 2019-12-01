@@ -23,17 +23,11 @@ namespace api {
  * @{
  */
 
-/**< @brief    constructor */
 policy::policy() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
 }
 
-/**
- * @brief    factory method to allocate & initialize a security policy instance
- * @param[in] spec    security policy spec
- * @return    new instance of security policy or NULL, in case of error
- */
 policy *
 policy::factory(pds_policy_spec_t *spec) {
     policy    *new_policy;
@@ -56,19 +50,11 @@ policy::factory(pds_policy_spec_t *spec) {
     return new_policy;
 }
 
-/**< @brief    destructor */
 policy::~policy() {
     // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
-/**
- * @brief    release all the s/w & h/w resources associated with this object,
- *           if any, and free the memory
- * @param[in] policy     security policy to be freed
- * NOTE: h/w entries themselves should have been cleaned up (by calling
- *       impl->cleanup_hw() before calling this
- */
 void
 policy::destroy(policy *policy) {
     policy->nuke_resources_();
@@ -79,11 +65,39 @@ policy::destroy(policy *policy) {
     policy_db()->free(policy);
 }
 
-/**
- * @brief     initialize security policy instance with the given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
+api_base *
+policy::clone(api_ctxt_t *api_ctxt) {
+    policy *cloned_policy;
+
+    cloned_policy = policy_db()->alloc();
+    if (cloned_policy) {
+        new (cloned_policy) policy();
+        cloned_policy->impl_ = impl_->clone();
+        if (unlikely(cloned_policy->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone policy %u impl", key_.id);
+            goto error;
+        }
+        cloned_policy->init_config(api_ctxt);
+    }
+    return cloned_policy;
+
+error:
+
+    cloned_policy->~policy();
+    policy_db()->free(cloned_policy);
+    return NULL;
+}
+
+sdk_ret_t
+policy::free(policy *policy) {
+    if (policy->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
+    }
+    policy->~policy();
+    policy_db()->free(policy);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 policy::init_config(api_ctxt_t *api_ctxt) {
     pds_policy_spec_t    *spec;
@@ -96,23 +110,11 @@ policy::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    allocate h/w resources for this object
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
-/**
- * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::program_create(obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming security policy %u", key_.id);
@@ -124,88 +126,45 @@ policy::nuke_resources_(void) {
     return impl_->nuke_resources(this);
 }
 
-/**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::release_resources(void) {
     return impl_->release_resources(this);
 }
 
-/**
- * @brief    cleanup all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
-/**
- * @brief    update all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    activate the epoch in the dataplane by programming stage 0
- *           tables, if any
- * @param[in] epoch       epoch being activated
- * @param[in] api_op      api operation
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
                         api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
-/**
- * @brief    this method is called on new object that needs to replace the
- *           old version of the object in the DBs
- * @param[in] orig_obj    old version of the object being swapped out
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief add security policy to database
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::add_to_db(void) {
     return policy_db()->policy_ht()->insert_with_key(&key_,
                                                            this, &ht_ctxt_);
 }
 
-/**
- * @brief delete security policy from database
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 policy::del_from_db(void) {
     policy_db()->policy_ht()->remove(&key_);
     return SDK_RET_OK;
 }
 
-/**
- * @brief    initiate delay deletion of this object
- */
 sdk_ret_t
 policy::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICY, this);
