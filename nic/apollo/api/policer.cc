@@ -140,8 +140,12 @@ policer_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
 }
 
 sdk_ret_t
-policer_entry::read(pds_policer_key_t *key, pds_policer_info_t *info) {
-    return impl_->read_hw(this, (impl::obj_key_t *)key,
+policer_entry::read(pds_policer_info_t *info) {
+    // fill key and direction
+    info->spec.key = this->key_;
+    info->spec.dir = this->dir_;
+
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                           (impl::obj_info_t *)info);
 }
 

@@ -43,8 +43,6 @@ program_vnic_policer_tx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
                                 P4TBL_ID_VNIC_POLICER_TX,
                                 VNIC_POLICER_TX_VNIC_POLICER_TX_ID, idx, upd);
 }
-#undef vnic_policer_tx_info
-#undef vnic_policer_rx_info
 
 policer_impl *
 policer_impl::factory(pds_policer_spec_t *spec) {
@@ -263,6 +261,11 @@ policer_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                             api_op_t api_op) {
     return SDK_RET_OK;
 }
+
+void
+policer_impl::fill_stats_(pds_policer_stats_t *stats) {
+}
+
 void
 policer_impl::fill_status_(pds_policer_status_t *status) {
     status->hw_id = hw_id_;
@@ -270,13 +273,81 @@ policer_impl::fill_status_(pds_policer_status_t *status) {
 
 sdk_ret_t
 policer_impl::fill_spec_(pds_policer_spec_t *spec) {
-    return SDK_RET_INVALID_OP;
+    p4pd_error_t p4pd_ret;
+    vnic_policer_rx_actiondata_t rx_data;
+    vnic_policer_tx_actiondata_t tx_data;
+    uint64_t rate, burst;
+
+    if (hw_id_ == 0xFFFF) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+
+    if (spec->dir == PDS_POLICER_DIR_INGRESS) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_POLICER_RX, hw_id_,
+                                          NULL, NULL, &rx_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read rx policer table at index %u", hw_id_);
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        memcpy(&rate, rx_data.vnic_policer_rx_info.rate,
+               sizeof(rx_data.vnic_policer_rx_info.rate));
+        memcpy(&burst, rx_data.vnic_policer_rx_info.burst,
+               sizeof(rx_data.vnic_policer_rx_info.burst));
+        if (rx_data.vnic_policer_rx_info.pkt_rate) {
+            spec->type = sdk::POLICER_TYPE_PPS;
+            sdk::policer_token_to_rate(rate, burst,
+                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       &spec->pps, &spec->pps_burst);
+        } else {
+            spec->type = sdk::POLICER_TYPE_BPS;
+            sdk::policer_token_to_rate(rate, burst,
+                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       &spec->bps, &spec->bps_burst);
+        }
+    } else if (spec->dir == PDS_POLICER_DIR_EGRESS) {
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_POLICER_TX, hw_id_,
+                                          NULL, NULL, &tx_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read policer table at index %u", hw_id_);
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+        memcpy(&rate, tx_data.vnic_policer_tx_info.rate,
+               sizeof(tx_data.vnic_policer_tx_info.rate));
+        memcpy(&burst, tx_data.vnic_policer_tx_info.burst,
+               sizeof(tx_data.vnic_policer_tx_info.burst));
+        if (tx_data.vnic_policer_tx_info.pkt_rate) {
+            spec->type = sdk::POLICER_TYPE_PPS;
+            sdk::policer_token_to_rate(rate, burst,
+                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       &spec->pps, &spec->pps_burst);
+        } else {
+            spec->type = sdk::POLICER_TYPE_BPS;
+            sdk::policer_token_to_rate(rate, burst,
+                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       &spec->bps, &spec->bps_burst);
+        }
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 policer_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t rv;
+    pds_policer_info_t *policer = (pds_policer_info_t *)info;
+
+    rv = fill_spec_(&policer->spec);
+    if (rv != sdk::SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read policer %s table entry",
+                      api_obj->key2str().c_str());
+        return rv;
+    }
+    fill_status_(&policer->status);
+    fill_stats_(&policer->stats);
+    return sdk::SDK_RET_OK;
 }
+
+#undef vnic_policer_tx_info
+#undef vnic_policer_rx_info
 
 /// \@}    // end of PDS_POLICER_IMPL
 

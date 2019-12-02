@@ -56,6 +56,16 @@ policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+policer_token_to_rate (uint64_t token_rate, uint64_t token_burst,
+                       uint64_t refresh_interval_us,
+                       uint64_t *rate, uint64_t *burst)
+{
+    *rate = (token_rate * 1000000)/refresh_interval_us;
+    *burst = (token_burst - token_rate);
+    return SDK_RET_OK;
+}
+
 }    // namespace sdk
 
 #endif    // __SDK_QOS_HPP__

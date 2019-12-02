@@ -151,10 +151,9 @@ public:
     virtual sdk_ret_t delay_delete(void) override;
 
     /// \brief          read config
-    /// \param[in]      key pointer to the key object
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policer_key_t *key, pds_policer_info_t *info);
+    sdk_ret_t read(pds_policer_info_t *info);
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {

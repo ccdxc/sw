@@ -39,8 +39,8 @@ typedef struct pds_policer_spec_s {
     pds_policer_dir_t dir;          ///< traffic direction policer is applied on
     union {
         struct {
-            uint32_t pps;           ///< packets per second threshold
-            uint32_t pps_burst;     ///< burst to absorb
+            uint64_t pps;           ///< packets per second threshold
+            uint64_t pps_burst;     ///< burst to absorb
         };
         struct {
             uint64_t bps;           ///< bytes per second threshold

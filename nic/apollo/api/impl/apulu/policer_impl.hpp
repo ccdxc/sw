@@ -161,6 +161,10 @@ private:
     /// \param[out] status status
     void fill_status_(pds_policer_status_t *status);
 
+    /// \brief      populate stats
+    /// \param[out] stats stats
+    void fill_stats_(pds_policer_stats_t *stats);
+
 private:
     uint16_t    hw_id_;    ///< hardware id
 };
