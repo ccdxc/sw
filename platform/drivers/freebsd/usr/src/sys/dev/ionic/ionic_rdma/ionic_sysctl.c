@@ -464,6 +464,7 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 	ionic_u8(ctx, parent, &dev->qp_opcodes, "qp_opcodes", "QP Opcodes");
 	ionic_u8(ctx, parent, &dev->admin_opcodes, "admin_opcodes",
 		 "Admin Opcodes");
+	ionic_u32(ctx, parent, &dev->reset_cnt, "reset_cnt", "Reset Count");
 
 	ionic_u32(ctx, parent, &dev->aq_base, "aq_base", "Admin QID Base");
 	ionic_u32(ctx, parent, &dev->cq_base, "cq_base",

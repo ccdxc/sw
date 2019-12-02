@@ -159,6 +159,7 @@ struct ionic_ibdev {
 
 	struct work_struct	reset_work;
 	bool			reset_posted;
+	u32			reset_cnt;
 
 	struct delayed_work	admin_dwork;
 	struct ionic_aq		**aq_vec;

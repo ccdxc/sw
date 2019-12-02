@@ -47,7 +47,7 @@
  * incompatible if compiled from different sources, or if some other driver
  * happens to be called "ionic".
  */
-#define IONIC_API_VERSION "5"
+#define IONIC_API_VERSION "6"
 
 struct sysctl_oid;
 struct ionic_lif;
@@ -119,6 +119,10 @@ void *ionic_api_get_private(struct ionic_lif *lif, enum ionic_api_prsn prsn);
  * @priv:		Private data or NULL.
  * @reset_cb:		Callback if device has been disabled or reset.
  * @prsn:		Personality to which the private data applies.
+ * @prsn_cnt:		When setting private data, returns the number of
+ *			times since driver load that the personality has
+ *			been set. Useful for tracking the number of resets
+ *			performed on the personality.
  *
  * Set the private data of some kind.  The private data may be, for example, an
  * instance of an rdma device for this lif.
@@ -128,7 +132,8 @@ void *ionic_api_get_private(struct ionic_lif *lif, enum ionic_api_prsn prsn);
  * Return: zero or negative error status.
  */
 int ionic_api_set_private(struct ionic_lif *lif, void *priv,
-        void (*reset_cb)(void *priv), enum ionic_api_prsn prsn);
+        void (*reset_cb)(void *priv), enum ionic_api_prsn prsn,
+        uint32_t *prsn_cnt);
 
 /** ionic_api_get_devinfo - Get device information.
  * @lif:		Handle to lif.

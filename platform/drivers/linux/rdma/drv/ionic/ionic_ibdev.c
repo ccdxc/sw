@@ -7528,7 +7528,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		}
 
 		rc = ionic_api_set_private(work->lif, dev, ionic_kill_ibdev_cb,
-					   IONIC_PRSN_RDMA);
+					   IONIC_PRSN_RDMA, &dev->reset_cnt);
 		if (rc) {
 			netdev_dbg(ndev, "error set private %d\n", rc);
 			ionic_destroy_ibdev(dev);
@@ -7550,7 +7550,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		netdev_dbg(ndev, "unregister ibdev\n");
 
 		ionic_api_set_private(work->lif, NULL, NULL,
-				      IONIC_PRSN_RDMA);
+				      IONIC_PRSN_RDMA, NULL);
 		ionic_destroy_ibdev(dev);
 
 		break;
@@ -7700,7 +7700,7 @@ static void __exit ionic_exit_work(struct work_struct *ws)
 	list_for_each_entry_safe_reverse(dev, dev_next, &ionic_ibdev_list,
 					 driver_ent) {
 		ionic_api_set_private(dev->lif, NULL, NULL,
-				      IONIC_PRSN_RDMA);
+				      IONIC_PRSN_RDMA, NULL);
 		ionic_destroy_ibdev(dev);
 	}
 }

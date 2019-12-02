@@ -352,6 +352,7 @@ struct ionic_lif {
 	bool stay_registered;
 	void *api_private;	/* For RoCE */
 	void (*api_reset_cb)(void *api_private);
+	uint32_t api_private_cnt;
 
 	uint64_t spurious; /* Spurious interrupt counter in legacy mode. */
 

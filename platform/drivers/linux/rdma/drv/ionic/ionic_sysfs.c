@@ -171,6 +171,7 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "rdma_version:\t%u\n", dev->rdma_version);
 	seq_printf(s, "qp_opcodes:\t%u\n", dev->qp_opcodes);
 	seq_printf(s, "admin_opcodes:\t%u\n", dev->admin_opcodes);
+	seq_printf(s, "reset_cnt:\t%u\n", dev->reset_cnt);
 
 	seq_printf(s, "aq_base:\t%u\n", dev->aq_base);
 	seq_printf(s, "cq_base:\t%u\n", dev->cq_base);

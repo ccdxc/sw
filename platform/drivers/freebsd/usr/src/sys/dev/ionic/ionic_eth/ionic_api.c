@@ -99,13 +99,18 @@ EXPORT_SYMBOL_GPL(ionic_api_get_private);
 
 int
 ionic_api_set_private(struct ionic_lif *lif, void *priv,
-    void (*reset_cb)(void *priv), enum ionic_api_prsn prsn)
+    void (*reset_cb)(void *priv), enum ionic_api_prsn prsn, uint32_t *prsn_cnt)
 {
 	if (prsn != IONIC_PRSN_RDMA)
 		return (-EINVAL);
 
 	if (lif->api_private && priv)
 		return (-EBUSY);
+
+	if (!priv)
+		lif->api_private_cnt++;
+	else if (prsn_cnt)
+		*prsn_cnt = lif->api_private_cnt;
 
 	lif->api_private = priv;
 	lif->api_reset_cb = reset_cb;

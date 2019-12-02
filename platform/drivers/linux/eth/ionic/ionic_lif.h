@@ -200,6 +200,7 @@ struct ionic_lif {
 	unsigned int dbid_count;
 	void *api_private;
 	void (*api_reset_cb)(void *api_private);
+	uint32_t api_private_cnt;
 	struct dentry *dentry;
 };
 
