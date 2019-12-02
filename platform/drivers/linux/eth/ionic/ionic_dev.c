@@ -362,37 +362,37 @@ int ionic_set_vf_config(struct ionic *ionic, int vf, u8 attr, u8 *data)
 	case IONIC_VF_ATTR_SPOOFCHK:
 		cmd.vf_setattr.spoofchk = *data;
 		dev_dbg(ionic->dev, "%s: vf %d spoof %d\n",
-			   __func__, vf, *data);
+			__func__, vf, *data);
 		break;
 	case IONIC_VF_ATTR_TRUST:
 		cmd.vf_setattr.trust = *data;
 		dev_dbg(ionic->dev, "%s: vf %d trust %d\n",
-			   __func__, vf, *data);
+			__func__, vf, *data);
 		break;
 	case IONIC_VF_ATTR_LINKSTATE:
 		cmd.vf_setattr.linkstate = *data;
 		dev_dbg(ionic->dev, "%s: vf %d linkstate %d\n",
-			   __func__, vf, *data);
+			__func__, vf, *data);
 		break;
 	case IONIC_VF_ATTR_MAC:
 		ether_addr_copy(cmd.vf_setattr.macaddr, data);
 		dev_dbg(ionic->dev, "%s: vf %d macaddr %pM\n",
-			   __func__, vf, data);
+			__func__, vf, data);
 		break;
 	case IONIC_VF_ATTR_VLAN:
 		cmd.vf_setattr.vlanid = cpu_to_le16(*(u16 *)data);
 		dev_dbg(ionic->dev, "%s: vf %d vlan %d\n",
-			   __func__, vf, *(u16 *)data);
+			__func__, vf, *(u16 *)data);
 		break;
 	case IONIC_VF_ATTR_RATE:
 		cmd.vf_setattr.maxrate = cpu_to_le32(*(u32 *)data);
 		dev_dbg(ionic->dev, "%s: vf %d maxrate %d\n",
-			   __func__, vf, *(u32 *)data);
+			__func__, vf, *(u32 *)data);
 		break;
 	case IONIC_VF_ATTR_STATSADDR:
 		cmd.vf_setattr.stats_pa = cpu_to_le64(*(u64 *)data);
 		dev_dbg(ionic->dev, "%s: vf %d stats_pa 0x%08llx\n",
-			   __func__, vf, *(u64 *)data);
+			__func__, vf, *(u64 *)data);
 		break;
 	default:
 		return -EINVAL;

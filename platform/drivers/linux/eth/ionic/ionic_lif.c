@@ -2155,6 +2155,7 @@ static int ionic_get_vf_config(struct net_device *netdev,
 
 	ivf->vf           = vf;
 	ivf->vlan         = ionic->vf[vf]->vlanid;
+	ivf->qos          = 0;
 	ivf->spoofchk     = ionic->vf[vf]->spoofchk;
 	ivf->linkstate    = ionic->vf[vf]->linkstate;
 	ivf->max_tx_rate  = ionic->vf[vf]->maxrate;
@@ -2167,64 +2168,94 @@ static int ionic_get_vf_config(struct net_device *netdev,
 static int ionic_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
+	int ret;
 
 	if (!(is_zero_ether_addr(mac) || is_valid_ether_addr(mac)))
 		return -EINVAL;
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_MAC, mac);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_MAC, mac);
+	if (!ret)
+		ether_addr_copy(lif->ionic->vf[vf]->macaddr, mac);
+
+	return ret;
 }
 
 static int ionic_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan,
 			     u8 qos, __be16 proto)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
+	int ret;
 
-	if (vlan > 4095 || qos > 7)
+	/* until someday when we support qos */
+	if (qos)
+		return -EINVAL;
+
+	if (vlan > 4095)
 		return -EINVAL;
 
 	if (proto != htons(ETH_P_8021Q))
 		return -EPROTONOSUPPORT;
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_VLAN, (u8 *)&vlan);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_VLAN, (u8 *)&vlan);
+	if (!ret)
+		lif->ionic->vf[vf]->vlanid = vlan;
+
+	return ret;
 }
 
 static int ionic_set_vf_rate(struct net_device *netdev, int vf,
 			     int tx_min, int tx_max)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
+	int ret;
 
 	/* setting the min just seems silly */
 	if (tx_min)
 		return -EINVAL;
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_RATE, (u8 *)&tx_max);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_RATE, (u8 *)&tx_max);
+	if (!ret)
+		lif->ionic->vf[vf]->maxrate = tx_max;
+
+	return ret;
 }
 
 static int ionic_set_vf_spoofchk(struct net_device *netdev, int vf, bool set)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data = set;  /* convert to u8 for config */
+	int ret;
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_SPOOFCHK, &data);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_SPOOFCHK, &data);
+	if (!ret)
+		lif->ionic->vf[vf]->spoofchk = data;
+
+	return ret;
 }
 
 static int ionic_set_vf_trust(struct net_device *netdev, int vf, bool set)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data = set;  /* convert to u8 for config */
+	int ret;
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_TRUST, &data);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_TRUST, &data);
+	if (!ret)
+		lif->ionic->vf[vf]->trusted = data;
+
+	return ret;
 }
 
 static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 data;
+	int ret;
 
 	switch (set) {
 	case IFLA_VF_LINK_STATE_AUTO:
@@ -2238,8 +2269,12 @@ static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 		break;
 	}
 
-	return ionic_set_vf_config(lif->ionic, vf,
-				   IONIC_VF_ATTR_TRUST, &data);
+	ret = ionic_set_vf_config(lif->ionic, vf,
+				  IONIC_VF_ATTR_LINKSTATE, &data);
+	if (!ret)
+		lif->ionic->vf[vf]->linkstate = set;
+
+	return ret;
 }
 
 static int ionic_get_vf_stats(struct net_device *netdev, int vf,
