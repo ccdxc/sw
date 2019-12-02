@@ -32,13 +32,13 @@ subnet_impl *
 subnet_impl::factory(pds_subnet_spec_t *spec) {
     subnet_impl *impl;
 
-    // TODO: move to slab later
     if (spec->fabric_encap.type != PDS_ENCAP_TYPE_VXLAN) {
         PDS_TRACE_ERR("Unknown fabric encap type %u, value %u - only VxLAN "
                       "fabric encap is supported", spec->fabric_encap.type,
                       spec->fabric_encap.val);
         return NULL;
     }
+    // TODO: move to slab later
     impl = (subnet_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_SUBNET_IMPL,
                                      sizeof(subnet_impl));
     new (impl) subnet_impl();

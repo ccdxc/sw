@@ -138,8 +138,7 @@ policy::cleanup_config(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policy::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t

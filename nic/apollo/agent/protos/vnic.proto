@@ -23,20 +23,20 @@ service VnicSvc {
 //       unique across VPCs
 message VnicSpec {
   // unique vnic id
-  uint32          VnicId                = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          VnicId                = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // id of the subnet this vnic belongs to
-  uint32          SubnetId              = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          SubnetId              = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // id of the VPC this vnic belongs to
-  uint32          VPCId                 = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          VPCId                 = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // vnic encap information to be used while sending packets to this vnic
-  types.Encap     VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  types.Encap     VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // overlay MAC of this VNIC
   uint64          MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory"];
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
   bool            SourceGuardEnable     = 6;
   // fabric encap information to be used for traffic originated from this vnic
-  types.Encap     FabricEncap           = 7;
+  types.Encap     FabricEncap           = 7 [(gogoproto.moretags) = "meta:immutable"];
   // Tx/egress mirror session id list, if any
   repeated uint32 TxMirrorSessionId     = 8;
   // Rx/ingress mirror session id list, if any
@@ -66,7 +66,7 @@ message VnicSpec {
   uint32          RxPolicerId           = 19;
   // if a vnic is not marked as primary, DHCP offer sent to such vnics
   // will not have gateway IP, hostname options filled in the DHCP offer
-  bool            Primary               = 20;
+  bool            Primary               = 20 [(gogoproto.moretags) = "meta:immutable"];
   // hostname of the vnic to be returned in the DHCP offer when DHCP policy
   // is enabled on the vnic's subnet
   string          HostName              = 21;

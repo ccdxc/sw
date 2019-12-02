@@ -36,7 +36,7 @@ enum SecurityRuleAction {
 message SecurityRule {
   // stateful rule results in flow/session creation whereas stateless rule
   // will not result in flow creation
-  bool               Stateful = 1;
+  bool               Stateful = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // rule match criteria
   types.RuleMatch    Match    = 2;
   // priority of this rule (lower the numeric value, higher the priority is)
@@ -48,11 +48,11 @@ message SecurityRule {
 // security policy configuration
 message SecurityPolicySpec {
   // unique identifier of security policy
-  uint32                Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32                Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 or IPv6 policy
-  types.IPAF            AddrFamily = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAF            AddrFamily = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // direction in which the policy should be enforced
-  types.RuleDir         Direction  = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.RuleDir         Direction  = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // list of security rules
   repeated SecurityRule Rules      = 4 [(gogoproto.moretags) = "meta:mandatory"];
 }

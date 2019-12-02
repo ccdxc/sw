@@ -19,10 +19,6 @@
 
 namespace api {
 
-/// \@defgroup PDS_ROUTE_TABLE - route table functionality
-/// \@ingroup PDS_ROUTE
-/// \@{
-
 typedef struct route_table_update_ctxt_s {
     route_table *rtable;
     obj_ctxt_t *obj_ctxt;
@@ -51,8 +47,6 @@ route_table::factory(pds_route_table_spec_t *spec) {
 }
 
 route_table::~route_table() {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -114,9 +108,8 @@ route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-route_table::program_create(obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming route table %u", key_.id);
-    return impl_->program_hw(this, obj_ctxt);
+route_table::release_resources(void) {
+    return impl_->release_resources(this);
 }
 
 sdk_ret_t
@@ -125,8 +118,9 @@ route_table::nuke_resources_(void) {
 }
 
 sdk_ret_t
-route_table::release_resources(void) {
-    return impl_->release_resources(this);
+route_table::program_create(obj_ctxt_t *obj_ctxt) {
+    PDS_TRACE_DEBUG("Programming route table %u", key_.id);
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -202,7 +196,5 @@ route_table::add_deps(obj_ctxt_t *obj_ctxt) {
     upd_ctxt.obj_ctxt = obj_ctxt;
     return subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
 }
-
-/// \@}    // end of PDS_ROUTE_TABLE
 
 }    // namespace api

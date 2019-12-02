@@ -51,8 +51,6 @@ subnet_entry::factory(pds_subnet_spec_t *spec) {
 }
 
 subnet_entry::~subnet_entry() {
-    // TODO: fix me
-    // SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -103,11 +101,10 @@ sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
-    PDS_TRACE_DEBUG(
-        "Initializing subnet (vpc %u, subnet %u), v4 pfx %s, v6 pfx %s, "
-        "v4_vr_ip %s, v6_vr_ip %s, vr_mac %s, v4 route table %u, "
-        "v6 route table %u, ingress v4 policy %u, ingress v6 policy %u, "
-        "egress v4 policy %u, egress v6 policy %u vnid %u",
+    PDS_TRACE_VERBOSE(
+        "Initializing subnet (vpc %u, subnet %u), v4/v6 pfx %s/%s,\n"
+        "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
+        "ingress v4/v6 policy %u/%u, egress v4/v6 policy %u/%u, vnid %u",
         spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
         ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
         ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),

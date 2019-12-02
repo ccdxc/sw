@@ -74,6 +74,8 @@ struct obj_ctxt_s {
         cloned_obj = NULL;
         cb_ctxt = NULL;
         upd_bmap = 0;
+        rsvd_rscs = 0;
+        hw_dirty = 0;
     }
 
     bool operator==(const obj_ctxt_s& rhs) const {

@@ -326,15 +326,16 @@ vpc_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 sdk_ret_t
 vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
+    pds_vpc_spec_t *spec;
     p4pd_error_t p4pd_ret;
     vni_actiondata_t vni_data;
     vpc_actiondata_t vpc_data;
     vni_swkey_t vni_key = { 0 };
     vpc_entry *vpc = (vpc_entry *)api_obj;
     sdk_table_api_params_t tparams = { 0 };
-    pds_vpc_info_t *vinfo = (pds_vpc_info_t *) info;
-    pds_vpc_spec_t *spec = &vinfo->spec;
+    pds_vpc_info_t *vpcinfo = (pds_vpc_info_t *)info;
 
+    spec = &vpcinfo->spec;
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, vpc->hw_id(),
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -349,8 +350,8 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     // read the VNI table
     ret = vpc_impl_db()->vni_tbl()->get(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read VNI table for vpc %u, err %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to read VNI table for vpc %u, vnid %u, err %u",
+                      spec->key.id, vni_key.vxlan_1_vni, ret);
         return ret;
     }
 

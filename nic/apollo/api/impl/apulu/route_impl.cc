@@ -311,7 +311,6 @@ route_table_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_route_table_info_t *route_table_info = (pds_route_table_info_t *)info;
 
     fill_status_(&route_table_info->status);
-
     return SDK_RET_OK;
 }
 
