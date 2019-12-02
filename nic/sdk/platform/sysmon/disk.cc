@@ -61,7 +61,7 @@ checkdiskinfo(mondisk_t *disk) {
                 disk->filesystem.c_str(), (double)disk->size / 1024.0,
                 (double)disk->used / 1024.0,
                 (double)disk->available / 1024.0,
-                disk->mounted);
+                disk->mounted.c_str());
         mondisk_map[disk->mounted] = *disk;
     } else {
         const mondisk_t& old_disk = it->second;

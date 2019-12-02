@@ -268,6 +268,11 @@ enum EventTypes {
     NAPLES_PANIC_EVENT              = 512 [(category)    = System,
                                            (severity)    = WARN,
                                            (desc)        = "System panic on the previous boot"];
+
+    NAPLES_POST_DIAG_FAILURE_EVENT  = 513 [(category)    = System,
+                                           (severity)    = WARN,
+                                           (desc)        = "System post diag test failed"];
+
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

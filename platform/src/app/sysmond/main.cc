@@ -141,6 +141,7 @@ main(int argc, char *argv[])
     sysmon_cfg.temp_event_cb = temp_event_cb;
     sysmon_cfg.memory_event_cb = memory_event_cb;
     sysmon_cfg.panic_event_cb = panic_event_cb;
+    sysmon_cfg.postdiag_event_cb = postdiag_event_cb;
     sysmon_cfg.catalog = catalog;
 
     // init the lib

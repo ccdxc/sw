@@ -16,6 +16,7 @@ void temp_event_cb(sdk::platform::sensor::system_temperature_t *temperature,
 void memory_event_cb(uint64_t total_mem, uint64_t available_mem,
                      uint64_t free_mem);
 void panic_event_cb(void);
+void postdiag_event_cb(void);
 void intr_event_cb(const intr_reg_t *reg, const intr_field_t *field);
 sdk_ret_t interrupt_notify(uint64_t reg_id, uint64_t field_id);
 void create_tables(void);

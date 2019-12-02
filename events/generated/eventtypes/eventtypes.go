@@ -377,6 +377,13 @@ func init() {
 		Desc:       "System panic on the previous boot",
 		SuppressMM: false}
 
+	eventTypes[NAPLES_POST_DIAG_FAILURE_EVENT] = &EventTypeAttributes{
+		EType:      NAPLES_POST_DIAG_FAILURE_EVENT.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "System post diag test failed",
+		SuppressMM: false}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:      ROLLOUT_STARTED.String(),
 		Severity:   "info",

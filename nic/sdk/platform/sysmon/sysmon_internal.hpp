@@ -46,6 +46,7 @@ void checktemperature(void);
 void checkdisk(void);
 void checkmemory(void);
 void checkpower(void);
+void checkpostdiag(void);
 
 extern sysmon_cfg_t g_sysmon_cfg;
 

@@ -55,6 +55,12 @@ panic_event_cb ()
 }
 
 void
+postdiag_event_cb ()
+{
+    eventrecorder_postdiag_event_cb();
+}
+
+void
 intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 {
     bool iscattrip = false;

@@ -14,6 +14,7 @@ monfunc_t monfunclist[] = {
     { checktemperature },
     { checkdisk        },
     { checkmemory      },
+    { checkpostdiag    },
     { checkpower       }
 };
 

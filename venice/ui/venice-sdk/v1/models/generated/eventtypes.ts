@@ -62,6 +62,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NAPLES_OVER_TEMP',
     'NAPLES_OVER_TEMP_EXIT',
     'NAPLES_PANIC_EVENT',
+    'NAPLES_POST_DIAG_FAILURE_EVENT',
     'NAPLES_SERVICE_STOPPED',
     'SERVICE_PENDING',
     'SERVICE_RUNNING',
@@ -303,6 +304,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NAPLES_PANIC_EVENT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "System panic on the previous boot",
+  },
+  'NAPLES_POST_DIAG_FAILURE_EVENT' : {
+      "Name": "NAPLES_POST_DIAG_FAILURE_EVENT",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System post diag test failed",
   },
   'NAPLES_SERVICE_STOPPED' : {
       "Name": "NAPLES_SERVICE_STOPPED",

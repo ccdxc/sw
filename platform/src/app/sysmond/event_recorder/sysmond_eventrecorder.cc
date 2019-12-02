@@ -43,3 +43,8 @@ void EventLogger::LogPanicEvent(std::string description)
 {
     this->recorder->event(eventtypes::NAPLES_PANIC_EVENT, description.c_str());
 }
+
+void EventLogger::LogPostdiagEvent(std::string description)
+{
+    this->recorder->event(eventtypes::NAPLES_POST_DIAG_FAILURE_EVENT, description.c_str());
+}

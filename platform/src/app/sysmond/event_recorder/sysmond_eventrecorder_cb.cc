@@ -38,3 +38,9 @@ eventrecorder_panic_event_cb (void)
 {
     EventLogger::getInstance()->LogPanicEvent("Panic occurred on the previous boot");
 }
+
+void
+eventrecorder_postdiag_event_cb (void)
+{
+    EventLogger::getInstance()->LogPostdiagEvent("Post diag test failed on this boot");
+}

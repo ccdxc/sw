@@ -239,6 +239,11 @@
    "Desc": "System panic on the previous boot"
   },
   {
+   "Name": "NAPLES_POST_DIAG_FAILURE_EVENT",
+   "Severity": "warn",
+   "Desc": "System post diag test failed"
+  },
+  {
    "Name": "NAPLES_SERVICE_STOPPED",
    "Severity": "critical",
    "Desc": "Naples service stopped"
