@@ -307,3 +307,12 @@ export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus g
 # ==========================================================================
 P4_DEFS    := -D${P4VER}
 
+# ==========================================================================
+#                        Code-Gen Specific Defs
+# ==========================================================================
+export PEN_IN_DIR          := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd/metrics/templates
+export PEN_OUT_DIR         := ${TOPDIR}/penctl/cmd
+export PDSA_SVC_IN_DIR     := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/templates/svc
+export PDSA_SVC_OUT_DIR    := ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen/svc
+export PDSA_MGMT_IN_DIR    := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/templates/mgmt
+export PDSA_MGMT_OUT_DIR   := ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen/mgmt

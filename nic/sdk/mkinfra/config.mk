@@ -16,12 +16,6 @@ export BLD_SYM_DIR         := ${BLD_ARCH_DIR}/sym
 
 export TMAGENT_PEN_IN_DIR  := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent
 export TMAGENT_PEN_OUT_DIR := ${TOPDIR}/nic/agent/protos/generated/restapi/tmagent
-export PEN_IN_DIR          := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd/metrics/templates
-export PEN_OUT_DIR         := ${TOPDIR}/penctl/cmd
-export PDSA_SVC_IN_DIR     := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/templates/svc
-export PDSA_SVC_OUT_DIR    := ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen/svc
-export PDSA_MGMT_IN_DIR    := ${GOPATH}/src/github.com/pensando/sw/nic/metaswitch/stubs/templates/mgmt
-export PDSA_MGMT_OUT_DIR   := ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen/mgmt
 
 include ${MKINFRA}/config_${ARCH}.mk
 
