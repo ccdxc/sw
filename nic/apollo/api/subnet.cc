@@ -25,7 +25,6 @@ typedef struct subnet_update_ctxt_s {
 } __PACK__ subnet_update_ctxt_t;
 
 subnet_entry::subnet_entry() {
-    // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
     v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
     ing_v4_policy_.id = PDS_POLICY_ID_INVALID;
@@ -98,35 +97,6 @@ subnet_entry::free(subnet_entry *subnet) {
 }
 
 sdk_ret_t
-subnet_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
-
-    PDS_TRACE_VERBOSE(
-        "Initializing subnet (vpc %u, subnet %u), v4/v6 pfx %s/%s,\n"
-        "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
-        "ingress v4/v6 policy %u/%u, egress v4/v6 policy %u/%u, vnid %u",
-        spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
-        ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
-        ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
-        spec->v4_route_table.id, spec->v6_route_table.id,
-        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
-        spec->egr_v4_policy.id, spec->egr_v6_policy.id,
-        spec->fabric_encap.val.vnid);
-
-    key_.id = spec->key.id;
-    vpc_ = spec->vpc;
-    fabric_encap_ = spec->fabric_encap;
-    v4_route_table_.id = spec->v4_route_table.id;
-    v6_route_table_.id = spec->v6_route_table.id;
-    ing_v4_policy_.id = spec->ing_v4_policy.id;
-    ing_v6_policy_.id = spec->ing_v6_policy.id;
-    egr_v4_policy_.id = spec->egr_v4_policy.id;
-    egr_v6_policy_.id = spec->egr_v6_policy.id;
-    memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret = sdk::SDK_RET_OK;
 
@@ -172,6 +142,35 @@ subnet_entry::nuke_resources_(void) {
     if (hw_id_ != 0xFFFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
+
+    PDS_TRACE_VERBOSE(
+        "Initializing subnet (vpc %u, subnet %u), v4/v6 pfx %s/%s,\n"
+        "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
+        "ingress v4/v6 policy %u/%u, egress v4/v6 policy %u/%u, vnid %u",
+        spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
+        ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
+        ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
+        spec->v4_route_table.id, spec->v6_route_table.id,
+        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
+        spec->egr_v4_policy.id, spec->egr_v6_policy.id,
+        spec->fabric_encap.val.vnid);
+
+    key_.id = spec->key.id;
+    vpc_ = spec->vpc;
+    fabric_encap_ = spec->fabric_encap;
+    v4_route_table_.id = spec->v4_route_table.id;
+    v6_route_table_.id = spec->v6_route_table.id;
+    ing_v4_policy_.id = spec->ing_v4_policy.id;
+    ing_v6_policy_.id = spec->ing_v6_policy.id;
+    egr_v4_policy_.id = spec->egr_v4_policy.id;
+    egr_v6_policy_.id = spec->egr_v6_policy.id;
+    memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     return SDK_RET_OK;
 }
 
@@ -253,11 +252,6 @@ subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-subnet_entry::delay_delete(void) {
-    return delay_delete_to_slab(PDS_SLAB_ID_SUBNET, this);
-}
-
 static bool
 vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
@@ -304,6 +298,11 @@ sdk_ret_t
 subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // TODO: FIXME
     return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+subnet_entry::delay_delete(void) {
+    return delay_delete_to_slab(PDS_SLAB_ID_SUBNET, this);
 }
 
 }    // namespace api

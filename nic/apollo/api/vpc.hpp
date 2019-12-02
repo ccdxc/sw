@@ -91,7 +91,7 @@ public:
     ///           attributes of the object on which this API is invoked and the
     ///           attrs provided in the update API call passed in the object
     ///           context (as cloned object + api_params) and compute the upd
-    ///            bitmap (and stash in the object context for later use)
+    ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;

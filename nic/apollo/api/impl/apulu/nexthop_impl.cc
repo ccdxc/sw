@@ -67,19 +67,28 @@ nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
 
-    spec = &obj_ctxt->api_params->nexthop_spec;
-    // for blackhole nexthop we can (re)use PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID
-    if (spec->type != PDS_NH_TYPE_BLACKHOLE) {
-        // reserve an entry in NEXTHOP table
-        ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve entry in nexthop table, err %u",
-                          ret);
-            return ret;
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        spec = &obj_ctxt->api_params->nexthop_spec;
+        // for blackhole nexthop, (re)use PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID
+        if (spec->type != PDS_NH_TYPE_BLACKHOLE) {
+            // reserve an entry in NEXTHOP table
+            ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to reserve entry in NEXTHOP table, "
+                              "err %u", ret);
+                return ret;
+            }
+            hw_id_ = idx;
+        } else {
+            hw_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
         }
-        hw_id_ = idx;
-    } else {
-        hw_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+        break;
+
+    case API_OP_UPDATE:
+        // we will use the same h/w resources as the original object
+    default:
+        break;
     }
     return SDK_RET_OK;
 }
@@ -100,29 +109,13 @@ nexthop_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-nexthop_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-nexthop_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-nexthop_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                     obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
-                               pds_nexthop_spec_t *spec) {
+nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
+                                      pds_nexthop_spec_t *spec) {
     sdk_ret_t ret;
     pds_encap_t encap;
     p4pd_error_t p4pd_ret;
@@ -135,7 +128,7 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         break;
 
     case PDS_NH_TYPE_UNDERLAY:
-        ret = populate_nh_info_(spec, &nh_data);
+        ret = populate_underlay_nh_info_(spec, &nh_data);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -149,8 +142,8 @@ nexthop_impl::activate_create_(pds_epoch_t epoch, nexthop *nh,
         break;
 
     default:
-        PDS_TRACE_ERR("Failed to program NEXTHOP %u, type %u at %u, err %u",
-                      spec->key.id, spec->type, hw_id_, ret);
+        PDS_TRACE_ERR("Failed to activate nexthop %u, unknown nexthop type %u",
+                      spec->key.id, spec->type);
         return SDK_RET_INVALID_ARG;
         break;
     }
@@ -186,8 +179,9 @@ nexthop_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
     switch (api_op) {
     case API_OP_CREATE:
+    case API_OP_UPDATE:
         spec = &obj_ctxt->api_params->nexthop_spec;
-        ret = activate_create_(epoch, (nexthop *)api_obj, spec);
+        ret = activate_create_update_(epoch, (nexthop *)api_obj, spec);
         break;
 
     case API_OP_DELETE:
@@ -195,7 +189,6 @@ nexthop_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         ret = activate_delete_(epoch, (nexthop *)api_obj);
         break;
 
-    case API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;
         break;

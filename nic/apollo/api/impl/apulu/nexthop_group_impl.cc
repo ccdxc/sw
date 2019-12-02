@@ -177,7 +177,7 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
     } else if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
         // program the nexthops first in NEXTHOP table
         for (uint8_t i = 0; i < spec->num_nexthops; i++) {
-            ret = populate_nh_info_(&spec->nexthops[i], &nh_data);
+            ret = populate_underlay_nh_info_(&spec->nexthops[i], &nh_data);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Programming of nexthop %u in NEXTHOP table for "
                               "nexthop group %u failed, err %u",

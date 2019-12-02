@@ -78,7 +78,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      re-program all hardware tables relevant to this object
     ///             except stage 0 table(s), if any and this reprogramming
@@ -97,7 +99,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      update all h/w tables relevant to this object except stage 0
     ///             table(s), if any, by updating packed entries with latest
@@ -106,7 +110,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
@@ -152,13 +158,13 @@ private:
     /// \brief  destructor
     ~nexthop_impl() {}
 
-    /// \brief     program nexthop related tables during create
+    /// \brief     program nexthop related tables during create/update
     /// \param[in] epoch epoch being activated
     /// \param[in] nh    nexthop obj being programmed
     /// \param[in] spec  nexthop configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_create_(pds_epoch_t epoch, nexthop *nh,
-                               pds_nexthop_spec_t *spec);
+    sdk_ret_t activate_create_update_(pds_epoch_t epoch, nexthop *nh,
+                                      pds_nexthop_spec_t *spec);
 
     /// \brief     program nexthop related tables during delete
     /// \param[in] epoch epoch being activated
@@ -183,8 +189,8 @@ private:
 /// in the nexthop P4 table entry
 #define nexthop_info    action_u.nexthop_nexthop_info
 static inline sdk_ret_t
-populate_nh_info_ (pds_nexthop_spec_t *spec,
-                  nexthop_actiondata_t *nh_data)
+populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
+                            nexthop_actiondata_t *nh_data)
 {
     if_entry *intf;
     pds_encap_t encap;
@@ -193,8 +199,8 @@ populate_nh_info_ (pds_nexthop_spec_t *spec,
     nh_data->action_id = NEXTHOP_NEXTHOP_INFO_ID;
     intf = if_db()->find(&spec->l3_if);
     if (!intf) {
-        PDS_TRACE_ERR("Interface not found for nh group %u l3 if %u",
-                      spec->key.id, spec->l3_if.id);
+        PDS_TRACE_ERR("L3 intf %u not found for nh group %u",
+                      spec->l3_if.id, spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
     if (intf->type() != PDS_IF_TYPE_L3) {

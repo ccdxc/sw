@@ -31,22 +31,14 @@ typedef enum pds_nh_type_e {
     PDS_NH_TYPE_UNDERLAY_ECMP = 5,    ///< underlay ECMP nexthop
     PDS_NH_TYPE_PEER_VPC      = 6,    ///< VPC id of the peer VPC
     PDS_NH_TYPE_VNIC          = 7,    ///< vnic nexthop
-    PDS_NH_TYPE_IP            = 8,    ///< native IP route
+    PDS_NH_TYPE_IP            = 8,    ///< native IP route (NOTE: deprecated)
 } pds_nh_type_t;
 
 /// \brief nexthop specification
 typedef struct pds_nexthop_spec_s {
     pds_nexthop_key_t     key;     ///< key
-    pds_nh_type_t         type;    ///< nexthop type
+    pds_nh_type_t         type;    ///< (immutable) nexthop type
     union {
-        // info specific to PDS_NH_TYPE_IP
-        struct {
-            pds_vpc_key_t vpc;     ///< nexthop's (egress VPC)
-            ip_addr_t     ip;      ///< nexthop IP address
-            uint16_t      vlan;    ///< egress vlan encap (for tagged packets)
-            mac_addr_t    mac;     ///< (optional) MAC address if known at
-                                   ///< config time
-        };
         // info specific to PDS_NH_TYPE_OVERLAY
         struct {
             pds_tep_key_t tep;
@@ -57,6 +49,15 @@ typedef struct pds_nexthop_spec_s {
                                            ///< vlan tag and outgoing port
                                            ///< come from this)
             mac_addr_t    underlay_mac;    ///< underlay/outer DMAC (DMACo)
+        };
+        // info specific to PDS_NH_TYPE_IP
+        // NOTE: PDS_NH_TYPE_IP is deprecated
+        struct {
+            pds_vpc_key_t vpc;     ///< nexthop's (egress VPC)
+            ip_addr_t     ip;      ///< nexthop IP address
+            uint16_t      vlan;    ///< egress vlan encap (for tagged packets)
+            mac_addr_t    mac;     ///< (optional) MAC address if known at
+                                   ///< config time
         };
     };
 } __PACK__ pds_nexthop_spec_t;

@@ -24,7 +24,6 @@ namespace api {
 /// @{
 
 nexthop::nexthop() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     impl_ = NULL;
 }
@@ -47,8 +46,6 @@ nexthop::factory(pds_nexthop_spec_t *spec) {
 }
 
 nexthop::~nexthop() {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -95,17 +92,27 @@ nexthop::free(nexthop *nh) {
 }
 
 sdk_ret_t
+nexthop::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return impl_->reserve_resources(this, obj_ctxt);
+}
+
+sdk_ret_t
+nexthop::release_resources(void) {
+    return impl_->release_resources(this);
+}
+
+sdk_ret_t
+nexthop::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
+}
+
+sdk_ret_t
 nexthop::init_config(api_ctxt_t *api_ctxt) {
     pds_nexthop_spec_t *spec = &api_ctxt->api_params->nexthop_spec;
 
     memcpy(&this->key_, &spec->key, sizeof(key_));
     type_ = spec->type;
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-nexthop::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -122,29 +129,30 @@ nexthop::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-nexthop::reprogram_config(api_op_t api_op) {
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
-nexthop::release_resources(void) {
-    return impl_->release_resources(this);
-}
-
-sdk_ret_t
-nexthop::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
-}
-
-sdk_ret_t
 nexthop::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
+nexthop::reprogram_config(api_op_t api_op) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+nexthop::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
+
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u",
+                      " on nexthop %u", type_, spec->type, spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 nexthop::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -169,11 +177,6 @@ nexthop::read(pds_nexthop_key_t *key, pds_nexthop_info_t *info) {
 }
 
 sdk_ret_t
-nexthop::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 nexthop::add_to_db(void) {
     PDS_TRACE_VERBOSE("Adding nexthop %u to db", key_);
     return nexthop_db()->insert(this);
@@ -185,6 +188,11 @@ nexthop::del_from_db(void) {
         return SDK_RET_OK;
     }
     return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+nexthop::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

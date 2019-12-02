@@ -54,16 +54,16 @@ message UnderlayNhSpec {
 // nexthop specification
 message NexthopSpec {
   // unique nexthop id
-  uint32          Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32           Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // nexthop can be one of different types
   oneof nhinfo {
-    // TODO: check why IPNhSpec is needed separately ??
-    // IP nexthop is used when VTEP IP is to be resolved by PDS
-    IPNhSpec       IPNhInfo       = 2;
     // Tunnel/TEP member is used for overlay routing
-    uint32         TunnelId       = 3;
+    uint32         TunnelId       = 2;
     // Underlay nexthop info is used for a resolved underlay IP
-    UnderlayNhSpec UnderlayNhInfo = 4;
+    UnderlayNhSpec UnderlayNhInfo = 3;
+    // IP nexthop is used when VTEP IP is to be resolved by PDS
+    // NOTE: IP nexthop is now deprecated
+    IPNhSpec       IPNhInfo       = 4;
   }
 }
 

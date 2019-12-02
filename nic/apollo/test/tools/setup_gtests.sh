@@ -14,7 +14,7 @@ export HAL_CONFIG_PATH=${NICDIR}/conf
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 export PATH=${PATH}:${BUILD_DIR}/bin
 export VAL_CMD=valgrind
-# export GDB='gdb --args'
+#export GDB='gdb --args'
 
 function finish () {
     # auto invoked on any exit
@@ -37,15 +37,16 @@ function run_gtest () {
     for cmdargs in "$@"
     do
         arg=$(echo $cmdargs | cut -f1 -d=)
-        val=$(echo $cmdargs | cut -f2 -d=)   
+        val=$(echo $cmdargs | cut -f2 -d=)
         case "$arg" in
             LOG) TEST_LOG=${val};;
-            CFG) TEST_CFG=${val};;     
-            *)   
-        esac    
+            CFG) TEST_CFG=${val};;
+            *)
+        esac
     done
     echo "`date +%x_%H:%M:%S:%N` : Running ${TEST_NAME}  > ${TEST_LOG} "
-    $GDB ${TEST_NAME} -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml" > ${TEST_LOG}
+    ${TEST_NAME} -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml" > ${TEST_LOG}
+    #$GDB ${TEST_NAME} -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml"
     [[ $? -ne 0 ]] && echo "${TEST_NAME} failed!" && exit 1
     return 0
 }
@@ -65,11 +66,11 @@ function run_valgrind_gtest () {
     for cmdargs in "$@"
     do
         arg=$(echo $cmdargs | cut -f1 -d=)
-        val=$(echo $cmdargs | cut -f2 -d=)   
+        val=$(echo $cmdargs | cut -f2 -d=)
         case "$arg" in
-            CFG) TEST_CFG=${val};;     
-            *)   
-        esac    
+            CFG) TEST_CFG=${val};;
+            *)
+        esac
     done
     echo "`date +%x_%H:%M:%S:%N` : Running ${TEST_NAME} > ${TEST_LOG} "
     ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${TEST_LOG} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/${PIPELINE}/bin/apollo_scale_test -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml"
