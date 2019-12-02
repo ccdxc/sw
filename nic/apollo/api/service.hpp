@@ -65,11 +65,6 @@ public:
     /// \param[in] mapping     service mapping to be freed
     static void soft_delete(svc_mapping *mapping);
 
-    /// \brief     initialize service mapping entry with the given config
-    /// \param[in] api_ctxt API context carrying the configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj    old version of the unmodified object
     /// \param[in] obj_ctxt    transient state associated with this API
@@ -77,24 +72,20 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     free h/w resources used by this object, if any
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
+    /// \brief     initialize service mapping entry with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
     /// \brief    program all h/w tables relevant to this object except stage 0
     ///           table(s), if any
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          reprogram all h/w tables relevant to this object and
-    ///                 dependent on other objects except stage 0 table(s),
-    ///                 if any
-    /// \param[in] api_op    API operation
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
-        return SDK_RET_INVALID_OP;
-    }
-
-    /// \brief     free h/w resources used by this object, if any
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
 
     /// \brief    cleanup all h/w tables relevant to this object except stage 0
     ///           table(s), if any, by updating packed entries with latest
@@ -102,6 +93,25 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
+        // this object is not affected by other objects
+        return SDK_RET_OK;
+    }
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    update all h/w tables relevant to this object except stage 0
     ///           table(s), if any, by updating packed entries with latest
@@ -133,7 +143,7 @@ public:
     ///       object list
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
                                         api_op_t api_op) override {
-        return SDK_RET_INVALID_OP;
+        return SDK_RET_OK;
     }
 
     /// \brief    add given service mapping to the database
@@ -161,7 +171,8 @@ public:
     ///                           processing
     /// \return       SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_INVALID_OP;
+        // no other objects are affected when this object is updated
+        return SDK_RET_OK;
     }
 
     /// \brief    return stringified key of the object (for debugging)
@@ -201,8 +212,9 @@ private:
 
 private:
     pds_svc_mapping_key_t key_; ///< key of this service mapping
+
     ht_ctxt_t ht_ctxt_;         ///< hash table context
-    impl_base    *impl_;        ///< impl object instance
+    impl_base *impl_;           ///< impl object instance
     /// svc_mapping_state is friend of svc_mapping
     friend class svc_mapping_state;
 } __PACK__;

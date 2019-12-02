@@ -191,33 +191,7 @@ subnet_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                        obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
-    p4pd_error_t p4pd_ret;
-    bd_actiondata_t bd_data;
-    subnet_entry *subnet = (subnet_entry *)curr_obj;
-    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
-
-    // read the BD table in the egress pipe
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, hw_id_,
-                                       NULL, NULL, &bd_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read BD table at index %u", hw_id_);
-        return sdk::SDK_RET_HW_READ_ERR;
-    }
-
-    // update the contents of that entry
-    bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
-    bd_data.bd_info.tos = spec->tos;
-    memcpy(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
-    PDS_TRACE_DEBUG("Updating BD table at %u with vni %u",
-                    hw_id_, bd_data.bd_info.vni);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_BD, hw_id_,
-                                       NULL, NULL, &bd_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to udpate BD table at index %u", hw_id_);
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-    return sdk::SDK_RET_OK;
+    return program_hw(curr_obj, obj_ctxt);
 }
 
 sdk_ret_t

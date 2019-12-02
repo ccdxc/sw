@@ -56,11 +56,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(subnet_entry *subnet);
 
-    /// \brief          initialize subnet entry with the given config
-    /// \param[in]      api_ctxt API context carrying the configuration
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief          allocate h/w resources for this object
     /// \param[in]      orig_obj    old version of the unmodified object
     /// \param[in]      obj_ctxt    transient state associated with this API
@@ -68,21 +63,20 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief          free h/w resources used by this object, if any
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
+    /// \brief          initialize subnet entry with the given config
+    /// \param[in]      api_ctxt API context carrying the configuration
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
     /// \brief          program all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          reprogram all h/w tables relevant to this object except
-    ///                 stage 0 table(s), if any
-    /// \param[in] api_op    API operation
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
-
-    /// \brief          free h/w resources used by this object, if any
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
 
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -90,6 +84,12 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          reprogram all h/w tables relevant to this object except
+    ///                 stage 0 table(s), if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the

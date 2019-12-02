@@ -33,10 +33,11 @@ message SvcKey {
 // service mapping specification
 message SvcMappingSpec {
   // key to identify the service
-  SvcKey          Key        = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  SvcKey          Key        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // service IP (aka. VIP)
   types.IPAddress IPAddr     = 3 [(gogoproto.moretags) = "meta:mandatory"];
-  // L4 port where service is hosted
+  // L4 port where service is hosted, if this port is given as 0 no port
+  // rewrite will be done and the incoming port will be carried as-is
   uint32          SvcPort    = 4 [(gogoproto.moretags) = "meta:mandatory, meta:range:1-65535"];
   // provider/underlay IP corresponding to the overlay IP of the backend
   types.IPAddress ProviderIP = 5;

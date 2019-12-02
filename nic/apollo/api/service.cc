@@ -1,10 +1,11 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    service.cc
- *
- * @brief   service mapping entry handling
- */
+//
+// Copyright (c) 2019 Pensando Systems, Inc.
+//----------------------------------------------------------------------------
+///
+/// \file
+/// service mapping entry handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -15,12 +16,6 @@
 #include "nic/apollo/framework/api_params.hpp"
 
 namespace api {
-
-/**
- * @defgroup PDS_SVC_MAPPING - mapping entry functionality
- * @ingroup PDS_SERVICE
- * @{
- */
 
 svc_mapping::svc_mapping() {
     stateless_ = true;
@@ -121,27 +116,9 @@ svc_mapping::soft_delete(svc_mapping *mapping) {
     svc_mapping_db()->free(mapping);
 }
 
-sdk_ret_t
-svc_mapping::init_config(api_ctxt_t *api_ctxt) {
-    pds_svc_mapping_spec_t *spec = &api_ctxt->api_params->svc_mapping_spec;
-
-    memcpy(&key_, &spec->key, sizeof(pds_svc_mapping_key_t));
-    return SDK_RET_OK;
-}
-
  sdk_ret_t
 svc_mapping::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
-}
-
-sdk_ret_t
-svc_mapping::program_create(obj_ctxt_t *obj_ctxt) {
-    return impl_->program_hw(this, obj_ctxt);
-}
-
-sdk_ret_t
-svc_mapping::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
 }
 
 sdk_ret_t
@@ -150,13 +127,39 @@ svc_mapping::release_resources(void) {
 }
 
 sdk_ret_t
+svc_mapping::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
+}
+
+sdk_ret_t
+svc_mapping::init_config(api_ctxt_t *api_ctxt) {
+    pds_svc_mapping_spec_t *spec = &api_ctxt->api_params->svc_mapping_spec;
+
+    memcpy(&key_, &spec->key, sizeof(pds_svc_mapping_key_t));
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+svc_mapping::program_create(obj_ctxt_t *obj_ctxt) {
+    return impl_->program_hw(this, obj_ctxt);
+}
+
+sdk_ret_t
 svc_mapping::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
+svc_mapping::compute_update(obj_ctxt_t *obj_ctxt) {
+    // we can compare the (VIP, svc port) and optimize for no update case in
+    // future but ideally we shouldn't hit that case as agent/controller
+    // shouldn't come down to HAL in such cases
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 svc_mapping::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -169,13 +172,6 @@ sdk_ret_t
 svc_mapping::read(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info) {
     return impl_->read_hw(this, (impl::obj_key_t *)key,
                           (impl::obj_info_t *)info);
-}
-
-sdk_ret_t
-svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // service mappings are not added to s/w db, so its a no-op, however, since
-    // update operation is not supported on this object, we shouldn't endup here
-    return sdk::SDK_RET_INVALID_OP;
 }
 
 // even though mapping object is stateless, we need to temporarily insert
@@ -195,10 +191,15 @@ svc_mapping::del_from_db(void) {
 }
 
 sdk_ret_t
+svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // service mappings are not added to s/w db, so its a no-op, however, since
+    // update operation is not supported on this object, we shouldn't endup here
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 svc_mapping::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_SVC_MAPPING, this);
 }
-
-/** @} */    // end of PDS_SVC_MAPPING
 
 }    // namespace api

@@ -807,6 +807,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
+            // TODO: isn't this needed ?
             // api_obj->program_create(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
