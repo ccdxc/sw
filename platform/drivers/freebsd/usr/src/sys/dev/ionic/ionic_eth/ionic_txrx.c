@@ -3114,7 +3114,7 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			ionic_reset_stats_sysctl, "I",
 			"Reset driver, firmware and port statistics");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "rdma_sniffer",
-			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_rdma_sniffer_sysctl, "I",
 			"Enable/Disable RDMA sniffer mode");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
