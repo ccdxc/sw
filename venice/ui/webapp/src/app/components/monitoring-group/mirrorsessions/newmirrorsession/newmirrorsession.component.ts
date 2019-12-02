@@ -5,7 +5,8 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
 import { Animations } from '@app/animations';
 import {
   IMonitoringMirrorSession, MonitoringMirrorSession, ILabelsRequirement,
-  MonitoringMirrorSessionSpec, MonitoringMirrorCollector, MonitoringMatchRule
+  MonitoringMirrorSessionSpec, MonitoringMirrorCollector, MonitoringMatchRule,
+  MonitoringMirrorSessionSpec_packet_filters
 } from '@sdk/v1/models/generated/monitoring';
 import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -92,6 +93,14 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   postNgInit(): void {
     this.getSecurityApps();
+
+    // currently backend does not support any drop packets
+    // UI temporarily drop those choices.
+    // once they are supported, pls remove the next lines
+    this.packetFilterOptions = this.packetFilterOptions.filter(item =>
+      item.value === MonitoringMirrorSessionSpec_packet_filters['all-packets']
+    );
+
     this.labelData = [
       {
         key: { label: 'text', value: '' },
@@ -153,9 +162,12 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isMirrorsessionNameValid(this.existingObjects)]);
 
+    // due to currently backend does not support all drops, comment out next lines
+    /*
     this.newObject.$formGroup.get(['spec', 'packet-filters']).setValidators([
       Validators.required,
       this.packetFiltersValidator()]);
+    */
 
     // Add one collectors if it doesn't already have one
     const collectors = this.newObject.$formGroup.get(['spec', 'collectors']) as FormArray;
@@ -169,6 +181,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     }
   }
 
+  // due to currently backend does not support all drops, comment out next lines
+  /*
   getPacketFiltersTooltip(): string {
     const packetFiltersField: FormControl =
       this.newObject.$formGroup.get(['spec', 'packet-filters']) as FormControl;
@@ -180,6 +194,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     }
     return '';
   }
+  */
 
   isFieldEmpty(field: AbstractControl): boolean {
     return Utility.isEmpty(field.value);
@@ -191,10 +206,13 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       return false;
     }
 
+    // due to currently backend does not support all drops, comment out next lines
+    /*
     if (!this.newObject.$formGroup.get(['spec', 'packet-filters']).valid) {
       this.createButtonTooltip = PACKET_FILTERS_ERRORMSG;
       return false;
     }
+    */
 
     const collectors = this.controlAsFormArray(
       this.newObject.$formGroup.get(['spec', 'collectors'])).controls;
@@ -233,6 +251,11 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
           'Error: Rule ' + (i + 1) + ' protocol/ports are invalid.';
         return false;
       }
+    }
+
+    if (this.areAllRulesEmpty()) {
+      this.createButtonTooltip = 'At least one match rule must be specified.';
+      return false;
     }
 
     if (!this.newObject.$formGroup.valid) {
@@ -360,9 +383,12 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   addRule() {
     const rule = new MonitoringMatchRule();
+    // due to currently backend does not support all drops, comment out next lines
+    /*
     rule.$formGroup.valueChanges.subscribe(() => {
       this.newObject.$formGroup.get(['spec', 'packet-filters']).updateValueAndValidity();
     });
+    */
     this.rules.push({
       id: Utility.s4(),
       data: { rule: rule, selectedProtoAppOption: this.PROTO_PORTS_OPTION },

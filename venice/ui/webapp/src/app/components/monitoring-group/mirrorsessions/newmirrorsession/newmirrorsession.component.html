@@ -68,8 +68,6 @@
                      appendTo="body"
                      formControlName="packet-filters" [filter]="false" [showToggleAll]="false"
                      [showHeader]="false"
-                     [pTooltip]="getPacketFiltersTooltip()" tooltipPosition="bottom"
-                     tooltipStyleClass="newmirrorsession-packet-error-tooltip"
                      defaultLabel="All" [options]="packetFilterOptions">
       </p-multiSelect>
     </div>
@@ -84,18 +82,20 @@
       <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
            *ngFor="let collector of controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).controls; index as index;">
         <div fxFlex="none" fxLayout="row" fxLayoutAlign="start start">
+          <!-- temporarily hide next part because right now only one coolect is allowed
           <div fxFlex="none" class="newmirrorsession-collector-indexLabel">#{{index + 1}}</div>
+          -->
           <div fxFlex="5px"></div>
           <div fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="newmirrorsession-collector-label">Type:</div>
-            <p-dropdown class="newmirrorsession-collector-inputbox" appendTo="body"
+            <p-dropdown class="newmirrorsession-general-inputbox" appendTo="body"
                         [options]="collectorTypeOptions" formControlName="type"></p-dropdown>
           </div>
           <div fxFlex="40px"></div>
           <div fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])">
             <div fxFlex="none"
                  [ngClass]="{
-                  'newmirrorsession-collector-label': true,
+                  'newmirrorsession-general-label': true,
                   'requiredLabel': isFieldEmpty(collector.get(['export-config', 'destination']))
                 }">Destination:
             </div>
@@ -133,7 +133,7 @@
 <ng-template #match_rules>
   <div fxFlex="none" fxLayout="column">
     <div fxFlex="none" fxLayout="row">
-      <div fxFlex="none">Rules:</div>
+      <div fxFlex="none" [ngClass]="{'requiredLabel': areAllRulesEmpty()}">Rules:</div>
       <div fxFlex="5px"></div>
       <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
     </div>
