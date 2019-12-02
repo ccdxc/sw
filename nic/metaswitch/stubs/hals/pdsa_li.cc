@@ -22,64 +22,63 @@ li_integ_subcomp_t* li_is ()
     return &g_li_is;
 }
 
-NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
+//----------------------------------
+// Physical port (Front panel port)
+//---------------------------------
+NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     try {
         pdsa_stub::li_intf_t intf;
-        if (intf.handle_add_upd_ips (port_add_upd)) {
-#if 0 // TODO: wait for async support from MS
-            return ATG_ASYNC_COMPLETION;
-#else
-            return ATG_OK;
-#endif
-        }
+        intf.handle_add_upd_ips (port_add_upd_ips);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
-        return ATG_UNSUCCESSFUL;
+        port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
+    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
 
 NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
-    try {
+     try {
         pdsa_stub::li_intf_t intf;
         intf.handle_delete (port_ifindex);
-        // TODO: Need to change this API to include the IPS 
-        // TODO: For now send synchronous response to MS for deletes
     } catch (Error& e) {
         SDK_TRACE_ERR ("Interface Delete processing failed %s", e.what());
-        return ATG_UNSUCCESSFUL;
     }
+    // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd) {
+//----------------------------------
+// VRF
+//---------------------------------
+NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     try {
-    auto vrf_id = vrfname_2_vrfid(vrf_add_upd->vrf_name, vrf_add_upd->vrf_name_len);
-    vrf_id = vrf_id;
+        auto vrf_id = vrfname_2_vrfid(vrf_add_upd_ips->vrf_name, vrf_add_upd_ips->vrf_name_len);
+        vrf_id = vrf_id;
     } catch (Error& e) {
         SDK_TRACE_ERR("VRF Add Update failed %s", e.what());
     }
+    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
 
 NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_len) {
+    // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
+//----------------------------------
+// VXLAN tunnel (TEP)
+//---------------------------------
+NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
     try {
         pdsa_stub::li_vxlan_tnl vxtnl;
-        if (vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd)) {
-#if 0 // TODO: wait for async support from MS
-            return ATG_ASYNC_COMPLETION;
-#else
-            return ATG_OK;
-#endif
-        }
+        vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd_ips);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
-        return ATG_UNSUCCESSFUL;
+        vxlan_tnl_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
+    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
      
@@ -87,32 +86,40 @@ NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
     try {
         pdsa_stub::li_vxlan_tnl vxtnl;
         vxtnl.handle_delete (vxlan_tnl_ifindex);
-        // TODO: Need to change this API to include the IPS 
-        // TODO: For now send synchronous response to MS for deletes
     } catch (Error& e) {
         SDK_TRACE_ERR ("Vxlan Tunnel Delete processing failed %s", e.what());
-        return ATG_UNSUCCESSFUL;
     }
+    // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::vxlan_port_add_update(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd) {
+//----------------------------------
+// VXLAN port (TEP, VNI)
+//---------------------------------
+NBB_BYTE li_integ_subcomp_t::vxlan_port_add_update(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
     return ATG_OK;
 }
 NBB_BYTE li_integ_subcomp_t::vxlan_port_delete(NBB_ULONG vxlan_port_ifindex) {
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::irb_add_update(ATG_LIPI_IRB_ADD_UPDATE* irb_add_upd) {
+//----------------------------------
+// IRB (SVI for overlay BD)
+//---------------------------------
+NBB_BYTE li_integ_subcomp_t::irb_add_update(ATG_LIPI_IRB_ADD_UPDATE* irb_add_upd_ips) {
     return ATG_OK;
 }
 NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex) {
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swif_add_upd) {
+//--------------------------------------------------
+// Software interface (Loopback and Dummy LIFs)
+//-------------------------------------------------
+NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swif_add_upd_ips) {
     SDK_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d", 
-                   swif_add_upd->id.if_index, swif_add_upd->id.if_name, swif_add_upd->softwif_type);
+                   swif_add_upd_ips->id.if_index, swif_add_upd_ips->id.if_name, 
+                   swif_add_upd_ips->softwif_type);
     return ATG_OK;
 }
 
@@ -124,6 +131,9 @@ NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
     return ATG_OK;
 }
 
+//--------------------------------------------------
+// Software interface IP (Loopback)
+//-------------------------------------------------
 NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {

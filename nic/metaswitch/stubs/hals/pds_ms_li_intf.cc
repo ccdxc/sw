@@ -8,16 +8,21 @@
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include <li_fte.hpp>
+#include <li_lipi_slave_join.hpp>
+#include <li_port.hpp>
+
+extern NBB_ULONG li_proc_id;
 
 namespace pdsa_stub {
 
-void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
-    ips_info_.ifindex = port_add_upd->id.if_index;
-    ips_info_.if_name = port_add_upd->id.if_name;
+void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
+    ips_info_.ifindex = port_add_upd_ips->id.if_index;
+    ips_info_.if_name = port_add_upd_ips->id.if_name;
     ips_info_.admin_state = 
-        (port_add_upd->port_settings.port_enabled == ATG_YES);
+        (port_add_upd_ips->port_settings.port_enabled == ATG_YES);
     ips_info_.admin_state_valid = 
-        (port_add_upd->port_settings.port_enabled_updated == ATG_YES);
+        (port_add_upd_ips->port_settings.port_enabled_updated == ATG_YES);
 }
 
 void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
@@ -99,7 +104,7 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     spec.type = PDS_IF_TYPE_L3;
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state = 
-        (port_prop.admin_state) ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
+        (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
     // TODO: Change this to eth IfIndex when HAL supports it
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
     spec.l3_if_info.port_num = ETH_IFINDEX_TO_PARENT_PORT(ifindex)-1;
@@ -110,6 +115,7 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
 pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
+    SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
@@ -139,23 +145,24 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
     return bctxt_guard_;
 }
 
-bool li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
+void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    parse_ips_info_(port_add_upd);
+    port_add_upd_ips->return_code = ATG_OK;
+
+    parse_ips_info_(port_add_upd_ips);
 
     if (ms_ifindex_to_pds_type (ips_info_.ifindex) != IF_TYPE_L3) {
         // Nothing to do for non-L3 interfaces
-        return false;
+        return;
     }
-    if (port_add_upd->port_settings.no_switch_port == ATG_NO) {
+    if (port_add_upd_ips->port_settings.no_switch_port == ATG_NO) {
         // Not an IP interface
         // IP to non-IP transition is not supported
-        return false;
+        return;
     }
 
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
-    cookie_uptr_->ips = (NBB_IPS*) port_add_upd;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pdsa_stub::state_t::thread_context();
@@ -169,7 +176,7 @@ bool li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
         if (unlikely(!cache_new_obj_in_cookie_())) {
             // No change
             SDK_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
-            return false;
+            return;
         } 
 
         pds_bctxt_guard = make_batch_pds_spec_(); 
@@ -180,19 +187,56 @@ bool li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
+    cookie_uptr_->send_ips_reply = 
+        [port_add_upd_ips] (bool pds_status) -> void {
+            // ----------------------------------------------------------------
+            // This block is executed asynchronously when PDS response is rcvd
+            // ----------------------------------------------------------------
+            NBB_CREATE_THREAD_CONTEXT
+            NBS_ENTER_SHARED_CONTEXT(li_proc_id);
+            NBS_GET_SHARED_DATA();
+
+            auto key = li::Port::get_key(*port_add_upd_ips);
+            auto& port_store = li::Fte::get().get_lipi_join()->get_port_store();
+            auto it = port_store.find(key);
+            if (it == port_store.end()) {
+                auto send_response = 
+                    li::Port::set_ips_rc(&port_add_upd_ips->ips_hdr,
+                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
+                SDK_ASSERT(send_response);
+                SDK_TRACE_DEBUG("Phy port 0x%x: Send Async IPS reply %s stateless mode",
+                                key.index, (pds_status) ? "Success" : "Failure");
+                li::Fte::get().get_lipi_join()->
+                    send_ips_reply(&port_add_upd_ips->ips_hdr);
+            } else {
+                if (pds_status) {
+                    SDK_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply success stateful mode",
+                                    key.index);
+                    (*it)->update_complete(ATG_OK);
+                } else {
+                    SDK_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply failure stateful mode",
+                                    key.index);
+                    (*it)->update_failed(ATG_UNSUCCESSFUL);
+                }
+            }
+            NBS_RELEASE_SHARED_DATA();
+            NBS_EXIT_SHARED_CONTEXT();
+            NBB_DESTROY_THREAD_CONTEXT    
+        };
+    // All processing complete, only batch commit remains - 
+    // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     if (unlikely (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update Port MS If ")
                     .append(std::to_string(ips_info_.ifindex)));
     }
+    port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful", 
                      ips_info_.ifindex);
-    return true;
 }
 
-bool li_intf_t::handle_delete(NBB_ULONG ifindex) {
+void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
@@ -218,6 +262,15 @@ bool li_intf_t::handle_delete(NBB_ULONG ifindex) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
+    cookie_uptr_->send_ips_reply = 
+        [ifindex] (bool pds_status) -> void {
+            // ----------------------------------------------------------------
+            // This block is executed asynchronously when PDS response is rcvd
+            // ----------------------------------------------------------------
+            SDK_TRACE_DEBUG("Phy port 0x%x Delete: Rcvd Async PDS response %s",
+                            ifindex, (pds_status) ? "Success" : "Failure");
+
+        };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
@@ -228,14 +281,12 @@ bool li_intf_t::handle_delete(NBB_ULONG ifindex) {
     }
     SDK_TRACE_DEBUG ("MS If 0x%lx: Delete PDS Batch commit successful", 
                      ips_info_.ifindex);
+
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pdsa_stub::state_t::thread_context();
-        // TODO: Change to async 
-        // For now deletes are synchronous - Delete the store entry immediately 
+        // Deletes are synchronous - Delete the store entry immediately 
         state_ctxt.state()->if_store().erase(ifindex);
     }
-
-    return true;
 }
 
 } // End namespace

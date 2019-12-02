@@ -25,6 +25,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include <thread>
 
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
 {
@@ -47,8 +48,8 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
     auto& pds_ret_status =  pds_mock->pds_ret_status;
 
     if (pds_mock->sim) {
-        ((pdsa_stub::cookie_t*)pds_mock->cookie)->ips = nullptr;
-        pdsa_stub::hal_callback(true, (uint64_t)pds_mock->cookie);
+        std::thread cb(pdsa_stub::hal_callback, true, (uint64_t)pds_mock->cookie);
+        cb.detach();
         return SDK_RET_OK;
     }
 

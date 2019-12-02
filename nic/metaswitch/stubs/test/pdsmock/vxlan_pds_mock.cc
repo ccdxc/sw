@@ -72,12 +72,18 @@ void vxlan_pds_mock_t::validate_()
     { // Enter state thread context
         auto state_ctxt = pdsa_stub::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == (num_tep_objs_+1));
-        if (!op_create_ && !op_delete_) {
-            // No change in Tunnel interface object for updates
-            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_));
+        if (op_delete_) {
+            // Object is removed from store synchronously for deletes
+            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_-1));
+            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == (num_tep_objs_-1));
         } else {
-            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_+1));
+            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == (num_tep_objs_+1));
+            if (!op_create_ && !op_delete_) {
+                // Update - No change in Tunnel interface object
+                ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_));
+            } else {
+                ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_+1));
+            }
         }
         ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID) == 1);
     }
@@ -87,7 +93,9 @@ void vxlan_pds_mock_t::validate_()
     // Mock callback
     auto pds_mock = dynamic_cast<pds_mock_t*>(test_params()->test_output);
     auto cookie = (pdsa_stub::cookie_t*) pds_mock->cookie;
-    cookie->ips = nullptr;
+    if (test_params()->test_input->ips_mock()) {
+        cookie->send_ips_reply = [] (bool status) -> void {};
+    }
     pdsa_stub::hal_callback(!mock_pds_batch_async_fail_, (uint64_t)cookie);
 
     if (mock_pds_batch_async_fail_) {

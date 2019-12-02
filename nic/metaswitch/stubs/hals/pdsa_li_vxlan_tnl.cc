@@ -6,6 +6,11 @@
 #include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include <li_fte.hpp>
+#include <li_lipi_slave_join.hpp>
+#include <li_vxlan.hpp>
+
+extern NBB_ULONG li_proc_id;
 
 namespace pdsa_stub {
 
@@ -49,13 +54,13 @@ pds_nexthop_group_spec_t li_vxlan_tnl::make_pds_nhgroup_spec_(void) {
     return spec;
 }
 
-void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
-    ips_info_.if_index = vxlan_tnl_add_upd->id.if_index;
-    ATG_INET_ADDRESS& ms_dest_ip = vxlan_tnl_add_upd->vxlan_settings.dest_ip;
+void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
+    ips_info_.if_index = vxlan_tnl_add_upd_ips->id.if_index;
+    ATG_INET_ADDRESS& ms_dest_ip = vxlan_tnl_add_upd_ips->vxlan_settings.dest_ip;
     pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_dest_ip, &ips_info_.tep_ip);
-    ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd->vxlan_settings.source_ip;
+    ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd_ips->vxlan_settings.source_ip;
     pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
-    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd->id.hw_correlator);
+    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd_ips->id.hw_correlator);
     ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
 }
 
@@ -118,23 +123,10 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
     return true;
 }
 
-void 
-li_vxlan_tnl::cache_obj_in_cookie_for_delete_op_(void) {
-    // Do not delete the object from the store until PDS Async response is received
-    // Cache a copy of the object in the cookie to revisit and delete asynchronously
-    if (store_info_.tep_obj != nullptr) {
-        std::unique_ptr<tep_obj_t> new_tep_obj (new tep_obj_t(*(store_info_.tep_obj)));
-        cookie_uptr_->objs.push_back(std::move(new_tep_obj));
-    }
-    if (store_info_.tun_if_obj != nullptr) {
-        std::unique_ptr<if_obj_t> new_if_obj (new if_obj_t(*(store_info_.tun_if_obj)));
-        cookie_uptr_->objs.push_back(std::move(new_if_obj));
-    }
-}
-
 pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
+    SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
@@ -149,7 +141,12 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
         pds_tep_delete(&tep_key, bctxt);
 
         auto nhgroup_key = make_pds_nhgroup_key_();
-        pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        auto ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        if (unlikely (ret != SDK_RET_OK)) {
+            throw Error(std::string("PDS TEP Delete failed for TEP ")
+                        .append(ipaddr2str(&store_info_.tep_obj->properties().tep_ip)));
+        }
+
     } else { // Add or update
         auto tep_spec = make_pds_tep_spec_();
         sdk_ret_t ret;
@@ -159,7 +156,7 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
             ret = pds_tep_update(&tep_spec, bctxt);
         }
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error("PDS Tep Create failed for TEP " 
+            throw Error("PDS TEP Create failed for TEP " 
                         + ips_info_.tep_ip_str);
         }
 
@@ -177,13 +174,13 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     return bctxt_guard_;
 }
 
-bool li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd) {
+void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    vxlan_tnl_add_upd_ips->return_code = ATG_OK;
 
-    parse_ips_info_(vxlan_tnl_add_upd);
+    parse_ips_info_(vxlan_tnl_add_upd_ips);
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
-    cookie_uptr_->ips = (NBB_IPS*) vxlan_tnl_add_upd;
 
     { // Enter thread-safe context to access/modify global state
     auto state_ctxt = pdsa_stub::state_t::thread_context();
@@ -195,7 +192,7 @@ bool li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
         SDK_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
-            return false;
+            return;
         } 
     } else {
         // Create Tunnel
@@ -212,59 +209,120 @@ bool li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
+    cookie_uptr_->send_ips_reply = 
+        [vxlan_tnl_add_upd_ips] (bool pds_status) -> void {
+            // ----------------------------------------------------------------
+            // This block is executed asynchronously when PDS response is rcvd
+            // ----------------------------------------------------------------
+            NBB_CREATE_THREAD_CONTEXT
+            NBS_ENTER_SHARED_CONTEXT(li_proc_id);
+            NBS_GET_SHARED_DATA();
+
+            auto key = li::VxLan::get_key(*vxlan_tnl_add_upd_ips);
+            auto& vxlan_store = li::Fte::get().get_lipi_join()->get_vxlan_store();
+            auto it = vxlan_store.find(key);
+            if (it == vxlan_store.end()) {
+                // MS Stub Stateless mode
+                auto send_response = li::Port::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
+                                                          (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
+                SDK_ASSERT(send_response);
+                SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode",
+                                key, (pds_status) ? "Success": "Failure");
+                li::Fte::get().get_lipi_join()->send_ips_reply(&vxlan_tnl_add_upd_ips->ips_hdr);
+            } else {
+                // MS Stub Stateful mode
+                if (pds_status) {
+                    SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply success stateful mode",
+                                     key);
+                    (*it)->update_complete(ATG_OK);
+                } else {
+                    SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply failure stateful mode",
+                                     key);
+                    (*it)->update_failed(ATG_UNSUCCESSFUL);
+                }
+            }
+            NBS_RELEASE_SHARED_DATA();
+            NBS_EXIT_SHARED_CONTEXT();
+            NBB_DESTROY_THREAD_CONTEXT    
+        };
+
+    // All processing complete, only batch commit remains - 
+    // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
         delete cookie;
-        throw Error("Batch commit failed for Add-Update TEP " 
-                    + ips_info_.tep_ip_str);
+        throw Error(std::string("Batch commit failed for Add-Update TEP ")
+                    .append(ips_info_.tep_ip_str));
     }
+    vxlan_tnl_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
                      ips_info_.tep_ip_str.c_str());
-    return true;
 }
 
-bool li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
+void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
+    // MS Integration APIs do not allow Async callback for deletes.
+    // However since we should not block the MS NBase main thread
+    // the HAL proessing is always asynchrnous even for deletes. 
+    // Assuming that Deletes never fail the Store is also updated
+    // in a synchronous fashion for deletes so that it is in sync
+    // if there is a subsequent create from MS.
+
     ips_info_.if_index = tnl_ifindex;
-    { // Enter thread-safe context to access/modify global state
-    auto state_ctxt = pdsa_stub::state_t::thread_context();
-
-    fetch_store_info_(state_ctxt.state());
-    if (unlikely (store_info_.tep_obj == nullptr && 
-                  store_info_.tun_if_obj == nullptr)) {
-        // No change
-        return ATG_OK;
-    }
-    ips_info_.tep_ip_str = ipaddr2str(&store_info_.tep_obj->properties().tep_ip);
-    SDK_TRACE_INFO ("TEP %s: Delete IPS", ips_info_.tep_ip_str.c_str());
-
-    // Alloc new cookie without IPS (sync response to MS)
+    // Empty cookie to force async PDS.
     cookie_uptr_.reset (new cookie_t);
-    cookie_uptr_->op_delete = true;
+    ip_addr_t tep_ip;
 
-    // Delete Tunnel
-    cache_obj_in_cookie_for_delete_op_(); 
-    pds_bctxt_guard = make_batch_pds_spec_ (); 
+    { // Enter thread-safe context to access/modify global state
+        auto state_ctxt = pdsa_stub::state_t::thread_context();
 
-    // If we have batched multiple IPS earlier flush it now
-    // Cannot add a Tunnel create to an existing batch
-    state_ctxt.state()->flush_outstanding_pds_batch();
+        fetch_store_info_(state_ctxt.state());
+        if (unlikely (store_info_.tep_obj == nullptr && 
+                      store_info_.tun_if_obj == nullptr)) {
+            // No change
+            return;
+        }
+        tep_ip = store_info_.tep_obj->properties().tep_ip;
+        SDK_TRACE_INFO ("TEP %s: Delete IPS", ipaddr2str(&tep_ip));
+
+        pds_bctxt_guard = make_batch_pds_spec_ (); 
+
+        // If we have batched multiple IPS earlier flush it now
+        // VXLAN Tunnel deletion cannot be appended to an existing batch
+        state_ctxt.state()->flush_outstanding_pds_batch();
 
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    // All processing complete, only batch commit remains - safe to release the cookie_uptr_ unique_ptr
+    cookie_uptr_->send_ips_reply = 
+        [tep_ip] (bool pds_status) -> void {
+            // ----------------------------------------------------------------
+            // This block is executed asynchronously when PDS response is rcvd
+            // ----------------------------------------------------------------
+            SDK_TRACE_DEBUG("TEP %s Delete: Rcvd Async PDS response %s",
+                            ipaddr2str(&tep_ip), (pds_status)?"Success": "Failure");
+
+        };
+
+    // All processing complete, only batch commit remains - 
+    // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
         delete cookie;
-        throw Error("Batch commit failed for delete TEP " + ips_info_.tep_ip_str);
+        throw Error(std::string("Batch commit failed for delete TEP ").
+                    append(ipaddr2str(&tep_ip)));
     }
     SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
-                     ips_info_.tep_ip_str.c_str());
-    return true;
+                     ipaddr2str(&tep_ip));
+
+    { // Enter thread-safe context to access/modify global state
+        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        // Deletes are synchronous - Delete the store entry immediately 
+        state_ctxt.state()->tep_store().erase(tep_ip.addr.v4_addr);
+        state_ctxt.state()->if_store().erase(ips_info_.if_index);
+    }
 }
 
 } // End namespace

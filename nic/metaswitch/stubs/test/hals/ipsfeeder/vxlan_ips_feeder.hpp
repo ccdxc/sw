@@ -53,7 +53,7 @@ public:
         tnl_ifindex += 1;
         api_test::increment_ip_addr (&dest_ip);
     }
-
+    bool ips_mock() override {return true;}
 };
 
 } // End Namespace

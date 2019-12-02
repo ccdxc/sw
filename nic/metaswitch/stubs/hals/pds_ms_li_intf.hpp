@@ -23,8 +23,8 @@ namespace pdsa_stub {
 
 class li_intf_t {
 public:    
-   bool handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
-   bool handle_delete(NBB_ULONG phy_port_ifindex);
+   void handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
+   void handle_delete(NBB_ULONG phy_port_ifindex);
 
 private:
     struct ips_info_t {

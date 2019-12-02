@@ -24,17 +24,11 @@ class cookie_t : public slab_obj_t<cookie_t> {
 public:    
     std::vector<std::unique_ptr<pdsa_stub::base_obj_t>> objs;
     void print_debug_str(void);
-
-    bool op_delete = false;
-    NBB_IPS* ips = nullptr;
-    NBB_PROC_ID nbb_stub_pid;
-    NBB_PROC_ID nbb_send_pid;
-    NBB_QUEUE_ID nbb_qid;
+    std::function<void(bool)> send_ips_reply;
 };
 
 inline void cookie_t::print_debug_str(void) {
-    if (op_delete) {SDK_TRACE_DEBUG ("Delete objects:");}
-    else {SDK_TRACE_DEBUG ("Add/Upd objects:");}
+    if (objs.size() > 0) {SDK_TRACE_DEBUG ("Update store for object(s):");}
 
     for (auto& obj_uptr: objs) {
         obj_uptr->print_debug_str();

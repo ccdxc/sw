@@ -52,6 +52,7 @@ public:
         phy_port_ifindex += 0x10000;
     }
 
+    bool ips_mock() override {return true;}
 };
 
 } // End Namespace

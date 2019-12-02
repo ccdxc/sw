@@ -43,7 +43,7 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
 
     mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
     // TODO: Change to EthIfIndex when HAL supports it 
-    // spec.l3_if_info.port_num = (uint8_t) ETH_IFINDEX (1,1,0);
+    // spec.l3_if_info.port_num = ETH_IFINDEX (1,1,1);
     spec.l3_if_info.port_num = 0;
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE; 
     spec.l3_if_info.encap.val.vnid = 0;
@@ -78,8 +78,7 @@ void phy_port_pds_mock_t::validate_()
         auto state_ctxt = pdsa_stub::state_t::thread_context();
         auto state = state_ctxt.state();
         if (op_delete_) {
-            // Temp object is not allocated for IF deletes
-            // In fact the object is already released before the callback
+            // Object is removed from store synchronously for deletes
             ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_-1));
         } else {
             ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_IF_SLAB_ID) == (num_if_objs_+1));
@@ -92,7 +91,9 @@ void phy_port_pds_mock_t::validate_()
     // Mock callback
     auto pds_mock = dynamic_cast<pds_mock_t*>(test_params()->test_output);
     auto cookie = (pdsa_stub::cookie_t*) pds_mock->cookie;
-    cookie->ips = nullptr;
+    if (test_params()->test_input->ips_mock()) {
+        cookie->send_ips_reply = [] (bool status) -> void {};
+    }
     pdsa_stub::hal_callback(!mock_pds_batch_async_fail_, (uint64_t)cookie);
 
     if (mock_pds_batch_async_fail_) {
