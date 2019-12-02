@@ -52,6 +52,7 @@ struct pd_wring_meta_s {
     uint32_t    ring_types_in_region;
     uint32_t    ring_type_offset;
     bool        mmap_ring; // Whether ring to be memmap'ed for direct access
+    bool        per_flow_ring;
     wring_hw_id_t base_addr[MAX_WRING_IDS];
     wring_hw_id_t obj_base_addr[MAX_WRING_IDS];
     uint8_t     *virt_base_addr[MAX_WRING_IDS]; // Virtual address of the ring base in memory
@@ -90,6 +91,75 @@ hal_ret_t wring_pd_table_init(types::WRingType type, uint32_t wring_id);
 
 extern void *wring_pd_get_hw_key_func(void *entry);
 extern uint32_t wring_pd_hw_key_size(void);
+
+#define WRING_PD_META_SET_BASE_ADDR(meta_, wring_id_, obj_, val_)       \
+    if (!meta_->per_flow_ring && (wring_id_ < MAX_WRING_IDS)) {         \
+        meta_->obj_[wring_id_] = val_;                                  \
+    }                                                                   \
+    
+#define WRING_PD_META_GET_BASE_ADDR(meta_, wring_id_, obj_, null_val_)  \
+    return !meta_->per_flow_ring && (wring_id_ < MAX_WRING_IDS) ?       \
+            meta_->obj_[wring_id_] : null_val_;                         \
+    
+static inline void
+wring_pd_set_meta_base_addr(pd_wring_meta_t *meta,
+                            uint32_t wring_id,
+                            wring_hw_id_t val)
+{
+    WRING_PD_META_SET_BASE_ADDR(meta, wring_id, base_addr, val);
+}
+
+static inline wring_hw_id_t
+wring_pd_get_meta_base_addr(pd_wring_meta_t *meta,
+                            uint32_t wring_id)
+{
+    WRING_PD_META_GET_BASE_ADDR(meta, wring_id, base_addr, 0);
+}
+
+static inline void
+wring_pd_set_meta_obj_base_addr(pd_wring_meta_t *meta,
+                                uint32_t wring_id,
+                                wring_hw_id_t val)
+{
+    WRING_PD_META_SET_BASE_ADDR(meta, wring_id, obj_base_addr, val);
+}
+
+static inline wring_hw_id_t
+wring_pd_get_meta_obj_base_addr(pd_wring_meta_t *meta,
+                                uint32_t wring_id)
+{
+    WRING_PD_META_GET_BASE_ADDR(meta, wring_id, obj_base_addr, 0);
+}
+
+static inline void
+wring_pd_set_meta_virt_base_addr(pd_wring_meta_t *meta,
+                                 uint32_t wring_id,
+                                 uint8_t *val)
+{
+    WRING_PD_META_SET_BASE_ADDR(meta, wring_id, virt_base_addr, val);
+}
+
+static inline uint8_t *
+wring_pd_get_meta_virt_base_addr(pd_wring_meta_t *meta,
+                                 uint32_t wring_id)
+{
+    WRING_PD_META_GET_BASE_ADDR(meta, wring_id, virt_base_addr, nullptr);
+}
+
+static inline void
+wring_pd_set_meta_virt_obj_base_addr(pd_wring_meta_t *meta,
+                                     uint32_t wring_id,
+                                     uint8_t *val)
+{
+    WRING_PD_META_SET_BASE_ADDR(meta, wring_id, virt_obj_base_addr, val);
+}
+
+static inline uint8_t *
+wring_pd_get_meta_virt_obj_base_addr(pd_wring_meta_t *meta,
+                                     uint32_t wring_id)
+{
+    WRING_PD_META_GET_BASE_ADDR(meta, wring_id, virt_obj_base_addr, nullptr);
+}
 
 }   // namespace pd
 }   // namespace hal

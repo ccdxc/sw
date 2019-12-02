@@ -118,13 +118,19 @@ validate_proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// insert this PROXYR CB in all meta data structures
+// insert/delete this PROXYR CB in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 add_proxyrcb_to_db (proxyrcb_t *proxyrcb)
 {
     g_hal_state->proxyrcb_id_ht()->insert(proxyrcb, &proxyrcb->ht_ctxt);
     return HAL_RET_OK;
+}
+
+static inline void
+del_proxyrcb_from_db (proxyrcb_t *proxyrcb)
+{
+    g_hal_state->proxyrcb_id_ht()->remove_entry(proxyrcb, &proxyrcb->ht_ctxt);
 }
 
 //------------------------------------------------------------------------------
@@ -403,6 +409,9 @@ proxyrcb_delete (internal::ProxyrCbDeleteRequest& req, internal::ProxyrCbDeleteR
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
+
+    del_proxyrcb_from_db(proxyrcb);
+    proxyrcb_free(proxyrcb);
 
     // fill stats of this PROXYR CB
     rsp->add_api_status(types::API_STATUS_OK);

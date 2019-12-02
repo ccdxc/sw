@@ -86,7 +86,7 @@ add_rawccb_pd_to_db (pd_rawccb_t *rawccb_pd)
 static inline hal_ret_t
 del_rawccb_pd_from_db(pd_rawccb_t *rawccb_pd)
 {
-    g_hal_state_pd->rawccb_hwid_ht()->remove(&rawccb_pd->hw_ht_ctxt);
+    g_hal_state_pd->rawccb_hwid_ht()->remove_entry(rawccb_pd, &rawccb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 

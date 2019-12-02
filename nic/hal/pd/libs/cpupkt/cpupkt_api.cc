@@ -202,8 +202,10 @@ cpupkt_update_slot_addr (cpupkt_qinst_info_t* qinst_info)
     /*
      * Update the virtual PC-index addr for direct access into the memory.
      */
-    qinst_info->virt_pc_index_addr = qinst_info->virt_base_addr +
-            (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
+    if (qinst_info->virt_base_addr) {
+        qinst_info->virt_pc_index_addr = qinst_info->virt_base_addr +
+                (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
+    }
 
     HAL_TRACE_DEBUG2("updated pc_index queue: type: {} id: {}, index: {} virt-idx-addr: {:#x} addr: {:#x}: valid_bit_value: {:#x}",
                     qinst_info->queue_info->type, qinst_info->queue_id,
@@ -218,6 +220,8 @@ pd_cpupkt_get_slot_addr (types::WRingType type, uint32_t wring_id,
     hal_ret_t      ret = HAL_RET_OK;
     cpupkt_hw_id_t base_addr = 0;
     pd_wring_meta_t *wring_meta = wring_pd_get_meta(type);
+    uint8_t *virt_base_addr;
+
     if(!wring_meta) {
         HAL_TRACE_ERR2("Failed to get wring meta for type: {}", type);
         return HAL_RET_WRING_NOT_FOUND;
@@ -234,8 +238,12 @@ pd_cpupkt_get_slot_addr (types::WRingType type, uint32_t wring_id,
     /*
      * Get the virtual-address of the slot from the memory region we've mapped to our address-space.
      */
-    *slot_virt_addr = (uint64_t *) (wring_meta->virt_base_addr[wring_id] +
-				    ((index % wring_meta->num_slots) * wring_meta->slot_size_in_bytes));
+    virt_base_addr = wring_pd_get_meta_virt_base_addr(wring_meta, wring_id);
+    if (virt_base_addr) {
+        virt_base_addr += (index % wring_meta->num_slots) * wring_meta->slot_size_in_bytes;
+    }
+
+    *slot_virt_addr = (uint64_t *)virt_base_addr;
     return HAL_RET_OK;
 }
 
@@ -243,13 +251,18 @@ static inline hal_ret_t
 pd_cpupkt_get_slot_addr_for_ring (pd_wring_meta_t *wring_meta, cpupkt_hw_id_t base_addr, uint32_t wring_id,
 				  uint32_t index, cpupkt_hw_id_t *slot_addr, uint64_t **slot_virt_addr)
 {
+    uint8_t *virt_base_addr;
+
     *slot_addr = base_addr + ((index % wring_meta->num_slots) * wring_meta->slot_size_in_bytes);
 
     /*
      * Get the virtual-address of the slot from the memory region we've mapped to our address-space.
      */
-    *slot_virt_addr = (uint64_t *) (wring_meta->virt_base_addr[wring_id] +
-				    ((index % wring_meta->num_slots) * wring_meta->slot_size_in_bytes));
+    virt_base_addr = wring_pd_get_meta_virt_base_addr(wring_meta, wring_id);
+    if (virt_base_addr) {
+        virt_base_addr += (index % wring_meta->num_slots) * wring_meta->slot_size_in_bytes;
+    }
+    *slot_virt_addr = (uint64_t *)virt_base_addr;
     return HAL_RET_OK;
 }
 
@@ -300,7 +313,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	/*
 	 * Directly free to the slot virtual-address if zero-copy is enabled.
 	 */
-	if (is_cpu_zero_copy_enabled()) {
+	if (is_cpu_zero_copy_enabled() && slot_virt_addr) {
 	    *slot_virt_addr = value;
 
 	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
@@ -371,7 +384,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
     /*
      * Directly free to the slot virtual-address if zero-copy is enabled.
      */
-    if (is_cpu_zero_copy_enabled()) {
+    if (is_cpu_zero_copy_enabled() && slot_virt_addr) {
         *slot_virt_addr = value;
 
 	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
@@ -660,18 +673,14 @@ cpupkt_register_qinst (cpupkt_queue_info_t* ctxt_qinfo, int qinst_index,
      * the wring_meta, so that we can do direct memory access instead of asic_read/write
      * API overheads.
      */
-    if (is_cpu_zero_copy_enabled()) {
+    if (is_cpu_zero_copy_enabled() &&
+        wring_pd_get_meta_virt_base_addr(ctxt_qinfo->wring_meta, queue_id)) {
 
-        qinst_info->virt_base_addr = ctxt_qinfo->wring_meta->virt_base_addr[queue_id];
-	if (!qinst_info->virt_base_addr) {
-            HAL_TRACE_ERR2("Failed to mmap the CPU RX Ring(T:{}, Q:{})", type, queue_id);
-	    return HAL_RET_NO_RESOURCE;
-	}
-	else {
-            HAL_TRACE_DEBUG2("mmap the CPU RX Ring(T:{}, Q:{}) phy {:#x} @ virt {:#x}",
-			    type, queue_id, (uint64_t)qinst_info->base_addr,
-			    (uint64_t)qinst_info->virt_base_addr);
-	}
+        qinst_info->virt_base_addr = 
+              wring_pd_get_meta_virt_base_addr(ctxt_qinfo->wring_meta, queue_id);
+        HAL_TRACE_DEBUG2("mmap the CPU RX Ring(T:{}, Q:{}) phy {:#x} @ virt {:#x}",
+		    type, queue_id, (uint64_t)qinst_info->base_addr,
+		    (uint64_t)qinst_info->virt_base_addr);
     }
 
     if(is_cpu_tx_queue(type)) {
@@ -974,7 +983,7 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
 	 * If zero-copy enabled, we'll read the slot directly without the
 	 * asic_mem_read() API overhead.
 	 */
-	if (is_cpu_zero_copy_enabled()) {
+	if (is_cpu_zero_copy_enabled() && qinst_info->virt_pc_index_addr) {
             value = *(uint64_t*)qinst_info->virt_pc_index_addr;
 	} else {
 	    if (sdk::asic::asic_mem_read(qinst_info->pc_index_addr,
@@ -1209,7 +1218,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	     * If zero-copy enabled, we'll read the slot directly without the
 	     * asic_mem_read() API overhead.
 	     */
-	    if (is_cpu_zero_copy_enabled()) {
+	    if (is_cpu_zero_copy_enabled() && qinst_info->virt_pc_index_addr) {
                 value = *(uint64_t*)qinst_info->virt_pc_index_addr;
 	    } else {
 	        if (sdk::asic::asic_mem_read(qinst_info->pc_index_addr,

@@ -147,7 +147,6 @@ modules:
         name    : APP_REDIR_RAW_NFS
         module  : app_redir_raw_appid
         spec    : app_redir_raw_nfs.testspec
-        enable  : False
         rtl     : True
         args    :
             num_pkts : 6

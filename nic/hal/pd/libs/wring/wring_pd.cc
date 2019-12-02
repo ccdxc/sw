@@ -127,16 +127,16 @@ wring_pd_meta_init() {
 			   "", 0, 0, armq_slot_parser, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
-                           NULL, NULL, true, 1, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 128, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
+                           NULL, NULL, true, 1, 0, false, true};
 
     g_meta[types::WRING_TYPE_APP_REDIR_PROXYR] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYR, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
-                           NULL, NULL, true, 1, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYR, 128, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
+                           NULL, NULL, true, 1, 0, false, true};
 
     g_meta[types::WRING_TYPE_APP_REDIR_PROXYC] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
-                           NULL, NULL, true, 1, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 128, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
+                           NULL, NULL, true, 1, 0, false, true};
 
     g_meta[types::WRING_TYPE_NMDR_TX_GC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_TX_GC,
@@ -339,7 +339,7 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
     /*
      * We'll cache the base-address for faster lookups.
      */
-    meta->base_addr[wring_id] = wring_base;
+    wring_pd_set_meta_base_addr(meta, wring_id, wring_base);
 
     /*
      * If we have an object region for this Wring, we'll cache the object
@@ -354,10 +354,10 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
 
         obj_reg_size = meta->num_slots * meta->obj_size;
         if (meta->is_global) {
-            meta->obj_base_addr[0] = wring_obj_base;
+            wring_pd_set_meta_obj_base_addr(meta, 0, wring_obj_base);
         } else {
             wring_obj_base += (wring_id * obj_reg_size);
-            meta->obj_base_addr[wring_id] = wring_obj_base;
+            wring_pd_set_meta_obj_base_addr(meta, wring_id, wring_obj_base);
         }
         HAL_TRACE_DEBUG("base-addr {:#x} size {} KB obj-base-addr {:#x} size {} KB",
               wring_base, get_mem_size_kb(meta->hbm_reg_name),
@@ -370,9 +370,26 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
         return HAL_RET_ERR;
     }
 
-    uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes *
-                    meta->ring_types_in_region ? meta->ring_types_in_region : 1;
-    SDK_ASSERT(reg_size * 1024 >= required_size);
+    uint32_t single_size = meta->num_slots * meta->slot_size_in_bytes *
+                    (meta->ring_types_in_region ? meta->ring_types_in_region : 1);
+    uint32_t required_size = single_size * (wring_id + 1);
+    if ((reg_size * 1024) < required_size) {
+
+        /*
+         * NOTE: Old code did not validate the required_size correctly -- it didn't
+         * take multiple per-flow queues as identified by wring_id into account.
+         * Hence the validation would always succeed.
+         *
+         * Even though the issue is now fixed, it is too risky to enable at
+         * this point as it might cause failures in existing DOL and iota tests.
+         * So for the time being, validation failures are only logged for
+         * debugging purposes.
+         */
+        HAL_TRACE_DEBUG("region {} total size {} is too small for wing_id {} "
+                        "of size {}", meta->hbm_reg_name, reg_size * 1024,
+                        wring_id, single_size);
+        //return HAL_RET_NO_RESOURCE;
+    }
 
     // Allocate memory for storing value for a slot
     if (meta->skip_init_slots) {
@@ -411,28 +428,29 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
     if (!is_platform_type_haps() && !is_platform_type_hw()) {
         return(HAL_RET_OK);
     }
-    if (!meta->mmap_ring || meta->virt_base_addr[wring_id]) return(HAL_RET_OK);
+    if (!meta->mmap_ring || wring_pd_get_meta_virt_base_addr(meta, wring_id)) return(HAL_RET_OK);
 
     /*
      * This should not happen for the CPU interested Rings which are not
      * per-flow rings.
      */
-    if (wring_id > MAX_WRING_IDS) {
+    if (!meta->per_flow_ring && (wring_id > MAX_WRING_IDS)) {
         HAL_TRACE_ERR("Invalid wrind_id {}, failed to mmap ring memory for Q:{}",
 		      wring_id, type);
         return(HAL_RET_ERR);
     }
 
-    meta->virt_base_addr[wring_id] = (uint8_t *)sdk::lib::pal_mem_map(wring_base,
+    wring_pd_set_meta_virt_base_addr(meta, wring_id, (uint8_t *)sdk::lib::pal_mem_map(wring_base,
 								       meta->num_slots *
-								       meta->slot_size_in_bytes);
-     if (!meta->virt_base_addr[wring_id]) {
+								       meta->slot_size_in_bytes));
+     if (!wring_pd_get_meta_virt_base_addr(meta, wring_id)) {
 	 HAL_TRACE_ERR("Failed to mmap the Ring(T:{}, Q:{})", type, wring_id);
 	 return HAL_RET_NO_RESOURCE;
      }
      else {
          HAL_TRACE_DEBUG("mmap the WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
-                         type, wring_id, (uint64_t)wring_base, (uint64_t)meta->virt_base_addr[wring_id],
+                         type, wring_id, (uint64_t)wring_base,
+                         (uint64_t)wring_pd_get_meta_virt_base_addr(meta, wring_id),
                          ((meta->num_slots * meta->slot_size_in_bytes)/1024));
      }
 
@@ -440,16 +458,17 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
       * If the object ring is present, lets memory-map the object memory region too.
       */
      if (meta->obj_size) {
-	 meta->virt_obj_base_addr[wring_id] = (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
-									       obj_reg_size);
-	 if (!meta->virt_obj_base_addr[wring_id]) {
+	 wring_pd_set_meta_virt_obj_base_addr(meta, wring_id, (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
+									       obj_reg_size));
+	 if (!wring_pd_get_meta_virt_obj_base_addr(meta, wring_id)) {
          HAL_TRACE_ERR("Failed to mmap the OBJ Ring(T:{}, Q:{})", type, wring_id);
 	     return HAL_RET_NO_RESOURCE;
 	 }
 	 else {
 	     HAL_TRACE_DEBUG("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
-			   type, wring_id, (uint64_t)wring_obj_base,
-			   (uint64_t)meta->virt_obj_base_addr[wring_id], (obj_reg_size/1024));
+			     type, wring_id, (uint64_t)wring_obj_base,
+			     (uint64_t)wring_pd_get_meta_virt_obj_base_addr(meta, wring_id),
+			     (obj_reg_size/1024));
 	 }
     }
 

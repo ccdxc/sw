@@ -1,6 +1,8 @@
 #ifndef __APP_REDIR_SHARED_H
 #define __APP_REDIR_SHARED_H
 
+#include "nic/include/pd.hpp"
+
 /*
  * This file contains app redirect definitions that are shared with P4+ asm code.
  * Do not insert C constructs that cannot be compiled by NCC assembler.
@@ -149,16 +151,16 @@
  * nic/conf/hbm_mem.json for the corresponding HBM regions ("app-redir-rawc",
  * "app-redir-proxyr", etc.) as well as the "lif2qstate_map" region.
  */
-#define RAWRCB_NUM_ENTRIES_MAX              4096
-#define RAWCCB_NUM_ENTRIES_MAX              4096
+#define RAWRCB_NUM_ENTRIES_MAX              MAX_PD_CPU_PKT_QUEUE_INST
+#define RAWCCB_NUM_ENTRIES_MAX              MAX_PD_CPU_PKT_QUEUE_INST
 #define RAWRCB_NUM_ENTRIES_MASK             (RAWRCB_NUM_ENTRIES_MAX - 1)
 #define RAWCCB_NUM_ENTRIES_MASK             (RAWCCB_NUM_ENTRIES_MAX - 1)
 
 /*
  * Number of proxy CBs must be >= number of supported TCP/TLS proxy control blocks
  */
-#define PROXYRCB_NUM_ENTRIES_MAX            4096
-#define PROXYCCB_NUM_ENTRIES_MAX            4096
+#define PROXYRCB_NUM_ENTRIES_MAX            MAX_PD_CPU_PKT_QUEUE_INST
+#define PROXYCCB_NUM_ENTRIES_MAX            MAX_PD_CPU_PKT_QUEUE_INST
 #define PROXYRCB_NUM_ENTRIES_MASK           (PROXYRCB_NUM_ENTRIES_MAX - 1)
 #define PROXYCCB_NUM_ENTRIES_MASK           (PROXYCCB_NUM_ENTRIES_MAX - 1)
  

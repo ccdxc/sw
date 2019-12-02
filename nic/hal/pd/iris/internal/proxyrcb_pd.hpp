@@ -87,7 +87,8 @@ add_proxyrcb_pd_to_db (pd_proxyrcb_t *proxyrcb_pd)
 static inline hal_ret_t
 del_proxyrcb_pd_from_db(pd_proxyrcb_t *proxyrcb_pd)
 {
-    g_hal_state_pd->proxyrcb_hwid_ht()->remove(&proxyrcb_pd->hw_ht_ctxt);
+    g_hal_state_pd->proxyrcb_hwid_ht()->remove_entry(proxyrcb_pd,
+                                                     &proxyrcb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 

@@ -118,13 +118,19 @@ validate_rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// insert this RAWR CB in all meta data structures
+// insert/delete this RAWR CB in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 add_rawrcb_to_db (rawrcb_t *rawrcb)
 {
     g_hal_state->rawrcb_id_ht()->insert(rawrcb, &rawrcb->ht_ctxt);
     return HAL_RET_OK;
+}
+
+static inline void
+del_rawrcb_from_db (rawrcb_t *rawrcb)
+{
+    g_hal_state->rawrcb_id_ht()->remove_entry(rawrcb, &rawrcb->ht_ctxt);
 }
 
 //------------------------------------------------------------------------------
@@ -363,6 +369,9 @@ rawrcb_delete (internal::RawrCbDeleteRequest& req, internal::RawrCbDeleteRespons
         rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
+
+    del_rawrcb_from_db(rawrcb);
+    rawrcb_free(rawrcb);
 
     // fill stats of this RAWR CB
     rsp->add_api_status(types::API_STATUS_OK);

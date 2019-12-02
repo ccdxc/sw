@@ -416,7 +416,7 @@
         },
         {
             "name": "app-redir-rawc",
-            "size": "256K"
+            "size": "512K"
         },
         {
             "name": "app-redir-proxyr",

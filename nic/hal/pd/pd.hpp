@@ -3,12 +3,15 @@
 #ifndef __HAL_COMMON_PD_HPP__
 #define __HAL_COMMON_PD_HPP__
 
-namespace hal {
-namespace pd {
-
 #define NATIVE_VLAN_ID                  8192
 #define NATIVE_TELEMETRY_VLAN_ID_START  8191
 #define NATIVE_TELEMETRY_VLAN_ID_END    8191
+
+#define MAX_PD_CPU_PKT_QUEUE_INST       1024
+
+#ifdef __cplusplus
+namespace hal {
+namespace pd {
 
 typedef struct pd_vrf_s pd_vrf_t;
 typedef struct pd_nwsec_profile_s pd_nwsec_profile_t;
@@ -60,6 +63,7 @@ typedef struct pd_snake_test_s pd_snake_test_t;
 
 }    // namespace pd
 }    // namespace hal
+#endif
 
 #endif    // __HAL_COMMON_PD_HPP__
 
