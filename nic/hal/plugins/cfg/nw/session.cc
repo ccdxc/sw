@@ -83,6 +83,7 @@ std::ostream& operator<<(std::ostream& os, const hal::flow_state_t& val) {
 thread_local void *t_session_timer;
 session_stats_t  *g_session_stats;
 
+sdk_spinlock_t          g_flow_telemetry_slock;
 flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
 flow_telemetry_state_t *g_flow_telemetry_state_age_tail_p;
 uint16_t                g_age_timer_ticks;
@@ -1658,7 +1659,10 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
         SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
         flow_telemetry_state_p = (flow_telemetry_state_t *) vaddr;
 
+        //
         // De-link Re-use HBM-resource from the Age-list
+        //
+        SDK_SPINLOCK_LOCK(&g_flow_telemetry_slock);
         if (flow_telemetry_state_p->prev_p == NULL) {
             g_flow_telemetry_state_age_head_p = flow_telemetry_state_p->next_p;
             if (g_flow_telemetry_state_age_head_p == NULL)
@@ -1677,6 +1681,8 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
             prev_p->next_p = next_p;
             next_p->prev_p = prev_p;
         }
+        SDK_SPINLOCK_UNLOCK(&g_flow_telemetry_slock);
+
         flow_telemetry_state_p->prev_p = NULL;
         flow_telemetry_state_p->next_p = NULL;
         if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
@@ -2169,7 +2175,10 @@ enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p)
         free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
     }
     else {
+        // 
         // Enqueue Flow-Proto-State to Age-list queue
+        // 
+        SDK_SPINLOCK_LOCK(&g_flow_telemetry_slock);
         if (g_flow_telemetry_state_age_tail_p == NULL) {
             g_flow_telemetry_state_age_head_p = flow_telemetry_state_p;
             g_flow_telemetry_state_age_tail_p = flow_telemetry_state_p;
@@ -2181,28 +2190,39 @@ enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p)
         }
         flow_telemetry_state_p->u2.delayed_age_ticks = 
                                         FLOW_TELEMETRY_DELAYED_AGE_TICKS_40SECS;
+        SDK_SPINLOCK_UNLOCK(&g_flow_telemetry_slock);
     }
 
     flow_p->flow_telemetry_state_p = NULL;
 }
 
-void
+flow_telemetry_state_t *
 dequeue_flow_telemetry_state_from_age_list (
                                  flow_telemetry_state_t *flow_telemetry_state_p)
 {
+    flow_telemetry_state_t *next_p;
+
+    //
     // Dequeue Flow-Proto-State to Age-list queue
     //
     // The assumption here is that head-of-age-list is being dequeued since
     // that would be the first one to age out
-    g_flow_telemetry_state_age_head_p = g_flow_telemetry_state_age_head_p->
-                                        next_p;
+    //
+    SDK_SPINLOCK_LOCK(&g_flow_telemetry_slock);
+    next_p = g_flow_telemetry_state_age_head_p->next_p;
+    g_flow_telemetry_state_age_head_p = next_p;
     if (g_flow_telemetry_state_age_head_p == NULL)
-        g_flow_telemetry_state_age_tail_p = NULL;;
+        g_flow_telemetry_state_age_tail_p = NULL;
+    else
+        g_flow_telemetry_state_age_head_p->prev_p = NULL;
+    SDK_SPINLOCK_UNLOCK(&g_flow_telemetry_slock);
 
     // Free Flow-Proto-Stats-State after deleting Delphi object
     delete_flow_proto_state(flow_telemetry_state_p, 
                             flow_telemetry_state_p->present_flags);
     free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
+
+    return(next_p);
 }
 
 inline void
@@ -3135,11 +3155,16 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     while (flow_telemetry_state_p != NULL) {
         flow_telemetry_state_t *next_p;
 
-        next_p = flow_telemetry_state_p->next_p;
-
+        //
+        // If head-entry has not reached clean-up stage, we quit
+        // since this list is in time-sorted-order
+        //
         flow_telemetry_state_p->u2.delayed_age_ticks--;
         if (flow_telemetry_state_p->u2.delayed_age_ticks == 0)
-            dequeue_flow_telemetry_state_from_age_list(flow_telemetry_state_p);
+            next_p = dequeue_flow_telemetry_state_from_age_list(
+                     flow_telemetry_state_p);
+        else
+            next_p = flow_telemetry_state_p->next_p;
 
         flow_telemetry_state_p = next_p;
     }
@@ -3291,6 +3316,9 @@ session_init (hal_cfg_t *hal_cfg)
         SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
         g_flow_telemetry_hbm_start = pal_addr;
+
+        // Spinlock init for Flow-Telemetry
+        SDK_SPINLOCK_INIT(&g_flow_telemetry_slock, PTHREAD_PROCESS_SHARED);
     }
 
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);
