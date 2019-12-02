@@ -50,7 +50,7 @@ mputrace_util_reg_program (cap_mpu_csr_trace_t &trace,
     trace.phv_debug(cfg_inst->ctrl.phv_debug);
     trace.phv_error(cfg_inst->ctrl.phv_error);
     if (cfg_inst->ctrl.watch_pc != 0) {
-        trace.watch_pc(cfg_inst->ctrl.watch_pc >> 6);
+        trace.watch_pc(cfg_inst->ctrl.watch_pc >> 3);
         trace.watch_enable(1);
     } else {
         trace.watch_enable(0);
@@ -194,7 +194,7 @@ mputrace_dump_trace_hdr_fill (mputrace_trace_hdr_t *trace_hdr,
     trace_hdr->trace_enable = (uint32_t)trace.trace_enable();
     trace_hdr->phv_debug = (uint32_t)trace.phv_debug();
     trace_hdr->phv_error = (uint32_t)trace.phv_error();
-    trace_hdr->watch_pc = (uint32_t)(trace.watch_pc() << 6);
+    trace_hdr->watch_pc = (uint32_t)(trace.watch_pc() << 3);
     trace_hdr->table_key = (uint32_t)trace.table_and_key();
     trace_hdr->instructions = (uint32_t)trace.instructions();
     trace_hdr->wrap = (uint32_t)trace.wrap();
@@ -359,7 +359,7 @@ mputrace_show_pipeline_internal (cap_mpu_csr_trace_t trace,
                (uint32_t)trace.rst(),
                // ctrl
                (uint32_t)trace.trace_enable(), (uint32_t)trace.phv_debug(),
-               (uint32_t)trace.phv_error(), (uint64_t)(trace.watch_pc() << 6),
+               (uint32_t)trace.phv_error(), (uint64_t)(trace.watch_pc() << 3),
                // content
                (uint32_t)trace.table_and_key(), (uint32_t)trace.instructions(),
                // location

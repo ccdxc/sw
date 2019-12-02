@@ -83,10 +83,35 @@ mputrace_cfg_inst_init (mputrace_cfg_inst_t *cfg_inst)
     cfg_inst->settings.trace_size = 4096;
 }
 
+static inline uint64_t
+mputrace_json_get_pc (std::string pgm_or_lbl)
+{
+    boost::property_tree::ptree pt;
+    bool is_pgm = (pgm_or_lbl.find(".bin") != std::string::npos);
+    uint64_t pgm_base = 0;
+
+    boost::property_tree::read_json("/nic/conf/gen/mpu_prog_info.json", pt);
+    for (auto pgm : pt.get_child("programs")) {
+        pgm_base = strtoul(pgm.second.get<std::string>("base_addr_hex").c_str(), NULL, 16);
+        if (is_pgm && pgm.second.get<std::string>("name") == pgm_or_lbl) {
+            return pgm_base;
+        } else {
+            for (auto lbl : pgm.second.get_child("symbols")) {
+                if (lbl.second.get<std::string>("name") == pgm_or_lbl) {
+                    return pgm_base + strtoul(lbl.second.get<std::string>("addr_hex").c_str(), NULL, 16);
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 static inline void
 mputrace_json_ctrl_parse (ptree &pt, mputrace_cfg_inst_t *cfg_inst)
 {
     boost::optional<bool> val;
+    boost::optional<std::string> str;
 
     val = pt.get_optional<bool>("trace");
     if (val) {
@@ -99,6 +124,10 @@ mputrace_json_ctrl_parse (ptree &pt, mputrace_cfg_inst_t *cfg_inst)
     val = pt.get_optional<bool>("phv-error");
     if (val) {
         cfg_inst->ctrl.phv_error = val.get();
+    }
+    str = pt.get_optional<std::string>("watch-pc");
+    if (str) {
+        cfg_inst->ctrl.watch_pc = mputrace_json_get_pc(str.get());
     }
 }
 
