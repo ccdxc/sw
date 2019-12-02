@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined(__API_SUBNET_HPP__)
+#ifndef __API_SUBNET_HPP__
 #define __API_SUBNET_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -175,12 +175,6 @@ public:
     static void *subnet_key_func_get(void *entry) {
         subnet_entry *subnet = (subnet_entry *)entry;
         return (void *)&(subnet->key_);
-    }
-
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_subnet_key_t);
     }
 
     /// \brief          return router mac of this subnet

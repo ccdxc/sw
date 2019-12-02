@@ -140,12 +140,6 @@ public:
         return (void *)&(tep->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_tep_key_t);
-    }
-
     /// \brief    return TEP's key
     /// \return    key of the TEP
     pds_tep_key_t key(void) const { return key_; }

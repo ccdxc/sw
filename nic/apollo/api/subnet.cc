@@ -206,7 +206,7 @@ subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     if (vpc_.id != spec->vpc.id) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"vpc\" "
                       "from %u to %u on subnet %s",
-                      vpc_.id, spec->vpc.id)
+                      vpc_.id, spec->vpc.id, key2str());
             return SDK_RET_INVALID_ARG;
     }
     if ((fabric_encap_.type != spec->fabric_encap.type) ||

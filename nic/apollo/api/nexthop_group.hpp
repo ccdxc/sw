@@ -155,12 +155,6 @@ public:
         return (void *)&(nh_group->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_nexthop_group_key_t);
-    }
-
     /// \brief     return the key of the nexthop group
     /// \return    nexthop group key
     pds_nexthop_group_key_t key(void) const { return key_; }

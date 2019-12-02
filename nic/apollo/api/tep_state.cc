@@ -25,7 +25,7 @@ tep_state::tep_state() {
     // TODO: need to tune multi-threading related params later
     tep_ht_ = ht::factory(PDS_MAX_TEP >> 2,
                           tep_entry::tep_key_func_get,
-                          tep_entry::key_size());
+                          sizeof(pds_tep_key_t));
     SDK_ASSERT(tep_ht_ != NULL);
 
     tep_slab_ = slab::factory("tep", PDS_SLAB_ID_TEP, sizeof(tep_entry),

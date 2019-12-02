@@ -21,7 +21,7 @@ namespace api {
 vpc_state::vpc_state() {
     vpc_ht_ = ht::factory(PDS_MAX_VPC >> 1,
                           vpc_entry::vpc_key_func_get,
-                          vpc_entry::key_size());
+                          sizeof(pds_vpc_key_t));
     SDK_ASSERT(vpc_ht_ != NULL);
     // we should accomodate one extra vpc of type provider/underlay/internet
     // and any other reserved vpcs (like service tunnel vpc etc.)

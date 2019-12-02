@@ -53,12 +53,6 @@ public:
         return (void *)&(lif->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_lif_key_t);
-    }
-
     /// \brief    handle all programming during lif creation
     ///< \param[in] spec    lif configuration parameters
     /// \return    SDK_RET_OK on success, failure status code on error

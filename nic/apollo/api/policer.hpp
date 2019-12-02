@@ -63,11 +63,17 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief          free h/w resources used by this object, if any
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
     /// \brief          program all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          reprogram all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
@@ -75,16 +81,23 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
-    /// \brief          free h/w resources used by this object, if any
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
-
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -93,7 +106,9 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \param[in]      epoch       epoch being activated
     /// \param[in]      api_op      api operation
@@ -152,12 +167,6 @@ public:
     static void *policer_key_func_get(void *entry) {
         policer_entry *policer = (policer_entry *)entry;
         return (void *)&(policer->key_);
-    }
-
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_policer_key_t);
     }
 
     /// \brief          return the policer key/id

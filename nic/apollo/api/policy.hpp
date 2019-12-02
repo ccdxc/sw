@@ -170,12 +170,6 @@ public:
         return (void *)&(table->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_policy_key_t);
-    }
-
     ///\brief read config
     ///\param[out] info Pointer to the info object
     ///\return   SDK_RET_OK on success, failure status code on error

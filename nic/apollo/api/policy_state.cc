@@ -24,7 +24,7 @@ policy_state::policy_state() {
     // TODO: need to tune multi-threading related params later
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                              policy::policy_key_func_get,
-                             policy::key_size());
+                             sizeof(pds_policy_key_t));
     SDK_ASSERT(policy_ht_ != NULL);
 
     policy_slab_ = slab::factory("security-policy", PDS_SLAB_ID_POLICY,

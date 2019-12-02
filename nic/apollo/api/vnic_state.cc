@@ -19,7 +19,7 @@ vnic_state::vnic_state() {
     // TODO: need to tune multi-threading related params later
     vnic_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
                            vnic_entry::vnic_key_func_get,
-                           vnic_entry::key_size());
+                           sizeof(pds_vnic_key_t));
     SDK_ASSERT(vnic_ht_ != NULL);
 
     vnic_slab_ = slab::factory("vnic", PDS_SLAB_ID_VNIC, sizeof(vnic_entry),

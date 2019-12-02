@@ -73,13 +73,6 @@ public:
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
 
-    /// \brief      program all h/w tables relevant to this object except
-    ///             stage 0 table(s), if any
-    /// \param[in]  obj_ctxt transient state associated with this API
-    /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
-
     /// \brief      re-program all hardware tables relevant to this object
     ///             except stage 0 table(s), if any and this reprogramming
     ///             must be based on existing state and any of the state
@@ -90,23 +83,6 @@ public:
     // NOTE: this method is called when an object is in the dependent/puppet
     //       object list
     virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
-
-    /// \brief      cleanup all h/w tables relevant to this object except
-    ///             stage 0 table(s), if any, by updating packed entries with
-    ///             latest epoch#
-    /// \param[in]  obj_ctxt transient state associated with this API
-    /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief      update all h/w tables relevant to this object except stage 0
-    ///             table(s), if any, by updating packed entries with latest
-    ///             epoch#
-    /// \param[in]  orig_obj old version of the unmodified object
-    /// \param[in]  obj_ctxt transient state associated with this API
-    /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
@@ -152,12 +128,22 @@ private:
     /// \brief  destructor
     ~policer_impl() {}
 
-    /// \brief     program policer related tables during create
-    /// \param[in] epoch epoch being activated
-    /// \param[in] policer    policer obj being programmed
-    /// \param[in] spec  policer configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \brief      program policer related tables during policer create by
+    ///             enabling stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch      epoch being activated
+    /// \param[in]  policer    policer obj being programmed
+    /// \param[in]  spec       policer configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_create_(pds_epoch_t epoch, policer_entry *policer,
+                               pds_policer_spec_t *spec);
+
+    /// \brief      program policer related tables during policer update by
+    ///             enabling stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch      epoch being activated
+    /// \param[in]  policer    cloned policer obj being programmed
+    /// \param[in]  spec       policer configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, policer_entry *policer,
                                pds_policer_spec_t *spec);
 
     /// \brief     program policer related tables during delete

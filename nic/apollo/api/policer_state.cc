@@ -20,7 +20,7 @@ namespace api {
 policer_state::policer_state() {
     policer_ht_ = ht::factory(PDS_MAX_POLICER >> 2,
                            policer_entry::policer_key_func_get,
-                           policer_entry::key_size());
+                           sizeof(pds_policer_key_t));
     SDK_ASSERT(policer_ht_ != NULL);
 
     policer_slab_ = slab::factory("policer", PDS_SLAB_ID_POLICER,

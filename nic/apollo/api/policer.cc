@@ -19,10 +19,6 @@
 
 namespace api {
 
-/// \defgroup PDS_POLICER - policer functionality
-/// \ingroup PDS_POLICER
-/// @{
-
 policer_entry::policer_entry() {
     ht_ctxt_.reset();
     impl_ = NULL;
@@ -92,27 +88,8 @@ policer_entry::free(policer_entry *policer) {
 }
 
 sdk_ret_t
-policer_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_policer_spec_t *spec = &api_ctxt->api_params->policer_spec;
-
-    memcpy(&this->key_, &spec->key, sizeof(key_));
-    dir_ = spec->dir;
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 policer_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
-}
-
-sdk_ret_t
-policer_entry::program_create(obj_ctxt_t *obj_ctxt) {
-    return impl_->program_hw(this, obj_ctxt);
-}
-
-sdk_ret_t
-policer_entry::reprogram_config(api_op_t api_op) {
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -126,14 +103,29 @@ policer_entry::nuke_resources_(void) {
 }
 
 sdk_ret_t
-policer_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->cleanup_hw(this, obj_ctxt);
+policer_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_policer_spec_t *spec = &api_ctxt->api_params->policer_spec;
+
+    memcpy(&this->key_, &spec->key, sizeof(key_));
+    dir_ = spec->dir;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
-policer_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+policer_entry::reprogram_config(api_op_t api_op) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+policer_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_policer_spec_t *spec = &obj_ctxt->api_params->policer_spec;
+
+    if (dir_ != spec->dir) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"dir\ from %u to %u "
+                      "on policer %u", dir_, spec->dir, key_.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -154,11 +146,6 @@ policer_entry::read(pds_policer_key_t *key, pds_policer_info_t *info) {
 }
 
 sdk_ret_t
-policer_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 policer_entry::add_to_db(void) {
     return policer_db()->insert(this);
 }
@@ -172,10 +159,13 @@ policer_entry::del_from_db(void) {
 }
 
 sdk_ret_t
+policer_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 policer_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICER, this);
 }
-
-/// @}     // end of PDS_POLICER
 
 }    // namespace api

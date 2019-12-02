@@ -143,12 +143,6 @@ public:
         return (void *)&(meter->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_meter_key_t);
-    }
-
     /// \brief          return the meter entry's key/id
     /// \return         key/id of the meter entry
     pds_meter_key_t key(void) const { return key_; }

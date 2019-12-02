@@ -154,12 +154,6 @@ public:
         return (void *)&(vpc->key_);
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_vpc_key_t);
-    }
-
     /// \brief  return the key of VPC
     /// \return key of the VPC
     pds_vpc_key_t key(void) const { return key_; }

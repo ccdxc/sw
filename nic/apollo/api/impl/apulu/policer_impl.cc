@@ -86,22 +86,31 @@ policer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_policer_spec_t *spec;
 
-    spec = &obj_ctxt->api_params->policer_spec;
-    if (spec->dir == PDS_POLICER_DIR_INGRESS) {
-        // reserve an entry in Rx policer table
-        ret = policer_impl_db()->rx_idxr()->alloc(&idx);
-    } else if (spec->dir == PDS_POLICER_DIR_EGRESS) {
-        // reserve an entry in Tx policer table
-        ret = policer_impl_db()->tx_idxr()->alloc(&idx);
-    } else {
-        return SDK_RET_INVALID_ARG;
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        spec = &obj_ctxt->api_params->policer_spec;
+        if (spec->dir == PDS_POLICER_DIR_INGRESS) {
+            // reserve an entry in Rx policer table
+            ret = policer_impl_db()->rx_idxr()->alloc(&idx);
+        } else if (spec->dir == PDS_POLICER_DIR_EGRESS) {
+            // reserve an entry in Tx policer table
+            ret = policer_impl_db()->tx_idxr()->alloc(&idx);
+        } else {
+            return SDK_RET_INVALID_ARG;
+        }
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in policer table for "
+                          "policer %u, err %u", spec->key.id, ret);
+            return ret;
+        }
+        hw_id_ = idx;
+        break;
+
+    case API_OP_UPDATE:
+        // we will use the same h/w resources as the original object
+    default:
+        break;
     }
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in policer table for policer %u,"
-                      " err %u", spec->key.id, ret);
-        return ret;
-    }
-    hw_id_ = idx;
     return SDK_RET_OK;
 }
 
@@ -134,24 +143,8 @@ policer_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-policer_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 policer_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
     return SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-policer_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-policer_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                     obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
@@ -178,7 +171,37 @@ policer_impl::activate_create_(pds_epoch_t epoch, policer_entry *policer,
         }
     }
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u",
+        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u create",
+                      spec->key.id, hw_id_);
+    }
+    return ret;
+}
+
+sdk_ret_t
+policer_impl::activate_update_(pds_epoch_t epoch, policer_entry *policer,
+                               pds_policer_spec_t *spec) {
+    sdk_ret_t ret;
+    sdk::policer_t pol;
+
+    if (spec->dir == PDS_POLICER_DIR_INGRESS) {
+        if (spec->type == sdk::POLICER_TYPE_PPS) {
+            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+            ret = program_vnic_policer_rx_entry_(&pol, hw_id_, true);
+        } else {
+            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            ret = program_vnic_policer_rx_entry_(&pol, hw_id_, true);
+        }
+    } else {
+        if (spec->type == sdk::POLICER_TYPE_PPS) {
+            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+            ret = program_vnic_policer_tx_entry_(&pol, hw_id_, true);
+        } else {
+            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            ret = program_vnic_policer_tx_entry_(&pol, hw_id_, true);
+        }
+    }
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u update",
                       spec->key.id, hw_id_);
     }
     return ret;
@@ -224,6 +247,10 @@ policer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
 
     case API_OP_UPDATE:
+        spec = &obj_ctxt->api_params->policer_spec;
+        ret = activate_update_(epoch, (policer_entry *)api_obj, spec);
+        break;
+
     default:
         ret = SDK_RET_INVALID_OP;
         break;
