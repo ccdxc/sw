@@ -9,7 +9,6 @@
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
-#include "nic/apollo/api/if_utils.hpp"
 
 namespace api_test {
 
@@ -21,6 +20,7 @@ extern uint32_t k_l3_if_id;
 class if_feeder : public feeder {
 public:
     pds_if_spec_t spec_feeder;
+
     // Constructor
     if_feeder() { };
     if_feeder(const if_feeder& feeder) {
@@ -46,6 +46,25 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_if_spec_t *spec) {
+    os << " key: " << spec->key.id
+       << " type: " << spec->type;
+
+    if (spec->type == PDS_IF_TYPE_L3) {
+        os << " port num: " << (uint32_t)spec->l3_if_info.port_num
+           << " ip pfx: " << ippfx2str(&spec->l3_if_info.ip_prefix)
+           << " mac addr: " << macaddr2str(spec->l3_if_info.mac_addr);
+    }
+
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_if_info_t *obj) {
+    os << "Interface info =>" << &obj->spec << std::endl;
+    return os;
+}
 inline std::ostream&
 operator<<(std::ostream& os, const if_feeder& obj) {
     os << "Interface feeder =>" << &obj.spec_feeder;

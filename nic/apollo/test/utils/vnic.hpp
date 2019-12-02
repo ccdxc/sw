@@ -7,7 +7,6 @@
 #define __TEST_UTILS_VNIC_HPP__
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
-#include "nic/apollo/api/vnic_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -20,6 +19,7 @@ extern const uint32_t k_max_vnic;
 // VNIC test feeder class
 class vnic_feeder : public feeder {
 public:
+    // TODO: move to vnic_spec_t instead of below variables
     pds_vnic_id_t id;
     pds_vpc_id_t vpc_id;
     pds_subnet_id_t subnet_id;
@@ -59,6 +59,54 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vnic_key_t *key) {
+    os << " id: " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
+    os << &spec->key
+       << " vpc id: " << spec->vpc.id
+       << " subnet id: " << spec->subnet.id
+       << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
+       << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
+       << " mac: " << macaddr2str(spec->mac_addr)
+       << " src dst check: " << spec->src_dst_check
+       << " tx_mirror_session_bmap: " << +spec->tx_mirror_session_bmap
+       << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap
+       << " v4 meter id: " << spec->v4_meter.id
+       << " v6 meter id: " << spec->v6_meter.id
+       << " switch vnic: " << spec->switch_vnic;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vnic_status_t *status) {
+    os << " HW id: " << status->hw_id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vnic_stats_t *stats) {
+    os << " rx pkts: " << stats->rx_pkts
+       << " rx bytes: " << stats->rx_bytes
+       << " tx pkts: " << stats->tx_pkts
+       << " tx bytes: " << stats->tx_bytes;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vnic_info_t *obj) {
+    os << " VNIC info =>"
+       << &obj->spec
+       << &obj->status
+       << &obj->stats
+       << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const vnic_feeder& obj) {
     os << "VNIC feeder =>"

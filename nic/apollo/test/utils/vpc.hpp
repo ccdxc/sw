@@ -7,7 +7,6 @@
 #define __TEST_UTILS_VPC_HPP__
 
 #include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/apollo/api/vpc_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -51,6 +50,41 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_key_t *key) {
+    os << " id: " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_spec_t *spec) {
+    os << &spec->key
+       << " type: " << spec->type
+       << " v4 cidr: " << ipv4pfx2str(&spec->v4_prefix)
+       << " v6 cidr: " << ippfx2str(&spec->v6_prefix)
+       << " vr mac: " << macaddr2str(spec->vr_mac)
+       << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
+       << " v4 rt table: " << spec->v4_route_table.id
+       << " v6 rt table: " << spec->v6_route_table.id
+       << " nat46 pfx: " << ippfx2str(&spec->nat46_prefix);
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_status_t *status) {
+    os << " HW id: " << status->hw_id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
+    os << "VPC info =>"
+       << &obj->spec
+       << &obj->status
+       << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"

@@ -13,7 +13,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-/// \cond
+
 //----------------------------------------------------------------------------
 // Svc mapping test class
 //----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ protected:
             pds_test_base::TearDownTestCase();
     }
 };
-/// \endcond
+
 //----------------------------------------------------------------------------
 // Svc mapping test cases implementation
 //----------------------------------------------------------------------------
@@ -210,7 +210,6 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_8) {
 // Entry point
 //----------------------------------------------------------------------------
 
-/// @private
 int
 main (int argc, char **argv)
 {

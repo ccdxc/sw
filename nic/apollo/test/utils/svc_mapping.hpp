@@ -6,7 +6,6 @@
 #define __TEST_UTILS_SVC_MAPPING_HPP__
 
 #include "nic/apollo/api/include/pds_service.hpp"
-#include "nic/apollo/api/service_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -46,6 +45,31 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_svc_mapping_key_t *key) {
+    os << " vpc: " << key->vpc.id
+       << " backend ip: " << key->backend_ip
+       << " backend port: " << key->backend_port;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_svc_mapping_spec_t *spec) {
+    os << &spec->key
+       << " vip: " << spec->vip
+       << " svc port " << spec->svc_port
+       << " backend provider ip " << spec->backend_provider_ip;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_svc_mapping_info_t *obj) {
+    os << "Svc mapping info =>"
+       << &obj->spec
+       << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const svc_mapping_feeder& obj) {
     os << "Svc Mapping feeder =>" << &obj.spec << " ";

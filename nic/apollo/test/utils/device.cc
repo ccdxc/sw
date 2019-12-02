@@ -3,7 +3,6 @@
 //
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/device_utils.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 

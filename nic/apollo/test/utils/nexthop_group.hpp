@@ -6,7 +6,6 @@
 #define __TEST_UTILS_NH_GROUP_HPP__
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
-#include "nic/apollo/api/nexthop_group_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -45,6 +44,41 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_nexthop_group_key_t *key) {
+    os << " id " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_nexthop_group_spec_t *spec) {
+    os << &spec->key
+       << " type " << spec->type
+       << " num nexthops " << unsigned(spec->num_nexthops);
+    for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+        os << "nexthop " << unsigned(i + 1)
+           << &spec->nexthops[i] << std::endl;
+    }
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_nexthop_group_status_t *status) {
+    os << " HW id " << status->hw_id
+       << "nh base idx " << status->nh_base_idx;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_nexthop_group_info_t *obj) {
+    os << " NH group info =>"
+       << &obj->spec
+       << &obj->status
+       << &obj->stats
+       << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const nexthop_group_feeder& obj) {
     os << "NH group feeder =>"

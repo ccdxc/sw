@@ -3,7 +3,6 @@
 //
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/api/if_utils.hpp"
 #include "nic/apollo/test/utils/if.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"

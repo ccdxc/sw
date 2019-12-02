@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-#include "nic/apollo/api/service_utils.hpp"
+//
 #include "nic/apollo/test/utils/svc_mapping.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 

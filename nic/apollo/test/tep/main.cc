@@ -15,7 +15,7 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-/// \cond
+
 // Globals
 static const char * const k_base_nh_ip = "50.50.1.1";
 static const std::string k_base_nh_ipv6 = "e1ba:50::50:1:1";
@@ -59,7 +59,7 @@ protected:
             pds_test_base::TearDownTestCase();
     }
 };
-/// \endcond
+
 //----------------------------------------------------------------------------
 // TEP test cases implementation
 //----------------------------------------------------------------------------

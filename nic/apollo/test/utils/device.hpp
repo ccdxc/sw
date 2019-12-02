@@ -9,13 +9,13 @@
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
-#include "nic/apollo/api/device_utils.hpp"
 
 namespace api_test {
 
 // Device test feeder class
 class device_feeder : public feeder {
 public:
+    // TODO: use spec_t instead of free form strings
     std::string device_ip_str;    // Device IP
     std::string mac_addr_str;     // Device MAC Address
     std::string gw_ip_str;        // Gateway IP
@@ -47,6 +47,20 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_device_spec_t *spec) {
+    os << " ip: " << ipaddr2str(&spec->device_ip_addr)
+       << " mac: " << macaddr2str(spec->device_mac_addr)
+       << " gw ip: " << ipaddr2str(&spec->gateway_ip_addr);
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_device_info_t *obj) {
+    os << "Device info =>" << &obj->spec << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const device_feeder& obj) {
     os << "Device feeder =>"

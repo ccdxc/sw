@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
+
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/vpc_peer.hpp"

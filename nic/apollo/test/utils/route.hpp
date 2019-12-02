@@ -8,7 +8,6 @@
 
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
-#include "nic/apollo/api/route_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -52,11 +51,72 @@ public:
 
 // Dump prototypes
 inline std::ostream&
+operator<<(std::ostream& os, const pds_route_t *route) {
+    os << " pfx: " << ippfx2str(&route->prefix)
+       << " nh type: " << route->nh_type;
+    switch (route->nh_type) {
+    case PDS_NH_TYPE_OVERLAY:
+        os << " TEP id: " << route->tep.id;
+        break;
+    case PDS_NH_TYPE_IP:
+        os << " NH id: " << route->nh.id;
+        break;
+    case PDS_NH_TYPE_PEER_VPC:
+        os << " vpc id: " << route->vpc.id;
+        break;
+    default:
+        break;
+    }
+    os << std::endl;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_table_key_t *key) {
+    os << " id: " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_table_spec_t *spec) {
+    os << &spec->key
+       << " af: " << +spec->af
+       << " num routes: " << spec->num_routes;
+    for (uint32_t i = 0; i < spec->num_routes; i++) {
+        os << &spec->routes[i];
+    }
+
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_table_status_t *status) {
+    os << " Base address: " << status->route_table_base_addr;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_table_stats_t *stats) {
+    os << "  ";
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_table_info_t *obj) {
+    os << " Route Table info =>"
+       << &obj->spec
+       << &obj->status
+       << &obj->stats
+       << std::endl;
+    return os;
+}
+
+inline std::ostream&
 operator<<(std::ostream& os, const route_table_feeder& obj) {
     os << "Route table feeder => "
        << " id: " << obj.spec.key.id
        << " af: " << +obj.spec.af
-       << " num routes: " << obj.spec.num_routes;  
+       << " num routes: " << obj.spec.num_routes;
     return os;
 }
 

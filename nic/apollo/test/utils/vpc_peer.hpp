@@ -7,7 +7,6 @@
 #define __TEST_UTILS_VPC_PEER_HPP__
 
 #include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/apollo/api/vpc_utils.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
 
@@ -43,6 +42,36 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_key_t *key) {
+    os << " id: " << key->id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_spec_t *spec) {
+    os << &spec->key
+       << " vpc1: " << spec->vpc1.id
+       << " vpc2: " << spec->vpc2.id;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_status_t *status) {
+    os << " HW id1: " << status->hw_id1
+       << " HW id2: " << status->hw_id2;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_vpc_peer_info_t *obj) {
+    os << "VPC Peer info =>"
+       << &obj->spec
+       << &obj->status
+       << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
     os << "VPC Peer feeder =>"

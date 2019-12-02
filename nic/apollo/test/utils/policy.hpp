@@ -8,19 +8,18 @@
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/test/utils/api_base.hpp"
 #include "nic/apollo/test/utils/feeder.hpp"
-#include "nic/apollo/api/policy_utils.hpp"
 
 namespace api_test {
 
-/// Policy test feeder class
+// Policy test feeder class
 class policy_feeder : public feeder {
 public:
-    /// Test params
+    // Test params
     pds_policy_spec_t spec;
     uint16_t stateful_rules;
     std::string cidr_str;
 
-    /// \brief constructor
+    // constructor
     policy_feeder() { };
     policy_feeder(policy_feeder& feeder) {
         init(feeder.spec.key, feeder.stateful_rules,
@@ -47,6 +46,21 @@ public:
 };
 
 // Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_policy_spec_t *spec) {
+    os << " id: " << spec->key.id
+       << " dir: " << spec->direction
+       << " af: " << (uint32_t)spec->af
+       << " num rules: " << spec->num_rules;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_policy_info_t *obj) {
+    os << "Policy info =>" << &obj->spec << std::endl;
+    return os;
+}
+
 inline std::ostream&
 operator<<(std::ostream& os, const policy_feeder& obj) {
     os << "Policy feeder =>" << &obj.spec
