@@ -29,3 +29,9 @@ testcases:
         args    :
             type         : remote_only
 
+    -   name    : link_reset
+        testcase: testcases.drivers.ethtool.link_reset
+        enable  : True
+        args    :
+            type         : remote_only
+
