@@ -31,7 +31,8 @@ struct req_rx_s2_t0_k k;
 .align
 req_rx_rrqsge_process:
     bcf            [c2 | c3 | c7], table_error
-    nop // BD Slot
+    // c5: near the end of page
+    seq            c5, CAPRI_KEY_FIELD(IN_P, end_of_page), 1 // BD Slot
 
     // Use conditional flag to select between sge_index 0 and 1
     // sge_index = 0
@@ -42,7 +43,8 @@ req_rx_rrqsge_process:
     // Data structures are accessed from bottom to top in big-endian, hence go to
     // the bottom of the SGE_T
     // big-endian
-    add            r1, r0, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
+    add.!c5        r1, r0, (RRQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    add.c5         r1, r0, (RRQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
     // r2 = k.args.current_sge_offset
     add            r2, r0, K_CUR_SGE_OFFSET
@@ -139,6 +141,10 @@ sge_loop:
     // sge_index = 1
     setcf.c1       c7, [!c0] // branch delay slot
 
+    // new logic is to read from the bottom of 64bytes, move point back to get the right index
+    // new logic is to read from the bottom of 64bytes, move point back to get the right index
+    add.!c5        r1, r1, (HBM_NUM_SGES_PER_CACHELINE - 2), LOG_SIZEOF_SGE_T_BITS
+    add.c5         r1, r1, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE-1), r1
     seq            c1, r1, K_NUM_VALID_SGES

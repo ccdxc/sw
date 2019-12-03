@@ -428,6 +428,7 @@ create_qp:
     //TODO: This should be enabled through modify_qp
     phvwr       p.sqcb1.sqd_async_notify_enable, 1
     phvwr.c4    p.sqcb1.pkt_spec_enable, 1
+    phvwr       p.sqcb1.log_sq_page_size, d.qp.sq_page_size_log2[4:0]
     //SQCB2:
 
     phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]

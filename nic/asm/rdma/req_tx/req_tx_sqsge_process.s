@@ -44,7 +44,8 @@ struct req_tx_s3_t0_k k;
 .align
 req_tx_sqsge_process:
     bcf            [c2 | c3 | c7], table_error
-    nop // BD Slot
+    // c5: near the end of page
+    seq            c5, CAPRI_KEY_FIELD(IN_P, end_of_page), 1 // BD Slot
 
     // Use conditional flag to select between sge_index 0 and 1
     // sge_index = 0
@@ -55,7 +56,8 @@ req_tx_sqsge_process:
     // Data structures are accessed from bottom to top in big-endian, hence go to
     // the bottom of the SGE_T
     // big-endian
-    add            r1, r0, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
+    add.!c5        r1, r0, (SQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    add.c5         r1, r0, (SQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
     // r2 = k.args.current_sge_offset
     add            r2, r0, K_CURRENT_SGE_OFFSET
@@ -155,6 +157,9 @@ sge_loop:
     phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, pyld_bytes), r5
 
     // if (index == num_valid_sges)
+    // new logic is to read from the bottom of 64bytes, move point back to get the right index
+    add.!c5        r1, r1, (HBM_NUM_SGES_PER_CACHELINE - 2), LOG_SIZEOF_SGE_T_BITS
+    add.c5         r1, r1, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE-1), r1
     seq            c1, r1, K_NUM_VALID_SGES
@@ -183,16 +188,16 @@ sge_loop:
     // if (index == num_valid_sges) last = TRUE else last = FALSE;
     cmov           r3, c1, 1, 0
     
-    seq            c5, K_SPEC_ENABLE, 1      
+    seq            c6, K_SPEC_ENABLE, 1      
     CAPRI_RESET_TABLE_2_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), r4, \
               CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, op_type, first), CAPRI_KEY_RANGE(IN_P, op_type, first)
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), r3, \
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r6
-    phvwrpair.!c5  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
+    phvwrpair.!c6  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
                   CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
     
-    phvwr.c5  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), K_SPEC_MSG_PSN
+    phvwr.c6  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), K_SPEC_MSG_PSN
     phvwr     CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key, op_send_wr_ah_handle), \
               CAPRI_KEY_RANGE(IN_P, imm_data_or_inv_key_sbit0_ebit7, ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default

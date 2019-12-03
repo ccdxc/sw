@@ -138,6 +138,7 @@ poll_for_work:
 
         // header_template_addr is needed to load hdr_template_process in fast-path.
         // For UD QPs, header_template_addr is shared with the q_key
+        phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, log_page_size), d.log_sq_page_size
         phvwrpair      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
                        CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable // BD-slot
 
@@ -271,6 +272,8 @@ in_progress:
 
         phvwrpair CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr, \
                   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
+
+        phvwr     CAPRI_PHV_FIELD(TO_S2_SQWQE_P, log_page_size), d.log_sq_page_size
        
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
 
@@ -324,6 +327,7 @@ in_progress_spec:
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_RESET_TABLE_0_ARG()
 
+        phvwr     CAPRI_PHV_FIELD(TO_S2_SQWQE_P, log_page_size), d.log_sq_page_size
         phvwr     CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_msg_psn), d.spec_msg_psn, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
@@ -557,6 +561,7 @@ process_sge_recirc:
     tblwr.c4       d.spec_msg_psn, d.msg_psn
 
 skip_msg_spec_reset:
+    phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, log_page_size), d.log_sq_page_size
     phvwr          CAPRI_PHV_FIELD(TO_S1_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r0)
 
@@ -582,6 +587,7 @@ fence:
     CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
     // Setup to-stage info.
+    phvwr       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, log_page_size), d.log_sq_page_size
     phvwrpair   CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
                 CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
     phvwrpair   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \

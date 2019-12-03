@@ -215,12 +215,14 @@ header_type req_rx_to_stage_rrqwqe_info_t {
         sge_opt                          :    1;
         priv_oper_enable                 :    1;
         log_pmtu                         :    5;
+        log_page_size                    :    5;
     }
 }
 
 header_type req_rx_sqcb1_to_sge_recirc_info_t {
     fields {
         rrq_in_progress                  :  1;
+        log_page_size                    :  5;
     }
 }
 
@@ -315,6 +317,7 @@ header_type req_rx_rrqwqe_to_sge_info_t {
         is_atomic                        :    1;
         dma_cmd_eop                      :    1;
         dma_cmd_start_index              :    4;
+        end_of_page                      :    1;
     }
 }
 
@@ -1421,6 +1424,7 @@ action req_rx_rrqsge_process () {
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_eop, t0_s2s_rrqwqe_to_sge_info.dma_cmd_eop);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_rrqwqe_to_sge_info.dma_cmd_start_index);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.post_cq, t0_s2s_rrqwqe_to_sge_info.post_cq);
+    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.end_of_page, t0_s2s_rrqwqe_to_sge_info.end_of_page);
 
 }
 action req_rx_rrqwqe_process () {
@@ -1435,6 +1439,7 @@ action req_rx_rrqwqe_process () {
     modify_field(to_s1_rrqwqe_info_scr.sge_opt, to_s1_rrqwqe_info.sge_opt);
     modify_field(to_s1_rrqwqe_info_scr.priv_oper_enable, to_s1_rrqwqe_info.priv_oper_enable);
     modify_field(to_s1_rrqwqe_info_scr.log_pmtu, to_s1_rrqwqe_info.log_pmtu);
+    modify_field(to_s1_rrqwqe_info_scr.log_page_size, to_s1_rrqwqe_info.log_page_size);
 
     // stage to stage
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
@@ -1464,6 +1469,7 @@ action req_rx_sqcb1_recirc_process () {
     modify_field(to_s1_recirc_info_scr.sge_opt, to_s1_recirc_info.sge_opt);
 
     modify_field(t0_s2s_sqcb1_to_sge_recirc_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_sge_recirc_info.rrq_in_progress);
+    modify_field(t0_s2s_sqcb1_to_sge_recirc_info_scr.log_page_size, t0_s2s_sqcb1_to_sge_recirc_info.log_page_size);
 }
 
 action req_rx_sqcb1_process () {

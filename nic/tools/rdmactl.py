@@ -392,7 +392,8 @@ class RdmaSQCB1state(Packet):
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
         BitField("rrq_spec_cindex", 0, 16),
-        BitField("sqcb1_rsvd7", 0, 16),
+        BitField("sqcb1_rsvd7", 0, 11),
+        BitField("log_sq_page_size", 0xc, 5),
     ]
 
 class RdmaSQCB2state(Packet):

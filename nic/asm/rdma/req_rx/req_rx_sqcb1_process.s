@@ -304,6 +304,7 @@ set_rrqwqe_pc:
     sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
     add            r5, r5, d.rrq_spec_cindex, LOG_RRQ_WQE_SIZE
 
+    phvwr          CAPRI_PHV_FIELD(TO_S1_P, log_page_size), d.log_sq_page_size
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, rrq_spec_cindex), d.rrq_spec_cindex
     // Increment spec-cindex for Read-Resp-Only/Read-Resp-Last/Atomic packets.
     IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY| REQ_RX_FLAG_LAST| REQ_RX_FLAG_ATOMIC_AETH)
@@ -486,6 +487,7 @@ check_state:
 
 process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()
+    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_SGE_RECIRC_P, log_page_size), d.log_sq_page_size
     phvwr          CAPRI_PHV_FIELD(TO_S1_RECIRC_P, sge_opt), d.pkt_spec_enable
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_recirc_sge_process, r0)
 

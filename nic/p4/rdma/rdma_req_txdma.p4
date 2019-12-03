@@ -311,7 +311,8 @@ header_type req_tx_wqe_to_sge_info_t {
         poll_in_progress                 : 1;
         color                            : 1;
         spec_enable                      : 1;
-        rsvd                             : 17;
+        end_of_page                      : 1;
+        rsvd                             : 16;
         dma_cmd_start_index              : 6;
         imm_data_or_inv_key              : 32;
         ah_handle                        : 32;
@@ -501,7 +502,8 @@ header_type req_tx_to_stage_sqwqe_info_t {
         wqe_addr                         :   64;
         header_template_addr             :   32;
         fast_reg_rsvd_lkey_enable        :    1;
-        pad                              :   22;
+        log_page_size                    :    5;
+        pad                              :   17;
         // These fields are written in tx_stage0_load_params. Do not move.
         log_num_kt_entries               :    5;
         log_num_dcqcn_profiles           :    4;
@@ -1670,6 +1672,7 @@ action req_tx_sqsge_process () {
     modify_field(t0_s2s_wqe_to_sge_info_scr.remaining_payload_bytes, t0_s2s_wqe_to_sge_info.remaining_payload_bytes);
     modify_field(t0_s2s_wqe_to_sge_info_scr.poll_in_progress, t0_s2s_wqe_to_sge_info.poll_in_progress);
     modify_field(t0_s2s_wqe_to_sge_info_scr.color, t0_s2s_wqe_to_sge_info.color);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.end_of_page, t0_s2s_wqe_to_sge_info.end_of_page);
     modify_field(t0_s2s_wqe_to_sge_info_scr.rsvd, t0_s2s_wqe_to_sge_info.rsvd);
     modify_field(t0_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_wqe_to_sge_info.dma_cmd_start_index);
     modify_field(t0_s2s_wqe_to_sge_info_scr.imm_data_or_inv_key, t0_s2s_wqe_to_sge_info.imm_data_or_inv_key);
@@ -1958,6 +1961,7 @@ action req_tx_sqwqe_process () {
     modify_field(to_s2_sqwqe_info_scr.header_template_addr,
                  to_s2_sqwqe_info.header_template_addr);
     modify_field(to_s2_sqwqe_info_scr.fast_reg_rsvd_lkey_enable, to_s2_sqwqe_info.fast_reg_rsvd_lkey_enable);
+    modify_field(to_s2_sqwqe_info_scr.log_page_size, to_s2_sqwqe_info.log_page_size);
     modify_field(to_s2_sqwqe_info_scr.pad, to_s2_sqwqe_info.pad);
     modify_field(to_s2_sqwqe_info_scr.log_num_kt_entries, to_s2_sqwqe_info.log_num_kt_entries);
     modify_field(to_s2_sqwqe_info_scr.log_num_dcqcn_profiles, to_s2_sqwqe_info.log_num_dcqcn_profiles);
@@ -2166,6 +2170,7 @@ action req_tx_sqsge_iterate_process_s2 () {
 
     // to stage
     modify_field(to_s2_sqwqe_info_scr.wqe_addr, to_s2_sqwqe_info.wqe_addr);
+    modify_field(to_s2_sqwqe_info_scr.log_page_size, to_s2_sqwqe_info.log_page_size);
 
     // stage to stage
     modify_field(t2_s2s_wqe_to_sge_info_scr.in_progress, t2_s2s_wqe_to_sge_info.in_progress);

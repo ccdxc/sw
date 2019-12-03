@@ -11,7 +11,9 @@ struct req_tx_s2_t2_k k;
 #define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
+#define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit1, num_valid_sges_sbit2_ebit7)
 #define K_WQE_ADDR       CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+#define K_LOG_PAGE_SIZE  CAPRI_KEY_FIELD(IN_TO_S_P, log_page_size)
 
 %%
     .param    req_tx_sqsge_process
@@ -41,5 +43,16 @@ trigger_stg3_sqsge_process:
 
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
     add            r1, r1, K_WQE_ADDR
+
+    srl            r3, r1, K_LOG_PAGE_SIZE
+    add            r4, r1, (SQWQE_SGE_TABLE_READ_SIZE - 1)
+    srl            r4, r4, K_LOG_PAGE_SIZE
+    sne            c3, r4, r3
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c3         r1, r1, 2, LOG_SIZEOF_SGE_T
+    // sge addr + 16 > end_of_page_addr, move addr_to_load back by sizeof 3 SGE's
+    phvwr.c3        CAPRI_PHV_FIELD(WQE_TO_SGE_P, end_of_page), 1
+    sub.c3          r1, r1, 3, LOG_SIZEOF_SGE_T
+
     CAPRI_SET_TABLE_2_VALID(0)
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)

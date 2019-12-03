@@ -27,6 +27,7 @@ struct req_rx_s1_t0_k k;
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
+#define K_LOG_PAGE_SIZE  CAPRI_KEY_RANGE(IN_TO_S_P, log_page_size_sbit0_ebit2, log_page_size_sbit3_ebit4)
 
 #define TO_S1_RECIRC_P to_s1_recirc_info
 #define TO_S2_P to_s2_rrqsge_info
@@ -243,6 +244,16 @@ read:
     j.c2           req_rx_rrqwqe_base_sge_process
 
     add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
+    srl            r5, r3, K_LOG_PAGE_SIZE
+    add            r6, r3, (RRQWQE_SGE_TABLE_READ_SIZE - 1)
+    srl            r6, r6, K_LOG_PAGE_SIZE
+    sne            c3, r5, r6
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c3        r3, r3, 2, LOG_SIZEOF_SGE_T
+    phvwr.!c3      CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 0
+    // start addr and end addr are not in the same page, move addr_to_load back by sizeof 3 SGE's
+    phvwr.c3       CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 1
+    sub.c3         r3, r3, 3, LOG_SIZEOF_SGE_T
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
                                 req_rx_rrqsge_process, r3)
 

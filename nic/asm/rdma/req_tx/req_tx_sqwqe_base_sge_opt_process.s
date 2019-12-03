@@ -27,6 +27,7 @@ struct req_tx_s2_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
+#define K_LOG_PAGE_SIZE  CAPRI_KEY_FIELD(IN_TO_S_P, log_page_size)
 #define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 
@@ -140,6 +141,16 @@ trigger_sqsge_process:
     // imm_data and inv_key are union members
     phvwrpair       CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), \
                     CAPRI_PHV_FIELD(WQE_TO_SGE_P, imm_data_or_inv_key), d.{base.imm_data}
+
+    srl             r5, r3, K_LOG_PAGE_SIZE
+    add             r6, r3, (SQWQE_SGE_TABLE_READ_SIZE - 1)
+    srl             r6, r6, K_LOG_PAGE_SIZE
+    sne             c3, r5, r6
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c3         r3, r3, 2, LOG_SIZEOF_SGE_T
+    // start addr and end addr are not in the same page, move addr_to_load back by sizeof 3 SGE's
+    phvwr.c3        CAPRI_PHV_FIELD(WQE_TO_SGE_P, end_of_page), 1
+    sub.c3          r3, r3, 3, LOG_SIZEOF_SGE_T
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 

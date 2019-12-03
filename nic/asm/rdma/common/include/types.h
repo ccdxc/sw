@@ -644,6 +644,14 @@ union mr_flags_t {
 #define SQWQE_FORMAT_8x4      1
 #define SQWQE_FORMAT_16x2     2
 
+#define SQWQE_SGE_TABLE_READ_SIZE 32
+#define SQWQE_OPT_SGE_OFFSET_BITS 256 // 32 * 8
+#define SQWQE_OPT_LAST_SGE_OFFSET_BITS 128
+
+#define RRQWQE_SGE_TABLE_READ_SIZE 32
+#define RRQWQE_OPT_SGE_OFFSET_BITS 256 // 32 * 8
+#define RRQWQE_OPT_LAST_SGE_OFFSET_BITS 128
+
 //16B
 struct sqwqe_base_t {
     wrid               : 64;
