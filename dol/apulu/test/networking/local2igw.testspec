@@ -42,8 +42,8 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
-                src     : ref://testcase/config/devicecfg/MACAddr
-                dst     : 00:02:0b:0a:0d:0e
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMac
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
                 dst     : ref://testcase/config/route/TunIP
@@ -51,14 +51,14 @@ packets:
                 tos     : 0
                 id      : 0
             vxlan:
-                vni     : ref://testcase/config/route/TUNNEL/EncapValue
+                vni     : ref://testcase/config/route/VPC/Vnid
             ipv4:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             ipv6:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
+                dst     : ref://testcase/config/route/TUNNEL/MACAddr
 
 buffers:
     - buffer:

@@ -42,6 +42,7 @@ class RouteObject(base.ConfigObjectBase):
             self.TunnelId = 0
         self.NexthopId = self.NEXTHOP.NexthopId if self.NEXTHOP else 0
         self.VPCId = parent.VPCId
+        self.VPC = parent
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
         self.PeerVPCId = vpcpeerid
@@ -141,6 +142,7 @@ class RouteObject(base.ConfigObjectBase):
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
+        obj.vpc = self.VPC
         return
 
 class RouteObjectClient(base.ConfigClientBase):
