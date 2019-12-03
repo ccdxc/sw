@@ -1,0 +1,133 @@
+<div fxFlex class="alertsevents-events-table">
+  <app-tableviewedit fxFlex="auto" fxLayout="column" class="naples-table-container"
+                     [data]="dataObjects"
+                     [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
+                     [runDoCheck]="true"
+                     [dataKey]="'meta.name'" [sortOrder]="-1" [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [enableCheckbox]="true"
+                     [actionTemplate]="actionTemplate">
+  </app-tableviewedit>
+</div>
+
+
+<ng-template #actionTemplate let-rowData>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'resolved'"
+              matTooltip="Resolve Alert"
+              class="global-table-action-icon" (click)="resolveAlert(rowData)">
+      done_all
+    </mat-icon>
+    <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'acknowledged'"
+              matTooltip="Acknowledge Alert"
+              class="global-table-action-icon alertsevents-acknowledge-icon"
+              (click)="acknowledgeAlert(rowData)">
+      done
+    </mat-icon>
+    <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'open'"
+              matTooltip="Mark Alert as Open"
+              class="global-table-action-icon alertsevents-open-icon"
+              (click)="openAlert(rowData)">
+      priority_high
+    </mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader fxFlex title="Alerts" [count]="count" [total]="alerts.length"
+                   [icon]="alertsIcon"
+                   [enableColumnSelect]="false" width="250px">
+    <div fxFlex="50" fxLayoutAlign="start center">
+      <div fxFlex="none">
+        <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"
+                  class="global-table-action-icon"
+                  (click)="resolveSelectedAlerts()">
+          done_all
+        </mat-icon>
+        <mat-icon *ngIf="showBatchAcknowLedgeIcon()" matTooltip="Acknowledge Selected Alerts"
+                  class="global-table-action-icon alertsevents-acknowledge-icon"
+                  (click)="acknowledgeSelectedAlerts()">
+          done
+        </mat-icon>
+        <mat-icon *ngIf="showBatchOpenIcon()" matTooltip="Mark Selected Alerts as Open"
+                  class="global-table-action-icon alertsevents-open-icon"
+                  (click)="openSelectedAlerts()">
+          priority_high
+        </mat-icon>
+      </div>
+      <div fxFlex></div>
+      <div *ngIf="selector && selector.alertSelector && selector.alertSelector.name"
+           class="alertsevents-filter-sourcenode">
+        Filtering by {{selector.alertSelector.name}}
+      </div>
+    </div>
+    <div fxFlex="none" fxLayoutAlign="end center">
+      <!-- Checkboxes for Open, Ack, Resolved states -->
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+        <ng-container *ngFor="let state of possibleFilterStates">
+          <p-checkbox name="stateFilter" styleClass="alertsevents-checkbox"
+                      labelStyleClass="alertsevents-checkbox-label" [value]="state"
+                      [label]="state"
+                      [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
+                      [(ngModel)]="selectedStateFilters" (onChange)="filterAlerts()">
+          </p-checkbox>
+        </ng-container>
+      </div>
+      <!-- Removing the all button -->
+      <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number "
+        (click)="onAlertNumberClick(null)"  [matTooltip]="'All Alerts'"
+        *ngIf="currentAlertSeverityFilter != null">All</div> -->
+
+      <div class="global-button global-alert-critical alertsevents-main-menu-number "
+           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+           (click)="onAlertNumberClick('critical')" [matTooltip]="'Critical Alerts'"
+           *ngIf="alertNumbers.critical>0 && alertNumbers.critical !== alerts.length">
+        {{ alertNumbers.critical }}</div>
+      <div class="global-button global-alert-warning alertsevents-main-menu-number "
+           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+           (click)="onAlertNumberClick('warn')" [matTooltip]="'Warning Alerts'"
+           *ngIf="alertNumbers.warn>0 && alertNumbers.warn !== alerts.length">
+        {{ alertNumbers.warn }}</div>
+      <div class="global-button global-alert-info alertsevents-main-menu-number "
+           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+           (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
+           *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
+        {{ alertNumbers.info }}</div>
+      &nbsp;|
+      <app-timerange fxFlex="nogrow" [selectedTimeRange]="alertsSelectedTimeRange"
+                     (timeRange)="setAlertsTimeRange($event)"></app-timerange>
+    </div>
+  </app-tableheader>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'status.severity'">
+      <mat-icon *ngIf="rowData.status.severity === 'critical'"
+                class="alertsevents-icon global-alert-critical-icon">
+        error</mat-icon>
+      <mat-icon *ngIf="rowData.status.severity === 'warn'"
+                class="alertsevents-icon global-alert-warning-icon">
+        error</mat-icon>
+      <mat-icon *ngIf="rowData.status.severity === 'info'"
+                class="alertsevents-icon global-alert-info-icon">
+        notifications</mat-icon>
+      <div style="display: inline; margin-left: 25px">
+        {{ severityEnum[rowData.status.severity] }} </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'status.source'">
+      <div *ngIf="rowData.status.source != null" style="display: inline">
+        {{ rowData.status.source['node-name'] }} : {{ rowData.status.source.component }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>

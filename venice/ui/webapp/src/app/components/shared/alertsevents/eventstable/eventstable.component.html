@@ -1,0 +1,103 @@
+<div class="alertsevents-events-table" style="height: 100%">
+  <app-tableviewedit
+                     style="height: 100%"
+                     fxLayout="column"
+                     [data]="dataObjects"
+                     [showRowExpand]="showRowExpand"
+                     [cols]="cols"
+                     [virtualRowHeight]="36"
+                     [sortField]="'meta.mod-time'"
+                     [dataKey]="'meta.name'"
+                     [sortOrder]="-1"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate">
+  </app-tableviewedit>
+</div>
+<ng-template #captionTemplate>
+  <div fxFlex fxLayout="row" fxLayoutAlign="center center">
+    <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
+                     [icon]="eventsIcon"
+                     width="250px">
+    </app-tableheader>
+    <div fxFlex></div>
+  </div>
+  <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+    <!-- All events are currently informational, so we do not display severity filters or search filter -->
+    <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
+    <!-- Find Event by:  -->
+    <!-- <mat-form-field fxFlex="nogrow" floatLabel="never"> -->
+    <!-- Max length is picked to be the same as Elastic search limit -->
+    <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
+    <!-- </mat-form-field> -->
+    <!-- </div> -->
+    <div *ngIf="selector && selector.eventSelector && selector.eventSelector.name"
+         class="alertsevents-filter-sourcenode eventstable-filterby">
+      Filtering by {{selector.eventSelector.name}}
+    </div>
+    <!-- Removing the all button -->
+    <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number alertsevents-disabled"
+            (click)="onEventNumberClick($event, null)" [matTooltip]="'All Events'"
+            *ngIf="currentEventSeverityFilter != null">All</div> -->
+    <div class="global-button global-alert-critical alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'critical')" [matTooltip]="'Critical Events'"
+         *ngIf="eventNumbers.critical>0 && eventNumbers.critical !== events.length">
+      {{ eventNumbers.critical }}</div>
+    <div class="global-button global-alert-warning alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'warn')" [matTooltip]="'Warning Events'"
+         *ngIf="eventNumbers.warn>0 && eventNumbers.warn !== events.length">
+      {{ eventNumbers.warn }}</div>
+    <div class="global-button global-alert-info alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'info')" [matTooltip]="'Infomational Events'"
+         *ngIf="eventNumbers.info>0 && eventNumbers.info !== events.length">
+      {{ eventNumbers.info }}</div>
+    <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
+                labelStyleClass="alertsevents-checkbox-label" binary="true"
+                label="Show Debug Events"
+                [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
+    <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
+                   (timeRange)="setEventsTimeRange($event)"></app-timerange>
+  </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'severity'">
+      <mat-icon *ngIf="rowData.severity === 'critical'"
+                class="alertsevents-icon global-alert-critical-icon">
+        error</mat-icon>
+      <mat-icon *ngIf="rowData.severity === 'warn'"
+                class="alertsevents-icon global-alert-warning-icon">error
+      </mat-icon>
+      <mat-icon *ngIf="rowData.severity === 'info'"
+                class="alertsevents-icon global-alert-info-icon">
+        notifications</mat-icon>
+      <mat-icon *ngIf="rowData.severity === 'debug'"
+                class="alertsevents-icon global-alert-info-icon">
+        bug_report</mat-icon>
+      <div style="display: inline; margin-left: 25px">
+        {{ severityEnum[rowData.severity] }} </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'object-ref'">
+      <ng-container *ngIf="rowData['object-ref'] != null">
+        {{ rowData['object-ref'].kind }} : {{ rowData['object-ref'].name }}
+      </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'source'">
+      <ng-container *ngIf="rowData.source != null">
+        {{ rowData.source['node-name'] }} : {{ rowData.source.component }}
+      </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>

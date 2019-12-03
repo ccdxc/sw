@@ -1,0 +1,5 @@
+@import 'src/global-mixins';
+
+.eventstable-filterby {
+  @include primary-font();
+}

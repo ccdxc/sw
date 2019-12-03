@@ -37,6 +37,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChipsComponent } from './chips/chips.component';
 import { DomHandler } from 'primeng/api';
 import { FeatureGuardDirective } from './directives/featureGuard.directive';
+import { AlertstableComponent } from './alertsevents/alertstable/alertstable.component';
+import { EventstableComponent } from './alertsevents/eventstable/eventstable.component';
 
 @NgModule({
   imports: [
@@ -78,7 +80,9 @@ import { FeatureGuardDirective } from './directives/featureGuard.directive';
     TimeRangeComponent,
     UIChartComponent,
     OrderedlistComponent,
-    ChipsComponent
+    ChipsComponent,
+    AlertstableComponent,
+    EventstableComponent
   ],
   exports: [
     PagebodyComponent,
@@ -109,7 +113,9 @@ import { FeatureGuardDirective } from './directives/featureGuard.directive';
     TimeRangeComponent,
     UIChartComponent,
     OrderedlistComponent,
-    ChipsComponent
+    ChipsComponent,
+    AlertstableComponent,
+    EventstableComponent
   ],
   providers: [
     DomHandler
