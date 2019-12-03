@@ -39,14 +39,12 @@ namespace impl {
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *spec) {
     mapping_impl    *impl;
-    device_entry    *device;
 
     impl = mapping_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
     new (impl) mapping_impl();
-    device = device_db()->find();
     return impl;
 }
 
@@ -81,16 +79,16 @@ mapping_impl::free(mapping_impl *impl) {
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     sdk_ret_t ret;
-    device_entry *device;
+    bool is_local;
     vpc_entry *vpc;
     mapping_impl *impl;
-    bool is_local;
-    bool public_ip_valid = false;
     ip_addr_t public_ip;
-    sdk_table_api_params_t tparams;
-    nat_actiondata_t nat_data;
+    device_entry *device;
     p4pd_error_t p4pd_ret;
+    nat_actiondata_t nat_data;
     mapping_swkey_t mapping_key;
+    bool public_ip_valid = false;
+    sdk_table_api_params_t tparams;
     mapping_appdata_t mapping_data;
     local_mapping_swkey_t local_mapping_key;
     local_mapping_appdata_t local_mapping_data;

@@ -52,11 +52,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(tep_entry *tep);
 
-    /// \brief     initialize TEP entry with the given config
-    /// \param[in] api_ctxt API context carrying the configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
@@ -64,15 +59,20 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief  free h/w resources used by this object, if any
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
+    /// \brief     initialize TEP entry with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
     /// \brief     program all h/w tables relevant to this object except
     ///            stage 0 table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief  free h/w resources used by this object, if any
-    /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -80,6 +80,15 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     update all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with
@@ -196,12 +205,13 @@ private:
     /// \NOTE: the mac address for this TEP will be learnt in the datapath from
     ///        ARP traffic in the underlay, but we don't need to store it in
     ///        s/w, we will directly refresh the TEP_TX table
-    pds_tep_key_t  key_;        ///< TEP key
-    pds_tep_type_t type_;       ///< TEP type
-    ip_addr_t      remote_ip_;  ///< TEP IP
-    bool           remote_svc_; ///< true if this is remote (service) TEP
-    mac_addr_t     mac_;        ///< (learnt/configured) MAC address of this TEP
-    pds_nh_type_t  nh_type_;    ///< type of the nexthop for this TEP
+    pds_tep_key_t  key_;             ///< TEP key
+    pds_tep_type_t type_;            ///< TEP type
+    ip_addr_t      remote_ip_;       ///< TEP IP
+    bool           remote_svc_;      ///< true if this is remote (service) TEP
+    mac_addr_t     mac_;             ///< (learnt/configured) MAC address of this TEP
+    pds_encap_t    fabric_encap_;    ///< fabric encap information
+    pds_nh_type_t  nh_type_;         ///< type of the nexthop for this TEP
     ///< one of possible nexthop types
     union {
         pds_nexthop_key_t nh_;
@@ -215,7 +225,7 @@ private:
 
 /// \@}
 
-}  // namespace api
+}    // namespace api
 
 using api::tep_entry;
 

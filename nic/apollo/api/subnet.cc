@@ -296,7 +296,6 @@ subnet_entry::del_from_db(void) {
 
 sdk_ret_t
 subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // TODO: FIXME
     return sdk::SDK_RET_INVALID_OP;
 }
 

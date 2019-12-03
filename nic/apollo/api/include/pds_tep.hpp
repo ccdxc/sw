@@ -60,7 +60,7 @@ typedef struct pds_tep_spec_s {
     /// encapsulated VXLAN packet in the Tx direction
     ip_addr_t      remote_svc_public_ip;
     /// type of the nexthop for this mapping
-    pds_nh_type_t nh_type;
+    pds_nh_type_t  nh_type;
     /// forwarding information for this TEP can be one of
     /// 1. nexthop
     /// 2. nexthop group

@@ -31,48 +31,48 @@ enum TunnelType {
 message TunnelSpec {
   // unique tunnel identifier
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
-  uint32          Id                    = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // virtual private cloud this is tunnel belongs to
-  uint32          VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32          VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
   types.IPAddress LocalIP               = 3;
   // remote IP of the tunnel (used as outer DIP in tunneled packets)
-  types.IPAddress RemoteIP              = 4 [(gogoproto.moretags) = "meta:mandatory"];
-  // MAC address of the remote IP (i.e., remote side of the tunnel)
-  // NOTE: if dataplane is supposed to resolve this, set to 0
-  uint64          MACAddress            = 5;
-  // type of this tunnel
-  TunnelType      Type                  = 6 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress RemoteIP              = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  TunnelType      Type                  = 5 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // encap used while sending traffic to this tunnel
-  types.Encap     Encap                 = 7;
+  types.Encap     Encap                 = 6 [(gogoproto.moretags) = "immutable"];
   // if Nat is set to true, do (static) source NAT for the traffic going to
   // this tunnel and (static) destination NAT in the reverse direction if
   // the local IP mapping has NAT/public IP configured
-  bool            Nat                   = 8;
-  // RemoteService flag is true when tunnel is pointing to a service
-  // that is in a different data center and packet needs to be carried
-  // with 2 fabric encaps. IPv4 traffic in this case goes thru protocol
-  // translation (to IPv6) and then goes in a Vxlan tunnel
-  bool            RemoteService         = 9;
-  // RemoteServiceEncap must be set if the tunnel type is
-  // TUNNEL_TYPE_REMOTE_SERVICE, this is the outer most vnid seen when the
-  // packet is receievd from the remote service
-  types.Encap     RemoteServiceEncap    = 10;
-  // public IP of the remote service tunnel that is used as SIPo
-  // in the encapped VXLAN packet in the Tx direction
-  types.IPAddress RemoteServicePublicIP = 11;
+  bool            Nat                   = 7;
   // Tunnel points to a underlay nexthop/nexthop group (ECMP)/another Tunnel
   oneof nh {
     // underlay nexthop for this tunnel
-    uint32        NexthopId             = 12;
+    uint32        NexthopId             = 8;
     // underlay nexthop group for this tunnel
-    uint32        NexthopGroupId        = 13;
+    uint32        NexthopGroupId        = 9;
     // a tunnel can point to another tunnel for double encap
     // NOTE:
     // 1. currently the 2nd tunnel is expected to be MPLSoUDP only
     // 2. more than 2 tunnels can't be supported in a chain
-    uint32        TunnelId              = 14;
+    uint32        TunnelId              = 10;
   }
+  // MAC address of the remote IP (i.e., remote side of the tunnel)
+  // NOTE: if dataplane is supposed to resolve this, set to 0
+  uint64          MACAddress            = 11;
+  // type of this tunnel
+  // RemoteService flag is true when tunnel is pointing to a service
+  // that is in a different data center and packet needs to be carried
+  // with 2 fabric encaps. IPv4 traffic in this case goes thru protocol
+  // translation (to IPv6) and then goes in a Vxlan tunnel
+  bool            RemoteService         = 12;
+  // RemoteServiceEncap must be set if the tunnel type is
+  // TUNNEL_TYPE_REMOTE_SERVICE, this is the outer most vnid seen when the
+  // packet is receievd from the remote service
+  types.Encap     RemoteServiceEncap    = 13;
+  // public IP of the remote service tunnel that is used as SIPo
+  // in the encapped VXLAN packet in the Tx direction
+  types.IPAddress RemoteServicePublicIP = 14;
 }
 
 // operational status of the tunnel, if any

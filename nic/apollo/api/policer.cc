@@ -121,8 +121,8 @@ policer_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     pds_policer_spec_t *spec = &obj_ctxt->api_params->policer_spec;
 
     if (dir_ != spec->dir) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"dir\ from %u to %u "
-                      "on policer %u", dir_, spec->dir, key_.id);
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"direction\" "
+                      "from %u to %u on policer %u", dir_, spec->dir, key_.id);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;

@@ -22,12 +22,9 @@ using sdk::lib::ht;
 
 namespace api {
 
-/// \defgroup PDS_TEP_ENTRY - tep entry functionality
-/// \ingroup PDS_TEP
-/// \@{
-
 tep_entry::tep_entry() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    fabric_encap_ = { PDS_ENCAP_TYPE_NONE, 0 };
+    nh_type_ = PDS_NH_TYPE_NONE;
     ht_ctxt_.reset();
     MAC_UINT64_TO_ADDR(mac_, PDS_REMOTE_TEP_MAC);
 }
@@ -46,8 +43,6 @@ tep_entry::factory(pds_tep_spec_t *spec) {
 }
 
 tep_entry::~tep_entry() {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -94,53 +89,9 @@ tep_entry::free(tep_entry *tep) {
 }
 
 sdk_ret_t
-tep_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
-
-    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s encap %s",
-                    spec->key.id, ipaddr2str(&spec->remote_ip),
-                    pds_encap2str(&spec->encap));
-    memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
-    this->type_ = spec->type;
-    this->remote_ip_ = spec->remote_ip;
-    this->remote_svc_ = spec->remote_svc;
-    if (is_mac_set(spec->mac)) {
-        memcpy(mac_, spec->mac, ETH_ADDR_LEN);
-    }
-    nh_type_ = spec->nh_type;
-    if (nh_type_ == PDS_NH_TYPE_UNDERLAY) {
-        nh_ = spec->nh;
-    } else if (nh_type_ == PDS_NH_TYPE_UNDERLAY_ECMP) {
-        nh_group_ = spec->nh_group;
-    } else if (nh_type_ == PDS_NH_TYPE_OVERLAY) {
-        tep_ = spec->tep;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->reserve_resources(this, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-// TODO: we should simply be generating ARP request in the underlay in this API
-//       and come back and do this h/w programming later, but until that control
-//       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
-sdk_ret_t
-tep_entry::program_create(obj_ctxt_t *obj_ctxt) {
-    if (impl_) {
-        return impl_->program_hw(this, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-tep_entry::nuke_resources_(void) {
-    if (impl_) {
-        return impl_->nuke_resources(this);
     }
     return SDK_RET_OK;
 }
@@ -154,6 +105,48 @@ tep_entry::release_resources(void) {
 }
 
 sdk_ret_t
+tep_entry::nuke_resources_(void) {
+    if (impl_) {
+        return impl_->nuke_resources(this);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
+
+    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s encap %s",
+                    spec->key.id, ipaddr2str(&spec->remote_ip),
+                    pds_encap2str(&spec->encap));
+    memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
+    this->type_ = spec->type;
+    this->remote_ip_ = spec->remote_ip;
+    this->remote_svc_ = spec->remote_svc;
+    if (is_mac_set(spec->mac)) {
+        memcpy(mac_, spec->mac, ETH_ADDR_LEN);
+    }
+    fabric_encap_ = spec->encap;
+    nh_type_ = spec->nh_type;
+    if (nh_type_ == PDS_NH_TYPE_UNDERLAY) {
+        nh_ = spec->nh;
+    } else if (nh_type_ == PDS_NH_TYPE_UNDERLAY_ECMP) {
+        nh_group_ = spec->nh_group;
+    } else if (nh_type_ == PDS_NH_TYPE_OVERLAY) {
+        tep_ = spec->tep;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_entry::program_create(obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->program_hw(this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->cleanup_hw(this, obj_ctxt);
@@ -162,18 +155,40 @@ tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+tep_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_tep_spec_t *spec = &obj_ctxt->api_params->tep_spec;
+
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
+                      "on tunnel %u", type_, spec->type, key_.id);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if ((fabric_encap_.type != spec->encap.type) ||
+        (fabric_encap_.val.value != spec->encap.val.value)) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"encap\" from "
+                      "%s to %s on tunnel %u", pds_encap2str(&fabric_encap_),
+                      pds_encap2str(&spec->encap), key_.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 tep_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // impl->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->update_hw(orig_obj, this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -181,14 +196,8 @@ tep_entry::read(pds_tep_key_t *key, pds_tep_info_t *info) {
     if (impl_) {
         return impl_->read_hw(this, (impl::obj_key_t *)key,
                               (impl::obj_info_t *)info);
-    } else {
-        return sdk::SDK_RET_INVALID_OP;
     }
-}
-
-sdk_ret_t
-tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -202,6 +211,11 @@ tep_entry::del_from_db(void) {
         return SDK_RET_OK;
     }
     return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

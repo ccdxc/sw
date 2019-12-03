@@ -92,6 +92,20 @@ public:
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     activate the epoch in the dataplane by programming stage 0
+    ///            tables, if any
+    /// \param[in] api_obj  (cloned) API object being activated
+    /// \param[in] orig_obj previous/original unmodified object
+    /// \param[in] epoch    epoch being activated
+    /// \param[in] api_op   api operation
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
+                                  pds_epoch_t epoch, api_op_t api_op,
+                                  obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_OK;
+    }
+
     /// \brief  return h/w index for this TEP
     /// \return h/w table index for this TEP
     uint16_t remote46_hw_id(void) const { return remote46_hw_id_; }
