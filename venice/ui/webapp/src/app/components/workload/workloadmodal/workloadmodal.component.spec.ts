@@ -18,6 +18,8 @@ import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { MatDialog } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule} from '@angular/common/http/testing';
+import { WidgetsModule } from 'web-app-framework';
 
 import { NgModule } from '@angular/core';
 import { SharedModule } from '@app/components/shared//shared.module';
@@ -42,6 +44,8 @@ describe('WorkloadModalComponent', () => {
   configureTestSuite(() => {
      TestBed.configureTestingModule({
       imports: [
+        HttpClientTestingModule,
+        WidgetsModule,
         CommonModule,
         PrimengModule,
         MaterialdesignModule,

@@ -244,7 +244,6 @@ export class NetworkgraphComponent implements OnInit {
 
     const defs = svg.append('svg:defs');
     arrowMarkers.forEach((markerSettings) => {
-      console.log(markerSettings.name );
           defs.append('svg:marker')    // This section adds in the arrows
           .attr('id', markerSettings.name)
           .attr('viewBox', '0 -5 10 10')

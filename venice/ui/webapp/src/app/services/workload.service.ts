@@ -234,7 +234,6 @@ export class WorkloadService extends AbstractService {
     if (this.totalworkloads.data != null) {
       this.totalworkloads.data.y[this.totalworkloads.data.y - 1] = this.workloads.length;
     }
-    console.log('workload populated');
     this.workloadItemsHandler.next(this.workloads);
   }
 

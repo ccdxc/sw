@@ -1,4 +1,6 @@
 import { Component, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import {BaseComponent} from '@components/base/base.component';
+import {ControllerService} from '@app/services/controller.service';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 
 @Component({
@@ -6,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   templateUrl: './softwareversion.component.html',
   styleUrls: ['./softwareversion.component.scss']
 })
-export class SoftwareversionComponent implements OnInit, OnDestroy, OnChanges {
+export class SoftwareversionComponent extends BaseComponent implements OnInit, OnDestroy, OnChanges {
   title = 'Software Version';
   content = 'Version 1.3.0';
   upgrademessage = 'UPDATE VER 1.3.3 AVAILABLE';
@@ -37,7 +39,10 @@ export class SoftwareversionComponent implements OnInit, OnDestroy, OnChanges {
     matIcon: 'system_update_alt'
   };
 
-  constructor() { }
+  // without controllerService, icon register won't work
+  constructor(protected controllerService: ControllerService, ) {
+    super(controllerService);
+  }
 
   ngOnInit() {
 

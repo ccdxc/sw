@@ -52,7 +52,7 @@ RUN cd /usr/local/lib/venice-sdk && yarn install --frozen-lockfile
 RUN cd /usr/local/lib/venice-sdk && tar zcf node_modules.tgz node_modules
 RUN rm -rf /usr/local/lib/venice-sdk/node_modules
 
-RUN cd /usr/local/lib/web-app-framework && yarn install --frozen-lockfile
+RUN cd /usr/local/lib/web-app-framework && yarn install --frozen-lockfile --network-timeout 100000
 RUN cd /usr/local/lib/web-app-framework && tar zcf node_modules.tgz node_modules
 RUN rm -rf /usr/local/lib/web-app-framework/node_modules
 

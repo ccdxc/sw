@@ -105,7 +105,6 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('venice', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-venice.svg'));
     this.matIconRegistry.addSvgIcon('policy-health', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-policyhealth.svg'));
     this.matIconRegistry.addSvgIcon('policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/ico-policy.svg'));
-    this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-security-policy.svg'));
     this.matIconRegistry.addSvgIcon('security', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-security.svg'));
 
     // network icons
@@ -498,7 +497,7 @@ export class ControllerService {
       return;
     }
     // Don't know what the error is, websockets can come to here.
-    console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.
+    // console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.
     let msg = 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please reload browser and sign in again or contact system administrator.';
     if (error.statusCode === 0) {
       // VS-872. After browser idle for some time. It runs into refused to execute inline script because it violates the following content security policy directive...

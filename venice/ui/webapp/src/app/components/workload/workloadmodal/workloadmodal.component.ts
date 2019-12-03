@@ -1,10 +1,12 @@
 import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
+import {BaseComponent} from '@components/base/base.component';
 import { AbstractControl, FormControl, FormGroupDirective, NgForm, ValidatorFn, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { Utility } from '@app/common/Utility';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import {ControllerService} from '@app/services/controller.service';
 
 /** Error when invalid control is touched, or submitted.
  * On first focus, the error state won't activate till the user leaves the field
@@ -43,7 +45,7 @@ class ObservableInstantErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./workloadmodal.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadModalComponent implements OnInit {
+export class WorkloadModalComponent extends BaseComponent implements OnInit {
   icon: any = {
     url: 'security-policy'
   };
@@ -75,9 +77,13 @@ export class WorkloadModalComponent implements OnInit {
 
   filteredOptions: any;
 
+  // without controllerService, icon register won't work
   constructor(
+    protected controllerService: ControllerService,
     public dialogRef: MatDialogRef<WorkloadModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any) { }
+    @Inject(MAT_DIALOG_DATA) public data: any) {
+    super(controllerService);
+  }
 
   ngOnInit() {
     // filtering for the existing security group option

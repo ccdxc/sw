@@ -21,7 +21,6 @@ export const logout_success = () => ({ type: AUTH_LOGOUT_SUCCESS });
 export const selectorAuth = state => state.auth;
 
 export function reducer(state = initialState, action: Action) {
-  console.log('auth.reducer.ts reducer() ' + action.type);
   switch (action.type) {
     case AUTH_LOGIN:
       return Object.assign({}, state, {

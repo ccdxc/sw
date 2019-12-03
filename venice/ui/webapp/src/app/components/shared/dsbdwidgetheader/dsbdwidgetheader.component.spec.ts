@@ -26,9 +26,8 @@ describe('DsbdwidgetheaderComponent', () => {
     component.icon = {
       margin: {
         top: '5px',
-        left: '5px',
-      },
-      svgIcon: 'test.com'
+        left: '5px'
+      }
     };
     component.id = 'test_id';
     fixture.detectChanges();

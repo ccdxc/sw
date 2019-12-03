@@ -54,7 +54,6 @@ export class TroubleshootingComponent implements OnInit {
 
   tabChange(event) {
     const newTab = event.tab.textLabel;
-    console.log(newTab);
     switch (newTab) {
       case 'EVENTS':
         this.positionNodesEvents();
@@ -99,7 +98,6 @@ export class TroubleshootingComponent implements OnInit {
     // currently its taking height before flex applies
     // const height = $("#troubleshooting-graph").height();
     const height = 415;
-    console.log($('#troubleshooting-graph').height());
     const width = $('#troubleshooting-graph').width();
     return {height: height, width: width};
   }
