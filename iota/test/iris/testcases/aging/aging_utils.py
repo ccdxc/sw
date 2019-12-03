@@ -58,6 +58,37 @@ def get_timeout(timeout):
 
     return 0
 
+def get_timeout_val(timeout):
+
+    #Query will get the reference of objects on store
+    store_profile_objects = netagent_cfg_api.QueryConfigs(kind='SecurityProfile')
+    val = ""
+    if len(store_profile_objects) == 0:
+        api.Logger.error("No security profile objects in store")
+        return val
+
+    for object in store_profile_objects:
+        if (timeout == 'tcp-timeout'):
+            val = object.spec.timeouts.tcp
+        if (timeout == 'udp-timeout'):
+            val = object.spec.timeouts.udp
+        if (timeout == 'icmp-timeout'):
+            val = object.spec.timeouts.icmp
+        if (timeout == 'tcp-half-close'):
+            val = object.spec.timeouts.tcp_half_close
+        if (timeout == 'tcp-close'):
+            val = object.spec.timeouts.tcp_close
+        if (timeout == 'tcp-connection-setup'):
+            val = object.spec.timeouts.tcp_connection_setup
+        if (timeout == 'tcp-drop'):
+            val = object.spec.timeouts.tcp_drop
+        if (timeout == 'udp-drop'):
+            val = object.spec.timeouts.udp_drop
+        if (timeout == 'icmp-drop'):
+            val = object.spec.timeouts.icmp_drop
+
+    return val
+
 def update_timeout(timeout, val):
     #Query will get the reference of objects on store
     store_profile_objects = netagent_cfg_api.QueryConfigs(kind='SecurityProfile')

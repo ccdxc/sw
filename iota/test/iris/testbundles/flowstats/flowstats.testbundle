@@ -1,0 +1,115 @@
+meta:
+    name            : flowstats
+    nics            : [ pensando, intel, mellanox, broadcom ]
+    os              : [ linux, esx ]
+    targetcount     : 1 
+
+testcases:
+    -   name        : FlowStatsSingleIPv4TcpFlowDrops
+        testcase    : testcases.flowstats.single_ipv4_tcp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local]
+            naples  : [client, server]
+            timeout : [0s]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsSingleIPv4UdpFlowDrops
+        testcase    : testcases.flowstats.single_ipv4_udp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local, remote]
+            naples  : [client, server]
+            timeout : [0s]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsSingleIPv4IcmpFlowDrops
+        testcase    : testcases.flowstats.single_ipv4_icmp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local, remote]
+            naples  : [client, server]
+            timeout : [0s]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4TcpFlowDropsNoAging
+        testcase    : testcases.flowstats.multiple_ipv4_tcp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local]
+            naples  : [client]
+            timeout : [0s]
+            sessions: [8]
+#           sessions: [8, 16, 32, 64]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4UdpFlowDropsNoAging
+        testcase    : testcases.flowstats.multiple_ipv4_udp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local]
+            naples  : [server]
+            timeout : [0s]
+            sessions: [8]
+#           sessions: [8, 16, 32, 64, 128, 256, 512, 1024]
+            interval: [1000]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4IcmpFlowDropsNoAging
+        testcase    : testcases.flowstats.multiple_ipv4_icmp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [remote]
+            naples  : [client]
+            timeout : [0s]
+            types   : [8]
+#           types   : [128, 256]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4TcpFlowDropsAging
+        testcase    : testcases.flowstats.multiple_ipv4_tcp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [remote]
+            naples  : [server]
+            timeout : [8s]
+            sessions: [8]
+#           timeout : [8s, 16s]
+#           sessions: [8, 16, 32, 64]
+            interval: [1000]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4UdpFlowDropsAging
+        testcase    : testcases.flowstats.multiple_ipv4_udp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [local]
+            naples  : [server]
+            timeout : [8s]
+            sessions: [8]
+#           timeout : [4s, 8s, 16s, 32s]
+#           sessions: [8, 16, 32, 64, 128, 256, 512, 1024]
+            interval: [1000]
+        args        :
+            type    : local_only
+
+    -   name        : FlowStatsMultipleIPv4IcmpFlowDropsAging
+        testcase    : testcases.flowstats.multiple_ipv4_icmp_flow_drops
+        iterators   :
+            type    : nested
+            peer    : [remote]
+            naples  : [client]
+            timeout : [8s]
+            types   : [8]
+#           timeout : [4s, 8s, 16s, 32s]
+#           types   : [128, 256]
+        args        :
+            type    : local_only
+
