@@ -166,24 +166,53 @@ private:
     /// \brief     program outer tunnel (MPLSoUDP in this case) related tables
     ///            during TEP delete by disabling stage0 tables corresponding to
     ///            the new epoch
-    /// \param[in] epoch epoch being activated
+    /// \param[in] epoch epoch being deleted
     /// \param[in] tep  TEP obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep);
 
     /// \brief     program TEP related tables during TEP delete by disabling
     ///            stage0 tables corresponding to the new epoch
-    /// \param[in] epoch epoch being activated
+    /// \param[in] epoch epoch being deleted
     /// \param[in] tep  TEP obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_tunnel_table_(pds_epoch_t epoch, tep_entry *tep);
 
     /// \brief     program TEP related tables during TEP delete by disabling
     ///            stage0 tables corresponding to the new epoch
-    /// \param[in] epoch epoch being activated
+    /// \param[in] epoch epoch being deleted
     /// \param[in] tep   TEP obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_(pds_epoch_t epoch, tep_entry *tep);
+
+    /// \brief     update outer tunnel (MPLSoUDP in this case) related tables
+    ///            during TEP update by enabling stage0 tables corresponding to
+    ///            the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being updated
+    /// \param[in] spec TEP configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
+                                       pds_tep_spec_t *spec);
+
+    /// \brief     program TEP related tables during TEP update by enabling
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being updated
+    /// \param[in] spec TEP configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
+                                            pds_tep_spec_t *spec);
+
+    /// \brief     program TEP related tables during TEP update by enabling
+    ///            stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] tep  TEP obj being updated
+    /// \param[in] orig_tep old version of the unmodified object
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, tep_entry *tep,
+                               tep_entry *orig_tep, obj_ctxt_t *obj_ctxt);
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec     specification

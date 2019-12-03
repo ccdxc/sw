@@ -222,8 +222,8 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
-        for (uint32_t nh_idx = nhgroup_impl->nh_base_hw_id();
-             nh_idx < nhgroup->num_nexthops(); nh_idx++) {
+        for (uint32_t i = 0, nh_idx = nhgroup_impl->nh_base_hw_id();
+             i < nhgroup->num_nexthops(); nh_idx++, i++) {
             p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx,
                                               NULL, NULL, &nh_data);
             if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
@@ -373,10 +373,40 @@ tep_impl::activate_delete_(pds_epoch_t epoch, tep_entry *tep) {
     PDS_TRACE_DEBUG("Activating TEP %u delete, hw id %u",
                     tep->key().id, hw_id_);
     if (tep2_tbl_) {
-        // program outer tunnel in double encap case
+        // cleanup outer tunnel in double encap case
         ret = activate_delete_tunnel2_(epoch, tep);
     } else {
         ret = activate_delete_tunnel_table_(epoch, tep);
+    }
+    return ret;
+}
+
+sdk_ret_t
+tep_impl::activate_update_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
+                                        pds_tep_spec_t *spec) {
+    return activate_create_tunnel_table_(epoch, tep, spec);
+}
+
+sdk_ret_t
+tep_impl::activate_update_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
+                                   pds_tep_spec_t *spec) {
+    return activate_create_tunnel2_(epoch, tep, spec);
+}
+
+sdk_ret_t
+tep_impl::activate_update_(pds_epoch_t epoch, tep_entry *tep,
+                           tep_entry *orig_tep, obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
+    pds_tep_spec_t *spec;
+
+    spec = &obj_ctxt->api_params->tep_spec;
+    PDS_TRACE_DEBUG("Activating TEP %u update, hw id %u",
+                    tep->key().id, hw_id_);
+    if (tep2_tbl_) {
+        // update outer tunnel in double encap case
+        ret = activate_update_tunnel2_(epoch, tep, spec);
+    } else {
+        ret = activate_update_tunnel_table_(epoch, tep, spec);
     }
     return ret;
 }
@@ -399,6 +429,10 @@ tep_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
         break;
 
     case API_OP_UPDATE:
+        ret = activate_update_(epoch, (tep_entry *)api_obj,
+                               (tep_entry *)orig_obj, obj_ctxt);
+        break;
+
     default:
         ret = SDK_RET_INVALID_OP;
         break;

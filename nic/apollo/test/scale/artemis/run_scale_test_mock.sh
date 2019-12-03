@@ -21,7 +21,8 @@ echo "Using config file $cfgfile"
 export PATH=${PATH}:${BUILD_DIR}/bin
 rm -f $NICDIR/conf/pipeline.json
 ln -s $NICDIR/conf/artemis/pipeline.json $NICDIR/conf/pipeline.json
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > artemis_scale_test.log
+apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > artemis_scale_test.log
+#$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 rm -f $NICDIR/conf/pipeline.json
 if [ $? -eq 0 ]
 then

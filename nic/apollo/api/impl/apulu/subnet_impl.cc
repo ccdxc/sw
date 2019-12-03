@@ -262,6 +262,33 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
 }
 
 sdk_ret_t
+subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
+    sdk_ret_t ret;
+    vni_swkey_t vni_key = { 0 };
+    vni_actiondata_t vni_data = { 0 };
+    sdk_table_api_params_t tparams = { 0 };
+
+    PDS_TRACE_DEBUG("Activating subnet %u delete, fabric encap (%u, %u)",
+                    subnet->key().id, subnet->fabric_encap().type,
+                    subnet->fabric_encap().val.vnid);
+    // fill the key
+    vni_key.vxlan_1_vni = subnet->fabric_encap().val.vnid;
+    // fill the data
+    vni_data.vni_info.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
+    vni_data.vni_info.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
+                                   VNI_VNI_INFO_ID,
+                                   sdk::table::handle_t::null());
+    // program the VNI table
+    ret = vpc_impl_db()->vni_tbl()->update(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
+                      subnet->key().id, ret);
+    }
+    return ret;
+}
+
+sdk_ret_t
 subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
                               subnet_entry *orig_subnet, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
@@ -328,33 +355,6 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
         }
     }
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
-    sdk_ret_t ret;
-    vni_swkey_t vni_key = { 0 };
-    vni_actiondata_t vni_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
-
-    PDS_TRACE_DEBUG("Activating subnet %u delete, fabric encap (%u, %u)",
-                    subnet->key().id, subnet->fabric_encap().type,
-                    subnet->fabric_encap().val.vnid);
-    // fill the key
-    vni_key.vxlan_1_vni = subnet->fabric_encap().val.vnid;
-    // fill the data
-    vni_data.vni_info.bd_id = PDS_IMPL_RSVD_BD_HW_ID;
-    vni_data.vni_info.vpc_id = PDS_IMPL_RSVD_VPC_HW_ID;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
-                                   VNI_VNI_INFO_ID,
-                                   sdk::table::handle_t::null());
-    // program the VNI table
-    ret = vpc_impl_db()->vni_tbl()->update(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
-                      subnet->key().id, ret);
-    }
-    return ret;
 }
 
 sdk_ret_t
