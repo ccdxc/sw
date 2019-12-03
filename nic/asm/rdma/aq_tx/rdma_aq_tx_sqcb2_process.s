@@ -20,8 +20,8 @@ struct aq_tx_s5_t2_k k;
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
 #define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_dscp_sbit0_ebit3, local_ack_timeout_or_dscp_sbit4_ebit4)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
-#define K_RNR_RETRY_COUNT CAPRI_KEY_RANGE(IN_P, rnr_retry_count_sbit0_ebit1, rnr_retry_count_sbit2_ebit2) 
-#define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid) 
+#define K_RNR_RETRY_COUNT CAPRI_KEY_FIELD(IN_P, rnr_retry_count)
+#define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid)
 #define K_DST_QP  CAPRI_KEY_RANGE(IN_TO_S_P, dst_qp_sbit0_ebit5, dst_qp_sbit22_ebit23)
 #define K_CONGESTION_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable)
 
@@ -84,11 +84,8 @@ rnr_retry_count:
     bbne        K_RNR_RETRY_VALID, 1, setup_sqcb0
     nop
 
-    //TODO: For now keep default retry count of 7 (infinite retries) until
-    //data path starts supporting.
+    tblwr       d.rnr_retry_ctr, K_RNR_RETRY_COUNT
 
-    //tblwr     d.rnr_retry_ctr, K_RNR_RETRY_COUNT
-    
 setup_sqcb0:
 
     mfspr       r2, spr_tbladdr

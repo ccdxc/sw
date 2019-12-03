@@ -22,9 +22,9 @@ rdma_aq_tx_rqcb2_process:
 
     bbne        CAPRI_KEY_FIELD(IN_P, rnr_timer_valid), 1, exit
     nop
-    
+
     tblwr       d.rnr_timeout, K_MIN_RNR_TIMER
-    
+
 exit: 
     CAPRI_SET_TABLE_1_VALID(0)
     nop.e

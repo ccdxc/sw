@@ -1134,7 +1134,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             qkey_dest_qpn = self.spec.fields.modify_qp.qkey_dest_qpn if hasattr(self.spec.fields.modify_qp, 'qkey_dest_qpn') else 0
             rate_limit_kbps = 0
             pmtu = self.spec.fields.modify_qp.pmtu if hasattr(self.spec.fields.modify_qp, 'pmtu') else 0
-            retry = 0
+            retry = self.spec.fields.modify_qp.retry if hasattr(self.spec.fields.modify_qp, 'retry') else 0
             rnr_timer = 0
             retry_timeout = 0
             rsq_depth = 0

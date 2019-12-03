@@ -28,6 +28,8 @@ def TestCaseSetup(tc):
     # Set attr_mask for mod_qp
     tc.pvtdata.attr_mask = 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RQ_PSN
     tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
+    tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RETRY_CNT
+    tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RNR_RETRY
 
     # Setup values to send down to mod_qp
     if tc.pvtdata.rq_pre_qstate.e_psn != 0:
@@ -39,6 +41,10 @@ def TestCaseSetup(tc):
         tc.pvtdata.dma_addr = rs.lqp.hdr_slab.phy_address[0]
     else:
         tc.pvtdata.dma_addr = 0
+    # retry = (rnr_retry_count << 4) + err_retry_count
+    tc.pvtdata.rnr_retry = (tc.pvtdata.sq_pre_qstate.rnr_retry_count + 4) % 8
+    tc.pvtdata.err_retry = (tc.pvtdata.sq_pre_qstate.err_retry_count + 3) % 8
+    tc.pvtdata.retry = (tc.pvtdata.rnr_retry << 4) + tc.pvtdata.err_retry
 
     # Assuming SQ, RQ share CQ
     rs.lqp.sq_cq.qstate.Read()
@@ -90,6 +96,18 @@ def TestCaseStepVerify(tc, step):
 
         # verify that rq_psn is set in rqcb1
         if not VerifyFieldAbsolute(tc, rs.lqp.rq.qstate.data, 'e_psn', tc.pvtdata.rq_psn):
+            return False
+
+        # verify that rnr_retry is set in sqcb1 and sqcb2
+        if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'rnr_retry_count', tc.pvtdata.rnr_retry):
+            return False
+        if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'rnr_retry_ctr', tc.pvtdata.rnr_retry):
+            return False
+
+        # verify that err_retry is set in sqcb1 and sqcb2
+        if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'err_retry_count', tc.pvtdata.err_retry):
+            return False
+        if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'err_retry_ctr', tc.pvtdata.err_retry):
             return False
 
         # verify that dcqcn cb values are sane

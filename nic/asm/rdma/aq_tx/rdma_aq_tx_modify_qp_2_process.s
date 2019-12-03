@@ -254,31 +254,28 @@ timeout:
 retry_cnt:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RETRY_CNT], 1, rnr_min_timer
 
-    add         r4, d.mod_qp.retry, r0
+    add         r4, d.mod_qp.retry, r0  // BD Slot
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count_or_pcp), r4[2:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count_valid), 1
-
     phvwr       p.rdma_feedback.modify_qp.err_retry_count, r4[2:0]
     phvwr       p.rdma_feedback.modify_qp.err_retry_count_valid, 1
 
 rnr_min_timer:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_MIN_RNR_TIMER], 1, rnr_retry
-    nop
 
-    add         r4, d.mod_qp.rnr_timer, r0
+    add         r4, d.mod_qp.rnr_timer, r0  // BD Slot
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, rnr_min_timer), r4[4:0]
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, rnr_timer_valid), 1
     
 rnr_retry:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RNR_RETRY], 1, pmtu
-    nop
+    add         r4, d.mod_qp.retry, r0  // BD Slot
 
-    add         r4, d.mod_qp.retry, r0
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rnr_retry_count), r4[6:4]
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rnr_retry_valid), 1
     phvwr       p.rdma_feedback.modify_qp.rnr_retry_count, r4[6:4]
     phvwr       p.rdma_feedback.modify_qp.rnr_retry_valid, 1
-    
+
 pmtu:
 
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_PATH_MTU], 1, access_flags

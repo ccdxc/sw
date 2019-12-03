@@ -94,7 +94,7 @@ rnr_retry_count:
     bbne        K_RNR_RETRY_COUNT_VALID, 1, pmtu
     nop
 
-    tblwr     d.rnr_retry_count, K_RNR_RETRY_COUNT
+    tblwr       d.rnr_retry_count, K_RNR_RETRY_COUNT
 
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, access_flags

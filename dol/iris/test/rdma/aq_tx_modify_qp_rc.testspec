@@ -19,6 +19,7 @@ descriptors:
                   rq_psn        : ref://testcase/pvtdata/rq_psn
                   dcqcn_profile : 1     # Configure default profile for QP
                   ah_id_len     : ref://testcase/pvtdata/ah_id_len
+                  retry         : ref://testcase/pvtdata/retry
                   dma_addr      : ref://testcase/pvtdata/dma_addr
 
     - descriptor:
