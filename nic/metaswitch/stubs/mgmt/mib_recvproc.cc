@@ -187,8 +187,9 @@ NBB_VOID sms_rcv_amb_ips(NBB_IPS *ips NBB_CCXT_T NBB_CXT)
 NBB_BOOL sms_rcv_amb_get(NBB_IPS *ips NBB_CCXT_T NBB_CXT)
 {
   NBB_TRC_ENTRY("sms_rcv_amb_get");
+  SHARED.saved_ips = ips;
+  SHARED.wait_check_get(NBB_CXT);
   NBB_TRC_EXIT();
-
   return(TRUE);
 
 } /* sms_rcv_amb_get */

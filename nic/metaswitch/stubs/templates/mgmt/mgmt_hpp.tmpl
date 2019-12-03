@@ -51,12 +51,24 @@ extern "C" {
     NBB_VOID pdsa_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
     NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
     NBB_VOID pdsa_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-
+    NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status);
+    {{end}}
+  {{end}}
+  {{if hasExtension "venice.pdsaGetGlobOpts" . }}
+    {{$param := (getPdsaGetGlobalOpts . $cam)}}
+    {{$oidLen := $param.OidLen}}
+    {{$oidFam := $param.OidFam}}
+    {{$struct := $param.Struct}}
+    {{$mib    := $param.Mib}}
+    {{if not (eq $oidLen "")}}
     /*===== Get helpers for MS Table: {{$struct}} =====*/
     NBB_VOID pdsa_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
     NBB_VOID pdsa_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
     NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req);
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+                                       NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req);
     {{end}}
   {{end}}
 {{end}}

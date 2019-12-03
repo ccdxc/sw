@@ -14,6 +14,7 @@
 {{$pkgName := .Package}}
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_get_utils.hpp"
 
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
@@ -282,7 +283,10 @@
                         {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType}}
                         {{if (eq $castFn "")}}
                           {{if (eq .GetTypeName ".types.IPAddress")}}
-                ent->set_allocated_{{$fieldOpt.Name | ToLower}}(pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}));
+                auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
+                //*{{$fieldOpt.Name | ToLower}}_addr = *pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->v4addr();
+		{{$fieldOpt.Name | ToLower}}_addr->set_af(pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->af());
+		{{$fieldOpt.Name | ToLower}}_addr->set_v4addr(pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->v4addr());
                           {{else}}
                             {{$castFn = (getCppTypeFieldFromProto .Type .GetTypeName)}}
                             {{if (eq $castFn "")}}
@@ -426,15 +430,13 @@
         NBB_TRC_EXIT();
     } /* pdsa_get_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req,
-                                            NBB_LONG row_status) {
+    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
-        NBB_ULONG       test_correlator = 0x100;
-
-        ATG_CPI_ROW_UPDATE  *row_update = NULL;
-        AMB_GEN_IPS         *mib_msg = NULL;
+        AMB_GET *v_amb_get = NULL;
+        NBB_ULONG oid[{{$oidLen}}];
+        NBB_BUF_SIZE data_len = sizeof({{$struct}});
 
         NBB_TRC_ENTRY("pdsa_get_{{$struct | ToLower}}");
 
@@ -443,15 +445,72 @@
         /***************************************************************************/
         SHARED.wait_check_get = pdsa_check_get_{{$struct | ToLower}};
 
-        // Build row update
-        row_update = pdsa_ctm_bld_row_update_common (&mib_msg,
-                                                     sizeof({{$struct}}),
-                                                     {{$oidLen}},
-                                                     row_status,
-                                                     test_correlator);
+        /***************************************************************************/
+        /* Build and send the first GET.                                           */
+        /***************************************************************************/
 
-        NBB_ASSERT_PTR_NE (row_update, NULL);
-        NBB_ASSERT_PTR_NE (mib_msg, NULL);
+        /***************************************************************************/
+        /* Set up the OID to pass in on the AMB_TEST                               */
+        /***************************************************************************/
+        pdsa_get_{{$struct | ToLower}}_oid(req, oid);
+
+        /***************************************************************************/
+        /* Build the common part of the AMB_GET message.                           */
+        /***************************************************************************/
+        v_amb_get = pdsa_amb_get_bulk_common(1000, data_len, oid[0], oid);
+
+        /***************************************************************************/
+        /* Set all fields absent.                                                  */
+        /***************************************************************************/
+        AMB_SET_ALL_FIELDS_NOT_PRESENT(v_amb_get);
+
+        /***************************************************************************/
+        /* We're trying to get an exact match.                */
+        /***************************************************************************/
+        v_amb_get->exact = ATG_YES;
+        v_amb_get->get_next_object = ATG_NO;
+
+        /***************************************************************************/
+        /* Send AMB_GET.                                                           */
+        /***************************************************************************/
+        NBB_TRC_FLOW((NBB_FORMAT "Send a {{$struct}} GET MIB."));
+        NBB_SEND_IPS (SHARED.sm_pid, AMB_MIB_Q, v_amb_get);
+
+        NBB_TRC_EXIT();
+        return;
+    } /* pdsa_get_{{$struct | ToLower}} */
+
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+                                       NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
+        /***************************************************************************/
+        /* Local Variables                                                         */
+        /***************************************************************************/
+
+        NBB_TRC_ENTRY("pdsa_getall_{{$struct | ToLower}}_oid");
+        /***************************************************************************/
+        /* Zero the OID, then fill in the length, family and entity index.         */
+        /***************************************************************************/
+        NBB_MEMSET(oid, 0, sizeof(NBB_ULONG) * {{$oidLen}});
+        oid[0] = {{$oidLen}};
+        oid[1] = {{$oidFam}};
+
+        NBB_TRC_EXIT();
+    } /* pdsa_getall_{{$struct | ToLower}}_oid */
+
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+        /***************************************************************************/
+        /* Local Variables                                                         */
+        /***************************************************************************/
+        AMB_GET *v_amb_get = NULL;
+        NBB_ULONG oid[{{$oidLen}}];
+        NBB_BUF_SIZE data_len = sizeof({{$struct}});
+
+        NBB_TRC_ENTRY("pdsa_getall_{{$struct | ToLower}}");
+
+        /***************************************************************************/
+        /* Define the routine to be used on receipt of a GET response.             */
+        /***************************************************************************/
+        SHARED.wait_check_get = pdsa_check_get_{{$struct | ToLower}};
 
         /***************************************************************************/
         /* Build and send the first GET.                                           */
@@ -460,35 +519,33 @@
         /***************************************************************************/
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
-        NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
-        pdsa_get_{{$struct | ToLower}}_oid(req, oid);
+        pdsa_getall_{{$struct | ToLower}}_oid(req, oid);
+
+        /***************************************************************************/
+        /* Build the common part of the AMB_GET message.                           */
+        /***************************************************************************/
+        v_amb_get = pdsa_amb_get_bulk_common(1000, data_len, oid[0], oid);
 
         /***************************************************************************/
         /* Set all fields absent.                                                  */
         /***************************************************************************/
-        AMB_SET_ALL_FIELDS_NOT_PRESENT(mib_msg);
+        AMB_SET_ALL_FIELDS_NOT_PRESENT(v_amb_get);
 
         /***************************************************************************/
         /* We're trying to get the next object, not an exact match.                */
         /***************************************************************************/
-        mib_msg->ips_hdr.ips_type       = IPS_AMB_GET;
-        mib_msg->exact = ATG_NO;
-        mib_msg->get_next_object = ATG_YES;
-        mib_msg->bulk_get = ATG_YES;
-        mib_msg->bulk_requested = 1000;
-        mib_msg->bulk_returned = 0;
+        v_amb_get->exact = ATG_NO;
+        v_amb_get->get_next_object = ATG_YES;
 
         /***************************************************************************/
         /* Send AMB_GET.                                                           */
         /***************************************************************************/
         NBB_TRC_FLOW((NBB_FORMAT "Send a {{$struct}} GET MIB."));
-
-        // Send the Row Update request to CSS
-        NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
+        NBB_SEND_IPS (SHARED.sm_pid, AMB_MIB_Q, v_amb_get);
 
         NBB_TRC_EXIT();
         return;
-    } /* pdsa_get_{{$struct | ToLower}} */
+    } /* pdsa_getall_{{$struct | ToLower}} */
     {{end}}
   {{end}}
 {{end}}

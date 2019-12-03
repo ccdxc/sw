@@ -23,19 +23,42 @@ Status
 {{$svcname}}Impl::{{$rpc}}(ServerContext *context,
                               const {{$pkgName}}::{{.RequestType.Name}} *req,
                               {{$pkgName}}::{{.ResponseType.Name}} *resp) {
-    uint correlator = 0x100;
     if (req == NULL) {
         resp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::CANCELLED;
     }
-    PDSA_START_TXN(correlator);
   {{if (HasSuffix $rpc "Delete")}}
     //Delete request
   {{end}}
   {{if (HasSuffix $rpc "Get")}}
+    PDSA_GET_SHARED_START();
     //Get request
+    {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
+      {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
+      {{$struct := $param.Struct}}
+    for (int i = 0; i < req->request_size(); i ++) {
+        auto proto_spec = req->request(i);
+        pdsa_get_{{$struct | ToLower}}(proto_spec);
+    }
+    {{end}}
+    PDSA_GET_SHARED_END();
+  {{end}}
+  {{if (HasSuffix $rpc "GetAll")}}
+    PDSA_GET_SHARED_START();
+    //Getall request
+    {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
+      {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
+      {{$struct := $param.Struct}}
+    for (int i = 0; i < req->request_size(); i ++) {
+        auto proto_spec = req->request(i);
+        pdsa_getall_{{$struct | ToLower}}(proto_spec);
+    }
+    {{end}}
+    PDSA_GET_SHARED_END();
   {{end}}
   {{if or (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
+    uint correlator = 0x100;
+    PDSA_START_TXN(correlator);
     //Create/Update request
     {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
       {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
@@ -47,8 +70,8 @@ Status
         pdsa_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
     }
     {{end}}
-  {{end}}
     PDSA_END_TXN(correlator);
+  {{end}}
 
     resp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     return Status::OK;

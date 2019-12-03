@@ -51,6 +51,9 @@ static sdk::lib::thread *g_nbase_thread;
 
 void *pdsa_nbase_thread_init (void *ctxt)
 {
+    // opting for graceful termination
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+
     if (!pdsa_stub_mgmt_init()) {
         SDK_ASSERT("pdsa init failed!");
     }
@@ -80,6 +83,9 @@ int main(void)
     auto ret = spawn_nbase_thread();
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+    while (!g_nbase_thread->ready()) {
+        pthread_yield();
     }
     svc_reg();
 

@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include <stdlib.h>
+#include <unistd.h>
 
 class Client {
  public:
@@ -42,13 +43,64 @@ class Client {
         grpc::Status status = stub_->BGPPeerSpecCreate(&context, req, &res);
 
         if (status.ok()) {
-            std::cout << "good job" << std::endl;
+            std::cout << "created 1 entry" << std::endl;
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;
         }
-  }
+    }
 
+    void peerGet() {
+        pds::BGPPeerRequest req;
+        pds::BGPPeerSpecResponse res;
+        grpc::ClientContext context;
+
+        auto ent = req.add_request();
+        auto peeraddr = ent->mutable_peeraddr();
+        peeraddr->set_af(types::IP_AF_INET);
+        peeraddr->set_v4addr(0);
+        ent->set_vrfid(1);
+        ent->set_peerport(3);
+        auto localaddr = ent->mutable_localaddr();
+        localaddr->set_af(types::IP_AF_INET);
+        localaddr->set_v4addr(0);
+        ent->set_localport(3);
+        ent->set_ifid(0);
+        grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
+
+        if (status.ok()) {
+            std::cout << "got 1 entry" << std::endl;
+        } else {
+            std::cout << status.error_code() << ": " << status.error_message()
+                      << std::endl;
+        }
+    }
+
+    void peerGetAll() {
+        pds::BGPPeerRequest req;
+        pds::BGPPeerSpecResponse res;
+        grpc::ClientContext context;
+
+        auto ent = req.add_request();
+        auto peeraddr = ent->mutable_peeraddr();
+        peeraddr->set_af(types::IP_AF_INET);
+        peeraddr->set_v4addr(0);
+        ent->set_vrfid(1);
+        ent->set_peerport(3);
+        auto localaddr = ent->mutable_localaddr();
+        localaddr->set_af(types::IP_AF_INET);
+        localaddr->set_v4addr(0);
+        ent->set_localport(3);
+        ent->set_ifid(0);
+        grpc::Status status = stub_->BGPPeerSpecGetAll(&context, req, &res);
+
+        if (status.ok()) {
+            std::cout << "got entire table" << std::endl;
+        } else {
+            std::cout << status.error_code() << ": " << status.error_message()
+                      << std::endl;
+        }
+    }
  private:
     std::unique_ptr<pds::BGPSvc::Stub> stub_;
 };
@@ -59,6 +111,10 @@ int main(int argc, char** argv) {
 
 
     client.peerCreate();
+    sleep(5);
+    client.peerGet();
+    sleep(25);
+    client.peerGetAll();
 
     return 0;
 }

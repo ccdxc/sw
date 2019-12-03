@@ -31,14 +31,17 @@ service BGPSvc {
   rpc BGPGlobalSpecUpdate (BGPRequest) returns (BGPResponse) {}
   rpc BGPGlobalSpecDelete (BGPRequest) returns (BGPResponse) {}
   rpc BGPGlobalSpecGet (BGPRequest) returns (BGPGlobalSpecResponse) {}
+  rpc BGPGlobalSpecGetAll (BGPRequest) returns (BGPGlobalSpecResponse) {}
   rpc BGPPeerSpecCreate (BGPPeerRequest) returns (BGPResponse) {}
   rpc BGPPeerSpecUpdate (BGPPeerRequest) returns (BGPResponse) {}
   rpc BGPPeerSpecDelete (BGPPeerRequest) returns (BGPResponse) {}
   rpc BGPPeerSpecGet (BGPPeerRequest) returns (BGPPeerSpecResponse) {}
+  rpc BGPPeerSpecGetAll (BGPPeerRequest) returns (BGPPeerSpecResponse) {}
   rpc BGPPeerAfCreate (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfUpdate (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfDelete (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfGet (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
+  rpc BGPPeerAfGetAll (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
 }
 
 // BGP address family identifier
