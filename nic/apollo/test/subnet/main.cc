@@ -55,6 +55,27 @@ protected:
 /// \defgroup SUBNET_TEST Subnet Tests
 /// @{
 
+/// \brief Subnet WF_B1
+/// \ref WF_B1
+TEST_F(subnet, subnet_workflow_b1) {
+    pds_subnet_key_t key = {.id = 1};
+    subnet_feeder feeder;
+
+    feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    workflow_b1<subnet_feeder>(feeder);
+}
+
+/// \brief Subnet WF_B2
+/// \ref WF_B2
+TEST_F(subnet, DISABLED_subnet_workflow_b2) {
+    pds_subnet_key_t key = {.id = 1};
+    subnet_feeder feeder1, feeder1A;
+
+    feeder1.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    feeder1A.init(key, k_vpc_key, "11.0.0.0/16", "00:02:0A:00:00:01");
+    workflow_b2<subnet_feeder>(feeder1, feeder1A);
+}
+
 /// \brief Subnet WF_1
 /// \ref WF_1
 TEST_F(subnet, subnet_workflow_1) {

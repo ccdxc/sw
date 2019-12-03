@@ -43,6 +43,27 @@ protected:
 /// \defgroup VPC_TEST VPC Tests
 /// @{
 
+/// \brief VPC WF_B1
+/// \ref WF_B1
+TEST_F(vpc, vpc_workflow_b1) {
+    pds_vpc_key_t key = {.id = 1};
+    vpc_feeder feeder;
+
+    feeder.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", "00:02:01:00:00:01");
+    workflow_b1<vpc_feeder>(feeder);
+}
+
+/// \brief VPC WF_B2
+/// \ref WF_B2
+TEST_F(vpc, DISABLED_vpc_workflow_b2) {
+    pds_vpc_key_t key = {.id = 1};
+    vpc_feeder feeder1, feeder1A;
+
+    feeder1.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", "00:02:01:00:00:01");
+    feeder1A.init(key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", "00:02:0A:00:00:01");
+    workflow_b2<vpc_feeder>(feeder1, feeder1A);
+}
+
 /// \brief VPC WF_1
 /// \ref WF_1
 TEST_F(vpc, vpc_workflow_1) {

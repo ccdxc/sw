@@ -63,6 +63,7 @@ inline sdk::sdk_ret_t                                                        \
 create(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
+    memset(&spec, 0, sizeof(pds_##_api_str##_spec_t));                       \
     feeder.spec_build(&spec);                                                \
     return (pds_##_api_str##_create(&spec, bctxt));                          \
 }
@@ -83,6 +84,7 @@ read(_api_str##_feeder& feeder) {                                            \
     pds_##_api_str##_key_t key;                                              \
     pds_##_api_str##_info_t info;                                            \
                                                                              \
+    memset(&key, 0, sizeof(pds_##_api_str##_key_t));                         \
     feeder.key_build(&key);                                                  \
     memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
     if ((rv = pds_##_api_str##_read(&key, &info)) != sdk::SDK_RET_OK)        \
@@ -114,6 +116,7 @@ inline sdk::sdk_ret_t                                                        \
 update(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
+    memset(&spec, 0, sizeof(pds_##_api_str##_spec_t));                       \
     feeder.spec_build(&spec);                                                \
     return (pds_##_api_str##_update(&spec, bctxt));                          \
 }
@@ -124,6 +127,7 @@ inline sdk::sdk_ret_t                                                        \
 del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
     pds_##_api_str##_key_t key;                                              \
                                                                              \
+    memset(&key, 0, sizeof(pds_##_api_str##_key_t));                         \
     feeder.key_build(&key);                                                  \
     return (pds_##_api_str##_delete(&key, bctxt));                           \
 }

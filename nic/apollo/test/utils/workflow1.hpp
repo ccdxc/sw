@@ -37,6 +37,51 @@ inline void workflow_tmp_1(feeder_T &feeder) {
     many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
 }
 
+/// \brief WF_B1: [ Create One ] - Read - [Delete One ] - Read
+/// Create one object in a batch and delete the same object in another batch
+/// \anchor WF_B1
+template <typename feeder_T>
+inline void workflow_b1(feeder_T& feeder) {
+    // trigger
+    pds_batch_ctxt_t bctxt = batch_start();
+    many_create<feeder_T>(bctxt, feeder);
+    batch_commit(bctxt);
+
+    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+
+    bctxt = batch_start();
+    many_delete<feeder_T>(bctxt, feeder);
+    batch_commit(bctxt);
+
+    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief WF_B2: [ Create One ] - Read - [Update One ] - Read
+/// Create one object in a batch and update the same object in another batch
+/// \anchor WF_B2
+template <typename feeder_T>
+inline void workflow_b2(feeder_T& feeder, feeder_T& feeder1A) {
+    // trigger
+    pds_batch_ctxt_t bctxt = batch_start();
+    many_create<feeder_T>(bctxt, feeder);
+    batch_commit(bctxt);
+
+    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+
+    bctxt = batch_start();
+    many_update<feeder_T>(bctxt, feeder1A);
+    batch_commit(bctxt);
+
+    many_read<feeder_T>(feeder1A, sdk::SDK_RET_OK);
+
+    // cleanup
+    bctxt = batch_start();
+    many_delete<feeder_T>(bctxt, feeder1A);
+    batch_commit(bctxt);
+
+    many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
 /// \brief WF_1: [ Create SetMax - Delete SetMax ] - Read
 /// Create and delete max objects in the same batch.
 /// The operation should be de-duped by framework and is
