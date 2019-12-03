@@ -44,6 +44,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
+				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(ag.nagent.NetworkAgent.ListEndpoint()))
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
@@ -117,7 +118,7 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	// if not present create the default tenant
 	it.CreateTenant("default")
 
-	macAddr := fmt.Sprintf("0002.0000.0000")
+	macAddr := fmt.Sprintf("0002.0002.0000")
 	wpname, _ := strconv.ParseMacAddr(macAddr)
 	err := it.CreateWorkload("default", "default", "testWorkload-validator", "invalidHost", macAddr, 101, 1)
 	Assert(c, err != nil, "was able to create workload without a host")
