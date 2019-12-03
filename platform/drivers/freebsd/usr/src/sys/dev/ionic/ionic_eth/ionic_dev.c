@@ -774,7 +774,18 @@ ionic_fw_hb_work(struct work_struct *work)
 	IONIC_WDOG_UNLOCK(idev);
 }
 
-static void
+void
+ionic_fw_hb_start(struct ionic_dev *idev)
+{
+
+	IONIC_WDOG_LOCK(idev);
+	idev->fw_hb_resched = true;
+	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
+	    idev->fw_hb_interval);
+	IONIC_WDOG_UNLOCK(idev);
+}
+
+void
 ionic_fw_hb_stop(struct ionic_dev *idev)
 {
 
@@ -787,16 +798,10 @@ ionic_fw_hb_stop(struct ionic_dev *idev)
 void
 ionic_fw_hb_resched(struct ionic_dev *idev)
 {
-
-	/* Cancel all outstanding work */
+	/* Restart fw heartbeat with new parameters. */
 	ionic_fw_hb_stop(idev);
 
-	/* Start again with the new hb_interval */
-	IONIC_WDOG_LOCK(idev);
-	idev->fw_hb_resched = true;
-	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
-	    idev->fw_hb_interval);
-	IONIC_WDOG_UNLOCK(idev);
+	ionic_fw_hb_start(idev);
 }
 
 int
@@ -846,11 +851,7 @@ ionic_wdog_init(struct ionic *ionic)
 	idev->fw_hb_state = ionic_fw_hb_interval ?
 	     IONIC_FW_HB_INIT : IONIC_FW_HB_DISABLED;
 
-	IONIC_WDOG_LOCK(idev);
-	idev->fw_hb_resched = true;
-	queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
-	    idev->fw_hb_interval);
-	IONIC_WDOG_UNLOCK(idev);
+	ionic_fw_hb_start(idev);
 
 	return (0);
 }

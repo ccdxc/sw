@@ -3101,10 +3101,17 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 			ionic_cmd_hb_handler, "IU",
 			"Command heartbeat interval in msecs");
+
+	/* Fw heartbeat. */
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "fw_hb_counter", CTLFLAG_RD,
+			&idev->fw_hb_last, 0, "Firmware heartbeat counter");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "fw_hb_state", CTLFLAG_RD,
+			&idev->fw_hb_state, 0, "Firmware heartbeat state");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "fw_hb_interval",
 			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_fw_hb_handler, "I",
 			"Firmware heartbeat interval in msecs");
+
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "txq_wdog_timeout",
 			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_txq_wdog_handler, "I",

@@ -206,6 +206,8 @@ int  ionic_wdog_init(struct ionic *ionic);
 void ionic_wdog_deinit(struct ionic *ionic);
 void ionic_cmd_hb_resched(struct ionic_dev *idev);
 void ionic_fw_hb_resched(struct ionic_dev *idev);
+void ionic_fw_hb_start(struct ionic_dev *idev);
+void ionic_fw_hb_stop(struct ionic_dev *idev);
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
