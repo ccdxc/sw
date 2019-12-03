@@ -400,6 +400,7 @@ def GetExpectedCPSPacket(testcase, args):
     tc_rule = testcase.config.tc_rule
     if tc_rule is None:
         # no rule in policy - so implicit deny
+        logger.info("GetExpectedCPSPacket: packet denied, empty rules")
         return None
     # TODO: handle vnic security policies
     policy = testcase.config.policy
@@ -407,7 +408,9 @@ def GetExpectedCPSPacket(testcase, args):
     match_rule = __get_matching_rule(policy, pkt, tc_rule)
     final_result = __get_final_result(tc_rule, match_rule)
     if final_result == policy_pb2.SECURITY_RULE_ACTION_DENY:
+        logger.info("GetExpectedCPSPacket: packet denied")
         return None
+    logger.info("GetExpectedCPSPacket: packet allowed")
     return testcase.packets.Get(args.epkt_pass)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
@@ -476,15 +479,33 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
             testcase.config.devicecfg, testcase.config.remotemapping,
             testcase.config.localmapping, args)
 
+def __is_any_cfg_deleted(tc):
+    vnic = tc.config.localmapping.VNIC
+    tunnel = tc.config.tunnel
+    vpc = tc.config.localmapping.VNIC.SUBNET.VPC
+    subnet = tc.config.localmapping.VNIC.SUBNET
+    objs = [vnic, tunnel, vpc, subnet]
+    values = list(map(lambda x: x.IsDeleted(), list(filter(None, objs))))
+    if any(values):
+        return True
+    return False
+
 def GetExpectedPacket(testcase, args):
     #add all the cases for checking packet and return expected packet on demand
-    tunnel = testcase.config.tunnel
-    deleted = tunnel.deleted if tunnel else False
-    deleted = deleted or testcase.config.localmapping.VNIC.SUBNET.VPC.deleted
-    deleted = deleted or testcase.config.localmapping.VNIC.deleted
-    if deleted == True:
+    if __is_any_cfg_deleted(testcase):
+        logger.info("one or more cfgs deleted - no packet expected")
         return None
     return testcase.packets.Get(args.pkt)
+
+# used to check if packets are expected on the lif queue
+# True  - no packets expected
+# False - descriptor on expect is valid
+def IsNegativeTestCase(testcase):
+    # if no packet is expected, return True otherwise False
+    if __is_any_cfg_deleted(testcase):
+        logger.info("one or more cfgs deleted - negative testcase")
+        return True
+    return False
 
 def __get_ip_localmapping_impl(localmapping, tunnel):
     if tunnel is not None:

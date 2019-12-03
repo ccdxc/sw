@@ -10,6 +10,7 @@ feature:
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
+        # caches all the following objects
         name    : VNIC_WORKFLOW_START
         spec    : workflow.testspec
         iterate :
@@ -41,6 +42,7 @@ modules:
         ignore  : True
 
     - module:
+        # cached objects are cleared
         name    : VNIC_WORKFLOW_END
         spec    : workflow.testspec
         iterate :

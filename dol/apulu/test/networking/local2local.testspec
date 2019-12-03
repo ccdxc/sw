@@ -116,5 +116,6 @@ session:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
                 - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
                     object  : ref://testcase/descriptors/id=DESC4
                     ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX

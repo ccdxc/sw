@@ -110,7 +110,8 @@ MAX_DEVICE = 1
 MAX_TUNNEL = 1023
 MAX_VPC = 64
 MAX_VNIC = 128 if utils.IsPipelineArtemis() else 64
-MAX_SUBNET = 64
+# Apulu supports 8 lif for now and therefore cfg cannot have more than 8 subnets
+MAX_SUBNET = 8 if utils.IsPipelineApulu() else 64
 MAX_ROUTE_TABLE = 128 if utils.IsPipelineArtemis() else 1024
 MAX_ROUTES_PER_ROUTE_TBL = 63 if utils.IsPipelineArtemis() else 1023
 MAX_POLICY = 1023

@@ -53,6 +53,14 @@ buffers                 :
             size        : 1518
             data        : None
 
+    - buffer            :
+        id              : BUF2  # Expected Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind        : False
+            size        : ref://testcase/packets/id=TO_HOST_PKT/size
+            data        : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
 descriptors             :
     - descriptor        :
         id              : DESC1 # Input Descriptor
@@ -61,6 +69,13 @@ descriptors             :
             _buf        : ref://testcase/buffers/id=BUF1
             addr        : ref://testcase/buffers/id=BUF1/addr
             len         : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor        :
+        id              : DESC2 # Expected Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF2
+            len         : ref://testcase/buffers/id=BUF2/size
 
 session:
     - step:
@@ -79,5 +94,6 @@ session:
             delay               : 1
             descriptors         :
                 - descriptor    :
-                    object      : None
+                    negtest     : True
+                    object      : ref://testcase/descriptors/id=DESC2
                     ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX

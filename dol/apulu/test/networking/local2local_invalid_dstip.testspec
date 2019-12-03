@@ -30,6 +30,18 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+
 buffers:
     - buffer:
         id      : BUF1    # Input Buffer
@@ -38,6 +50,14 @@ buffers:
            bind : True
            size : ref://testcase/packets/id=FROM_HOST_PKT/size
            data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+    - buffer:
+        id       : BUF2  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
 
     - buffer:
         id          : BUF3  # Input Buffer
@@ -70,6 +90,13 @@ descriptors:
             addr    : ref://testcase/buffers/id=BUF3/addr
             len     : ref://testcase/buffers/id=BUF3/size
 
+    - descriptor:
+        id          : DESC4 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF2
+            len     : ref://testcase/buffers/id=BUF2/size
+
 session:
     - step:
         trigger:
@@ -88,5 +115,6 @@ session:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
                 - descriptor:
-                    object  : None
+                    negtest : True
+                    object  : ref://testcase/descriptors/id=DESC4
                     ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX

@@ -1,3 +1,9 @@
+# WORKFLOW_START ==> select & cache the objects to be operated
+# series of CRUD operation ==> performs CRUD operations on cached objects
+# mlists ==> runs the mlists
+# restore ==> restores / creates back the cached objects
+# mlists ==> re-run the mlists to make sure we are back to normalcy)
+# WORKFLOW_END ==> clear the cached objects
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1

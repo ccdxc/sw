@@ -207,7 +207,11 @@ class DolVerifEngineObject(VerifEngineObject):
     def __verify_descriptors(self, step, tc):
         final_status = defs.status.SUCCESS
         for dsp in step.expect.descriptors:
-            negtest = dsp.descriptor.negtest
+            negtest_obj = dsp.descriptor.negtest
+            if objects.IsCallback(negtest_obj):
+                negtest = negtest_obj.call(tc)
+            else:
+                negtest = negtest_obj
             edescr = dsp.descriptor.object
             adescr = self.__consume_descriptor(edescr, negtest,
                                                dsp.descriptor.ring,

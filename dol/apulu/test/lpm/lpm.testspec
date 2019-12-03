@@ -7,16 +7,10 @@ selectors:
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : callback://networking/packets/GetUsableHostFromRoute
@@ -25,12 +19,26 @@ packets:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : callback://networking/packets/GetUsableHostFromRoute
                 hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : EXP_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=IN_PKT
+        id          : FROM_HOST_PKT # Input packet from host
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet to network
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
@@ -42,10 +50,6 @@ packets:
                 ttl     : 64
                 tos     : 0
                 id      : 0
-            mpls:
-                label   : ref://testcase/config/route/TUNNEL/EncapValue
-                ttl     : 0
-                s       : 1
             vxlan:
                 vni     : ref://testcase/config/route/TUNNEL/EncapValue
             ipv4:
@@ -56,62 +60,100 @@ packets:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : 00:02:00:00:00:00
 
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
 
 session:
     - step:
         trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
-                    port    : ref://testcase/config/hostport
-        
-        expect:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-                    port    : ref://testcase/config/switchport
-
-    - step:
-        trigger:
-            configs:
-                - object    : ref://testcase/config/route
-                  method    : Delete
-
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
-                    port    : ref://testcase/config/hostport
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
 
         expect:
-            configs:
-                - object    : ref://testcase/config/route
-                  method    : ReadAfterDelete
-
             packets:
                 - packet:
-                    #object  : None
-                    # Currently, deleting a route table does NOT cleanup HW
-                    # and corresponding vnic also does not get updated.
-                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-                    port    : ref://testcase/config/switchport
+                    object  : ref://testcase/packets/id=TO_SWITCH_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
 
-    - step:
-        trigger:
-            configs:
-                - object    : ref://testcase/config/route
-                  method    : Create
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
 
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
-                    port    : ref://testcase/config/hostport
+    # - step:
+    #     trigger:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : Delete
 
-        expect:
-            configs:
-                - object    : ref://testcase/config/route
-                  method    : Read
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC1
+    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
 
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-                    port    : ref://testcase/config/switchport
+    #     expect:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : ReadAfterDelete
+
+    #         packets:
+    #             - packet:
+    #                 #object  : None
+    #                 # Currently, deleting a route table does NOT cleanup HW
+    #                 # and corresponding vnic also does not get updated.
+    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
+    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
+
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC2
+    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+
+    # - step:
+    #     trigger:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : Create
+
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC1
+    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+
+    #     expect:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : Read
+
+    #         packets:
+    #             - packet:
+    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
+    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
+
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC2
+    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX

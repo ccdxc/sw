@@ -2,9 +2,13 @@
 # Networking Module
 import pdb
 
+import apollo.config.utils as utils
 import apollo.test.callbacks.common.modcbs as modcbs
 
 def Setup(infra, module):
+    if 'WORKFLOW_START' in module.name:
+        utils.CachedObjs.select_objs = True
+        utils.CachedObjs.setMaxLimits(module.testspec.selectors.maxlimits)
     modcbs.Setup(infra, module)
     return True
 
@@ -33,4 +37,9 @@ def TestCaseStepTeardown(tc, step):
     return True
 
 def TestCaseVerify(tc):
+    if 'WORKFLOW_START' in tc.module.name:
+        utils.CachedObjs.select_objs = False
+        utils.CachedObjs.use_selected_objs = True
+    elif 'WORKFLOW_END' in tc.module.name:
+        utils.CachedObjs.reset()
     return True

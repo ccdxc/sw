@@ -49,31 +49,9 @@ device:
 vpc:
     - stack  : dual
       count : 1
-      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
-      subnet :
-         - count : 1
-           v4prefixlen : 24
-           v6prefixlen : 64
-      routetbl:
-         - type: specific
-           routetype: only_default
-           v4routes:
-              - '0.0.0.0\0'
-           v6routes:
-              - '0::\0'
-      #nexthop:
-      #       - type: base
-      #         count : 1
-      policy:
-        - type : specific
-          policytype : default
-          direction : bidir
-
-    - stack  : dual
-      count : 1
       type  : tenant
       subnet:
-        - count     : 25              # should be same as total routetbl
+        - count     : 7               # should be same as total routetbl
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:

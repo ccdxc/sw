@@ -28,14 +28,45 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/hostport
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
 
-expect:
-    packets:
-        - packet:
-            object  : None
-            port    : ref://testcase/config/switchport
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+
+        expect:
+            packets:
+                - packet:
+                    object  : None
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
