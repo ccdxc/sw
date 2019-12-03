@@ -13,7 +13,8 @@ topdir = os.path.dirname(sys.argv[0]) + '/../'
 topdir = os.path.abspath(topdir)
 sys.path.insert(0, topdir)
 paths = [
-    'iota/protos/pygen'
+    'iota/protos/pygen',
+    'iota/test/iris/utils/ip_rule_db/'
 ]
 for p in paths:
     fullpath = os.path.join(topdir, p)

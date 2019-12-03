@@ -1,0 +1,57 @@
+{
+   "kind": "NetworkSecurityPolicy",
+   "meta": {
+      "name": "testNetworkSecurityPolicy",
+      "tenant": "default",
+      "namespace": "default",
+      "generation-id": "",
+      "creation-time": "",
+      "mod-time": ""
+   },
+   "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
+         {
+            "action": "PERMIT",
+            "source": {
+               "addresses": [
+                  "10.0.0.0 - 10.0.1.0"
+               ]
+            },
+            "destination": {
+               "addresses": [
+                  "192.168.0.1 - 192.168.1.0"
+               ],
+               "app-configs": [
+                  {
+                     "protocol": "tcp",
+                     "port": "80"
+                  },
+                  {
+                     "protocol": "tcp",
+                     "port": "443"
+                  },
+                  {
+                     "protocol": "udp",
+                     "port": "53"
+                  },
+                  {
+                     "protocol": "tcp",
+                     "port": "0-40"
+                  },
+                  {
+                     "protocol": "tcp",
+                     "port": "60000-65535"
+                  },
+                  {
+                     "protocol": "tcp",
+                     "port": "0-65535"
+                  }
+               ]
+            },
+             "rule-id":"1"
+         }
+      ]
+   },
+   "status": {}
+}

@@ -5,79 +5,45 @@ import yaml
 import iota.harness.api as api
 import subprocess
 import threading
+import random
 import os
+import iota.test.iris.utils.ip_rule_db.util.proto as proto
+import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
+import time
 
-proto_list  = [ 'tcp']
-action_list  = ['PERMIT', 'DENY']
+def DisableHalLogs(workload):
+    cmd = 'halctl debug trace --level none'
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    result = api.types.status.SUCCESS
 
-class Rule:
-    def __init__(self, key, action):
-        self.key = key
-        self.action = action
+    api.Trigger_AddNaplesCommand(req, workload.node_name,
+                                 workload.workload_name, cmd)
+    api.Logger.info("Running COMMAND {}".format(cmd))
 
+    api.Trigger(req)
 
-def get_appconfig(protocol, port):
-    app_config = {}
-    app_config['protocol'] = protocol
-    app_config['port'] = port
-    return app_config
+def GetSecurityPolicy(workload=None, node_name=None):
+    if not node_name:
+        node_name = workload.node_name
 
-def get_destination(dst_ip, protocol, port):
-    dst = {}
-    dst['addresses'] = []
-    dst['addresses'].append(dst_ip)
-    dst['app-configs'] = []
-    dst['app-configs'].append(get_appconfig(protocol, port))
-    return dst
+    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:8888/api/security/policies/'
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    result = api.types.status.SUCCESS
 
-def get_source(src_ip):
-    src = {}
-    src['addresses'] = []
-    src['addresses'].append(src_ip)
-    return src
+    api.Trigger_AddHostCommand(req, node_name, cmd)
+    api.Logger.info("Running COMMAND {}".format(cmd))
 
-def get_rule(dst_ip, src_ip, protocol, port, action):
-    rule = {}
-    rule['destination'] = get_destination(dst_ip, protocol, port)
-    rule['source'] = get_source(src_ip)
-    rule['action'] = action
-    return rule
+    resp = api.Trigger(req)
 
-class Command(object):
-    def __init__(self, cmd):
-        api.Logger.info("Running Command : {}".format(cmd))
-        self.cmd = cmd
-        self.process = None
-        self.out = None
+    for cmd in resp.commands:
+        api.Logger.info("CMD = {}", cmd)
+        if cmd.exit_code != 0:
+            return None
+    return cmd.stdout
 
-    def run_command(self, capture = False):
-        if not capture:
-            self.process = subprocess.Popen(self.cmd,shell=True)
-            self.process.communicate()
-            return
-        # capturing the outputs of shell commands
-        self.process = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        out,err = self.process.communicate()
-        if len(out) > 0:
-            self.out = out.splitlines()
-        else:
-            self.out = None
-
-    # set default timeout to 2 minutes
-    def run(self, capture = False, timeout = 120):
-        thread = threading.Thread(target=self.run_command, args=(capture,))
-        thread.start()
-        thread.join(timeout)
-        if thread.is_alive():
-            self.process.terminate()
-            thread.join()
-        return self.out
-
-def GetSecurityPolicy(workload):
-    mnicIP = api.GetNicIntMgmtIP(workload.node_name)
-
-    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://{}:8888/api/security/policies/'.format(workload.workload_name,mnicIP)
-    return Command(cmd).run()
+def clearNaplesSessions(node_name):
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name, "/nic/bin/halctl clear session")
 
 def GetProtocolDirectory(proto):
     return api.GetTopologyDirectory() + "/gen/{}".format(proto)
@@ -92,172 +58,190 @@ def ReadJson(filename):
     api.Logger.info("Reading JSON file {}".format(filename))
     return api.parser.JsonParse(filename)
 
-def GetHping3Cmd(protocol, destination_ip, destination_port, source_port = 0, ):
+def GetHping3Cmd(pkt):
+    protocol = proto.Proto.getStrFromL3Proto(pkt["proto"])
     if protocol == 'tcp':
-        cmd = "hping3 -p {} -c 1 {}".format(int(destination_port), destination_ip)
+        cmd = "hping3 -p {} -c 1 {}".format(int(pkt["dp"]), pkt["dip"])
     elif protocol == 'udp':
-        cmd = "hping3 --{} -p {} -c 1 {}".format(protocol.lower(), int(destination_port), destination_ip)
+        cmd = "hping3 --{} -s {} -p {} -c 1 --keep {}".\
+              format(protocol.lower(), int(pkt["sp"]), \
+                     int(pkt["dp"]), str(pkt["dip"]))
     else:
-        cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), destination_ip)
+        cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), str(pkt["dip"]))
 
     return cmd
 
-def GetVerifJsonFromPolicyJson(policy_json):
-    return policy_json.replace("_policy", "_verif")
+def GetDelphiRuleMetrics(node_name):
+    cmd = "PATH=$PATH:/platform/bin/;\
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib/:/nic/lib/;\
+    export PATH; export LD_LIBRARY_PATH;\
+    /nic/bin/delphictl metrics get RuleMetrics"
 
-def GetNwsecYaml(workload):
-    cmd = 'sleep 3 && /nic/bin/halctl show nwsec policy'
     req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, workload.node_name, cmd)
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
     resp = api.Trigger(req)
-    yml = None
-
+    ptrn = "\r\n\r\n"
+    ruleMetrics = []
     cmd = resp.commands[0]
+    print("delphictl Network policy Rule Metrics \n : %s \n\n"%
+                    cmd.stdout)
+
     if not cmd.stdout:
-        return None
+        return ruleMetrics
 
-    yml_loaded = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
-    for yml in yml_loaded:
-        if yml is not None:
-            return yml
-    return None
+    # Following code is bad practice to parse the scraped output
+    # of the command, bound to failure .. :(
+    ruleOut = cmd.stdout
+    ruleOutList = ruleOut.split(ptrn)
 
-def GetRuleHit(workload, ruleid):
-    d = GetNwsecYaml(workload)
-    print(d)
-
-    if d is None:
-        return None
-    for i in range(0, len(d['polstats']["rulestats"])):
-        if(d['polstats']["rulestats"][i]["ruleid"] == ruleid):
-            print("FOUND Rule id {}".format(ruleid))
-            return None
-    return None
-
-
-def VerifyCmd(cmd, action):
-    api.PrintCommandResults(cmd)
-    result = api.types.status.SUCCESS
-    if action == 'PERMIT' and cmd.exit_code != 0:
-        result = api.types.status.FAILURE
-    elif action == 'DENY' and cmd.exit_code ==0:
-        result = api.types.status.FAILURE
-
-    return result
-
-def GetDestPort(port):
-    if ',' in port:
-        return "100"
-    if '-' in port:
-        return "120"
-    return port
-
-def RunCmd(workload, protocol, destination_ip, destination_port, action, ruleid):
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    result = api.types.status.SUCCESS
-
-    #GetRuleHit(workload, ruleid)
-
-    for i in range(0, len(destination_port)):
-        cmd = GetHping3Cmd(protocol[i], destination_ip, GetDestPort(destination_port[i]))
-        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
-        api.Logger.info("Running COMMAND {}".format(cmd))
-
-    resp = api.Trigger(req)
-
-    for cmd in resp.commands:
-        result = VerifyCmd(cmd, action)
-        if(result == api.types.status.FAILURE):
-            break;
-
-    return result
-
-def GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid):
-    verif = {}
-    verif['ruleid'] = ruleid
-    verif['protocol'] = protocol
-    verif['src_ip'] = src_ip
-    verif['src_port'] = src_port
-    verif['dst_ip'] = dst_ip
-    verif['dst_port'] = dst_port
-    verif['result'] = result
-    return verif
-
-def ParseVerifStr(verif_str):
-    js = json.loads(verif_str)
-    verif = []
-
-    for i in range(0, len(js[0]["spec"]["policy-rules"])):
-        protocol = []
+    for ruleOut in ruleOutList:
         try:
-            for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
-                protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["protocol"])
-            src_ip = js[0]["spec"]["policy-rules"][i]["source"]["addresses"]
-            src_port = "1234"
-            dst_ip = js[0]["spec"]["policy-rules"][i]["destination"]["addresses"]
-
-            dst_port = []
-            for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
-                protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
-                dst_port.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
-            result = js[0]["spec"]["policy-rules"][i]["action"]
-            ruleid = js[0]["spec"]["policy-rules"][i]["rule-id"]
-            v = GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid)
-            verif.append(v)
+            ruleMetrics.append(json.loads(ruleOut))
         except:
-            print("Error while parsing verif string. Skipping this rule.")
-    return verif
+            api.Logger.error("Failed to parse rule yaml => %s"%ruleOut)
 
-def GetVerifDict(workload):
-    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:8888/api/security/policies/'
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    result = api.types.status.SUCCESS
-    verif = None
 
-    api.Trigger_AddHostCommand(req, workload.node_name, cmd)
-    api.Logger.info("Running COMMAND {}".format(cmd))
+    return ruleMetrics
 
-    resp = api.Trigger(req)
+def GetRuleHit(node_name, ruleId=None):
+    ruleList = GetDelphiRuleMetrics(node_name)
+    ruleStats = {}
+    exactMatch = False
 
-    for cmd in resp.commands:
-        api.Logger.info("CMD = {}", cmd)
-        if cmd.exit_code != 0:
-            return verif
-    #out = GetSecurityPolicy(workload)
-    verif = ParseVerifStr(cmd.stdout)
-    #verif = ParseVerifStr(out)
+    if isinstance(ruleId, int):
+        exactMatch = True
 
-    return verif
+    for r in ruleList:
+        rid = r['RuleMetrics']['Key']
+        if not exactMatch or (exactMatch and rid == ruleId):
+            count = r['RuleMetrics']['total_hits']
+            ruleStats[rid] = ruleStats.get(rid, 0) + count
 
-def RunAll(src_w, dest_w):
-    res = api.types.status.SUCCESS
+    return ruleStats
 
-    verif = GetVerifDict(src_w)
-    if verif == None:
+
+def compareStats(db, node, protocol=None):
+    policyDict = {}
+    error = False
+
+    api.Logger.info("====================== Comparing rule stats from %s for protocol %s ======================"%(node, protocol))
+    ruleStats = GetRuleHit(node)
+    db.printDB()
+
+    if len(ruleStats) == 0:
         return api.types.status.FAILURE
 
-    for i in range(0, len(verif)):
-        protocol = verif[i]['protocol']
-        #protocol = "udp"
-        destination_port = verif[i]['dst_port']
-        #destination_port = "90"
-        action = verif[i]['result']
-        #action = "DENY"
+    # Aggregate the Rules by policy ID
+    for rule in db.getRuleList():
+        ruleList = policyDict.get(rule.identifier, [])
+        ruleList.append(rule)
+        policyDict[rule.identifier] = ruleList
 
-        ruleid = verif[i]['ruleid']
 
-        res = RunCmd(src_w, protocol, dest_w.ip_address, destination_port, action, ruleid)
-        #if(res == api.types.status.FAILURE):
-        #    return res
+    # For given policy, match given valid protocol and compare the
+    # aggregate counter.
+    for rid, ruleList in policyDict.items():
+        unSupportedProto = False
+        counter = 0
+        for rule in ruleList:
+            if protocol and str(rule.proto) != protocol:
+                api.Logger.warn("Skipping rule with protocol mismatch found: %s, exp: %s"%
+                                (rule.proto, protocol))
+                unSupportedProto = True
+                continue
+            else:
+                counter += rule.counter
 
-    return res
+        if unSupportedProto:
+            continue
 
-def DisableHalLogs(workload):
-    cmd = 'halctl debug trace --level none'
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    result = api.types.status.SUCCESS
+        if rid not in ruleStats:
+            api.Logger.error("Failed to find the Rule Id: %s in HAL rule"%rid)
+            error = True
+        elif counter != ruleStats[rid]:
+            api.Logger.error("Found rule hit count mismatch for "
+                             "Rule Id: %s, exp: %s and found: %s "%
+                             (rid, counter, ruleStats[rid]))
+            error = True
 
-    api.Trigger_AddNaplesCommand(req, workload.node_name, workload.workload_name, cmd)
-    api.Logger.info("Running COMMAND {}".format(cmd))
+    return api.types.status.FAILURE if error else api.types.status.SUCCESS
 
-    api.Trigger(req)
+def RunCmd(workload, pkt):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    cmd = GetHping3Cmd(pkt)
+    api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+def getRandomPackets(db, ppp, seed):
+    random.seed(seed)
+    ruleList = random.choices(db.getRuleList(), k=ppp)
+    pktList = [r.getRandom(seed) for r in ruleList]
+    return pktList
+
+def RunAll(ppp, src_w, dst_w, src_db, dst_db, filter_and_alter_func=None, seed=None):
+    if src_db == None and dst_db == None:
+        return api.types.status.SUCCESS
+
+    elif src_db == None and dst_db:
+        api.Logger.info("Found valid dst db.")
+        pktList = getRandomPackets(dst_db, ppp, seed)
+        for pkt in pktList:
+            if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
+                continue
+            api.Logger.info("=> Matching pkt : %s"%pkt)
+            r = dst_db.match(**pkt)
+            api.Logger.info("DST_DB::Matched Rule : %s"%r)
+            RunCmd( src_w, pkt)
+
+    elif src_db and dst_db == None:
+        api.Logger.info("Found valid src db.")
+        pktList = getRandomPackets(src_db, ppp, seed)
+        for pkt in pktList:
+            if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
+                continue
+            api.Logger.info("=> Matching pkt : %s"%pkt)
+            r = src_db.match(**pkt)
+            api.Logger.info("SRC_DB::Matched Rule : %s"%r)
+            RunCmd( src_w, pkt)
+    else:
+        api.Logger.info("Found valid src and dst db.")
+        pktList = getRandomPackets(src_db, ppp, seed)
+        for pkt in pktList:
+            if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
+                continue
+            api.Logger.info("=> Matching pkt : %s"%pkt)
+            r = src_db.match(**pkt)
+            api.Logger.info("SRC_DB::Matched Rule : %s"%r)
+            if r.action.name == "PERMIT":
+                api.Logger.info("Found permit on rule..")
+                r = dst_db.match(**pkt)
+                api.Logger.info("DST_DB::Matched rule : %s"%r)
+            RunCmd( src_w, pkt)
+
+    return api.types.status.SUCCESS
+
+
+def SetupLocalRuleDbPerNaple(policy_json):
+    nodes = api.GetNaplesHostnames()
+    dbByNode = {}
+
+    for n in nodes:
+        api.Logger.info("Setting local Rule DB on %s from JSON file '%s'"%
+                        (n, policy_json))
+        dbByNode[n] = db.RuleDB(policy_json)
+        api.Logger.info("Getting security policies from node %s"%
+                        (n))
+        policy = GetSecurityPolicy(node_name=n)
+        if policy == None:
+            api.Logger.error("Failed to get security policy from %s"%n)
+            return None
+        api.Logger.info("Populating rule-id in local DB for %s"%
+                        (n))
+        policy_dict = json.loads(policy)[0]
+        dbByNode[n].populateRuleIdsFromDict(policy_dict)
+        dbByNode[n].printDB()
+
+    api.Logger.info("Successully setup local DB for Naples")
+    return dbByNode
