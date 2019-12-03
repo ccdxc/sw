@@ -158,22 +158,11 @@ public:
             return HAL_RET_ENTRY_EXISTS;
         }
 
-        if (mirror_info.mirror_en) {
-            mirror_info_.mirror_en = mirror_info.mirror_en;
-            mirror_info_.egr_mirror_session |= mirror_info.egr_mirror_session;
-            mirror_info_.ing_mirror_session |= mirror_info.ing_mirror_session;
-            mirror_info_.proxy_egr_mirror_session |= mirror_info.proxy_egr_mirror_session;
-            mirror_info_.proxy_ing_mirror_session |= mirror_info.proxy_ing_mirror_session;
-        } else {
-            mirror_info_.egr_mirror_session &= ~mirror_info.egr_mirror_session;
-            mirror_info_.ing_mirror_session &= ~mirror_info.ing_mirror_session;
-            mirror_info_.proxy_egr_mirror_session &= ~mirror_info.proxy_egr_mirror_session;
-            mirror_info_.proxy_ing_mirror_session &= ~mirror_info.proxy_ing_mirror_session;
-            if (!mirror_info_.egr_mirror_session &&
-                        !mirror_info_.ing_mirror_session) {
-                mirror_info_.mirror_en = mirror_info.mirror_en;
-            }
-        }
+        mirror_info_.mirror_en = mirror_info.mirror_en;
+        mirror_info_.egr_mirror_session = mirror_info.egr_mirror_session;
+        mirror_info_.ing_mirror_session = mirror_info.ing_mirror_session;
+        mirror_info_.proxy_egr_mirror_session = mirror_info.proxy_egr_mirror_session;
+        mirror_info_.proxy_ing_mirror_session = mirror_info.proxy_ing_mirror_session;
         valid_.mirror_info = true;
         return HAL_RET_OK;
     }

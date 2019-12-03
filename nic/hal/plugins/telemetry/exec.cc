@@ -81,6 +81,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     }
 
     ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("telemetry policy didn't match ret={}", ret);
         goto end;
@@ -90,56 +91,65 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
         acl::ref_t *rc;
         rc = get_rule_data((acl_rule_t *)rule);
         frule = (const hal::flow_monitor_rule_t *) RULE_MATCH_USER_DATA(rc, hal::flow_monitor_rule_t, ref_count);
-        if (frule->action.num_mirror_dest > 0) {
+
+        if (mirror_action) {
             memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
             mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
-            mirror_flowupd.mirror_info.mirror_en = true;
-            mirror_flowupd.mirror_info.ing_mirror_session = 0;
-            mirror_flowupd.mirror_info.egr_mirror_session = 0;
-            for (int i = 0; i < frule->action.num_mirror_dest; i++) {
-                /*
-                 * We always want to send user-vlan while mirroring.
-                 * so pick the mirroring as ingress or egress depending on the
-                 * flow direction. There is a bit of a cost to do the recirc
-                 * for egress in P4. TBD: Move to user configurable option
-                 */
-                if (ctx.flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
-                    mirror_flowupd.mirror_info.egr_mirror_session |= (1 << frule->action.mirror_destinations[i]);
-                } else {
-                    mirror_flowupd.mirror_info.ing_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+            if (frule->action.num_mirror_dest > 0) {
+                mirror_flowupd.mirror_info.mirror_en = true;
+                mirror_flowupd.mirror_info.ing_mirror_session = 0;
+                mirror_flowupd.mirror_info.egr_mirror_session = 0;
+                for (int i = 0; i < frule->action.num_mirror_dest; i++) {
+                    //
+                    // We always want to send user-vlan while mirroring. so pick
+                    // the mirroring as ingress or egress depending on the
+                    // flow direction. There is a bit of a cost to do the recirc
+                    // for egress in P4. TBD: Move to user configurable option
+                    //
+                    if (ctx.flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
+                        mirror_flowupd.mirror_info.egr_mirror_session |= 
+                        (1 << frule->action.mirror_destinations[i]);
+                    } else {
+                        mirror_flowupd.mirror_info.ing_mirror_session |= 
+                        (1 << frule->action.mirror_destinations[i]);
+                    }
                 }
             }
-        }
-        if (frule->action.num_collector > 0) {
-            memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
-            export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
-            int n = frule->action.num_collector;
-            export_flowupd.export_info.export_en = 0;
-            if (n >= 1) {
-                export_flowupd.export_info.export_en |= (1 << 0);
-                export_flowupd.export_info.export_id1 = frule->action.collectors[0];
-            }
-            if (n >= 2) {
-                export_flowupd.export_info.export_en |= (1 << 1);
-                export_flowupd.export_info.export_id2 = frule->action.collectors[1];
-            }
-            if (n >= 3) {
-                export_flowupd.export_info.export_en |= (1 << 2);
-                export_flowupd.export_info.export_id3 = frule->action.collectors[2];
-            }
-            if (n == 4) {
-                export_flowupd.export_info.export_en |= (1 << 3);
-                export_flowupd.export_info.export_id4 = frule->action.collectors[3];
-            }
-        }
-        if (mirror_flowupd.mirror_info.mirror_en) {
+
             ret = ctx.update_flow(mirror_flowupd);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error updating mirror info");
                 return ret;
             }
         }
-        if (export_flowupd.export_info.export_en) {
+        else {
+            memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
+            export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
+            if (frule->action.num_collector > 0) {
+                int n = frule->action.num_collector;
+                export_flowupd.export_info.export_en = 0;
+                if (n >= 1) {
+                    export_flowupd.export_info.export_en |= (1 << 0);
+                    export_flowupd.export_info.export_id1 = 
+                    frule->action.collectors[0];
+                }
+                if (n >= 2) {
+                    export_flowupd.export_info.export_en |= (1 << 1);
+                    export_flowupd.export_info.export_id2 = 
+                    frule->action.collectors[1];
+                }
+                if (n >= 3) {
+                    export_flowupd.export_info.export_en |= (1 << 2);
+                    export_flowupd.export_info.export_id3 = 
+                    frule->action.collectors[2];
+                }
+                if (n == 4) {
+                    export_flowupd.export_info.export_en |= (1 << 3);
+                    export_flowupd.export_info.export_id4 = 
+                    frule->action.collectors[3];
+                }
+            }
+
             ret = ctx.update_flow(export_flowupd);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error updating export info");
