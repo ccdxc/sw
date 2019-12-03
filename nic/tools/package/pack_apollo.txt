@@ -250,6 +250,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpdsahals.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsacommon.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsamgmt.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsastubs.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsamgmtsvc.so                   /nic/lib/
 nic/metaswitch/config/nbase.ini                                   /nic/conf/
 
 # cronjobs

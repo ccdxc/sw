@@ -8,7 +8,7 @@ MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam ftlv6 ftlv4 \
                   rfc_${PIPELINE} event_thread pdsrfc pdsagentcore slhash \
-                  pdsahals pdsamgmt pdsacommon pdsastubs \
+                  pdsahals pdsamgmt pdsacommon pdsastubs pdsamgmtsvc \
                   ${NIC_${PIPELINE}_NICMGR_LIBS}
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

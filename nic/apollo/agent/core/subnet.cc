@@ -6,6 +6,7 @@
 #include "nic/apollo/agent/core/subnet.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/agent/trace.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
 
 namespace core {
 
@@ -64,7 +65,14 @@ subnet_create (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
         return ret;
     }
 
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::subnet_create(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to create subnet {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create subnet {}, err {}",
                           spec->key.id, ret);
@@ -136,7 +144,14 @@ subnet_update (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
         return ret;
     }
 
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::subnet_update(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update subnet {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update subnet {}, err {}",
                           spec->key.id, ret);
@@ -160,13 +175,21 @@ subnet_update (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
 sdk_ret_t
 subnet_delete (pds_subnet_key_t *key, pds_batch_ctxt_t bctxt)
 {
+    pds_subnet_spec_t *spec;
     sdk_ret_t ret;
 
-    if (agent_state::state()->find_in_subnet_db(key) == NULL) {
+    if ((spec = agent_state::state()->find_in_subnet_db(key)) == NULL) {
         PDS_TRACE_ERR("Failed to find subnet {} in db", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::subnet_delete(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to delete subnet {}, err {}",
+                          key->id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete subnet {}, err {}", key->id, ret);
             return ret;
