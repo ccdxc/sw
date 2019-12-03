@@ -5,7 +5,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IMonitoringFwlogPolicy, MonitoringFwlogPolicy, MonitoringFwlogPolicySpec } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
-import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
+import { SyslogComponent } from '@app/components/shared/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';

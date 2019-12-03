@@ -2,7 +2,7 @@ import {  ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 
 import { NewflowexportpolicyComponent } from './newflowexportpolicy.component';
-import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
+import { TroubleshootGroupModule } from '@app/components/troubleshoot-group/troubleshoot-group.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ControllerService } from '@app/services/controller.service';
@@ -27,7 +27,7 @@ describe('NewflowexportComponent', () => {
      TestBed.configureTestingModule({
       declarations: [NewflowexportpolicyComponent],
       imports: [
-        MonitoringGroupModule,
+        TroubleshootGroupModule,
         SharedModule,
         ReactiveFormsModule,
         RouterTestingModule,

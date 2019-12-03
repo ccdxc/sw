@@ -39,6 +39,7 @@ import { DomHandler } from 'primeng/api';
 import { FeatureGuardDirective } from './directives/featureGuard.directive';
 import { AlertstableComponent } from './alertsevents/alertstable/alertstable.component';
 import { EventstableComponent } from './alertsevents/eventstable/eventstable.component';
+import { SyslogComponent } from './syslog/syslog.component';
 
 @NgModule({
   imports: [
@@ -82,7 +83,8 @@ import { EventstableComponent } from './alertsevents/eventstable/eventstable.com
     OrderedlistComponent,
     ChipsComponent,
     AlertstableComponent,
-    EventstableComponent
+    EventstableComponent,
+    SyslogComponent
   ],
   exports: [
     PagebodyComponent,
@@ -115,7 +117,8 @@ import { EventstableComponent } from './alertsevents/eventstable/eventstable.com
     OrderedlistComponent,
     ChipsComponent,
     AlertstableComponent,
-    EventstableComponent
+    EventstableComponent,
+    SyslogComponent
   ],
   providers: [
     DomHandler

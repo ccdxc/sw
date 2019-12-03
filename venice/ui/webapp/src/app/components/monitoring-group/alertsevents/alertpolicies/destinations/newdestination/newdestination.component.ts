@@ -9,7 +9,7 @@ import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, Mo
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { BaseComponent } from '@app/components/base/base.component';
-import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
+import { SyslogComponent } from '@app/components/shared/syslog/syslog.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { required } from '@sdk/v1/utils/validators';
 

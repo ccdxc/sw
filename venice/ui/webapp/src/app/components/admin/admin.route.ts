@@ -39,7 +39,7 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        loadChildren: '@app/components/monitoring-group/techsupport/techsupport.module#TechsupportModule'
+        loadChildren: '@app/components/admin/techsupport/techsupport.module#TechsupportModule'
       }
     ]
   },

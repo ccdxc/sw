@@ -17,7 +17,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
-import { MonitoringGroupModule } from '../../monitoring-group.module';
+import { TroubleshootGroupModule } from '../../troubleshoot-group.module';
 import { NewflowexportpolicyComponent } from './newflowexportpolicy/newflowexportpolicy.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
@@ -42,7 +42,7 @@ describe('FlowexportpolicyComponent', () => {
         MaterialdesignModule,
         RouterTestingModule,
         SharedModule,
-        MonitoringGroupModule
+        TroubleshootGroupModule
       ],
       providers: [
         ControllerService,

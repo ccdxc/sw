@@ -51,6 +51,10 @@ export const routes: Routes = [
         loadChildren: '@components/monitoring-group/monitoring-group.module#MonitoringGroupModule',
       },
       {
+        path: 'troubleshoot',
+        loadChildren: '@components/troubleshoot-group/troubleshoot-group.module#TroubleshootGroupModule',
+      },
+      {
         path: 'admin',
         loadChildren: '@components/admin/admin.module#AdminModule',
       },

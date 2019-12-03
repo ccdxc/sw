@@ -117,9 +117,7 @@ export const sideNavMenu: SideNavItem[] = [
         UIRolePermissions.monitoringalert_read,
         UIRolePermissions.eventsevent_read,
         UIRolePermissions.auditevent_read,
-        UIRolePermissions.fwlogsquery_read,
-        UIRolePermissions.monitoringflowexportpolicy_read,
-        UIRolePermissions.monitoringtechsupportrequest_read,
+        UIRolePermissions.fwlogsquery_read
       ]
     },
     children: [
@@ -165,14 +163,31 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: UIRolePermissions.fwlogsquery_read,
         link: ['/monitoring', 'fwlogs']
-      },
+      }
+    ]
+  },
+  {
+    label: 'Troubleshoot',
+    icon: {
+      cssClass: 'material-icons',
+      matIconName: 'build_outlined'
+    },
+    link: ['/troubleshoot'],
+    roleGuard: {
+      opt: [
+        UIRolePermissions.monitoringflowexportpolicy_read,
+        UIRolePermissions.monitoringtroubleshootingsession_read,
+        UIRolePermissions.monitoringmirrorsession_read
+      ]
+    },
+    children: [
       {
         label: 'Flow Export',
         icon: {
           cssClass: 'app-l-side-nav-monitoring-flowexport'
         },
         roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
-        link: ['/monitoring', 'flowexport']
+        link: ['/troubleshoot', 'flowexport']
       },
       {
         label: 'Troubleshooting',
@@ -181,15 +196,15 @@ export const sideNavMenu: SideNavItem[] = [
         },
         featureGuard: Features.troubleshooting,
         roleGuard: UIRolePermissions.monitoringtroubleshootingsession_read,
-        link: ['/monitoring', 'troubleshooting']
+        link: ['/troubleshoot', 'troubleshooting']
       },
       {
         label: 'Mirror Sessions',
         icon: {
           cssClass: 'app-l-side-nav-monitoring-mirrorsession'
         },
-        roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
-        link: ['/monitoring', 'mirrorsessions']
+        roleGuard: UIRolePermissions.monitoringmirrorsession_read,
+        link: ['/troubleshoot', 'mirrorsessions']
       }
     ]
   },

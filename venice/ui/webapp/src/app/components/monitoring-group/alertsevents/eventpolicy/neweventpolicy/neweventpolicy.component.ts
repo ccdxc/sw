@@ -4,7 +4,7 @@ import { FieldselectorComponent } from '@app/components/shared/fieldselector/fie
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MonitoringEventPolicy, IMonitoringEventPolicy, IApiStatus, } from '@sdk/v1/models/generated/monitoring';
-import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
+import { SyslogComponent } from '@app/components/shared/syslog/syslog.component';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 

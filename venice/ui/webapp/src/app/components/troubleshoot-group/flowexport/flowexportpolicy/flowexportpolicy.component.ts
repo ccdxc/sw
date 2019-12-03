@@ -76,7 +76,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
     this.controllerService.setToolbarData({
       buttons: buttons,
       breadcrumb: [
-        { label: 'Flow Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/flowexport' }
+        { label: 'Flow Export Policies', url: Utility.getBaseUIUrl() + 'troubleshoot/flowexport' }
       ]
     });
   }

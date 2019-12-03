@@ -131,7 +131,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     }
     this.controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Mirror Sessions', url: Utility.getBaseUIUrl() + 'monitoring/mirrorsessions' }]
+      breadcrumb: [{ label: 'Mirror Sessions', url: Utility.getBaseUIUrl() + 'troubleshoot/mirrorsessions' }]
     });
   }
 

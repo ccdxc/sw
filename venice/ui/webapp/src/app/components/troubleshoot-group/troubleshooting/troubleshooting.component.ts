@@ -47,7 +47,7 @@ export class TroubleshootingComponent implements OnInit {
   ngOnInit() {
     this.controllerService.setToolbarData({
       buttons: [],
-      breadcrumb: [{ label: 'Troubleshooting (mocked data)', url: Utility.getBaseUIUrl() + 'monitoring/troubleshooting' }]
+      breadcrumb: [{ label: 'Troubleshooting (mocked data)', url: Utility.getBaseUIUrl() + 'troubleshoot/troubleshooting' }]
     });
     this.defaultLayout();
   }

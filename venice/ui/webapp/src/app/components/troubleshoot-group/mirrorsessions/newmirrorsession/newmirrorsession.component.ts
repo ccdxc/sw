@@ -96,7 +96,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
     // currently backend does not support any drop packets
     // UI temporarily drop those choices.
-    // once they are supported, pls remove the next lines
+    // once they are supported, pls uncomment out the next lines
     this.packetFilterOptions = this.packetFilterOptions.filter(item =>
       item.value === MonitoringMirrorSessionSpec_packet_filters['all-packets']
     );

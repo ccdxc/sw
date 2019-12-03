@@ -13,7 +13,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WidgetsModule } from 'web-app-framework';
 import { FlowexportpolicyComponent } from './flowexportpolicy/flowexportpolicy.component';
 import { NewflowexportpolicyComponent } from './flowexportpolicy/newflowexportpolicy/newflowexportpolicy.component';
-import { MonitoringGroupModule } from '../monitoring-group.module';
+import { TroubleshootGroupModule } from '../troubleshoot-group.module';
 
 
 
@@ -31,7 +31,7 @@ import { MonitoringGroupModule } from '../monitoring-group.module';
 
     FlowexportRoutingModule,
     SharedModule,
-    MonitoringGroupModule
+    TroubleshootGroupModule
   ],
   declarations: [
     FlowexportComponent,

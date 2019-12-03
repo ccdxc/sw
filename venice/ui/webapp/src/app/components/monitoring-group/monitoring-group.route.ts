@@ -17,15 +17,6 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'flowexport',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/monitoring-group/flowexport/flowexport.module#FlowexportModule'
-      }
-    ]
-  },
-  {
     path: 'fwlogs',
     children: [
       {
@@ -49,24 +40,6 @@ const routes: Routes = [
       {
         path: '',
         loadChildren: '@app/components/monitoring-group/telemetry/telemetry.module#TelemetryModule'
-      }
-    ]
-  },
-  {
-    path: 'troubleshooting',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/monitoring-group/troubleshooting/troubleshooting.module#TroubleshootingModule'
-      }
-    ]
-  },
-  {
-    path: 'mirrorsessions',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/monitoring-group/mirrorsessions/mirrorsessions.module#MirrorsessionsModule'
       }
     ]
   }

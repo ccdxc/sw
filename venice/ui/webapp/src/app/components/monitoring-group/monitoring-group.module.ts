@@ -6,13 +6,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { MonitoringGroupComponent } from './monitoring-group.component';
 import { MonitoringRoutingModule } from './monitoring-group.route';
-import { SyslogComponent } from './syslog/syslog.component';
-import { MatchruleComponent } from './matchrule/matchrule.component';
 import { SharedModule } from '../shared/shared.module';
-import { NetworkgraphComponent } from './mirrorsessions/networkgraph/networkgraph.component';
-
-
-
 
 @NgModule({
   imports: [
@@ -26,7 +20,7 @@ import { NetworkgraphComponent } from './mirrorsessions/networkgraph/networkgrap
     MonitoringRoutingModule,
     SharedModule
   ],
-  declarations: [ MonitoringGroupComponent, SyslogComponent, MatchruleComponent, NetworkgraphComponent],
-  exports: [ MonitoringGroupComponent, SyslogComponent, MatchruleComponent]
+  declarations: [ MonitoringGroupComponent],
+  exports: [ MonitoringGroupComponent]
 })
 export class MonitoringGroupModule { }
