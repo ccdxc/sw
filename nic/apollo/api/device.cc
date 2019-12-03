@@ -95,11 +95,6 @@ device_entry::read(pds_device_info_t *info) {
 }
 
 sdk_ret_t
-device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 device_entry::add_to_db(void) {
     return device_db()->insert(this);
 }
@@ -110,6 +105,11 @@ device_entry::del_from_db(void) {
         return SDK_RET_OK;
     }
     return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

@@ -44,8 +44,8 @@ device_impl::destroy(device_impl *impl) {
 #define p4e_device_info    action_u.p4e_device_info_p4e_device_info
 sdk_ret_t
 device_impl::fill_spec_(pds_device_spec_t *spec) {
-    p4i_device_info_actiondata_t device_info = { 0 };
-    p4pd_error_t                 p4pd_ret;
+    p4pd_error_t p4pd_ret;
+    p4i_device_info_actiondata_t device_info;
 
     // read P4I_DEVICE_INFO table
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
@@ -58,7 +58,6 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     sdk::lib::memrev(spec->device_mac_addr,
                      device_info.p4i_device_info.device_mac_addr1,
                      ETH_ADDR_LEN);
-
     // check if there is an ipv4 address
     if (device_info.p4i_device_info.device_ipv4_addr) {
         spec->device_ip_addr.af = IP_AF_IPV4;
@@ -70,10 +69,8 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
                          device_info.p4i_device_info.device_ipv6_addr,
                          IP6_ADDR8_LEN);
     }
-
     spec->bridging_en = device_info.p4i_device_info.l2_enabled;
     spec->learning_en = device_info.p4i_device_info.learn_enabled;
-
     return sdk::SDK_RET_OK;
 }
 
@@ -81,9 +78,9 @@ uint32_t
 device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
+    p4i_drop_stats_actiondata_t data;
     p4i_drop_stats_swkey_t key = { 0 };
     p4i_drop_stats_swkey_mask_t key_mask = { 0 };
-    p4i_drop_stats_actiondata_t data = { 0 };
     const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
         "drop_vni_invalid",
         "drop_nacl",

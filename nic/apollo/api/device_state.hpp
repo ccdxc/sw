@@ -39,22 +39,11 @@ public:
 
     /// \brief  insert given device instance into the device db
     /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t insert(device_entry *device) {
-        if (device_cfg_ && (device_cfg_ != device)) {
-            return sdk::SDK_RET_ENTRY_EXISTS;
-        }
-        return SDK_RET_OK;
-    }
+    sdk_ret_t insert(device_entry *device);
 
     /// \brief  remove the (singleton) instance of device object from db
     /// \return pointer to the removed device instance or NULL, if not found
-    device_entry *remove(void) {
-        device_entry *device;
-
-        device = device_cfg_;
-        device_cfg_ = NULL;
-        return device;
-    }
+    device_entry *remove(void);
 
     /// \brief     free device instance back to slab
     /// \param[in] device pointer to the allocated device
@@ -62,7 +51,8 @@ public:
 
     /// \@brief    lookup a device in database given the key
     /// \param[in] device_key device key
-    /// \return    pointer to the instance of device config or NULL, if not found
+    /// \return    pointer to the instance of device config or NULL,
+    ///            if not found
     device_entry *find(void) {
         return device_cfg_;
     }
