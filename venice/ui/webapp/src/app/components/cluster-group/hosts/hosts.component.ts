@@ -108,11 +108,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
         this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
 
-        this.naplesEventUtility.processEvents(response);
         this.naplesWithoutHosts = [];
         for (const dsc of this.naples) {
           if (!dsc.status.host) {
-            const newHost = new ClusterHost();
             this.naplesWithoutHosts.push(dsc);
           }
         }

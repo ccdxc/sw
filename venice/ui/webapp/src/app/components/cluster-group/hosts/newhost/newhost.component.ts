@@ -130,31 +130,6 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     }
   }
 
-  getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this._clusterService.WatchDistributedServiceCard().subscribe(
-      response => {
-        this.naplesEventUtility.processEvents(response);
-        this.dataObjects = [];
-        this.objectMap = {};
-        for (const dsc of this.naples) {
-          if (!dsc.status.host) {
-            const newHost = new ClusterHost();
-            this.addDSCID(newHost);
-            this.dataObjects.push(dsc);
-            this.setValidators(newHost);
-            newHost.$formGroup.get(['spec', 'dscs', 0, 'mac-address']).setValue(dsc.status['primary-mac']);
-            this.objectMap[dsc.meta.name] = newHost;
-          }
-        }
-        this.notAdmittedCount = this.dataObjects.length;
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
-    );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
-  }
-
   getFormGroup(rowData: ClusterHost): FormGroup {
     return this.objectMap[rowData.meta.name].$formGroup;
   }
