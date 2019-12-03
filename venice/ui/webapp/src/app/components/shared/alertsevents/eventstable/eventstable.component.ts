@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, ChangeDetectorRef, SimpleChanges, OnChanges, OnDestroy } from '@angular/core';
 import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
 import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, EventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { EventsService } from '@app/services/events.service';
@@ -94,6 +94,8 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   // TimeRange for events and alerts
   eventsSelectedTimeRange: TimeRange;
   eventsTimeConstraints: string = '';
+
+  exportMap: CustomExportMap = {};
 
   constructor(protected eventsService: EventsService,
     protected searchService: SearchService,

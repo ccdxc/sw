@@ -2,7 +2,7 @@ import { Component, OnInit, Input, ViewChild, ChangeDetectorRef, SimpleChanges, 
 import { IMonitoringAlert, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { TimeRange } from '@app/components/shared/timerange/utility';
-import { TableCol } from '@app/components/shared/tableviewedit';
+import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -87,6 +87,8 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
 
   // Used for processing watch stream events
   alertsEventUtility: HttpEventUtility<MonitoringAlert>;
+
+  exportMap: CustomExportMap = {};
 
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
