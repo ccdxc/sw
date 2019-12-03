@@ -347,7 +347,23 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FlowExportPolicy", nil)
 		return len(p) == 2, p
-	}, "FlowExportPolicy update failed", "1s", "60s")
+	}, "FlowExportPolicy delete failed", "1s", "60s")
+
+	// Mock error by deleting again
+	err = policyDb.DeleteObject(&appObj)
+	Assert(t, err != nil, fmt.Sprintf("failed to raise error for redundant delete operation"))
+	AssertEventually(t, func() (bool, interface{}) {
+		p := policyDb.ListObjects("FlowExportPolicy", nil)
+		return len(p) == 2, p
+	}, "Number of policy changed after redundant delete operation", "1s", "60s")
+
+	// Mock error by updating non existed policy
+	err = policyDb.UpdateObject(&appObj)
+	Assert(t, err != nil, fmt.Sprintf("failed to raise error for redundant update operation"))
+	AssertEventually(t, func() (bool, interface{}) {
+		p := policyDb.ListObjects("FlowExportPolicy", nil)
+		return len(p) == 2, p
+	}, "Number of policy changed after redundant update operation", "1s", "60s")
 
 	contents := map[string]struct {
 		Watchers []int
@@ -409,6 +425,13 @@ func TestRpcServer(t *testing.T) {
 	AssertOk(t, err, "failed to create telemetry client")
 	Assert(t, client != nil, "invalid telemetry client ")
 	defer client.Stop()
+
+	// Mock runWatcher error by giving invalid URL to TpClient
+	// Even with invalid url, NewTpClient should also return non-nil client obj and nil err
+	invalidURLClient, invalidURLErr := NewTpClient("agent-err", handler, "Invalid URL", mockresolver)
+	Assert(t, invalidURLErr == nil, "NewTpClient func should return nil err even if url is invalid")
+	Assert(t, invalidURLClient != nil, "NewTpClient func should return non-nil client obj even if url is invalid")
+	defer invalidURLClient.Stop()
 
 	// start rpc server
 	f, err = rpcserver.NewRPCServer(serverAddr, policyDb, defaultCollectInterval, nil)
