@@ -98,6 +98,7 @@ type PdsaGlobalOpts struct {
 	OidFam string
 	Struct string
 	Mib    string
+	FillFn string
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -996,6 +997,7 @@ func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.Mib = r.Mib
 	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
+	pdsaGlobOpts.FillFn = r.FillFn
 	return pdsaGlobOpts, nil
 }
 

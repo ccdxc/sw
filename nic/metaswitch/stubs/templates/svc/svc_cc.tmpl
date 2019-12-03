@@ -10,6 +10,7 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_common.hpp"
 
 {{range .Services}}
 {{$svcname := .Name}}
@@ -22,11 +23,12 @@ Status
 {{$svcname}}Impl::{{$rpc}}(ServerContext *context,
                               const {{$pkgName}}::{{.RequestType.Name}} *req,
                               {{$pkgName}}::{{.ResponseType.Name}} *resp) {
+    uint correlator = 0x100;
     if (req == NULL) {
         resp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::CANCELLED;
     }
-    PDSA_START_TXN(0x100);
+    PDSA_START_TXN(correlator);
   {{if (HasSuffix $rpc "Delete")}}
     //Delete request
   {{end}}
@@ -40,11 +42,13 @@ Status
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE);
+        pdsa_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+        pdsa_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+        pdsa_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
     }
     {{end}}
   {{end}}
-    PDSA_END_TXN(0x100);
+    PDSA_END_TXN(correlator);
 
     resp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     return Status::OK;

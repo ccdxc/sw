@@ -22,11 +22,12 @@
   {{$msgName := .GetName}}
   {{$msg := .}}
   {{if hasExtension "venice.pdsaSetGlobOpts" . }}
-    {{$param := (getPdsaSetGlobalOpts . $cam)}}
+    {{$param  := (getPdsaSetGlobalOpts . $cam)}}
     {{$oidLen := $param.OidLen}}
     {{$oidFam := $param.OidFam}}
     {{$struct := $param.Struct}}
     {{$mib    := $param.Mib}}
+    {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
     /*===== Set MS Table: {{$struct}} =====*/
     NBB_VOID pdsa_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
@@ -61,7 +62,7 @@
         oid[{{$fieldOpt.SetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                   {{end}}
                 {{else}}
-        {{$fieldOpt.SetKeyOidFn}}(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
+        {{$fieldOpt.SetKeyOidFn}}(req, oid);
                 {{end}}
               {{end}}
             {{end}}
@@ -105,10 +106,10 @@
                 {{else}}
             {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                 {{end}}
-              {{else}}
-            {{$fieldOpt.SetFieldFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
-              {{end}}
             AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
+              {{else}}
+            {{$fieldOpt.SetFieldFn}}(req, mib_msg);
+              {{end}}
             {{else}}
               {{if TypeIsMessage .}}
                 {{if (eq $fieldOpt.Field "")}}
@@ -145,9 +146,9 @@
         NBB_TRC_EXIT();
     } /* pdsa_fill_{{$struct | ToLower}}_fields */
 
-    NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status) {
-        NBB_ULONG       test_correlator = 0x100;
-
+    NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+                                            NBB_LONG row_status,
+                                            NBB_ULONG test_correlator) {
         ATG_CPI_ROW_UPDATE  *row_update = NULL;
         AMB_GEN_IPS         *mib_msg = NULL;
 
@@ -174,6 +175,9 @@
         /***************************************************************************/
         {{$struct}} *data = ({{$struct}}*)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
         pdsa_fill_{{$struct | ToLower}}_fields(req, mib_msg, data, row_status);
+        {{if not (eq $fillFn "")}}
+        {{$fillFn}}(req, mib_msg, data, row_status);
+        {{end}}
 
         // Send the Row Update request to CSS
         NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
@@ -181,6 +185,36 @@
         NBB_TRC_EXIT();
         return;
     } /* pdsa_set_{{$struct | ToLower}} */
+
+    pre_set_{{$struct | ToLower}}_func_type pre_set_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pdsa_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type func) {
+        pre_set_{{$struct | ToLower}}_func = func;
+    } /* pdsa_reg_pre_set_{{$struct | ToLower}} */
+
+    NBB_VOID pdsa_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+                                            NBB_LONG row_status,
+                                            NBB_ULONG test_correlator) {
+        if (pre_set_{{$struct | ToLower}}_func != NULL) {
+            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator);
+        }
+        return;
+    } /* pdsa_pre_set_{{$struct | ToLower}} */
+
+    post_set_{{$struct | ToLower}}_func_type post_set_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pdsa_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type func) {
+        post_set_{{$struct | ToLower}}_func = func;
+    } /* pdsa_reg_post_set_{{$struct | ToLower}} */
+
+    NBB_VOID pdsa_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+                                            NBB_LONG row_status,
+                                            NBB_ULONG test_correlator) {
+        if (post_set_{{$struct | ToLower}}_func != NULL) {
+            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator);
+        }
+        return;
+    } /* pdsa_post_set_{{$struct | ToLower}} */
     {{end}}
   {{end}}
 {{end}}
