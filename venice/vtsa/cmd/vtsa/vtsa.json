@@ -1,65 +1,63 @@
 {
-	"Name" : "ExampleConfig",
-	"FilesystemRoot" : "/tmp",
-	"Retention" : 0,
-	"PrepActions" : [
-				{
-					"Name" : "Action1",
-					"Method" : 0,
-					"Command" : "ls -l"
-				}
-			],
+  "Name":"VeniceTechsupportConfig",
+  "FilesystemRoot":"/tmp",
+  "Retention":0,
+  "PrepActions":[
+    {
+      "Name":"Action1",
+      "Method":0,
+      "Command":"ls -l"
+    }
+  ],
+  "CollectActions":[
+    {
+      "Name":"GetNodeInfo",
+      "Method":0,
+      "Command":"kubectl describe nodes"
+    },
+    {
+      "Name":"GetAllKubectlInfo",
+      "Method":0,
+      "Command":"kubectl describe all"
+    },
+    {
+      "Name":"GetKubeLogs",
+      "Method":0,
+      "Command":"mkdir -p kubelogs && for i in $(kubectl get pods | awk '{print $1}' | grep -v NAME) ; do kubectl logs $i > kubelogs/$i; done"
+    },
+    {
+      "Name":"ShowPods",
+      "Method":0,
+      "Command":"kubectl get pods -o wide"
+    },
+    {
+      "Name":"Cores",
+      "Method":0,
+      "Command":"mkdir core && cp /data/core/* core"
+    },
+    {
+      "Name":"Logs",
+      "Method":0,
+      "Command":"mkdir logs && cp -r /var/log/pensando/* logs/"
+    },
+    {
+      "Name":"syslog",
+      "Method":0,
+      "Command":"mkdir syslogs && cp /var/syslog/messages syslogs/"
+    },
+    {
+      "Name":"Events",
+      "Method":0,
+      "Command":"mkdir events && cp -r /var/lib/pensando/events/* events/"
+    },
+    {
+      "Name":"Uptime",
+      "Method":0,
+      "Command":"uptime"
+    }
+  ],
+  "ExportActions":[
 
-	"CollectActions" : [
-                                {
-                                        "Name" : "GetNodeInfo",
-                                        "Method" : 0,
-                                        "Command" : "kubectl describe nodes"
-                                },
-				{
-                                        "Name" : "GetAllKubectlInfo",
-                                        "Method" : 0,
-                                        "Command" : "kubectl describe all"
-                                },
-                                {
-                                        "Name" : "GetKubeLogs",
-                                        "Method" : 0,
-                                        "Command" : "mkdir -p kubelogs && for i in $(kubectl get pods | awk '{print $1}' | grep -v NAME) ; do kubectl logs $i > kubelogs/$i; done"
-                                },
-                                {
-                                        "Name" : "ShowPods",
-                                        "Method" : 0,
-                                        "Command" : "kubectl get pods -o wide"
-                                },
-                                {
-                                        "Name" : "Cores",
-                                        "Method" : 0,
-					"Command" : "mkdir core && cp /data/core/* core"
-                                },
-				{
-                                        "Name" : "Logs",
-                                        "Method" : 0,
-                                        "Command" : "mkdir logs && cp /var/log/pensando/* logs/"
-                                },
-				{
-					"Name" : "syslog",
-					"Method": 0,
-					"Command" : "mkdir syslogs && cp /var/syslog/messages syslogs/"
-				},
-                                {
-                                        "Name" : "Events",
-                                        "Method" : 0,
-                                        "Command" : "mkdir events && cp -r /var/lib/pensando/events/* events/"
-                                },
-                                {
-                                        "Name" : "Uptime",
-                                        "Method" : 0,
-                                        "Command" : "uptime"
-                                }
-			],
-
-	"ExportActions" : [
-			],
-
-	"RetentionPolicy" : 0
-}				
+  ],
+  "RetentionPolicy":0
+}
