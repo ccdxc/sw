@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -32,6 +33,18 @@ nexthop_impl_state::nexthop_impl_state(pds_state *state) {
 
 nexthop_impl_state::~nexthop_impl_state() {
     rte_indexer::destroy(nh_idxr_);
+}
+
+nexthop_impl *
+nexthop_impl_state::alloc(void) {
+    return (nexthop_impl *)
+               SDK_CALLOC(SDK_MEM_ALLOC_PDS_NEXTHOP_IMPL,
+                          sizeof(nexthop_impl));
+}
+
+void
+nexthop_impl_state::free(nexthop_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_NEXTHOP_IMPL, impl);
 }
 
 /// \@}    // end of PDS_NEXTHOP_IMPL_STATE

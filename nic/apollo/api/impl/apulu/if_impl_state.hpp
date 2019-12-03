@@ -10,8 +10,8 @@
 
 #ifndef __IF_IMPL_STATE_HPP__
 #define __IF_IMPL_STATEHPP__
-#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
@@ -35,6 +35,14 @@ public:
 
     /// \brief  destructor
     ~if_impl_state();
+
+    /// \brief  allocate memory required for an interface impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    if_impl *alloc(void);
+
+    /// \brief     free interface impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(if_impl *impl);
 
 private:
     rte_indexer *l3if_idxr(void) { return l3if_idxr_; }

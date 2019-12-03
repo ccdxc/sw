@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -29,6 +30,17 @@ subnet_impl_state::subnet_impl_state(pds_state *state) {
 
 subnet_impl_state::~subnet_impl_state() {
     rte_indexer::destroy(subnet_idxr_);
+}
+
+subnet_impl *
+subnet_impl_state::alloc(void) {
+    return (subnet_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_SUBNET_IMPL,
+                                     sizeof(subnet_impl));
+}
+
+void
+subnet_impl_state::free(subnet_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_SUBNET_IMPL, impl);
 }
 
 sdk_ret_t

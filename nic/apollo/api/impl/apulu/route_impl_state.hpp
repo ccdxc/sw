@@ -36,6 +36,14 @@ public:
     /// \brief destructor
     ~route_table_impl_state();
 
+    /// \brief  allocate memory required for a route table impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    route_table_impl *alloc(void);
+
+    /// \brief     free route table impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(route_table_impl *impl);
+
     /// \brief  API to initiate transaction over all the table manamgement
     ///         library instances
     /// \return SDK_RET_OK on success, failure status code on error

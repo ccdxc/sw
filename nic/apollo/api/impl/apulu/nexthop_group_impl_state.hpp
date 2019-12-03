@@ -35,6 +35,14 @@ public:
     /// \brief  destructor
     ~nexthop_group_impl_state();
 
+    /// \brief  allocate memory required for a nexthop group impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    nexthop_group_impl *alloc(void);
+
+    /// \brief     free nexthop group impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(nexthop_group_impl *impl);
+
     /// \brief  return the nexthop group table indexer
     /// \return pointer to the nexthop group table indexer
     rte_indexer *nhgroup_idxr(void) { return nhgroup_idxr_; }

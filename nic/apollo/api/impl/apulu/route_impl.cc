@@ -39,9 +39,7 @@ route_table_impl *
 route_table_impl::factory(pds_route_table_spec_t *spec) {
     route_table_impl    *impl;
 
-    // TODO: move to slab later
-    impl = (route_table_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL,
-                                          sizeof(route_table_impl));
+    impl = route_table_impl_db()->alloc();
     new (impl) route_table_impl();
     return impl;
 }
@@ -49,16 +47,14 @@ route_table_impl::factory(pds_route_table_spec_t *spec) {
 void
 route_table_impl::destroy(route_table_impl *impl) {
     impl->~route_table_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
+    route_table_impl_db()->free(impl);
 }
 
 impl_base *
 route_table_impl::clone(void) {
     route_table_impl*cloned_impl;
 
-    cloned_impl = (route_table_impl *)
-                      SDK_CALLOC(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL,
-                                 sizeof(route_table_impl));
+    cloned_impl = route_table_impl_db()->alloc();
     new (cloned_impl) route_table_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

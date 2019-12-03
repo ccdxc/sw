@@ -45,9 +45,7 @@ vnic_impl *
 vnic_impl::factory(pds_vnic_spec_t *spec) {
     vnic_impl *impl;
 
-    // TODO: move to slab later
-    impl = (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VNIC_IMPL,
-                                  sizeof(vnic_impl));
+    impl = vnic_impl_db()->alloc();
     new (impl) vnic_impl();
     return impl;
 }
@@ -55,15 +53,14 @@ vnic_impl::factory(pds_vnic_spec_t *spec) {
 void
 vnic_impl::destroy(vnic_impl *impl) {
     impl->~vnic_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_VNIC_IMPL, impl);
+    vnic_impl_db()->free(impl);
 }
 
 impl_base *
 vnic_impl::clone(void) {
     vnic_impl *cloned_impl;
 
-    cloned_impl = (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VNIC_IMPL,
-                                          sizeof(vnic_impl));
+    cloned_impl = vnic_impl_db()->alloc();
     new (cloned_impl) vnic_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

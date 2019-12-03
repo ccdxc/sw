@@ -28,10 +28,7 @@ security_policy_impl *
 security_policy_impl::factory(pds_policy_spec_t *spec) {
     security_policy_impl    *impl;
 
-    // TODO: move to slab later
-    impl = (security_policy_impl *)
-               SDK_CALLOC(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL,
-                          sizeof(security_policy_impl));
+    impl = security_policy_impl_db()->alloc();
     new (impl) security_policy_impl();
     return impl;
 }
@@ -39,16 +36,14 @@ security_policy_impl::factory(pds_policy_spec_t *spec) {
 void
 security_policy_impl::destroy(security_policy_impl *impl) {
     impl->~security_policy_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL, impl);
+    security_policy_impl_db()->free(impl);
 }
 
 impl_base *
 security_policy_impl::clone(void) {
     security_policy_impl *cloned_impl;
 
-    cloned_impl = (security_policy_impl *)
-                      SDK_CALLOC(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL,
-                                 sizeof(security_policy_impl));
+    cloned_impl = security_policy_impl_db()->alloc();
     new (cloned_impl) security_policy_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

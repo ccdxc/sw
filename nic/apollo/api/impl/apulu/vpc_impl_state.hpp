@@ -37,6 +37,14 @@ public:
     /// \brief  destructor
     ~vpc_impl_state();
 
+    /// \brief  allocate memory required for a vpc impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    vpc_impl *alloc(void);
+
+    /// \brief     free vpc impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(vpc_impl *impl);
+
     /// \brief  API to initiate transaction over all the table manamgement
     ///         library instances
     /// \return #SDK_RET_OK on success, failure status code on error

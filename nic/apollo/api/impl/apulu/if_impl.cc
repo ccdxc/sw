@@ -30,7 +30,10 @@ if_impl *
 if_impl::factory(pds_if_spec_t *spec) {
     if_impl *impl;
 
-    impl = (if_impl *)SDK_CALLOC(SDK_MEM_ALLOC_IF_IMPL_IMPL, sizeof(if_impl));
+    impl = if_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
     new (impl) if_impl();
     return impl;
 }
@@ -38,15 +41,14 @@ if_impl::factory(pds_if_spec_t *spec) {
 void
 if_impl::destroy(if_impl *impl) {
     impl->~if_impl();
-    SDK_FREE(SDK_MEM_ALLOC_IF_IMPL_IMPL, impl);
+    if_impl_db()->free(impl);
 }
 
 impl_base *
 if_impl::clone(void) {
     if_impl *cloned_impl;
 
-    cloned_impl = (if_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_IF_IMPL,
-                                        sizeof(if_impl));
+    cloned_impl = if_impl_db()->alloc();
     new (cloned_impl) if_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

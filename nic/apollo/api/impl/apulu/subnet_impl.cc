@@ -38,9 +38,7 @@ subnet_impl::factory(pds_subnet_spec_t *spec) {
                       spec->fabric_encap.val);
         return NULL;
     }
-    // TODO: move to slab later
-    impl = (subnet_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_SUBNET_IMPL,
-                                     sizeof(subnet_impl));
+    impl = subnet_impl_db()->alloc();
     new (impl) subnet_impl();
     return impl;
 }
@@ -48,15 +46,14 @@ subnet_impl::factory(pds_subnet_spec_t *spec) {
 void
 subnet_impl::destroy(subnet_impl *impl) {
     impl->~subnet_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_SUBNET_IMPL, impl);
+    subnet_impl_db()->free(impl);
 }
 
 impl_base *
 subnet_impl::clone(void) {
     subnet_impl *cloned_impl;
 
-    cloned_impl = (subnet_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_SUBNET_IMPL,
-                                            sizeof(subnet_impl));
+    cloned_impl = subnet_impl_db()->alloc();
     new (cloned_impl) subnet_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

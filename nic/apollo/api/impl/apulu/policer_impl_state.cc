@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/policer_impl.hpp"
 #include "nic/apollo/api/impl/apulu/policer_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
@@ -36,6 +37,17 @@ policer_impl_state::policer_impl_state(pds_state *state) {
 policer_impl_state::~policer_impl_state() {
     rte_indexer::destroy(tx_idxr_);
     rte_indexer::destroy(rx_idxr_);
+}
+
+policer_impl *
+policer_impl_state::alloc(void) {
+    return (policer_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_POLICER_IMPL,
+                                      sizeof(policer_impl));
+}
+
+void
+policer_impl_state::free(policer_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_POLICER_IMPL, impl);
 }
 
 /// \@}    // end of PDS_POLICER_IMPL_STATE

@@ -40,8 +40,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
                       spec->fabric_encap.val);
         return NULL;
     }
-    impl = (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL,
-                                   sizeof(vpc_impl));
+    impl = vpc_impl_db()->alloc();
     new (impl) vpc_impl();
     return impl;
 }
@@ -49,7 +48,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
 void
 vpc_impl::destroy(vpc_impl *impl) {
     impl->~vpc_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_VPC_IMPL, impl);
+     vpc_impl_db()->free(impl);
 }
 
 impl_base *

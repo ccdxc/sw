@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/impl/apulu/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apulu/security_policy_impl_state.hpp"
 
 namespace api {
@@ -62,6 +63,18 @@ security_policy_impl_state::~security_policy_impl_state() {
     indexer::destroy(ing_v4_idxr_);
     indexer::destroy(egr_v6_idxr_);
     indexer::destroy(ing_v6_idxr_);
+}
+
+security_policy_impl *
+security_policy_impl_state::alloc(void) {
+    return (security_policy_impl *)
+               SDK_CALLOC(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL,
+                          sizeof(security_policy_impl));
+}
+
+void
+security_policy_impl_state::free(security_policy_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL, impl);
 }
 
 sdk_ret_t

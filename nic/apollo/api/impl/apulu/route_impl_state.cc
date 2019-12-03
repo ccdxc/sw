@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/impl/apulu/route_impl.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl_state.hpp"
 
 namespace api {
@@ -39,6 +40,17 @@ route_table_impl_state::route_table_impl_state(pds_state *state) {
 route_table_impl_state::~route_table_impl_state() {
     indexer::destroy(v4_idxr_);
     indexer::destroy(v6_idxr_);
+}
+
+route_table_impl *
+route_table_impl_state::alloc(void) {
+    return (route_table_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL,
+                                          sizeof(route_table_impl));
+}
+
+void
+route_table_impl_state::free(route_table_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
 }
 
 sdk_ret_t

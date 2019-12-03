@@ -34,10 +34,10 @@ nexthop_group_impl *
 nexthop_group_impl::factory(pds_nexthop_group_spec_t *spec) {
     nexthop_group_impl *impl;
 
-    // TODO: move to slab later
-    impl = (nexthop_group_impl *)
-               SDK_CALLOC(SDK_MEM_ALLOC_PDS_NEXTHOP_GROUP_IMPL,
-                          sizeof(nexthop_group_impl));
+    impl = nexthop_group_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
     new (impl) nexthop_group_impl();
     return impl;
 }
@@ -45,7 +45,7 @@ nexthop_group_impl::factory(pds_nexthop_group_spec_t *spec) {
 void
 nexthop_group_impl::destroy(nexthop_group_impl *impl) {
     impl->~nexthop_group_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_NEXTHOP_GROUP_IMPL, impl);
+     nexthop_group_impl_db()->free(impl);
 }
 
 impl_base *
@@ -53,8 +53,7 @@ nexthop_group_impl::clone(void) {
     nexthop_group_impl *cloned_impl;
 
     cloned_impl =
-        (nexthop_group_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_NEXTHOP_GROUP_IMPL,
-                                         sizeof(nexthop_group_impl));
+    cloned_impl = nexthop_group_impl_db()->alloc();
     new (cloned_impl) nexthop_group_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

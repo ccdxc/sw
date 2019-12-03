@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "nic/apollo/core/trace.hpp"
@@ -34,6 +35,16 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
 
 vpc_impl_state::~vpc_impl_state() {
     slhash::destroy(vni_tbl_);
+}
+
+vpc_impl *
+vpc_impl_state::alloc(void) {
+    return (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL, sizeof(vpc_impl));
+}
+
+void
+vpc_impl_state::free(vpc_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_VPC_IMPL, impl);
 }
 
 sdk_ret_t

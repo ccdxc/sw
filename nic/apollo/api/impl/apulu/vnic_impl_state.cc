@@ -41,6 +41,17 @@ vnic_impl_state::~vnic_impl_state() {
     slab::destroy(vnic_impl_slab_);
 }
 
+vnic_impl *
+vnic_impl_state::alloc(void) {
+    return (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VNIC_IMPL,
+                                   sizeof(vnic_impl));
+}
+
+void
+vnic_impl_state::free(vnic_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_PDS_VNIC_IMPL, impl);
+}
+
 sdk_ret_t
 vnic_impl_state::table_transaction_begin(void) {
     return SDK_RET_OK;

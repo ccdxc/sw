@@ -37,6 +37,14 @@ public:
     /// \brief destructor
     ~security_policy_impl_state();
 
+    /// \brief  allocate memory required for a security policy impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    security_policy_impl *alloc(void);
+
+    /// \brief     free security policy impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(security_policy_impl *impl);
+
     /// \brief  API to initiate transaction over all the table manamgement
     ///         library instances
     /// \return SDK_RET_OK on success, failure status code on error

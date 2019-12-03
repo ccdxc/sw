@@ -30,9 +30,7 @@ tep_impl *
 tep_impl::factory(pds_tep_spec_t *pds_tep) {
     tep_impl *impl;
 
-    // TODO: move to slab later
-    impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TEP_IMPL,
-                                  sizeof(tep_impl));
+    impl = tep_impl_db()->alloc();
     new (impl) tep_impl();
     return impl;
 }
@@ -40,15 +38,14 @@ tep_impl::factory(pds_tep_spec_t *pds_tep) {
 void
 tep_impl::destroy(tep_impl *impl) {
     impl->~tep_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_TEP_IMPL, impl);
+    tep_impl_db()->free(impl);
 }
 
 impl_base *
 tep_impl::clone(void) {
     tep_impl *cloned_impl;
 
-    cloned_impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TEP_IMPL,
-                                         sizeof(tep_impl));
+    cloned_impl = tep_impl_db()->alloc();
     new (cloned_impl) tep_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

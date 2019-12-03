@@ -35,6 +35,14 @@ public:
     /// \brief  destructor
     ~policer_impl_state();
 
+    /// \brief  allocate memory required for a policer impl instance
+    /// \return pointer to the allocated instance, NULL if no memory
+    policer_impl *alloc(void);
+
+    /// \brief     free policer impl instance back
+    /// \param[in] impl pointer to the allocated impl instance
+    void free(policer_impl *impl);
+
     /// \brief  return the Tx policer table indexer
     /// \return pointer to the Tx policer table indexer
     rte_indexer *tx_idxr(void) { return tx_idxr_; }

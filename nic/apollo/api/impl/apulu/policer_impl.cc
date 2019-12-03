@@ -48,8 +48,7 @@ policer_impl *
 policer_impl::factory(pds_policer_spec_t *spec) {
     policer_impl *impl;
 
-    impl = (policer_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_POLICER_IMPL,
-                                      sizeof(policer_impl));
+    impl = policer_impl_db()->alloc();
     new (impl) policer_impl();
     return impl;
 }
@@ -57,15 +56,14 @@ policer_impl::factory(pds_policer_spec_t *spec) {
 void
 policer_impl::destroy(policer_impl *impl) {
     impl->~policer_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_POLICER_IMPL, impl);
+    policer_impl_db()->free(impl);
 }
 
 impl_base *
 policer_impl::clone(void) {
     policer_impl *cloned_impl;
 
-    cloned_impl = (policer_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_POLICER_IMPL,
-                                             sizeof(policer_impl));
+    cloned_impl = policer_impl_db()->alloc();
     new (cloned_impl) policer_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;

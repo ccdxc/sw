@@ -10,6 +10,7 @@
 
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl_state.hpp"
 
 namespace api {
@@ -33,6 +34,15 @@ if_impl_state::~if_impl_state() {
     rte_indexer::destroy(lif_idxr_);
 }
 
+if_impl *
+if_impl_state::alloc(void) {
+    return (if_impl *)SDK_CALLOC(SDK_MEM_ALLOC_IF_IMPL_IMPL, sizeof(if_impl));
+}
+
+void
+if_impl_state::free(if_impl *impl) {
+    SDK_FREE(SDK_MEM_ALLOC_IF_IMPL_IMPL, impl);
+}
 
 /// \@}    // end of PDS_IF_IMPL_STATE
 
