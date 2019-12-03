@@ -144,18 +144,17 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
 #if 0
     case OBJ_ID_DEVICE:
         return device_entry::free((device_entry *)api_obj);
+#endif
 
     case OBJ_ID_IF:
         return if_entry::free((if_entry *)api_obj);
 
     case OBJ_ID_VPC:
         return vpc_entry::free((vpc_entry *)api_obj);
-#endif
 
     case OBJ_ID_SUBNET:
         return subnet_entry::free((subnet_entry *)api_obj);
 
-#if 0
     case OBJ_ID_TEP:
         return tep_entry::free((tep_entry *)api_obj);
 
@@ -191,7 +190,6 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group::free((nexthop_group *)api_obj);
-#endif
 
     default:
         break;
