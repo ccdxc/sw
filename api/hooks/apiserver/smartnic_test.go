@@ -86,6 +86,8 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		err = kv.Update(ctx, key, &nic)
 		AssertOk(t, err, fmt.Sprintf("Error updating object in KVStore, phase: %s", phase))
 
+		admitted := phase == cluster.DistributedServiceCardStatus_ADMITTED.String()
+
 		// Create and update should always go through
 		txn := kv.NewTxn()
 		_, r, err := hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
@@ -100,16 +102,20 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		// MgmtMode change only goes through if phase == ADMITTED
 		txn = kv.NewTxn()
 		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.UpdateOper, false, decomNICUpd)
-		Assert(t, r == true && (err == nil || phase != cluster.DistributedServiceCardStatus_ADMITTED.String()),
+		Assert(t, r == true && (err == nil || !admitted),
 			"smartNICPreCommitHook returned unexpected result on mode change, op: UPDATE, phase: %s, err: %v", phase, err)
 		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
-		// delete only goes through if phase != ADMITTED
-		txn = kv.NewTxn()
-		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nil)
-		Assert(t, r == true && (err == nil || phase == cluster.DistributedServiceCardStatus_ADMITTED.String()),
-			"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
-		Assert(t, phase == cluster.DistributedServiceCardStatus_ADMITTED.String() || !txn.IsEmpty(), "transaction should contain module object")
+		// delete only goes through if phase != ADMITTED || MgmtMode != NETWORK
+		for _, mgmtMode := range cluster.DistributedServiceCardSpec_MgmtModes_name {
+			nwManaged := mgmtMode == cluster.DistributedServiceCardSpec_NETWORK.String()
+			txn = kv.NewTxn()
+			_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nil)
+			Assert(t, r == true && (err == nil || (nwManaged && admitted)),
+				"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
+			Assert(t, (nwManaged && admitted) || !txn.IsEmpty(), "transaction should contain module object")
+		}
+		nic.Spec.MgmtMode = cluster.DistributedServiceCardSpec_NETWORK.String()
 	}
 	// Test unsupported Spec modifications
 	tlsKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
