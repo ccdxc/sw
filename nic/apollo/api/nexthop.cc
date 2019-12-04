@@ -134,6 +134,13 @@ nexthop::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+nexthop::add_deps(obj_ctxt_t *obj_ctxt) {
+    // objects pointing to the nexthop need not be update because of nexthop
+    // update as the h/w id is not changing
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 nexthop::reprogram_config(api_op_t api_op) {
     return SDK_RET_ERR;
 }
@@ -192,7 +199,10 @@ nexthop::del_from_db(void) {
 
 sdk_ret_t
 nexthop::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (nexthop_db()->remove((nexthop *)orig_obj)) {
+        return nexthop_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

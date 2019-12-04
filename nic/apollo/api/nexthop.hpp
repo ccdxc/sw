@@ -94,6 +94,13 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief          add all objects that may be affected if this object is
+    ///                 updated to framework's object dependency list
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+
     /// \brief     update all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
     ///            with latest epoch#

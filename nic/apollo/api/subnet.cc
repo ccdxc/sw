@@ -191,14 +191,6 @@ subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::reprogram_config(api_op_t api_op) {
-    if (impl_) {
-        return impl_->reprogram_hw(this, api_op);
-    }
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
 subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
@@ -234,24 +226,6 @@ subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-subnet_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (impl_) {
-        return impl_->update_hw(orig_obj, this, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (impl_) {
-        PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
-        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
-    }
-    return SDK_RET_OK;
-}
-
 static bool
 vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
@@ -270,6 +244,32 @@ subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
     upd_ctxt.subnet = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+}
+
+sdk_ret_t
+subnet_entry::reprogram_config(api_op_t api_op) {
+    if (impl_) {
+        return impl_->reprogram_hw(this, api_op);
+    }
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+subnet_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->update_hw(orig_obj, this, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
+        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
