@@ -27,6 +27,7 @@ testcases:
 
     -   name    : TFTP_RRQ_WRQ_TEST_MEMLEAK
         testcase: testcases.alg.tftp.tftp_rrq_wrq_test_memleak
+        disable : true
         args    :
             type: local_only
 
