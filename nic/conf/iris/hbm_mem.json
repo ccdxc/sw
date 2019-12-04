@@ -329,7 +329,8 @@
         },
         {
             "name": "p4_program",
-            "size": "64K"
+            "size": "64K",
+            "reset": true
         },
         {
             "name": "p4_atomic_stats",
@@ -375,7 +376,8 @@
         {
             "name": "p4plus_program",
             "size": "256K",
-            "cache": "p4plus-all"
+            "cache": "p4plus-all",
+            "reset": true
         },
         {
             "name": "rdma",
@@ -432,11 +434,13 @@
             "_comment1": "key space = 1024 * 64 = 64K",
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
-            "size": "1088K"
+            "size": "1088K",
+            "reset": true
         },
         {
             "name": "tx-scheduler",
-            "size": "2048K"
+            "size": "2048K",
+            "reset": true
         },
         {
             "name": "p4pt-tcb",

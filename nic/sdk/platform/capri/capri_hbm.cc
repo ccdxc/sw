@@ -102,49 +102,35 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
     mpartition_region_t *reg;
     mem_addr_t va, pa;
 
-    if (capri_cfg && ((capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS))) {
-        for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
-            reg = g_capri_state_pd->mempartition()->region(i);
-            if (reg->reset) {
-                // Reset only for haps
-                SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
+    if (!capri_cfg)
+        return;
 
-                pa = g_capri_state_pd->mempartition()->addr(reg->start_offset);
-                va = (mem_addr_t)sdk::lib::pal_mem_map(pa, reg->size);
-                if (va) {
-                    memset((void *)va, 0, reg->size);
-                    sdk::lib::pal_mem_unmap((void *)va);
-                } else {
-                    uint8_t zeros[1024] = {0};
-                    int64_t rem = reg->size;
-                    while (rem > 0) {
-                        sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem > sizeof(zeros) ? sizeof(zeros) : rem);
-                        pa += sizeof(zeros);
-                        rem -= sizeof(zeros);
-                    }
+    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS &&
+        capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HW) {
+        return;
+    }
+
+    for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
+        reg = g_capri_state_pd->mempartition()->region(i);
+        if (reg->reset) {
+            // Reset only for haps
+            SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
+
+            pa = g_capri_state_pd->mempartition()->addr(reg->start_offset);
+            va = (mem_addr_t)sdk::lib::pal_mem_map(pa, reg->size);
+            if (va) {
+                memset((void *)va, 0, reg->size);
+                sdk::lib::pal_mem_unmap((void *)va);
+            } else {
+                uint8_t zeros[1024] = {0};
+                int64_t rem = reg->size;
+                while (rem > 0) {
+                    sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem > sizeof(zeros) ? sizeof(zeros) : rem);
+                    pa += sizeof(zeros);
+                    rem -= sizeof(zeros);
                 }
-                SDK_TRACE_DEBUG("Resetting %s hbm region done", reg->mem_reg_name);
-#if 0
-                    /*
-                     * comparing for all "reset" regions is delaying HAL UP.
-                     * Nicmgr is getting dev cmds before that and Nicmgr cores as HalGRPCClient is NULL.
-                     * So just checking nicmgrqstate map.
-                     */
-                    if (!strcmp(reg->mem_reg_name, "nicmgrqstate_map")) {
-                        // Check if its all 0s for HW
-                        addr = reg->start_offset;
-                        for (uint64_t j = 0; j < (reg->size) >> 10; j++) {
-                            sdk::asic::asic_mem_read(addr, tmp, 1024, true);
-                            if (memcmp(tmp, zeros, 1024)) {
-                                SDK_TRACE_ERR("Fatal: HBM region %s has non-zero bytes.",
-                                              reg->mem_reg_name);
-                                SDK_ASSERT(0);
-                            }
-                            addr += 1024;
-                        }
-                    }
-#endif
-           }
+            }
+            SDK_TRACE_DEBUG("Resetting %s hbm region done", reg->mem_reg_name);
         }
     }
 }
@@ -167,6 +153,7 @@ static sdk_ret_t
 capri_hbm_p4_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     if (cfg == NULL || cfg->p4_cache == false) {
         SDK_TRACE_DEBUG("Disabling HBM P4 cache based on HAL config.");
@@ -174,16 +161,40 @@ capri_hbm_p4_cache_init (capri_cfg_t *cfg)
     }
 
     // Enable P4 Ingress (inst_id = 1)
-    cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
+    cap_pics_csr_t & ig_pics_csr = cap0.ssi.pics;
     ig_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     ig_pics_csr.picc.cfg_cache_global.hash_mode(0);
     ig_pics_csr.picc.cfg_cache_global.write();
 
+    // Invalidate P4IG cache
+    ig_pics_csr.picc.dhs_cache_invalidate.entry.read();
+    ig_pics_csr.picc.dhs_cache_invalidate.entry.inval_all(1);
+    ig_pics_csr.picc.dhs_cache_invalidate.entry.write();
+
+    // Invalidate MPU icaches
+    for (uint8_t stage = 0; stage < 6; stage++) {
+        cap0.sgi.mpu[stage].icache.read();
+        cap0.sgi.mpu[stage].icache.invalidate(1);
+        cap0.sgi.mpu[stage].icache.write();
+    }
+
     // Enable P4 Egress (inst_id = 2)
-    cap_pics_csr_t & eg_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 2);
+    cap_pics_csr_t & eg_pics_csr = cap0.sse.pics;
     eg_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     eg_pics_csr.picc.cfg_cache_global.hash_mode(0);
     eg_pics_csr.picc.cfg_cache_global.write();
+
+    // Invalidate P4EG cache
+    eg_pics_csr.picc.dhs_cache_invalidate.entry.read();
+    eg_pics_csr.picc.dhs_cache_invalidate.entry.inval_all(1);
+    eg_pics_csr.picc.dhs_cache_invalidate.entry.write();
+
+    // Invalidate MPU icaches
+    for (uint8_t stage = 0; stage < 6; stage++) {
+        cap0.sge.mpu[stage].icache.read();
+        cap0.sge.mpu[stage].icache.invalidate(1);
+        cap0.sge.mpu[stage].icache.write();
+    }
 
     return SDK_RET_OK;
 }
@@ -192,6 +203,7 @@ static sdk_ret_t
 capri_hbm_p4plus_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     if (cfg == NULL || cfg->p4plus_cache == false) {
         SDK_TRACE_DEBUG("Disabling HBM P4Plus cache based on HAL config.");
@@ -199,16 +211,40 @@ capri_hbm_p4plus_cache_init (capri_cfg_t *cfg)
     }
 
     // Enable P4Plus RXDMA (inst_id = 0)
-    cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
+    cap_pics_csr_t & rxdma_pics_csr = cap0.rpc.pics;
     rxdma_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     rxdma_pics_csr.picc.cfg_cache_global.write();
 
+    // Invalidate RXDMA cache
+    rxdma_pics_csr.picc.dhs_cache_invalidate.entry.read();
+    rxdma_pics_csr.picc.dhs_cache_invalidate.entry.inval_all(1);
+    rxdma_pics_csr.picc.dhs_cache_invalidate.entry.write();
+
+    // Invalidate MPU icaches
+    for (uint8_t stage = 0; stage < 8; stage++) {
+        cap0.pcr.mpu[stage].icache.read();
+        cap0.pcr.mpu[stage].icache.invalidate(1);
+        cap0.pcr.mpu[stage].icache.write();
+    }
+
     // Enable P4Plus TXDMA (inst_id = 3)
-    cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
+    cap_pics_csr_t & txdma_pics_csr = cap0.tpc.pics;
     txdma_pics_csr.picc.cfg_cache_global.bypass(global_bypass);
     txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     txdma_pics_csr.picc.cfg_cache_global.write();
+
+    // Invalidate TXDMA cache
+    txdma_pics_csr.picc.dhs_cache_invalidate.entry.read();
+    txdma_pics_csr.picc.dhs_cache_invalidate.entry.inval_all(1);
+    txdma_pics_csr.picc.dhs_cache_invalidate.entry.write();
+
+    // Invalidate MPU icaches
+    for (uint8_t stage = 0; stage < 8; stage++) {
+        cap0.pct.mpu[stage].icache.read();
+        cap0.pct.mpu[stage].icache.invalidate(1);
+        cap0.pct.mpu[stage].icache.write();
+    }
 
     return SDK_RET_OK;
 }

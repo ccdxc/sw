@@ -72,28 +72,6 @@ capri_default_config_init (capri_cfg_t *cfg)
 }
 
 static sdk_ret_t
-capri_timer_hbm_init (void)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-    uint64_t timer_key_hbm_base_addr;
-    uint64_t timer_key_hbm_addr;
-    uint64_t zero_data[8] = { 0 };
-
-    timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
-    SDK_TRACE_DEBUG("HBM timer key base addr %lx", timer_key_hbm_base_addr);
-    timer_key_hbm_addr = timer_key_hbm_base_addr;
-    while (timer_key_hbm_addr < timer_key_hbm_base_addr +
-                                CAPRI_TIMER_HBM_KEY_SPACE) {
-        sdk::asic::asic_mem_write(timer_key_hbm_addr, (uint8_t *)zero_data,
-                                  sizeof(zero_data),
-                                  ASIC_WRITE_MODE_WRITE_THRU);
-        timer_key_hbm_addr += sizeof(zero_data);
-    }
-
-    return ret;
-}
-
-static sdk_ret_t
 capri_pgm_init (capri_cfg_t *cfg)
 {
     sdk_ret_t      ret;
@@ -134,15 +112,15 @@ capri_asm_init (capri_cfg_t *cfg)
             "/" + cfg->asm_cfg[i].path;
         SDK_TRACE_DEBUG("Loading ASM binaries from dir %s", full_path.c_str());
 
-	// Check if directory is present
-	if (access(full_path.c_str(), R_OK) < 0) {
+        // Check if directory is present
+        if (access(full_path.c_str(), R_OK) < 0) {
             SDK_TRACE_ERR("%s not_present/no_read_permissions",
                 full_path.c_str());
             return SDK_RET_ERR;
         }
 
         symbols = NULL;
-        if(cfg->asm_cfg[i].symbols_func) {
+        if (cfg->asm_cfg[i].symbols_func) {
             num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols, cfg->platform);
         }
 
@@ -168,6 +146,9 @@ capri_asm_init (capri_cfg_t *cfg)
           return SDK_RET_ERR;
        }
    }
+
+    sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
+
    return SDK_RET_OK;
 }
 
@@ -175,6 +156,9 @@ static sdk_ret_t
 capri_hbm_regions_init (capri_cfg_t *cfg)
 {
     sdk_ret_t           ret = SDK_RET_OK;
+
+    // reset all the HBM regions that are marked for reset
+    reset_hbm_regions(cfg);
 
     ret = capri_asm_init(cfg);
     if (ret != SDK_RET_OK) {
@@ -185,14 +169,6 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
-    ret = capri_timer_hbm_init();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // reset all the HBM regions that are marked for reset
-    reset_hbm_regions(cfg);
 
     return ret;
 }
@@ -518,10 +494,6 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri TM ASIC init failure, err : %d", ret);
 
-    ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                             "Capri scheduler init failure, err : %d", ret);
-
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
     if (cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
@@ -540,13 +512,11 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri replication init failure, err : %d", ret);
 
-    sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
-
     ret = capri_barco_crypto_init(cfg->platform);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri barco crypto init failure, err : {}", ret);
 
-
+    // TODO: It's not clear why this is needed here
     ret = capri_quiesce_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri quiesce init failure, err : %d", ret);
@@ -554,6 +524,11 @@ capri_init (capri_cfg_t *cfg)
     ret = capri_prd_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri PRD init failure, err : %d", ret);
+
+    ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                             "Capri scheduler init failure, err : %d", ret);
+
 end:
     if (cfg->completion_func) {
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
