@@ -143,8 +143,6 @@ get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
     return true;
 }
 
-#define NUM_POSTED(LogN, h, t) (((h) - (t)) & ((1u << LogN) - 1))
-
 void
 rdma_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 {
@@ -1381,6 +1379,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
     nicmgr_req_qstate_t qstate_req = {0};
     nicmgr_resp_qstate_t qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
+    uint64_t addr = 0;
 
     if (!get_lif_qstate(lif, qinfo)) {
         printf("Failed to get qinfo for lif %u\n", lif);
@@ -1393,28 +1392,20 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
     }
 
     for (uint32_t qid = 0; qid < qinfo[qtype].length; qid++) {
-        uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
-        uint32_t posted = 0;
+        addr = qinfo[qtype].base + qid * qinfo[qtype].size;
         switch (qtype) {
         case 0:
             sdk::lib::pal_mem_read(addr,
                                    (uint8_t *)&qstate.ethrx,
                                    sizeof(qstate.ethrx));
-
-            posted = NUM_POSTED(qstate.ethrx.q.ring_size,
-                                qstate.ethrx.q.ring[0].p_index,
-                                qstate.ethrx.comp_index); // not c_index0
-
             printf(" rx%3d: "
                    "head %6u "
                    "tail %6u "
-                   "posted %6d "
                    "comp_index %6u "
                    "color %d\n",
                    qid,
                    qstate.ethrx.q.ring[0].p_index,
                    qstate.ethrx.comp_index, // not c_index0
-                   posted,
                    qstate.ethrx.comp_index,
                    qstate.ethrx.sta.color);
             break;
@@ -1422,63 +1413,46 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             sdk::lib::pal_mem_read(addr,
                                    (uint8_t *)&qstate.ethtx,
                                    sizeof(qstate.ethtx));
-
-            posted = NUM_POSTED(qstate.ethtx.tx.q.ring_size,
-                                qstate.ethtx.tx.q.ring[0].p_index,
-                                qstate.ethtx.tx.q.ring[0].c_index);
-
             printf(" tx%3d: "
                    "head %6u "
                    "tail %6u "
-                   "posted %6d "
                    "comp_index %6u "
                    "color %d\n",
                    qid,
                    qstate.ethtx.tx.q.ring[0].p_index,
                    qstate.ethtx.tx.q.ring[0].c_index,
-                   posted,
                    qstate.ethtx.tx.comp_index,
                    qstate.ethtx.tx.sta.color);
             break;
         case 2:
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethaq, sizeof(qstate_ethaq));
-            posted = NUM_POSTED(qstate_ethaq.ring_size, qstate_ethaq.p_index0,
-                                qstate_ethaq.c_index0);
-            printf(" aq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                   qstate_ethaq.p_index0, qstate_ethaq.c_index0, posted, qstate_ethaq.comp_index,
+            printf(" aq%3d: head %6u tail %6u comp_index %6u color %d\n", qid,
+                   qstate_ethaq.p_index0, qstate_ethaq.c_index0, qstate_ethaq.comp_index,
                    qstate_ethaq.sta.color);
             break;
         case 7:
             if (qid == 0) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
-                posted = NUM_POSTED(qstate_notifyq.ring_size, qstate_notifyq.p_index0,
-                                    qstate_notifyq.c_index0);
-                printf(" nq%3d: head %6u tail %6u posted %6d host_pindex %6u\n", qid,
-                        qstate_notifyq.p_index0, qstate_notifyq.c_index0, posted,
+                printf(" nq%3d: head %6u tail %6u host_pindex %6u\n", qid,
+                        qstate_notifyq.p_index0, qstate_notifyq.c_index0,
                         qstate_notifyq.host_pindex);
             }
             if (qid == 1) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
-                posted = NUM_POSTED(qstate_edmaq.ring_size, qstate_edmaq.p_index0,
-                                    qstate_edmaq.c_index0);
-                printf(" dq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                        qstate_edmaq.p_index0, qstate_edmaq.c_index0, posted,
+                printf(" dq%3d: head %6u tail %6u comp_index %6u color %d\n", qid,
+                        qstate_edmaq.p_index0, qstate_edmaq.c_index0,
                         qstate_edmaq.comp_index, qstate_edmaq.sta.color);
             }
             if (qid == 2) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
-                posted =
-                    NUM_POSTED(qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
-                printf("req%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                    qstate_req.p_index0, qstate_req.c_index0, posted, qstate_req.comp_index,
+                printf("req%3d: head %6u tail %6u comp_index %6u color %d\n", qid,
+                    qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
                     qstate_req.sta.color);
             }
             if (qid == 3) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
-                posted =
-                    NUM_POSTED(qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
-                printf("rsp%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                    qstate_resp.p_index0, qstate_resp.c_index0, posted, qstate_resp.comp_index,
+                printf("rsp%3d: head %6u tail %6u comp_index %6u color %d\n", qid,
+                    qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
                     qstate_resp.sta.color);
             }
             break;
