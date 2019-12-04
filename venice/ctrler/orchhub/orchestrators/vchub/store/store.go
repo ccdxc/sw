@@ -54,12 +54,15 @@ func (v *VCHStore) Start() {
 	}
 	v.ctx, v.cancel = context.WithCancel(context.Background())
 	go v.run()
+	go v.pCache.Run()
 }
 
 // Stop stops the sessions
 func (v *VCHStore) Stop() {
 	v.Lock()
 	defer v.Unlock()
+	v.pCache.Stop()
+
 	if v.cancel != nil {
 		v.cancel()
 		v.cancel = nil

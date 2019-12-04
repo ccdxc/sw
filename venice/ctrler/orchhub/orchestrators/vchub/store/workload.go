@@ -55,6 +55,15 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 				APIVersion: "v1",
 			},
 			ObjectMeta: *meta,
+			// TODO : Remove the hardcoded values
+			Spec: workload.WorkloadSpec{
+				Interfaces: []workload.WorkloadIntfSpec{
+					workload.WorkloadIntfSpec{
+						MACAddress:   "aabb.ccdd.eedd",
+						MicroSegVlan: 10,
+					},
+				},
+			},
 		}
 	} else {
 		temp := ref.DeepCopy(*existingWorkload).(workload.Workload)

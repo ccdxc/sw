@@ -35,6 +35,8 @@ func TestPcache(t *testing.T) {
 	stateMgr, err := newStateManager()
 	AssertOk(t, err, "failed to create statemgr")
 	pCache := NewPCache(stateMgr, logger)
+	go pCache.Run()
+	defer pCache.Stop()
 
 	expMeta := &api.ObjectMeta{
 		Name:      "127.0.0.1:8990-virtualmachine-41",

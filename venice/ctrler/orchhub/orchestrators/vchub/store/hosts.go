@@ -106,5 +106,4 @@ func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
 	} else {
 		v.stateMgr.Controller().Host().Update(hostObj)
 	}
-
 }

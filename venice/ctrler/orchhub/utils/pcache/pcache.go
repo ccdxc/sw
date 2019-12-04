@@ -1,9 +1,11 @@
 package pcache
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
@@ -44,16 +46,22 @@ type PCache struct {
 	stateMgr   *statemgr.Statemgr
 	kinds      map[string]*kindEntry
 	validators map[string]func(interface{}) bool
+	waitGrp    sync.WaitGroup
+	ctx        context.Context
+	cancel     context.CancelFunc
 }
 
 // NewPCache creates a new instance of pcache
 func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
-	logger.Infof("Creating pcache")
+	logger.Debugf("Creating pcache")
+	ctx, cancel := context.WithCancel(context.Background())
 	return &PCache{
 		stateMgr:   stateMgr,
 		Log:        logger,
 		kinds:      make(map[string]*kindEntry),
 		validators: make(map[string]func(interface{}) bool),
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 }
 
@@ -106,15 +114,50 @@ func (p *PCache) Get(kind string, meta *api.ObjectMeta) interface{} {
 	return obj
 }
 
-// Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
-func (p *PCache) Set(kind string, in interface{}) error {
+// validateAndPush validates the object and pushes it to API server or adds it to kindmap as necessary.
+// This is not thread safe, and the calling function is expected to hold Write lock on kindMap
+func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn func(interface{}) bool) error {
+	valid := true
+	if validateFn != nil {
+		valid = validateFn(in)
+	}
+
 	objMeta, err := runtime.GetObjectMeta(in)
 	if err != nil {
-		p.Log.Errorf("Set called on a non apiserver object, kind %s", kind)
 		return fmt.Errorf(("Object is not an apiserver object"))
 	}
 	key := objMeta.GetKey()
-	p.Log.Debugf("set for %s %s", kind, key)
+	p.Log.Debugf("set for %s", key)
+
+	if valid {
+		// Try to write to statemgr
+		p.Log.Debugf("%s object passed validation, writing to stateMgr", key)
+		err := p.writeStateMgr(in)
+		if err != nil {
+			// TODO: Look at the err reason to determine what to do.
+			// Possible error causes:
+			//   If its 4xx, we should save in map and do nothing
+			//   5xx should retry?
+			//   Unsupported object error
+			// Update in map for now
+			p.Log.Errorf("%s write to stateMgr failed, err:%s", key, err.Error())
+			kindMap.entries[key] = in
+		} else if _, ok := kindMap.entries[key]; ok {
+			p.Log.Debugf("%s write successful, removing from cache", key)
+			delete(kindMap.entries, key)
+		}
+	} else {
+		p.Log.Debugf("%s object failed validation, putting in cache", key)
+		// Update in map
+		kindMap.entries[key] = in
+	}
+
+	return nil
+}
+
+// Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
+func (p *PCache) Set(kind string, in interface{}) error {
+	p.Log.Debugf("Set called for kind : %v and Object : %v", kind, in)
 
 	// Get entries for the kind
 	p.RLock()
@@ -130,37 +173,10 @@ func (p *PCache) Set(kind string, in interface{}) error {
 		p.Unlock()
 	}
 
-	valid := true
-	if validateFn != nil {
-		valid = validateFn(in)
-	}
-
 	kindMap.Lock()
 	defer kindMap.Unlock()
 
-	if valid {
-		// Try to write to statemgr
-		p.Log.Debugf("%s %s object passed validation, writing to stateMgr", kind, key)
-		err := p.writeStateMgr(in)
-		if err != nil {
-			// TODO: Look at the err reason to determine what to do.
-			// Possible error causes:
-			//   If its 4xx, we should save in map and do nothing
-			//   5xx should retry?
-			//   Unsupported object error
-			// Update in map for now
-			p.Log.Errorf("%s %s write to stateMgr failed, err:%s", kind, key, err.Error())
-			kindMap.entries[key] = in
-		} else if _, ok := kindMap.entries[key]; ok {
-			p.Log.Debugf("%s %s write successful, removing from cache", kind, key)
-			delete(kindMap.entries, key)
-		}
-	} else {
-		p.Log.Debugf("%s %s object failed validation, putting in cache", kind, key)
-		// Update in map
-		kindMap.entries[key] = in
-	}
-	return nil
+	return p.validateAndPush(kindMap, in, validateFn)
 }
 
 // Delete deletes the given object from pcache and from statemgr
@@ -233,4 +249,48 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 	// Unsupported object, we only write it to cache
 	p.Log.Errorf("deleteStatemgr called on unsupported object %+v", in)
 	return fmt.Errorf("Unsupported object")
+}
+
+// Run runs loop to periodically push pending objects to apiserver
+func (p *PCache) Run() {
+	p.waitGrp.Add(1)
+	defer p.waitGrp.Done()
+	ticker := time.NewTicker(5 * time.Second)
+	inProgress := false
+
+	for {
+		select {
+		case <-p.ctx.Done():
+			return
+		case <-ticker.C:
+			if !inProgress {
+				inProgress = true
+
+				p.RLock()
+				for kind, m := range p.kinds {
+					validateFn := p.validators[kind]
+					m.Lock()
+					for _, in := range m.entries {
+						err := p.validateAndPush(m, in, validateFn)
+						if err != nil {
+							p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
+						}
+					}
+					m.Unlock()
+				}
+				p.RUnlock()
+
+				inProgress = false
+			}
+		}
+	}
+}
+
+// Stop stops pcache goroutines
+func (p *PCache) Stop() {
+	p.Lock()
+	defer p.Unlock()
+
+	p.cancel()
+	p.waitGrp.Wait()
 }
