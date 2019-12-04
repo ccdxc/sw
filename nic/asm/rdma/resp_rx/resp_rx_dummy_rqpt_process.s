@@ -15,7 +15,7 @@ struct resp_rx_s1_t0_k k;
 
 #define K_SEND_SGE_OPT CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt)
 #define K_HBM_WQE_PTR CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
-#define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 
 %%
     .param  resp_rx_rqwqe_process

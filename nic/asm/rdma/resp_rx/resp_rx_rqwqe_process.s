@@ -35,6 +35,7 @@ struct rqwqe_base_t d;
 #define UD_TMP r2
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
+#define IN_TO_S_P    to_s2_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
@@ -72,8 +73,7 @@ in_progress_init:
     #tblwr.l     d.rsvd[159:128], 0
 
     add         NUM_VALID_SGES, r0, CAPRI_KEY_FIELD(IN_P, num_valid_sges)
-    seq         c2, NUM_VALID_SGES, 1
-    //add         SGE_P, r0, (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+    seq         c2, CAPRI_KEY_FIELD(IN_TO_S_P, page_boundary), 1
     add.!c2     SGE_P, r0, (RQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
     add.c2      SGE_P, r0, (RQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 

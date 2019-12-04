@@ -36,7 +36,7 @@ struct rqwqe_base_t d;
 .align
 resp_rx_rqsge_process:
     bcf         [c2 | c3 | c7], table_error
-    seq         c1, CAPRI_KEY_FIELD(IN_P, is_last_sge), 1 // BD Slot
+    seq         c1, CAPRI_KEY_FIELD(IN_P, page_boundary), 1 // BD Slot
 
     add.!c1     SGE_P, r0, (RQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
     add.c1      SGE_P, r0, (RQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))

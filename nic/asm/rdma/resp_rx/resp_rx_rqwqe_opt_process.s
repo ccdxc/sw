@@ -29,6 +29,7 @@ struct rqwqe_base_t d;
 #define WQE_OFFSET      r6
 #define ADDR_TO_LOAD    r6
 #define SGE_OFFSET_SHIFT 32
+#define CACHELINE_END_ADDR_OFFSET 63
 
 #define F_FIRST_PASS  c7
 
@@ -47,6 +48,7 @@ struct rqwqe_base_t d;
 #define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
 #define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
+#define K_LOG_RQ_PAGE_SIZE CAPRI_KEY_RANGE(IN_P, log_rq_page_size_sbit0_ebit2, log_rq_page_size_sbit3_ebit4)
 
 %%
     .param  resp_rx_rqlkey_process
@@ -176,18 +178,25 @@ decode_wqe_opt:
 
     bcf         [!F_FIRST_PASS], skip_sge_load
     // addr_to_load = wqe_ptr + wqe_offset
+    add         ADDR_TO_LOAD, K_CURR_WQE_PTR, WQE_OFFSET // BD Slot
+
+    // set start_addr
+    sub         ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    srl         r7, ADDR_TO_LOAD, K_LOG_RQ_PAGE_SIZE
+    // set end_addr
+    add         r6, ADDR_TO_LOAD, CACHELINE_END_ADDR_OFFSET
+    srl         r6, r6, K_LOG_RQ_PAGE_SIZE
+    //  check if start and end addresses belong to the same host page
+    seq         c2, r6, r7
+    // c2: same page
+
+    add         WQE_OFFSET, RQWQE_OPT_SGE_OFFSET, SGE_ID, LOG_SIZEOF_SGE_T
     add         ADDR_TO_LOAD, K_CURR_WQE_PTR, WQE_OFFSET
-
-    sub         r7, d.num_sges, 1
-    seq         c2, SGE_ID, r7
-    // c2: last sge
-
     // move addr_to_load back by sizeof 2 SGE's
-    sub.!c2     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    sub.c2      ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
     // move addr_to_load back by sizeof 3 SGE's
-    sub.c2      ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
-
-    CAPRI_SET_FIELD2_C(INFO_SGE_T, is_last_sge, 1, c2)
+    sub.!c2     ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+    CAPRI_SET_FIELD2_C(INFO_SGE_T, page_boundary, 1, !c2)
 
     // wqe_to_sge_info_p->sge_offset = sge_offset
     CAPRI_SET_FIELD2(INFO_SGE_T, sge_offset, SGE_OFFSET)

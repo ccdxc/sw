@@ -10,11 +10,14 @@ struct resp_rx_s1_t0_k k;
 #define WQE_OFFSET      r1
 #define NUM_VALID_SGES  r2
 #define ADDR_TO_LOAD    r3
+#define END_ADDR        r5
 
 #define RQCB_TO_WQE_P   t0_s2s_rqcb_to_wqe_info
 #define IN_P            t0_s2s_rqcb_to_rqcb1_info
-#define K_LOG_PMTU      CAPRI_KEY_FIELD(IN_P, log_pmtu)
-#define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+#define TO_S2_P         to_s2_wqe_info
+#define K_LOG_PMTU      CAPRI_KEY_RANGE(IN_P, log_pmtu_sbit0_ebit2, log_pmtu_sbit3_ebit4)
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+#define K_LOG_RQ_PAGE_SIZE CAPRI_KEY_FIELD(IN_P, log_rq_page_size)
 
 
 %%
@@ -53,11 +56,18 @@ skip_cqe_pyld_len:
     add     ADDR_TO_LOAD, CAPRI_KEY_RANGE(IN_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63), WQE_OFFSET
     sub     NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_P, num_sges), CAPRI_KEY_FIELD(IN_P, current_sge_id)
 
-    seq     c2, NUM_VALID_SGES, 1
-    // move addr_to_load back by sizeof 2 SGE's
-    sub.!c2 ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
-    // move addr_to_load back by sizeof 3 SGE's
-    sub.c2  ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+    // set start_addr
+    sub     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    srl     r4, ADDR_TO_LOAD, K_LOG_RQ_PAGE_SIZE
+    // set end_addr
+    add     END_ADDR, ADDR_TO_LOAD, 4, LOG_SIZEOF_SGE_T
+    sub     END_ADDR, END_ADDR, 1
+    srl     r5, END_ADDR, K_LOG_RQ_PAGE_SIZE
+    //  check if start and end addresses belong to the same host page
+    seq     c1, r4, r5
+    // move addr_to_load back by sizeof 1 SGE
+    sub.!c1 ADDR_TO_LOAD, ADDR_TO_LOAD, 1, LOG_SIZEOF_SGE_T
+    CAPRI_SET_FIELD2_C(TO_S2_P, page_boundary, 1, !c1)
 
     // we come here only in case of SEND MID/LAST packets. sometimes for MID packets also completion may be 
     // required (in case of lkey access permission failures). Hence copying wrid field always into phv's cqwqe

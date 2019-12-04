@@ -379,7 +379,8 @@ send_in_progress:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb3_in_progress_process, r5)
 
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr       CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, log_pmtu), d.log_pmtu
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, log_pmtu), d.log_pmtu, \
+                CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, log_rq_page_size), d.log_rq_page_size
     phvwr       CAPRI_PHV_RANGE(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges), d.{curr_wqe_ptr...num_sges}
 
     b           exit
@@ -1006,6 +1007,8 @@ rc_checkout:
     or.c2       r2, r2, CAPRI_RXDMA_INTRINSIC_LIF, 52
     
     CAPRI_RESET_TABLE_0_ARG()
+
+    CAPRI_SET_FIELD2(WQE_INFO_P, log_rq_page_size, d.log_rq_page_size)
     phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES, \
                 CAPRI_PHV_FIELD(WQE_INFO_P, curr_wqe_ptr), r2
     phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, dma_cmd_index), RESP_RX_DMA_CMD_PYLD_BASE, \
@@ -1036,6 +1039,7 @@ pt_process:
     // now r3 has page_p to load
 
     CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_SET_FIELD2(INFO_OUT1_P, log_rq_page_size, d.log_rq_page_size)
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, page_seg_offset), r5, \
                 CAPRI_PHV_FIELD(INFO_OUT1_P, page_offset), r1
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), REM_PYLD_BYTES, \
@@ -1127,6 +1131,7 @@ recirc_sge_work_pending:
     //invoke an MPU only program to continue the activity
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
+    CAPRI_SET_FIELD2(RQCB_TO_RQCB1_P, log_rq_page_size, d.log_rq_page_size)
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_recirc_sge_process, r0)
 
     nop.e

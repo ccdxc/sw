@@ -17,6 +17,8 @@ struct resp_rx_s1_t0_k k;
 
 #define IN_TO_S_P to_s1_rqpt_info
 #define K_SEND_SGE_OPT CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt)
+#define K_PAGE_OFFSET CAPRI_KEY_RANGE(IN_P, page_offset_sbit0_ebit7, page_offset_sbit8_ebit15)
+#define K_RQ_PAGE_SIZE CAPRI_KEY_RANGE(IN_P, log_rq_page_size_sbit0_ebit2, log_rq_page_size_sbit3_ebit4)
 
 %%
     .param  resp_rx_rqwqe_wrid_process
@@ -40,7 +42,7 @@ resp_rx_rqpt_process:
     or         r3, r3, K_GLOBAL_LIF, 52
 
     // wqe_p = (void *)(*page_addr_p + rqcb_to_pt_info_p->page_offset);
-    add     r3, r3, CAPRI_KEY_FIELD(IN_P, page_offset)
+    add     r3, r3, K_PAGE_OFFSET
     // now r3 has wqe_p to load
 
     CAPRI_RESET_TABLE_0_ARG()
@@ -53,6 +55,7 @@ resp_rx_rqpt_process:
                 RESP_RX_DMA_CMD_PYLD_BASE, \
                 CAPRI_PHV_FIELD(INFO_OUT1_P, log_pmtu), \
                 CAPRI_KEY_FIELD(IN_P, log_pmtu)
+    CAPRI_SET_FIELD2(INFO_OUT1_P, log_rq_page_size, K_RQ_PAGE_SIZE)
 
     bbeq        K_SEND_SGE_OPT, 1, rqwqe_opt
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS    //BD Slot

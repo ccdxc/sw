@@ -10,13 +10,17 @@ struct resp_rx_s1_t0_k k;
 #define WQE_OFFSET      r1
 #define NUM_VALID_SGES  r2
 #define ADDR_TO_LOAD    r3
+#define END_ADDR        r5
 
 #define RQCB_TO_WQE_P   t0_s2s_rqcb_to_wqe_info
+#define IN_TO_S_P       to_s1_recirc_info
+#define IN_P            t0_s2s_rqcb_to_rqcb1_info
+#define TO_S2_P         to_s2_wqe_info
 
-#define IN_TO_S_P   to_s1_recirc_info
 #define IN_TO_S_CURR_WQE_PTR      CAPRI_KEY_RANGE(IN_TO_S_P, curr_wqe_ptr_sbit0_ebit47, curr_wqe_ptr_sbit48_ebit63)
 #define IN_TO_S_CURR_SGE_OFFSET   CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
 #define IN_TO_S_REM_PYLD_BYTES    CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+#define IN_LOG_RQ_PAGE_SIZE       CAPRI_KEY_FIELD(IN_P, log_rq_page_size)
 
 %%
     .param    resp_rx_rqwqe_process
@@ -37,11 +41,18 @@ resp_rx_rqcb1_recirc_sge_process:
 
     sub     NUM_VALID_SGES, NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
 
-    seq     c2, NUM_VALID_SGES, 1
-    // move addr_to_load back by sizeof 2 SGE's
-    sub.!c2 ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
-    // move addr_to_load back by sizeof 3 SGE's
-    sub.c2  ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+    // set start_addr
+    sub     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    srl     r4, ADDR_TO_LOAD, IN_LOG_RQ_PAGE_SIZE
+    // set end_addr
+    add     END_ADDR, ADDR_TO_LOAD, 4, LOG_SIZEOF_SGE_T
+    sub     END_ADDR, END_ADDR, 1
+    srl     r5, END_ADDR, IN_LOG_RQ_PAGE_SIZE
+    //  check if start and end addresses belong to the same host page
+    seq     c1, r4, r5
+    // move addr_to_load back by sizeof 1 SGE
+    sub.!c1 ADDR_TO_LOAD, ADDR_TO_LOAD, 1, LOG_SIZEOF_SGE_T
+    CAPRI_SET_FIELD2_C(TO_S2_P, page_boundary, 1, !c1)
 
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2_IMM(RQCB_TO_WQE_P, recirc_path, in_progress, (1 << 1)|1)
