@@ -439,11 +439,14 @@ class NaplesManagement(EntityManagement):
 
     def Reboot(self):
         if not self.host.PciSensitive():
-            self.SendlineExpect("reboot", ["#", "capri login:", "capri-gold login:"], timeout = 120)
+            self.hdl.sendline('reboot')
+            self.hdl.expect_exact('Starting kernel',120)
+            self.hdl.expect_exact(["#", "capri login:", "capri-gold login:"],120)
         else:
             self.host.Reboot()
             self.host.WaitForSsh()
-            self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"], timeout = 120)
+            self.hdl.expect_exact('Starting kernel',120)
+            self.hdl.expect_exact(["#", "capri login:", "capri-gold login:"],120)
         self.__login()
 
     def InstallPrep(self):
