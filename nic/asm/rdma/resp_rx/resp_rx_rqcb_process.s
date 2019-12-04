@@ -888,6 +888,10 @@ seq_err_nak:
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
 
 process_rnr:
+    // memwr timestamp into rqcb3 if spec_cindex = proxy_pindex (RNR)
+    add         r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (3*CB_UNIT_SIZE_BYTES)
+    add         r1, r1, FIELD_OFFSET(rqcb3_t, resp_rx_timestamp)
+    memwr.h     r1, r4
     phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
                     ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_OUT_OF_BUFFER_OFFSET))
 process_rnr_atomic:

@@ -759,7 +759,9 @@ class RdmaRQCB3state(Packet):
         IntField("num_pkts_in_curr_msg", 0),
         IntField("dma_len", 0),
 
-        BitField("rqcb3_pad", 0, 160),
+        BitField("rqcb3_pad", 0, 32),
+        LongField("resp_tx_timestamp", 0),
+        LongField("resp_rx_timestamp", 0),
     ]
 
 class RdmaRespTxStats(Packet):

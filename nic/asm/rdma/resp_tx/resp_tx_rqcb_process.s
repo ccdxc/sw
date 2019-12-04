@@ -42,10 +42,21 @@ resp_tx_rqcb_process:
 
     seq             c2, d.state, QP_STATE_ERR
     bcf             [c1 | c2], state_fail
-
     seq             c3, d.prefetch_en, 1 // BD Slot
     // c3: prefetch_en
 
+    seq             c4, RQ_C_INDEX, RQ_P_INDEX
+    // memwr timestamp into rqcb3 only if pindex != cindex
+    bcf             [c3 | c4], timestamp_memwr_done
+    add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (3*CB_UNIT_SIZE_BYTES) // BD Slot
+    add             r2, r2, FIELD_OFFSET(rqcb3_t, resp_tx_timestamp)
+    memwr.h         r2, r4
+    // memwr proxy_pindex if there are buffers posted, irrespective of which ring is scheduled
+    add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
+    add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
+    memwr.hx        r2, RQ_P_INDEX
+
+timestamp_memwr_done:
     .brbegin
     brpri           r7[MAX_RQ_RINGS-1:0], [DCQCN_TIMER_PRI, DCQCN_RATE_COMPUTE_PRI, BT_PRI, ACK_NAK_PRI, RSQ_PRI, RQ_PRI]
     nop
