@@ -104,7 +104,8 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
         computeClass: () => this.shouldEnable_refresh_button ? '' : 'global-button-disabled',
         callback: () => { this.refresh(); }
       };
-      if (this.uiconfigsService.isAuthorized(UIRolePermissions.objstorebucket_create)) {
+      if (this.uiconfigsService.isAuthorized(UIRolePermissions.objstorebucket_create) &&
+          this.uiconfigsService.isAuthorized(UIRolePermissions.clustersnapshotrestore_create)) {
         const saveButton = {
           cssClass: 'global-button-primary snapshots-toolbar-button snapshots-toolbar-button-ADD',
           text: 'SAVE A CONFIG SNAPSHOT',

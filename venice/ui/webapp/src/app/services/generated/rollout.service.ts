@@ -29,6 +29,7 @@ export class RolloutService extends Rolloutv1Service {
         (payload) => { this.publishAJAXStart(payload); },
         (payload) => { this.publishAJAXEnd(payload); }
       );
+      this.serviceUtility.setId(this.getClassName());
   }
 
   /**

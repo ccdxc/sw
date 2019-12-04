@@ -93,6 +93,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-security-securitygroups'
         },
+        featureGuard: Features.securitygroup,
         roleGuard: UIRolePermissions.securitysecuritygroup_read,
         link: ['/security', 'securitygroups']
       },

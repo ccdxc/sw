@@ -14,7 +14,8 @@ export enum Features {
   help = 'help',
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
-  troubleshooting = 'troubleshooting'
+  troubleshooting = 'troubleshooting',
+  securitygroup = 'securitygroup'
 }
 
 interface UIConfig {
@@ -84,6 +85,9 @@ export class UIConfigsService {
       ],
     },
     'security/securitygroups': {
+      requiredFeatures: [
+        Features.securitygroup,
+      ],
       requiredPerm: [
         UIRolePermissions.securitysecuritygroup_read,
       ]

@@ -24,6 +24,7 @@ export class AuthService extends AbstractService {
       (payload) => { this.publishAJAXStart(payload); },
       (payload) => { this.publishAJAXEnd(payload); }
     );
+    this.serviceUtility.setId(this.getClassName());
   }
 
   protected callServer(url: string, payload: any) {

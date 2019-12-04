@@ -80,7 +80,8 @@
   <div
        class="global-column-action-icon-container  global-column-action-icon-container-newsnapshot_{{rowData.meta.name}}"
        fxLayout="row" fxLayoutGap="5px" *ngIf="showDeleteIcon(rowData)">
-    <mat-icon matTooltip="Restore config" *roleGuard="'clustersnapshotrestore_create'"
+    <!-- only admin role can run config restore -->
+    <mat-icon matTooltip="Restore config" *roleGuard="'adminrole'"
               class="global-table-action-icon"
               (click)="onRestoreSnapshotClick($event, rowData)">restore
     </mat-icon>

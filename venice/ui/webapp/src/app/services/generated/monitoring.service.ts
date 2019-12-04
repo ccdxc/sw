@@ -30,6 +30,7 @@ export class MonitoringService extends Monitoringv1Service {
         (payload) => { this.publishAJAXStart(payload); },
         (payload) => { this.publishAJAXEnd(payload); }
       );
+      this.serviceUtility.setId(this.getClassName());
   }
 
   /**

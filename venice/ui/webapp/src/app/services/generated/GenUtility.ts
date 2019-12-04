@@ -1,16 +1,36 @@
-import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { Utility } from '@app/common/Utility';
-import * as oboe from 'oboe';
-import { publishReplay, refCount, delay } from 'rxjs/operators';
-import { Observable ,  Subject, Subscriber, TeardownLogic, NEVER } from 'rxjs';
-import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
+import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { MockDataUtil } from '@app/common/MockDataUtil';
+import { Utility } from '@app/common/Utility';
 import { AUTH_KEY } from '@app/core/auth/auth.reducer';
-import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
-import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import * as oboe from 'oboe';
+import { NEVER, Observable, Subject, Subscriber, Subscription, TeardownLogic } from 'rxjs';
+import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
+import { delay, publishReplay, refCount } from 'rxjs/operators';
 
+/**
+ * This class is the core component of invoking REST API.  All *.service.ts use this class.
+ * (e.g. see src/app/services/generated/auth.service.ts this.serviceUtility = new GenServiceUtility(..) ...  this.serviceUtility.setId(this.getClassName());)
+ *
+ * key API:
+ * this.invokeAJAX() is the key API
+ *        --> in case it is a "WATCH" web-socket call, --> handleWatchRequest()
+ *
+ * this.handleWatchRequest() is the watch response handler.  It also tries to keep web-socket connections alive.
+ *
+ * this.teardown() release all resources.
+ *
+ *
+ * Misc:
+ *    oboeObserverCreate() web-socket response handler.
+ *    isAllowed() controls whether to invoke the REST call.
+ *    setId() is used in *.service.ts. Using,  console.log('GenUtilty.subcribeToEvents() ' + this.id); we know which servie class is using this GenUtility instance.
+ */
 export class GenServiceUtility {
+
   protected _http;
   protected urlServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected urlWsMap: { [method: string]: WebSocketSubject<any> } = {};
@@ -18,26 +38,84 @@ export class GenServiceUtility {
   protected ajaxEndCallback: (payload: any) => void;
   protected useWebSockets: boolean;
 
+  pingServerTimerMap: { [url: string]: any } = {};
+  subscription: Subscription = null;
+
+  id: string = null;
+
   constructor(http: HttpClient, ajaxStartCallback, ajaxEndCallback, useWebSockets = true) {
     this._http = http;
     this.ajaxStartCallback = ajaxStartCallback;
     this.ajaxEndCallback = ajaxEndCallback;
     this.useWebSockets = useWebSockets;
     window.addEventListener('unload', (event) => {
-      for (const key in this.urlWsMap) {
-        if (this.urlWsMap.hasOwnProperty(key)) {
-          const ws = this.urlWsMap[key];
-          if (ws != null) {
-            // Closing websocket
-            try {
-              ws.unsubscribe();
-            } catch (e) {
-              console.error(e);
-            }
-          }
+      this.teardown();
+    });
+  }
+
+  setId(inputId: string) {
+    this.id = (inputId) ? inputId : this.id;
+  }
+
+  /**
+   * Listen to logout event.
+   * We subscribe only once.
+   */
+  subcribeToEvents() {
+    if (!this.subscription && Utility.getInstance().getControllerService()) {
+      // for debug: // console.log('GenUtilty.subcribeToEvents() ' + this.id);
+      this.subscription = Utility.getInstance().getControllerService().subscribe(Eventtypes.LOGOUT, (payload) => {
+        this.onLogout(payload);
+      });
+    }
+  }
+
+  clearOneTimer(pingServerTimer: any) {
+    if (pingServerTimer) {
+      clearInterval(pingServerTimer);
+    }
+  }
+
+  clearAllTimers() {
+    for (const key in this.pingServerTimerMap) {
+      if (this.pingServerTimerMap.hasOwnProperty(key)) {
+        this.clearOneTimer(this.pingServerTimerMap[key]);
+      }
+    }
+  }
+
+  /**
+   * Clean up.
+   */
+  teardown() {
+    this.clearAllTimers();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
+    for (const key in this.urlWsMap) {
+      if (this.urlWsMap.hasOwnProperty(key)) {
+        try {
+          this.urlWsMap[key].unsubscribe();
+        } catch (e) {
+          console.error(e);
         }
       }
-    });
+    }
+    for (const key in this.urlServiceMap) {
+      if (this.urlServiceMap.hasOwnProperty(key)) {
+        try {
+          delete this.urlServiceMap[key];
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+  }
+
+  onLogout(payload: any) {
+    this.teardown();
   }
 
   convertEventID(opts: MethodOpts): UIRolePermissions {
@@ -139,7 +217,23 @@ export class GenServiceUtility {
         const observer = new WebSocketSubject({
           url: url,
         });
-
+         // In this code block, we use a timer to invoke _observer.next() in order to keep UI page which subscribes to watch response active. (prevent browser closes ws due to ws idle)
+        const pingServerTimer = setInterval(() => {
+          const _observer = this.urlWsMap[url];
+          if (_observer != null) {
+            if (Utility.getInstance().getControllerService().isUserLogin()) {
+              // for debug: // console.log('GenUtil.handleWatchRequest() ping server timer ' + this.id + ' ' + url);
+              _observer.next(true);  // fire up observer to keep ws active
+            } else {
+                // for debug // console.log('GenUtil.handleWatchRequest() ping server timer/logout ' + this.id + ' ' + url);
+                // if user is logout, we teardown everything.
+                this.teardown();
+            }
+          } else {
+            this.clearOneTimer(this.pingServerTimerMap[url]);
+          }
+        }, 60000);
+        this.pingServerTimerMap[url] = pingServerTimer;
         this.urlWsMap[url] = observer;
       }
       return this.urlWsMap[url];
@@ -159,9 +253,11 @@ export class GenServiceUtility {
     return this.urlServiceMap[url];
   }
 
+
+
   public isAllowed(eventPayloadID: any) {
     // checking maintenance mode (but get version object)
-    const blockCondition = (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout' && eventPayloadID !== 'GetRollout' && eventPayloadID !== 'WatchDistributedServiceCard' && eventPayloadID !== 'StopRollout' ) ;
+    const blockCondition = (Utility.getInstance().getMaintenanceMode() && eventPayloadID !== 'WatchVersion' && eventPayloadID !== 'WatchRollout' && eventPayloadID !== 'GetRollout' && eventPayloadID !== 'WatchDistributedServiceCard' && eventPayloadID !== 'StopRollout');
 
     if (blockCondition) {
       return false;
@@ -174,6 +270,7 @@ export class GenServiceUtility {
     if (!this.isAllowed(eventPayloadID)) {
       return NEVER;
     }
+    this.subcribeToEvents();  // subscribe to event in the very first REST call.
     // Removing time fields as null values will be attempted to be parsed
     if (payload != null) {
       if (payload.meta != null) {

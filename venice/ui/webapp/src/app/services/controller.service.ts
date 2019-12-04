@@ -77,7 +77,7 @@ export class ControllerService {
   public useRealData = false;
   private _enableIdle = true;
   // time to idle before warning user of logout (in seconds)
-  private _idleTime = 60 * 60 * 1;
+  private _idleTime = 60 * 60 * 1;  // 60 minutes
 
   constructor(
     private _router: Router,
@@ -491,18 +491,32 @@ export class ControllerService {
       return;
     } else if (error && error.constructor && error.constructor.name === 'CloseEvent') {
       // VS-478. Run into web-socket issue. See https://stackoverflow.com/questions/19304157/getting-the-reason-why-websockets-closed-with-close-code-1006 (Chrome)
-      const errorCode  = (error.code) ? error.code : '';
+      const errorCode = (error.code) ? error.code : '';
       const errorMsg = 'Connection close - ' + errorCode;  // error.code is likely 1006, 1011
-      this.invokeErrorToaster( 'Web socket', summary + '\n' + errorMsg);
+      // VS-879. GenUtil should re-connect Web-socket // this.invokeErrorToaster( 'Web socket', summary + '\n' + errorMsg);
+      if (errorCode === 1000) {
+        // normall close
+        return;
+      }
+      const url = (error.currentTarget && error.currentTarget.url) ? error.currentTarget.url :
+        (error.srcElement && error.srcElement.url) ? error.srcElement.url : '';
+      console.error('controller.service.invokeRESTErrorToaster()  websocket error:' + errorCode + ' ' + errorMsg + ' url: ' + url);
+
+      // Chrome will close web-socket if browser is idle for a while and set code as 1006. We dont want stikcy toaster
+      if (errorCode !== 1006 && Utility.getBrowserInfomation()['browserName'] !== 'Chrome') {
+        this.invokeErrorToaster('Web socket', summary + '\n' + errorMsg);
+      } else {
+        this.invokeErrorToaster('Web socket closed', summary + '\n' + errorMsg + ' (browser is idle for too long)', [], true, false);
+      }
       return;
     }
     // Don't know what the error is, websockets can come to here.
     // console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.
     let msg = 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please reload browser and sign in again or contact system administrator.';
     if (error.statusCode === 0) {
-      // VS-872. After browser idle for some time. It runs into refused to execute inline script because it violates the following content security policy directive...
+      // VS-872. After browser idle for some time. Browser refuses to execute inline script because it violates the following content security policy directive...
       // This is due to cert and content-security-policy issue. We advice user to clear broswer cache. (It is conner case and is likely to occur in sys-test.)
-       msg = 'Please clear your browser cache and sign in again.';
+      msg = 'Please clear your browser cache and sign in again.';
     }
     this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, msg, buttons);
   }
@@ -544,7 +558,7 @@ export class ControllerService {
     };
   }
 
-  invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = [], shouldSplitLines: boolean = true) {
+  invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = [], shouldSplitLines: boolean = true, sticky: boolean = true) {
     if (shouldSplitLines) {
       errorMsg = errorMsg.split('. ').filter(x => x.length > 0).join('.\n');
     }
@@ -552,7 +566,7 @@ export class ControllerService {
       severity: 'error',
       summary: summary,
       detail: errorMsg,
-      sticky: true,
+      sticky: sticky,
       buttons: buttons
     });
   }

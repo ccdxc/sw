@@ -32,6 +32,7 @@ export class EventsService extends Eventsv1Service {
         (payload) => { this.publishAJAXStart(payload); },
         (payload) => { this.publishAJAXEnd(payload); }
       );
+      this.serviceUtility.setId(this.getClassName());
   }
 
   /**

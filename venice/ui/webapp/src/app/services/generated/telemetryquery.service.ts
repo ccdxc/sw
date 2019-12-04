@@ -36,6 +36,7 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
       (payload) => { this.publishAJAXStart(payload); },
       (payload) => { this.publishAJAXEnd(payload); }
     );
+    this.serviceUtility.setId(this.getClassName());
   }
 
   /**
