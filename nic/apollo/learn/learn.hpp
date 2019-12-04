@@ -13,6 +13,8 @@
 
 namespace learn {
 
+bool learn_thread_enabled(void);
+
 void *learn_thread_start(void *ctxt);
 
 }    // namespace learn

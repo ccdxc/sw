@@ -12,15 +12,30 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/sdk/lib/dpdk/dpdk.hpp"
+#include <learn_utils.hpp>
 #include <vector>
 #include <unistd.h>
+#include <string.h>
 
 using namespace std;
 
 namespace learn {
 
-// TODO: Channges this to correct lif once we define one for learn
-#define LEARN_LIF_NAME "net_ionic0"
+bool
+learn_thread_enabled (void)
+{
+    // there is no other way to get if we are running gtest without model.
+    // if we start learn thread in gtest, DPDK will assert as model is not
+    // running, so disable learn thread while running under gtest
+    if (getenv("CAPRI_MOCK_MODE")) {
+        return false;
+    }
+
+    if (0 != strlen(LEARN_LIF_NAME)) {
+        return true;
+    }
+    return false;
+}
 
 static int
 learn_log (sdk_trace_level_e trace_level,
@@ -42,6 +57,10 @@ learn_thread_start (void *ctxt)
 
     SDK_THREAD_INIT(ctxt);
 
+    // TODO: though we start this thread after is_nicmgr_ready(), still uio
+    // devices are not created by the time we reach here. So this hack
+    // for now. We need to come back and fix this later.
+    sleep(30);
     params.log_cb = learn_log;
     params.eal_init_list = "-c 3 -n 4 --in-memory --file-prefix learn --master-lcore 1";
     params.log_name = "learn_dpdk";
@@ -50,7 +69,12 @@ learn_thread_start (void *ctxt)
     params.num_mbuf = 1024;
     params.vdev_list.push_back(string(LEARN_LIF_NAME));
     ret = dpdk_init(&params);
-    SDK_ASSERT(ret == SDK_RET_OK);
+    if (ret != SDK_RET_OK) {
+        // learn lif may not be present on all pipelines, so exit
+        // on dpdk init failure.
+        PDS_TRACE_ERR("DPDK init failed! Exit learn thread!");
+        goto end;
+    }
 
     args.dev_name = LEARN_LIF_NAME;
     args.num_rx_desc = 1024;
@@ -69,6 +93,7 @@ learn_thread_start (void *ctxt)
         // Lazy poll
         usleep(100000);
     }
+end:
     return NULL;
 }
 

@@ -943,6 +943,7 @@ lif_impl::create(pds_lif_spec_t *spec) {
         break;
     case sdk::platform::LIF_TYPE_LEARN:
         ret = create_learn_lif_(spec);
+        break;
     default:
         return SDK_RET_INVALID_ARG;
     }

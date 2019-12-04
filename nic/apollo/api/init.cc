@@ -295,7 +295,7 @@ pds_init (pds_init_params_t *params)
     }
 
     // spin learn thread
-    //core::spawn_learn_thread(&api::g_pds_state);
+    core::spawn_learn_thread(&api::g_pds_state);
 
     // raise HAL_UP event
     sdk::event_thread::publish(EVENT_ID_PDS_HAL_UP, NULL, 0);
