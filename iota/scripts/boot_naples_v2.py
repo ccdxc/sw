@@ -1077,8 +1077,7 @@ def Main():
             #Read Naples Gold FW version if system in good state.
             #If not able to read then we will reset
             naples.ReadGoldFwVersion()
-            if not host.IsSSHUP():
-                raise Exception("Host not up.")
+            host.WaitForSsh()
             #need to unload driver as host might crash in ESX case.
             #unloading of driver should not fail, else reset to goldfw
             host.UnloadDriver()
