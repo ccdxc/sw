@@ -583,8 +583,9 @@ int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
 #ifdef HAVE_RDMA_DRIVER_ID
 #include <rdma/rdma_user_ioctl_cmds.h>
+/* Upstream: QIB, EFA, SIW, <us> */
 enum {
-	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 1,
+	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
 };
 #endif
 
