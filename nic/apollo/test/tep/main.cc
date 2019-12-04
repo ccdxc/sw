@@ -67,6 +67,27 @@ protected:
 /// \defgroup TEP TEP Tests
 /// @{
 
+/// \brief TEP WF_B1
+/// \ref WF_B1
+TEST_F(tep_test, tep_workflow_b1) {
+    if (!apulu()) return;
+
+    tep_feeder feeder;
+    feeder.init(g_tep_id, k_tep_mac, k_base_nh_ip, 1);
+    workflow_b1<tep_feeder>(feeder);
+}
+
+/// \brief TEP WF_B2
+/// \ref WF_B2
+TEST_F(tep_test, DISABLED_tep_workflow_b2) {
+    if (!apulu()) return;
+
+    tep_feeder feeder1, feeder1A;
+    feeder1.init(g_tep_id, k_tep_mac, k_base_nh_ip, 1);
+    feeder1A.init(g_tep_id, k_tep_mac, k_base_nh_ipv6, 1);
+    workflow_b2<tep_feeder>(feeder1, feeder1A);
+}
+
 /// \brief TEP WF_1
 /// \ref WF_1
 TEST_F(tep_test, tep_workflow_1) {
