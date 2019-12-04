@@ -39,11 +39,17 @@ public:
     ///            impl->cleanup_hw() before calling this)
     static void destroy(device_impl *impl);
 
-    /// \brief constructor
-    device_impl() {}
+    /// \brief    clone this object by copying all the h/w resources
+    ///           allocated for this object into new object and return the
+    ///           cloned object
+    /// \return    cloned impl instance
+    virtual impl_base *clone(void) override;
 
-    /// \brief destructor
-    ~device_impl() {}
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] impl impl instance to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(device_impl *impl);
 
     /// \brief     program all h/w tables relevant to this object except
     ///            stage 0 table(s), if any
@@ -99,6 +105,12 @@ public:
                               obj_info_t *info) override;
 
 private:
+    /// \brief constructor
+    device_impl() {}
+
+    /// \brief destructor
+    ~device_impl() {}
+
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification
     /// \return     SDK_RET_OK on success, failure status code on error

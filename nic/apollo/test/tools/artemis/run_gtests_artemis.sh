@@ -8,7 +8,7 @@ source ${NICDIR}/apollo/test/tools/setup_gtests.sh
 setup
 
 # run all gtests
-run_gtest device
+#run_gtest device
 run_gtest vpc_peer
 # run_gtest tep
 # run_gtest nh

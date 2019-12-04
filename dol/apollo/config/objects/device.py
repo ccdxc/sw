@@ -73,7 +73,7 @@ class DeviceObject(base.ConfigObjectBase):
         if utils.ValidateRpcIPAddr(self.GatewayAddr, spec.GatewayIP) is False:
             return False
         # TODO: fix this
-        if utils.IsPipelineArtemis() is False:
+        if utils.IsPipelineApollo() is True:
             if spec.MACAddr != self.MACAddr.getnum():
                 return False
         if utils.IsPipelineApulu() is True:

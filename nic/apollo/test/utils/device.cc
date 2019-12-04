@@ -26,7 +26,7 @@ device_feeder::spec_build(pds_device_spec_t *spec) const {
     ip_prefix_t device_ip_pfx, gw_ip_pfx;
 
     memset(spec, 0, sizeof(pds_device_spec_t));
-    
+
     extract_ip_pfx(device_ip_str.c_str(), &device_ip_pfx);
     if (device_ip_pfx.addr.af == IP_AF_IPV6) {
         spec->device_ip_addr.af = IP_AF_IPV6;
@@ -47,7 +47,9 @@ device_feeder::spec_build(pds_device_spec_t *spec) const {
         spec->gateway_ip_addr.addr.v4_addr = gw_ip_pfx.addr.addr.v4_addr;
     }
 
-    mac_str_to_addr((char *)mac_addr_str.c_str(), spec->device_mac_addr);
+    if (!apulu()) {
+        mac_str_to_addr((char *)mac_addr_str.c_str(), spec->device_mac_addr);
+    }
 
     if (apulu()) {
         spec->dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
@@ -68,8 +70,10 @@ device_feeder::spec_compare(const pds_device_spec_t *spec) const {
         return false;
     }
     mac_str_to_addr((char *)mac_addr_str.c_str(), device_mac_addr);
-    if (memcmp(device_mac_addr, spec->device_mac_addr, ETH_ADDR_LEN)) {
-        return false;
+    if (!apulu()) {
+        if (memcmp(device_mac_addr, spec->device_mac_addr, ETH_ADDR_LEN)) {
+            return false;
+        }
     }
     if (!IPADDR_EQ(&gw_ip_pfx.addr, &spec->gateway_ip_addr)) {
         return false;

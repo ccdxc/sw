@@ -147,16 +147,16 @@ public:
     virtual sdk_ret_t update_db(api_base *orig_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          initiate delay deletion of this object
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t delay_delete(void) override;
-
     /// \brief          add all objects that may be affected if this object is
     ///                 updated to framework's object dependency list
     /// \param[in]      obj_ctxt    transient state associated with this API
     ///                             processing
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          initiate delay deletion of this object
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t delay_delete(void) override;
 
     /// \brief          read config
     /// \param[in]      key pointer to the key object

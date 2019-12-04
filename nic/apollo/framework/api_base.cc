@@ -144,10 +144,8 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 sdk_ret_t
 api_base::free(obj_id_t obj_id, api_base *api_obj) {
     switch (obj_id) {
-#if 0
     case OBJ_ID_DEVICE:
         return device_entry::free((device_entry *)api_obj);
-#endif
 
     case OBJ_ID_IF:
         return if_entry::free((if_entry *)api_obj);

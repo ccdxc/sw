@@ -120,10 +120,8 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 sdk_ret_t
 impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
     switch (obj_id) {
-#if 0
     case IMPL_OBJ_ID_DEVICE:
         return device_impl::free((device_impl *)impl);
-#endif
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::free((tep_impl *)impl);

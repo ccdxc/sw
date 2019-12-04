@@ -28,9 +28,9 @@
     (api_params)->handle = (hdl);                                            \
 }
 
-#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
-    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
-        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
+#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)         \
+    for (uint32_t i = 0; i < (p4_addr_size); i++) {                          \
+        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                     \
     }
 
 #define PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(tparams, idx, actiondata_,     \
@@ -42,13 +42,13 @@
     (tparams)->actiondata_mask = actiondata_mask_;                           \
 }
 
-#define P4_IPADDR_TO_IPADDR(p4_ip, ip, af_)                                  \
+#define P4_IPADDR_TO_IPADDR(p4_ip_, ip_, af_)                                \
 {                                                                            \
-    ip.af = af_;                                                             \
+    (ip_).af = (af_);                                                        \
     if (af_ == IP_AF_IPV6) {                                                 \
-        sdk::lib::memrev(ip.addr.v6_addr.addr8, p4_ip, IP6_ADDR8_LEN);       \
+        sdk::lib::memrev((ip_).addr.v6_addr.addr8, (p4_ip_), IP6_ADDR8_LEN); \
     } else {                                                                 \
-        memcpy(&ip.addr.v4_addr, p4_ip, IP4_ADDR8_LEN);                      \
+        memcpy(&(ip_).addr.v4_addr, (p4_ip_), IP4_ADDR8_LEN);                \
     }                                                                        \
 }
 

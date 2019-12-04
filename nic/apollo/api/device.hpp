@@ -37,16 +37,16 @@ public:
     ///            impl->cleanup_hw() before calling this
     static void destroy(device_entry *device);
 
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
     /// \brief    free all the memory associated with this object without
     ///           touching any of the databases or h/w etc.
-    /// \param[in] api_obj    api object being freed
+    /// \param[in] device    device object being freed
     /// \return   SDK_RET_OK or error code
-    static sdk_ret_t free(device_entry *api_obj);
-
-    /// \brief     initialize device entry with the given config
-    /// \param[in] api_ctxt API context carrying the configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+    static sdk_ret_t free(device_entry *device);
 
     /// \brief     allocate/reserve h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
@@ -56,16 +56,6 @@ public:
                                         obj_ctxt_t *obj_ctxt) override {
         // this object results in register programming only, hence no resources
         // need to be reserved for this object
-        return SDK_RET_OK;
-    }
-
-    /// \brief     program all h/w tables relevant to this object except stage 0
-    ///            table(s), if any
-    /// \param[in] obj_ctxt transient state associated with this API
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override {
-        // all configuration is programmed only during activate stage
-        // for this object, hence this is a no-op
         return SDK_RET_OK;
     }
 
@@ -79,9 +69,24 @@ public:
         return SDK_RET_OK;
     }
 
+    /// \brief     initialize device entry with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
+    /// \brief     program all h/w tables relevant to this object except stage 0
+    ///            table(s), if any
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override {
+        // all configuration is programmed only during activate stage
+        // for this object, hence this is a no-op
+        return SDK_RET_OK;
+    }
+
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
-    ///            table(s), if any, by updating packed entries with latest epoch#
-    ///            and setting invalid bit (if any) in the h/w entries
+    ///            table(s), if any, by updating packed entries with latest
+    ///             epoch# and setting invalid bit (if any) in the h/w entries
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
@@ -89,8 +94,18 @@ public:
         return SDK_RET_OK;
     }
 
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+
     /// \brief     update all h/w tables relevant to this object except stage 0
-    ///            table(s), if any, by updating packed entries with latest epoch#
+    ///            table(s), if any, by updating packed entries with latest
+    ///            epoch#
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -108,13 +123,14 @@ public:
                                       api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief  add device object to the database
-    /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_to_db(void) override;
-
-    /// \brief  del device object from the database
-    /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t del_from_db(void) override;
+    /// \brief          add all objects that may be affected if this object is
+    ///                 updated to framework's object dependency list
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt)  {
+        return SDK_RET_OK;
+    }
 
     /// \brief     this method is called on new object that needs to replace the
     ///            old version of the object in the DBs
@@ -123,6 +139,14 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *orig_obj,
                                 obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief  add device object to the database
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_to_db(void) override;
+
+    /// \brief  del device object from the database
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t del_from_db(void) override;
 
     /// \brief initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;

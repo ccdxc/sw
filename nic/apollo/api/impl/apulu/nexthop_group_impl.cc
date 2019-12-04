@@ -52,7 +52,6 @@ impl_base *
 nexthop_group_impl::clone(void) {
     nexthop_group_impl *cloned_impl;
 
-    cloned_impl =
     cloned_impl = nexthop_group_impl_db()->alloc();
     new (cloned_impl) nexthop_group_impl();
     // deep copy is not needed as we don't store pointers

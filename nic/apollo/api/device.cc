@@ -52,6 +52,29 @@ device_entry::destroy(device_entry *device) {
     device_db()->free(device);
 }
 
+api_base *
+device_entry::clone(api_ctxt_t *api_ctxt) {
+    device_entry *cloned_device;
+
+    cloned_device = device_db()->alloc();
+    if (cloned_device) {
+        new (cloned_device) device_entry();
+        cloned_device->impl_ = impl_->clone();
+        if (unlikely(cloned_device->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone device impl");
+            goto error;
+        }
+        cloned_device->init_config(api_ctxt);
+    }
+    return cloned_device;
+
+error:
+
+    cloned_device->~device_entry();
+    device_db()->free(cloned_device);
+    return NULL;
+}
+
 sdk_ret_t
 device_entry::free(device_entry *device) {
     if (device->impl_) {
@@ -76,6 +99,19 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
+device_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_device_spec_t *spec = &obj_ctxt->api_params->device_spec;
+
+    if ((oper_mode_ != spec->dev_oper_mode) ||
+        (bridging_en_ != spec->bridging_en) ||
+        (learning_en_ != spec->learning_en)) {
+        PDS_TRACE_WARN("Some of the device obj's attribute changes will take "
+                       "affect after next reboot");
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 device_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
@@ -83,10 +119,7 @@ device_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // there is no stage 0 programming for device cfg, so this is a no-op
-    PDS_TRACE_DEBUG("Activating device config");
-    impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
-    return SDK_RET_OK;
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
@@ -109,7 +142,10 @@ device_entry::del_from_db(void) {
 
 sdk_ret_t
 device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (device_db()->remove()) {
+        return device_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
