@@ -13,7 +13,6 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
@@ -21,16 +20,14 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_evpn_utils.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <iostream>
 #include <thread>
 
 using boost::property_tree::ptree;
-
-//----------------------------------------------------------------------------
-// Entry point
-//----------------------------------------------------------------------------
 
 namespace pdsa_test {
 test_params_t* test_params() {    
@@ -40,12 +37,27 @@ test_params_t* test_params() {
 
 } // End namespace pdsa_test
 
+using namespace std;
+using grpc::Server;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::Status;
+
+static sdk::lib::thread *g_routing_thread;
+std::string g_grpc_server_addr;
+#define GRPC_API_PORT   50057
+
 namespace pdsa_stub {
+
+
 static NBB_VOID
 pdsa_sim_test_config (pdsa_config_t& conf)
 {
-    // Let N-Base thread to start
-    sleep (10);
+    cout << "Config thread is waiting for Nbase....\n";
+    while (!g_routing_thread->ready()) {
+         pthread_yield();
+    }    
+    cout << "Nbase is ready!\n";
 
     // Create thread context
     NBB_CREATE_THREAD_CONTEXT
@@ -211,15 +223,6 @@ parse_json_config (pdsa_config_t *conf) {
 
 } // End of pdsa_stub namespace
 
-using namespace std;
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
-
-std::string g_grpc_server_addr;
-#define GRPC_API_PORT   50057
-
 static void
 svc_reg (void)
 {
@@ -241,33 +244,6 @@ svc_reg (void)
     server->Wait();
 }
 
-enum {
-    THREAD_ID_AGENT_NONE = 0,
-    THREAD_ID_NBASE      = 1,
-    THREAD_ID_AGENT_MAX  = 2,
-};
-
-static sdk::lib::thread *g_routing_thread;
-
-sdk_ret_t
-spawn_routing_thread (void)
-{
-    g_routing_thread =
-        sdk::lib::thread::factory(
-            "routing", THREAD_ID_NBASE, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, &pdsa_stub::pdsa_thread_init,
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            false);
-
-    SDK_ASSERT_TRACE_RETURN((g_routing_thread != NULL), SDK_RET_ERR,
-                            "n-base thread create failure");
-    g_routing_thread->start(g_routing_thread);
-
-    return SDK_RET_OK;
-}
-
-
 int
 main (int argc, char **argv)
 {
@@ -278,14 +254,22 @@ main (int argc, char **argv)
     pds_init(nullptr);
 
     // parse json config file
-    if (parse_json_config(&conf) >= 0) {
-        // config file exists and it has test-config flag to initiate config
-        std::thread test_cfg(pdsa_stub::pdsa_sim_test_config, std::ref(conf));
-        test_cfg.detach();
+    if (parse_json_config(&conf) < 0) {
+        cout << "Config file not found! Check CONFIG_PATH env var\n";
+        exit(1);
     }
-    auto ret = spawn_routing_thread();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
+    // This will start nbase
+    g_routing_thread =
+        sdk::lib::thread::factory(
+            "routing", 0, sdk::lib::THREAD_ROLE_CONTROL,
+            0x0, &pdsa_stub::pdsa_thread_init,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            false);
+    SDK_ASSERT_TRACE_RETURN((g_routing_thread != NULL), SDK_RET_ERR,
+                            "Routing thread create failure");
+    g_routing_thread->start(g_routing_thread);
+    // Push the test config, this will wait for nbase init to complete
+    pdsa_stub::pdsa_sim_test_config(conf);
     svc_reg();
 }

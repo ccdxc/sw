@@ -2,8 +2,10 @@
 #define __PDSA_STUB_INIT_HPP__
 
 namespace pdsa_stub{
-int pdsa_init ();
-void *pdsa_thread_init (void *ctxt);
+
+int pdsa_init();
+void *pdsa_thread_init(void *ctxt);
+
 }
 
-#endif /*__PDSA_STUB_INIT_HPP__*/
+#endif    // __PDSA_STUB_INIT_HPP__

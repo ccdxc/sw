@@ -5,6 +5,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/vpc.hpp"
 #include "nic/apollo/agent/trace.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 
 namespace core {
 
@@ -43,7 +44,14 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.id, ret);
         return ret;
     }
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::vpc_create(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to create vpc {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.id, ret);
             return ret;
@@ -89,7 +97,14 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         return ret;
     }
 
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::vpc_update(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update vpc {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
             return ret;
@@ -123,7 +138,14 @@ vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to delete vpc {}, vpc not found", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (!agent_state::state()->pds_mock_mode()) {
+    if (agent_state::state()->device()->overlay_routing_en) {
+        // call the metaswitch api
+        if ((ret = pds_ms::vpc_delete(spec, bctxt)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to delete vpc {}, err {}",
+                          key->id, ret);
+            return ret;
+        }
+    } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc {}, err {}", key->id, ret);
             return ret;

@@ -4,7 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
-#include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -193,13 +193,6 @@ nbase_init ()
     /*************************************************************************/
     pdsa_stub::pdsa_stubs_create();
 
-    /*************************************************************************/
-    /* Set the thread ready before spinning up nabse                         */
-    /*************************************************************************/
-    if (sdk::lib::thread::current_thread()) {
-        sdk::lib::thread::current_thread()->set_ready(true);
-    }
-
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
     /***************************************************************************/
@@ -247,6 +240,13 @@ EXIT_LABEL:
 
 bool pdsa_stub_mgmt_init()
 {
+    pds_ms::mgmt_state_init();
+    // Enter thread-safe context to cache nbase thread ptr
+    {
+        auto ctx = pds_ms::mgmt_state_t::thread_context();
+        ctx.state()->set_nbase_thread(sdk::lib::thread::current_thread());
+    }
+    // Start nbase - blocking call
     nbase_init();
     return true;
 }

@@ -4,7 +4,7 @@
 #define __PDSA_EVPN_UTILS_HPP__
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_vpc.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 
 namespace pdsa_stub {
 

@@ -18,11 +18,11 @@ void pdsa_stubs_create ()
     NBS_GET_SHARED_DATA();
 
     NBB_TRC_FLOW ((NBB_FORMAT "Start CTM Transaction"));
-    pdsa_ctm_send_transaction_start (PDSA_CTM_CORRELATOR);
+    pdsa_ctm_send_transaction_start (PDSA_CTM_STUB_INIT_CORRELATOR);
 
     NBB_TRC_FLOW ((NBB_FORMAT "ROW UPDATES to initialize Stubs and MS Processes"));
 
-    conf.correlator         = PDSA_CTM_CORRELATOR;
+    conf.correlator         = PDSA_CTM_STUB_INIT_CORRELATOR;
     conf.row_status         = AMB_ROW_ACTIVE;
 
     // l2fEntTable
@@ -192,7 +192,7 @@ void pdsa_stubs_create ()
                              0);
 
     NBB_TRC_FLOW ((NBB_FORMAT "End CTM Transaction"));
-    pdsa_ctm_send_transaction_end (PDSA_CTM_CORRELATOR);
+    pdsa_ctm_send_transaction_end (PDSA_CTM_STUB_INIT_CORRELATOR);
 
     /***************************************************************************/ 
     /* Release the lock on the SHARED LOCAL data.                              */

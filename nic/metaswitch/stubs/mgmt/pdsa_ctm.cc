@@ -4,7 +4,9 @@
 
 #include <iostream>
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
-#include <iostream>
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 
 using namespace std;
 
@@ -92,11 +94,20 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
     NBB_TRC_ENTRY ("pdsa_ctm_rcv_transaction_done");
     NBB_ASSERT_PTR_NE (trans_done, NULL);
 
-    //cout << "trans_done->return_code="<<trans_done->return_code<<endl;
     switch (trans_done->return_code)
     {
         case ATG_CPI_RC_OK:
             NBB_TRC_FLOW((NBB_FORMAT "ATG_CPI_RC_OK"));
+            if (trans_done->trans_correlator.correlator1 ==
+                                PDSA_CTM_STUB_INIT_CORRELATOR) {
+                // Stubs initialization transaction is done
+                // We can now signal that nbase thread is ready
+                {
+                    SDK_TRACE_INFO("Nbase thread ready");
+                    auto ctx = pds_ms::mgmt_state_t::thread_context();
+                    ctx.state()->nbase_thread()->set_ready(true);
+                }
+            }
             break;
 
         case ATG_CPI_RC_INTERNAL_FAILURE:
@@ -105,7 +116,6 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 
         case ATG_CPI_RC_APPLY_CFG_FAILURE:
             NBB_TRC_FLOW((NBB_FORMAT "ATG_CPI_RC_APPLY_CFG_FAILURE"));
-            //cout << "trans_done->return_subcode="<<trans_done->return_subcode<<endl;
             if (trans_done->return_subcode == AMB_RC_RESOURCE_UNAVAILABLE)
             {
                 NBB_TRC_FLOW((NBB_FORMAT "AMB_RC_RESOURCE_UNAVAILABLE"));

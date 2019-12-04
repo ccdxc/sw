@@ -6,10 +6,8 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
-
-#include <iostream>
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 
 using namespace std;
 using grpc::Server;
@@ -17,8 +15,9 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
+static sdk::lib::thread *g_nbase_thread;
+std::string g_grpc_server_addr;
 
 static void
 svc_reg (void)
@@ -41,14 +40,6 @@ svc_reg (void)
     server->Wait();
 }
 
-enum {
-    THREAD_ID_AGENT_NONE = 0,
-    THREAD_ID_NBASE      = 1,
-    THREAD_ID_AGENT_MAX  = 2,
-};
-
-static sdk::lib::thread *g_nbase_thread;
-
 void *pdsa_nbase_thread_init (void *ctxt)
 {
     // opting for graceful termination
@@ -57,6 +48,7 @@ void *pdsa_nbase_thread_init (void *ctxt)
     if (!pdsa_stub_mgmt_init()) {
         SDK_ASSERT("pdsa init failed!");
     }
+
     return NULL;
 }
 
@@ -65,7 +57,7 @@ spawn_nbase_thread (void)
 {
     g_nbase_thread =
         sdk::lib::thread::factory(
-            "nbase", THREAD_ID_NBASE, sdk::lib::THREAD_ROLE_CONTROL,
+            "nbase", 1, sdk::lib::THREAD_ROLE_CONTROL,
             0x0, &pdsa_nbase_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -84,6 +76,7 @@ int main(void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    // Wait for nbase to be ready
     while (!g_nbase_thread->ready()) {
         pthread_yield();
     }
