@@ -96,6 +96,7 @@ action copp(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 @pragma stage 4
 @pragma index_table
 @pragma policer_table two_color
+@pragma token_refresh_rate 512
 table copp {
     reads {
         p4e_i2e.copp_policer_id : exact;

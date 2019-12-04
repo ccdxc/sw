@@ -133,7 +133,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     directmap       *copp_tbl = NULL;
     copp_actiondata_t d = {0};
     copp_actiondata_t d_mask = {0};
-    uint64_t        refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
+    uint64_t        refresh_interval_us = HAL_DEFAULT_COPP_REFRESH_INTERVAL;
     uint64_t        rate_tokens = 0;
     uint64_t        burst_tokens = 0;
     uint64_t        rate;

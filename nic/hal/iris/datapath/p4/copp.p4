@@ -33,6 +33,7 @@ action execute_copp(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 
 @pragma stage 3
 @pragma policer_table two_color
+@pragma token_refresh_rate 512
 table copp {
     reads {
         copp_metadata.policer_index : exact;

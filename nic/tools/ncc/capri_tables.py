@@ -5147,7 +5147,7 @@ class capri_gress_tm:
                     if ctable.is_policer or ctable.is_rate_limit_en:
                         if t._parsed_pragmas and 'token_refresh_rate' in t._parsed_pragmas:
                             ctable.token_refresh_rate = int(t._parsed_pragmas['token_refresh_rate'].keys()[0])
-                            ncc_assert(ctable.token_refresh_rate > 4000, \
+                            ncc_assert(ctable.token_refresh_rate <= 4000, \
                                        "token refresh rate should be less than 4000/sec")
                     else:
                         if t._parsed_pragmas and 'token_refresh_rate' in t._parsed_pragmas:

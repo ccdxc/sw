@@ -32,7 +32,8 @@ namespace pd {
 
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
 
-#define HAL_DEFAULT_POLICER_REFRESH_INTERVAL 250 // us
+#define HAL_DEFAULT_POLICER_REFRESH_INTERVAL 250  // us - min 4K PPS
+#define HAL_DEFAULT_COPP_REFRESH_INTERVAL    2000 // us - min 512 PPS
 #define HAL_MAX_POLICER_TOKENS_PER_INTERVAL ((1ull<<39)-1)
 
 #define HAL_PD_QOS_IQS(ENTRY)                                        \
