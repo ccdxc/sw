@@ -45,6 +45,7 @@ typedef enum obj_id_e {
     OBJ_ID_VPC_PEER,       ///< vpc peer
     OBJ_ID_NEXTHOP,        ///< nexthop
     OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
+    OBJ_ID_POLICER,        ///< policer
     OBJ_ID_MAX,
 } obj_id_t;
 

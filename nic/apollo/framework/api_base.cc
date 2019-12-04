@@ -66,6 +66,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group::factory(&api_ctxt->api_params->nexthop_group_spec);
 
+    case OBJ_ID_POLICER:
+        return policer_entry::factory(&api_ctxt->api_params->policer_spec);
+
     default:
         break;
     }
@@ -274,6 +277,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
             return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_key);
         }
         return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_spec.key);
+
+    case OBJ_ID_POLICER:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return policer_db()->find(&api_ctxt->api_params->policer_key);
+        }
+        return policer_db()->find(&api_ctxt->api_params->policer_spec.key);
 
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_VPC_PEER:

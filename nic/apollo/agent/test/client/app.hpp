@@ -12,6 +12,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
@@ -36,6 +37,7 @@ sdk_ret_t create_device_grpc(pds_device_spec_t *spec);
 sdk_ret_t create_mirror_session_grpc(pds_mirror_session_spec_t *spec);
 sdk_ret_t create_meter_grpc(pds_meter_spec_t *spec);
 sdk_ret_t create_tag_grpc(pds_tag_spec_t *spec);
+sdk_ret_t create_policer_grpc(pds_policer_spec_t *spec);
 sdk_ret_t create_nexthop_grpc(pds_nexthop_spec_t *spec);
 sdk_ret_t create_nexthop_group_grpc(pds_nexthop_group_spec_t *spec);
 sdk_ret_t create_svc_mapping_grpc(pds_svc_mapping_spec_t *spec);

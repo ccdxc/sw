@@ -157,6 +157,16 @@ create_meter (pds_meter_spec_t *pds_meter)
 }
 
 sdk_ret_t
+create_policer (pds_policer_spec_t *pds_policer)
+{
+    if (pds_policer) {
+        return pds_policer_create(pds_policer);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
 create_nexthop (pds_nexthop_spec_t *pds_nh)
 {
     if (pds_nh) {

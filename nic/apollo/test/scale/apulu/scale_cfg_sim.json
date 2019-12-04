@@ -60,6 +60,10 @@
             "count" : "4096"
         },
         {
+            "kind" : "policer",
+            "count" : "1024"
+        },
+        {
             "kind" : "flows",
             "num_tcp": "0",
             "num_udp": "0",

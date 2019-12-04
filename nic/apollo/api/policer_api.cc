@@ -28,7 +28,7 @@ pds_policer_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
         return rv;
 
     // allocate API context
-    api_ctxt = api::api_ctxt_alloc(OBJ_ID_SUBNET, op);
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_POLICER, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
             api_ctxt->api_params->policer_key = *key;

@@ -116,6 +116,12 @@ create_meter (pds_meter_spec_t *pds_meter)
 }
 
 sdk_ret_t
+create_policer (pds_policer_spec_t *pds_policer)
+{
+    return create_policer_grpc(pds_policer);
+}
+
+sdk_ret_t
 create_nexthop (pds_nexthop_spec_t *pds_nh)
 {
     return create_nexthop_grpc(pds_nh);

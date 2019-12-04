@@ -15,6 +15,7 @@
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 
 #define TESTAPP_METER_NUM_PREFIXES                         16
@@ -145,6 +146,10 @@ typedef struct test_params_s {
         uint32_t num_svc_mappings;
         ip_prefix_t v4_vip_pfx;
         ip_prefix_t v6_vip_pfx;
+    };
+    // policer
+    struct {
+        uint32_t num_policers;
     };
 } test_params_t;
 
@@ -400,6 +405,8 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 pfxstr = obj.second.get<std::string>("v6-vip-prefix");
                 assert(str2ipv6pfx((char *)pfxstr.c_str(),
                                    &test_params->v6_vip_pfx) == 0);
+            } else if (kind == "policer") {
+                test_params->num_policers = std::stol(obj.second.get<std::string>("count"));
             }
         }
     } catch (std::exception const &e) {

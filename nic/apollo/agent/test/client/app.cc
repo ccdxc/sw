@@ -19,6 +19,7 @@
 #include "gen/proto/meter.grpc.pb.h"
 #include "gen/proto/tags.grpc.pb.h"
 #include "gen/proto/nh.grpc.pb.h"
+#include "gen/proto/policer.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -26,6 +27,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
@@ -42,6 +44,9 @@ using grpc::ClientContext;
 using pds::VPCDeleteResponse;
 using pds::VPCGetResponse;
 using pds::VPCPeerResponse;
+using pds::PolicerRequest;
+using pds::PolicerResponse;
+using pds::PolicerSpec;
 using pds::NexthopResponse;
 using pds::NexthopSpec;
 using pds::NhGroupSpec;
@@ -65,6 +70,7 @@ std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
 std::unique_ptr<pds::MeterSvc::Stub>             g_meter_stub_;
 std::unique_ptr<pds::TagSvc::Stub>               g_tag_stub_;
 std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
+std::unique_ptr<pds::PolicerSvc::Stub>           g_policer_stub_;
 std::unique_ptr<pds::IfSvc::Stub>                g_if_stub_;
 std::unique_ptr<pds::Svc::Stub>                  g_svc_mapping_stub_;
 
@@ -79,6 +85,7 @@ pds::TunnelRequest            g_tunnel_req;
 pds::MirrorSessionRequest     g_mirror_session_req;
 pds::MeterRequest             g_meter_req;
 pds::TagRequest               g_tag_req;
+pds::PolicerRequest           g_policer_req;
 pds::NexthopRequest           g_nexthop_req;
 pds::NhGroupRequest           g_nexthop_group_req;
 pds::SvcMappingRequest        g_svc_mapping_req;
@@ -426,6 +433,30 @@ create_meter_grpc (pds_meter_spec_t *spec)
 }
 
 sdk_ret_t
+create_policer_grpc (pds_policer_spec_t *spec)
+{
+    ClientContext   context;
+    PolicerResponse response;
+    Status          ret_status;
+
+    if (spec != NULL) {
+        PolicerSpec *proto_spec = g_policer_req.add_request();
+        pds_policer_api_spec_to_proto(proto_spec, spec);
+    }
+    if ((g_policer_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+       ret_status = g_policer_stub_->PolicerCreate(
+                                        &context, g_policer_req, &response);
+        if (!ret_status.ok() ||
+                        (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_policer_req.clear_request();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 create_nexthop_grpc (pds_nexthop_spec_t *spec)
 {
     ClientContext   context;
@@ -628,6 +659,7 @@ test_app_init (void)
     g_mirror_stub_ = pds::MirrorSvc::NewStub(channel);
     g_meter_stub_ = pds::MeterSvc::NewStub(channel);
     g_tag_stub_ = pds::TagSvc::NewStub(channel);
+    g_policer_stub_ = pds::PolicerSvc::NewStub(channel);
     g_nexthop_stub_ = pds::NhSvc::NewStub(channel);
     g_if_stub_ = pds::IfSvc::NewStub(channel);
     g_svc_mapping_stub_ = pds::Svc::NewStub(channel);

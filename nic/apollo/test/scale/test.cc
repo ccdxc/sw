@@ -5,6 +5,7 @@
 #include <iostream>
 #include <math.h>
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/api.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -1020,6 +1021,42 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
 }
 
 static inline sdk_ret_t
+create_policers (uint32_t num_policers)
+{
+    sdk_ret_t ret;
+    pds_policer_spec_t pds_policer;
+    uint32_t pps = 4000;
+    uint32_t bps = 32000;
+    uint32_t pps_burst = 400;
+    uint32_t bps_burst = 3200;
+
+    for (uint32_t i = 1; i <= num_policers; i ++) {
+        memset(&pds_policer, 0, sizeof(pds_policer_spec_t));
+        pds_policer.key.id = i;
+        pds_policer.dir = (i % 2) ? PDS_POLICER_DIR_INGRESS : PDS_POLICER_DIR_EGRESS;
+        pds_policer.type = (i % 3) ? sdk::POLICER_TYPE_PPS : sdk::POLICER_TYPE_BPS;
+        if (pds_policer.type == sdk::POLICER_TYPE_PPS) {
+            pds_policer.pps = pps;
+            pds_policer.pps_burst = pps_burst;
+        } else {
+            pds_policer.bps = bps;
+            pds_policer.bps_burst = bps_burst;
+        }
+        ret = create_policer(&pds_policer);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    // push leftover objects
+    ret = create_policer(NULL);
+    if (ret != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
 create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
 {
     sdk_ret_t ret;
@@ -1529,6 +1566,13 @@ create_objects (void)
         // create nexthops
         ret = create_nexthops(g_test_params.num_nh, &g_test_params.tep_pfx,
                               g_test_params.num_vpcs);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (apulu()) {
+        ret = create_policers(g_test_params.num_policers);
         if (ret != SDK_RET_OK) {
             return ret;
         }
