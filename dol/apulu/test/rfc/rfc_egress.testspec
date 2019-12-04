@@ -55,10 +55,10 @@ packets:
                 tos     : 0
                 id      : 0
             vxlan:
-                vni     : ref://testcase/config/route/TUNNEL/EncapValue
+                vni     : ref://testcase/config/route/VPC/Vnid
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
+                dst     : ref://testcase/config/route/TUNNEL/MACAddr
             ipv4:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             ipv6:
