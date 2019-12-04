@@ -20,7 +20,7 @@ def Main(tc):
     for commands in resp.commands:
         if commands.exit_code == 0:
             api.PrintCommandResults(commands)
-            api.Logger.error("ECCERR found Waiting to be debbuged - contact Rahul")
+            api.Logger.error("ECCERR found; Waiting to be debugged - contact Rahul")
             time.sleep(72000)
             return api.types.status.FAILURE
 

@@ -30,9 +30,12 @@ fi
 # if OS_DIR was relative, make it absolute here
 OS_DIR=$(readlink -f "$OS_DIR")
 
-# Hacky: "root@freebsd:/usr/obj/usr/src/sys/GENERIC"
-# Can't rely on uname -i, unfortunately.
-KERNCONF=`uname -v | awk -F/ '{print $NF}'`
+# The ident set in the kernel config file must match the name of the file.
+KERNCONF=`uname -i`
+if uname -v | grep -q -v $KERNCONF ; then
+    echo "KERNCONF=${KERNCONF} invalid, check kernel config"
+    exit 1
+fi
 
 make_ext() {
 	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" "KERNCONF=$KERNCONF" \

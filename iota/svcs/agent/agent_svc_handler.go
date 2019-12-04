@@ -271,7 +271,7 @@ func (agent *Service) DeleteWorkloads(ctx context.Context, in *iota.WorkloadMsg)
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 func (agent *Service) Trigger(ctx context.Context, in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	agent.logger.Printf("Trigger messasge received : %v", in)
+	agent.logger.Printf("Trigger message received : %v", in)
 	/* Check if the node running an instance to add a workload */
 	if agent.node == nil {
 		msg := fmt.Sprintf("Invalid trigger message received on unintialized node")

@@ -271,6 +271,7 @@ const struct sysfs_ops kobj_sysfs_ops = {
 	.store	= kobj_attr_store,
 };
 
+#if __FreeBSD_version < 1200000
 int sysfs_create_groups(struct kobject *kobj,
 			const struct attribute_group **groups)
 {
@@ -290,6 +291,7 @@ int sysfs_create_groups(struct kobject *kobj,
 	}
 	return error;
 }
+#endif
 
 void sysfs_remove_groups(struct kobject *kobj,
 			 const struct attribute_group **groups)

@@ -41,6 +41,10 @@
 #include <rdma/ib_verbs.h>
 #include <ionic_kpicompat.h>
 
+#if __FreeBSD_version >= 1200000
+#include <ck_queue.h>
+#endif
+
 /* marks code inserted to silence false positive warnings */
 #define IONIC_STATIC_ANALYSIS_HINTS_NOT_FOR_UPSTREAM 1
 

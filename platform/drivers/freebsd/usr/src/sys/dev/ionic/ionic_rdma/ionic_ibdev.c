@@ -7168,7 +7168,11 @@ static void ionic_netdev_discover(void)
 	VNET_FOREACH(vnet) {
 		IFNET_RLOCK();
 		CURVNET_SET_QUIET(vnet);
+#if __FreeBSD_version >= 1200000
+		CK_STAILQ_FOREACH(ndev, &V_ifnet, if_link)
+#else
 		TAILQ_FOREACH(ndev, &V_ifnet, if_link)
+#endif
 			ionic_netdev_event(&ionic_netdev_notifier,
 					   NETDEV_REGISTER, ndev);
 		CURVNET_RESTORE();
