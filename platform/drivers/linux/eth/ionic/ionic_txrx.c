@@ -371,10 +371,10 @@ void ionic_rx_fill(struct ionic_queue *q)
 	unsigned int len;
 
 	len = netdev->mtu + ETH_HLEN;
-	remain_len = len;
 	nfrags = round_up(len, PAGE_SIZE) / PAGE_SIZE;
 
 	for (i = ionic_q_space_avail(q); i; i--) {
+		remain_len = len;
 		desc_info = q->head;
 		desc = desc_info->desc;
 		sg_desc = desc_info->sg_desc;
