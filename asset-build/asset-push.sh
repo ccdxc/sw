@@ -80,11 +80,17 @@ mv tools/docker-files/ova/output/venice.ova /sw/output
 mv tools/docker-files/ova/output/venice.qcow2 /sw/output
 mv bin/bundle/bundle.tar /sw/output/bundle/
 mv bin/pen-install.iso /sw/output/
+
 mkdir -p /sw/output/pxe/tftpboot/pxelinux.cfg
 mv bin/pxe/tftpboot/initrd0.img /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/vmlinuz0 /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/pxelinux.0 /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/pxelinux.cfg/default /sw/output/pxe/tftpboot/pxelinux.cfg/
+
+mkdir -p /sw/output/venice-install
+mv bin/venice-install/squashfs.img /sw/output/venice-install
+mv tools/docker-files/vinstall/PEN-VERSION /sw/output/venice-install
+
 cd /sw/output
 find . -type f -print0 | while IFS= read -r -d $'\0' file;
   do asset-push builds hourly $RELEASE "$file" ;
