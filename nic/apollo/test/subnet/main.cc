@@ -67,7 +67,7 @@ TEST_F(subnet, subnet_workflow_b1) {
 
 /// \brief Subnet WF_B2
 /// \ref WF_B2
-TEST_F(subnet, DISABLED_subnet_workflow_b2) {
+TEST_F(subnet, subnet_workflow_b2) {
     pds_subnet_key_t key = {.id = 1};
     subnet_feeder feeder1, feeder1A;
 
@@ -165,7 +165,7 @@ TEST_F(subnet, subnet_workflow_7) {
 
 /// \brief Subnet WF_8
 /// \ref WF_8
-TEST_F(subnet, DISABLED_subnet_workflow_8) {
+TEST_F(subnet, subnet_workflow_8) {
     pds_subnet_key_t key = {.id = 1};
     subnet_feeder feeder1, feeder1A, feeder1B;
 
@@ -180,7 +180,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_8) {
 
 /// \brief Subnet WF_9
 /// \ref WF_9
-TEST_F(subnet, DISABLED_subnet_workflow_9) {
+TEST_F(subnet, subnet_workflow_9) {
     pds_subnet_key_t key = {.id = 1};
     subnet_feeder feeder1, feeder1A;
 
@@ -193,7 +193,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_9) {
 
 /// \brief Subnet WF_10
 /// \ref WF_10
-TEST_F(subnet, DISABLED_subnet_workflow_10) {
+TEST_F(subnet, subnet_workflow_10) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                      key4 = {.id = 100};
     subnet_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
@@ -288,8 +288,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_6) {
 
 /// \brief Subnet WF_N_7
 /// \ref WF_N_7
-/// TODO: enalbe this only for apollo
-TEST_F(subnet, DISABLED_subnet_workflow_neg_7) {
+TEST_F(subnet, subnet_workflow_neg_7) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
     subnet_feeder feeder1, feeder1A, feeder2;
 

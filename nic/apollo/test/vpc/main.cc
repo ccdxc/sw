@@ -55,7 +55,7 @@ TEST_F(vpc, vpc_workflow_b1) {
 
 /// \brief VPC WF_B2
 /// \ref WF_B2
-TEST_F(vpc, DISABLED_vpc_workflow_b2) {
+TEST_F(vpc, vpc_workflow_b2) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A;
 
@@ -159,7 +159,7 @@ TEST_F(vpc, vpc_workflow_7) {
 
 /// \brief VPC WF_8
 /// \ref WF_8
-TEST_F(vpc, DISABLED_vpc_workflow_8) {
+TEST_F(vpc, vpc_workflow_8) {
     pds_vpc_key_t key = {.id = 1};
     vpc_feeder feeder1, feeder1A, feeder1B;
 

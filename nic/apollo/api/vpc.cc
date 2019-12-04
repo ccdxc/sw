@@ -212,6 +212,11 @@ vpc_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+vpc_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
@@ -219,11 +224,6 @@ vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_entry::delay_delete(void) {
-    return delay_delete_to_slab(PDS_SLAB_ID_VPC, this);
 }
 
 sdk_ret_t
@@ -250,8 +250,15 @@ vpc_entry::del_from_db(void) {
 
 sdk_ret_t
 vpc_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // TODO: FIXME
-    return sdk::SDK_RET_INVALID_OP;
+    if (vpc_db()->remove((vpc_entry *)orig_obj)) {
+        return vpc_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+vpc_entry::delay_delete(void) {
+    return delay_delete_to_slab(PDS_SLAB_ID_VPC, this);
 }
 
 }    // namespace api

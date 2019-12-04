@@ -296,7 +296,10 @@ subnet_entry::del_from_db(void) {
 
 sdk_ret_t
 subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (subnet_db()->remove((subnet_entry *)orig_obj)) {
+        return subnet_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

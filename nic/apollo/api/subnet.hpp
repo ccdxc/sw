@@ -118,6 +118,13 @@ public:
                                       api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief          add all objects that may be affected if this object is
+    ///                 updated to framework's object dependency list
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing
     ///        state and any of the state present in the dirty object list
@@ -146,13 +153,6 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *orig_obj,
                                 obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          add all objects that may be affected if this object is
-    ///                 updated to framework's object dependency list
-    /// \param[in]      obj_ctxt    transient state associated with this API
-    ///                             processing
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          initiate delay deletion of this object
     /// \return         SDK_RET_OK on success, failure status code on error
