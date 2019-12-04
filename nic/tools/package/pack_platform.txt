@@ -2,7 +2,7 @@
 # Programs
 nic/build/aarch64/iris/bin/capview                                              /platform/bin/
 nic/build/aarch64/iris/bin/palreg                                               /platform/bin/
-nic/build/aarch64/iris/bin/cpldapp                                              /platform/bin/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                                           /nic/bin/
 nic/build/aarch64/iris/bin/palutils                                             /platform/bin/
 nic/build/aarch64/iris/bin/captrace                                             /platform/bin/
 nic/build/aarch64/iris/bin/memtun                                               /platform/bin/
@@ -46,7 +46,7 @@ nic/build/aarch64/iris/lib/libpciemgr.so                                        
 nic/build/aarch64/iris/lib/libmisc.so                                           /platform/lib/
 nic/build/aarch64/iris/lib/libpcietlp.so                                        /platform/lib/
 nic/build/aarch64/iris/lib/libgtest.so                                          /platform/lib/
-nic/build/aarch64/iris/lib/libpal.so                                            /platform/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpal.so                                         /nic/lib/
 nic/build/aarch64/iris/lib/libsensor.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libsysmon.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libasicerror.so                                      /platform/lib/
@@ -60,10 +60,10 @@ nic/sdk/third-party/ncurses/aarch64/*.so                                       /
 platform/tools/start-nicmgr-haps.sh                                             /platform/tools/
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
-platform/src/app/cpld/bin/*.bin                                                 /platform/etc/cpld/
+platform/src/app/cpld/bin/*.bin                                                 /nic/etc/cpld/
 nic/tools/pcie_hostdn.sh                                                        /nic/tools/
-platform/src/app/cpld/cpldapp.sh                                                /platform/tools/
-platform/src/app/cpld/reboot.sh                                                 /platform/tools/
+platform/src/app/cpld/cpldapp.sh                                                /nic/tools/
+platform/src/app/cpld/reboot.sh                                                 /nic/tools/
 
 # Oprom
 nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/

@@ -149,6 +149,12 @@ nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
 nic/tools/pcie_hostdn.sh                                          /nic/tools/
 
+# system level tools needed for cpld upgrade
+platform/src/app/cpld/cpldapp.sh                                  /nic/tools/
+platform/src/app/cpld/reboot.sh                                   /nic/tools/
+platform/src/app/cpld/bin/*.bin                                   /nic/etc/cpld/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
+
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
