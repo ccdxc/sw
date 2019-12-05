@@ -52,6 +52,7 @@ func NewNimbusClient(clientName, srvURL string, rpcClient *rpckit.RPCClient) (*N
 
 // Wait waits for all watchers to exit
 func (client *NimbusClient) Wait() {
+	client.debugStats.Close()
 	client.waitGrp.Wait()
 }
 

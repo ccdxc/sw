@@ -21,6 +21,8 @@ type tsdbMetadata struct {
 
 // Stats stores counters for debug purpose
 type Stats struct {
+	sync.Mutex
+	name             string
 	tsdb             bool
 	tsdbPushDuration time.Duration
 	tsdbKeys         map[string]string
@@ -37,6 +39,7 @@ type StatFactory struct {
 	kind             string
 	tsdb             bool
 	tsdbPushDuration time.Duration
+	stats            *Stats
 }
 
 // CPUStats is collection of runtime process stats
@@ -71,9 +74,32 @@ func New(instance string) *StatFactory {
 
 // Build the Stat container
 func (sf *StatFactory) Build() *Stats {
+	if sf.stats != nil {
+		sf.stats.Lock()
+		if sf.stats.tsdbCloseCh != nil {
+			// stats is created and still open
+			sf.stats.Unlock()
+			return sf.stats
+		}
+		sf.stats.Unlock()
+	}
 	debugInstance := sf.kind + "_" + sf.name
-	var debugs *expvar.Map
+	mutex.Lock()
+	defer mutex.Unlock()
 	// If it already exists, return it
+	var s *Stats
+	for _, v := range allStats {
+		if v.name == debugInstance {
+			s = v
+			break
+		}
+	}
+	if s != nil {
+		sf.stats = s
+		return s
+	}
+
+	var debugs *expvar.Map
 	vars := expvar.Get(debugInstance)
 	if vars == nil {
 		debugs = expvar.NewMap(debugInstance)
@@ -84,16 +110,15 @@ func (sf *StatFactory) Build() *Stats {
 			log.Fatalf("expvar already has non-map object with name %+v", debugInstance)
 		}
 	}
-	s := &Stats{
+	s = &Stats{
+		name:             debugInstance,
 		debugs:           debugs,
 		tsdb:             sf.tsdb,
 		tsdbPushDuration: sf.tsdbPushDuration,
-		tsdbCloseCh:      make(chan bool),
-		closeAckCh:       make(chan bool),
+		tsdbCloseCh:      make(chan bool, 1),
+		closeAckCh:       make(chan bool, 1),
 	}
-	mutex.Lock()
 	allStats = append(allStats, s)
-	mutex.Unlock()
 
 	if sf.tsdb {
 		var err error
@@ -107,6 +132,7 @@ func (sf *StatFactory) Build() *Stats {
 			go s.startTsdbTimer(sf.tsdbPushDuration)
 		}
 	}
+	sf.stats = s
 	return s
 }
 
@@ -170,23 +196,40 @@ func (st *Stats) sendPoints() {
 func (st *Stats) startTsdbTimer(d time.Duration) {
 	for {
 		select {
-		case <-time.After(d):
-			st.sendPoints()
 		case <-st.tsdbCloseCh:
 			st.sendPoints()
 			close(st.closeAckCh)
 			return
+		case <-time.After(d):
+			st.sendPoints()
 		}
 	}
 }
 
 // Close stops any pending goroutines in background and clears stats
 func (st *Stats) Close() {
+	st.Lock()
+	defer st.Unlock()
+	if st.tsdbCloseCh == nil {
+		// already closed
+		return
+	}
 	if st.tsdb && st.tsdbPushDuration != 0 {
+		st.tsdbCloseCh <- true
 		close(st.tsdbCloseCh)
 		<-st.closeAckCh
+		st.tsdbCloseCh = nil
 	}
 	st.debugs.Init()
+	indexToRemove := -1
+	for i, v := range allStats {
+		if v.name == st.name {
+			indexToRemove = i
+		}
+	}
+	if indexToRemove != -1 {
+		allStats = append(allStats[:indexToRemove], allStats[indexToRemove+1:]...)
+	}
 }
 
 // Increment increments this counter
