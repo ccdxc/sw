@@ -8,25 +8,32 @@
 #include <sys/mman.h>
 #include <errno.h>
 
-/* Supply these for ionic_dev.h */
+/* Supply these for ionic_if.h */
 typedef u_int8_t u8;
 typedef u_int16_t u16;
+typedef u_int16_t __le16;
 typedef u_int32_t u32;
+typedef u_int32_t __le32;
 typedef u_int64_t u64;
+typedef u_int64_t __le64;
 typedef u_int64_t dma_addr_t;
+typedef u_int64_t phys_addr_t;
+typedef u_int64_t cpumask_t;
 #define BIT(n)  (1 << (n))
+#define BIT_ULL(n)  (1ULL << (n))
 typedef u8 bool;
 #define false 0
 #define true 1
 #define __iomem
-#define BUILD_BUG_ON(c)
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-#include "../../ionic_dev.h"
+#include "ionic_if.h"
 
 #define DEV_CMD_DONE                    0x00000001
 
-struct dev_cmd_regs *regs;
-struct dev_cmd_db *db;
+union dev_cmd_regs *cmd_regs;
+union dev_info_regs *info_regs;
+
 
 static void usage(char **argv)
 {
@@ -34,6 +41,7 @@ static void usage(char **argv)
 	printf("%s reset\n", argv[0]);
 	printf("%s identify\n", argv[0]);
 	printf("%s lif_init <index>\n", argv[0]);
+	printf("%s vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n", argv[0]);
 	exit(1);
 }
 
@@ -41,23 +49,34 @@ static int go(union dev_cmd *cmd, union dev_cmd_comp *comp)
 {
 	unsigned int i;
 
-	for (i = 0; i < 16; i++)
-		regs->cmd.words[i] = cmd->words[i];
+	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
+		cmd_regs->cmd.words[i] = cmd->words[i];
 
-	regs->done = 0;
-	db->v = 1;
+	cmd_regs->done = 0;
+	cmd_regs->doorbell = 1;
 
 	sleep(1);
 
-	if (!(regs->done & DEV_CMD_DONE)) {
+	if (!(cmd_regs->done & DEV_CMD_DONE)) {
 		fprintf(stderr, "Done bit not set after 1 second.\n");
 		return 0;
 	}
 
-	for (i = 0; i < 4; i++)
-		comp->words[i] = regs->comp.words[i];
+	for (i = 0; i < ARRAY_SIZE(comp->words); i++)
+		comp->words[i] = cmd_regs->comp.words[i];
 
 	return 1;
+}
+
+static void dump_regs()
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(cmd_regs->cmd.words); i++)
+		printf("cmd[%02d] = 0x%08x\n", i, cmd_regs->cmd.words[i]);
+
+	for (i = 0; i < ARRAY_SIZE(cmd_regs->comp.words); i++)
+		printf("comp[%02d] = 0x%08x\n", i, cmd_regs->comp.words[i]);
 }
 
 static void nop(int argc, char **argv)
@@ -70,9 +89,8 @@ static void nop(int argc, char **argv)
 	if (argc != 2)
 		usage(argv);
 
-	if (go(&cmd, &comp)) {
+	if (go(&cmd, &comp))
 		printf("status: %d\n", comp.nop.status);
-	}
 }
 
 static void reset(int argc, char **argv)
@@ -85,28 +103,48 @@ static void reset(int argc, char **argv)
 	if (argc != 2)
 		usage(argv);
 
-	if (go(&cmd, &comp)) {
+	if (go(&cmd, &comp))
 		printf("status: %d\n", comp.reset.status);
-	}
 }
 
 static void identify(int argc, char **argv)
 {
 	union dev_cmd cmd = {
 		.identify.opcode = CMD_OPCODE_IDENTIFY,
-		.identify.ver = IDENTITY_VERSION_1,
-		.identify.addr = 0,  // fix model to take no host addr?
+		.identify.ver = IONIC_IDENTITY_VERSION_1,
 	};
 	union dev_cmd_comp comp;
+	union dev_identity *dev_ident;
 
 	if (argc != 2)
 		usage(argv);
 
-	if (go(&cmd, &comp)) {
-		printf("status: %d\n", comp.identify.status);
-		printf("ver: %d\n", comp.identify.ver);
-		// TODO add dump of identify info from second half of dev cmd page
-	}
+	if (!go(&cmd, &comp))
+		return;
+
+	printf("status: %d\n", comp.identify.status);
+	printf("ver: %d\n", comp.identify.ver);
+	printf("\n");
+
+	printf("signature:        0x%x\n", info_regs->signature);
+	printf("asic_type:        0x%x\n", info_regs->asic_type);
+	printf("asic_rev:         0x%x\n", info_regs->asic_rev);
+	printf("serial_num:       %s\n",   info_regs->serial_num);
+	printf("fw_version:       %s\n",   info_regs->fw_version);
+	printf("fw_status:        0x%x\n", info_regs->fw_status);
+	printf("fw_heartbeat:     0x%x\n", info_regs->fw_heartbeat);
+	printf("\n");
+
+	dev_ident = (union dev_identity *)cmd_regs->data;
+	printf("version:          %d\n", dev_ident->version);
+	printf("type:             %d\n", dev_ident->type);
+	printf("nports:           %d\n", dev_ident->nports);
+	printf("nlifs:            %d\n", dev_ident->nlifs);
+	printf("nintrs:           %d\n", dev_ident->nintrs);
+	printf("eth_eq_count:     %d\n", dev_ident->eq_count);
+	printf("ndbpgs_per_lif:   %d\n", dev_ident->ndbpgs_per_lif);
+	printf("intr_coal_mult:   %d\n", dev_ident->intr_coal_mult);
+	printf("intr_coal_div:    %d\n", dev_ident->intr_coal_div);
 }
 
 static void lif_init(int argc, char **argv)
@@ -121,8 +159,98 @@ static void lif_init(int argc, char **argv)
 
 	cmd.lif_init.index = strtol(argv[2], NULL, 10);
 
-	if (go(&cmd, &comp)) {
+	if (go(&cmd, &comp))
 		printf("status: %d\n", comp.identify.status);
+}
+
+static void vf_attr(int argc, char **argv)
+{
+	union dev_cmd cmd = { 0 };
+	union dev_cmd_comp comp;
+	unsigned int attr;
+	unsigned int vf;
+	unsigned int set = 0;
+
+	/* devc vf <id> set/get spoof|trust|state|mac|vlan|rate [val]*/
+	if (argc < 5)
+		usage(argv);
+
+	errno = 0;
+	vf = strtol(argv[2], NULL, 10);
+	if (errno)
+		usage(argv);
+	cmd.vf_setattr.vf_index = vf;
+
+	if (!strcmp(argv[3], "set")) {
+		set++;
+		if (argc != 6)
+			usage(argv);
+	} else if (argc != 5) {
+		usage(argv);
+	}
+
+	if (!strcmp(argv[4], "spoof")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_SPOOFCHK;
+		if (set)
+			cmd.vf_setattr.spoofchk = strtol(argv[5], NULL, 10);
+	} else if (!strcmp(argv[4], "trust")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_TRUST;
+		if (set)
+			cmd.vf_setattr.trust = strtol(argv[5], NULL, 10);
+	} else if (!strcmp(argv[4], "state")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_LINKSTATE;
+		if (set)
+			cmd.vf_setattr.linkstate = strtol(argv[5], NULL, 10);
+	} else if (!strcmp(argv[4], "vlan")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_VLAN;
+		if (set)
+			cmd.vf_setattr.vlanid = strtol(argv[5], NULL, 10);
+	} else if (!strcmp(argv[4], "rate")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_RATE;
+		if (set)
+			cmd.vf_setattr.maxrate = strtol(argv[5], NULL, 10);
+	} else if (!strcmp(argv[4], "mac")) {
+		cmd.vf_setattr.attr = IONIC_VF_ATTR_MAC;
+		if (set) {
+			//val = strtol(argv[5], NULL, 10);
+			printf("set mac not yet supported\n");
+			exit(1);
+		}
+	} else {
+		usage(argv);
+	}
+
+	if (set)
+		cmd.vf_setattr.opcode = CMD_OPCODE_VF_SETATTR;
+	else
+		cmd.vf_setattr.opcode = CMD_OPCODE_VF_GETATTR;
+
+	if (!go(&cmd, &comp))
+		return;
+
+	printf("status: %d\n", comp.identify.status);
+
+	if (!set && !comp.identify.status) {
+		switch (cmd.vf_setattr.attr) {
+		case IONIC_VF_ATTR_MAC:
+			printf("%02x:%02x:%02x:%02x:%02x:%02x\n",
+				comp.vf_getattr.macaddr[0],
+				comp.vf_getattr.macaddr[1],
+				comp.vf_getattr.macaddr[2],
+				comp.vf_getattr.macaddr[3],
+				comp.vf_getattr.macaddr[4],
+				comp.vf_getattr.macaddr[5]);
+			break;
+		case IONIC_VF_ATTR_VLAN:
+			printf("%d\n", comp.vf_getattr.vlanid);
+			break;
+		case IONIC_VF_ATTR_RATE:
+			printf("%d\n", comp.vf_getattr.maxrate);
+			break;
+		default:
+			printf("%d\n", comp.vf_getattr.trust);
+			break;
+		}
 	}
 }
 
@@ -131,8 +259,9 @@ int main(int argc, char **argv)
 	int fd;
 	char *path = "/dev/mem";
 	char *cmd;
-	off_t bar_addr = 0xfe600000;
-	size_t bar_size = 2 * 4096;
+	off_t bar_addr = 0xfbb50000;
+	void *mapped;
+	size_t map_size = 4096;
 
 	if (argc < 2)
 		usage(argv);
@@ -143,31 +272,37 @@ int main(int argc, char **argv)
 		exit(1);
 	} 
 
-	regs = mmap(0, bar_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, bar_addr);
-	if (regs == MAP_FAILED) {
+	mapped = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, bar_addr);
+	if (mapped == MAP_FAILED) {
 		perror("mmap");
 		exit(1);
 	}
 
-	if (regs->signature != DEV_CMD_SIGNATURE) {
+	info_regs = mapped + BAR0_DEV_INFO_REGS_OFFSET;
+	if (info_regs->signature != IONIC_DEV_INFO_SIGNATURE) {
 		fprintf(stderr, "Signature didn't match.  Expected 0x%08x, got 0x%08x\n",
-			DEV_CMD_SIGNATURE, regs->signature);
+			IONIC_DEV_INFO_SIGNATURE, info_regs->signature);
 	}
-
-	db = (void *)regs + 0x1000;
+	cmd_regs = mapped + BAR0_DEV_CMD_REGS_OFFSET;
 
 	cmd = argv[1];
 
 	if (strcmp(cmd, "nop") == 0)
 		nop(argc, argv);
-	if (strcmp(cmd, "reset") == 0)
+	else if (strcmp(cmd, "reset") == 0)
 		reset(argc, argv);
-	if (strcmp(cmd, "identify") == 0)
+	else if (strcmp(cmd, "identify") == 0)
 		identify(argc, argv);
-	if (strcmp(cmd, "lif_init") == 0)
+	else if (strcmp(cmd, "lif_init") == 0)
 		lif_init(argc, argv);
+	else if (strcmp(cmd, "vf") == 0)
+		vf_attr(argc, argv);
+	else if (strcmp(cmd, "dump") == 0)
+		dump_regs();
+	else
+		usage(argv);
 
-	munmap(regs, bar_size);
+	munmap(mapped, map_size);
 	close(fd);
 
 	return 0;
