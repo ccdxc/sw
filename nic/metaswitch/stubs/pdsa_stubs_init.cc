@@ -4,7 +4,7 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"

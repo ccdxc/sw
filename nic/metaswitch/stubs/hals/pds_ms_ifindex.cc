@@ -7,7 +7,8 @@
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
+using pdsa_stub::state_t;
 
 uint32_t 
 ms_to_pds_ifindex (uint32_t ms_ifindex)

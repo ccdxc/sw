@@ -14,7 +14,10 @@
 
 extern NBB_ULONG li_proc_id;
 
-namespace pdsa_stub {
+namespace pds_ms {
+
+using pdsa_stub::Error;
+using pdsa_stub::get_linux_intf_params;
 
 void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     ips_info_.ifindex = port_add_upd_ips->id.if_index;

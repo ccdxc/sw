@@ -3,7 +3,7 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
@@ -12,7 +12,10 @@
 
 extern NBB_ULONG li_proc_id;
 
-namespace pdsa_stub {
+namespace pds_ms {
+
+using pdsa_stub::Error;
+using pdsa_stub::convert_ipaddr_ms_to_pdsa;
 
 void li_vxlan_tnl::fetch_store_info_(pdsa_stub::state_t* state) {
     store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);

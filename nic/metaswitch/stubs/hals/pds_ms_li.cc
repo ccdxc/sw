@@ -3,7 +3,7 @@
 // PDSA Implementation of Metaswitch LI stub integration 
 //---------------------------------------------------------------
  
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
@@ -11,10 +11,14 @@
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
+
+using pdsa_stub::Error;
+using pdsa_stub::convert_ipaddr_ms_to_pdsa;
+using pdsa_stub::vrfname_2_vrfid;
 
 li_integ_subcomp_t* li_is () 
 {
@@ -27,7 +31,7 @@ li_integ_subcomp_t* li_is ()
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     try {
-        pdsa_stub::li_intf_t intf;
+        li_intf_t intf;
         intf.handle_add_upd_ips (port_add_upd_ips);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
@@ -39,7 +43,7 @@ NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_
 
 NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
      try {
-        pdsa_stub::li_intf_t intf;
+        li_intf_t intf;
         intf.handle_delete (port_ifindex);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Interface Delete processing failed %s", e.what());
@@ -72,7 +76,7 @@ NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
     try {
-        pdsa_stub::li_vxlan_tnl vxtnl;
+        li_vxlan_tnl vxtnl;
         vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd_ips);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
@@ -84,7 +88,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_t
      
 NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
     try {
-        pdsa_stub::li_vxlan_tnl vxtnl;
+        li_vxlan_tnl vxtnl;
         vxtnl.handle_delete (vxlan_tnl_ifindex);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Vxlan Tunnel Delete processing failed %s", e.what());

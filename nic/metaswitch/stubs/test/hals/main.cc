@@ -15,12 +15,13 @@ extern "C"
 #include <lipi.h>
 }
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
+#include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -174,7 +175,7 @@ TEST(pdsa_loopback_test, test) {
     pdsa_stub::convert_ipaddr_pdsa_to_ms (in_ip, &ip_addr.inet_addr);
 
     std::cout << "=== Loopback IP Add test ===" << std::endl;
-    pdsa_stub::li_is()->softwif_addr_set("lo1", &ip_addr,
+    pds_ms::li_is()->softwif_addr_set("lo1", &ip_addr,
                                          nullptr);
     sleep(1);
     auto fp = popen ("ip addr show dev lo to 39.0.0.1 | grep 39.0.0.1", "r");
@@ -190,7 +191,7 @@ TEST(pdsa_loopback_test, test) {
     ASSERT_TRUE (strcmp (buf,"") != 0) ;
 
     std::cout << "=== Loopback IP Delete test ===" << std::endl;
-    pdsa_stub::li_is()->softwif_addr_del("lo1", &ip_addr,
+    pds_ms::li_is()->softwif_addr_del("lo1", &ip_addr,
                                          nullptr);
     sleep(1);
     buf[0] = 0;
@@ -204,10 +205,42 @@ TEST(pdsa_loopback_test, test) {
     pclose (fp);
     ASSERT_TRUE (strcmp (buf,"") == 0) ;
 }
+
+TEST_F(pdsa_hals_test, underlay_ecmp_test) {
+    pdsa_test::load_underlay_ecmp_test();
+    auto test_input = pdsa_test::test_params()->test_input;
+    auto test_output = pdsa_test::test_params()->test_output;
+
+    // Initialize
+    std::vector<pdsa_test::nhinfo_t>   nexthops;
+    auto underlay_ecmp_input = dynamic_cast<pdsa_test::underlay_ecmp_input_params_t*>(test_input);
+    // Nexthop MS L3 Intf Index, Dest MAC
+    underlay_ecmp_input->init ({{0x10001, "00:05:56:54:57:58"},
+                                {0x20001, "00:06:66:64:67:68"}});
+    // Create
+    std::cout << "=== NH Create test ===" << std::endl;
+    test_output->expect_create();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Update
+    std::cout << "=== NH Update test ===" << std::endl;
+    test_input->modify(); // Delete 1 NH in group
+    test_output->expect_update();
+    test_input->trigger_update();
+    test_output->validate();
+
+    // Delete
+    std::cout << "=== NH Delete test ===" << std::endl;
+    test_output->expect_delete();
+    test_input->trigger_delete();
+    test_output->validate();
+}
+
+
 //----------------------------------------------------------------------------
 // Entry point
 //----------------------------------------------------------------------------
-
 int
 main (int argc, char **argv)
 {

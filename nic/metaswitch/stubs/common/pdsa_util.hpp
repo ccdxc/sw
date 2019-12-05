@@ -7,10 +7,12 @@
 #define __PDSA_UTIL_HPP__
 
 #include <nbase.h>
+extern "C" {
 #include <a0spec.h>
 #include <o0mac.h>
 #include <a0cust.h>
 #include <a0mib.h>
+}
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"

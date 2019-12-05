@@ -4,12 +4,12 @@
 //---------------------------------------------------------------
 
 #include <l2f_c_includes.hpp>
-#include "nic/metaswitch/stubs/hals/pdsa_l2f.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 // Class that implements the L2F Integration subcomponent interface 
-void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd)
+void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips)
 {
 }
 

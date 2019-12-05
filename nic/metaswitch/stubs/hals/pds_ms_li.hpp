@@ -13,7 +13,7 @@ extern "C"
 #include <lipi.h>
 }
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 class li_integ_subcomp_t {
 public:

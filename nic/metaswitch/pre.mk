@@ -49,6 +49,8 @@ MS_INCLPATH = \
 	code/stubs/hals/         \
 	code/stubs/smi           \
 	code/comn/l2             \
+	code/lim                 \
+	code/stubs/l2/unix       \
 	code/comn/worker         \
 	output/$(GMK_TARGETOS)
 

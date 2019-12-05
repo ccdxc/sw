@@ -10,7 +10,7 @@
 #include <hw_desc/smi_hw_desc.hpp>
 #include <vector>
 
-namespace pdsa_stub
+namespace pds_ms
 {
 // PDSA implementation of the SMI Hardware Description class.
 class pdsa_smi_hw_desc_t : public smi::HwDesc

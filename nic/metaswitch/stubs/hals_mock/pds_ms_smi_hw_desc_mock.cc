@@ -3,7 +3,7 @@
 // Mock SMI HW Description
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals_mock/pdsa_smi_hw_desc_mock.hpp"
+#include "nic/metaswitch/stubs/hals_mock/pds_ms_smi_hw_desc_mock.hpp"
 #include <lipi.h>
 #include <lim_smi_mac.hpp>
 

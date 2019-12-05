@@ -5,7 +5,7 @@
 
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 // Pegasus does not require any interfaces to be populated in Metaswitch.
 // Define mock APIs to satisfy the build since Pegasus image 

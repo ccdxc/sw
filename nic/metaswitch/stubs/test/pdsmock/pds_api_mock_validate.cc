@@ -17,6 +17,7 @@ pds_tep_mock_validate (const spec_t&  expected_pds,
             std::cout << "Rcvd: " << rcvd_pds.tep.key.id << std::endl;
             return false;
         }
+        return true;;
     }
     api_test::tep_feeder feeder;
     feeder.spec = expected_pds.tep; 
@@ -40,6 +41,7 @@ pds_nhgroup_mock_validate (const spec_t&  expected_pds,
             std::cout << "Rcvd: " << rcvd_pds.nhgroup.key.id << std::endl;
             return false;
         }
+        return true;;
     }
     api_test::nexthop_group_feeder feeder;
     feeder.spec = expected_pds.nhgroup;
@@ -63,6 +65,7 @@ pds_if_mock_validate (const spec_t&  expected_pds,
             std::cout << "Rcvd: " << rcvd_pds.intf.key.id << std::endl;
             return false;
         }
+        return true;;
     }
     api_test::if_feeder feeder;
     feeder.spec_feeder = expected_pds.intf; 

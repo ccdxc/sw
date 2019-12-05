@@ -6,7 +6,7 @@
 
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
 namespace pdsa_test {
@@ -35,16 +35,16 @@ public:
 
     void trigger_create(void) override {
         auto add_upd = generate_add_upd_ips();
-        pdsa_stub::li_is()->vxlan_add_update(&add_upd);
+        pds_ms::li_is()->vxlan_add_update(&add_upd);
     }
 
     void trigger_delete(void) override {
-        pdsa_stub::li_is()->vxlan_delete(tnl_ifindex);
+        pds_ms::li_is()->vxlan_delete(tnl_ifindex);
     }
 
     void trigger_update(void) override {
         auto add_upd = generate_add_upd_ips();
-        pdsa_stub::li_is()->vxlan_add_update(&add_upd);
+        pds_ms::li_is()->vxlan_add_update(&add_upd);
     }
     void modify(void) override {
         unh_dp_idx += 5;

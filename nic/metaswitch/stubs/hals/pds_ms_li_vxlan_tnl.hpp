@@ -22,7 +22,14 @@ extern "C"
 #include <lipi.h>
 }
 
-namespace pdsa_stub {
+namespace pds_ms {
+
+using pdsa_stub::ms_ifindex_t;
+using pdsa_stub::mac_addr_wr_t;
+using pdsa_stub::cookie_t;
+using pdsa_stub::pds_batch_ctxt_guard_t;
+using pdsa_stub::tep_obj_t;
+using pdsa_stub::if_obj_t;
 
 class li_vxlan_tnl {
 public:    

@@ -79,7 +79,7 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     // limInterfaceCfgTable - L3 interface for physical port
     // NetAgent will provide the HAL L3 IfIndex.
     // Mgmt Stub has to convert it to MS IfIndex
-    auto ms_ifindex = pdsa_stub::pds_to_ms_ifindex(conf.g_evpn_if_index);
+    auto ms_ifindex = pds_ms::pds_to_ms_ifindex(conf.g_evpn_if_index);
     SDK_TRACE_INFO ("Configuring uplink port %ld L3 IfIndex 0x%lx MS IfIndex 0x%lx",
                     ETH_IFINDEX_TO_PARENT_PORT(conf.g_evpn_if_index), conf.g_evpn_if_index, ms_ifindex);
     pdsa_test_row_update_lim_if_cfg (&conf,

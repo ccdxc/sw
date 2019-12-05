@@ -3,7 +3,7 @@
 // PDSA SMI HW description
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals/pdsa_smi_hw_desc.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_smi_hw_desc.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include <lipi.h>
@@ -61,11 +61,11 @@ create_hw_desc(void)
     // method set a bit in the memory.
     // Eve with this it asserts if there is a failure in the 
     // initial CTM transaction - need to look into this.
-    return (new pdsa_stub::pdsa_smi_hw_desc_t(initial_mac_address, total_macs));
+    return (new pds_ms::pdsa_smi_hw_desc_t(initial_mac_address, total_macs));
 }
 } // End namespace
 
-namespace pdsa_stub 
+namespace pds_ms 
 {
 pdsa_smi_hw_desc_t::pdsa_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_ADDR_LEN],
                      NBB_ULONG total_macs) :

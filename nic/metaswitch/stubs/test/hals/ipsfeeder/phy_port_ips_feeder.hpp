@@ -1,12 +1,12 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __VXLAN_IPS_FEEDER_HPP__
-#define __VXLAN_IPS_FEEDER_HPP__
+#ifndef __PHY_PORT_IPS_FEEDER_HPP__
+#define __PHY_PORT_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
 namespace pdsa_test {
@@ -33,16 +33,16 @@ public:
 
     void trigger_create(void) override {
         auto add_upd = generate_add_upd_ips();
-        pdsa_stub::li_is()->port_add_update(&add_upd);
+        pds_ms::li_is()->port_add_update(&add_upd);
     }
 
     void trigger_delete(void) override {
-        pdsa_stub::li_is()->port_delete(phy_port_ifindex);
+        pds_ms::li_is()->port_delete(phy_port_ifindex);
     }
 
     void trigger_update(void) override {
         auto add_upd = generate_add_upd_ips();
-        pdsa_stub::li_is()->port_add_update(&add_upd);
+        pds_ms::li_is()->port_add_update(&add_upd);
     }
     void modify(void) override {
         admin_state = !admin_state;

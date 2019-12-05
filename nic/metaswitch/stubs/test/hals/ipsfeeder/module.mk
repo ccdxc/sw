@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
+MODULE_PREREQS  = metaswitch.submake
 MODULE_TARGET   = libipsfeeder.so
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_ARCH     = x86_64

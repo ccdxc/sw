@@ -9,13 +9,14 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include <nbase.h>
+#include <lim_interface_index_base.hpp>
 extern "C" {
 #include <a0spec.h>
 #include <o0mac.h>
 #include <a0user.h>
 }
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 // Used in the HAL stubs to convert from MS IfIndex to PDS IfIndex    
 uint32_t ms_to_pds_ifindex(uint32_t ms_ifindex);
@@ -34,11 +35,16 @@ static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex) {
     return pds_ifindex & ~((IF_TYPE_MASK << IF_TYPE_SHIFT) | 
                            (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
 }
-    
+ 
 // Used at MS initialization to set up SMI HW Desc from the PDS catalog
 uint32_t pds_port_to_ms_ifindex_and_ifname(uint32_t port, std::string* ifname);
 
 static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
+    if (ms_ifindex >= lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE) {
+        // LIM allocated internsl MS interface
+        // eg - VXLAN tunnel, IRB etc
+        return IF_TYPE_NONE;
+    }
     // We only create UplinkL3 and LIF interfaces in Metaswitch
     // Assumptions: 
     // Eth Uplinks have parent port ID set in the 17th bit
@@ -46,6 +52,8 @@ static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
     if (ms_ifindex >= (1 << ETH_IF_PARENT_PORT_SHIFT)) {
         return IF_TYPE_L3;
     } 
+    //TODO: This assumes that LIFs are created as first-class interfaces
+    // in MS. Needs to be changed if LIFS are created as software interfaces
     return IF_TYPE_LIF;
 }
 

@@ -3,9 +3,9 @@
 // Mock implementation of Metaswitch LI stub integration 
 //---------------------------------------------------------------
  
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 li_integ_subcomp_t* li_is () 
 {

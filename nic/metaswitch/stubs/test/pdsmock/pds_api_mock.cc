@@ -21,10 +21,10 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
 
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include <thread>
 
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 

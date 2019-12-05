@@ -3,8 +3,8 @@
 //------------------------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/test/pdsmock/phy_port_pds_mock.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
-#include "nic/metaswitch/stubs/hals/pdsa_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/apollo/test/utils/if.hpp"

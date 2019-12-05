@@ -3,7 +3,7 @@
 // Initialize Stubs that drive the dataplane
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals/pdsa_hal_init.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
