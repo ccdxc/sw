@@ -128,6 +128,7 @@ func TestReconnect(t *testing.T) {
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 
 	config := log.GetDefaultConfig("vcprobe_test")
+	config.Filter = log.AllowAllFilter
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
@@ -160,6 +161,8 @@ func TestReconnect(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		doneCh <- false
 		t.Logf("Failed to receive all messages.")
+		t.Logf("host events: %v", eventMap[defs.HostSystem])
+		t.Logf("vm events: %v", eventMap[defs.VirtualMachine])
 		t.FailNow()
 	}
 
@@ -189,6 +192,8 @@ func TestReconnect(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		doneCh <- false
 		t.Logf("Failed to receive all messages.")
+		t.Logf("host events: %v", eventMap[defs.HostSystem])
+		t.Logf("vm events: %v", eventMap[defs.VirtualMachine])
 		t.FailNow()
 	}
 }
