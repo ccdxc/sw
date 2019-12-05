@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
@@ -84,8 +85,10 @@ func TestPcache(t *testing.T) {
 
 	// Update with correct value, pcache should call statemgr update
 	expWorkload.Labels["test"] = "test"
-	err = pCache.Set("Workload", expWorkload)
-	AssertOk(t, err, "Failed to write workload")
+
+	// Allow pcache retry goroutine enough time to push the completed object to StateManager
+	time.Sleep(3 * time.Second)
+
 	// Should no longer be in cache
 	entry = pCache.kinds["Workload"].entries[expMeta.GetKey()]
 	Assert(t, entry == nil, "Workload still in pcache")

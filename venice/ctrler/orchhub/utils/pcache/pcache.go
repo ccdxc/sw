@@ -34,6 +34,11 @@ import (
 * To add a kind, add to the switch case in the writeStatemgr, and deleteFromStateMgr methods
 */
 
+const (
+	// PCacheRetryInterval is the cadence of retry for pcache retries
+	PCacheRetryInterval = 1
+)
+
 type kindEntry struct {
 	sync.Mutex
 	entries map[string]interface{}
@@ -255,7 +260,7 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 func (p *PCache) Run() {
 	p.waitGrp.Add(1)
 	defer p.waitGrp.Done()
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(PCacheRetryInterval * time.Second)
 	inProgress := false
 
 	for {
