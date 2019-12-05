@@ -11,6 +11,8 @@
 #include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_common.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
 {{range .Services}}
 {{$svcname := .Name}}
@@ -38,7 +40,7 @@ Status
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_get_{{$struct | ToLower}}(proto_spec);
+        pdsa_get_{{$struct | ToLower}}(proto_spec, resp);
     }
     {{end}}
     PDSA_GET_SHARED_END();
@@ -51,13 +53,13 @@ Status
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_getall_{{$struct | ToLower}}(proto_spec);
+        pdsa_getall_{{$struct | ToLower}}(proto_spec, resp);
     }
     {{end}}
     PDSA_GET_SHARED_END();
   {{end}}
   {{if or (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
-    uint correlator = 0x100;
+    uint correlator = PDSA_CTM_GRPC_CORRELATOR;
     PDSA_START_TXN(correlator);
     //Create/Update request
     {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
@@ -72,7 +74,7 @@ Status
     {{end}}
     PDSA_END_TXN(correlator);
   {{end}}
-
+    pds_ms::mgmt_state_t::ms_response_wait();
     resp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     return Status::OK;
 } 

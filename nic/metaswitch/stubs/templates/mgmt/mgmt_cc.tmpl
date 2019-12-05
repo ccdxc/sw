@@ -15,6 +15,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_get_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
@@ -238,7 +239,6 @@
         /* Local Variables                                                         */
         /***************************************************************************/
         AMB_GET *v_amb_get;
-        pds::{{$msgName}}Response resp;
         NBB_LONG bulk_row;
         {{$struct}} *v_{{$struct | ToLower}};
 
@@ -251,11 +251,11 @@
         NBB_ASSERT_NUM_EQ(SHARED.saved_ips->ips_type, IPS_AMB_GET);
 
         v_amb_get = (AMB_GET *)SHARED.saved_ips;
+        pds::{{$msgName}}Response *resp = (pds::{{$msgName}}Response*)v_amb_get->correlator.pds_ms_resp_ctx;
         SHARED.saved_ips = NULL;
 
         if (v_amb_get->ret_code == AMB_RC_NO_ERROR)
         {
-            auto ent = resp.add_response();
             /*************************************************************************/
             /* This GET response contains entry from {{$struct}}                     */
             /*************************************************************************/
@@ -266,6 +266,7 @@
 
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
+                auto ent = resp->add_response();
                 /*************************************************************************/
                 /* TODO: Extract the fields.                                             */
                 /*************************************************************************/
@@ -368,6 +369,8 @@
             NBB_TRC_FLOW((NBB_FORMAT "End of table"));
             NBB_ASSERT_NUM_EQ(v_amb_get->ret_code, AMB_RC_END_OF_TABLE);
 
+            pds_ms::mgmt_state_t::ms_response_ready();
+            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
             /*************************************************************************/
             /* Free the buffer.                                                      */
             /*************************************************************************/
@@ -430,7 +433,7 @@
         NBB_TRC_EXIT();
     } /* pdsa_get_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -470,6 +473,8 @@
         v_amb_get->exact = ATG_YES;
         v_amb_get->get_next_object = ATG_NO;
 
+        v_amb_get->correlator.pds_ms_resp_ctx = (NBB_VOID*)resp;
+
         /***************************************************************************/
         /* Send AMB_GET.                                                           */
         /***************************************************************************/
@@ -497,7 +502,7 @@
         NBB_TRC_EXIT();
     } /* pdsa_getall_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -536,6 +541,8 @@
         /***************************************************************************/
         v_amb_get->exact = ATG_NO;
         v_amb_get->get_next_object = ATG_YES;
+
+        v_amb_get->correlator.pds_ms_resp_ctx = (NBB_VOID*)resp;
 
         /***************************************************************************/
         /* Send AMB_GET.                                                           */

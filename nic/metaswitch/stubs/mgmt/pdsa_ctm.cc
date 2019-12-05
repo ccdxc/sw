@@ -141,7 +141,9 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             NBB_ASSERT_INVALID_BRANCH;
             break;
     }
-
+    if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
+        pds_ms::mgmt_state_t::ms_response_ready();
+    }
     NBB_TRC_EXIT();
     return;
 }

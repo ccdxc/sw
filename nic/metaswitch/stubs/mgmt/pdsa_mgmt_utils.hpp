@@ -29,6 +29,7 @@ extern "C" {
 #include "gen/proto/types.pb.h"
 
 #define PDSA_CTM_CORRELATOR 0x100
+#define PDSA_CTM_GRPC_CORRELATOR 0x101
 #define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
 
 NBB_VOID  pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 

@@ -43,7 +43,7 @@ class Client {
         grpc::Status status = stub_->BGPPeerSpecCreate(&context, req, &res);
 
         if (status.ok()) {
-            std::cout << "created 1 entry" << std::endl;
+            std::cout << "inserted 1 more entry into peer table" << std::endl;
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;
@@ -95,7 +95,7 @@ class Client {
         grpc::Status status = stub_->BGPPeerSpecGetAll(&context, req, &res);
 
         if (status.ok()) {
-            std::cout << "got entire table" << std::endl;
+            std::cout << "got peer status table with " << res.response_size() << " entry" << std::endl;
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;
@@ -110,10 +110,10 @@ int main(int argc, char** argv) {
             grpc::InsecureChannelCredentials()));
 
 
+    client.peerGetAll();
     client.peerCreate();
-    sleep(5);
-    client.peerGet();
-    sleep(25);
+//    client.peerGet();
+//    sleep(25);
     client.peerGetAll();
 
     return 0;

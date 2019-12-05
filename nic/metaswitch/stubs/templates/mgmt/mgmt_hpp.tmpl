@@ -65,10 +65,10 @@ extern "C" {
     NBB_VOID pdsa_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
     NBB_VOID pdsa_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req);
+    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
     NBB_VOID pdsa_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req);
+    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
     {{end}}
   {{end}}
 {{end}}
