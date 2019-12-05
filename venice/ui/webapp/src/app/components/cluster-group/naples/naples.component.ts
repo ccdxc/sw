@@ -693,7 +693,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
                   oldObject: ClusterDistributedServiceCard,
                   successMsg: string,
                   actionType: string) {
-    const sub = this.clusterService.UpdateDistributedServiceCard(oldObject.meta.name, updatedObject, null, oldObject).subscribe(
+    delete updatedObject[NaplesComponent.NAPLES_FIELD_WORKLOADS]; // avoid hard code
+    const sub = this.clusterService.UpdateDistributedServiceCard(updatedObject.meta.name, updatedObject, null, oldObject).subscribe(
       () => {
         this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
           successMsg);
