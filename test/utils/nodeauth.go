@@ -9,12 +9,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/pensando/sw/api/generated/tokenauth"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 )
+
+const maxRetry = 5
 
 // GetNodeAuthToken fetches a node auth token from the supplied endpointURL
 // ctx must contain proper credentials
@@ -43,24 +47,38 @@ func GetNodeAuthToken(ctx context.Context, endpointURL string, audience []string
 
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: transport}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("Error sending request: %v", err)
+
+	reqToken := func() (string, error) {
+		resp, err := client.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("Error sending request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("server returned error, uri: %s, status: %s", uri, resp.Status)
+		}
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("Error reading response body: %v", err)
+		}
+		var tokenResp tokenauth.NodeTokenResponse
+		err = json.Unmarshal(respBody, &tokenResp)
+		if err != nil {
+			return "", fmt.Errorf("Error unmarshaling response body resp: %s: %v", string(respBody), err)
+		}
+		return tokenResp.Token, nil
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("server returned error, uri: %s, status: %s", uri, resp.Status)
+
+	for i := 0; i < maxRetry; i++ {
+		token, err := reqToken()
+		if err == nil {
+			return token, err
+		}
+
+		log.Errorf("%v, retry", err)
+		time.Sleep(time.Second)
 	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("Error reading response body: %v", err)
-	}
-	var tokenResp tokenauth.NodeTokenResponse
-	err = json.Unmarshal(respBody, &tokenResp)
-	if err != nil {
-		return "", fmt.Errorf("Error unmarshaling response body resp: %s: %v", string(respBody), err)
-	}
-	return tokenResp.Token, nil
+	return "", fmt.Errorf("retries exhausted to get token")
 }
 
 // GetNodeAuthTokenTempFile fetches a node auth token from the supplied endpointURL and save it to a temp file

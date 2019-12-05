@@ -624,7 +624,7 @@ func (md *MetadataMgr) createNewReplica(shard *Shard, nodeUUID string) (*Replica
 	// add the replica to the shard
 	err = shard.AddReplicas([]*Replica{repl})
 	if err != nil {
-		log.Errorf("Error adding replica %+v to shard %d. Err: %v", repl, shard.ShardID, err)
+		log.Errorf("Error adding replica %+v to shard %d. Err: %v, shard:%+v ", repl, shard.ShardID, err, shard)
 		return nil, err
 	}
 
