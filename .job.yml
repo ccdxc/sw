@@ -270,6 +270,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
   nic/vpp:
     - reference: nic/apollo
+    - reference: iota/test/standalone/sanity/apulu-linux
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:

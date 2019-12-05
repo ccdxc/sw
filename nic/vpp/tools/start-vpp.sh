@@ -12,6 +12,6 @@ export HAL_CONFIG_PATH=$NIC_DIR/conf/
 ulimit -c unlimited
 
 # FIX ME AND REMOVE ME
-sleep 5
+sleep 20
 
 exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp_3_workers.conf
