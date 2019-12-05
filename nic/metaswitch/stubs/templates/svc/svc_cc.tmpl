@@ -74,8 +74,7 @@ Status
     {{end}}
     PDSA_END_TXN(correlator);
   {{end}}
-    pds_ms::mgmt_state_t::ms_response_wait();
-    resp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
     return Status::OK;
 } 
 

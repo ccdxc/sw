@@ -360,6 +360,12 @@
             /* We are no longer responsible for incoming GETs.                       */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
+
+            /*************************************************************************/
+            /* Send response back to the caller.                                     */
+            /*************************************************************************/
+            pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OUT_OF_RESOURCE);
+            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
         }
         else
         {
@@ -369,8 +375,12 @@
             NBB_TRC_FLOW((NBB_FORMAT "End of table"));
             NBB_ASSERT_NUM_EQ(v_amb_get->ret_code, AMB_RC_END_OF_TABLE);
 
-            pds_ms::mgmt_state_t::ms_response_ready();
+            /*************************************************************************/
+            /* Send response back to the caller.                                     */
+            /*************************************************************************/
+            pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
             v_amb_get->correlator.pds_ms_resp_ctx = NULL;
+
             /*************************************************************************/
             /* Free the buffer.                                                      */
             /*************************************************************************/

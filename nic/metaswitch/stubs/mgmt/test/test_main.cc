@@ -96,6 +96,15 @@ class Client {
 
         if (status.ok()) {
             std::cout << "got peer status table with " << res.response_size() << " entry" << std::endl;
+            for (int i=0; i<res.response_size(); i++) {
+                auto resp = res.response(i);
+                std::cout << "vrfid: " << resp.vrfid() << std::endl;
+                std::cout << "peerport: " << resp.peerport() << std::endl;
+                std::cout << "localport: " << resp.localport() << std::endl;
+                std::cout << "ifid: " << resp.ifid() << std::endl;
+                std::cout << "adminen: " << resp.adminen() << std::endl;
+                std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
+            }
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;

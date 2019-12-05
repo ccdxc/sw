@@ -10,6 +10,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "gen/proto/types.pb.h"
 #include <mutex>
 #include <condition_variable>
 
@@ -50,17 +51,19 @@ public:
     
     // Blocking function call. To be used only from the grpc thread
     // context while waiting for the async response back from nbase
-    static void ms_response_wait(void) {
+    static types::ApiStatus ms_response_wait(void) {
         std::unique_lock<std::mutex> lock(g_cv_mtx_);
         g_cv_resp_.wait(lock, response_ready);
         g_response_ready_ = false;
+        return g_ms_response_;
     }
     
     // Called from the response method in the nbase thread context to
     // unblock the grpc thread
-    static void ms_response_ready(void) {
+    static void ms_response_ready(types::ApiStatus resp) {
         std::unique_lock<std::mutex> lock(g_cv_mtx_);
         g_response_ready_ = true;
+        g_ms_response_ = resp;
         g_cv_resp_.notify_all();
     }
 
@@ -79,6 +82,7 @@ private:
     static std::mutex g_cv_mtx_;
     static std::mutex g_state_mtx_;
     static std::condition_variable g_cv_resp_;
+    static types::ApiStatus g_ms_response_;
 
 private:
     mgmt_state_t(void) {}

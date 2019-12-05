@@ -93,7 +93,7 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 {
     NBB_TRC_ENTRY ("pdsa_ctm_rcv_transaction_done");
     NBB_ASSERT_PTR_NE (trans_done, NULL);
-
+    types::ApiStatus status;
     switch (trans_done->return_code)
     {
         case ATG_CPI_RC_OK:
@@ -108,10 +108,12 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
                     ctx.state()->nbase_thread()->set_ready(true);
                 }
             }
+            status = types::ApiStatus::API_STATUS_OK;
             break;
 
         case ATG_CPI_RC_INTERNAL_FAILURE:
             NBB_TRC_FLOW((NBB_FORMAT "ATG_CPI_RC_INTERNAL_FAILURE"));
+            status = types::ApiStatus::API_STATUS_ERR;
             break;
 
         case ATG_CPI_RC_APPLY_CFG_FAILURE:
@@ -119,30 +121,35 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             if (trans_done->return_subcode == AMB_RC_RESOURCE_UNAVAILABLE)
             {
                 NBB_TRC_FLOW((NBB_FORMAT "AMB_RC_RESOURCE_UNAVAILABLE"));
+                status = types::ApiStatus::API_STATUS_OUT_OF_RESOURCE;
             }
             else if ((trans_done->return_subcode == AMB_RC_WRONG_VALUE) ||
                     (trans_done->return_subcode == AMB_RC_INCONSISTENT_VALUE))
             {
                 NBB_TRC_FLOW((NBB_FORMAT "Wrong/inconsistent value"));
+                status = types::ApiStatus::API_STATUS_INVALID_ARG;
             }
             else
             {
                 NBB_TRC_FLOW((NBB_FORMAT "Config injection failure"));
+                status = types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED;
             }
             break;
 
         case ATG_CPI_RC_INCONSISTENT_STATE:
             NBB_TRC_FLOW((NBB_FORMAT "ATG_CPI_RC_INCONSISTENT_STATE"));
+            status = types::ApiStatus::API_STATUS_INVALID_ARG;
             break;
 
         default:
             NBB_TRC_FLOW((NBB_FORMAT "Unexpected return code %lu",
                         trans_done->return_code));
             NBB_ASSERT_INVALID_BRANCH;
+            status = types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED;
             break;
     }
     if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
-        pds_ms::mgmt_state_t::ms_response_ready();
+        pds_ms::mgmt_state_t::ms_response_ready(status);
     }
     NBB_TRC_EXIT();
     return;

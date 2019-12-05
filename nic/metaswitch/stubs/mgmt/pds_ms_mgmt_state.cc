@@ -13,6 +13,7 @@ bool mgmt_state_t::g_response_ready_ = false;
 std::mutex mgmt_state_t::g_cv_mtx_;
 std::mutex mgmt_state_t::g_state_mtx_;
 std::condition_variable mgmt_state_t::g_cv_resp_;
+types::ApiStatus mgmt_state_t::g_ms_response_;
 
 bool 
 mgmt_state_init (void)
