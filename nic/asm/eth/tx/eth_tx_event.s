@@ -55,11 +55,7 @@ eth_tx_event:
     //SAVE_STATS(_r_stats)
 
     // If exiting, just prepare the phv for the eth_tx_completion action.
-    //
-    // This program will exit, but table valid bits are not cleared here:
-    // the table valid bits are under control of tx, tx_sg, or tx_tso action,
-    // and that action will clear this table valid bit for the next stage.
-
+    phvwr           p.app_header_table2_valid, 0
     phvwr.!c7       p.eth_tx_t0_s2s_eq_desc_addr, _r_eq_desc
     phvwr.!c7.e     p.eth_tx_t0_s2s_intr_index, d.{intr_index}.hx
     phvwr.!c7       p.eth_tx_global_do_intr, d.{intr_enable}

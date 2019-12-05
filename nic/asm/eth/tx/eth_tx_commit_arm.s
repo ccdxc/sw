@@ -47,7 +47,7 @@ eth_tx_commit_arm_event:
   phvwri          p.eq_desc_intr_data, 0x01000000
 
   // Launch eth_tx_event action
-  phvwr           p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_2
+  phvwr           p.app_header_table2_valid, 0x1
   phvwr           p.common_te2_phv_table_addr, d.{intr_index_or_eq_addr}.dx
   phvwri          p.common_te2_phv_table_raw_table_size, LG2_EQ_QSTATE_SIZE
   phvwri.e        p.common_te2_phv_table_lock_en, 1

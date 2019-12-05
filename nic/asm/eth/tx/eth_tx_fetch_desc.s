@@ -10,8 +10,8 @@ struct tx_table_s0_t0_k_ k;
 struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 #define  _r_ci                r1    // Current CI
-#define  _r_stats             r2    // Stats
 #define  _r_desc_addr         r5    // Descriptor address
+//#define  _r_stats           r6    // Stats
 
 // DB macros use specific registers. Only used at the end, so no conflicts.
 #define  _r_dbval       r3    // Doorbell value must be r3
@@ -30,14 +30,11 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 .align
 eth_tx_fetch_desc:
-
 #ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
 #endif
-
-  // INIT_STATS(_r_stats)
 
   bbeq            d.enable, 0, eth_tx_queue_disabled
   // Use this phv to arm the cq, or do tx fetch?
@@ -47,7 +44,6 @@ eth_tx_fetch_desc:
   // If not arming, is there anything to transmit?
   sne             _c_tx, d.p_index0, d.c_index0 // BD Slot, for both
   bcf             [ !_c_tx ], eth_tx_queue_empty
-  // BD Slot: next instruction must not branch, and be careful of side-effects
 
   // Claim the descriptor
   add             _r_ci, r0, d.{c_index0}.hx
@@ -64,10 +60,8 @@ eth_tx_fetch_desc:
   sll             r7, _r_ci, d.lg2_desc_sz
   add             _r_desc_addr, d.{ring_base}.dx, r7
 
-  phvwr           p.eth_tx_to_s1_qstate_addr[33:0], k.p4_txdma_intr_qstate_addr
-
   // Setup Descriptor read for next stage
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0
   phvwri          p.common_te0_phv_table_lock_en, 0
   phvwri          p.common_te0_phv_table_pc, eth_tx_prep[38:6]
   phvwr.e         p.common_te0_phv_table_addr, _r_desc_addr

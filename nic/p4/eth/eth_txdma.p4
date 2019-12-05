@@ -166,7 +166,6 @@ header_type eth_sg_desc_d {
 header_type eth_tx_global_k {
     fields {
         dma_cur_index : 6;
-        sg_desc_addr : 64;
         sg_in_progress : 1;
         num_sg_elems : 4;
         tso_eot : 1;    // end of tso

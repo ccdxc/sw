@@ -283,6 +283,7 @@ def InitEthTxSgDescriptor(tc, obj, args=None):
 def InitEthTxTsoDescriptor(tc, obj, args=None):
     buf = tc.buffers.db[obj.buf]
     pkt = tc.packets.db[obj.pkt].spktobj.spkt
+    name = obj.id
     mss = int(obj.mss)
     nfrags = int(obj.nfrags)
 
@@ -318,7 +319,7 @@ def InitEthTxTsoDescriptor(tc, obj, args=None):
         #     (op=TSO, flags=EOT, nsge=0, addr=0xffd9b110, len=0x5a8, hdrlen=0x42, mss=0x5a8)
 
         desc = EthTxDescriptorObject()
-        desc.GID('DESC%d' % i)
+        desc.GID('%s_%d' % (name, i))
         desc.fields = dict()
         desc.fields['opcode'] = TxOpcodeEnum['TXQ_DESC_OPCODE_TSO']
         desc.fields['csum_l3_or_sot'] = sot
@@ -345,14 +346,14 @@ def InitEthTxTsoDescriptor(tc, obj, args=None):
         if nfrags == 0:
             desc.fields['num_sg_elems'] = 0
             desc.fields['len'] = seg_bytes_rem
-            seg_bytes_rem -= seg_bytes_rem
             addr += seg_bytes_rem
+            seg_bytes_rem -= seg_bytes_rem
         else:
             # we should be able to get atleast one byte per fragment
             assert seg_bytes_rem >= (nfrags + 1)
             desc.fields['num_sg_elems'] = nfrags
             desc._sgelems = [None] * nfrags
-            print('DESC%d' % i, nfrags)
+            # print('DESC%d' % i, nfrags)
             if sot:
                 frag_sz = (seg_bytes_rem - hdr_len) // nfrags
                 desc.fields['len'] = hdr_len    # header is indivisible
@@ -367,7 +368,7 @@ def InitEthTxTsoDescriptor(tc, obj, args=None):
             frag_idx = 0
             while seg_bytes_rem > 0:
                 frag_sz = seg_bytes_rem if frag_idx == nfrags - 1 else frag_sz
-                print('DESC%d/FRAG%d' % (i, frag_idx))
+                # print('DESC%d/FRAG%d' % (i, frag_idx))
                 desc._sgelems[frag_idx] = EthTxSgElement(addr=addr, len=frag_sz)
                 frag_idx += 1
                 seg_bytes_rem -= frag_sz

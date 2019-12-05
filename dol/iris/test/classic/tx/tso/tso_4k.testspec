@@ -72,7 +72,15 @@ buffers:
             data : ref://testcase/packets/id=PKT1/rawbytes
 
 descriptors:
-    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC1,buf=BUF1,pkt=PKT1,mss=1448,nfrags=0
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC2,buf=BUF1,pkt=PKT1,mss=1448,nfrags=1
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC3,buf=BUF1,pkt=PKT1,mss=1448,nfrags=4
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC4,buf=BUF1,pkt=PKT1,mss=1448,nfrags=5
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC5,buf=BUF1,pkt=PKT1,mss=1448,nfrags=8
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC6,buf=BUF1,pkt=PKT1,mss=1448,nfrags=9
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC7,buf=BUF1,pkt=PKT1,mss=1448,nfrags=12
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC8,buf=BUF1,pkt=PKT1,mss=1448,nfrags=13
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC9,buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
     - descriptor:
         id      : EXP_DESC1 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
@@ -84,10 +92,10 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
+                    object  : ref://testcase/descriptors/id=DESC1_1
                     ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC2
+                    object  : ref://testcase/descriptors/id=DESC1_2
                     ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
         expect:
             delay   : callback://networking/packets/GetExpectDelay
@@ -107,7 +115,280 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC3
+                    object  : ref://testcase/descriptors/id=DESC1_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC4_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC4_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC4_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC5_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC5_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC5_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC6_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC6_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC6_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC7_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC7_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC7_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC8_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC8_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC8_3
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT3
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # first tso descriptors
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC9_1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC9_2
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            descriptors:
+                - descriptor:
+                    negtest : True # no completion (yet)
+                    object  : ref://testcase/descriptors/id=EXP_DESC1
+                    ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT1
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT2
+                    port    : callback://networking/fwmode/GetTxExpectedPorts
+    - step: # last tso descriptor, with completion
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC9_3
                     ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
         expect:
             delay   : callback://networking/packets/GetExpectDelay

@@ -61,6 +61,7 @@ eth_tx_completion_interrupt:
 
     addi            _r_intr_addr, r0, INTR_ASSERT_BASE
     add             _r_intr_addr, _r_intr_addr, k.eth_tx_t0_s2s_intr_index, LG2_INTR_ASSERT_STRIDE
+    phvwri          p.eq_desc_intr_data, 0x01000000
 
     // DMA Interrupt
     DMA_CMD_PTR(_r_ptr, _r_index, r7)

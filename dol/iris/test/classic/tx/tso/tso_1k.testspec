@@ -78,7 +78,15 @@ buffers:
             data : ref://testcase/packets/id=PKT1/rawbytes
 
 descriptors:
-    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC1,buf=BUF1,pkt=PKT1,mss=1448,nfrags=0
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC2,buf=BUF1,pkt=PKT1,mss=1448,nfrags=1
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC3,buf=BUF1,pkt=PKT1,mss=1448,nfrags=4
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC4,buf=BUF1,pkt=PKT1,mss=1448,nfrags=5
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC5,buf=BUF1,pkt=PKT1,mss=1448,nfrags=8
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC6,buf=BUF1,pkt=PKT1,mss=1448,nfrags=9
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC7,buf=BUF1,pkt=PKT1,mss=1448,nfrags=12
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC8,buf=BUF1,pkt=PKT1,mss=1448,nfrags=13
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC9,buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
     - descriptor:
         id      : EXP_DESC1 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
@@ -88,7 +96,31 @@ descriptors:
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
+            object  : ref://testcase/descriptors/id=DESC1_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC3_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC4_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC5_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC6_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC7_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC8_1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC9_1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
@@ -98,8 +130,56 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC1
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
     packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : callback://networking/fwmode/GetTxExpectedPorts
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT1
             port    : callback://networking/fwmode/GetTxExpectedPorts

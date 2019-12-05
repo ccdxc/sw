@@ -15,20 +15,21 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 .param  eth_tx_commit
 .param  eth_tx_commit_tso
 
+#define  _c_cq            c1  // Generate completion
 #define  _c_sg            c2  // SG
 #define  _c_tso           c3  // TSO
 
-#define  _r_t1            r2  // Opcode processing register
-#define  _r_t2            r3  // Opcode processing register
-#define  _r_stats         r6  // Stats
+#define  _r_t1            r1  // Opcode processing register
+#define  _r_t2            r2  // Opcode processing register
+#define  _r_tbl_size      r3  // Table size
+// #define  _r_stats         r6  // Stats
 
 
 .align
 eth_tx_prep:
-  LOAD_STATS(_r_stats)
+  // LOAD_STATS(_r_stats)
 
   bcf         [c2 | c3 | c7], eth_tx_prep_error
-  nop
 
   // Set intrinsics
 #ifndef GFT
@@ -59,16 +60,16 @@ eth_tx_prep:
   seq         _c_tso, r7[1:0], TXQ_DESC_OPCODE_TSO
   .brcase TXQ_DESC_OPCODE_CSUM_NONE
       b             eth_tx_opcode_done
-      phvwri        p.eth_tx_global_do_cq, 1
+      setcf         _c_cq, [c0]
   .brcase TXQ_DESC_OPCODE_CSUM_PARTIAL
       b             eth_tx_calc_csum
-      phvwri        p.eth_tx_global_do_cq, 1
+      setcf         _c_cq, [c0]
   .brcase TXQ_DESC_OPCODE_CSUM_TCPUDP
       b             eth_tx_calc_csum_tcpudp
-      phvwri        p.eth_tx_global_do_cq, 1
+      setcf         _c_cq, [c0]
   .brcase TXQ_DESC_OPCODE_TSO
       b             eth_tx_opcode_tso
-      phvwr         p.eth_tx_global_do_cq, d.{csum_l4_or_eot}
+      seq           _c_cq, d.csum_l4_or_eot, 1
 .brend
   // SET_STAT(_r_stats, _C_TRUE, desc_opcode_invalid)
   b               eth_tx_opcode_done
@@ -143,17 +144,18 @@ eth_tx_prep_done_no_tso:
   phvwr._c_sg     p.eth_tx_global_num_sg_elems, d.num_sg_elems
   // SET_STAT(_r_stats, _c_sg, oper_sg)
 
+  phvwri._c_cq    p.eth_tx_global_do_cq, 1
+
   // SAVE_STATS(_r_stats)
 
   // Launch commit stage
+  phvwri          p.app_header_table0_valid, 1
   phvwri          p.common_te0_phv_table_lock_en, 1
   phvwrpair.e     p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
   phvwri.f        p.common_te0_phv_table_pc, eth_tx_commit[38:6]
 
 eth_tx_prep_error:
-  SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
-
-  SAVE_STATS(_r_stats)
+  phvwri          p.eth_tx_global_stats[STAT_desc_fetch_error], 1
 
   // Don't drop the phv, because, we have claimed a descriptor.
   // Generate an error completion.

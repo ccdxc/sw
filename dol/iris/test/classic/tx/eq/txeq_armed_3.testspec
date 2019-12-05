@@ -75,7 +75,7 @@ buffers:
             data : ref://testcase/packets/id=PKT1/rawbytes
 
 descriptors:
-    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
+    - callback: callback://eth/callbacks/InitEthTxTsoDescriptor/id=DESC1,buf=BUF1,pkt=PKT1,mss=1448,nfrags=15
 
     - descriptor:
         id      : EXP_DESC1
@@ -106,7 +106,7 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
+                    object  : ref://testcase/descriptors/id=DESC1_1
                     ring    : ref://testcase/pvtdata/queue
         expect:
             delay   : callback://networking/packets/GetExpectDelay
@@ -129,7 +129,7 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC2
+                    object  : ref://testcase/descriptors/id=DESC1_2
                     ring    : ref://testcase/pvtdata/queue
         expect:
             delay   : callback://networking/packets/GetExpectDelay

@@ -264,7 +264,6 @@
 
 #define MODIFY_ETH_TX_GLOBAL \
     modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index); \
-    modify_field(eth_tx_global_scratch.sg_desc_addr, eth_tx_global.sg_desc_addr); \
     modify_field(eth_tx_global_scratch.sg_in_progress, eth_tx_global.sg_in_progress); \
     modify_field(eth_tx_global_scratch.num_sg_elems, eth_tx_global.num_sg_elems); \
     modify_field(eth_tx_global_scratch.tso_sot, eth_tx_global.tso_sot); \
