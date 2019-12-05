@@ -40,6 +40,9 @@ function generateHelpDocs(config) {
         converter.makeHtml(md);
         var metadata = converter.getMetadata();
         var id = metadata.id;
+        if (id == null) {
+            console.error("id was null for file " + entry.output);
+        }
         id = metadata.id.replace(/\s/g, '');
         id = id.replace(/\r?\n|\r/g, '');
         refMap[id] = path.join(config.htmlLinkBase, entry.filePath.split('.').slice(0, -1).join('.')) + '.html';

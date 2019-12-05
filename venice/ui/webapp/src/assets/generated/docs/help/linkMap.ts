@@ -7,6 +7,7 @@ export const HelpLinkMap: { [id: string]: string } = {
   "hosts" : "/assets/generated/docs/help/hosts.html",
   "ldap" : "/assets/generated/docs/help/ldap.html",
   "metrics" : "/assets/generated/docs/help/metrics.html",
+  "mirrorsessions" : "/assets/generated/docs/help/mirrorsessions.html",
   "policies" : "/assets/generated/docs/help/policies.html",
   "radius" : "/assets/generated/docs/help/radius.html",
   "securitygroups" : "/assets/generated/docs/help/securitygroups.html",

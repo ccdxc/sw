@@ -1,5 +1,5 @@
 <h2 id="flowexport">Flow Export</h2>
-<p>Venice allows to send specific flows to an external destination flow collector supporting IPFIX format. Users can send the flows to multiple destination flow collectors.  To configure the flow export, the following are the configuration parameters.</p>
+<p>Venice allows to send specific flows to an external destination flow collector supporting IPFIX format.  Users can send the flows to multiple destination flow collectors.  To configure the flow export, the following are the configuration parameters.</p>
 <table>
 <thead>
 <tr>
@@ -22,7 +22,7 @@
 </tr>
 </tbody>
 </table>
-<h6 id="matchrules">Match Rules</h6>
+<h6 id="exportpacketif">Export Packet If</h6>
 <p>This is the filters for the flow export. Packets will only be exported if they match these rules.</p>
 <table>
 <thead>
@@ -89,3 +89,27 @@
 </tr>
 </tbody>
 </table>
+<h2 id="example">Example:</h2>
+<p><strong>Name:</strong> Splunk</p>
+<p><strong>Interval:</strong> 10s</p>
+<p><strong>Template Refresh:</strong> 5m</p>
+<p><strong>Export Packet If:</strong></p>
+<pre><code>- Source
+    - IP Address: 10.29.30.0/24
+    - Mac Address:
+
+- Destination
+    - IP Address: 10.29.31.0/24
+    - Mac Address:
+
+- App/Ports
+    - Apps:
+    - Protocol/Ports: tcp/80
+</code></pre>
+<p><strong>Export Configuration</strong></p>
+<pre><code>- Format: ipfix
+
+- Target
+    - Destination: 10.29.30.22
+    - Transport: udp/4739
+</code></pre>
