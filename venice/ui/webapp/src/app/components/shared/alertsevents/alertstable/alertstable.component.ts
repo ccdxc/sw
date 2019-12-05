@@ -245,6 +245,15 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     this.filterAlerts();
   }
 
+  getAlertSourceNameLink(rowData: MonitoringAlert): string {
+    return '#/' + Utility.genSelfLinkUIRoute(rowData.status['object-ref'].kind, rowData.status.source['node-name']);
+  }
+
+  getAlertSourceNameTooltip(rowData: MonitoringAlert): string {
+    const cat = rowData.status['object-ref'].kind;
+    return 'Go to ' + (cat ? cat.toLowerCase() + ' ' : '') + 'details page';
+  }
+
   setAlertsTimeRange(timeRange: TimeRange) {
     // update query and call getEvents
     setTimeout(() => {
@@ -257,7 +266,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     }, 0);
   }
 
-  displayColumn(data, col): any {
+  displayColumn(data: MonitoringAlert, col: TableCol): any {
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;

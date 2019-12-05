@@ -25,7 +25,9 @@
     <div>
       <span
             class="alertlistitem-display-text-small alertlistitem-user">{{alert.status.source.component}}
-        {{alert.status.source['node-name']}} {{alert.status['object-ref'].kind}}</span>
+        <a href="{{getAlertItemSourceNameLink()}}" [matTooltip]="getAlertItemSourceNameTooltip()"
+           (click)="onAlertItemSourceNameClick()">{{alert.status.source['node-name']}}</a>
+        {{alert.status['object-ref'].kind}}</span>
       <span
             class="alertlistitem-display-text-small alertlistitem-time">{{alert.meta['creation-time']| PrettyDate }}</span>
     </div>

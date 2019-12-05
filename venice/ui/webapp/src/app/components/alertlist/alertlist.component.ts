@@ -20,6 +20,7 @@ import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_sever
 })
 export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   @Input() data: ReadonlyArray<MonitoringAlert> = [];
+  @Output() alertsClose: EventEmitter<any> = new EventEmitter();
   @Output() expandAllAlertsClick: EventEmitter<any> = new EventEmitter();
 
   // match MonitoringAlertStatus_severity
@@ -128,6 +129,10 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
    */
   onAlertClick(changedAlert) {
     // console.log("AlertlistComponent.onAlertClick() alert " + changedAlert.id + " is acknowledged");
+  }
+
+  onAlertSourceNameClick() {
+    this.alertsClose.emit();
   }
 
   /**

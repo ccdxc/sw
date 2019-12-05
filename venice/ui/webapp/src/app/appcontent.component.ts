@@ -651,6 +651,11 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   isAlertInOpenState(alert: MonitoringAlert): boolean {
     return (alert.spec.state === 'open');
   }
+
+  onAlertsClose() {
+    this._rightSideNav.close();
+  }
+
   /**
    * This API serves html template
    * It response to user request of expanding all alerts (in RHS alert-list panel)

@@ -222,6 +222,7 @@
 <ng-template #sideNavNotification let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
     <app-alertlist *ngIf="alerts" [data]="alerts"
+                   (alertsClose)="onAlertsClose()"
                    (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
   </div>
 </ng-template>

@@ -24,6 +24,7 @@
   <div class="alertlist-items-div">
     <ng-container *ngFor="let alert of alerts ">
       <app-alertlistitem [data]="alert" (alertClick)="onAlertClick(alert)"
+                         (alertSourceNameClick)="onAlertSourceNameClick()"
                          *ngIf="isToShowThisAlert(alert)"></app-alertlistitem>
     </ng-container>
   </div>

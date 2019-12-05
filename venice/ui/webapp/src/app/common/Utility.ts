@@ -1019,8 +1019,9 @@ export class Utility {
     cat = (cat) ? cat.toLowerCase() : '';
     switch (kind) {
       case 'Cluster':
-      case 'Node':
         return cat + '/cluster';
+      case 'Node':
+        return cat + '/cluster' + (name ? '/' + name : '');
       case 'DistributedServiceCard':
         return cat + '/naples';
       case 'Host':

@@ -62,6 +62,7 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   @Input() data;
 
   @Output() alertClick: EventEmitter<any> = new EventEmitter();
+  @Output() alertSourceNameClick: EventEmitter<any> = new EventEmitter();
 
 
   alert;
@@ -103,4 +104,16 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
     this.alertClick.emit(this.alert);
   }
 
+  onAlertItemSourceNameClick() {
+    this.alertSourceNameClick.emit();
+  }
+
+  getAlertItemSourceNameLink(): string {
+    return '#/' + Utility.genSelfLinkUIRoute(this.alert.status['object-ref'].kind, this.alert.status.source['node-name']);
+  }
+
+  getAlertItemSourceNameTooltip(): string {
+    const cat = this.alert.status['object-ref'].kind;
+    return 'Go to ' + (cat ? cat.toLowerCase() + ' ' : '') + 'details page';
+  }
 }

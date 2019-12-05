@@ -123,7 +123,9 @@
     </ng-container>
     <ng-container *ngSwitchCase="'status.source'">
       <div *ngIf="rowData.status.source != null" style="display: inline">
-        {{ rowData.status.source['node-name'] }} : {{ rowData.status.source.component }}
+        <a href="{{getAlertSourceNameLink(rowData)}}"
+           [matTooltip]="getAlertSourceNameTooltip(rowData)">{{ rowData.status.source['node-name'] }}</a>
+        : {{ rowData.status.source.component }}
       </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
