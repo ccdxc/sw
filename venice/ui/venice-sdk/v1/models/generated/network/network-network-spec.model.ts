@@ -9,6 +9,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { NetworkNetworkSpec_type,  } from './enums';
 import { NetworkRDSpec, INetworkRDSpec } from './network-rd-spec.model';
+import { NetworkOrchestratorInfo, INetworkOrchestratorInfo } from './network-orchestrator-info.model';
 
 export interface INetworkNetworkSpec {
     'type': NetworkNetworkSpec_type;
@@ -21,6 +22,7 @@ export interface INetworkNetworkSpec {
     'virtual-router'?: string;
     'ipam-policy'?: string;
     'route-imoport-export'?: INetworkRDSpec;
+    'orchestrators'?: Array<INetworkOrchestratorInfo>;
 }
 
 
@@ -45,6 +47,8 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     'ipam-policy': string = null;
     /** RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported. */
     'route-imoport-export': NetworkRDSpec = null;
+    /** If supplied, this network will only be applied to the orchestrators specified. */
+    'orchestrators': Array<NetworkOrchestratorInfo> = null;
     public static propInfo: { [prop in keyof INetworkNetworkSpec]: PropInfoItem } = {
         'type': {
             enum: NetworkNetworkSpec_type,
@@ -98,6 +102,11 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             required: false,
             type: 'object'
         },
+        'orchestrators': {
+            description:  'If supplied, this network will only be applied to the orchestrators specified.',
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -123,6 +132,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['route-imoport-export'] = new NetworkRDSpec();
+        this['orchestrators'] = new Array<NetworkOrchestratorInfo>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -200,6 +210,11 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
         } else {
             this['route-imoport-export'].setValues(null, fillDefaults);
         }
+        if (values) {
+            this.fillModelArray<NetworkOrchestratorInfo>(this, 'orchestrators', values['orchestrators'], NetworkOrchestratorInfo);
+        } else {
+            this['orchestrators'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -217,10 +232,18 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
                 'virtual-router': CustomFormControl(new FormControl(this['virtual-router']), NetworkNetworkSpec.propInfo['virtual-router']),
                 'ipam-policy': CustomFormControl(new FormControl(this['ipam-policy']), NetworkNetworkSpec.propInfo['ipam-policy']),
                 'route-imoport-export': CustomFormGroup(this['route-imoport-export'].$formGroup, NetworkNetworkSpec.propInfo['route-imoport-export'].required),
+                'orchestrators': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<NetworkOrchestratorInfo>('orchestrators', this['orchestrators'], NetworkOrchestratorInfo);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('route-imoport-export') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('route-imoport-export').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('orchestrators') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('orchestrators').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -243,6 +266,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             this._formGroup.controls['virtual-router'].setValue(this['virtual-router']);
             this._formGroup.controls['ipam-policy'].setValue(this['ipam-policy']);
             this['route-imoport-export'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<NetworkOrchestratorInfo>(this, 'orchestrators', this['orchestrators'], NetworkOrchestratorInfo);
         }
     }
 }

@@ -322,8 +322,9 @@ func (s *snetworkNetworkBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 		}),
 
-		"network.NetworkSpec":   apisrvpkg.NewMessage("network.NetworkSpec"),
-		"network.NetworkStatus": apisrvpkg.NewMessage("network.NetworkStatus"),
+		"network.NetworkSpec":      apisrvpkg.NewMessage("network.NetworkSpec"),
+		"network.NetworkStatus":    apisrvpkg.NewMessage("network.NetworkStatus"),
+		"network.OrchestratorInfo": apisrvpkg.NewMessage("network.OrchestratorInfo"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

@@ -57,6 +57,7 @@ export * from './network-network-interface-uplink-status.model';
 export * from './network-network-list.model';
 export * from './network-network-spec.model';
 export * from './network-network-status.model';
+export * from './network-orchestrator-info.model';
 export * from './network-pause-spec.model';
 export * from './network-rd-spec.model';
 export * from './network-route.model';

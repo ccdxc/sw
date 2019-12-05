@@ -118,3 +118,37 @@ func EncodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (int
 func DecodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPOrchestratorInfo(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPOrchestratorInfo(_ context.Context, r *http.Request) (interface{}, error) {
+	var req OrchestratorInfo
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqOrchestratorInfo encodes GRPC request
+func EncodeGrpcReqOrchestratorInfo(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OrchestratorInfo)
+	return req, nil
+}
+
+// DecodeGrpcReqOrchestratorInfo decodes GRPC request
+func DecodeGrpcReqOrchestratorInfo(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OrchestratorInfo)
+	return req, nil
+}
+
+// EncodeGrpcRespOrchestratorInfo encodes GRC response
+func EncodeGrpcRespOrchestratorInfo(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespOrchestratorInfo decodes GRPC response
+func DecodeGrpcRespOrchestratorInfo(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

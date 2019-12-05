@@ -65,6 +65,13 @@
       "Field": "IPAMPolicy"
     }
   ],
+  "network.OrchestratorInfo": [
+    {
+      "Type": "NamedRef",
+      "To": "orchestration/Orchestrator",
+      "Field": "Name"
+    }
+  ],
   "network.Route": [
     {
       "Type": "WeakRef",

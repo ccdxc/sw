@@ -27,6 +27,7 @@
 		Network
 		NetworkSpec
 		NetworkStatus
+		OrchestratorInfo
 		NetworkInterface
 		NetworkInterfaceHostStatus
 		NetworkInterfaceSpec

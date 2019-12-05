@@ -137,6 +137,27 @@ func (m *NetworkStatus) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *OrchestratorInfo) Clone(into interface{}) (interface{}, error) {
+	var out *OrchestratorInfo
+	var ok bool
+	if into == nil {
+		out = &OrchestratorInfo{}
+	} else {
+		out, ok = into.(*OrchestratorInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*OrchestratorInfo))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *OrchestratorInfo) Defaults(ver string) bool {
+	return false
+}
+
 // Validators and Requirements
 
 func (m *Network) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -257,6 +278,19 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "orchestrators"
+
+		for _, v := range m.Orchestrators {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "virtual-router"
 		uref, ok := resp[tag]
 		if !ok {
@@ -327,6 +361,41 @@ func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 }
 
 func (m *NetworkStatus) Normalize() {
+
+}
+
+func (m *OrchestratorInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "orchestrator-name"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Orchestrator",
+			}
+		}
+
+		if m.Name != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/orchestration/"+"orchestrator/"+m.Name)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
+func (m *OrchestratorInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *OrchestratorInfo) Normalize() {
 
 }
 

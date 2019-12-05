@@ -11,6 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
 
+import "github.com/pensando/sw/api/protos/orchestration.proto";
 import "tenant.proto";
 import "route.proto";
 import "smartnic.proto";
@@ -45,6 +46,16 @@ message NetworkSpec {
     string IPAMPolicy = 9 [(gogoproto.jsontag) = "ipam-policy,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/IPAMPolicy"}];
     // RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.
     RDSpec RouteImportExport  = 10 [(gogoproto.jsontag) = "route-imoport-export,omitempty"];
+    // If supplied, this network will only be applied to the orchestrators specified.
+    repeated OrchestratorInfo Orchestrators = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orchestrators,omitempty"];
+}
+
+message OrchestratorInfo {
+    // Name of Orchestrator object to which this network should be applied to
+    string Name      = 1 [(gogoproto.jsontag) = "orchestrator-name, omitempty",
+                                 (venice.objRelation) = {Type: "NamedRef", To: "orchestration/Orchestrator"}];
+    // Namespace in the orchestrator in which this network should be created in.
+    string Namespace = 2 [(gogoproto.jsontag) = "namespace, omitempty"];
 }
 
 // status part of network object

@@ -8184,6 +8184,13 @@
         "route-imoport-export": {
           "$ref": "#/definitions/networkRDSpec",
           "description": "RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported."
+        },
+        "orchestrators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkOrchestratorInfo"
+          },
+          "description": "If supplied, this network will only be applied to the orchestrators specified."
         }
       },
       "title": "spec part of network object"
@@ -8229,6 +8236,19 @@
         }
       },
       "title": "Network represents a subnet"
+    },
+    "networkOrchestratorInfo": {
+      "type": "object",
+      "properties": {
+        "orchestrator-name": {
+          "type": "string",
+          "title": "Name of Orchestrator object to which this network should be applied to"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace in the orchestrator in which this network should be created in."
+        }
+      }
     },
     "networkPauseSpec": {
       "type": "object",

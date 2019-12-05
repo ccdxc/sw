@@ -65,6 +65,7 @@ var typesMapNetwork = map[string]*api.Struct{
 			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":                 api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":            api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"orchestrator-name":    api.CLIInfo{Path: "Spec.Orchestrators[].Name", Skip: false, Insert: "", Help: ""},
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
@@ -98,6 +99,8 @@ var typesMapNetwork = map[string]*api.Struct{
 			"IPAMPolicy": api.Field{Name: "IPAMPolicy", CLITag: api.CLIInfo{ID: "ipam-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipam-policy", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"RouteImportExport": api.Field{Name: "RouteImportExport", CLITag: api.CLIInfo{ID: "route-imoport-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-imoport-export", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RDSpec"},
+
+			"Orchestrators": api.Field{Name: "Orchestrators", CLITag: api.CLIInfo{ID: "orchestrators", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orchestrators", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.OrchestratorInfo"},
 		},
 	},
 	"network.NetworkStatus": &api.Struct{
@@ -108,6 +111,14 @@ var typesMapNetwork = map[string]*api.Struct{
 			"AllocatedIPv4Addrs": api.Field{Name: "AllocatedIPv4Addrs", CLITag: api.CLIInfo{ID: "allocated-ipv4-addrs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "allocated-ipv4-addrs", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 
 			"Handle": api.Field{Name: "Handle", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
+		},
+	},
+	"network.OrchestratorInfo": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrchestratorInfo{}) },
+		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "orchestrator-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orchestrator-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }
