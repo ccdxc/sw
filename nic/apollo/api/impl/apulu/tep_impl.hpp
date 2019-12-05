@@ -121,6 +121,22 @@ public:
                                   pds_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief      re-activate config in the hardware stage 0 tables relevant
+    ///             to this object, if any, this reactivation must be based on
+    ///             existing state and any of the state present in the dirty
+    ///             object list (like clone objects etc.) only and not directly
+    ///             on db objects
+    // \param[in]   api_obj API object being activated
+    /// \param[in]  api_op API operation
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    // NOTE: this method is called when an object is in the dependent/puppet
+    //       object list
+    virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
+                                    api_op_t api_op) override {
+        // TODO: real implementation will come later based on pipeline layout
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief     return h/w index for this TEP
     /// \return    h/w table index for this TEP
     uint16_t hw_id(void) const { return hw_id_; }

@@ -166,6 +166,9 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
                       spec->nh_type, spec->key.id);
         SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
     }
+    if (spec->encap.type != PDS_ENCAP_TYPE_NONE) {
+        tep_data.tunnel_action.vni = spec->encap.val.value;
+    }
     if (spec->remote_ip.af == IP_AF_IPV4) {
         tep_data.tunnel_action.ip_type = IPTYPE_IPV4;
         memcpy(tep_data.tunnel_action.dipo, &spec->remote_ip.addr.v4_addr,

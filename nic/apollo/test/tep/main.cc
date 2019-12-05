@@ -247,8 +247,10 @@ TEST_F(tep_test, tep_workflow_7) {
 
 /// \brief TEP WF_8
 /// \ref WF_8
-TEST_F(tep_test, DISABLED_tep_workflow_8) {
+TEST_F(tep_test, tep_workflow_8) {
     tep_feeder feeder1, feeder1A, feeder1B;
+
+    if (!apulu()) return;
 
     if (artemis()) {
         feeder1.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,
@@ -279,8 +281,10 @@ TEST_F(tep_test, DISABLED_tep_workflow_8) {
 
 /// \brief TEP WF_9
 /// \ref WF_9
-TEST_F(tep_test, DISABLED_tep_workflow_9) {
+TEST_F(tep_test, tep_workflow_9) {
     tep_feeder feeder1, feeder1A;
+
+    if (!apulu()) return;
 
     if (artemis()) {
         feeder1.init(g_tep_id, k_base_nh_ip, k_max_tep, k_zero_encap,

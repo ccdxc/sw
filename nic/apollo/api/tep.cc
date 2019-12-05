@@ -22,6 +22,11 @@ using sdk::lib::ht;
 
 namespace api {
 
+typedef struct tep_update_ctxt_s {
+    tep_entry *tep;
+    obj_ctxt_t *obj_ctxt;
+} __PACK__ tep_update_ctxt_t;
+
 tep_entry::tep_entry() {
     fabric_encap_ = { PDS_ENCAP_TYPE_NONE, 0 };
     nh_type_ = PDS_NH_TYPE_NONE;
@@ -174,6 +179,29 @@ tep_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
+static bool
+tep_upd_walk_cb_(void *api_obj, void *ctxt) {
+    pds_tep_key_t tep_key;
+    tep_entry *tep = (tep_entry *)api_obj;
+    tep_update_ctxt_t *upd_ctxt = (tep_update_ctxt_t *)ctxt;
+
+    tep_key = upd_ctxt->tep->key();
+    if ((tep->nh_type() == PDS_NH_TYPE_OVERLAY) &&
+        (tep->tep().id == tep_key.id)) {
+        upd_ctxt->obj_ctxt->add_deps(tep, API_OP_UPDATE);
+    }
+    return false;
+}
+
+sdk_ret_t
+tep_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+    tep_update_ctxt_t upd_ctxt = { 0 };
+
+    upd_ctxt.tep = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    return tep_db()->walk(tep_upd_walk_cb_, &upd_ctxt);
+}
+
 sdk_ret_t
 tep_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
@@ -187,6 +215,16 @@ tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+    // we hit this when a tunnel (T1) is pointing to a tunnel (T2), and
+    // T2 is updated necessitating an update on T1
+    if (impl_) {
+        impl_->reactivate_hw(this, epoch, api_op);
     }
     return SDK_RET_OK;
 }
@@ -215,7 +253,10 @@ tep_entry::del_from_db(void) {
 
 sdk_ret_t
 tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (tep_db()->remove((tep_entry *)orig_obj)) {
+        return tep_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

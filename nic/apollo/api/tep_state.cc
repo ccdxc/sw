@@ -66,6 +66,11 @@ tep_state::find(pds_tep_key_t *tep_key) const {
 }
 
 sdk_ret_t
+tep_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return tep_ht_->walk(walk_cb, ctxt);
+}
+
+sdk_ret_t
 tep_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(tep_slab_, ctxt);
     return SDK_RET_OK;
