@@ -1297,7 +1297,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 
 		_, err := stateMgr.FindTenant("testTenant")
-		if err == nil {
+		if err != nil {
 			return true, nil
 		}
 		fmt.Printf("Error find ten %v\n", err)

@@ -72,6 +72,7 @@ type RolloutHandler interface {
 	OnRolloutCreate(obj *Rollout) error
 	OnRolloutUpdate(oldObj *Rollout, newObj *rollout.Rollout) error
 	OnRolloutDelete(obj *Rollout) error
+	GetRolloutWatchOptions() *api.ListWatchOptions
 }
 
 // handleRolloutEvent handles Rollout events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = rolloutHandler.OnRolloutUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Rollout = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runRolloutWatcher() {
 	kind := "Rollout"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	rolloutHandler := handler.(RolloutHandler)
+
+	opts := rolloutHandler.GetRolloutWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "RolloutWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Rollout object watcher
-				wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, &opts)
+				wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type RolloutActionHandler interface {
 	OnRolloutActionCreate(obj *RolloutAction) error
 	OnRolloutActionUpdate(oldObj *RolloutAction, newObj *rollout.RolloutAction) error
 	OnRolloutActionDelete(obj *RolloutAction) error
+	GetRolloutActionWatchOptions() *api.ListWatchOptions
 }
 
 // handleRolloutActionEvent handles RolloutAction events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = rolloutactionHandler.OnRolloutActionUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.RolloutAction = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffRolloutAction(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runRolloutActionWatcher() {
 	kind := "RolloutAction"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	rolloutactionHandler := handler.(RolloutActionHandler)
+
+	opts := rolloutactionHandler.GetRolloutActionWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "RolloutActionWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// RolloutAction object watcher
-				wt, werr := apicl.RolloutV1().RolloutAction().Watch(ctx, &opts)
+				wt, werr := apicl.RolloutV1().RolloutAction().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

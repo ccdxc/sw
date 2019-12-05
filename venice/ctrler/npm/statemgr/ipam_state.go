@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -48,6 +49,12 @@ func (sm *Statemgr) FindIPAMPolicy(tenant, ns, name string) (*IPAMState, error) 
 	}
 
 	return IPAMPolicyStateFromObj(obj)
+}
+
+//GetIPAMPolicyWatchOptions gets options
+func (sm *Statemgr) GetIPAMPolicyWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 func convertIPAMPolicy(ipam *IPAMState) *netproto.IPAMPolicy {

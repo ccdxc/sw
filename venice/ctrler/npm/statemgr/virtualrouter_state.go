@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils/log"
@@ -19,6 +20,12 @@ type VirtualRouterState struct {
 	sync.Mutex
 	VirtualRouter *ctkit.VirtualRouter `json:"-"` // VirtualRouter object
 	stateMgr      *Statemgr            // pointer to the network manager
+}
+
+//GetVirtualRouterWatchOptions gets options
+func (sm *Statemgr) GetVirtualRouterWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // VirtualRouterStateFromObj converts from memdb object to VirtualRouter state

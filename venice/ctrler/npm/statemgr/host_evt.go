@@ -47,6 +47,13 @@ func NewHostState(host *ctkit.Host, stateMgr *Statemgr) (*HostState, error) {
 	return hs, nil
 }
 
+//GetHostWatchOptions gets options
+func (sm *Statemgr) GetHostWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // addWorkload adds a workload to host
 func (hst *HostState) addWorkload(wrk *ctkit.Workload) {
 	hst.workloads.Store(wrk.Name, wrk.ObjectMeta)

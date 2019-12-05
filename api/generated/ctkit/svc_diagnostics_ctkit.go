@@ -72,6 +72,7 @@ type ModuleHandler interface {
 	OnModuleCreate(obj *Module) error
 	OnModuleUpdate(oldObj *Module, newObj *diagnostics.Module) error
 	OnModuleDelete(obj *Module) error
+	GetModuleWatchOptions() *api.ListWatchOptions
 }
 
 // handleModuleEvent handles Module events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = moduleHandler.OnModuleUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Module = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffModule(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runModuleWatcher() {
 	kind := "Module"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	moduleHandler := handler.(ModuleHandler)
+
+	opts := moduleHandler.GetModuleWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "ModuleWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Module object watcher
-				wt, werr := apicl.DiagnosticsV1().Module().Watch(ctx, &opts)
+				wt, werr := apicl.DiagnosticsV1().Module().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

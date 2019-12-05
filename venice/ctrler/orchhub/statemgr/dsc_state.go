@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -14,6 +15,12 @@ type DistributedServiceCardState struct {
 	sync.Mutex
 	DistributedServiceCard *ctkit.DistributedServiceCard
 	stateMgr               *Statemgr
+}
+
+//GetDistributedServiceCardWatchOptions gets options
+func (sm *Statemgr) GetDistributedServiceCardWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // OnDistributedServiceCardCreate creates a DistributedServiceCard based on watch event

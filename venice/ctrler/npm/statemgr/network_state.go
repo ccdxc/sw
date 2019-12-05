@@ -370,6 +370,13 @@ func (sm *Statemgr) ListNetworks() ([]*NetworkState, error) {
 	return networks, nil
 }
 
+//GetNetworkWatchOptions gets options
+func (sm *Statemgr) GetNetworkWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // OnNetworkCreate creates local network state based on watch event
 func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 	// create new network state

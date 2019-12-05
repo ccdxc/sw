@@ -188,6 +188,13 @@ func NewEndpointState(epinfo *ctkit.Endpoint, stateMgr *Statemgr) (*EndpointStat
 	return &eps, nil
 }
 
+//GetEndpointWatchOptions gets options
+func (sm *Statemgr) GetEndpointWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // OnEndpointCreateReq gets called when agent sends create request
 func (sm *Statemgr) OnEndpointCreateReq(nodeID string, objinfo *netproto.Endpoint) error {
 	return nil

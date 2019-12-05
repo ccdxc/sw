@@ -121,7 +121,8 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	}
 
 	// create controller instance
-	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger, true)
+	// disable object resolution
+	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger, false)
 	if err != nil {
 		logger.Fatalf("Error creating controller. Err: %v", err)
 	}

@@ -1,10 +1,18 @@
 package statemgr
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 )
+
+//GetModuleWatchOptions gets options
+func (sm *Statemgr) GetModuleWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
 
 // OnModuleUpdate updates the log level on module update event
 func (sm *Statemgr) OnModuleUpdate(oldObj *ctkit.Module, newObj *diagapi.Module) error {

@@ -72,6 +72,7 @@ type BucketHandler interface {
 	OnBucketCreate(obj *Bucket) error
 	OnBucketUpdate(oldObj *Bucket, newObj *objstore.Bucket) error
 	OnBucketDelete(obj *Bucket) error
+	GetBucketWatchOptions() *api.ListWatchOptions
 }
 
 // handleBucketEvent handles Bucket events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = bucketHandler.OnBucketUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Bucket = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffBucket(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runBucketWatcher() {
 	kind := "Bucket"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	bucketHandler := handler.(BucketHandler)
+
+	opts := bucketHandler.GetBucketWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "BucketWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Bucket object watcher
-				wt, werr := apicl.ObjstoreV1().Bucket().Watch(ctx, &opts)
+				wt, werr := apicl.ObjstoreV1().Bucket().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type ObjectHandler interface {
 	OnObjectCreate(obj *Object) error
 	OnObjectUpdate(oldObj *Object, newObj *objstore.Object) error
 	OnObjectDelete(obj *Object) error
+	GetObjectWatchOptions() *api.ListWatchOptions
 }
 
 // handleObjectEvent handles Object events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = objectHandler.OnObjectUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Object = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffObject(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runObjectWatcher() {
 	kind := "Object"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	objectHandler := handler.(ObjectHandler)
+
+	opts := objectHandler.GetObjectWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "ObjectWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Object object watcher
-				wt, werr := apicl.ObjstoreV1().Object().Watch(ctx, &opts)
+				wt, werr := apicl.ObjstoreV1().Object().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

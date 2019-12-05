@@ -19,6 +19,13 @@ type DistributedServiceCardState struct {
 	stateMgr               *Statemgr                     // pointer to state manager
 }
 
+//GetDistributedServiceCardWatchOptions gets options
+func (sm *Statemgr) GetDistributedServiceCardWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{}
+	return &opts
+}
+
 // DistributedServiceCardStateFromObj conerts from memdb object to smartNic state
 func DistributedServiceCardStateFromObj(obj runtime.Object) (*DistributedServiceCardState, error) {
 	switch obj.(type) {
@@ -314,6 +321,7 @@ func (sm *Statemgr) ListDistributedServiceCards() ([]*DistributedServiceCardStat
 // isDscHealthy returns true if smartnic is in healthry condition
 func (sm *Statemgr) isDscHealthy(nsnic *cluster.DistributedServiceCard) bool {
 	isHealthy := false
+	log.Infof("DSC STATSUS %v", nsnic.Status.Conditions)
 	if len(nsnic.Status.Conditions) > 0 {
 		for _, cond := range nsnic.Status.Conditions {
 			if cond.Type == cluster.DSCCondition_HEALTHY.String() && cond.Status == cluster.ConditionStatus_TRUE.String() {

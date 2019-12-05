@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -14,6 +15,13 @@ type HostState struct {
 	sync.Mutex
 	Host     *ctkit.Host
 	stateMgr *Statemgr
+}
+
+//GetHostWatchOptions gets options
+func (sm *Statemgr) GetHostWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
 }
 
 // OnHostCreate creates a host based on watch event

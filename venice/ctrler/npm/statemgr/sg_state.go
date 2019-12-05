@@ -203,6 +203,13 @@ func (sm *Statemgr) ListSecurityGroups() ([]*SecurityGroupState, error) {
 	return sgs, nil
 }
 
+//GetSecurityGroupWatchOptions gets tenant options
+func (sm *Statemgr) GetSecurityGroupWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // OnSecurityGroupCreate creates a security group
 func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 	// create new sg state

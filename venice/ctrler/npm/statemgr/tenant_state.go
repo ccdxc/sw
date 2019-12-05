@@ -42,6 +42,13 @@ func convertTenant(tns *TenantState) *netproto.Tenant {
 	return &ntn
 }
 
+//GetTenantWatchOptions gets tenant options
+func (sm *Statemgr) GetTenantWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // OnTenantCreate creates a tenant based on watch event
 func (sm *Statemgr) OnTenantCreate(tn *ctkit.Tenant) error {
 	// create new tenant state

@@ -72,6 +72,7 @@ type OrchestratorHandler interface {
 	OnOrchestratorCreate(obj *Orchestrator) error
 	OnOrchestratorUpdate(oldObj *Orchestrator, newObj *orchestration.Orchestrator) error
 	OnOrchestratorDelete(obj *Orchestrator) error
+	GetOrchestratorWatchOptions() *api.ListWatchOptions
 }
 
 // handleOrchestratorEvent handles Orchestrator events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 						Status:     eobj.Status}
 
 					err = orchestratorHandler.OnOrchestratorUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Orchestrator = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffOrchestrator(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runOrchestratorWatcher() {
 	kind := "Orchestrator"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	orchestratorHandler := handler.(OrchestratorHandler)
+
+	opts := orchestratorHandler.GetOrchestratorWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "OrchestratorWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Orchestrator object watcher
-				wt, werr := apicl.OrchestratorV1().Orchestrator().Watch(ctx, &opts)
+				wt, werr := apicl.OrchestratorV1().Orchestrator().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

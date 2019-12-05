@@ -44,6 +44,13 @@ func WorkloadStateFromObj(obj runtime.Object) (*WorkloadState, error) {
 	}
 }
 
+//GetWorkloadWatchOptions gets options
+func (sm *Statemgr) GetWorkloadWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // NewWorkloadState creates new workload state object
 func NewWorkloadState(wrk *ctkit.Workload, stateMgr *Statemgr) (*WorkloadState, error) {
 	w := &WorkloadState{

@@ -287,6 +287,13 @@ func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*Sg
 	return &sgps, nil
 }
 
+//GetNetworkSecurityPolicyWatchOptions gets options
+func (sm *Statemgr) GetNetworkSecurityPolicyWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec", "ObjectMeta.GenerationID"}
+	return &opts
+}
+
 // OnNetworkSecurityPolicyCreateReq gets called when agent sends create request
 func (sm *Statemgr) OnNetworkSecurityPolicyCreateReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error {
 	return nil
@@ -491,7 +498,7 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	if err == nil {
 		// if smartnic is not healthy, dont update
 		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
-			return
+			log.Infof("DSC %v unhealthy but ignoring to update policy status with genID %v", nodeuuid, generationID)
 		}
 	}
 

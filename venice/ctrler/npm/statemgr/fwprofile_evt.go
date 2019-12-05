@@ -42,6 +42,13 @@ func FirewallProfileStateFromObj(obj runtime.Object) (*FirewallProfileState, err
 	}
 }
 
+//GetFirewallProfileWatchOptions gets options
+func (sm *Statemgr) GetFirewallProfileWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{}
+	return &opts
+}
+
 // NewFirewallProfileState creates new fwProfile state object
 func NewFirewallProfileState(fwProfile *ctkit.FirewallProfile, stateMgr *Statemgr) (*FirewallProfileState, error) {
 	fps := FirewallProfileState{

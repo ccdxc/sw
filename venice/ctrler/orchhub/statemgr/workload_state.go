@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -14,6 +15,12 @@ type WorkloadState struct {
 	sync.Mutex
 	Workload *ctkit.Workload
 	stateMgr *Statemgr
+}
+
+//GetWorkloadWatchOptions gets options
+func (sm *Statemgr) GetWorkloadWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // OnWorkloadCreate creates a workload based on watch event

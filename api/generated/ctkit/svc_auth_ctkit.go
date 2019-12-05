@@ -72,6 +72,7 @@ type UserHandler interface {
 	OnUserCreate(obj *User) error
 	OnUserUpdate(oldObj *User, newObj *auth.User) error
 	OnUserDelete(obj *User) error
+	GetUserWatchOptions() *api.ListWatchOptions
 }
 
 // handleUserEvent handles User events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = userHandler.OnUserUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.User = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runUserWatcher() {
 	kind := "User"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	userHandler := handler.(UserHandler)
+
+	opts := userHandler.GetUserWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runUserWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "UserWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// User object watcher
-				wt, werr := apicl.AuthV1().User().Watch(ctx, &opts)
+				wt, werr := apicl.AuthV1().User().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type AuthenticationPolicyHandler interface {
 	OnAuthenticationPolicyCreate(obj *AuthenticationPolicy) error
 	OnAuthenticationPolicyUpdate(oldObj *AuthenticationPolicy, newObj *auth.AuthenticationPolicy) error
 	OnAuthenticationPolicyDelete(obj *AuthenticationPolicy) error
+	GetAuthenticationPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleAuthenticationPolicyEvent handles AuthenticationPolicy events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 						Status:     eobj.Status}
 
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.AuthenticationPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 	kind := "AuthenticationPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	authenticationpolicyHandler := handler.(AuthenticationPolicyHandler)
+
+	opts := authenticationpolicyHandler.GetAuthenticationPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "AuthenticationPolicyWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// AuthenticationPolicy object watcher
-				wt, werr := apicl.AuthV1().AuthenticationPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.AuthV1().AuthenticationPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -1570,6 +1590,7 @@ type RoleHandler interface {
 	OnRoleCreate(obj *Role) error
 	OnRoleUpdate(oldObj *Role, newObj *auth.Role) error
 	OnRoleDelete(obj *Role) error
+	GetRoleWatchOptions() *api.ListWatchOptions
 }
 
 // handleRoleEvent handles Role events from watcher
@@ -1878,7 +1899,7 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = roleHandler.OnRoleUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Role = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1973,6 +1994,16 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runRoleWatcher() {
 	kind := "Role"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	roleHandler := handler.(RoleHandler)
+
+	opts := roleHandler.GetRoleWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1983,7 +2014,6 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "RoleWatcher")
 
 	// create a grpc client
@@ -2012,7 +2042,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Role object watcher
-				wt, werr := apicl.AuthV1().Role().Watch(ctx, &opts)
+				wt, werr := apicl.AuthV1().Role().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -2319,6 +2349,7 @@ type RoleBindingHandler interface {
 	OnRoleBindingCreate(obj *RoleBinding) error
 	OnRoleBindingUpdate(oldObj *RoleBinding, newObj *auth.RoleBinding) error
 	OnRoleBindingDelete(obj *RoleBinding) error
+	GetRoleBindingWatchOptions() *api.ListWatchOptions
 }
 
 // handleRoleBindingEvent handles RoleBinding events from watcher
@@ -2627,7 +2658,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = rolebindingHandler.OnRoleBindingUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.RoleBinding = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2722,6 +2753,16 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runRoleBindingWatcher() {
 	kind := "RoleBinding"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	rolebindingHandler := handler.(RoleBindingHandler)
+
+	opts := rolebindingHandler.GetRoleBindingWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -2732,7 +2773,6 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "RoleBindingWatcher")
 
 	// create a grpc client
@@ -2761,7 +2801,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// RoleBinding object watcher
-				wt, werr := apicl.AuthV1().RoleBinding().Watch(ctx, &opts)
+				wt, werr := apicl.AuthV1().RoleBinding().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -3068,6 +3108,7 @@ type UserPreferenceHandler interface {
 	OnUserPreferenceCreate(obj *UserPreference) error
 	OnUserPreferenceUpdate(oldObj *UserPreference, newObj *auth.UserPreference) error
 	OnUserPreferenceDelete(obj *UserPreference) error
+	GetUserPreferenceWatchOptions() *api.ListWatchOptions
 }
 
 // handleUserPreferenceEvent handles UserPreference events from watcher
@@ -3376,7 +3417,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 						Status:     eobj.Status}
 
 					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.UserPreference = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3471,6 +3512,16 @@ func (ct *ctrlerCtx) diffUserPreference(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 	kind := "UserPreference"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	userpreferenceHandler := handler.(UserPreferenceHandler)
+
+	opts := userpreferenceHandler.GetUserPreferenceWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -3481,7 +3532,6 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "UserPreferenceWatcher")
 
 	// create a grpc client
@@ -3510,7 +3560,7 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// UserPreference object watcher
-				wt, werr := apicl.AuthV1().UserPreference().Watch(ctx, &opts)
+				wt, werr := apicl.AuthV1().UserPreference().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

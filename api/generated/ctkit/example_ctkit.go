@@ -72,6 +72,7 @@ type OrderHandler interface {
 	OnOrderCreate(obj *Order) error
 	OnOrderUpdate(oldObj *Order, newObj *bookstore.Order) error
 	OnOrderDelete(obj *Order) error
+	GetOrderWatchOptions() *api.ListWatchOptions
 }
 
 // handleOrderEvent handles Order events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleOrderEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = orderHandler.OnOrderUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Order = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffOrder(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runOrderWatcher() {
 	kind := "Order"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	orderHandler := handler.(OrderHandler)
+
+	opts := orderHandler.GetOrderWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "OrderWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Order object watcher
-				wt, werr := apicl.BookstoreV1().Order().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Order().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type BookHandler interface {
 	OnBookCreate(obj *Book) error
 	OnBookUpdate(oldObj *Book, newObj *bookstore.Book) error
 	OnBookDelete(obj *Book) error
+	GetBookWatchOptions() *api.ListWatchOptions
 }
 
 // handleBookEvent handles Book events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleBookEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = bookHandler.OnBookUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Book = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffBook(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runBookWatcher() {
 	kind := "Book"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	bookHandler := handler.(BookHandler)
+
+	opts := bookHandler.GetBookWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runBookWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "BookWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runBookWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Book object watcher
-				wt, werr := apicl.BookstoreV1().Book().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Book().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -1570,6 +1590,7 @@ type PublisherHandler interface {
 	OnPublisherCreate(obj *Publisher) error
 	OnPublisherUpdate(oldObj *Publisher, newObj *bookstore.Publisher) error
 	OnPublisherDelete(obj *Publisher) error
+	GetPublisherWatchOptions() *api.ListWatchOptions
 }
 
 // handlePublisherEvent handles Publisher events from watcher
@@ -1878,7 +1899,7 @@ func (ct *ctrlerCtx) handlePublisherEventParallelWithNoResolver(evt *kvstore.Wat
 						Status:     eobj.Status}
 
 					err = publisherHandler.OnPublisherUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Publisher = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1973,6 +1994,16 @@ func (ct *ctrlerCtx) diffPublisher(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runPublisherWatcher() {
 	kind := "Publisher"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	publisherHandler := handler.(PublisherHandler)
+
+	opts := publisherHandler.GetPublisherWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1983,7 +2014,6 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "PublisherWatcher")
 
 	// create a grpc client
@@ -2012,7 +2042,7 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Publisher object watcher
-				wt, werr := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Publisher().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -2319,6 +2349,7 @@ type StoreHandler interface {
 	OnStoreCreate(obj *Store) error
 	OnStoreUpdate(oldObj *Store, newObj *bookstore.Store) error
 	OnStoreDelete(obj *Store) error
+	GetStoreWatchOptions() *api.ListWatchOptions
 }
 
 // handleStoreEvent handles Store events from watcher
@@ -2627,7 +2658,7 @@ func (ct *ctrlerCtx) handleStoreEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = storeHandler.OnStoreUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Store = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2722,6 +2753,16 @@ func (ct *ctrlerCtx) diffStore(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runStoreWatcher() {
 	kind := "Store"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	storeHandler := handler.(StoreHandler)
+
+	opts := storeHandler.GetStoreWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -2732,7 +2773,6 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "StoreWatcher")
 
 	// create a grpc client
@@ -2761,7 +2801,7 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Store object watcher
-				wt, werr := apicl.BookstoreV1().Store().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Store().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -3068,6 +3108,7 @@ type CouponHandler interface {
 	OnCouponCreate(obj *Coupon) error
 	OnCouponUpdate(oldObj *Coupon, newObj *bookstore.Coupon) error
 	OnCouponDelete(obj *Coupon) error
+	GetCouponWatchOptions() *api.ListWatchOptions
 }
 
 // handleCouponEvent handles Coupon events from watcher
@@ -3376,7 +3417,7 @@ func (ct *ctrlerCtx) handleCouponEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = couponHandler.OnCouponUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Coupon = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3471,6 +3512,16 @@ func (ct *ctrlerCtx) diffCoupon(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runCouponWatcher() {
 	kind := "Coupon"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	couponHandler := handler.(CouponHandler)
+
+	opts := couponHandler.GetCouponWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -3481,7 +3532,6 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "CouponWatcher")
 
 	// create a grpc client
@@ -3510,7 +3560,7 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Coupon object watcher
-				wt, werr := apicl.BookstoreV1().Coupon().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Coupon().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -3817,6 +3867,7 @@ type CustomerHandler interface {
 	OnCustomerCreate(obj *Customer) error
 	OnCustomerUpdate(oldObj *Customer, newObj *bookstore.Customer) error
 	OnCustomerDelete(obj *Customer) error
+	GetCustomerWatchOptions() *api.ListWatchOptions
 }
 
 // handleCustomerEvent handles Customer events from watcher
@@ -4125,7 +4176,7 @@ func (ct *ctrlerCtx) handleCustomerEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = customerHandler.OnCustomerUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Customer = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4220,6 +4271,16 @@ func (ct *ctrlerCtx) diffCustomer(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runCustomerWatcher() {
 	kind := "Customer"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	customerHandler := handler.(CustomerHandler)
+
+	opts := customerHandler.GetCustomerWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -4230,7 +4291,6 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "CustomerWatcher")
 
 	// create a grpc client
@@ -4259,7 +4319,7 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Customer object watcher
-				wt, werr := apicl.BookstoreV1().Customer().Watch(ctx, &opts)
+				wt, werr := apicl.BookstoreV1().Customer().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

@@ -75,6 +75,7 @@ type {{.}}Handler interface {
 	On{{.}}Create(obj *{{.}}) error
 	On{{.}}Update(oldObj *{{.}}, newObj *{{$pkgname}}.{{.}}) error
 	On{{.}}Delete(obj *{{.}}) error
+	Get{{.}}WatchOptions() *api.ListWatchOptions
 }
 
 // handle{{.}}Event handles {{.}} events from watcher
@@ -385,7 +386,7 @@ func (ct *ctrlerCtx) handle{{.}}EventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = {{ToLower .}}Handler.On{{.}}Update(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.{{.}} = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -481,6 +482,17 @@ func (ct *ctrlerCtx) diff{{.}}(apicl apiclient.Services) {
 func (ct *ctrlerCtx) run{{.}}Watcher() {
 	kind := "{{.}}"
 
+
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	{{ToLower .}}Handler := handler.({{.}}Handler)
+
+	opts := {{ToLower .}}Handler.Get{{.}}WatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -491,7 +503,6 @@ func (ct *ctrlerCtx) run{{.}}Watcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "{{.}}Watcher")
 
 	// create a grpc client
@@ -520,7 +531,7 @@ func (ct *ctrlerCtx) run{{.}}Watcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// {{.}} object watcher
-				wt, werr := apicl.{{$srvname}}().{{.}}().Watch(ctx, &opts)
+				wt, werr := apicl.{{$srvname}}().{{.}}().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

@@ -1057,6 +1057,7 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	// create network state manager
 
+	t.Skip("Skipping this as obj resolved is not enabled in unit tests")
 	url := "localhost:55555"
 
 	grpcServer, err := rpckit.NewRPCServer("netctrler", url, rpckit.WithTLSProvider(nil))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -15,6 +16,12 @@ type NetworkState struct {
 	sync.Mutex
 	Network  *ctkit.Network
 	stateMgr *Statemgr
+}
+
+//GetNetworkWatchOptions gets options
+func (sm *Statemgr) GetNetworkWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // OnNetworkCreate creates a network based on watch event

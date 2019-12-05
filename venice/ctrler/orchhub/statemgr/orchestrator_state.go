@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -19,6 +20,12 @@ type OrchestratorState struct {
 	sync.Mutex
 	Orchestrator *ctkit.Orchestrator
 	stateMgr     *Statemgr
+}
+
+//GetOrchestratorWatchOptions gets options
+func (sm *Statemgr) GetOrchestratorWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // OnOrchestratorCreate creates a orchestrator based on watch event

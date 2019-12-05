@@ -72,6 +72,7 @@ type BufferHandler interface {
 	OnBufferCreate(obj *Buffer) error
 	OnBufferUpdate(oldObj *Buffer, newObj *staging.Buffer) error
 	OnBufferDelete(obj *Buffer) error
+	GetBufferWatchOptions() *api.ListWatchOptions
 }
 
 // handleBufferEvent handles Buffer events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleBufferEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = bufferHandler.OnBufferUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Buffer = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffBuffer(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runBufferWatcher() {
 	kind := "Buffer"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	bufferHandler := handler.(BufferHandler)
+
+	opts := bufferHandler.GetBufferWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "BufferWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Buffer object watcher
-				wt, werr := apicl.StagingV1().Buffer().Watch(ctx, &opts)
+				wt, werr := apicl.StagingV1().Buffer().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

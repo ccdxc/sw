@@ -57,6 +57,12 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	return netif
 }
 
+//GetInterfaceWatchOptions gets options
+func (sm *Statemgr) GetInterfaceWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
+}
+
 // OnInterfaceCreateReq gets called when agent sends create request
 func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Interface) error {
 	// convert agent's netif struct to the api object
@@ -98,6 +104,13 @@ func (sm *Statemgr) OnInterfaceOperUpdate(nodeID string, agentNetif *netproto.In
 // OnInterfaceOperDelete is called when agent sends delete request
 func (sm *Statemgr) OnInterfaceOperDelete(nodeID string, agentNetif *netproto.Interface) error {
 	return nil
+}
+
+//GetNetworkInterfaceWatchOptions gets options
+func (sm *Statemgr) GetNetworkInterfaceWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
 }
 
 // OnNetworkInterfaceCreate creates a NetworkInterface

@@ -72,6 +72,7 @@ type EventPolicyHandler interface {
 	OnEventPolicyCreate(obj *EventPolicy) error
 	OnEventPolicyUpdate(oldObj *EventPolicy, newObj *monitoring.EventPolicy) error
 	OnEventPolicyDelete(obj *EventPolicy) error
+	GetEventPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleEventPolicyEvent handles EventPolicy events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = eventpolicyHandler.OnEventPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.EventPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runEventPolicyWatcher() {
 	kind := "EventPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	eventpolicyHandler := handler.(EventPolicyHandler)
+
+	opts := eventpolicyHandler.GetEventPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "EventPolicyWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// EventPolicy object watcher
-				wt, werr := apicl.MonitoringV1().EventPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().EventPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type StatsPolicyHandler interface {
 	OnStatsPolicyCreate(obj *StatsPolicy) error
 	OnStatsPolicyUpdate(oldObj *StatsPolicy, newObj *monitoring.StatsPolicy) error
 	OnStatsPolicyDelete(obj *StatsPolicy) error
+	GetStatsPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleStatsPolicyEvent handles StatsPolicy events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = statspolicyHandler.OnStatsPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.StatsPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 	kind := "StatsPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	statspolicyHandler := handler.(StatsPolicyHandler)
+
+	opts := statspolicyHandler.GetStatsPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "StatsPolicyWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// StatsPolicy object watcher
-				wt, werr := apicl.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().StatsPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -1570,6 +1590,7 @@ type FwlogPolicyHandler interface {
 	OnFwlogPolicyCreate(obj *FwlogPolicy) error
 	OnFwlogPolicyUpdate(oldObj *FwlogPolicy, newObj *monitoring.FwlogPolicy) error
 	OnFwlogPolicyDelete(obj *FwlogPolicy) error
+	GetFwlogPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleFwlogPolicyEvent handles FwlogPolicy events from watcher
@@ -1878,7 +1899,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.FwlogPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1973,6 +1994,16 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 	kind := "FwlogPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	fwlogpolicyHandler := handler.(FwlogPolicyHandler)
+
+	opts := fwlogpolicyHandler.GetFwlogPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1983,7 +2014,6 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "FwlogPolicyWatcher")
 
 	// create a grpc client
@@ -2012,7 +2042,7 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// FwlogPolicy object watcher
-				wt, werr := apicl.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().FwlogPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -2319,6 +2349,7 @@ type FlowExportPolicyHandler interface {
 	OnFlowExportPolicyCreate(obj *FlowExportPolicy) error
 	OnFlowExportPolicyUpdate(oldObj *FlowExportPolicy, newObj *monitoring.FlowExportPolicy) error
 	OnFlowExportPolicyDelete(obj *FlowExportPolicy) error
+	GetFlowExportPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleFlowExportPolicyEvent handles FlowExportPolicy events from watcher
@@ -2627,7 +2658,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 						Status:     eobj.Status}
 
 					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.FlowExportPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -2722,6 +2753,16 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 	kind := "FlowExportPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	flowexportpolicyHandler := handler.(FlowExportPolicyHandler)
+
+	opts := flowexportpolicyHandler.GetFlowExportPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -2732,7 +2773,6 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "FlowExportPolicyWatcher")
 
 	// create a grpc client
@@ -2761,7 +2801,7 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// FlowExportPolicy object watcher
-				wt, werr := apicl.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().FlowExportPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -3068,6 +3108,7 @@ type AlertHandler interface {
 	OnAlertCreate(obj *Alert) error
 	OnAlertUpdate(oldObj *Alert, newObj *monitoring.Alert) error
 	OnAlertDelete(obj *Alert) error
+	GetAlertWatchOptions() *api.ListWatchOptions
 }
 
 // handleAlertEvent handles Alert events from watcher
@@ -3376,7 +3417,7 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = alertHandler.OnAlertUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Alert = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -3471,6 +3512,16 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runAlertWatcher() {
 	kind := "Alert"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	alertHandler := handler.(AlertHandler)
+
+	opts := alertHandler.GetAlertWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -3481,7 +3532,6 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "AlertWatcher")
 
 	// create a grpc client
@@ -3510,7 +3560,7 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Alert object watcher
-				wt, werr := apicl.MonitoringV1().Alert().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().Alert().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -3817,6 +3867,7 @@ type AlertPolicyHandler interface {
 	OnAlertPolicyCreate(obj *AlertPolicy) error
 	OnAlertPolicyUpdate(oldObj *AlertPolicy, newObj *monitoring.AlertPolicy) error
 	OnAlertPolicyDelete(obj *AlertPolicy) error
+	GetAlertPolicyWatchOptions() *api.ListWatchOptions
 }
 
 // handleAlertPolicyEvent handles AlertPolicy events from watcher
@@ -4125,7 +4176,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = alertpolicyHandler.OnAlertPolicyUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.AlertPolicy = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4220,6 +4271,16 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 	kind := "AlertPolicy"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	alertpolicyHandler := handler.(AlertPolicyHandler)
+
+	opts := alertpolicyHandler.GetAlertPolicyWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -4230,7 +4291,6 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "AlertPolicyWatcher")
 
 	// create a grpc client
@@ -4259,7 +4319,7 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// AlertPolicy object watcher
-				wt, werr := apicl.MonitoringV1().AlertPolicy().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().AlertPolicy().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -4566,6 +4626,7 @@ type AlertDestinationHandler interface {
 	OnAlertDestinationCreate(obj *AlertDestination) error
 	OnAlertDestinationUpdate(oldObj *AlertDestination, newObj *monitoring.AlertDestination) error
 	OnAlertDestinationDelete(obj *AlertDestination) error
+	GetAlertDestinationWatchOptions() *api.ListWatchOptions
 }
 
 // handleAlertDestinationEvent handles AlertDestination events from watcher
@@ -4874,7 +4935,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 						Status:     eobj.Status}
 
 					err = alertdestinationHandler.OnAlertDestinationUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.AlertDestination = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -4969,6 +5030,16 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 	kind := "AlertDestination"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	alertdestinationHandler := handler.(AlertDestinationHandler)
+
+	opts := alertdestinationHandler.GetAlertDestinationWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -4979,7 +5050,6 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "AlertDestinationWatcher")
 
 	// create a grpc client
@@ -5008,7 +5078,7 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// AlertDestination object watcher
-				wt, werr := apicl.MonitoringV1().AlertDestination().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().AlertDestination().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -5315,6 +5385,7 @@ type MirrorSessionHandler interface {
 	OnMirrorSessionCreate(obj *MirrorSession) error
 	OnMirrorSessionUpdate(oldObj *MirrorSession, newObj *monitoring.MirrorSession) error
 	OnMirrorSessionDelete(obj *MirrorSession) error
+	GetMirrorSessionWatchOptions() *api.ListWatchOptions
 }
 
 // handleMirrorSessionEvent handles MirrorSession events from watcher
@@ -5623,7 +5694,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.MirrorSession = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -5718,6 +5789,16 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 	kind := "MirrorSession"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	mirrorsessionHandler := handler.(MirrorSessionHandler)
+
+	opts := mirrorsessionHandler.GetMirrorSessionWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -5728,7 +5809,6 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "MirrorSessionWatcher")
 
 	// create a grpc client
@@ -5757,7 +5837,7 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// MirrorSession object watcher
-				wt, werr := apicl.MonitoringV1().MirrorSession().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().MirrorSession().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -6064,6 +6144,7 @@ type TroubleshootingSessionHandler interface {
 	OnTroubleshootingSessionCreate(obj *TroubleshootingSession) error
 	OnTroubleshootingSessionUpdate(oldObj *TroubleshootingSession, newObj *monitoring.TroubleshootingSession) error
 	OnTroubleshootingSessionDelete(obj *TroubleshootingSession) error
+	GetTroubleshootingSessionWatchOptions() *api.ListWatchOptions
 }
 
 // handleTroubleshootingSessionEvent handles TroubleshootingSession events from watcher
@@ -6372,7 +6453,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 						Status:     eobj.Status}
 
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.TroubleshootingSession = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -6467,6 +6548,16 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 	kind := "TroubleshootingSession"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	troubleshootingsessionHandler := handler.(TroubleshootingSessionHandler)
+
+	opts := troubleshootingsessionHandler.GetTroubleshootingSessionWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -6477,7 +6568,6 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "TroubleshootingSessionWatcher")
 
 	// create a grpc client
@@ -6506,7 +6596,7 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// TroubleshootingSession object watcher
-				wt, werr := apicl.MonitoringV1().TroubleshootingSession().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().TroubleshootingSession().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -6813,6 +6903,7 @@ type TechSupportRequestHandler interface {
 	OnTechSupportRequestCreate(obj *TechSupportRequest) error
 	OnTechSupportRequestUpdate(oldObj *TechSupportRequest, newObj *monitoring.TechSupportRequest) error
 	OnTechSupportRequestDelete(obj *TechSupportRequest) error
+	GetTechSupportRequestWatchOptions() *api.ListWatchOptions
 }
 
 // handleTechSupportRequestEvent handles TechSupportRequest events from watcher
@@ -7121,7 +7212,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 						Status:     eobj.Status}
 
 					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.TechSupportRequest = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -7216,6 +7307,16 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 	kind := "TechSupportRequest"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	techsupportrequestHandler := handler.(TechSupportRequestHandler)
+
+	opts := techsupportrequestHandler.GetTechSupportRequestWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -7226,7 +7327,6 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "TechSupportRequestWatcher")
 
 	// create a grpc client
@@ -7255,7 +7355,7 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// TechSupportRequest object watcher
-				wt, werr := apicl.MonitoringV1().TechSupportRequest().Watch(ctx, &opts)
+				wt, werr := apicl.MonitoringV1().TechSupportRequest().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

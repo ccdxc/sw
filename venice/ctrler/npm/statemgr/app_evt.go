@@ -179,6 +179,13 @@ func (app *AppState) detachPolicy(sgpName string) error {
 	return nil
 }
 
+//GetAppWatchOptions gets options
+func (sm *Statemgr) GetAppWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
+	return &opts
+}
+
 // OnAppCreate handles app creation
 func (sm *Statemgr) OnAppCreate(app *ctkit.App) error {
 	// see if we already have the app

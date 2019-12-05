@@ -793,8 +793,10 @@ func (ct *ctrlerCtx) delObject(kind, key string) error {
 		return fmt.Errorf("Object %s/%s not found", kind, key)
 	}
 
+	ks.Lock()
 	_, ok = ks.objects[key]
 	if !ok {
+		ks.Unlock()
 		return fmt.Errorf("Object %s/%s not found", kind, key)
 	}
 
@@ -802,6 +804,7 @@ func (ct *ctrlerCtx) delObject(kind, key string) error {
 
 	// delete the object
 	delete(ks.objects, key)
+	ks.Unlock()
 
 	return nil
 }

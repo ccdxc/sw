@@ -72,6 +72,7 @@ type EndpointHandler interface {
 	OnEndpointCreate(obj *Endpoint) error
 	OnEndpointUpdate(oldObj *Endpoint, newObj *workload.Endpoint) error
 	OnEndpointDelete(obj *Endpoint) error
+	GetEndpointWatchOptions() *api.ListWatchOptions
 }
 
 // handleEndpointEvent handles Endpoint events from watcher
@@ -380,7 +381,7 @@ func (ct *ctrlerCtx) handleEndpointEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = endpointHandler.OnEndpointUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Endpoint = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -475,6 +476,16 @@ func (ct *ctrlerCtx) diffEndpoint(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runEndpointWatcher() {
 	kind := "Endpoint"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	endpointHandler := handler.(EndpointHandler)
+
+	opts := endpointHandler.GetEndpointWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -485,7 +496,6 @@ func (ct *ctrlerCtx) runEndpointWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "EndpointWatcher")
 
 	// create a grpc client
@@ -514,7 +524,7 @@ func (ct *ctrlerCtx) runEndpointWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Endpoint object watcher
-				wt, werr := apicl.WorkloadV1().Endpoint().Watch(ctx, &opts)
+				wt, werr := apicl.WorkloadV1().Endpoint().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():
@@ -821,6 +831,7 @@ type WorkloadHandler interface {
 	OnWorkloadCreate(obj *Workload) error
 	OnWorkloadUpdate(oldObj *Workload, newObj *workload.Workload) error
 	OnWorkloadDelete(obj *Workload) error
+	GetWorkloadWatchOptions() *api.ListWatchOptions
 }
 
 // handleWorkloadEvent handles Workload events from watcher
@@ -1129,7 +1140,7 @@ func (ct *ctrlerCtx) handleWorkloadEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = workloadHandler.OnWorkloadUpdate(obj, &p)
-					workCtx.obj = eobj
+					workCtx.obj.Workload = p
 					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
@@ -1224,6 +1235,16 @@ func (ct *ctrlerCtx) diffWorkload(apicl apiclient.Services) {
 func (ct *ctrlerCtx) runWorkloadWatcher() {
 	kind := "Workload"
 
+	ct.Lock()
+	handler, ok := ct.handlers[kind]
+	ct.Unlock()
+	if !ok {
+		ct.logger.Fatalf("Cant find the handler for %s", kind)
+	}
+	workloadHandler := handler.(WorkloadHandler)
+
+	opts := workloadHandler.GetWorkloadWatchOptions()
+
 	// if there is no API server to connect to, we are done
 	if (ct.resolver == nil) || ct.apisrvURL == "" {
 		return
@@ -1234,7 +1255,6 @@ func (ct *ctrlerCtx) runWorkloadWatcher() {
 	ct.Lock()
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
-	opts := api.ListWatchOptions{}
 	logger := ct.logger.WithContext("submodule", "WorkloadWatcher")
 
 	// create a grpc client
@@ -1263,7 +1283,7 @@ func (ct *ctrlerCtx) runWorkloadWatcher() {
 				logger.Infof("API client connected {%+v}", apicl)
 
 				// Workload object watcher
-				wt, werr := apicl.WorkloadV1().Workload().Watch(ctx, &opts)
+				wt, werr := apicl.WorkloadV1().Workload().Watch(ctx, opts)
 				if werr != nil {
 					select {
 					case <-ctx.Done():

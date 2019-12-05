@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -14,6 +15,12 @@ type EndpointState struct {
 	sync.Mutex
 	Endpoint *ctkit.Endpoint
 	stateMgr *Statemgr
+}
+
+//GetEndpointWatchOptions gets options
+func (sm *Statemgr) GetEndpointWatchOptions() *api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	return &opts
 }
 
 // OnEndpointCreate creates a Endpoint based on watch event
