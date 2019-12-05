@@ -12,7 +12,6 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 #define   _r_pktlen     r1        // Packet length
 #define   _r_addr       r2        // Buffer address
 #define   _r_len        r3        // Buffer length
-#define   _r_stats      r4        // Stats
 #define   _r_ptr        r5        // Current DMA byte offset in PHV
 #define   _r_index      r6        // Current DMA command index in PHV
 
@@ -24,8 +23,6 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 
 .align
 eth_rx:
-    LOAD_STATS(_r_stats)
-
     // Setup DMA CMD PTR
     phvwr           p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
     addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
@@ -68,8 +65,6 @@ eth_rx:
     sub            _r_len, k.eth_rx_t0_s2s_pkt_len, _r_len      // branch-delay slot
 
 eth_rx_sg:
-    SAVE_STATS(_r_stats)
-
     // Launch eth_rx_sg in next stage
     phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_len
 
@@ -84,8 +79,6 @@ eth_rx_sg:
     phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
 
 eth_rx_done:
-    SAVE_STATS(_r_stats)
-
     // Save DMA command pointer
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
@@ -99,20 +92,18 @@ eth_rx_done:
     phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_rx_desc_addr_error:
-    SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+    phvwri          p.eth_rx_global_stats[STAT_desc_fetch_error], 1
 
     b               eth_rx_error
     phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_desc_data_error:
-    SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+    phvwri          p.eth_rx_global_stats[STAT_desc_data_error], 1
 
     b               eth_rx_error
     phvwri          p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
 
 eth_rx_error:
-    SAVE_STATS(_r_stats)
-
     // Reset the DMA command stack to discard existing DMA commands
     addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 

@@ -51,7 +51,7 @@ eth_rx_arm_event:
   phvwrpair       p.eq_desc_lif_index, d.lif_index, p.eq_desc_qid, r7.wx
 
   // Launch eth_rx_event action
-  phvwr           p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_2
+  phvwr           p.app_header_table2_valid, 0x1
   phvwr           p.common_te2_phv_table_addr, d.{intr_index_or_eq_addr}.dx
   phvwri          p.common_te2_phv_table_raw_table_size, LG2_EQ_QSTATE_SIZE
   phvwri.e        p.common_te2_phv_table_lock_en, 1

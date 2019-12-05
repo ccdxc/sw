@@ -16,8 +16,6 @@ struct rx_table_s4_t1_eth_rx_sg_d d;
 #define   _r_ptr        r5        // Current DMA byte offset in PHV
 #define   _r_index      r6        // Current DMA command index in PHV
 
-//#define   _r_stats      r4        // Stats
-
 %%
 
 .param eth_rx_completion
@@ -99,10 +97,9 @@ eth_rx_sg_continue:
   nop
 
 eth_rx_sg_next:   // Continue SG in next stage
-  // Calculate the address of next sges
-  mfspr           r7, spr_tbladdr
-  add             r7, r7, 1, LG2_RX_SG_MAX_READ_SIZE
-  phvwr           p.common_te0_phv_table_addr, r7
+  // Calculate the address of next 4 sges
+  add             r7, k.common_te1_phv_table_addr, 1, LG2_RX_SG_MAX_READ_SIZE
+  phvwr           p.common_te1_phv_table_addr, r7
 
   // Save state
   phvwrpair.e     p.eth_rx_t1_s2s_rem_pkt_bytes, _r_rem_bytes, p.eth_rx_t1_s2s_rem_sg_elems, _r_rem_sg
@@ -127,7 +124,7 @@ eth_rx_sg_done:   // We are done with SG
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
   // Launch stats & completion action
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
+  phvwri          p.{app_header_table0_valid...app_header_table1_valid}, 0x3
 
   phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
   phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
@@ -136,17 +133,13 @@ eth_rx_sg_done:   // We are done with SG
   phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_rx_sg_addr_error:
-  //LOAD_STATS(_r_stats)
-  //SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
-  //SAVE_STATS(_r_stats)
+  phvwri          p.eth_rx_global_stats[STAT_desc_fetch_error], 1
 
   b               eth_rx_sg_error
   phvwri          p.cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_sg_data_error:
-  //LOAD_STATS(_r_stats)
-  //SET_STAT(_r_stats, _C_TRUE, desc_data_error)
-  //SAVE_STATS(_r_stats)
+  phvwri          p.eth_rx_global_stats[STAT_desc_data_error], 1
 
   b               eth_rx_sg_error
   phvwr           p.cq_desc_status, ETH_RX_DESC_DATA_ERROR
@@ -169,7 +162,7 @@ eth_rx_sg_error:
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
   // Launch stats & completion action
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, TABLE_VALID_0 | TABLE_VALID_1
+  phvwri          p.{app_header_table0_valid...app_header_table1_valid}, 0x3
 
   phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
   phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

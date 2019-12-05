@@ -15,7 +15,6 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 #define  _r_ci                r1    // Current ci and comp index
 #define  _r_color             r3    // Current color
 #define  _r_desc_addr         r4    // Descriptor address
-#define  _r_stats             r5    // Stats
 #define  _r_tbl_valid         r6    // Next stage table valid bits
 
 %%
@@ -26,14 +25,11 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 .align
 eth_rx_fetch_desc:
-
 #ifdef PHV_DEBUG
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1
   trace.c7        0x1
 #endif
-
-  LOAD_STATS(_r_stats)
 
   bcf             [c2 | c3 | c7], eth_rx_queue_error
 
@@ -42,12 +38,6 @@ eth_rx_fetch_desc:
   seq             _c_queue_empty, d.p_index0, d.comp_index
   bcf             [_c_queue_empty], eth_rx_queue_empty
   ori             _r_tbl_valid, r0, 0 // BD Slot
-
-#ifdef PHV_DEBUG
-  seq             c7, d.debug, 1
-  phvwr.c7        p.p4_intr_global_debug_trace, 1
-  trace.c7        0x1
-#endif
 
   // Claim the descriptor and completion entry
   add             _r_ci, r0, d.{comp_index}.hx
@@ -93,8 +83,6 @@ eth_rx_cq_entry:
   phvwr           p.cq_desc_comp_index, _r_ci.hx
   phvwr           p.cq_desc_color, _r_color
 
-  // SAVE_STATS(_r_stats)
-
   // Save data for next stages
   phvwr           p.{eth_rx_global_host_queue...eth_rx_global_cpu_queue}, d.{host_queue...cpu_queue}
 
@@ -124,13 +112,11 @@ eth_rx_fetch_desc_eq:
   phvwri          p.common_te2_phv_table_raw_table_size, LG2_EQ_QSTATE_SIZE
 
 eth_rx_queue_error:
-  SET_STAT(_r_stats, _C_TRUE, queue_error)
+  phvwri          p.eth_rx_global_stats[STAT_queue_error], 1
 eth_rx_queue_empty:
-  SET_STAT(_r_stats, _c_queue_empty, queue_empty)
+  phvwri._c_queue_empty     p.eth_rx_global_stats[STAT_queue_empty], 1
 eth_rx_queue_disabled:
-  SET_STAT(_r_stats, _c_queue_disabled, queue_disabled)
-
-  SAVE_STATS(_r_stats)
+  phvwri._c_queue_disabled  p.eth_rx_global_stats[STAT_queue_disabled], 1
 
   phvwr           p.eth_rx_global_drop, 1   // increment pkt drop counters
   phvwr           p.p4_intr_global_drop, 1

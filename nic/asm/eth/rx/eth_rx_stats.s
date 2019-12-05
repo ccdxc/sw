@@ -37,20 +37,23 @@ eth_rx_stats:
     nop
 
 eth_rx_stats_accept:
+#if PHV_DEBUG
+    phvwri          p.app_header_table2_valid, 1
+    phvwri          p.common_te2_phv_table_lock_en, 1
+    phvwri          p.common_te2_phv_table_pc, eth_rx_stats_queue_accept[38:6]
+    add             r7, _r_base, LIF_STATS_RX_RSS_OFFSET
+    phvwr           p.common_te2_phv_table_addr, r7
+    phvwr           p.common_te2_phv_table_raw_table_size, LG2_RX_STATS_BLOCK_SZ
+#else
+    phvwri          p.app_header_table2_valid, 0
+#endif
+
     phvwri          p.app_header_table1_valid, 1
     phvwri          p.common_te1_phv_table_lock_en, 1
     phvwri          p.common_te1_phv_table_pc, eth_rx_stats_packet_accept[38:6]
     add             r7, _r_base, LIF_STATS_RX_UCAST_BYTES_OFFSET
     phvwr.e         p.common_te1_phv_table_addr, r7
     phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_STATS_BLOCK_SZ
-
-    // Following stats are for debugging only ... the exit above is intentional
-    phvwri          p.app_header_table2_valid, 1
-    phvwri          p.common_te2_phv_table_lock_en, 1
-    phvwri          p.common_te2_phv_table_pc, eth_rx_stats_queue_accept[38:6]
-    add             r7, _r_base, LIF_STATS_RX_RSS_OFFSET
-    phvwr.e         p.common_te2_phv_table_addr, r7
-    phvwr.f         p.common_te2_phv_table_raw_table_size, LG2_RX_STATS_BLOCK_SZ
 
 eth_rx_stats_drop:
     phvwri          p.app_header_table1_valid, 1
