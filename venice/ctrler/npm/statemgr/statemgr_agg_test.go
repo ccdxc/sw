@@ -862,10 +862,15 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 
 	go ag.client.WatchAggregate(context.Background(), []string{"SecurityGroup", "NetworkSecurityPolicy"}, ag)
 
-	time.Sleep(100 * time.Millisecond)
-
-	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
-	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) != 3 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityGroups), ag)
+		}
+		if len(ag.securityPolicies) != 3 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityPolicies), ag)
+		}
+		return true, nil
+	}, fmt.Sprintf("Expected number of security groups or policies not found. %v", ag), "100ms", "1s")
 
 	time.Sleep(2 * time.Second)
 	err = propogationCompleteForPolicies(stateMgr, 0, 3)
@@ -890,9 +895,15 @@ func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
 	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) != 0 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 0, len(ag.securityGroups), ag)
+		}
+		if len(ag.securityPolicies) != 0 {
+			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 0, len(ag.securityPolicies), ag)
+		}
+		return true, nil
+	}, fmt.Sprintf("Expected number of security groups or policies not found. %v", ag), "100ms", "1s")
 
 	synced := stateMgr.topics.AggregateTopic.WatcherInConfigSync(snic.Status.PrimaryMAC, "NetworkSecurityPolicy",
 		api.EventType_UpdateEvent)

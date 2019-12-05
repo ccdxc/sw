@@ -1597,10 +1597,11 @@ func TestWorkloadUpdate(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
 		if err == nil {
-			return true, nil
+			_, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+			return ok, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
 	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")

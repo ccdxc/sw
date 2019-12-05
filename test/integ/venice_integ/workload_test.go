@@ -113,17 +113,17 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			waitCh <- nil
 		}(sn.agent)
 
+		name, err := strconv.ParseMacAddr(sn.macAddr)
+		if err != nil {
+			name = sn.agent.NetworkAgent.NodeUUID
+		}
+		epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
+		epmeta := api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      epname,
+		}
 		AssertEventually(c, func() (bool, interface{}) {
-			name, err := strconv.ParseMacAddr(sn.macAddr)
-			if err != nil {
-				name = sn.agent.NetworkAgent.NodeUUID
-			}
-			epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
-			epmeta := api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      epname,
-			}
 			gep, gerr := it.apisrvClient.WorkloadV1().Endpoint().Get(ctx, &epmeta)
 			if gerr != nil {
 				return false, fmt.Errorf("Endpoint %s not found in apiserver", epname)
@@ -132,7 +132,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				return false, fmt.Errorf("Endpoint %s not found in apiserver", epname)
 			}
 			return true, nil
-		}, "100ms", it.pollTimeout())
+		}, fmt.Sprintf("Endpoint %s not found in apiserver", epname), "100ms", it.pollTimeout())
 	}
 
 	// wait for all goroutines to complete
