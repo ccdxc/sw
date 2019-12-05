@@ -1,0 +1,4 @@
+basepath: "github.com/pensando/sw/metrics/templates"
+templates:
+- template: "metrics_map.tmpl"
+  outputpath: "{FILE}_map.go"

@@ -652,6 +652,13 @@ type msgMetricOptions struct {
 	Scope       string               `json:",omitempty"`
 }
 
+type fileMsgFieldMapOpt struct {
+	FileName string              `json:",omitempty"`
+	Package  string              `json:",omitempty"`
+	Prefix   string              `json:",omitempty"`
+	Maps     map[string][]string `json:",omitempty"`
+}
+
 func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
 	switch in {
 	case gogoproto.FieldDescriptorProto_TYPE_DOUBLE, gogoproto.FieldDescriptorProto_TYPE_FLOAT:
@@ -911,6 +918,26 @@ func genFileMetricsJSON(f *descriptor.File, prefix string) (string, error) {
 		return "", err
 	}
 	return string(ret), nil
+}
+
+func getFileMsgFieldMap(f *descriptor.File) (fileMsgFieldMapOpt, error) {
+	mapOpt := fileMsgFieldMapOpt{}
+	mapOpt.FileName = *f.Name
+	mapOpt.Package = f.GoPkg.Name
+	mapOpt.Maps = map[string][]string{}
+
+	for _, m := range f.Messages {
+		mopts, ok := getMsgMetricOptions(m)
+		if ok {
+			key := mopts.Name
+			values := []string{}
+			for _, field := range mopts.Fields {
+				values = append(values, field.Name)
+			}
+			mapOpt.Maps[key] = values
+		}
+	}
+	return mapOpt, nil
 }
 
 func getPenctlParentCmdOptions(m *descriptor.Message) ([]PenctlCmdOpts, error) {
@@ -3838,6 +3865,7 @@ func init() {
 	reg.RegisterFunc("getGenParamsPath", getGenParamsPath)
 	reg.RegisterFunc("genMetricsManifest", genMetricsManifest)
 	reg.RegisterFunc("getMsgMetricOptionsHdlr", getMsgMetricOptionsHdlr)
+	reg.RegisterFunc("getFileMsgFieldMap", getFileMsgFieldMap)
 	reg.RegisterFunc("getPdsaFieldOpt", getPdsaFieldOpt)
 	reg.RegisterFunc("isPdsaFieldInTable", isPdsaFieldInTable)
 	reg.RegisterFunc("getEnumVNameName", getEnumVNameName)
