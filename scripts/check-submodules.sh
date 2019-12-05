@@ -2,6 +2,15 @@
 
 TOP=${TOP:-/go/src/github.com/pensando/sw}
 VERSIONS_FILE=$TOP/scripts/module_versions.txt
+GITMODULES=$TOP/.gitmodules
+
+# Make sure all the submodules exist have a file in VERSIONS_FILE.
+# buildroot is a special case
+for submodule in `grep path $GITMODULES | sed 's/.*= \(.*\)/\1/'`; do
+    grep -c $submodule $VERSIONS_FILE > /dev/null || \
+        [[ $submodule == 'nic/buildroot' ]] || \
+        echo "$submodule doesn't have a version in /sw/scripts/module_versions.txt"
+done
 
 # Read the module_versions.txt files and make sure the submodule versions match
 while read -a LINE; do
