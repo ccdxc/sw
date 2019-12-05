@@ -8,10 +8,13 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
@@ -768,6 +771,7 @@ sdk_ret_t
 lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     uint32_t idx;
     sdk_ret_t ret;
+    ::core::event_t event;
     lif_actiondata_t lif_data = { 0 };
 
     PDS_TRACE_DEBUG("Creating host lif %u", key_);
@@ -785,6 +789,12 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
+
+    // notify rest of the system
+    memset(&event, 0, sizeof(event));
+    event.lif.ifindex = LIF_IFINDEX(key_);
+    event.lif.state = lif_state_t::LIF_STATE_NONE;
+    sdk::event_thread::publish(EVENT_ID_HOST_LIF_CREATE, &event, sizeof(event));
     return SDK_RET_OK;
 
 error:
