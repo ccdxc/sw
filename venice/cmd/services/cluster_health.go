@@ -653,6 +653,7 @@ func (c *ClusterHealthMonitor) processPodEvent(eventType k8swatch.EventType, pod
 
 	if refName == "" {
 		c.logger.Errorf("pod event %v, %+v has no owner references", eventType, pod)
+		c.servicesHealth.Unlock()
 		return
 	}
 
