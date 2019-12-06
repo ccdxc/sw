@@ -39,11 +39,11 @@ regression-rdma-stress: extract-artifacts
 
 regression-storage: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
-	           --regression --testbundle storage 
+	           --regression --testbundle storage,penctl
  
 regression-eth: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
-	           --regression --testbundle ethtool,connectivity,filters,mtu,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr
+	           --regression --testbundle ethtool,connectivity,filters,mtu,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,ionicdrv_regr
 
 regression-infra: extract-artifacts
 	cd /sw/iota && cat /warmd.json && ./iota.py --testsuite classic --testbed /warmd.json \
