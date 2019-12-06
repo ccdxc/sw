@@ -27,8 +27,6 @@ struct aq_rx_s4_t2_k k;
 #define K_RNR_RETRY_COUNT CAPRI_KEY_FIELD(IN_TO_S_P, rnr_retry_count)
 #define K_RNR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, rnr_retry_count_valid)
 #define K_SQD_ASYNC_NOTIFY_EN CAPRI_KEY_FIELD(IN_P, sqd_async_notify_en)
-#define K_ACCESS_FLAGS_VALID CAPRI_KEY_FIELD(IN_P, access_flags_valid)
-#define K_ACCESS_FLAGS CAPRI_KEY_FIELD(IN_P, access_flags)
 #define K_CONGESTION_MGMT_ENABLED CAPRI_KEY_FIELD(IN_P, congestion_mgmt_enable)
 %%
 
@@ -97,15 +95,10 @@ rnr_retry_count:
     tblwr       d.rnr_retry_count, K_RNR_RETRY_COUNT
 
 pmtu:
-    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, access_flags
+    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, sqd_async_notify
     nop
                                         
     tblwr       d.log_pmtu, CAPRI_KEY_RANGE(IN_P, pmtu_log2_sbit0_ebit2, pmtu_log2_sbit3_ebit4)
-
-access_flags:
-    seq         c1, K_ACCESS_FLAGS_VALID, 1
-    //TODO: Enable tblwr after carving space in sqcb1 to hold them.
-    //tblwr.c1    d.access_flags, K_ACCESS_FLAGS
 
 sqd_async_notify:
     seq         c1, K_SQD_ASYNC_NOTIFY_EN, 1

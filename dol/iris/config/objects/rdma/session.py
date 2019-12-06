@@ -56,6 +56,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
         if self.lqp.svc == 3:
             self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
 
+        self.lqp.set_access_flags(1,1,1) # REMOTE_WRITE | READ | ATOMIC
         self.lqp.set_q_state(3) # Q_STATE_RTS
 
         # For local-local rdma sessions, need to setup reverse direction too
@@ -69,6 +70,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
             self.rqp.set_rsq_wqes(flip=True)
             self.rqp.set_rrq_wqes(flip=True)
             self.rqp.set_pmtu()
+            self.rqp.set_access_flags(1,1,1) # REMOTE_WRITE | READ | ATOMIC
             self.rqp.set_q_state(3)
 
         pass

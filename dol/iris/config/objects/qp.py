@@ -213,6 +213,14 @@ class QpObject(base.ConfigObjectBase):
             logger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
             logger.info('CQ ID: %d EQ ID: %d' %(self.cq_id, self.eq_id))
 
+    def set_access_flags(self, remote_write, remote_read, remote_atomic):
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_ACCESS_FLAGS
+        mask = (remote_write & 1) | ((remote_read & 1) << 1) | ((remote_atomic & 1) << 2)
+        self.flags = self.flags | mask
+        logger.info(" RdmaQpUpdate Oper: SET_ACCESS_FLAGS access_flags: %d " %
+                        (mask))
+        if (GlobalOptions.dryrun): return
+
     def set_dst_qp(self, value):
         self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN
         self.dst_qp = value

@@ -17,6 +17,9 @@ struct aq_rx_s5_t2_k k;
 
 #define K_SQCB_ADDR   CAPRI_KEY_RANGE(IN_P, sqcb_addr_sbit0_ebit2, sqcb_addr_sbit27_ebit31)
 #define K_CONGESTION_MGMT_ENABLED CAPRI_KEY_FIELD(IN_P, congestion_mgmt_enable)
+#define K_ACCESS_FLAGS_VALID CAPRI_KEY_FIELD(IN_P, access_flags_valid)
+#define K_ACCESS_FLAGS CAPRI_KEY_FIELD(IN_P, access_flags)
+
 %%
 
 .align
@@ -81,10 +84,14 @@ state:
     DMA_HBM_PHV2MEM_SETUP(r6, rqcb4, rqcb5, r3)
     
 pmtu:
-    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, q_key
+    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, access_flags
     nop
 
     tblwr       d.log_pmtu, CAPRI_KEY_RANGE(IN_P, pmtu_log2_sbit0_ebit2, pmtu_log2_sbit3_ebit4)
+
+access_flags:
+    seq         c1, K_ACCESS_FLAGS_VALID, 1
+    tblwr.c1    d.access_flags, K_ACCESS_FLAGS
 
 q_key:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P , q_key_valid), 1, done

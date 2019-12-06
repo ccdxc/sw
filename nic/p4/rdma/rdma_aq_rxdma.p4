@@ -636,6 +636,10 @@ action rdma_aq_rx_rqcb1_process () {
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.state_valid, t2_s2s_sqcb1_to_rqcb1_info.state_valid);    
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_log2, t2_s2s_sqcb1_to_rqcb1_info.pmtu_log2);    
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_valid, t2_s2s_sqcb1_to_rqcb1_info.pmtu_valid);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.rq_id, t2_s2s_sqcb1_to_rqcb1_info.rq_id);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.sqd_async_notify_en, t2_s2s_sqcb1_to_rqcb1_info.sqd_async_notify_en);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.access_flags_valid, t2_s2s_sqcb1_to_rqcb1_info.access_flags_valid);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.access_flags, t2_s2s_sqcb1_to_rqcb1_info.access_flags);
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state, t2_s2s_sqcb1_to_rqcb1_info.cur_state);
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state_valid, t2_s2s_sqcb1_to_rqcb1_info.cur_state_valid);
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.sqcb_addr, t2_s2s_sqcb1_to_rqcb1_info.sqcb_addr);

@@ -23,6 +23,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
 
+    rs.lqp.rq.qstate.data.access_flags = 0
+    rs.lqp.rq.qstate.WriteWithDelay()
     tc.pvtdata.test_qp = rs.lqp
 
     # Set attr_mask for mod_qp
@@ -30,6 +32,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
     tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RETRY_CNT
     tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_RNR_RETRY
+    tc.pvtdata.attr_mask |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_ACCESS_FLAGS
 
     # Setup values to send down to mod_qp
     if tc.pvtdata.rq_pre_qstate.e_psn != 0:
@@ -57,6 +60,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.dcqcn_profile = RdmaDcqcnProfileObject(tc.pvtdata.lif, 0).data
     tc.pvtdata.pre_dcqcn_data = copy.deepcopy(rs.lqp.dcqcn_data)
     tc.pvtdata.rate_enforced = tc.pvtdata.dcqcn_profile.rp_qp_rate
+    tc.pvtdata.access_flags = 11 # REMOTE_WRITE | REMOTE_READ and 1 bit out of range
     return
 
 def TestCaseTrigger(tc):
@@ -108,6 +112,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'err_retry_count', tc.pvtdata.err_retry):
             return False
         if not VerifyFieldAbsolute(tc, rs.lqp.sq.qstate.data, 'err_retry_ctr', tc.pvtdata.err_retry):
+            return False
+
+        # verify that access_flags is set in rqcb1
+        if not VerifyFieldAbsolute(tc, rs.lqp.rq.qstate.data, 'access_flags', tc.pvtdata.access_flags & 0x3):
             return False
 
         # verify that dcqcn cb values are sane
