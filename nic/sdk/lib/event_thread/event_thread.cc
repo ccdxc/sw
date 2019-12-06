@@ -8,19 +8,12 @@
 #include "event_thread.hpp"
 
 #include "include/sdk/mem.hpp"
+#include "lib/ipc/subscribers.hpp"
 
 #define MAX_THREAD_ID 63
 
 namespace sdk {
 namespace event_thread {
-
-typedef struct pubsub_meta_ {
-    uint32_t sender;
-    uint32_t recipient;
-    uint32_t msg_code;
-    uint32_t serial;
-    size_t   data_length;
-} pubsub_meta_t;
 
 typedef enum updown_status_ {
     THREAD_DOWN = 0,
@@ -33,7 +26,6 @@ typedef struct updown_meta_ {
 } updown_meta_t;
 
 typedef union lfq_msg_meta_ {
-    pubsub_meta_t pubsub;
     updown_meta_t updown;
 } lfq_msg_meta_t;
 
@@ -43,7 +35,6 @@ public:
     static void destroy(lfq_msg *msg);
     enum lfq_msg_type {
         USER_MSG,
-        PUBSUB_MSG,
         UPDOWN_MSG, // thread-up notifications
     } type;
     void *payload;
@@ -53,16 +44,6 @@ private:
     ~lfq_msg();
 };
 typedef std::shared_ptr<lfq_msg> lfq_msg_ptr;
-
-class pubsub_mgr {
-public:
-    void subscribe(uint32_t msg_code, uint32_t client_id);
-    std::set<uint32_t> subscriptions(uint32_t msg_code);
-private:
-    std::map<uint32_t, std::shared_ptr<std::set<uint32_t> > > subscriptions_;
-    std::mutex mutex_;
-};
-typedef std::shared_ptr<pubsub_mgr> pubsub_msg_ptr;
 
 // Responsible for thread status notification
 // Thread going up and down
@@ -86,8 +67,6 @@ typedef struct cookie_wrapper_ {
 static thread_local event_thread *t_event_thread_ = NULL;
 
 static event_thread *g_event_thread_table[MAX_THREAD_ID + 1];
-
-static pubsub_mgr g_pubsubs;
 
 static updown_mgr g_updown;
 
@@ -149,27 +128,6 @@ lfq_msg::lfq_msg() {
 
 lfq_msg::~lfq_msg() {
 }
-
-void
-pubsub_mgr::subscribe(uint32_t msg_code, uint32_t client_id) {
-    this->mutex_.lock();
-    if (this->subscriptions_.count(msg_code) == 0) {
-        this->subscriptions_[msg_code] = std::make_shared<std::set<uint32_t> >();
-    }
-    this->subscriptions_[msg_code]->insert(client_id);
-    this->mutex_.unlock();
-}
-
-std::set<uint32_t>
-pubsub_mgr::subscriptions(uint32_t msg_code) {
-    std::set<uint32_t> res;
-    this->mutex_.lock();
-    if (this->subscriptions_.count(msg_code) > 0) {
-        res = *this->subscriptions_[msg_code];
-    }
-    this->mutex_.unlock();
-    return res;
-};
 
 void
 updown_mgr::subscribe(uint32_t subscriber, uint32_t target) {
@@ -274,6 +232,7 @@ event_thread::init(const char *name, uint32_t thread_id,
     for (int i = 0; i < IPC_MAX_ID + 1; i++) {
         this->ipc_clients_[i] = NULL;
     }
+    this->ipc_server_ = ipc::ipc_server::factory(this->thread_id());
 
     return 0;
 }
@@ -328,17 +287,6 @@ event_thread::process_lfq_(void) {
         if (msg->type == lfq_msg::USER_MSG) {
             assert(this->message_cb_ != NULL);
             this->message_cb_(msg->payload, this->user_ctx_);
-        } else if (msg->type == lfq_msg::PUBSUB_MSG) {
-            assert(this->sub_cbs_.count(msg->meta.pubsub.msg_code) > 0);
-            SDK_TRACE_DEBUG("Subscribed message rx: sender: %u, recipient: %u, "
-                            "msg_code: %u, ",
-                            msg->meta.pubsub.sender, msg->meta.pubsub.recipient,
-                            msg->meta.pubsub.msg_code);
-            this->sub_cbs_[msg->meta.pubsub.msg_code](
-                msg->payload, msg->meta.pubsub.data_length, this->user_ctx_);
-            if (msg->payload) {
-                free(msg->payload);
-            }
         } else if (msg->type == lfq_msg::UPDOWN_MSG) {
             assert(this->updown_up_cbs_.count(msg->meta.updown.thread_id) > 0);
             this->updown_up_cbs_[msg->meta.updown.thread_id](
@@ -360,7 +308,6 @@ event_thread::run_(void) {
     this->set_ready(true);
 
     // IPC
-    this->ipc_server_ = ipc::ipc_server::factory(this->thread_id());
     ev_io_init(&this->ipc_watcher_, &this->ipc_callback_,
                this->ipc_server_->fd(), EV_READ);
     this->ipc_watcher_.data = this;
@@ -502,24 +449,24 @@ event_thread::message_send(void *message) {
 }
 
 void
-event_thread::subscribe(uint32_t msg_code, sub_cb callback) {
-    assert(t_event_thread_ == this);
-    assert(this->sub_cbs_.count(msg_code) == 0);
-
-    this->sub_cbs_[msg_code] = callback;
-    g_pubsubs.subscribe(msg_code, this->thread_id());
-}
-
-void
 event_thread::handle_ipc_(void) {
     while (1) {
         ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
         if (msg == nullptr) {
             return;
         }
-        // We received an IPC message but don't have a handler
-        assert(this->rpc_req_cbs_.count(msg->code()) > 0);
-        this->rpc_req_cbs_[msg->code()](msg, this->user_ctx_);
+        if (msg->type() == sdk::ipc::DIRECT) {
+            // We received an IPC message but don't have a handler
+            assert(this->rpc_req_cbs_.count(msg->code()) > 0);
+            this->rpc_req_cbs_[msg->code()](msg, this->user_ctx_);
+        } else if (msg->type() == sdk::ipc::BROADCAST) {
+            // We shouldn't be receiving this if we don't have a handler
+            assert(this->sub_cbs_.count(msg->code()) > 0);
+            this->sub_cbs_[msg->code()](msg->data(), msg->length(),
+                                        this->user_ctx_);
+        } else {
+            assert(0);
+        }
     }
 }
 
@@ -581,16 +528,10 @@ event_thread::rpc_reg_response_handler(uint32_t msg_code,
     this->rpc_rsp_cbs_[msg_code] = callback;
 }
 
-
-void
-event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
-                          const void *data, size_t data_length,
-                          const void *cookie, const msg_cleanup_cb cleanup_cb)
-{
+ipc::ipc_client *
+event_thread::get_client_(uint32_t recipient) {
     ipc::ipc_client *client;
-
-    assert(t_event_thread_ == this);
-
+    
     client = this->ipc_clients_[recipient];
     if (client == NULL) {
         ev_io *watcher = &this->ipc_client_watchers_[recipient];
@@ -606,13 +547,45 @@ event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
         client->recv(NULL);
     }
 
+    return client;
+}
+
+void
+event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
+                          const void *data, size_t data_length,
+                          const void *cookie, const msg_cleanup_cb cleanup_cb) {
+    assert(t_event_thread_ == this);
+
     // This gets freed in handle_ipc_client_
     cookie_wrapper_t *wrap = (cookie_wrapper_t *)malloc(sizeof(*wrap));
     wrap->user_data = data;
     wrap->user_cookie = cookie;
     wrap->cleanup_cb = cleanup_cb;
     
-    client->send(msg_code, data, data_length, wrap);
+    this->get_client_(recipient)->send(msg_code, data, data_length, wrap);
+}
+
+void
+event_thread::subscribe(uint32_t msg_code, sub_cb callback) {
+    assert(t_event_thread_ == this);
+    assert(this->sub_cbs_.count(msg_code) == 0);
+    assert(callback != NULL);
+
+    this->sub_cbs_[msg_code] = callback;
+    this->ipc_server_->subscribe(msg_code);
+}
+
+void
+event_thread::publish(uint32_t msg_code, const void *data,
+                      size_t data_length) {
+    std::vector<uint32_t> recipients =
+        ipc::subscribers::instance()->get(msg_code);
+
+    assert(t_event_thread_ == this);
+
+    for(uint32_t rcpt : recipients) {
+        this->get_client_(rcpt)->send(msg_code, data, data_length, NULL);
+    }
 }
 
 void
@@ -729,49 +702,6 @@ message_send (uint32_t thread_id, void *message)
 }
 
 void
-subscribe (uint32_t msg_code, sub_cb callback)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->subscribe(msg_code, callback);
-}
-
-void
-publish (uint32_t msg_code, void *data, size_t data_length)
-{
-    void *data_copy;
-    std::set<uint32_t> subs;
-    uint32_t sender_id = MAX_THREAD_ID + 1;
-
-    if (t_event_thread_ != NULL) {
-        sender_id = t_event_thread_->thread_id();
-    }
-
-    subs = g_pubsubs.subscriptions(msg_code);
-
-    for (auto sub: subs) {
-        lfq_msg *msg = lfq_msg::factory();
-        if (data_length) {
-            data_copy = malloc(data_length);
-            memcpy(data_copy, data, data_length);
-        } else {
-            data_copy = NULL;
-        }
-        msg->type = lfq_msg::PUBSUB_MSG;
-        msg->payload = data_copy;
-        msg->meta.pubsub.data_length = data_length;
-        msg->meta.pubsub.sender = sender_id;
-        msg->meta.pubsub.recipient = sub;
-        msg->meta.pubsub.msg_code = msg_code;
-        msg->meta.pubsub.serial = 0;
-        SDK_TRACE_DEBUG("Published message: sender: %u, recipient: %u, "
-                        "msg_code: %u, ", sender_id, sub, msg_code);
-        g_event_thread_table[sub]->message_send(msg);
-    }
-
-}
-
-void
 rpc_reg_request_handler (uint32_t msg_code, rpc_request_cb callback)
 {
     assert(t_event_thread_ != NULL);
@@ -804,6 +734,22 @@ rpc_request (uint32_t recipient, uint32_t msg_code,
     assert(t_event_thread_ != NULL);
     t_event_thread_->rpc_request(recipient, msg_code, data, data_length,
                                  cookie, cleanup_cb);
+}
+
+void
+subscribe (uint32_t msg_code, sub_cb callback)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->subscribe(msg_code, callback);
+}
+
+void
+publish (uint32_t msg_code, const void *data, size_t data_length)
+{
+    assert(t_event_thread_ != NULL);
+
+    t_event_thread_->publish(msg_code, data, data_length);
 }
 
 } // namespace event_thread

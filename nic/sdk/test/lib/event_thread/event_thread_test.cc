@@ -15,8 +15,6 @@ namespace event = sdk::event_thread;
 #define THREAD_T3 3
 #define THREAD_T4 4
 #define THREAD_T5 5
-#define THREAD_T6 6
-#define THREAD_T7 7
 
 class event_thread_test : public ::testing::Test {
 public:
@@ -215,7 +213,7 @@ ipc_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
     event::rpc_response(msg, msg->data(), msg->length());
 
     printf("Also publishing: broadcast\n");
-    event::publish(0x123, (void *)"broadcast", 10);
+    event::publish(1, (void *)"broadcast", 10);
 }
 
 void
@@ -247,9 +245,9 @@ ipc_client_cb (uint32_t sender, sdk::ipc::ipc_msg_ptr msg, void *ctx,
 }
 
 void
-subscribe_cb (void *data, size_t data_length, void *ctx)
+subscribe_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
 {
-    printf("Subscriber got: %s\n", (char *)data);
+    printf("Subscriber got: %s\n", (char *)msg->data());
 }
 
 void
@@ -263,7 +261,7 @@ init_ipc_client (void *ctx)
     event::rpc_reg_request_handler(0, ipc_cb);
     event::rpc_reg_response_handler(0, ipc_client_cb);
 
-    event::subscribe(0x123, subscribe_cb);
+    event::rpc_reg_request_handler(1, subscribe_cb);
 }
 
 

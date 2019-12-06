@@ -11,7 +11,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/lib/device/device.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -298,7 +298,7 @@ pds_init (pds_init_params_t *params)
     core::spawn_learn_thread(&api::g_pds_state);
 
     // raise HAL_UP event
-    sdk::event_thread::publish(EVENT_ID_PDS_HAL_UP, NULL, 0);
+    sdk::ipc::broadcast(EVENT_ID_PDS_HAL_UP, NULL, 0);
 
     return SDK_RET_OK;
 }

@@ -11,10 +11,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define IPC_MAX_ID 63
+#define IPC_MAX_CLIENT 63
+
 namespace sdk {
 namespace ipc {
 
-#define IPC_MAX_ID 63
+typedef enum ipc_msg_type {
+    DIRECT    = 0,
+    BROADCAST = 1,
+} ipc_msg_type_t;
 
 class ipc_msg {
 public:
@@ -23,6 +29,8 @@ public:
     virtual void *data(void) = 0;
     /// \brief get the size of the data payload
     virtual size_t length(void) = 0;
+    /// \brief get the type of the message (DIRECT or BROADCAST)
+    virtual ipc_msg_type_t type(void) = 0;
 };
 typedef std::shared_ptr<struct ipc_msg> ipc_msg_ptr;
 
@@ -33,6 +41,8 @@ typedef std::shared_ptr<struct ipc_msg> ipc_msg_ptr;
 extern ipc_msg_ptr request(uint32_t recipient, uint32_t msg_code,
                            const void *data, size_t data_length);
 
+extern void broadcast(uint32_t msg_code, const void *data, size_t data_length);
+
 class ipc_server {
 public:
     /// \brief create a new ipc server
@@ -40,6 +50,7 @@ public:
     ///               requests
     static ipc_server *factory(uint32_t id);
     static void destroy(ipc_server *server);
+    virtual void subscribe(uint32_t msg_code) = 0;
     virtual int fd(void) = 0;
     virtual ipc_msg_ptr recv(void) = 0;
     virtual void reply(ipc_msg_ptr msg, const void *data,
@@ -53,6 +64,8 @@ public:
     virtual int fd(void) = 0;
     virtual void send(uint32_t msg_code, const void *data, size_t data_length,
                       const void *cookie) = 0;
+    virtual void broadcast(uint32_t msg_code, const void *data,
+                           size_t data_length) = 0;
     virtual ipc_msg_ptr recv(const void** cokie) = 0;
 };
 

@@ -10,7 +10,7 @@
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -40,7 +40,7 @@ port_event_cb (port_event_info_t *port_event_info)
         sdk::lib::catalog::logical_port_to_ifindex(logical_port);
     event.port.event = port_event;
     event.port.speed = port_speed;
-    sdk::event_thread::publish(EVENT_ID_PORT_STATUS, &event, sizeof(event));
+    sdk::ipc::broadcast(EVENT_ID_PORT_STATUS, &event, sizeof(event));
 }
 
 bool
@@ -68,7 +68,7 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
     event.xcvr.pid = xcvr_event_info->pid;
     event.xcvr.cable_type = xcvr_event_info->cable_type;
     memcpy(event.xcvr.sprom, xcvr_event_info->xcvr_sprom, XCVR_SPROM_SIZE);
-    sdk::event_thread::publish(EVENT_ID_XCVR_STATUS, &event, sizeof(event));
+    sdk::ipc::broadcast(EVENT_ID_XCVR_STATUS, &event, sizeof(event));
     return false;
 }
 
