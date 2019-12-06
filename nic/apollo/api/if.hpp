@@ -20,6 +20,9 @@
 
 #define PDS_MAX_IF    256             ///< Max interfaces
 
+// attribute update bits for interface object
+#define PDS_IF_UPD_ADMIN_STATE         0x1
+
 namespace api {
 
 // forward declaration
@@ -60,11 +63,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(if_entry *intf);
 
-    /// \brief     initialize an interface entry with the given config
-    /// \param[in] api_ctxt API context carrying the configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
@@ -76,18 +74,16 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(void) override;
 
+    /// \brief     initialize an interface entry with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
     /// \brief     program all h/w tables relevant to this object except
     ///            stage 0 table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          reprogram all h/w tables relevant to this object and
-    ///                 dependent on other objects except stage 0 table(s),
-    ///                 if any
-    /// \param[in] api_op    API operation
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -95,6 +91,33 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          add all objects that may be affected if this object is
+    ///                 updated to framework's object dependency list
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
+        return SDK_RET_INVALID_OP;
+    }
 
     /// \brief     update all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -233,7 +256,6 @@ private:
 
 private:
     pds_if_key_t key_;             ///< interface key
-    ht_ctxt_t ht_ctxt_;            ///< hash table context
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
     pds_if_state_t admin_state_;   ///< admin state
@@ -255,8 +277,10 @@ private:
             mac_addr_t mac_;       ///< MAC address of this L3 interface
         } l3_;
     } if_info_;
+
+    ht_ctxt_t ht_ctxt_;            ///< hash table context
     ht_ctxt_t ifindex_ht_ctxt_;    ///< hash table context
-    impl_base         *impl_;      ///< impl object instance
+    impl_base *impl_;              ///< impl object instance
     friend class if_state;         ///< if_state is friend of if_entry
 };
 

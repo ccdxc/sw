@@ -75,7 +75,19 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt);
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /// \brief      cleanup all h/w tables relevant to this object except
+    ///             stage 0 table(s), if any, by updating packed entries with
+    ///             latest epoch#
+    /// \param[in]  obj_ctxt transient state associated with this API
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t cleanup_hw(api_base *api_obj,
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      re-program all hardware tables relevant to this object
     ///             except stage 0 table(s), if any and this reprogramming
@@ -88,14 +100,6 @@ public:
     //       object list
     virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
 
-    /// \brief      cleanup all h/w tables relevant to this object except
-    ///             stage 0 table(s), if any, by updating packed entries with
-    ///             latest epoch#
-    /// \param[in]  obj_ctxt transient state associated with this API
-    /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
-
     /// \brief      update all h/w tables relevant to this object except stage 0
     ///             table(s), if any, by updating packed entries with latest
     ///             epoch#
@@ -103,7 +107,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
@@ -151,6 +157,11 @@ private:
     /// \brief  destructor
     ~if_impl() {}
 
+    /// \brief     program l3 interface related attributes in the datapath
+    /// \param[in] spec  interface configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_l3_if_(pds_if_spec_t *spec);
+
     /// \brief     program interface related tables during interface create by
     ///            enabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
@@ -159,6 +170,15 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_create_(pds_epoch_t epoch, if_entry *intf,
                                pds_if_spec_t *spec);
+
+    /// \brief      program subnet related tables during subnet update by
+    ///             enabling stage0 tables corresponding to the new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  intf cloned interface obj being programmed
+    /// \param[in]  obj_ctxt transient state associated with this API
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, if_entry *intf,
+                               obj_ctxt_t *obj_ctxt);
 
     /// \brief     program interface related tables during interface delete by
     ///            disabling stage0 tables corresponding to the new epoch

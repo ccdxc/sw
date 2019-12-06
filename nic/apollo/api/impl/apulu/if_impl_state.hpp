@@ -45,13 +45,10 @@ public:
     void free(if_impl *impl);
 
 private:
-    rte_indexer *l3if_idxr(void) { return l3if_idxr_; }
     rte_indexer *lif_idxr(void) { return lif_idxr_; }
     friend class if_impl;      // if_impl class is friend of if_impl_state
 
 private:
-    ///< indexer for L3 interfaces and sub-interfaces
-    rte_indexer *l3if_idxr_;
     ///< indexer for uplinks and internal svc lifs
     rte_indexer  *lif_idxr_;
 };

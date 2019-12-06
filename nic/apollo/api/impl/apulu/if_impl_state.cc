@@ -21,16 +21,12 @@ namespace impl {
 /// \@{
 
 if_impl_state::if_impl_state(pds_state *state) {
-    // create indexer for L3 interface h/w ids
-    l3if_idxr_ = rte_indexer::factory(16, true, true);
-    SDK_ASSERT(l3if_idxr_ != NULL);
     // create indexer for uplinks and internal service lifs
     lif_idxr_ = rte_indexer::factory(64, true, false);
     SDK_ASSERT(lif_idxr_ != NULL);
 }
 
 if_impl_state::~if_impl_state() {
-    rte_indexer::destroy(l3if_idxr_);
     rte_indexer::destroy(lif_idxr_);
 }
 

@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/if.hpp"
@@ -20,7 +21,6 @@
 namespace api {
 
 if_entry::if_entry() {
-    // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     memset(&if_info_, 0, sizeof(if_info_));
     ifindex_ = IFINDEX_INVALID;
@@ -45,7 +45,7 @@ if_entry *
 if_entry::factory(pds_if_spec_t *spec) {
     if_entry *intf;
 
-    // create vpc entry with defaults, if any
+    // create interface entry with defaults, if any
     intf = if_db()->alloc();
     if (intf) {
         new (intf) if_entry();
@@ -55,7 +55,6 @@ if_entry::factory(pds_if_spec_t *spec) {
 }
 
 if_entry::~if_entry() {
-    // SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -102,35 +101,6 @@ if_entry::free(if_entry *intf) {
 }
 
 sdk_ret_t
-if_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;
-
-    PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
-                    spec->key.id, spec->type);
-    memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
-    type_ = spec->type;
-    ifindex_ = spec->key.id;
-    admin_state_ = spec->admin_state;
-    switch (type_) {
-     case PDS_IF_TYPE_UPLINK:
-         if_info_.uplink_.port_ = spec->uplink_info.port_num;
-         break;
-     case PDS_IF_TYPE_L3:
-         if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
-         if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
-         if_info_.l3_.port_ = spec->l3_if_info.port_num;
-         if_info_.l3_.encap_ = spec->l3_if_info.encap;
-         memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
-                ETH_ADDR_LEN);
-         break;
-     default:
-         return sdk::SDK_RET_INVALID_ARG;
-         break;
-     }
-     return SDK_RET_OK;
-}
-
-sdk_ret_t
 if_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->reserve_resources(this, obj_ctxt);
@@ -155,16 +125,42 @@ if_entry::nuke_resources_(void) {
 }
 
 sdk_ret_t
+if_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;
+
+    PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
+                    spec->key.id, spec->type);
+    memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
+    type_ = spec->type;
+    ifindex_ = spec->key.id;
+    admin_state_ = spec->admin_state;
+    switch (type_) {
+     case PDS_IF_TYPE_UPLINK:
+         if_info_.uplink_.port_ = spec->uplink_info.port_num;
+         break;
+
+     case PDS_IF_TYPE_L3:
+         if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
+         if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
+         if_info_.l3_.port_ = spec->l3_if_info.port_num;
+         if_info_.l3_.encap_ = spec->l3_if_info.encap;
+         memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
+                ETH_ADDR_LEN);
+         break;
+
+     default:
+         return sdk::SDK_RET_INVALID_ARG;
+         break;
+     }
+     return SDK_RET_OK;
+}
+
+sdk_ret_t
 if_entry::program_create(obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-if_entry::reprogram_config(api_op_t api_op) {
-    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
@@ -176,8 +172,34 @@ if_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+if_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
+
+    obj_ctxt->upd_bmap = 0;
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" "
+                      "from type %u to %u on interface 0x%x",
+                      type_, spec->type, key_.id);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if (admin_state_ != spec->admin_state) {
+        obj_ctxt->upd_bmap |= PDS_IF_UPD_ADMIN_STATE;
+    }
+
+    if (type_ == PDS_IF_TYPE_UPLINK) {
+        // no other changes are relevant to uplink
+        return SDK_RET_OK;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 if_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (impl_) {
+        return impl_->update_hw(orig_obj, this, obj_ctxt);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -185,6 +207,15 @@ if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+if_entry::read(pds_if_key_t *key, pds_if_info_t *info) {
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)key,
+                              (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;
 }
@@ -204,22 +235,15 @@ if_entry::del_from_db(void) {
 
 sdk_ret_t
 if_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (if_db()->remove((if_entry *)orig_obj)) {
+        return if_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
 if_entry::delay_delete(void) {
-    PDS_TRACE_VERBOSE("Delay delete interface 0x%x", key_);
     return delay_delete_to_slab(PDS_SLAB_ID_IF, this);
-}
-
-sdk_ret_t
-if_entry::read(pds_if_key_t *key, pds_if_info_t *info) {
-    if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
-                              (impl::obj_info_t *)info);
-    }
-    return SDK_RET_OK;
 }
 
 }    // namespace api
