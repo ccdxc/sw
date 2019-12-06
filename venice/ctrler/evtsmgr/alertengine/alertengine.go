@@ -31,9 +31,10 @@ import (
 )
 
 var (
-	pkgName       = "evts-alerts-engine"
-	maxRetry      = 15
-	numAPIClients = 10
+	pkgName                   = "evts-alerts-engine"
+	maxRetry                  = 15
+	numAPIClients             = 10
+	alertPolicyUpdateInterval = 10 * time.Second
 )
 
 //
@@ -74,16 +75,30 @@ var (
 // events to alerts based on the event based alert policies.
 type alertEngineImpl struct {
 	sync.RWMutex
-	logger         log.Logger                // logger
-	resolverClient resolver.Interface        // to connect with apiserver to fetch alert policies; and send alerts
-	memDb          *memdb.MemDb              // in-memory db/cache
-	configWatcher  *eapiclient.ConfigWatcher // API server client
-	exporter       *exporter.AlertExporter   // exporter to export alerts to different destinations
-	ctx            context.Context           // context to cancel goroutines
-	cancelFunc     context.CancelFunc        // context to cancel goroutines
-	wg             sync.WaitGroup            // for version watcher routine
-	eventsQueue    chan *evtsapi.Event       // queue holding events that were not processed due to apiserver connection failure
-	apiClients     *apiClients
+	logger                    log.Logger                // logger
+	resolverClient            resolver.Interface        // to connect with apiserver to fetch alert policies; and send alerts
+	memDb                     *memdb.MemDb              // in-memory db/cache
+	configWatcher             *eapiclient.ConfigWatcher // API server client
+	exporter                  *exporter.AlertExporter   // exporter to export alerts to different destinations
+	ctx                       context.Context           // context to cancel goroutines
+	cancelFunc                context.CancelFunc        // context to cancel goroutines
+	wg                        sync.WaitGroup            // for version watcher routine
+	eventsQueue               chan *evtsapi.Event       // queue holding events that were not processed due to apiserver connection failure
+	apiClients                *apiClients
+	alertPolicyStatusCounters *alertPolicyStatusCounters
+}
+
+// alertPolicyStatusCounters represents the alert policy status that needs to be updated with the API server
+type alertPolicyStatusCounters struct {
+	sync.Mutex
+	counters map[string]*apStatusCounters
+}
+
+// apStatusCounters captures the status counters
+type apStatusCounters struct {
+	meta                  *api.ObjectMeta
+	incrementOpenAlertsBy int32
+	incrementTotalHitsBy  int32
 }
 
 type apiClients struct {
@@ -102,20 +117,22 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, configWatcher
 
 	ctx, cancelFunc := context.WithCancel(parentCtx)
 	ae := &alertEngineImpl{
-		logger:         logger,
-		resolverClient: resolverClient,
-		configWatcher:  configWatcher,
-		memDb:          memDb,
-		exporter:       exporter.NewAlertExporter(memDb, configWatcher, logger.WithContext("submodule", "alert_exporter")),
-		ctx:            ctx,
-		cancelFunc:     cancelFunc,
-		eventsQueue:    make(chan *evtsapi.Event, 500),
-		apiClients:     &apiClients{clients: make([]apiclient.Services, 0, numAPIClients)},
+		logger:                    logger,
+		resolverClient:            resolverClient,
+		configWatcher:             configWatcher,
+		memDb:                     memDb,
+		exporter:                  exporter.NewAlertExporter(memDb, configWatcher, logger.WithContext("submodule", "alert_exporter")),
+		ctx:                       ctx,
+		cancelFunc:                cancelFunc,
+		eventsQueue:               make(chan *evtsapi.Event, 500),
+		apiClients:                &apiClients{clients: make([]apiclient.Services, 0, numAPIClients)},
+		alertPolicyStatusCounters: &alertPolicyStatusCounters{counters: make(map[string]*apStatusCounters)},
 	}
 
-	ae.wg.Add(2)
+	ae.wg.Add(3)
 	go ae.createAPIClients(numAPIClients)
 	go ae.processEventsFromQueue()
+	go ae.updateAlertPolicies()
 
 	return ae, nil
 }
@@ -154,6 +171,9 @@ func (a *alertEngineImpl) Stop() {
 	close(a.eventsQueue)
 
 	a.exporter.Stop() // this will stop any exports that're in line
+
+	a.logger.Infof("final update on the pending alert policies")
+	a.updateAlertPoliciesHelper() // try updating any pending alert policies
 
 	// close all the clients
 	a.apiClients.Lock()
@@ -319,14 +339,12 @@ func (a *alertEngineImpl) runPolicy(reqID string, apCl apiclient.Services, ap *m
 		if created {
 			a.logger.Infof("{req: %s} alert created from event {%s: %s, %s, %v} for the policy {%s/%s}", reqID,
 				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
-			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
+			a.updateAlertPolicyStatusCounters(ap.GetObjectMeta(), 1, 1)
 		} else {
 			a.logger.Infof("{req: %s} existing open alert found for event {%s: %s, %s, %v}  for the policy {%s/%s}", reqID,
 				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
-			err = a.updateAlertPolicy(reqID, apCl, ap.GetObjectMeta(), 1, 0) //update only hits, // alert exists already,
+			a.updateAlertPolicyStatusCounters(ap.GetObjectMeta(), 1, 0)
 		}
-
-		return err
 	}
 
 	return nil
@@ -412,28 +430,95 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 	return alertCreated.(bool), err
 }
 
-// updateAlertPolicy helper function to update total hits and open alerts count on the alert policy.
-func (a *alertEngineImpl) updateAlertPolicy(reqID string, apCl apiclient.Services, meta *api.ObjectMeta, incrementTotalHitsBy,
-	incrementOpenAlertsBy int) error {
-	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		ap, err := apCl.MonitoringV1().AlertPolicy().Get(ctx,
-			&api.ObjectMeta{Name: meta.GetName(), Tenant: meta.GetTenant(), Namespace: meta.GetNamespace(), UUID: meta.GetUUID()}) // get the alert policy
-		if err != nil {
-			return nil, err
+// updateAlertPolicyStatusCounters during alert creation, the respective alert policy needs to be updated
+// total number of hits and total open alerts on that policy. This function updates the local map which will be
+// propagated to the API server in intervals.
+func (a *alertEngineImpl) updateAlertPolicyStatusCounters(meta *api.ObjectMeta, incrementTotalHitsBy, incrementOpenAlertsBy int32) {
+	a.alertPolicyStatusCounters.Lock()
+	counters, found := a.alertPolicyStatusCounters.counters[meta.GetKey()]
+	if !found {
+		counters = &apStatusCounters{meta: meta}
+	}
+	counters.incrementTotalHitsBy += incrementTotalHitsBy
+	counters.incrementOpenAlertsBy += incrementOpenAlertsBy
+	a.alertPolicyStatusCounters.counters[meta.GetKey()] = counters
+	a.alertPolicyStatusCounters.Unlock()
+}
+
+// updateAlertPolicies helper function to update total hits and open alerts count on the alert policy in the
+// intervals of 10s.
+// NOTE: evtsmgr will lose the local cache during restarts, as a result alert policy will not updated.
+func (a *alertEngineImpl) updateAlertPolicies() {
+	defer a.wg.Done()
+
+	ticker := time.NewTicker(alertPolicyUpdateInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Info("context cancelled, returning from update alert policies")
+			return
+		case <-ticker.C:
+			a.updateAlertPoliciesHelper()
 		}
+	}
+}
 
-		ap.Status.OpenAlerts += int32(incrementOpenAlertsBy)
-		ap.Status.TotalHits += int32(incrementTotalHitsBy)
+// helper function to update alert policies
+func (a *alertEngineImpl) updateAlertPoliciesHelper() {
+	apCl := a.getAPIClient()
+	if apCl == nil {
+		a.logger.Infof("no API client available, skipping alert policy update")
+		return
+	}
 
-		ap, err = apCl.MonitoringV1().AlertPolicy().UpdateStatus(ctx, ap) // update the policy
-		if err != nil {
-			errStatus, _ := status.FromError(err)
-			a.logger.Debugf("{req: %s} failed to update alert policy, err: %v: %v", reqID, err, errStatus)
-			return nil, err
+	a.alertPolicyStatusCounters.Lock()
+	for key, counters := range a.alertPolicyStatusCounters.counters {
+		if counters.incrementOpenAlertsBy > 0 || counters.incrementTotalHitsBy > 0 {
+			a.logger.Infof("updating alert policy with counters {%v}, total-hits: %v, open-alerts: %v",
+				counters.meta.Name, counters.incrementTotalHitsBy, counters.incrementOpenAlertsBy)
+			_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+				ap, err := apCl.MonitoringV1().AlertPolicy().Get(ctx,
+					&api.ObjectMeta{
+						Name:      counters.meta.GetName(),
+						Tenant:    counters.meta.GetTenant(),
+						Namespace: counters.meta.GetNamespace(),
+						UUID:      counters.meta.GetUUID(),
+					}) // get the alert policy
+				if err != nil {
+					errStatus, _ := status.FromError(err)
+					if errStatus.Code() == codes.NotFound {
+						delete(a.alertPolicyStatusCounters.counters, key)
+						return nil, nil
+					} else if errStatus.Code() == codes.Unavailable { // retry in the next interval
+						return nil, nil
+					}
+					return nil, err
+				}
+
+				ap.Status.OpenAlerts += counters.incrementOpenAlertsBy
+				ap.Status.TotalHits += counters.incrementTotalHitsBy
+
+				ap, err = apCl.MonitoringV1().AlertPolicy().UpdateStatus(ctx, ap) // update the policy
+				if err != nil {
+					errStatus, _ := status.FromError(err)
+					a.logger.Debugf("failed to update alert policy {%v}, increment total-hits by: %v, open-alerts by: %v, err: %v, %v",
+						counters.meta.Name, counters.incrementTotalHitsBy, counters.incrementOpenAlertsBy, err, errStatus)
+					return nil, err
+				}
+
+				// delete the entry after successful update to avoid backlog of old entries
+				delete(a.alertPolicyStatusCounters.counters, key)
+
+				return nil, nil
+			}, 2*time.Second, maxRetry)
+
+			if err != nil {
+				a.logger.Errorf("failed to update alert policy {%v}, increment total-hits by: %v, open-alerts by: %v, err: %v",
+					counters.meta.Name, counters.incrementTotalHitsBy, counters.incrementOpenAlertsBy, err)
+			}
 		}
-
-		return nil, nil
-	}, 5*time.Second, maxRetry)
-
-	return err
+	}
+	a.alertPolicyStatusCounters.Unlock()
 }

@@ -1333,6 +1333,24 @@ func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
 			return false, fmt.Sprintf("expected: 2, got: %v alerts", len(alerts))
 		}, fmt.Sprintf("expected number of alerts are not created"), "200ms", "6s")
 
+	// ensure alert policy status counters are correct
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
+			alertPolicy1, err = ti.apiClient.MonitoringV1().AlertPolicy().Get(ctx, alertPolicy1.GetObjectMeta())
+			if err != nil {
+				return false, nil
+			}
+
+			if alertPolicy1.Status.TotalHits == 2 && alertPolicy1.Status.OpenAlerts == 2 {
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected total-hits: 2 open-alerts: 2, got: %+v ", alertPolicy1.Status)
+		}, fmt.Sprintf("alert policy status counters are not updated"), "2s", "20s")
+
 	err = ti.cleanupPolicies()
 	AssertOk(t, err, "failed to cleanup polices")
 
