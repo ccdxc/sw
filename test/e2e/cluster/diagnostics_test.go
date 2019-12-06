@@ -186,9 +186,13 @@ var _ = Describe("diagnostics tests", func() {
 			}, 10, 1).Should(BeNil())
 		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.Spyglass)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Spyglass)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
