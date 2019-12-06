@@ -98,16 +98,6 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
     {
         case ATG_CPI_RC_OK:
             NBB_TRC_FLOW((NBB_FORMAT "ATG_CPI_RC_OK"));
-            if (trans_done->trans_correlator.correlator1 ==
-                                PDSA_CTM_STUB_INIT_CORRELATOR) {
-                // Stubs initialization transaction is done
-                // We can now signal that nbase thread is ready
-                {
-                    SDK_TRACE_INFO("Nbase thread ready");
-                    auto ctx = pds_ms::mgmt_state_t::thread_context();
-                    ctx.state()->nbase_thread()->set_ready(true);
-                }
-            }
             status = types::ApiStatus::API_STATUS_OK;
             break;
 
@@ -149,7 +139,17 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             break;
     }
     if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
+        // Unblock the GRPC thread which is waiting for the response
         pds_ms::mgmt_state_t::ms_response_ready(status);
+    } else if (trans_done->trans_correlator.correlator1 ==
+                                PDSA_CTM_STUB_INIT_CORRELATOR) {
+        SDK_ABORT_TRACE((trans_done->return_code == ATG_CPI_RC_OK),
+                                "Nbase stubs init txn failed! Aborting!");
+        // Stubs initialization transaction is successful
+        // We can now signal that the nbase thread is ready
+        SDK_TRACE_INFO("Nbase thread ready");
+        auto ctx = pds_ms::mgmt_state_t::thread_context();
+        ctx.state()->nbase_thread()->set_ready(true);
     }
     NBB_TRC_EXIT();
     return;
