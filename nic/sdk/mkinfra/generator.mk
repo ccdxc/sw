@@ -13,7 +13,7 @@ define PRINT_TARGET_DEBUG_INFO
     $$(info =================================================)
     $$(info Target           MODULE_TARGET        = $${${1}_TARGET})
     $$(info Pipeline         MODULE_PIPELINE      = $${${1}_PIPELINE})
-ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
+    $$(info ASIC             MODULE_ASIC          = $${${1}_ASIC})
     $$(info Source Files     MODULE_SRCS          = $${${1}_SRCS})
     $$(info Source DIRS      MODULE_SRC_DIRS      = $${${1}_SRC_DIRS})
     $$(info Bin DIR          MODULE_BIN_DIR       = $${${1}_BIN_DIR})
@@ -43,7 +43,6 @@ ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
     $$(info Module ARLIB Deps    = $${${1}_SOLIB_DEPS})
     $$(info Module Objects       = $${${1}_OBJS})
     $$(info Module MMD Deps      = $${${1}_MMD_DEPS})
-endif
     $$(info )
 endef
 
@@ -76,6 +75,7 @@ define INCLUDE_MODULEMK
     MODULE_DEFS                 :=
     MODULE_DEPS                 :=
     MODULE_PIPELINE             :=
+    MODULE_ASIC                 :=
     MODULE_PREREQS              :=
     MODULE_ARCH_DIR             :=
     MODULE_POSTGEN_MK           :=
@@ -121,6 +121,7 @@ define INCLUDE_MODULEMK
                                $$(addprefix $${RPATH_PREFIX},$${MODULE_LDPATHS}) ${CONFIG_LDPATHS}
     $${TGID}_LDFLAGS        := $${MODULE_LDFLAGS} ${CMD_LINKER_FLAGS}
     $${TGID}_PIPELINE       := $$(filter $${PIPELINE},$${MODULE_PIPELINE})
+    $${TGID}_ASIC           := $$(filter $${ASIC},$${MODULE_ASIC})
     $${TGID}_ARCH           := $$(findstring ${ARCH},$${MODULE_ARCH})
     $${TGID}_FWTYPE         := $$(findstring $${FWTYPE},$${MODULE_FWTYPE})
     $${TGID}_DEPS           := $${MODULE_DEPS}
@@ -346,11 +347,13 @@ endef
 define FILTER_TARGETS_BY_PIPELINE
     ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
         ifeq "$${${1}_ARCH}" "${ARCH}"
-            ifeq "$${${1}_FWTYPE}" "${FWTYPE}"
-                ALL_TARGETS += $${${1}_MKTARGET}
-                ifeq "$${${1}_RECIPE_SUBTYPE}" "GTEST"
-                    ALL_GTEST_TARGETS += $${${1}_MKTARGET}
-                endif
+            ifeq "$${${1}_ASIC}" "${ASIC}"
+                ifeq "$${${1}_FWTYPE}" "${FWTYPE}"
+                    ALL_TARGETS += $${${1}_MKTARGET}
+                    ifeq "$${${1}_RECIPE_SUBTYPE}" "GTEST"
+                        ALL_GTEST_TARGETS += $${${1}_MKTARGET}
+                    endif
+		endif
             endif
         endif
     endif

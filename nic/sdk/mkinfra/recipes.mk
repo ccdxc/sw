@@ -116,10 +116,14 @@ $${${1}_MKTARGET}: $${${1}_DEPS}
 endef
 
 define ADD_RECIPE_FOR_POSTGEN_MK
-ifeq "$${${1}_PIPELINE}" "$${PIPELINE}"
-    $${${1}_MK_DIR}/${2}: $${${1}_MKTARGET}
+    ifeq "$${${1}_ASIC}" "$${ASIC}"
+        ifeq "$${${1}_PIPELINE}" "$${PIPELINE}"
+            ifeq "$${${1}_FWTYPE}" "$${FWTYPE}"
+                $${${1}_MK_DIR}/${2}: $${${1}_MKTARGET}
 		${AT}touch $$@
-endif
+            endif
+        endif
+    endif
 endef
 
 define ADD_RECIPE_FOR_SWIGCLI
@@ -131,8 +135,12 @@ $${${1}_MKTARGET}: $${${1}_DEPS}
 endef
 
 define ADD_RECIPE
-ifeq "$${${1}_PIPELINE}" "$${PIPELINE}"
-    $(call ADD_RECIPE_FOR_${${1}_RECIPE_TYPE},${1})
-    $${${1}_TARGET}: $${${1}_MKTARGET}
-endif
+    ifeq "$${${1}_ASIC}" "$${ASIC}"
+        ifeq "$${${1}_PIPELINE}" "$${PIPELINE}"
+            ifeq "$${${1}_FWTYPE}" "$${FWTYPE}"
+                $(call ADD_RECIPE_FOR_${${1}_RECIPE_TYPE},${1})
+                $${${1}_TARGET}: $${${1}_MKTARGET}
+            endif
+        endif
+    endif
 endef

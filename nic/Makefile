@@ -3,6 +3,7 @@
 export ARCH         ?= x86_64
 export PIPELINE     ?= iris
 export PLATFORM     ?= sim
+export ASIC         ?= capri
 export FWTYPE       ?= full
 export P4VER        ?= P4_14
 export TOPDIR       := ${realpath ${CURDIR}/../}
