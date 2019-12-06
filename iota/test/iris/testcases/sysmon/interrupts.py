@@ -28,7 +28,7 @@ class InterruptField:
         return self.field().replace('_interrupt', '')
 
     def set_field_cmd(self):
-        return '/bin/echo \'fset ' + self.name() + ' ' + self.field() + '=0x1\' | LD_LIBRARY_PATH=/platform/lib:$LD_LIBRARY_PATH /platform/bin/capview'
+        return '/bin/echo \'fset ' + self.name() + ' ' + self.field() + '=0x1\' | LD_LIBRARY_PATH=/nic/lib:/platform/lib:$LD_LIBRARY_PATH /platform/bin/capview'
 
     def get_count_cmd(self):
         return '/bin/grep ' + self.field_cmp_str() + ' /obfl/asicerrord_err.log | wc -l'
