@@ -21,48 +21,52 @@ service SubnetSvc {
 // SubnetSpec captures subnet specific coniguration
 message SubnetSpec {
   // unique identifier of the subnet
-  uint32         Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32           Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // virtual private cloud this subnet is belongs to
-  uint32         VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32           VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 prefix of this subnet, this must be a sub prefix of VPC's prefix
-  types.IPv4Prefix V4Prefix            = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPv4Prefix V4Prefix              = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv6 prefix of this subnet, this must be a sub prefix of VPC's prefix
-  types.IPv6Prefix V6Prefix            = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPv6Prefix V6Prefix              = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 Virtual Router (VR) IP of this subnet, this IP is owned by the device
   // and packets originated by this device carry this IP as source IP
-  uint32         IPv4VirtualRouterIP   = 5;
+  uint32           IPv4VirtualRouterIP   = 5;
   // Ipv6 Virtual Router (VR) IP of this subnet, this IP is owned by the device
   // and packets originated by this device carry this IP as source IP
-  bytes          IPv6VirtualRouterIP   = 6;
+  bytes            IPv6VirtualRouterIP   = 6;
   // Virtual Router (VR) MAC address, any packets originated or routed by
   // the device carry this MAC as source MAC
-  uint64         VirtualRouterMac      = 7 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64           VirtualRouterMac      = 7 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used
-  uint32         V4RouteTableId        = 8 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32           V4RouteTableId        = 8 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv6 route table to be used, if any
-  uint32         V6RouteTableId        = 9;
+  uint32           V6RouteTableId        = 9;
   // identifier of ingress IPv4 security policy to be enforced
-  uint32         IngV4SecurityPolicyId = 10;
+  // NOTE: max. of 2 policies supported currently
+  repeated uint32  IngV4SecurityPolicyId = 10;
   // identifier of ingress IPv6 security policy to be enforced
-  uint32         IngV6SecurityPolicyId = 11;
+  // NOTE: max. of 2 policies supported currently
+  repeated uint32  IngV6SecurityPolicyId = 11;
   // identifier of egress IPv4 security policy to be enforced
-  uint32         EgV4SecurityPolicyId  = 12;
+  // NOTE: max. of 2 policies supported currently
+  repeated uint32  EgV4SecurityPolicyId  = 12;
   // identifier of egress IPv6 security policy to be enforced
-  uint32         EgV6SecurityPolicyId  = 13;
+  // NOTE: max. of 2 policies supported currently
+  repeated uint32  EgV6SecurityPolicyId  = 13;
   // encapped traffic coming with the specified encap from fabric side will be
   // mapped to this subnet and traffic from workloads in this subnet will carry
   // this encap towards the fabric side
-  types.Encap    FabricEncap           = 14 [(gogoproto.moretags) = "meta:immutable"];
+  types.Encap      FabricEncap           = 14 [(gogoproto.moretags) = "meta:immutable"];
   // when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
   // present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
   // HostIfIndex is the interface index of such VF/PF
-  uint32          HostIfIndex           = 15;
+  uint32           HostIfIndex           = 15;
   // DHCP policy to be applied in this subnet
-  uint32          DHCPPolicyId          = 16;
+  uint32           DHCPPolicyId          = 16;
   // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
   // header or in the Traffic Class field of IPv6 outer header, this value will
   // be written as-is (i.e., not interpreted) during encap time by the dataplane
-  uint32          ToS                   = 17;
+  uint32           ToS                   = 17;
 }
 
 // operational status of the subnet, if any

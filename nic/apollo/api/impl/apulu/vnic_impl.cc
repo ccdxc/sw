@@ -336,7 +336,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // if subnet has ingress IPv4 policy, that should be evaluated first in the
     // Rx direction
     i = 1; // policy roots start at index 1
-    policy_key = subnet->ing_v4_policy();
+    policy_key = subnet->ing_v4_policy(0);
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
@@ -372,7 +372,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // if subnet has ingress IPv6 policy, that should be evaluated first in the
     // Rx direction
     i = 1; // Policy roots start at index 1
-    policy_key = subnet->ing_v6_policy();
+    policy_key = subnet->ing_v6_policy(0);
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
@@ -432,7 +432,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // if subnet has egress IPv4 policy, append that policy tree root
-    policy_key = subnet->egr_v4_policy();
+    policy_key = subnet->egr_v4_policy(0);
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
@@ -483,7 +483,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // if subnet has egress IPv6 policy, append that policy tree root
-    policy_key = subnet->egr_v6_policy();
+    policy_key = subnet->egr_v6_policy(0);
     sec_policy = policy_db()->find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();

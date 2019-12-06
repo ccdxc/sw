@@ -21,7 +21,8 @@
 /// \defgroup PDS_SUBNET Subnet API
 /// @{
 
-#define PDS_MAX_SUBNET    64    ///< Max subnets
+#define PDS_MAX_SUBNET           64    ///< max subnets
+#define PDS_MAX_SUBNET_POLICY    5     ///< max #of security policies per subnet
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
@@ -34,10 +35,18 @@ typedef struct pds_subnet_spec_s {
     mac_addr_t vr_mac;                       ///< virtual router mac
     pds_route_table_key_t v4_route_table;    ///< IPv4 Route table id
     pds_route_table_key_t v6_route_table;    ///< IPv6 Route table id
-    pds_policy_key_t ing_v4_policy;          ///< ingress IPv4 policy table
-    pds_policy_key_t ing_v6_policy;          ///< ingress IPv6 policy table
-    pds_policy_key_t egr_v4_policy;          ///< egress IPv4 policy table
-    pds_policy_key_t egr_v6_policy;          ///< egress IPv6 policy table
+    ///< ingress IPv4 policy table(s)
+    uint8_t num_ing_v4_policy;
+    pds_policy_key_t ing_v4_policy[PDS_MAX_SUBNET_POLICY];
+    ///< ingress IPv6 policy table(s)
+    uint8_t num_ing_v6_policy;
+    pds_policy_key_t ing_v6_policy[PDS_MAX_SUBNET_POLICY];
+    ///< egress IPv4 policy table(s)
+    uint8_t num_egr_v4_policy;
+    pds_policy_key_t egr_v4_policy[PDS_MAX_SUBNET_POLICY];
+    ///< egress IPv6 policy table(s)
+    uint8_t num_egr_v6_policy;
+    pds_policy_key_t egr_v6_policy[PDS_MAX_SUBNET_POLICY];
     pds_encap_t fabric_encap;                ///< fabric encap for this subnet
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, subnet can be attached to PF/VF

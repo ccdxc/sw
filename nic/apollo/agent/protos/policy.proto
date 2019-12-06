@@ -48,13 +48,18 @@ message SecurityRule {
 // security policy configuration
 message SecurityPolicySpec {
   // unique identifier of security policy
-  uint32                Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32                Id              = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 or IPv6 policy
-  types.IPAF            AddrFamily = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAF            AddrFamily      = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // direction in which the policy should be enforced
-  types.RuleDir         Direction  = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.RuleDir         Direction       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // DefaultFWAction is the action taken by the firewall when SG policies are
+  // configured on vnic but no rule is hit. Similarly, when NACLs are configured
+  // on a subnet and no rule is hit, this action is taken by the firewall
+  // if this attribute is not set, by default "allow" action is assumed
+  SecurityRuleAction    DefaultFWAction = 4 [(gogoproto.moretags) = "meta:default=SECURITY_RULE_ACTION_ALLOW"];
   // list of security rules
-  repeated SecurityRule Rules      = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  repeated SecurityRule Rules           = 5 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // operational status of security policy, if any
@@ -122,10 +127,9 @@ message SecurityProfileSpec {
   // ConnTrackEn, if set to true, will enable full connection tracking
   bool               ConnTrackEn         = 2 [(gogoproto.moretags) = "meta:default=false"];
 
-  // DefaultFWAction is the action taken by the firewall when SG policies are
-  // configured on vnic but no rule is hit. Similarly, when NACLs are configured
-  // on a subnet and no rule is hit, this action is taken by the firewall
-  // if this attribute is not set, by default "allow" action is assumed
+  // DefaultFWAction is the action taken by the smartnic when no policies are
+  // configured on the subnet or vnic (note that this case is different from
+  // having a policy configured but no rules are configured in that policy)
   SecurityRuleAction DefaultFWAction     = 3 [(gogoproto.moretags) = "meta:default=SECURITY_RULE_ACTION_ALLOW"];
 
   // timeouts for established sessions per TCP/UDP/ICMP and other protocols

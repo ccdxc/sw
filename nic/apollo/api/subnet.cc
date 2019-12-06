@@ -27,11 +27,14 @@ typedef struct subnet_update_ctxt_s {
 subnet_entry::subnet_entry() {
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
     v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
-    ing_v4_policy_.id = PDS_POLICY_ID_INVALID;
-    ing_v6_policy_.id = PDS_POLICY_ID_INVALID;
-    egr_v4_policy_.id = PDS_POLICY_ID_INVALID;
-    egr_v6_policy_.id = PDS_POLICY_ID_INVALID;
-
+    num_ing_v4_policy_ = 0;
+    num_ing_v6_policy_ = 0;
+    num_egr_v4_policy_ = 0;
+    num_egr_v6_policy_ = 0;
+    memset(&ing_v4_policy_, 0, sizeof ing_v4_policy_);
+    memset(&ing_v6_policy_, 0, sizeof ing_v6_policy_);
+    memset(&egr_v4_policy_, 0, sizeof egr_v4_policy_);
+    memset(&egr_v6_policy_, 0, sizeof egr_v6_policy_);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -152,13 +155,13 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     PDS_TRACE_VERBOSE(
         "Initializing subnet (vpc %u, subnet %u), v4/v6 pfx %s/%s,\n"
         "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
-        "ingress v4/v6 policy %u/%u, egress v4/v6 policy %u/%u, vnid %u",
-        spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
+        "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
+        "vnid %u", spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
         ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
         ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
         spec->v4_route_table.id, spec->v6_route_table.id,
-        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
-        spec->egr_v4_policy.id, spec->egr_v6_policy.id,
+        spec->num_ing_v4_policy, spec->num_ing_v6_policy,
+        spec->num_egr_v4_policy, spec->num_egr_v6_policy,
         spec->fabric_encap.val.vnid);
 
     key_.id = spec->key.id;
@@ -166,10 +169,22 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     fabric_encap_ = spec->fabric_encap;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;
-    ing_v4_policy_.id = spec->ing_v4_policy.id;
-    ing_v6_policy_.id = spec->ing_v6_policy.id;
-    egr_v4_policy_.id = spec->egr_v4_policy.id;
-    egr_v6_policy_.id = spec->egr_v6_policy.id;
+    num_ing_v4_policy_ = spec->num_ing_v4_policy;
+    for (uint8_t i = 0; i < num_ing_v4_policy_; i++) {
+        ing_v4_policy_[i].id = spec->ing_v4_policy[i].id;
+    }
+    num_ing_v6_policy_ = spec->num_ing_v6_policy;
+    for (uint8_t i = 0; i < num_ing_v6_policy_; i++) {
+        ing_v6_policy_[i].id = spec->ing_v6_policy[i].id;
+    }
+    num_egr_v4_policy_ = spec->num_egr_v4_policy;
+    for (uint8_t i = 0; i < num_egr_v4_policy_; i++) {
+        egr_v4_policy_[i].id = spec->egr_v4_policy[i].id;
+    }
+    num_egr_v6_policy_ = spec->num_egr_v6_policy;
+    for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
+        egr_v6_policy_[i].id = spec->egr_v6_policy[i].id;
+    }
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     return SDK_RET_OK;
 }
@@ -213,10 +228,18 @@ subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
         (v6_route_table_.id !=  spec->v6_route_table.id)) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_ROUTE_TABLE;
     }
-    if ((ing_v4_policy_.id != spec->ing_v4_policy.id) ||
-        (ing_v6_policy_.id != spec->ing_v6_policy.id) ||
-        (egr_v4_policy_.id != spec->egr_v4_policy.id) ||
-        (egr_v6_policy_.id != spec->egr_v6_policy.id)) {
+    if ((num_ing_v4_policy_ != spec->num_ing_v4_policy)          ||
+        (num_ing_v6_policy_ != spec->num_ing_v6_policy)          ||
+        (num_egr_v4_policy_ != spec->num_egr_v4_policy)          ||
+        (num_egr_v6_policy_ != spec->num_egr_v6_policy)          ||
+        (memcmp(ing_v4_policy_, spec->ing_v4_policy,
+                num_ing_v4_policy_ * sizeof(ing_v4_policy_[0]))) ||
+        (memcmp(ing_v6_policy_, spec->ing_v6_policy,
+                num_ing_v6_policy_ * sizeof(ing_v6_policy_[0]))) ||
+        (memcmp(egr_v4_policy_, spec->egr_v4_policy,
+                num_egr_v4_policy_ * sizeof(egr_v4_policy_[0]))) ||
+        (memcmp(egr_v6_policy_, spec->egr_v6_policy,
+                   num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_POLICY;
     }
     if (host_ifindex_ != spec->host_ifindex) {

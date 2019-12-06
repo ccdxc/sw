@@ -40,6 +40,8 @@ pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
+// TODO: these xxx_fill() need to move to subnet.cc and corresponding impl.cc
+//       please fix the read for subnet to support multiple policies
 static inline sdk::sdk_ret_t
 pds_subnet_stats_fill (pds_subnet_stats_t *stats, subnet_entry *entry)
 {
@@ -53,6 +55,7 @@ pds_subnet_status_fill (pds_subnet_status_t *status, subnet_entry *entry)
     return SDK_RET_OK;
 }
 
+// TODO: fix this read API for multiple policies
 static inline sdk::sdk_ret_t
 pds_subnet_spec_fill (pds_subnet_spec_t *spec, subnet_entry *entry)
 {
@@ -62,10 +65,14 @@ pds_subnet_spec_fill (pds_subnet_spec_t *spec, subnet_entry *entry)
     spec->vpc.id = vpc.id;
     spec->v4_route_table = entry->v4_route_table();
     spec->v6_route_table = entry->v6_route_table();
-    spec->ing_v4_policy = entry->ing_v4_policy();
-    spec->ing_v6_policy = entry->ing_v6_policy();
-    spec->egr_v4_policy = entry->egr_v4_policy();
-    spec->egr_v6_policy = entry->egr_v6_policy();
+    spec->num_ing_v4_policy = 1;
+    spec->ing_v4_policy[0] = entry->ing_v4_policy(0);
+    spec->num_ing_v6_policy = 1;
+    spec->ing_v6_policy[0] = entry->ing_v6_policy(0);
+    spec->num_egr_v4_policy = 1;
+    spec->egr_v4_policy[0] = entry->egr_v4_policy(0);
+    spec->num_egr_v6_policy = 1;
+    spec->egr_v6_policy[0] = entry->egr_v6_policy(0);
     memcpy(&spec->vr_mac, entry->vr_mac(), sizeof(mac_addr_t));
     spec->fabric_encap = entry->fabric_encap();
 

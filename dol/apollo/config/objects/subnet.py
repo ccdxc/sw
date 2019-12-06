@@ -1,9 +1,9 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import itertools
 
 from infra.common.logging import logger
-
 from apollo.config.store import Store
 
 import apollo.config.resmgr as resmgr
@@ -43,10 +43,10 @@ class SubnetObject(base.ConfigObjectBase):
         self.VirtualRouterMacAddr = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
-        self.IngV4SecurityPolicyId = policy.client.GetIngV4SecurityPolicyId(parent.VPCId)
-        self.IngV6SecurityPolicyId = policy.client.GetIngV6SecurityPolicyId(parent.VPCId)
-        self.EgV4SecurityPolicyId = policy.client.GetEgV4SecurityPolicyId(parent.VPCId)
-        self.EgV6SecurityPolicyId = policy.client.GetEgV6SecurityPolicyId(parent.VPCId)
+        self.IngV4SecurityPolicyIds = [policy.client.GetIngV4SecurityPolicyId(parent.VPCId)]
+        self.IngV6SecurityPolicyIds = [policy.client.GetIngV6SecurityPolicyId(parent.VPCId)]
+        self.EgV4SecurityPolicyIds = [policy.client.GetEgV4SecurityPolicyId(parent.VPCId)]
+        self.EgV6SecurityPolicyIds = [policy.client.GetEgV6SecurityPolicyId(parent.VPCId)]
         self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         self.Vnid = next(resmgr.VxlanIdAllocator)
@@ -80,14 +80,13 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- NaclIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
-                    (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
+                    (self.IngV4SecurityPolicyIds[0], self.IngV6SecurityPolicyIds[0], self.EgV4SecurityPolicyIds[0], self.EgV6SecurityPolicyIds[0]))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
         return
 
     def __fill_default_rules_in_policy(self):
-        ids = [self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId]
-        ids += [self.IngV6SecurityPolicyId, self.EgV6SecurityPolicyId]
+        ids = itertools.chain(self.IngV4SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV6SecurityPolicyIds)
         for policyid in ids:
             if policyid is 0:
                 continue
@@ -144,10 +143,14 @@ class SubnetObject(base.ConfigObjectBase):
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId
-        spec.IngV4SecurityPolicyId = self.IngV4SecurityPolicyId
-        spec.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
-        spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
-        spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
+        for policyid in self.IngV4SecurityPolicyIds:
+            spec.IngV4SecurityPolicyId.append(policyid)
+        for policyid in self.IngV6SecurityPolicyIds:
+            spec.IngV6SecurityPolicyId.append(policyid)
+        for policyid in self.EgV4SecurityPolicyIds:
+            spec.EgV4SecurityPolicyId.append(policyid)
+        for policyid in self.EgV6SecurityPolicyIds:
+            spec.EgV6SecurityPolicyId.append(policyid)
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.HostIf:
             spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
@@ -164,13 +167,13 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.V6RouteTableId != self.V6RouteTableId:
             return False
-        if spec.IngV4SecurityPolicyId != self.IngV4SecurityPolicyId:
+        if spec.IngV4SecurityPolicyId[0] != self.IngV4SecurityPolicyIds[0]:
             return False
-        if spec.IngV6SecurityPolicyId != self.IngV6SecurityPolicyId:
+        if spec.IngV6SecurityPolicyId[0] != self.IngV6SecurityPolicyIds[0]:
             return False
-        if spec.EgV4SecurityPolicyId !=  self.EgV4SecurityPolicyId:
+        if spec.EgV4SecurityPolicyId[0] !=  self.EgV4SecurityPolicyIds[0]:
             return False
-        if spec.EgV6SecurityPolicyId != self.EgV6SecurityPolicyId:
+        if spec.EgV6SecurityPolicyId[0] != self.EgV6SecurityPolicyIds[0]:
             return False
         if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
             return False
@@ -188,14 +191,14 @@ class SubnetObject(base.ConfigObjectBase):
     def GetNaclId(self, direction, af=utils.IP_VERSION_4):
         if af == utils.IP_VERSION_4:
             if direction == 'ingress':
-                return self.IngV4SecurityPolicyId
+                return self.IngV4SecurityPolicyIds[0]
             else:
-                return self.EgV4SecurityPolicyId
+                return self.EgV4SecurityPolicyIds[0]
         elif af == utils.IP_VERSION_6:
             if direction == 'ingress':
-                return self.IngV6SecurityPolicyId
+                return self.IngV6SecurityPolicyIds[0]
             else:
-                return self.EgV6SecurityPolicyId
+                return self.EgV6SecurityPolicyIds[0]
         return None
 
 class SubnetObjectClient(base.ConfigClientBase):

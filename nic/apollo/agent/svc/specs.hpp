@@ -129,9 +129,11 @@ ipsubnet_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
                                    const types::IPSubnet& in_ipsubnet)
 {
     if (in_ipsubnet.has_ipv4subnet()) {
-        return ippfx_proto_spec_to_ipvx_range(ip_range, in_ipsubnet.ipv4subnet());
+        return ippfx_proto_spec_to_ipvx_range(ip_range,
+                                              in_ipsubnet.ipv4subnet());
     } else if (in_ipsubnet.has_ipv6subnet()) {
-        return ippfx_proto_spec_to_ipvx_range(ip_range, in_ipsubnet.ipv6subnet());
+        return ippfx_proto_spec_to_ipvx_range(ip_range,
+                                              in_ipsubnet.ipv6subnet());
     }
     return sdk::SDK_RET_OK;
 }
@@ -3043,10 +3045,19 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
     proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
     proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
-    proto_spec->set_ingv4securitypolicyid(api_spec->ing_v4_policy.id);
-    proto_spec->set_ingv6securitypolicyid(api_spec->ing_v6_policy.id);
-    proto_spec->set_egv4securitypolicyid(api_spec->egr_v4_policy.id);
-    proto_spec->set_egv6securitypolicyid(api_spec->egr_v6_policy.id);
+
+    for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
+        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
+        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
+        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id);
+    }
+    for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
+        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
+    }
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_hostifindex(api_spec->host_ifindex);
@@ -3085,7 +3096,7 @@ pds_subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
 }
 
 // build subnet API spec from proto buf spec
-static inline void
+static inline sdk_ret_t
 pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                               const pds::SubnetSpec &proto_spec)
 {
@@ -3101,14 +3112,48 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
     api_spec->v6_route_table.id = proto_spec.v6routetableid();
-    api_spec->ing_v4_policy.id = proto_spec.ingv4securitypolicyid();
-    api_spec->ing_v6_policy.id = proto_spec.ingv6securitypolicyid();
-    api_spec->egr_v4_policy.id = proto_spec.egv4securitypolicyid();
-    api_spec->egr_v6_policy.id = proto_spec.egv6securitypolicyid();
+
+    if (proto_spec.ingv4securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
+        PDS_TRACE_ERR("No. of IPv4 ingress security policies on subnet can't "
+                      "exceed {}", PDS_MAX_SUBNET_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_ing_v4_policy = proto_spec.ingv4securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
+        api_spec->ing_v4_policy[i].id = proto_spec.ingv4securitypolicyid(i);
+    }
+    if (proto_spec.ingv6securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
+        PDS_TRACE_ERR("No. of IPv6 ingress security policies on subnet can't "
+                      "exceed {}", PDS_MAX_SUBNET_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_ing_v6_policy = proto_spec.ingv6securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
+        api_spec->ing_v6_policy[i].id = proto_spec.ingv6securitypolicyid(i);
+    }
+    if (proto_spec.egv4securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
+        PDS_TRACE_ERR("No. of IPv4 egress security policies on subnet can't "
+                      "exceed {}", PDS_MAX_SUBNET_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_egr_v4_policy = proto_spec.egv4securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
+        api_spec->egr_v4_policy[i].id = proto_spec.egv4securitypolicyid(i);
+    }
+    if (proto_spec.egv6securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
+        PDS_TRACE_ERR("No. of IPv6 egress security policies on subnet can't "
+                      "exceed {}", PDS_MAX_SUBNET_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_egr_v6_policy = proto_spec.egv6securitypolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
+        api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
+    }
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     api_spec->host_ifindex = proto_spec.hostifindex();
     api_spec->dhcp_policy.id = proto_spec.dhcppolicyid();
     api_spec->tos = proto_spec.tos();
+    return SDK_RET_OK;
 }
 
 // build VPC API spec from protobuf spec

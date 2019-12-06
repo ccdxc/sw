@@ -50,10 +50,10 @@ operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
         << " vr_mac: " << macaddr2str(spec->vr_mac)
         << " v4_rt: " << spec->v4_route_table.id
         << " v6_rt: " << spec->v6_route_table.id
-        << " v4_in_pol: " << spec->ing_v4_policy.id
-        << " v6_in_pol: " << spec->ing_v6_policy.id
-        << " v4_eg_pol: " << spec->egr_v4_policy.id
-        << " v6_eg_pol: " << spec->egr_v6_policy.id
+        << " v4_in_pol: " << spec->ing_v4_policy[0].id
+        << " v6_in_pol: " << spec->ing_v6_policy[0].id
+        << " v4_eg_pol: " << spec->egr_v4_policy[0].id
+        << " v6_eg_pol: " << spec->egr_v6_policy[0].id
         << " fabric encap: " << pds_encap2str(&spec->fabric_encap);
     return os;
 }

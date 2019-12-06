@@ -747,9 +747,9 @@ class PolicyObjectHelper:
 
     def __get_policyID_from_subnet(self, subnet, af, direction):
         if af == 'IPV6':
-            return subnet.IngV6SecurityPolicyId if direction == 'ingress' else subnet.EgV6SecurityPolicyId
+            return subnet.IngV6SecurityPolicyIds[0] if direction == 'ingress' else subnet.EgV6SecurityPolicyIds[0]
         else:
-            return subnet.IngV4SecurityPolicyId if direction == 'ingress' else subnet.EgV4SecurityPolicyId
+            return subnet.IngV4SecurityPolicyIds[0] if direction == 'ingress' else subnet.EgV4SecurityPolicyIds[0]
 
     def __is_lmapping_match(self, policyobj, lobj):
         if lobj.VNIC.SUBNET.VPC.VPCId != policyobj.VPCId:

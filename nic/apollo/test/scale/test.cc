@@ -622,10 +622,14 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.v6_route_table.id =
             route_table_id + (num_subnets * num_vpcs);
         pds_subnet.v4_route_table.id = route_table_id++;
-        pds_subnet.egr_v4_policy.id = policy_id;
-        pds_subnet.ing_v4_policy.id = policy_id + (num_subnets * num_vpcs);
-        pds_subnet.egr_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 2;
-        pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
+        pds_subnet.num_egr_v4_policy = 1;
+        pds_subnet.egr_v4_policy[0].id = policy_id;
+        pds_subnet.num_ing_v4_policy = 1;
+        pds_subnet.ing_v4_policy[0].id = policy_id + (num_subnets * num_vpcs);
+        pds_subnet.num_egr_v6_policy = 1;
+        pds_subnet.egr_v6_policy[0].id = policy_id + (num_subnets * num_vpcs) * 2;
+        pds_subnet.num_ing_v6_policy = 1;
+        pds_subnet.ing_v6_policy[0].id = policy_id + (num_subnets * num_vpcs) * 3;
         if (apulu()) {
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_subnet.fabric_encap.val.vnid =

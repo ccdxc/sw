@@ -488,13 +488,13 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
         v6_route_table = NULL;
     }
 
-    policy_key = subnet->ing_v4_policy();
+    policy_key = subnet->ing_v4_policy(0);
     ing_v4_policy = policy_db()->find(&policy_key);
-    policy_key = subnet->ing_v6_policy();
+    policy_key = subnet->ing_v6_policy(0);
     ing_v6_policy = policy_db()->find(&policy_key);
-    policy_key = subnet->egr_v4_policy();
+    policy_key = subnet->egr_v4_policy(0);
     egr_v4_policy = policy_db()->find(&policy_key);
-    policy_key = subnet->egr_v6_policy();
+    policy_key = subnet->egr_v6_policy(0);
     egr_v6_policy = policy_db()->find(&policy_key);
     // program local_vnic_by_vlan_tx table entry
     ret = activate_vnic_by_vlan_tx_table_create_(epoch, vpc, spec, vnic,
@@ -681,13 +681,13 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     } else {
         v6_route_table = NULL;
     }
-    policy_key = subnet->ing_v4_policy();
+    policy_key = subnet->ing_v4_policy(0);
     ing_v4_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
-    policy_key = subnet->ing_v6_policy();
+    policy_key = subnet->ing_v6_policy(0);
     ing_v6_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
-    policy_key = subnet->egr_v4_policy();
+    policy_key = subnet->egr_v4_policy(0);
     egr_v4_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
-    policy_key = subnet->egr_v6_policy();
+    policy_key = subnet->egr_v6_policy(0);
     egr_v6_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
     if (v4_route_table) {
         addr =
