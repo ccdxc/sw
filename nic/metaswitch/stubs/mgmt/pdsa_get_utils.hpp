@@ -9,9 +9,14 @@
 #include "include/sdk/ip.hpp"
 
 AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
-                                     NBB_LONG data_len,
-                                     NBB_LONG oid_len,
-                                     NBB_ULONG *oid
-                                     NBB_CCXT_T NBB_CXT);
+                                  NBB_LONG data_len,
+                                  NBB_LONG oid_len,
+                                  NBB_ULONG *oid
+                                  NBB_CCXT_T NBB_CXT);
+
+AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
+                             NBB_LONG oid_len,
+                             NBB_ULONG *oid
+                             NBB_CCXT_T NBB_CXT);
 
 #endif /*__PDSA_GET_UTILS_HPP__*/

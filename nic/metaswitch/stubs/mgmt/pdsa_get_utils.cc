@@ -12,8 +12,8 @@ using namespace std;
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
 NBB_VOID pdsa_amb_gen_common(AMB_GEN_IPS *amb_gen,
-                                NBB_LONG row_status
-                                NBB_CCXT_T NBB_CXT)
+                             NBB_LONG row_status
+                             NBB_CCXT_T NBB_CXT)
 {
   /***************************************************************************/
   /* Local Variables                                                         */
@@ -78,10 +78,10 @@ NBB_VOID pdsa_amb_gen_common(AMB_GEN_IPS *amb_gen,
 } /* pdsa_amb_gen_common */
 
 AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
-                                     NBB_LONG data_len,
-                                     NBB_LONG oid_len,
-                                     NBB_ULONG *oid
-                                     NBB_CCXT_T NBB_CXT)
+                                  NBB_LONG data_len,
+                                  NBB_LONG oid_len,
+                                  NBB_ULONG *oid
+                                  NBB_CCXT_T NBB_CXT)
 {
   /***************************************************************************/
   /* Local Variables                                                         */
@@ -132,3 +132,59 @@ AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
   return(v_amb_get);
 
 } /* pdsa_amb_get_bulk_common */
+
+AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
+                                NBB_LONG oid_len,
+                                NBB_ULONG *oid
+                                NBB_CCXT_T NBB_CXT)
+{
+  /***************************************************************************/
+  /* Local Variables                                                         */
+  /***************************************************************************/
+  NBB_USHORT ii;
+  NBB_ULONG *get_oid;
+  NBB_BUF_SIZE ctrl_size = 0;
+  AMB_GET *v_amb_get = NULL;
+
+  NBB_TRC_ENTRY("pdsa_amb_get_common");
+
+  /***************************************************************************/
+  /* Get an internal buffer.                                                 */
+  /***************************************************************************/
+  ctrl_size = sizeof(AMB_GET) + data_len + (oid_len * sizeof(NBB_ULONG));
+  v_amb_get = (AMB_GET *)NBB_GET_BUFFER(NBB_NULL_HANDLE,
+                                        ctrl_size,
+                                        0,
+                                        NBB_NORETRY_ABORT);
+  NBB_ASSERT_PTR_NE(v_amb_get, NULL);
+
+  /***************************************************************************/
+  /* Clear out the body of the IPS.                                          */
+  /***************************************************************************/
+  NBB_ZERO_IPS(&(v_amb_get->ips_hdr));
+
+  /***************************************************************************/
+  /* Fill in all fields on the message.                                      */
+  /***************************************************************************/
+  v_amb_get->ips_hdr.ips_type = IPS_AMB_GET;
+
+  pdsa_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
+
+  v_amb_get->oid_offset = sizeof(AMB_GET);
+  v_amb_get->data_offset = sizeof(AMB_GET) + (oid_len * sizeof(NBB_ULONG));
+  v_amb_get->data_len = data_len;
+
+  get_oid = (NBB_ULONG *)((NBB_BYTE *)v_amb_get + v_amb_get->oid_offset);
+  for (ii = 0; ii < oid_len; ii++)
+  {
+    /*************************************************************************/
+    /* FLOW TRACING NOT REQUIRED    Reason: tight loop.                      */
+    /*************************************************************************/
+    get_oid[ii] = oid[ii];
+  }
+
+  NBB_TRC_EXIT();
+
+  return(v_amb_get);
+
+} /* pdsa_amb_get_common */

@@ -470,7 +470,7 @@
         /***************************************************************************/
         /* Build the common part of the AMB_GET message.                           */
         /***************************************************************************/
-        v_amb_get = pdsa_amb_get_bulk_common(1000, data_len, oid[0], oid);
+        v_amb_get = pdsa_amb_get_common(data_len, oid[0], oid);
 
         /***************************************************************************/
         /* Set all fields absent.                                                  */
