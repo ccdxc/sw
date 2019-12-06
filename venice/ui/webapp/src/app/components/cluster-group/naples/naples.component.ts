@@ -664,7 +664,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       message: 'Once the card is decommissioned, it can not be brought back through UI.',
       acceptLabel: 'Decommission',
       accept: () => {
-        const updatedObject: ClusterDistributedServiceCard = _.cloneDeep(object);
+        const updatedObject: ClusterDistributedServiceCard = new ClusterDistributedServiceCard(object);
         updatedObject.spec['mgmt-mode'] = ClusterDistributedServiceCardSpec_mgmt_mode.host;
         this.invokeUpdateCard(updatedObject, object,
           'Successfully decommissioned ' + object.meta.name, 'Decommision Service');
@@ -681,7 +681,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       message: 'Once the card is admitted, This action can not be undone.',
       acceptLabel: 'Admit',
       accept: () => {
-        const updatedObject: ClusterDistributedServiceCard = _.cloneDeep(object);
+        const updatedObject: ClusterDistributedServiceCard = new ClusterDistributedServiceCard(object);
         updatedObject.spec.admit = true;
         this.invokeUpdateCard(updatedObject, object,
           'Successfully admitted ' + object.meta.name, 'Admit Service');
@@ -693,8 +693,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
                   oldObject: ClusterDistributedServiceCard,
                   successMsg: string,
                   actionType: string) {
-    delete updatedObject[NaplesComponent.NAPLES_FIELD_WORKLOADS]; // avoid hard code
-    const sub = this.clusterService.UpdateDistributedServiceCard(updatedObject.meta.name, updatedObject, null, oldObject).subscribe(
+    const sub = this.clusterService.UpdateDistributedServiceCard(updatedObject.meta.name, updatedObject, null,
+        oldObject, false).subscribe(
       () => {
         this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
           successMsg);
