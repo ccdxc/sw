@@ -1,7 +1,6 @@
 #!/usr/local/bin/python
 #
 # Capri-Non-Compiler-Compiler (capri-ncc)
-# Mahesh Shirshyad (Pensando Systems)
 
 import argparse
 import os
@@ -668,15 +667,67 @@ class capri_p4pd_generator:
         self.pddict['pipeline'] = args.pipeline
         self.pddict['p4plus_module'] = args.p4_plus_module
 
+    def process_annotations(self):
+        # process table and action annotations (pragmas) that influence api generation
+        # annotations supported are -
+        # - appdatafields
+        # - hwfields_access_api
+
+        for t,v in self.pddict['tables'].items():
+            # appdatafields and hwfields annotations are internally processed by ncc
+            # do not destroy those
+            if 'hwfields' in self.pddict['tables'][t]:
+                continue
+            self.pddict['tables'][t]['hwfields'] = OrderedDict()
+
+            if 'appdatafields' in self.pddict['tables'][t]:
+                continue
+            self.pddict['tables'][t]['appdatafields'] = OrderedDict()
+
+            for actionname, actiondata, annotations in v['actions']:
+                # build adtion data fields dictionary
+                adata = OrderedDict()
+                for ad in actiondata:
+                    fldname = ad['p4_name']
+                    if fldname in adata:
+                        adata[fldname] = adata[fldname] + ad['len']
+                    else:
+                        adata[fldname] = ad['len']
+                hwfields_acc = False
+                # annotations are store as a list where each element is a dictionary that contains
+                # only one k,v opair
+                for anno in annotations.values()[0]:
+                    # each element is a dict with single k,v pair
+                    aname, aval = anno.items()[0]
+                    if aname == 'appdatafields':
+                        actiondatafields = []
+                        for adfld in aval:
+                            if adfld not in adata:
+                                continue
+                            actiondatafields.append([adfld, adata[adfld]])
+
+                        self.pddict['tables'][t]['appdatafields'][actionname] = actiondatafields
+
+                    if aname == 'hwfields_access_api':
+                        hwfields_acc = True;
+
+                if hwfields_acc:
+                    hwfields = []
+                    for fldname, fldlen in adata.items():
+                        # add all action data fields not specified in the action data to the list
+                        add_fld = True
+                        if actionname in self.pddict['tables'][t]['appdatafields']:
+                            for adf in self.pddict['tables'][t]['appdatafields'][actionname]:
+                                if fldname == adf[0]:
+                                    add_fld = False
+                                    break
+                        if add_fld:
+                            hwfields.append([fldname, fldlen])
+
+                    self.pddict['tables'][t]['hwfields'][actionname] =  hwfields
+
 def capri_p4pd_code_generate(p4pd_gen):
-    '''
-    p4pd = capri_p4pd(capri_be)
-    p4pd.build_pd_dict()
-    p4pd.verify_table_ki()
-    #with open('/tmp/pddict.json', "w") as of:
-    #    json.dump(p4pd.pddict, of, indent=2)
-    #    of.close()
-    '''
+    p4pd_gen.process_annotations()
     k_plus_d_dict = p4pd_gen.generate_code()
     p4pd_gen.generate_swig()
 
@@ -719,6 +770,5 @@ if __name__ == '__main__':
     be = _dummy_backend(args);
     p4pd_gen = capri_p4pd_generator(be)
     p4pd_gen.load_pd_dict()
-    k_plus_d_dict = p4pd_gen.generate_code()
-    p4pd_gen.generate_swig()
+    capri_p4pd_code_generate(p4pd_gen)
 
