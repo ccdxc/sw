@@ -17,6 +17,12 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
     return ms_ifindex;
 }
 
+NBB_LONG 
+lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
+{
+    return lnx_ifindex;
+}
+
 uint32_t 
 ms_to_l3_ifindex (uint32_t ms_ifindex) 
 {

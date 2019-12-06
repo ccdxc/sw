@@ -27,6 +27,8 @@ public:
 
     NBB_BYTE nhpi_delete_ecmp_nh(NBB_CORRELATOR ecmp_corr,
                                  NBB_CORRELATOR nh_corr);
+    // Enable ECMP even for 1 NextHop
+    NBB_BYTE nhpi_ignore_num_next_hops() { return ATG_YES; }
 };
 
 } // End namespace

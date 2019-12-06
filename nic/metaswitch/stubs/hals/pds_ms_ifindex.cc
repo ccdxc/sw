@@ -5,10 +5,14 @@
 
 #include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pds_ms {
 using pdsa_stub::state_t;
+using pdsa_stub::ms_ifindex_t;
+using pdsa_stub::ms_iftype_t;
+using pdsa_stub::if_obj_t;
 
 uint32_t 
 ms_to_pds_ifindex (uint32_t ms_ifindex)
@@ -64,9 +68,38 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
     // Linux ifindex is cached in the store at the time 
     // of L3 interface creation
     auto lnx_ifindex = phy_port_if_obj->phy_port_properties().lnx_ifindex;
-    SDK_TRACE_VERBOSE ("MS UserExit: MS IfIndex = %ld -> Linux IfIndex = %ld", 
+    SDK_TRACE_VERBOSE ("MS UserExit: MS IfIndex 0x%lx -> Linux IfIndex %ld", 
                        ms_ifindex, lnx_ifindex);
     return lnx_ifindex; 
+}
+
+NBB_LONG 
+lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
+{
+    auto state_thr_ctxt = state_t::thread_context();
+    NBB_ULONG  ms_ifindex = 0;
+    bool found = false;
+
+    state_thr_ctxt.state()->if_store().
+        walk([lnx_ifindex, &ms_ifindex, &found] (ms_ifindex_t ifindex, if_obj_t& if_obj) ->bool {
+            if (if_obj.type() != ms_iftype_t::PHYSICAL_PORT) {
+                return true; // Continue walk
+            }
+            if (if_obj.phy_port_properties().lnx_ifindex == lnx_ifindex) {
+                ms_ifindex = ifindex;
+                found = true;
+                return false; // Stop walk
+            }
+            return true;
+        });
+
+    if (found) {
+        SDK_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
+                          lnx_ifindex, ms_ifindex);
+    } else {
+        SDK_TRACE_ERR("MS UserExit: Lnx IfIndex %ld -> Ms IfIndex conversion Failed");
+    }
+    return ms_ifindex; 
 }
 
 // Used at MS initialization to set up SMI HW Desc from the PDS catalog

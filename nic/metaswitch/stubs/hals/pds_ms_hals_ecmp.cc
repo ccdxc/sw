@@ -73,11 +73,16 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(void) {
     nhgroup_spec.num_nexthops = ips_info_.nexthops.size();
 
     int i = 0, num_repeats = 0;
-    if (op_create_) {num_repeats = 1;}
-    // The only update allowed is when the number of nexthops in the Group
-    // gets cut by half due to a link failure. 
-    // In this case the remaining set of nexthops need to repeated twice
-    else {num_repeats = 2;}
+    if (op_create_) {
+        num_repeats = 1;
+    } else {
+        // The only update allowed is when the number of nexthops in the Group
+        // gets cut by half due to a link failure. 
+        // In this case the remaining set of nexthops need to repeated twice
+        SDK_TRACE_DEBUG("MS ECMP %ld Update - setting repeat to 2", 
+                        ips_info_.pathset_id);
+        num_repeats = 2;
+    }
 
     for (int repeat = 0; repeat < num_repeats; ++repeat) {
         for (auto& nh: ips_info_.nexthops) {
@@ -87,6 +92,10 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(void) {
                 ms_to_pds_ifindex(nh.ms_ifindex);
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
                    ETH_ADDR_LEN);
+            SDK_TRACE_DEBUG("MS ECMP %ld Add NH MSIfIndex 0x%lx PDSIfIndex 0x%lx MAC %s",
+                            ips_info_.pathset_id, nh.ms_ifindex, 
+                            nhgroup_spec.nexthops[i].l3_if.id,
+                            macaddr2str(nh.mac_addr.m_mac));
             ++i;
         }
     }
@@ -110,7 +119,7 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
         auto nhgroup_key = make_pds_nhgroup_key_();
         auto ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error(std::string("Delete PDS Nexthop Group failed for MS Pathset ")
+            throw Error(std::string("Delete PDS Nexthop Group failed for MS ECMP ")
                         .append(std::to_string(ips_info_.pathset_id)));
         }
 
@@ -119,13 +128,13 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
         if (op_create_) {
             auto ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
             if (unlikely (ret != SDK_RET_OK)) {
-                throw Error(std::string("Create PDS Nexthop Group failed for MS Pathset ")
+                throw Error(std::string("Create PDS Nexthop Group failed for MS ECMP ")
                             .append(std::to_string(ips_info_.pathset_id)));
             }
         } else {
             auto ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
             if (unlikely (ret != SDK_RET_OK)) {
-                throw Error(std::string("Update PDS Nexthop Group failed for MS Pathset ")
+                throw Error(std::string("Update PDS Nexthop Group failed for MS ECMP ")
                             .append(std::to_string(ips_info_.pathset_id)));
             }
         }
@@ -149,7 +158,8 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     if ((ips_info_.num_added_nh == num_nexthops) &&
         (ips_info_.num_deleted_nh == 0)) {
         op_create_ = true;
-        SDK_TRACE_DEBUG ("MS ECMP %ld: Create IPS", ips_info_.pathset_id);
+        SDK_TRACE_DEBUG ("MS ECMP %ld: Create IPS Num nexthops %ld", 
+                         ips_info_.pathset_id, num_nexthops);
     } else {
         // NH Group Update - optimization to quickly update in-place in case of
         // link failure. Adding new Nexthops to an existing Group is not 
@@ -238,7 +248,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     .append(std::to_string(ips_info_.pathset_id)));
     }
     add_upd_ecmp_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("MS Pathset %ld: Add/Upd PDS Batch commit successful", 
+    SDK_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
                      ips_info_.pathset_id);
 }
 

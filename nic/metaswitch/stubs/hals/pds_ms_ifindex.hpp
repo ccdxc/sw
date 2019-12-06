@@ -7,7 +7,6 @@
 #define __PDS_MS_IFINDEX_HPP__
 
 #include "nic/sdk/include/sdk/if.hpp"
-#include "nic/apollo/api/pds_state.hpp"
 #include <nbase.h>
 #include <lim_interface_index_base.hpp>
 extern "C" {
@@ -24,6 +23,7 @@ uint32_t ms_to_pds_eth_ifindex(uint32_t ms_ifindex);
 
 // Used when progamming Linux route to convert from MS IfIndex to Linux IfIndex
 NBB_LONG ms_to_lnx_ifindex(NBB_LONG ms_ifindex, NBB_ULONG location);
+NBB_LONG lnx_to_ms_ifindex(NBB_LONG lnx_ifindex, NBB_ULONG location);
 
 // Used in the Mgmt Stubs to convert from PDS IfIndex to MS IfIndex
 static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex) {

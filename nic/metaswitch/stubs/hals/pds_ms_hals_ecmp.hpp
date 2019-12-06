@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <nbase.h>
 extern "C"

@@ -7,6 +7,7 @@
 #define __PDSA_LI_INTF_HPP__
 
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <nbase.h>
 extern "C"

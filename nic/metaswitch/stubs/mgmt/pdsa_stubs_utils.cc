@@ -151,6 +151,11 @@ void pdsa_stubs_create ()
     // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
     pdsa_row_update_rtm_mj (&conf, AMB_RTM_ARI_PARTNER_FT);
 
+    // Join RTM - PSM (Pathset Mgr)
+    pdsa_row_update_rtm_mj (&conf, AMB_RTM_ARI_PARTNER_PSM);
+    // Join RTM - FTM (FwdTable Mgr) 
+    pdsa_row_update_rtm_mj (&conf, AMB_RTM_ARI_PARTNER_FTM);
+
     // rtmEntityTable - Admin UP                                
     pdsa_row_update_rtm (&conf, AMB_ADMIN_STATUS_UP);
 

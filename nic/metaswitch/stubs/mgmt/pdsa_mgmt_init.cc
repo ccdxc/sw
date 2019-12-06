@@ -94,8 +94,9 @@ nbase_init ()
     SMSI_L2_INITIALIZE();
     SMSI_FTM_INITIALIZE();
 
-    // Register user callback to convert MS IfIndex to Linux IfIndex
+    // Register user callback to convert between MS IfIndex & Linux IfIndex
     A0_USER_REG_LOCAL_IF_MAP_FN (pds_ms::ms_to_lnx_ifindex);
+    A0_USER_REG_SYSTEM_IF_MAP_FN(pds_ms::lnx_to_ms_ifindex);
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */
