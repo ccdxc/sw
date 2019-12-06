@@ -19,11 +19,13 @@ export CMD_RESOLVER_PORT=9009
 export CMD_GRPC_UNAUTH_PORT=9002
 export NPM_RPC_PORT=9005
 
+# serial-number is hardcoded in go code.
+# nic/agent/nmd/state/rolloutif/smartnic_rollout.go
 fru_base='{
     "manufacturing-date": "1539734400",
     "manufacturer": "PENSANDO SYSTEMS INC.",
     "product-name": "NAPLES 100",
-    "serial-number": "FLM18440000",
+    "serial-number": "SIM18440000",
     "part-number": "68-0003-02 01",
     "engineering-change-level": "00",
     "board-id": "1000",
@@ -109,6 +111,8 @@ set -x
 if [ -f /tmp/naples-netagent.db ]; then
     rm -f /tmp/naples-netagent.db
 fi
+
+mkdir -p /update/
 
 # make the example configs visible to the VM outside
 if [ -d /naples/nic/data/examples ]; then

@@ -17,6 +17,10 @@ import (
 
 // =====   RolloutAPI interface =====
 //  Provided by NMD to Rollout Controller
+const (
+	//value taken from nic/sim/naples/start-naples.sh
+	simSerialNumber = "SIM18440000"
+)
 
 // CreateUpdateDSCRollout as requested by Rollout Controller
 func (n *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
@@ -185,12 +189,21 @@ func (n *NMD) issueNextPendingOp() {
 	n.updateRolloutStatus(op)
 
 	var err error
-	log.Infof("Issuing %#v", n.ro.InProgressOp)
+	log.Infof("Issuing %#v serialNumber %#v", n.ro.InProgressOp, n.config.Status.Fru.SerialNum)
 	switch n.ro.InProgressOp.Op {
 	case protos.DSCOp_DSCDisruptiveUpgrade:
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			return
+		}
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: upgrade completed")
+			rerr := os.Remove("/update/naples_fw.tar")
+			if rerr != nil {
+				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
+			}
+			go n.UpgSuccessful()
 			return
 		}
 		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
@@ -203,6 +216,15 @@ func (n *NMD) issueNextPendingOp() {
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
+			return
+		}
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: upgrade completed")
+			rerr := os.Remove("/update/naples_fw.tar")
+			if rerr != nil {
+				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
+			}
+			go n.UpgSuccessful()
 			return
 		}
 		_, err = naplesHostDisruptiveUpgrade("naples_fw.tar")
@@ -237,6 +259,11 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 		cancel()
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: image download completed")
+			go n.UpgPossible()
+			return
+		}
 		_, err = naplesPkgVerify("naples_fw.tar")
 		if err != nil {
 			log.Errorf("Firmware image verification failed %s", err)
@@ -269,6 +296,11 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 		cancel()
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: image download completed")
+			go n.UpgPossible()
+			return
+		}
 		err = n.Upgmgr.StartPreCheckDisruptive(n.ro.InProgressOp.Version)
 		if err != nil {
 			log.Errorf("StartPreCheckDisruptive returned %s", err)
