@@ -1,5 +1,4 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
@@ -11,12 +10,15 @@ using sdk::table::sdk_table_factory_params_t;
 using sdk::table::sdk_table_api_params_t;
 using hal::pd::flow_table_pd;
 
+typedef char* (*key2str_t)(void *key);
+typedef char* (*appdata2str_t)(void *data);
+
 static char*
 key2str(void *key) {
     thread_local static char str[256] = { 0 };
     char srcstr[INET6_ADDRSTRLEN] = { 0 };
     char dststr[INET6_ADDRSTRLEN] = { 0 };
-    flow_hash_swkey_t *swkey = static_cast<flow_hash_swkey_t*>(key);
+    ftlv6_entry_t     *swkey = static_cast<ftlv6_entry_t*>(key);
     SDK_ASSERT(swkey);
 
     if (swkey->flow_lkp_metadata_lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6) {
@@ -40,14 +42,12 @@ key2str(void *key) {
                  swkey->flow_lkp_metadata_lkp_dst[4],
                  swkey->flow_lkp_metadata_lkp_dst[5]);
     } else if (swkey->flow_lkp_metadata_lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) {
-        inet_ntop(AF_INET, swkey->flow_lkp_metadata_lkp_src,
-                  srcstr, INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, swkey->flow_lkp_metadata_lkp_dst,
-                  dststr, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, swkey->flow_lkp_metadata_lkp_src, srcstr, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, swkey->flow_lkp_metadata_lkp_dst, dststr, INET_ADDRSTRLEN);
     }
 
-    snprintf(str, sizeof(str), "type=%d,inst=%d,dir=%d,dst=%s,"
-             "src=%s,dport=%d,sport=%d,proto=%d,vrf=%d",
+    snprintf(str, sizeof(str), "type=%lu,inst=%lu,dir=%lu,dst=%s,"
+             "src=%s,dport=%lu,sport=%lu,proto=%lu,vrf=%lu",
              swkey->flow_lkp_metadata_lkp_type,
              swkey->flow_lkp_metadata_lkp_inst,
              swkey->flow_lkp_metadata_lkp_dir,
@@ -60,13 +60,13 @@ key2str(void *key) {
 }
 
 static char*
-appdata2str(void *appdata) {
+appdata2str(void *entry) {
     thread_local static char str[32] = { 0 };
-    flow_hash_appdata_t *swappdata = static_cast<flow_hash_appdata_t*>(appdata);
-    SDK_ASSERT(swappdata);
+    ftlv6_entry_t     *swentry = static_cast<ftlv6_entry_t*>(entry);
+    SDK_ASSERT(swentry);
 
-    snprintf(str, sizeof(str), "export_en=%d,flow_index=%d",
-             swappdata->export_en, swappdata->flow_index);
+    snprintf(str, sizeof(str), "export_en=%lu,flow_index=%lu",
+             swentry->export_en, swentry->flow_index);
     return str;
 }
 
@@ -90,7 +90,7 @@ flow_table_pd::factory() {
 
 void
 flow_table_pd::destroy(flow_table_pd *ftpd) {
-    mem_hash::destroy(ftpd->table_);
+    ftlv6::destroy(ftpd->table_);
     return;
 }
 
@@ -111,10 +111,8 @@ flow_table_pd::init() {
     params.max_recircs = 8;
     params.key2str = key2str;
     params.appdata2str = appdata2str;
-    params.entry_trace_en = false;
-    //params.health_monitor_func = table_health_monitor;
 
-    table_ = mem_hash::factory(&params);
+    table_ = ftlv6::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
     return HAL_RET_OK;
 }
@@ -150,22 +148,29 @@ flow_table_pd::stats_get(sys::TableStatsEntry *stats_entry) {
 static void
 table_entry_fill(sdk_table_api_params_t *params) {
     char *str = NULL;
+    ftlv6_entry_t *hwentry = (ftlv6_entry_t *) params->entry;
     TableResponse *rsp = static_cast<TableResponse*>(params->cbdata);
     TableFlowEntry *entry = rsp->mutable_flow_table()->add_flow_entry();
 
-    entry->set_primary_index_valid(params->handle.pvalid());
-    entry->set_primary_index(params->handle.pindex());
-    entry->set_secondary_index_valid(params->handle.svalid());
-    entry->set_secondary_index(params->handle.sindex());
-    str = key2str(params->key);
-    entry->set_key(str);
-    HAL_TRACE_DEBUG("Key: {}", str);
+    if (hwentry->entry_valid) {
+        str = key2str(hwentry);
+        entry->set_key(str);
+        HAL_TRACE_VERBOSE("key {}", str);
 
-    str = appdata2str(params->appdata);
-    entry->set_data(str);
-    HAL_TRACE_DEBUG("Data: {}", str);
-    HAL_TRACE_DEBUG("Pindex valid: {} Pindex: {} Sindex valid: {} Sindex: {}", params->handle.pvalid(), 
-                    params->handle.pindex(), params->handle.svalid(), params->handle.sindex());
+        str = appdata2str(hwentry);
+        entry->set_data(str);
+        HAL_TRACE_VERBOSE("app data {}", str);
+
+        entry->set_primary_index_valid(params->handle.pvalid());
+        entry->set_primary_index(params->handle.pindex());
+        entry->set_secondary_index_valid(params->handle.svalid());
+        entry->set_secondary_index(params->handle.sindex());
+
+        HAL_TRACE_VERBOSE("pindex valid {}, pindex {}, sindex valid {}, sindex {}",
+                          params->handle.pvalid(), params->handle.pindex(),
+                          params->handle.svalid(), params->handle.sindex());
+    }
+
     return;
 }
 
@@ -175,6 +180,7 @@ table_entry_fill(sdk_table_api_params_t *params) {
 hal_ret_t
 flow_table_pd::dump(TableResponse *rsp) {
     sdk_table_api_params_t params = { 0 };
+
     params.cbdata = rsp;
     params.itercb = table_entry_fill;
     table_->iterate(&params);
@@ -186,25 +192,41 @@ flow_table_pd::dump(TableResponse *rsp) {
 // insert(): Insert flow into flow table
 // -----------------------------------------------------------------------
 hal_ret_t
-flow_table_pd::insert(void *key, void *appdata,
+flow_table_pd::insert(void *entry,
                       uint32_t *hash_value, bool hash_valid) {
-    sdk_table_api_params_t params = { 0 };
+    sdk_table_api_params_t params;
     sdk_ret_t sret = SDK_RET_OK;
     hal_ret_t ret = HAL_RET_OK;
     
-    params.key = key;
-    params.appdata = appdata;
-    params.hash_32b = *hash_value;
-    params.hash_valid = hash_valid;
+    bzero((void *)&params, sizeof(sdk_table_api_params_t));
+    params.entry = entry;
+    if (hash_valid) {
+        params.hash_32b = *hash_value;
+        params.hash_valid = true;
+    }
 
     sret = table_->insert(&params);
     ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in flowtable insert, sret {}, key {}", sret, key2str(params.entry));
+        HAL_TRACE_ERR("Error in flowtable insert, app data {}, "
+                      "pindex valid {}, pindex {}, sindex valid {}, sindex {}",
+                      appdata2str(params.entry), params.handle.pvalid(),
+                      params.handle.pindex(), params.handle.svalid(),
+                      params.handle.sindex());
+
         return ret;
     }
     if (hash_valid == false) {
         *hash_value = params.hash_32b;
     }
+
+    HAL_TRACE_VERBOSE("flowtable insert, hash {}, key {}", params.hash_32b, key2str(params.entry));
+    HAL_TRACE_VERBOSE("flowtable insert: app data {}, pindex valid {}, "
+                      "pindex {}, sindex valid {}, sindex {}",
+                      appdata2str(params.entry), params.handle.pvalid(),
+                      params.handle.pindex(), params.handle.svalid(),
+                      params.handle.sindex());
 
     return HAL_RET_OK;
 }
@@ -213,16 +235,18 @@ flow_table_pd::insert(void *key, void *appdata,
 // update(): Update flow into flow table
 // -----------------------------------------------------------------------
 hal_ret_t
-flow_table_pd::update(void *key, void *appdata,
+flow_table_pd::update(void *entry,
                       uint32_t *hash_value, bool hash_valid) {
     sdk_table_api_params_t params = { 0 };
     sdk_ret_t sret = SDK_RET_OK;
     hal_ret_t ret = HAL_RET_OK;
     
-    params.key = key;
-    params.appdata = appdata;
-    params.hash_32b = *hash_value;
-    params.hash_valid = hash_valid;
+    bzero((void *)&params, sizeof(sdk_table_api_params_t));
+    params.entry = entry;
+    if (hash_valid) {
+        params.hash_32b = *hash_value;
+        params.hash_valid = 1;
+    }
 
     sret = table_->update(&params);
     ret = hal_sdk_ret_to_hal_ret(sret);
@@ -240,11 +264,31 @@ flow_table_pd::update(void *key, void *appdata,
 // remove(): Remove flow from flow table
 // -----------------------------------------------------------------------
 hal_ret_t
-flow_table_pd::remove(void *key) {
-    sdk_table_api_params_t params = { 0 };
+flow_table_pd::remove(void *entry) {
+    sdk_table_api_params_t params;
     sdk_ret_t sret = SDK_RET_OK;
-    params.key = key;
+    hal_ret_t ret = HAL_RET_OK;
+
+    bzero((void *)&params, sizeof(sdk_table_api_params_t));
+    params.entry = entry;
     sret = table_->remove(&params);
+
+    ret = hal_sdk_ret_to_hal_ret(sret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in flowtable remove, sret {}, key {}", sret, key2str(params.entry));
+        HAL_TRACE_ERR("Error in flowtable remove, app data {}, pindex valid {}, "
+                      " pindex {}, sindex valid {}, sindex {}",
+                      appdata2str(params.entry), params.handle.pvalid(),
+                      params.handle.pindex(), params.handle.svalid(),
+                      params.handle.sindex());
+    } else {
+        HAL_TRACE_VERBOSE("flowtable remove, key {}", key2str(params.entry));
+        HAL_TRACE_VERBOSE("flowtable remove, app data {}, pindex valid {}, "
+                          "pindex {}, sindex valid {}, sindex {}",
+                          appdata2str(params.entry), params.handle.pvalid(),
+                          params.handle.pindex(), params.handle.svalid(),
+                          params.handle.sindex());
+    }
     return hal_sdk_ret_to_hal_ret(sret);
 }
 
@@ -280,24 +324,25 @@ flow_table_pd::meta_get(table::TableMetadataResponseMsg *rsp_msg) {
 }
 
 hal_ret_t
-flow_table_pd::get(void *key, FlowHashGetResponse *entry) {
+flow_table_pd::get(void *entry, FlowHashGetResponse *rsp) {
     flow_hash_appdata_t swappdata = { 0 };
     sdk_table_api_params_t params = { 0 };
     sdk_ret_t sret = SDK_RET_OK;
     char *str = NULL;
 
-    params.key = key;
+    params.entry = entry;
     params.appdata = &swappdata;
     sret = table_->get(&params);
     if (sret == SDK_RET_OK) {
-        str = appdata2str(params.appdata);
-        entry->set_data(str);
-        entry->set_primary_index_valid(params.handle.pvalid());
-        entry->set_primary_index(params.handle.pindex());
-        entry->set_secondary_index_valid(params.handle.svalid());
-        entry->set_secondary_index(params.handle.sindex());
-        str = key2str(params.key);
-        entry->set_key(str);
+        str = key2str(params.entry);
+        rsp->set_key(str);
+
+        str = appdata2str(params.entry);
+        rsp->set_data(str);
+        rsp->set_primary_index_valid(params.handle.pvalid());
+        rsp->set_primary_index(params.handle.pindex());
+        rsp->set_secondary_index_valid(params.handle.svalid());
+        rsp->set_secondary_index(params.handle.sindex());
     }
 
     return hal_sdk_ret_to_hal_ret(sret);

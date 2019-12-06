@@ -45,10 +45,10 @@ rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
     if ((*rwe) == NULL) {
         ret = HAL_RET_ENTRY_NOT_FOUND;
     } else {
-        HAL_TRACE_DEBUG("Found rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
-                        (*rwe)->rw_idx, rw_key->rw_act,
-                        ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
-                        ether_ntoa((struct ether_addr*)&rw_key->mac_da));
+        HAL_TRACE_VERBOSE("Found rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                          (*rwe)->rw_idx, rw_key->rw_act,
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_da));
     }
 
 end:
@@ -158,11 +158,12 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         *rw_idx = rwe->rw_idx;
         // Increment the ref count
         rwe->ref_cnt++;
-        HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
-                        g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
-                        rwe->ref_cnt, rwe->rw_idx, rw_key->rw_act,
-                        ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
-                        ether_ntoa((struct ether_addr*)&rw_key->mac_da));
+        HAL_TRACE_VERBOSE("Usage: {} ref_cnt: {} Find/Alloc rw_id: {} "
+                          "for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                          g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
+                          rwe->ref_cnt, rwe->rw_idx, rw_key->rw_act,
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_da));
         goto end;
     }
 

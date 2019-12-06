@@ -220,11 +220,13 @@ __label__ done;
     // Set the Handle
     if (match_ctx->is_main()) {
         match_ctx->params->handle.pindex(match_ctx->table_index);
+        ctx->params->handle.pindex(match_ctx->table_index);
     } else {
         match_ctx->params->handle.sindex(match_ctx->table_index);
+        ctx->params->handle.sindex(match_ctx->table_index);
     }
 
-    ctx->entry.copy_key_data((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
+    ctx->entry.copy_key_data((FTL_MAKE_AFTYPE(entry_t)*)match_ctx->params->entry);
 
 done:
     return ret;

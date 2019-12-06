@@ -30,11 +30,11 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
     proxy_enabled = ctx.is_proxy_enabled();
     proxy_flow = ctx.is_proxy_flow();
 
-    HAL_TRACE_DEBUG("proxy_enabled {} proxy_flow {} "
-                    "enic_dif {} enic_sif {}",
-                    proxy_enabled, proxy_flow,
-                    dif && (dif->if_type == intf::IF_TYPE_ENIC),
-                    sif && (sif->if_type == intf::IF_TYPE_ENIC));
+    HAL_TRACE_VERBOSE("proxy_enabled {} proxy_flow {} "
+                      "enic_dif {} enic_sif {}",
+                      proxy_enabled, proxy_flow,
+                      dif && (dif->if_type == intf::IF_TYPE_ENIC),
+                      sif && (sif->if_type == intf::IF_TYPE_ENIC));
 
     if (dif && (dif->if_type == intf::IF_TYPE_ENIC)) {
         hal::lif_t *dlif = if_get_lif(dif);
@@ -101,8 +101,8 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
         if (ret != HAL_RET_OK) {
             return ret;
         }
-        HAL_TRACE_DEBUG("qos_class_en {} qos_class {} qos_class_id {}",
-                        qos_class_en, qos_class->key, qos_class_id);
+        HAL_TRACE_VERBOSE("qos_class_en {} qos_class {} qos_class_id {}",
+                          qos_class_en, qos_class->key, qos_class_id);
     }
 
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_QOS_INFO};

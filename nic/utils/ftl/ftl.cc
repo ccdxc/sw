@@ -180,7 +180,7 @@ FTL_AFPFX()::genhash_(sdk_table_api_params_t *params) {
 
     if (!params->hash_valid) {
 #ifdef SIM
-        static thread_local char buff[256];
+        static thread_local char buff[512];
         ((FTL_MAKE_AFTYPE(entry_t)*)params->entry)->tostr(buff, sizeof(buff));
         FTL_TRACE_VERBOSE("Input Entry = [%s]", buff);
         params->hash_32b = sdk::utils::crc32((uint8_t *)&hashkey,
@@ -316,7 +316,7 @@ FTL_AFPFX()::get(sdk_table_api_params_t *params) {
 
     ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->get_(apictx_);
     if (ret != SDK_RET_OK) {
-        FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
+        FTL_TRACE_ERR("get_ failed. ret:%d", ret);
         goto get_return;
     }
 

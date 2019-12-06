@@ -51,7 +51,11 @@ FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
     ctx->entry.entry_valid = valid_;
     if (ctx->hint) {
-        ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
+        if (HINT_SLOT_IS_MORE(ctx->hint_slot)) {
+            ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, 1);
+        } else {
+            ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
+        }
     }
 
     ctx->trace();
@@ -81,8 +85,10 @@ FTL_MAKE_AFTYPE(bucket)::create_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // Set the Handle
     if (ctx->is_main()) {
         ctx->params->handle.pindex(ctx->table_index);
+        FTL_TRACE_VERBOSE("pindex: %d", ctx->params->handle.pindex());
     } else {
         ctx->params->handle.sindex(ctx->table_index);
+        FTL_TRACE_VERBOSE("sindex: %d", ctx->params->handle.sindex());
     }
 
     // Update the bucket meta data
@@ -140,8 +146,7 @@ sdk_ret_t
 FTL_MAKE_AFTYPE(bucket)::append_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    FTL_TRACE_VERBOSE("%s: Appending to bucket.", ctx->idstr());
-    FTL_TRACE_VERBOSE("- PreMeta : [%s]", ctx->metastr());
+    FTL_TRACE_VERBOSE("%s: Appending to bucket. - PreMeta: [%s].", ctx->idstr(), ctx->metastr());
 
     ret = find_(ctx);
     if (ret == SDK_RET_OK) {
@@ -230,9 +235,11 @@ FTL_MAKE_AFTYPE(bucket)::find_first_free_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
 sdk_ret_t
 FTL_MAKE_AFTYPE(bucket)::find_last_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+
     ctx->hint_slot = ctx->entry.find_last_hint();
-    if (!ctx->entry.is_hint_slot_valid(ctx->hint_slot)) {
-        FTL_TRACE_VERBOSE("- No Valid Hint Found");
+
+    if (ctx->entry.is_hint_slot_valid(ctx->hint_slot) == false) {
+        FTL_TRACE_VERBOSE("- No Valid Hint Found, hint_slot: %d, hint: %d", ctx->hint_slot, ctx->hint);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     
@@ -297,6 +304,10 @@ FTL_MAKE_AFTYPE(bucket)::find_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // Compare the Key portion, if it matches, then we have to re-align
     // the entries.
     // TODO
+
+    //char buff[500];
+    //((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry)->tostr(buff, 500);
+    //FTL_TRACE_VERBOSE("Key :%s", buff);
     match = ctx->entry.compare_key((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
     if (match) {
         ctx->match = 1; ctx->exmatch = 1;
@@ -325,6 +336,8 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (!valid_) {
+        FTL_TRACE_ERR("%s: failed to remove, entry not found Ctx: [%s]",
+                      ctx->idstr(), ctx->metastr());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
@@ -334,8 +347,8 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         return ret;
     }
 
-    FTL_TRACE_VERBOSE("%s: find_ result ret:%d Ctx: [%s]", ctx->idstr(), ret,
-                      ctx->metastr());
+    FTL_TRACE_VERBOSE("%s: find_ result ret:%d exact_match:%d Ctx:[%s]",
+                      ctx->idstr(), ret, ctx->exmatch, ctx->metastr());
 
     // If it is not an exact match, then no further processing is required
     // at this stage.
@@ -361,7 +374,9 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         ret = SDK_RET_OK;
         // Since this bucket has no hints, we can update stats here.
         // If it had hints, then it would be update during defragmentation
-        FTL_TRACE_VERBOSE("decrementing table stats for %s", ctx->idstr());
+        FTL_TRACE_VERBOSE("decrementing table stats for idstr:%s, metastr:%s",
+                          ctx->idstr(), ctx->metastr());
+
         ctx->tstats->remove(ctx->level);
     } else if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("find_last_hint_ failed. ret:%d", ret);

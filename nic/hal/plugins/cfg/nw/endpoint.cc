@@ -2502,6 +2502,12 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
                 HAL_TRACE_ERR("Couldnt delete session with handle: {}", entry->handle_id);
             }
         }
+        // clean up the session to ctxt reference
+        if (curr == session->sep_sess_list_entry_ctxt) {
+            session->sep_sess_list_entry_ctxt = NULL;
+        } else if (curr == session->dep_sess_list_entry_ctxt) {
+            session->dep_sess_list_entry_ctxt = NULL;
+        }
         // Remove from list
         dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
@@ -2927,13 +2933,19 @@ ep_add_session (ep_t *ep, session_t *session)
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);
     sdk::lib::dllist_add(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
+
+    if (session->sep_handle == ep->hal_handle) {
+        session->sep_sess_list_entry_ctxt = &entry->dllist_ctxt;
+    } else if (session->dep_handle == ep->hal_handle) {
+        session->dep_sess_list_entry_ctxt = &entry->dllist_ctxt;
+    }
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);
 
 end:
 
     HAL_TRACE_DEBUG("add ep {}/{} => session {}, ret : {}",
-                      ep_l2_key_to_str(ep), ep->hal_handle,
-                      session->hal_handle, ret);
+                    ep_l2_key_to_str(ep), ep->hal_handle,
+                    session->hal_handle, ret);
     return ret;
 }
 
@@ -3003,7 +3015,19 @@ ep_del_session (ep_t *ep, session_t *session)
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &ep->session_list_head[session->fte_id]) {
+
+    if (session->sep_handle == ep->hal_handle) {
+        curr = session->sep_sess_list_entry_ctxt;
+
+        // clean up the session to ctxt reference
+        session->sep_sess_list_entry_ctxt = NULL;
+    } else if (session->dep_handle == ep->hal_handle) {
+        curr = session->dep_sess_list_entry_ctxt;
+
+        // clean up the session to ctxt reference
+        session->dep_sess_list_entry_ctxt = NULL;
+    }
+    if (curr != NULL) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == session->hal_handle) {
             // Remove from list

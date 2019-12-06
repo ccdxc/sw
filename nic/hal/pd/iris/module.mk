@@ -30,5 +30,5 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/flow/*.cc)
 MODULE_INCS     = ${NIC_CSR_INCS} \
                   ${BLD_PROTOGEN_DIR}
-MODULE_SOLIBS   = memhash
+MODULE_SOLIBS   = ftlv6
 include ${MKDEFS}/post.mk

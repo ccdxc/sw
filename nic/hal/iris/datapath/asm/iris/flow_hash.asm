@@ -18,10 +18,8 @@ flow_hash_info:
   phvwr       p.control_metadata_lkp_flags_egress, r7
   seq         c2, d.flow_hash_info_d.entry_valid, 1
   bcf         [c1&c2], flow_hash_hit
-  or          r7,  d.flow_hash_info_d.hint1_sbit4_ebit17, \
-                d.flow_hash_info_d.hint1_sbit0_ebit3, 14
   seq         c1, r1[31:21], d.flow_hash_info_d.hash1
-  sne         c3, r7, r0
+  sne         c3, d.flow_hash_info_d.hint1, r0
   bcf         [c1&c2&c3], flow_hash_hint1
   seq         c1, r1[31:21], d.flow_hash_info_d.hash2
   sne         c3, d.flow_hash_info_d.hint2, r0
@@ -35,8 +33,8 @@ flow_hash_info:
   seq         c1, r1[31:21], d.flow_hash_info_d.hash5
   sne         c3, d.flow_hash_info_d.hint5, r0
   bcf         [c1&c2&c3], flow_hash_hint5
-  seq         c1, d.flow_hash_info_d.more_hashs, 1
-  bcf         [c1&c2], flow_hash_more_hashs
+  seq         c1, d.flow_hash_info_d.more_hashes, 1
+  bcf         [c1&c2], flow_hash_more_hashes
   phvwr       p.recirc_header_valid, 0
   phvwr       p.control_metadata_flow_miss_ingress, 1
   phvwr.e     p.control_metadata_i2e_flags[P4_I2E_FLAGS_FLOW_MISS], 1
@@ -48,7 +46,7 @@ flow_hash_hit:
 
 flow_hash_hint1:
   b           flow_hash_recirc
-  add         r2, r0, r7
+  add         r2, r0, d.flow_hash_info_d.hint1
 
 flow_hash_hint2:
   b           flow_hash_recirc
@@ -66,7 +64,7 @@ flow_hash_hint5:
   b           flow_hash_recirc
   add         r2, r0, d.flow_hash_info_d.hint5
 
-flow_hash_more_hashs:
+flow_hash_more_hashes:
   b           flow_hash_recirc
   add         r2, r0, d.flow_hash_info_d.more_hints
 

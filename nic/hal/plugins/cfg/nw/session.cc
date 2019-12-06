@@ -422,12 +422,12 @@ add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
     dep = find_ep_by_handle(dep_handle);
 
     if (sep) {
-        ep_add_session(sep, session);
         session->sep_handle = sep->hal_handle;
+        ep_add_session(sep, session);
     }
     if (dep) {
-        ep_add_session(dep, session);
         session->dep_handle = dep->hal_handle;
+        ep_add_session(dep, session);
     }
 
     return HAL_RET_OK;
@@ -441,7 +441,7 @@ del_session_from_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t
 {
     ep_t *sep = NULL, *dep = NULL;
 
-    HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
+    HAL_TRACE_VERBOSE("Entering DEL session from DB:{}", session->hal_handle);
 
     sep = find_ep_by_handle(session->sep_handle);
     dep = find_ep_by_handle(session->dep_handle);
@@ -921,7 +921,7 @@ flow_matches_filter (hal::flow_t *flow, SessionFilter *filter)
     }
 
     if (filter->has_dst_ip()) {
-	    HAL_TRACE_DEBUG("Checking for dest ip");
+	    HAL_TRACE_VERBOSE("Checking for dest ip");
         ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->dst_ip());
         if (ret != HAL_RET_OK) {
             return false;
@@ -2762,8 +2762,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // session anyway.
     if (tcp_session && session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
-        HAL_TRACE_DEBUG("Session {} connection tracking timer is on -- bailing aging",
-                        session->hal_handle);
+        HAL_TRACE_VERBOSE("Session {} connection tracking timer is on "
+                          "-- bailing aging", session->hal_handle);
         return retval;
     }
 

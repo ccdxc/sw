@@ -419,8 +419,8 @@ pd_if_get_tm_oport(pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("dest_if pi_if NULL");
         goto end;
     }
-    HAL_TRACE_DEBUG("dest_if if_type {} if_id {}",
-                    pi_if->if_type, pi_if->if_id);
+    HAL_TRACE_VERBOSE("dest_if if_type {} if_id {}",
+                      pi_if->if_type, pi_if->if_id);
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:

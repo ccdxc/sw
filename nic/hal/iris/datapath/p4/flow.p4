@@ -388,12 +388,13 @@ table flow_info {
 @pragma capi appdatafields flow_index export_en
 @pragma capi hwfields_access_api
 action flow_hash_info(entry_valid, export_en,
-                      flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
-                      hash4, hint4, hash5, hint5,
-                      more_hashs, more_hints) {
+                      flow_index, pad4, hash1, hint1, hash2, hint2,
+                      hash3, hint3, hash4, hint4, hash5, hint5,
+                      more_hashes, more_hints) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.entry_valid, entry_valid);
     modify_field(scratch_metadata.export_en, export_en);
+    modify_field(scratch_metadata.pad4, pad4);
     modify_field(scratch_metadata.flow_hash1, hash1);
     modify_field(scratch_metadata.flow_hash2, hash2);
     modify_field(scratch_metadata.flow_hash3, hash3);
@@ -404,7 +405,7 @@ action flow_hash_info(entry_valid, export_en,
     modify_field(scratch_metadata.flow_hint3, hint3);
     modify_field(scratch_metadata.flow_hint4, hint4);
     modify_field(scratch_metadata.flow_hint5, hint5);
-    modify_field(scratch_metadata.more_hashs, more_hashs);
+    modify_field(scratch_metadata.more_hashes, more_hashes);
     modify_field(scratch_metadata.more_hints, more_hints);
 
     modify_field(rewrite_metadata.entropy_hash, scratch_metadata.entropy_hash);

@@ -385,6 +385,15 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     tcp_ctx_ = fte::impl::init_tcp_rings_ctxt(id_, arm_ctx_);
 
     while (true) {
+        process_arq_new();
+        process_softq();
+
+#ifdef SIM
+        fte::impl::process_pending_queues();
+        ctx_->process_tcp_queues(tcp_ctx_);
+#endif
+        curr_thread->punch_heartbeat();
+
         if (hal::is_platform_type_hw()) {
 
             /*
@@ -392,10 +401,11 @@ void inst_t::start(sdk::lib::thread *curr_thread)
              * there is a starvation issue for mnic (and potentially other linux threads)
              * if FTE threads spin constantly, due to cpu affinities not setup properly.
              * Will be removing the sleep once those issues are addressed.
-	     * If 'bypass_fte_' is set, this is for PMD perf-mode, we dont want to sleep
-	     * between packets.
+             * If 'bypass_fte_' is set, this is for PMD perf-mode, we dont want to sleep
+             * between packets.
              */
-	    if (!bypass_fte_) usleep(10);
+            if (!bypass_fte_) usleep(10);
+            continue;
         } else if (hal::is_platform_type_sim()) {
             usleep(1000000/30);
         } else if (hal::is_platform_type_rtl()) {
@@ -405,14 +415,6 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         } else { /* PLATFORM_MOCK */
             usleep(1000);
         }
-        process_arq_new();
-        process_softq();
-
-#ifdef SIM
-        fte::impl::process_pending_queues();
-        ctx_->process_tcp_queues(tcp_ctx_);
-#endif
-        curr_thread->punch_heartbeat();
     }
 }
 
@@ -424,7 +426,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                  hal::pd::p4plus_to_p4_header_t* p4plus_header,
                  uint8_t* pkt, size_t pkt_len)
 {
-    HAL_TRACE_DEBUG("fte: sending pkt to id: {}, {}", id_, hex_str(pkt, pkt_len));
+    HAL_TRACE_VERBOSE("fte: sending pkt to id: {}, {}", id_, hex_str(pkt, pkt_len));
     return fte::impl::cpupkt_send(arm_ctx_, id_, cpu_header, p4plus_header, pkt, pkt_len);
 }
 
@@ -470,7 +472,7 @@ void inst_t::process_softq()
         npkt++;
     }
     if (npkt) {
-        HAL_TRACE_DEBUG("Done processing softq: {}", npkt);
+        HAL_TRACE_VERBOSE("Done processing softq: {}", npkt);
     }
 }
 
@@ -781,7 +783,7 @@ void inst_t::process_arq()
      */
     if (bypass_fte_) {
 
-        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+        HAL_TRACE_VERBOSE("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
         update_rx_stats(cpu_rxhdr, pkt_len);
         if (pkt) {
@@ -875,7 +877,8 @@ void inst_t::process_arq_new ()
     size_t                    pkt_len;
     bool                      copied_pkt, drop_pkt;
 
-    bzero(&cpupkt_batch, sizeof(hal::pd::cpupkt_pkt_batch_t));
+    // reset the batch packet count
+    cpupkt_batch.pktcount = 0;
 
     // read the packet
     ret = fte::impl::cpupkt_poll_receive_new(arm_ctx_, &cpupkt_batch);
@@ -903,7 +906,7 @@ void inst_t::process_arq_new ()
             cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
             copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
 
-            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+            HAL_TRACE_VERBOSE("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
             if (pkt) {
 
@@ -933,7 +936,7 @@ void inst_t::process_arq_new ()
 
     if (!cpupkt_batch.pktcount) return;
 
-    HAL_TRACE_DEBUG("Received {} packets", cpupkt_batch.pktcount);
+    HAL_TRACE_VERBOSE("Received {} packets", cpupkt_batch.pktcount);
 
     for (npkt = 0; npkt < cpupkt_batch.pktcount; npkt++) {
 
@@ -957,7 +960,7 @@ void inst_t::process_arq_new ()
             ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
             if (ret != HAL_RET_OK) {
                 if (ret == HAL_RET_FTE_SPAN) {
-                    HAL_TRACE_DEBUG("fte: done processing span packet");
+                    HAL_TRACE_VERBOSE("fte: done processing span packet");
                 } else {
                     HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
                 }
@@ -1002,7 +1005,7 @@ void inst_t::process_arq_new ()
 
         fte::impl::cfg_db_close();
     }
-    HAL_TRACE_DEBUG("Done processing {} packets", cpupkt_batch.pktcount);
+    HAL_TRACE_VERBOSE("Done processing {} packets", cpupkt_batch.pktcount);
 
 }
 
@@ -1135,7 +1138,7 @@ set_fte_max_sessions (uint8_t fte_id, uint64_t max_sessions)
     if (fte_disabled_)
         goto done;
     fn_ctx.max_sessions = max_sessions;
-    HAL_TRACE_DEBUG("max sessions {}", max_sessions);
+    HAL_TRACE_VERBOSE("max sessions {}", max_sessions);
 
     fte_execute(fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;

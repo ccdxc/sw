@@ -1327,8 +1327,10 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	return(HAL_RET_RETRY);
     }
 
-    HAL_TRACE_DEBUG("Process batch: total-pkts {} rxq-pkts {} compq-rx-descrs {} compq-tx-descrs {}",
-		    pktcount, rxq_pkt_count, compq_rx_pkt_count, compq_tx_pkt_count);
+    HAL_TRACE_VERBOSE("Process batch: total-pkts {} rxq-pkts {} "
+                      "compq-rx-descrs {} compq-tx-descrs {}",
+                      pktcount, rxq_pkt_count,
+                      compq_rx_pkt_count, compq_tx_pkt_count);
 
     /*
      * If we received the descriptor on the completion-queue (one of the ASCQ's), we
@@ -1351,54 +1353,56 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
     }
 
     for (npkt = 0; npkt < rxq_pkt_count; npkt++) {
+        bzero(&(pkt_batch->pkts[*app_pkt_count]), sizeof (cpupkt_pktinfo_t));
 
         /*
-	 * Lets get the packet header/data from the descriptor we've received.
-	 */
+         * Lets get the packet header/data from the descriptor we've received.
+         */
         ret = cpupkt_descr_to_headers(rxq_descr_virt_ptrs[npkt], &(pkt_batch->pkts[*app_pkt_count].cpu_rxhdr),
-				      &(pkt_batch->pkts[*app_pkt_count].pkt), &(pkt_batch->pkts[*app_pkt_count].pkt_len),
-				      &(pkt_batch->pkts[*app_pkt_count].copied_pkt), cpu_rx_descrs[npkt]);
-	if(ret != HAL_RET_OK) {
-	   rxq->qinst_info[0]->ctr.rx_descr_to_hdr_err++;
-	   HAL_TRACE_ERR2("Failed to convert descr to headers");
-	   if (cpu_rx_descrs[npkt] && is_cpu_zero_copy_enabled()) {
-	       ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
-	       if (ret != HAL_RET_OK) {
-		   rxq->qinst_info[0]->ctr.tx_descr_free_err++;
-		   HAL_TRACE_ERR2("Failed to free rx descr: {}", ret);
-	       }
-	   }
-	} else {
+                &(pkt_batch->pkts[*app_pkt_count].pkt), &(pkt_batch->pkts[*app_pkt_count].pkt_len),
+                &(pkt_batch->pkts[*app_pkt_count].copied_pkt), cpu_rx_descrs[npkt]);
 
-	   (*app_pkt_count)++;
+        if(ret != HAL_RET_OK) {
+            rxq->qinst_info[0]->ctr.rx_descr_to_hdr_err++;
+            HAL_TRACE_ERR2("Failed to convert descr to headers");
+            if (cpu_rx_descrs[npkt] && is_cpu_zero_copy_enabled()) {
+                ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
+                if (ret != HAL_RET_OK) {
+                    rxq->qinst_info[0]->ctr.tx_descr_free_err++;
+                    HAL_TRACE_ERR2("Failed to free rx descr: {}", ret);
+                }
+            }
+        } else {
 
-	   if (cpu_rx_descrs[npkt]) {
+            (*app_pkt_count)++;
 
-	       /*
-		* If we're not doing zero-copy and this was a CPU-RX-DPR
-		* descriptor, then we will free this descriptor directly
-		* to the pool, and not go through the Garbage-collector (GC)
-		* P4+ program.
-		*/
-	       if (!is_cpu_zero_copy_enabled()) {
-		   ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
-		   if (ret != HAL_RET_OK) {
-		       rxq->qinst_info[0]->ctr.tx_descr_free_err++;
-		       HAL_TRACE_ERR2("Failed to free rx descr: {}", ret);
-		   }
-	       }
-	   } else {
+            if (cpu_rx_descrs[npkt]) {
 
-	       /*
-		* Free the descriptor to GC.
-		*/
-	       ret = cpupkt_descr_free(rxq_descr_addrs[npkt]);
-	       if (ret != HAL_RET_OK) {
-		   rxq->qinst_info[0]->ctr.rx_descr_free_err++;
-		   HAL_TRACE_ERR2("Failed to free tx descr");
-	       }
-	   }
-	}
+                /*
+                 * If we're not doing zero-copy and this was a CPU-RX-DPR
+                 * descriptor, then we will free this descriptor directly
+                 * to the pool, and not go through the Garbage-collector (GC)
+                 * P4+ program.
+                 */
+                if (!is_cpu_zero_copy_enabled()) {
+                    ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
+                    if (ret != HAL_RET_OK) {
+                        rxq->qinst_info[0]->ctr.tx_descr_free_err++;
+                        HAL_TRACE_ERR2("Failed to free rx descr: {}", ret);
+                    }
+                }
+            } else {
+
+                /*
+                 * Free the descriptor to GC.
+                 */
+                ret = cpupkt_descr_free(rxq_descr_addrs[npkt]);
+                if (ret != HAL_RET_OK) {
+                    rxq->qinst_info[0]->ctr.rx_descr_free_err++;
+                    HAL_TRACE_ERR2("Failed to free tx descr");
+                }
+            }
+        }
     }
 
     return (*app_pkt_count) ? ret : HAL_RET_RETRY;

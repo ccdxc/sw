@@ -339,7 +339,7 @@ sfw_exec(ctx_t& ctx)
     if ((!ctx.protobuf_request() && ctx.existing_session()) ||
         (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
          (sfw_info->skip_sfw || sfw_info->sfw_done))) {
-        HAL_TRACE_DEBUG("Existing session.. skipping lookups");
+        HAL_TRACE_VERBOSE("Existing session.. skipping lookups");
         return PIPELINE_CONTINUE;
     }
 

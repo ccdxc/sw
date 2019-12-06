@@ -517,6 +517,8 @@ struct session_s {
     hal_handle_t        sep_handle;               // Source EP Handle
     hal_handle_t        dep_handle;               // Destination EP Handle
     /* TODO: SEP and DEP handles need to be removed */
+    dllist_ctxt_t      *sep_sess_list_entry_ctxt; // sep to session list entry context
+    dllist_ctxt_t      *dep_sess_list_entry_ctxt; // dep to session list entry context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 

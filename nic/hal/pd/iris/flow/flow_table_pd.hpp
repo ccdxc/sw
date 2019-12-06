@@ -4,14 +4,15 @@
 #define __HAL_PD_IRIS_FLOW_PD_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "gen/proto/system.pb.h"
 #include "gen/proto/table.pb.h"
 #include "gen/proto/internal.pb.h"
+#include <nic/utils/ftl/ftl_structs.hpp>
+#include <nic/utils/ftl/ftlv6.hpp>
 
-using sdk::table::mem_hash;
 using table::TableResponse;
 using internal::FlowHashGetResponse;
+
 
 namespace hal {
 namespace pd {
@@ -25,19 +26,19 @@ public:
     ~flow_table_pd() {}
 
     hal_ret_t init();
-    hal_ret_t insert(void *key, void *data,
+    hal_ret_t insert(void *entry,
                      uint32_t *hash_value, bool hash_valid);
-    hal_ret_t update(void *key, void *data,
+    hal_ret_t update(void *entry,
                      uint32_t *hash_value, bool hash_valid);
-    hal_ret_t remove(void *key);
-    hal_ret_t get(void *key, FlowHashGetResponse *entry);
+    hal_ret_t remove(void *entry);
+    hal_ret_t get(void *entry, FlowHashGetResponse *rsp);
     
     hal_ret_t meta_get(table::TableMetadataResponseMsg *rsp_msg);
     hal_ret_t stats_get(sys::TableStatsEntry *stats_entry);
     hal_ret_t dump(TableResponse *rsp);
 
 private:
-    mem_hash *table_;
+    ftlv6 *table_;
     std::string table_name_;
     uint32_t table_size_;
     uint32_t oflow_table_size_;

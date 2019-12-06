@@ -228,8 +228,8 @@ FTL_MAKE_AFTYPE(hint_table)::tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
 
     auto ret = tctx->bucket->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
-        FTL_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
-                              tctx->metastr(), ret);
+        FTL_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s], ret:%d", tctx->idstr(),
+                          tctx->metastr(), ret);
         // We have found a valid hint, recursively find the tail of this node
         ret = tail_(tctx, retctx);;
         // NOTE: We are not freeing any context right now, as it gets
@@ -238,8 +238,12 @@ FTL_MAKE_AFTYPE(hint_table)::tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
         // tail context after the processing is done.
     } else if (ret == SDK_RET_ENTRY_NOT_FOUND) {
         // No valid hint in this bucket, this itself is the tail
-        *retctx = ctx;
+        *retctx = tctx;
+
         ret = SDK_RET_OK;
+        FTL_TRACE_VERBOSE("%s: SDK_RET_ENTRY_NOT_FOUND: returning end tail, "
+                          "metastr: [%s], ret:%d",
+                          tctx->idstr(), tctx->metastr(), ret);
     } else {
         *retctx = NULL;
         FTL_TRACE_ERR("%s: find_last_hint_ failed ret:%d", tctx->idstr(), ret);

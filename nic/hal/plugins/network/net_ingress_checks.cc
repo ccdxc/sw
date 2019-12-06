@@ -71,7 +71,7 @@ update_src_if(fte::ctx_t&ctx)
     if ((ctx.session() && ctx.session()->is_ipfix_flow) ||
             (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
             (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
-        HAL_TRACE_DEBUG("IPFIX pkt, do not enforce ingress-checks");
+        HAL_TRACE_VERBOSE("IPFIX pkt, do not enforce ingress-checks");
         return HAL_RET_OK;
     }
 
@@ -92,7 +92,7 @@ update_src_if(fte::ctx_t&ctx)
 
     if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
         (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_IPSEC)) {
-        HAL_TRACE_DEBUG("Pkt from IPSec app, do not enforce ingress-checks");
+        HAL_TRACE_VERBOSE("Pkt from IPSec app, do not enforce ingress-checks");
         return HAL_RET_OK;
     }
 
@@ -112,7 +112,7 @@ update_src_if(fte::ctx_t&ctx)
     if (src_local || ep_get_pinned_uplink(ctx.dep()) == NULL ||
         (ctx.role() == hal::FLOW_ROLE_INITIATOR && 
          ctx.is_flow_swapped() && dst_local)) {
-        HAL_TRACE_DEBUG("Source is local");
+        HAL_TRACE_VERBOSE("Source is local");
         return HAL_RET_OK;
     }
 

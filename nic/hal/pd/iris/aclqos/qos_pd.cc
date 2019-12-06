@@ -1679,8 +1679,8 @@ pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
     }
 
     if (dest_if) {
-        HAL_TRACE_DEBUG("dest_if if_type {} if_id {}",
-                        dest_if->if_type, dest_if->if_id);
+        HAL_TRACE_VERBOSE("dest_if if_type {} if_id {}",
+                          dest_if->if_type, dest_if->if_id);
         if (dest_if->if_id == 132) {
             HAL_TRACE_ERR("");
         }

@@ -104,6 +104,7 @@ nic/build/x86_64/iris/lib/libdropstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/libflowstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/librulestatsproto.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                         /nic/lib/
+nic/build/x86_64/iris/lib/libftlv6.so                               /nic/lib/
 
 nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so              /nic/lib/
 nic/sdk/third-party/libev/x86_64/lib/libev.so                    /nic/lib/
@@ -171,8 +172,8 @@ nic/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json      /nic/conf/
 nic/sysmgr/src/naples_sim.json                                   /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_sim_no_datapath.json                       /nic/conf/sysmgr_no_datapath.json
 
-nic/build/aarch64/iris/bin                                       /platform/bin/
-nic/build/aarch64/iris/lib                                       /platform/lib/
+nic/build/x86_64/iris/bin                                        /platform/bin/
+nic/build/x86_64/iris/lib                                        /platform/lib/
 
 /lib64/libedit.so*                                               /platform/lib/
 platform/tools/setup_pcie.sh                                     /platform/bin/

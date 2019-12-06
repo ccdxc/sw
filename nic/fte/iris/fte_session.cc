@@ -94,7 +94,7 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
                     session->hal_handle,
                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id, force_delete);
 
-    HAL_TRACE_DEBUG("num features: {} feature state size: {}", num_features, fstate_size);
+    HAL_TRACE_VERBOSE("num features: {} feature state size: {}", num_features, fstate_size);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
     if (!feature_state) {

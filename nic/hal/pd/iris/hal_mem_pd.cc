@@ -1020,8 +1020,6 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 break;
             }
             SDK_ASSERT(tid == P4TBL_ID_FLOW_HASH);
-            flow_table_pd_ = flow_table_pd::factory();
-            SDK_ASSERT(flow_table_pd_ != NULL);
             break;
 
         case P4_TBL_TYPE_MPU:
@@ -1031,6 +1029,15 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
     }
 
     return ret;
+}
+
+hal_ret_t
+hal_state_pd::init_flow_table(void)
+{
+    flow_table_pd_ = flow_table_pd::factory();
+    SDK_ASSERT(flow_table_pd_ != NULL);
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -1261,6 +1268,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     SDK_ASSERT(sdk::asic::pd::asicpd_program_table_mpu_pc() == SDK_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_deparser_init() == SDK_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_program_hbm_table_base_addr() == SDK_RET_OK);
+    g_hal_state_pd->init_flow_table();
     hal::svc::set_hal_status(hal::HAL_STATUS_MEM_INIT_DONE);
 
     return HAL_RET_OK;

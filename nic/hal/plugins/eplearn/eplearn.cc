@@ -88,14 +88,13 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         return ret;
     }
 
-
    if ((cpu_hdr->src_app_id == P4PLUS_APPTYPE_IPSEC) &&
        (cpu_hdr->src_lif == HAL_LIF_CPU)) {
        HAL_TRACE_DEBUG("No EP lif update necessary for pkts coming from CPU lif");
        return ret;
     }
 
-    HAL_TRACE_DEBUG("Doing EP lif update if necessary");
+    HAL_TRACE_VERBOSE("Doing EP lif update if necessary");
 
     args.flow_lkupid = cpu_hdr->lkp_vrf;
     args.obj_id = &obj_id;

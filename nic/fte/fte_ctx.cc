@@ -263,7 +263,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
          SDK_ASSERT(status == STATUS_OK);
          SDK_ASSERT(error == NULL);
 
-         HAL_TRACE_DEBUG("fte: fte-span packet: {}", dump);
+         HAL_TRACE_VERBOSE("fte: fte-span packet: {}", dump);
          free(dump);
          packet_free(packet);
          return HAL_RET_FTE_SPAN;
@@ -558,7 +558,7 @@ ctx_t::advance_to_next_stage() {
 void
 ctx_t::invoke_completion_handlers(bool fail)
 {
-    HAL_TRACE_DEBUG("fte: invoking completion handlers.");
+    HAL_TRACE_VERBOSE("fte: invoking completion handlers.");
     for (int i = 0; i < num_features_; i++) {
         if (feature_state_[i].completion_handler != nullptr) {
             HAL_TRACE_VERBOSE("fte: invoking completion handler {}",

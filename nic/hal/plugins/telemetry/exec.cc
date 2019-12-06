@@ -35,8 +35,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     acl_ctx = acl::acl_get(ctx_name);
     HAL_TRACE_VERBOSE("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("No telemetry policy for vrf {} id {} mirror_action {}",
-                         ctx_name, ctx.get_key().svrf_id, mirror_action);
+        HAL_TRACE_VERBOSE("No telemetry policy for vrf {} id {} mirror_action {}",
+                          ctx_name, ctx.get_key().svrf_id, mirror_action);
         ret = HAL_RET_OK;
         goto end;
     }
@@ -53,7 +53,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             acl_key.mac_dst |= ctx.get_key().dmac[i] << (i * 8);
         }
     } else {
-        HAL_TRACE_DEBUG("Invalid flow type {}", ctx.get_key().flow_type);
+        HAL_TRACE_VERBOSE("Invalid flow type {}", ctx.get_key().flow_type);
         ret = HAL_RET_OK;
         goto end;
     }
@@ -222,14 +222,14 @@ telemetry_exec_delete (fte::ctx_t &ctx)
 {
     hal::session_t *session = ctx.session();
     
-    HAL_TRACE_DEBUG("Delete for telemetry plugin, event {}",
+    HAL_TRACE_VERBOSE("Delete for telemetry plugin, event {}",
                                         ctx.pipeline_event());
     if (session && session->is_ipfix_flow) {
         hal::session_t *ls = (session_t *)
             g_hal_state->session_hal_telemetry_ht()->lookup(&session->hal_handle);
         if (ls) {
-            HAL_TRACE_DEBUG("Found IPFIX session {} Deleting from HT",
-                                               session->hal_handle);
+            HAL_TRACE_VERBOSE("Found IPFIX session {} Deleting from HT",
+                              session->hal_handle);
             g_hal_state->session_hal_telemetry_ht()->remove_entry(session,
                                                &session->hal_telemetry_ht_ctxt);
         }
@@ -251,7 +251,7 @@ telemetry_completion_hdlr (fte::ctx_t& ctx, bool status)
         if (!ls) {
             session->hal_telemetry_ht_ctxt.reset();
             HAL_TRACE_DEBUG("Inserting IPFIX session {} into HT",
-                                               session->hal_handle);
+                            session->hal_handle);
             g_hal_state->session_hal_telemetry_ht()->insert(session,
                                                &session->hal_telemetry_ht_ctxt);
             session->is_ipfix_flow = true;

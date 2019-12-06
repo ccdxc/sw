@@ -163,6 +163,7 @@ public:
     hal_ret_t init_tables(pd_mem_init_args_t *args);
     hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
     hal_ret_t p4plus_txdma_init_tables(pd_mem_init_args_t *args);
+    hal_ret_t init_flow_table(void);
 
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {

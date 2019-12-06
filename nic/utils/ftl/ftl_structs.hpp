@@ -14,8 +14,9 @@
 #elif APULU
 #include "ftlv6_structs_apulu.hpp"
 #include "ftlv4_structs_apulu.hpp"
-#else
-#error FTL is not suppored on IRIS pipeline (Yet!!).
+#elif IRIS
+#include "ftlv6_structs_iris.hpp"
+#include "ftlv4_structs_iris.hpp"
 #endif
 
 #endif // __FTL_STRUCTS_HPP__

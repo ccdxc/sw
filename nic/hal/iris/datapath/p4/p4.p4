@@ -203,7 +203,7 @@ header_type scratch_metadata_t {
         flow_hint3                 : 18;
         flow_hint4                 : 18;
         flow_hint5                 : 18;
-        more_hashs                 : 1;
+        more_hashes                : 1;
         more_hints                 : 18;
 
         // flow key
@@ -303,6 +303,7 @@ header_type scratch_metadata_t {
         delta                         : 64;
         size64                        : 64;
         pad320                        : 320;
+        pad4                          : 4;
     }
 }
 

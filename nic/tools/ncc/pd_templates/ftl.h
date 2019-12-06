@@ -668,7 +668,7 @@ public:
         if (more_hints && more_hashes) {
             return get_more_hint_slot();
 //::        hash_field_cnt = ftl_hash_field_cnt()
-//::        for hash_field in range(1, hash_field_cnt):
+//::        for hash_field in range(hash_field_cnt-1, 0, -1):
 //::            fields = get_hash_hint_fields_db(hash_field)
 //::            if fields is None:
 //::                continue
@@ -724,13 +724,18 @@ public:
         int offset = key2str(buff, len);
 
         // delimiter b/w key and data
-        snprintf(buff + offset, 2, ", ");
+        snprintf(buff + offset, len - offset, ", ");
         return data2str(buff + offset + 2, len - offset - 2);
     }
 //::
 //::        # To set fields if they are split
 //::        split_field_dict = {}
-//::        for key_data_field in itertools.chain(key_fields_list, data_fields_list):
+//::        if pddict['pipeline'] == 'iris':
+//::            key_data_fields = itertools.chain(data_fields_list)
+//::        else:
+//::            key_data_fields = itertools.chain(key_fields_list, data_fields_list)
+//::        #endif
+//::        for key_data_field in key_data_fields:
 //::            # ignore if field is hash/hint/padding
 //::            if not key_data_field.is_key_appdata_field():
 //::                continue
@@ -762,7 +767,12 @@ public:
 //::
 //::        # To get fields if they are split
 //::        split_field_dict = {}
-//::        for key_data_field in itertools.chain(key_fields_list, data_fields_list):
+//::        if pddict['pipeline'] == 'iris':
+//::            key_data_fields = itertools.chain(data_fields_list)
+//::        else:
+//::            key_data_fields = itertools.chain(key_fields_list, data_fields_list)
+//::        #endif
+//::        for key_data_field in key_data_fields:
 //::            # ignore if field is hash/hint/padding
 //::            if not key_data_field.is_key_appdata_field():
 //::                continue

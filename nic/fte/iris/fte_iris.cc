@@ -170,7 +170,7 @@ ctx_t::lookup_flow_objs()
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
 
     if (svrf_ == NULL && dvrf_ == NULL) {
-        HAL_TRACE_DEBUG("Looking up vrf for id: {}", key_.svrf_id);
+        HAL_TRACE_VERBOSE("Looking up vrf for id: {}", key_.svrf_id);
         svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
         if (svrf_ == NULL) {
             HAL_TRACE_ERR("fte: vrf not found for id:{}", key_.svrf_id);
@@ -257,7 +257,7 @@ ctx_t::lookup_flow_objs()
              hal::lif_t *dlif = if_get_lif(dif_);
              if (dlif == NULL) {
                  /* Ignore the lookup as we don't know the lif yet */
-                 HAL_TRACE_DEBUG("fte: dest lif not found or discovered yet.");
+                 HAL_TRACE_VERBOSE("fte: dest lif not found or discovered yet.");
              }
         }
     }
@@ -285,7 +285,7 @@ ctx_t::lookup_flow_objs()
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
         rkey_.lkpvrf = args.hwid;
     }
-    HAL_TRACE_DEBUG("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
+    HAL_TRACE_VERBOSE("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
 
     return HAL_RET_OK;
 }
@@ -411,7 +411,7 @@ ctx_t::create_session()
         memcpy(l2_info.dmac, ethhdr->dmac, sizeof(l2_info.dmac));
     }
 
-    HAL_TRACE_DEBUG("fte: create session");
+    HAL_TRACE_VERBOSE("fte: create session");
 
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(key_);
@@ -827,7 +827,7 @@ ctx_t::update_flow_table()
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
     } else {
-        HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
+        HAL_TRACE_VERBOSE("Session {} of session {} successful", update_type, session_handle);
     }
 
     if (protobuf_request()) {
@@ -1019,7 +1019,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     }
 
     pkt_info = &txpkts_[txpkt_cnt_++];
-    HAL_TRACE_DEBUG("fte: txpkt for dir={}, tunnel_terminated: {}", 
+    HAL_TRACE_VERBOSE("fte: txpkt for dir={}, tunnel_terminated: {}", 
                     key_.dir, tunnel_terminated());
     if (cpu_header) {
         pkt_info->cpu_header = *cpu_header;
@@ -1034,7 +1034,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         if ((cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) && 
             (use_vrf_ || is_proxy_enabled() || tunnel_terminated() ||
              pkt_info->cpu_header.src_lif == HAL_LIF_CPU)) {
-     	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
+     	    HAL_TRACE_VERBOSE("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = HAL_LIF_CPU;
             if (use_vrf_) {
                 hal::pd::pd_vrf_get_fromcpu_vlanid_args_t args;
@@ -1075,14 +1075,14 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     pkt_info->wring_type = wring_type;
     pkt_info->cb = cb;
 
-    HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
-                    "dest_lifq={} ring={} wring={} pkt={:p} len={}",
-                    feature_name_,
-                    pkt_info->p4plus_header.lkp_inst,
-                    pkt_info->cpu_header.src_lif,
-                    pkt_info->cpu_header.hw_vlan_id,
-                    pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
-                    pkt_info->pkt, pkt_info->pkt_len);
+    HAL_TRACE_VERBOSE("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
+                      "dest_lifq={} ring={} wring={} pkt={:p} len={}",
+                      feature_name_,
+                      pkt_info->p4plus_header.lkp_inst,
+                      pkt_info->cpu_header.src_lif,
+                      pkt_info->cpu_header.hw_vlan_id,
+                      pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
+                      pkt_info->pkt, pkt_info->pkt_len);
     return HAL_RET_OK;
 }
 
