@@ -117,8 +117,7 @@ def triggerArping(w1, w2, tc):
 
     #do arping
 
-    api.Logger.info ("ArpPrefix: %s" %tc.ArpPrefix)
-    cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpPrefix, arping_count, w1.ip_address)
+    cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpingPrefix, arping_count, w1.ip_address)
     api.Trigger_AddHostCommand(tc.req, w2.node_name, cmd_cookie)
     tc.cmd_cookies.append(cmd_cookie)
 
@@ -199,22 +198,22 @@ def Trigger(tc):
     #first, find the right arp (we rely on -W option)
     tc.req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
  
-    ArpPrefix = "/usr/local/sbin/"
+    ArpingPrefix = "/usr/local/sbin/"
 
-    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls %sarping" % ArpPrefix)
+    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls %sarping" % ArpingPrefix)
     resp = api.Trigger(tc.req)
 
     for cmd in resp.commands:
-        api.Logger.info("ls %sarping output stdout: %s, stderr: %s" % (ArpPrefix, cmd.stdout,cmd.stderr))
+        api.Logger.info("ls %sarping output stdout: %s, stderr: %s" % (ArpingPrefix, cmd.stdout,cmd.stderr))
         if cmd.stderr.find("No such file or directory")!=-1:
-            ArpPrefix = ""
+            ArpingPrefix = ""
             api.Logger.info("Using the default arping")
         else:
-            api.Logger.info("Using  %sarping" % ArpPrefix)
+            api.Logger.info("Using  %sarping" % ArpingPrefix)
 
-    api.Logger.info("Using the following: %s arping" % ArpPrefix)
+    api.Logger.info("Using the following: %s arping" % ArpingPrefix)
 
-    tc.ArpPrefix = ArpPrefix
+    tc.ArpingPrefix = ArpingPrefix
     
     #Trigger arping and get interface BC stats pre & post trigger
     triggerBCtraffic(tc)

@@ -23,7 +23,7 @@ testcases:
         testcase: testcases.filters.broadcast_mac_filter
         stress  : True
         disable : False
-        ignore  : False
+        ignore  : True
         args :
             timeout : 7200
 
