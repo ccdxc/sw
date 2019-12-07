@@ -533,7 +533,28 @@ def RebootHost(n):
     nodes.append(n)
     api.Logger.info("Rebooting Host {}".format(n))
     ret = api.RestartNodes(nodes)
+    # Loop to check if the card is reachable
+    reqPing = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(reqPing, n, "ping -c 2 169.254.0.1")
+    retryCount = 0
 
+    while retryCount < 6:
+        retryCount = retryCount + 1
+        respPing = api.Trigger(reqPing)
+        if len(respPing.commands) != 1:
+            continue
+
+        if respPing.commands[0].exit_code == 0:
+            break
+
+        api.Logger.info("Ping to the host failed. Ping Response {}".format(respPing))
+        time.sleep(10)
+
+    if retryCount == 6:
+        api.Logger.info("Nodes were unreachable after reboot. {}".format(nodes))
+        api.types.status.FAILURE
+
+    api.Logger.info("Successfully rebooted host {}".format(n))
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     enable_sshd = "system enable-sshd"
     copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
@@ -544,7 +565,7 @@ def RebootHost(n):
 
     resp = api.Trigger(req)
 
-    return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
 def DelphictlGetNetworkMode(n):
     naples_status = GetDelphictlNapleStatusJson(n)

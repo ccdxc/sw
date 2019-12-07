@@ -19,7 +19,12 @@ def Trigger(tc):
         #common.PenctlGetControllersStatus(n)[0]
            
         api.Logger.info("Going for first reboot")
-        common.RebootHost(n)
+        tc.TriggerResult = api.types.status.SUCCESS
+        err = common.RebootHost(n)
+        if err == api.types.status.FAILURE:
+            tc.TriggerResult = api.types.status.FAILURE
+            return api.types.status.FAILURE
+
         tc.after_first_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
         api.Logger.info("The Status after first reboot is {}".format(tc.after_first_reboot_status))
         #tc.controller_ip_penctl_after.append(common.PenctlGetControllersStatus(n)[0])
@@ -32,6 +37,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if tc.TriggerResult == api.types.status.FAILURE:
+        return api.types.status.FAILURE
+
     if tc.after_first_reboot_status != "VENICE_UNREACHABLE" \
         or tc.after_second_reboot_status != "VENICE_UNREACHABLE":
           api.Logger.info("Test Failed. STATUS - BEFORE {} AFTER FIRST REBOOT {} AFTER SECOND REBOOT {}".format(tc.before_reboot_status, \
