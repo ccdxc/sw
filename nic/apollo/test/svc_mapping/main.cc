@@ -47,15 +47,6 @@ protected:
 /// \defgroup SVC_MAPPING_TEST Service Mapping Tests
 /// @{
 
-/// \brief SVC MAPPING WF_TMP_1
-/// \ref WF_TMP_1
-TEST_F(svc_mapping_test, svc_mapping_workflow_tmp_1) {
-    svc_mapping_feeder feeder;
-
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 10);
-    workflow_tmp_1<svc_mapping_feeder>(feeder);
-}
-
 /// \brief SVC MAPPING WF_1
 /// \ref WF_1
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_1) {
