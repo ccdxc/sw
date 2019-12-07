@@ -117,6 +117,8 @@ TEST_F(device_test, device_workflow_7) {
 /// \brief Device WF_8
 /// \ref WF_8
 TEST_F(device_test, device_workflow_8) {
+    if (!apulu()) return;
+
     device_feeder feeder1, feeder1A, feeder1B;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
     feeder1A.init("1.0.0.1", "00:02:01:00:0A:0B", "111.0.0.111");
@@ -134,6 +136,8 @@ TEST_F(device_test, device_workflow_8) {
 /// \brief Device WF_9
 /// \ref WF_9
 TEST_F(device_test, device_workflow_9) {
+    if (!apulu()) return;
+
     device_feeder feeder1, feeder1A;
     feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
     feeder1A.init("1.0.0.1", "00:02:01:00:0A:0B", "111.0.0.111");
@@ -149,6 +153,8 @@ TEST_F(device_test, device_workflow_9) {
 /// \brief Device WF_N_1
 /// \ref WF_N_1
 TEST_F(device_test, device_workflow_neg_1) {
+    if (!apulu()) return;
+
     device_feeder feeder;
     feeder.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
     workflow_neg_1<device_feeder>(feeder);

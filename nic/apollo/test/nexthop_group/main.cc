@@ -15,13 +15,12 @@
 #include "nic/apollo/test/utils/workflow1.hpp"
 
 namespace api_test {
-/// \cond
 
 // Globals
 static constexpr uint16_t k_num_groups = 10;
 
 //----------------------------------------------------------------------------
-// NH test class
+// NH Group test class
 //----------------------------------------------------------------------------
 
 class nh_group_test : public ::pds_test_base {
@@ -49,15 +48,38 @@ protected:
             pds_test_base::TearDownTestCase();
     }
 };
-/// \endcond
+
 //----------------------------------------------------------------------------
 // NH test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup NH Nexthop Tests
+/// \defgroup NH_GRP Nexthop group tests
 /// @{
 
-/// \brief NH WF_1
+/// \brief Nexthop group WF_B1
+/// \ref WF_B1
+TEST_F(nh_group_test, nh_group_workflow_b1) {
+    if (!apulu()) return;
+
+    nexthop_group_feeder feeder;
+
+    feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, 10, 1);
+    workflow_b1<nexthop_group_feeder>(feeder);
+}
+
+/// \brief Nexthop group WF_B2
+/// \ref WF_B2
+TEST_F(nh_group_test, DISABLED_nh_workflow_b2) {
+    if (!apulu()) return;
+
+    nexthop_group_feeder feeder1, feeder1A;
+
+    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, 10, 1);
+    feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, 10, 1);
+    workflow_b2<nexthop_group_feeder>(feeder1, feeder1A);
+}
+
+/// \brief Nexthop group WF_1
 /// \ref WF_1
 TEST_F(nh_group_test, nh_group_workflow_1) {
     nexthop_group_feeder feeder;
@@ -69,7 +91,7 @@ TEST_F(nh_group_test, nh_group_workflow_1) {
     //workflow_1<nexthop_group_feeder>(feeder);
 }
 
-/// \brief NH WF_2
+/// \brief Nexthop group WF_2
 /// \ref WF_2
 TEST_F(nh_group_test, nh_group_workflow_2) {
     nexthop_group_feeder feeder;
@@ -81,7 +103,7 @@ TEST_F(nh_group_test, nh_group_workflow_2) {
     //workflow_2<nexthop_group_feeder>(feeder);
 }
 
-/// \brief NH WF_3
+/// \brief Nexthop group WF_3
 /// \ref WF_3
 TEST_F(nh_group_test, nh_group_workflow_3) {
     nexthop_group_feeder feeder1, feeder2, feeder3;
@@ -99,7 +121,7 @@ TEST_F(nh_group_test, nh_group_workflow_3) {
 #endif
 }
 
-/// \brief NH WF_4
+/// \brief Nexthop group WF_4
 /// \ref WF_4
 TEST_F(nh_group_test, nh_group_workflow_4) {
     nexthop_group_feeder feeder;
@@ -113,7 +135,7 @@ TEST_F(nh_group_test, nh_group_workflow_4) {
 #endif
 }
 
-/// \brief NH WF_5
+/// \brief Nexthop group WF_5
 /// \ref WF_5
 TEST_F(nh_group_test, nh_group_workflow_5) {
     nexthop_group_feeder feeder1, feeder2, feeder3;
@@ -131,7 +153,7 @@ TEST_F(nh_group_test, nh_group_workflow_5) {
 #endif
 }
 
-/// \brief NH WF_6
+/// \brief Nexthop group WF_6
 /// \ref WF_6
 TEST_F(nh_group_test, nh_group_workflow_6) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
@@ -149,7 +171,7 @@ TEST_F(nh_group_test, nh_group_workflow_6) {
 #endif
 }
 
-/// \brief NH WF_7
+/// \brief Nexthop group WF_7
 /// \ref WF_7
 TEST_F(nh_group_test, nh_group_workflow_7) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
@@ -167,7 +189,7 @@ TEST_F(nh_group_test, nh_group_workflow_7) {
 #endif
 }
 
-/// \brief NH WF_8
+/// \brief Nexthop group WF_8
 /// \ref WF_8
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_8) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
@@ -185,7 +207,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_8) {
 #endif
 }
 
-/// \brief NH WF_9
+/// \brief Nexthop group WF_9
 /// \ref WF_9
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_9) {
     nexthop_group_feeder feeder1, feeder1A;
@@ -201,7 +223,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_9) {
 #endif
 }
 
-/// \brief NH WF_10
+/// \brief Nexthop group WF_10
 /// \ref WF_10
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
     nexthop_group_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
@@ -228,7 +250,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
 #endif
 }
 
-/// \brief NH WF_N_1
+/// \brief Nexthop group WF_N_1
 /// \ref WF_N_1
 TEST_F(nh_group_test, nh_group_workflow_neg_1) {
     nexthop_group_feeder feeder;
@@ -242,7 +264,7 @@ TEST_F(nh_group_test, nh_group_workflow_neg_1) {
 #endif
 }
 
-/// \brief NH WF_N_2
+/// \brief Nexthop group WF_N_2
 /// \ref WF_N_2
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_2) {
     nexthop_group_feeder feeder;
@@ -256,7 +278,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_2) {
 #endif
 }
 
-/// \brief NH WF_N_3
+/// \brief Nexthop group WF_N_3
 /// \ref WF_N_3
 TEST_F(nh_group_test, nh_group_workflow_neg_3) {
     nexthop_group_feeder feeder;
@@ -270,7 +292,7 @@ TEST_F(nh_group_test, nh_group_workflow_neg_3) {
 #endif
 }
 
-/// \brief NH WF_N_4
+/// \brief Nexthop group WF_N_4
 /// \ref WF_N_4
 TEST_F(nh_group_test, nh_group_workflow_neg_4) {
     nexthop_group_feeder feeder1, feeder2;
@@ -286,7 +308,7 @@ TEST_F(nh_group_test, nh_group_workflow_neg_4) {
 #endif
 }
 
-/// \brief NH WF_N_5
+/// \brief Nexthop group WF_N_5
 /// \ref WF_N_5
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_5) {
     nexthop_group_feeder feeder1, feeder1A;
@@ -302,7 +324,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_5) {
 #endif
 }
 
-/// \brief NH WF_N_6
+/// \brief Nexthop group WF_N_6
 /// \ref WF_N_6
 TEST_F(nh_group_test, nh_group_workflow_neg_6) {
     nexthop_group_feeder feeder1, feeder1A;
@@ -318,7 +340,7 @@ TEST_F(nh_group_test, nh_group_workflow_neg_6) {
 #endif
 }
 
-/// \brief NH WF_N_7
+/// \brief Nexthop group WF_N_7
 /// \ref WF_N_7
 TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_7) {
     nexthop_group_feeder feeder1, feeder1A, feeder2;
@@ -336,7 +358,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_7) {
 #endif
 }
 
-/// \brief NH WF_N_8
+/// \brief Nexthop group WF_N_8
 /// \ref WF_N_8
 TEST_F(nh_group_test, nh_group_workflow_neg_8) {
     nexthop_group_feeder feeder1, feeder2;

@@ -51,6 +51,29 @@ protected:
 /// \defgroup NH Nexthop Tests
 /// @{
 
+/// \brief NH WF_B1
+/// \ref WF_B1
+TEST_F(nh_test, nh_workflow_b1) {
+    if (!apulu()) return;
+
+    nexthop_feeder feeder;
+
+    feeder.init("", 0x0E0D0A0B0100, 1, 1, PDS_NH_TYPE_UNDERLAY);
+    workflow_b1<nexthop_feeder>(feeder);
+}
+
+/// \brief NH WF_B2
+/// \ref WF_B2
+TEST_F(nh_test, DISABLED_nh_workflow_b2) {
+    if (!apulu()) return;
+
+    nexthop_feeder feeder1, feeder1A;
+
+    feeder1.init("", 0x0E0D0A0B0100, 1, 1, PDS_NH_TYPE_UNDERLAY);
+    feeder1A.init("", 0x0E0D0A0B0200, 1, 1, PDS_NH_TYPE_UNDERLAY);
+    workflow_b2<nexthop_feeder>(feeder1, feeder1A);
+}
+
 /// \brief NH WF_1
 /// \ref WF_1
 TEST_F(nh_test, nh_workflow_1) {
