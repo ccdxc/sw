@@ -418,7 +418,7 @@ func (tu *TestUtils) Init() {
 	gomega.Eventually(func() int {
 		instList := tu.resolver.Lookup(globals.ElasticSearch)
 		return len(instList.Items)
-	}, 10, 1).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have ElasticSearch entries")
+	}, 180, 1).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have ElasticSearch entries")
 
 	ginkgo.By("important services are running")
 
