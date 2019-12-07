@@ -182,7 +182,7 @@ static inline void tep_feeder_init(uint32_t tep_id, std::string ip_str,
         k_tep_feeder.init(tep_id, ip_str, k_max_tep, k_zero_encap,
                           k_nat, PDS_TEP_TYPE_SERVICE, k_base_dipi, k_tep_mac);
     } else if (apulu()) {
-        k_tep_feeder.init(tep_id, k_tep_mac, ip_str);
+        k_tep_feeder.init(tep_id, k_tep_mac, ip_str, num_tep);
     } else if (apollo()) {
         k_tep_feeder.init(tep_id, ip_str, num_tep);
     }

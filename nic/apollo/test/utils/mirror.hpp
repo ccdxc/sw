@@ -7,14 +7,18 @@
 #define __TEST_UTILS_MIRROR_HPP__
 
 #include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/test/utils/api_base.hpp"
+#include "nic/apollo/test/utils/feeder.hpp"
 
 namespace api_test {
 
-// Mirror session object seed used as base seed in many_* operations
-typedef struct mirror_session_stepper_seed_s {
+// MIRROR test feeder class
+class mirror_session_feeder : public feeder {
+public:
     pds_mirror_session_key_t key;
     pds_vpc_id_t vpc_id;
     pds_mirror_session_type_t type;
+    uint32_t snap_len;
     uint32_t tep_id;
     ip_addr_t dst_ip;
     ip_addr_t src_ip;
@@ -22,77 +26,48 @@ typedef struct mirror_session_stepper_seed_s {
     uint32_t dscp;
     pds_ifindex_t interface;
     pds_encap_t encap;
-    uint8_t num_ms;
-} mirror_session_stepper_seed_t;
 
-/// Mirror session test utility class
-class mirror_session_util {
-public:
-    pds_mirror_session_key_t key;       ///< Mirror session id
-    pds_mirror_session_type_t type;     ///< Mirror session type
-    uint16_t snap_len;                  ///< max length of packet mirrored
-    pds_erspan_spec_t erspan_spec;      ///< Erspan specification
-    pds_rspan_spec_t rspan_spec;        ///< Rspan specification
+    //Constructor
+    mirror_session_feeder() { };
 
-    /// \brief Constructor
-    mirror_session_util() {}
+    // initalize feeder with base set of values
+    void init(pds_mirror_session_key_t key, uint8_t max_ms,
+              pds_ifindex_t interface, uint16_t vlan_tag,
+              std::string src_ip, uint32_t tep_id,
+              uint32_t span_id = 1, uint32_t dscp = 1);
 
-    /// \brief Parameterized constructor
-    mirror_session_util(mirror_session_stepper_seed_t *seed);
+    // Iterate helper routines
+    void iter_next(int width = 1);
 
-    /// \brief Destructor
-    ~mirror_session_util() {}
+    // Build routines
+    void key_build(pds_mirror_session_key_t *key) const;
+    void spec_build(pds_mirror_session_spec_t *spec) const;
 
-    /// \brief Create mirror session
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void) const;
+    // Compare routines
+    bool key_compare(const pds_mirror_session_key_t *key) const;
+    bool spec_compare(const pds_mirror_session_spec_t *spec) const;
 
-    /// \brief Read mirror session info
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_mirror_session_info_t *info) const;
+    bool read_unsupported(void) const {
+        return (::capri_mock_mode() ? true : false);
+    }
 
-    /// \brief Update mirror session configuration
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void) const;
-
-    /// \brief Delete mirror session
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void) const;
-
-    /// \brief Create many mirror sessions for the given type
-    ///
-    /// \param num_mirror_sessions Number of mirror sessions to be created
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(mirror_session_stepper_seed_t *seed);
-
-    /// \brief Read many mirror sessions
-    ///
-    /// \param num_mirror_sessions Number of mirror sessions to be read
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(mirror_session_stepper_seed_t *seed,
-                               sdk::sdk_ret_t exp_result = sdk::SDK_RET_OK);
-
-    /// \brief update many mirror sessions for the given type and id
-    ///
-    /// \param num_mirror_sessions Number of mirror sessions to be created
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(mirror_session_stepper_seed_t *seed);
-
-    /// \brief Delete many mirror sessions
-    ///
-    /// \param num_mirror_sessions Number of mirror sessions to be deleted
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(mirror_session_stepper_seed_t *seed);
-
-    /// \brief Indicates whether mirror is stateful
-    ///
-    /// \returns FALSE for mirror which is stateless
-    static bool is_stateful(void) { return FALSE; }
 };
+
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const mirror_session_feeder& obj) {
+    os << "MIRROR feeder =>"
+       << "id: " << obj.key.id << "  "
+       << "type: " << obj.type
+       << "snap_len: " << obj.snap_len;
+    return os;
+}
+
+// CRUD prototypes
+API_CREATE(mirror_session);
+API_READ(mirror_session);
+API_UPDATE(mirror_session);
+API_DELETE(mirror_session);
 
 }    // namespace api_test
 

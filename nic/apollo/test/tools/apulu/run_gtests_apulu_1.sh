@@ -25,7 +25,7 @@ run_gtest vnic
 run_gtest tep
 run_gtest if
 run_gtest mapping LOG="/dev/null"
-#run_gtest mirror_session
+run_gtest mirror_session
 
 # end of script
 clean_exit

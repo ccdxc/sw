@@ -2,197 +2,117 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-#include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/test/utils/mirror.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/mirror.hpp"
 
 namespace api_test {
 
-mirror_session_util::mirror_session_util(mirror_session_stepper_seed_t *seed) {
-    this->key.id = seed->key.id;
+
+//----------------------------------------------------------------------------
+// Mirror feeder class routines
+//----------------------------------------------------------------------------
+
+void
+mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
+                            pds_ifindex_t interface, uint16_t vlan_tag,
+                            std::string src_ip, uint32_t tep_id,
+                            uint32_t span_id, uint32_t dscp) {
+
+    this->key =  key;
+    // init with rspan type, then alternate b/w rspan and erspan in iter_next
+    this->type = PDS_MIRROR_SESSION_TYPE_RSPAN;
+    this->interface = interface;
+    this->encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    this->encap.val.vlan_tag = vlan_tag;
+    this->num_obj  = max_ms;
+    this->vpc_id = 1;
+    this->tep_id = tep_id;
+    memset(&this->src_ip, 0x0, sizeof(ip_addr_t));
+    extract_ip_addr((char *)src_ip.c_str(), &this->src_ip);
+    this->span_id = span_id;
+    this->dscp =  dscp;
     this->snap_len = 100;
-    this->type = seed->type;
-
-    if (seed->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        this->rspan_spec.interface = seed->interface;
-        memcpy(&this->rspan_spec.encap, &seed->encap, sizeof(pds_encap_t));
-    } else if (seed->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-        this->erspan_spec.tep.id = seed->tep_id;
-        memcpy(&this->erspan_spec.src_ip, &seed->src_ip, sizeof(ip_addr_t));
-        this->erspan_spec.vpc.id = seed->vpc_id;
-        this->erspan_spec.dscp = seed->dscp;
-        this->erspan_spec.span_id = seed->span_id;
-    }
 }
 
-sdk::sdk_ret_t
-mirror_session_util::create(void) const {
-    pds_mirror_session_spec_t spec = {0};
+void
+mirror_session_feeder::iter_next(int width) {
 
-    spec.key.id = key.id;
-    spec.type =type;
-    spec.snap_len = snap_len;
-    if(spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        spec.rspan_spec = rspan_spec;
-    } else if (spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-        spec.erspan_spec = erspan_spec;
+    key.id += width;
+    if (type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+
+        type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
+        span_id++;
+        dscp++;
+        src_ip.addr.v4_addr += 1;
+
+    } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+
+        type = PDS_MIRROR_SESSION_TYPE_RSPAN;
+        if (encap.type  == PDS_ENCAP_TYPE_DOT1Q)
+            encap.val.vlan_tag++;
+        else if (encap.type == PDS_ENCAP_TYPE_QINQ) {
+            encap.val.qinq_tag.c_tag++;
+            encap.val.qinq_tag.s_tag++;
+        }
     }
-
-    return pds_mirror_session_create(&spec);
+    cur_iter_pos++;
 }
 
-sdk::sdk_ret_t
-mirror_session_util::read(pds_mirror_session_info_t *info) const {
-    sdk_ret_t rv;
-    pds_mirror_session_key_t key;
+void
+mirror_session_feeder::key_build(pds_mirror_session_key_t *key) const {
+    memset(key, 0, sizeof(pds_mirror_session_key_t));
+    key->id = this->key.id;
+}
 
-    memset(&key, 0, sizeof(pds_mirror_session_key_t));
-    memset(info, 0, sizeof(pds_mirror_session_info_t));
+void
+mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
+    memset(spec, 0, sizeof(pds_mirror_session_spec_t));
+    this->key_build(&spec->key);
 
-    key.id = this->key.id;
-    if ((rv = pds_mirror_session_read(&key, info)) != sdk::SDK_RET_OK)
-        return rv;
-
-    if (::capri_mock_mode())
-        return sdk::SDK_RET_OK;
-
-    // validate mirror session type
-    if (info->spec.type != this->type) {
-        return sdk::SDK_RET_ERR;
+    spec->type = type;
+    spec->snap_len = snap_len;
+    if (type  == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+        spec->rspan_spec.interface = interface;
+        memcpy(&spec->rspan_spec.encap, &encap, sizeof(pds_encap_t));
+    } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        spec->erspan_spec.vpc.id = vpc_id;
+        spec->erspan_spec.dscp = dscp;
+        spec->erspan_spec.span_id = span_id;
+        spec->erspan_spec.tep.id = tep_id;
+        // todo: need to handle mapping key
     }
-    // validate snap_len
-    if (info->spec.snap_len != this->snap_len) {
-        return sdk::SDK_RET_ERR;
-    }
-    if (info->spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+}
+bool
+mirror_session_feeder::key_compare(const pds_mirror_session_key_t *key) const {
+    return (memcmp(key, &this->key, sizeof(pds_mirror_session_key_t)) == 0);
+}
+
+bool
+mirror_session_feeder::spec_compare(
+                                const pds_mirror_session_spec_t *spec) const {
+
+    if (spec->type != type)
+        return false;
+
+    if (spec->snap_len != snap_len)
+        return false;
+
+    if (spec->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
         // validate rspan spec
-        if (info->spec.rspan_spec.interface !=
-            this->rspan_spec.interface) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.rspan_spec.encap.type !=
-            this->rspan_spec.encap.type) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.rspan_spec.encap.val.vlan_tag !=
-            this->rspan_spec.encap.val.vlan_tag) {
-            return sdk::SDK_RET_ERR;
-        }
-    } else if (info->spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        if ((spec->rspan_spec.interface != interface) ||
+            (spec->rspan_spec.encap.type != encap.type) ||
+            (spec->rspan_spec.encap.val.vlan_tag != encap.val.vlan_tag))
+            return false;
+
+    } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         // validate erspan spec
-        if (info->spec.erspan_spec.src_ip.addr.v4_addr !=
-            this->erspan_spec.src_ip.addr.v4_addr) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.erspan_spec.tep.id != this->erspan_spec.tep.id) {
-            return sdk::SDK_RET_ERR;
-        }
+        if ((spec->erspan_spec.vpc.id != vpc_id) ||
+            (spec->erspan_spec.dscp != dscp) ||
+            (spec->erspan_spec.span_id != span_id) ||
+             (spec->erspan_spec.tep.id != tep_id))
+            return false;
     }
-
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-mirror_session_util::update(void) const {
-    pds_mirror_session_spec_t spec = {0};
-
-    spec.key.id = key.id;
-    spec.type = type;
-    spec.snap_len = snap_len;
-    if(spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        spec.rspan_spec = rspan_spec;
-    } else if (spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-        spec.erspan_spec = erspan_spec;
-    }
-
-    return pds_mirror_session_update(&spec);
-}
-
-sdk::sdk_ret_t
-mirror_session_util::del(void) const {
-    pds_mirror_session_key_t key = {0};
-
-    key.id = this->key.id;
-    return pds_mirror_session_delete(&key);
-}
-
-static inline sdk::sdk_ret_t
-mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
-                                   utils_op_t op,
-                                   sdk_ret_t expected_result = sdk::SDK_RET_OK)
-{
-    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    pds_mirror_session_info_t info = {};
-    mirror_session_stepper_seed_t local_seed;
-
-    if (seed->key.id == 0) seed->key.id = 1;
-    memcpy(&local_seed, seed, sizeof(mirror_session_stepper_seed_t));
-
-    for (uint32_t idx = seed->key.id;
-         idx < seed->key.id + seed->num_ms;
-         idx++) {
-
-        local_seed.key.id = idx;
-        mirror_session_util ms_obj(&local_seed);
-        switch (op) {
-        case OP_MANY_CREATE:
-            rv = ms_obj.create();
-            break;
-        case OP_MANY_READ:
-            rv = ms_obj.read(&info);
-            break;
-        case OP_MANY_UPDATE:
-            rv = ms_obj.update();
-            break;
-        case OP_MANY_DELETE:
-            rv = ms_obj.del();
-            break;
-        default:
-            return sdk::SDK_RET_INVALID_OP;
-        }
-
-        if (rv != expected_result)
-            return sdk::SDK_RET_ERR;
-        // alternatively create RSPAN and ERSPAN sessions
-        if (local_seed.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-            local_seed.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
-            if (local_seed.encap.type == PDS_ENCAP_TYPE_DOT1Q)
-                local_seed.encap.val.vlan_tag++;
-            else if (local_seed.encap.type == PDS_ENCAP_TYPE_QINQ) {
-                local_seed.encap.val.qinq_tag.c_tag++;
-                local_seed.encap.val.qinq_tag.s_tag++;
-            }
-        } else if (local_seed.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-            local_seed.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
-            local_seed.span_id++;
-            local_seed.dscp++;
-            local_seed.src_ip.addr.v4_addr += 1;
-        }
-    }
-
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-mirror_session_util::many_create(mirror_session_stepper_seed_t *seed) {
-    return (mirror_session_util_object_stepper(seed, OP_MANY_CREATE));
-}
-
-sdk::sdk_ret_t
-mirror_session_util::many_read(mirror_session_stepper_seed_t *seed,
-                     sdk::sdk_ret_t exp_result) {
-    return (mirror_session_util_object_stepper(seed, OP_MANY_READ,
-                                               exp_result));
-}
-
-sdk::sdk_ret_t
-mirror_session_util::many_update(mirror_session_stepper_seed_t *seed) {
-    return (mirror_session_util_object_stepper(seed, OP_MANY_UPDATE));
-}
-
-sdk::sdk_ret_t
-mirror_session_util::many_delete(mirror_session_stepper_seed_t *seed) {
-    return (mirror_session_util_object_stepper(seed, OP_MANY_DELETE));
+    return true;
 }
 
 }    // namespace api_test
