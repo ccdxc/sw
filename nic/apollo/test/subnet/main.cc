@@ -11,7 +11,7 @@
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/policy.hpp"
-#include "nic/apollo/test/utils/workflow1.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 namespace api_test {
 /// \cond

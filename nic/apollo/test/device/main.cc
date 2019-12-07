@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/workflow1.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 namespace api_test {
 

@@ -10,7 +10,7 @@
 
 #include "nic/apollo/test/utils/svc_mapping.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
-#include "nic/apollo/test/utils/workflow1.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 
 namespace api_test {
 

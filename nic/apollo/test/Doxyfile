@@ -733,7 +733,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT    = ./apollo/test/mapping/main.cc ./apollo/test/scale/main.cc ./apollo/test/subnet/main.cc ./apollo/test/tep/main.cc ./apollo/test/utils/api_base.hpp ./apollo/test/utils/base.hpp ./apollo/test/utils/feeder.hpp ./apollo/test/utils/workflow1.hpp ./apollo/test/vnic/main.cc ./apollo/test/device/main.cc ./apollo/test/policy/main.cc ./apollo/test/route/main.cc ./apollo/test/mirror/main.cc ./apollo/test/vpc/main.cc ./apollo/test/nexthop/main.cc ./apollo/test/svc_mapping/main.cc ./apollo/test/tag/main.cc ./apollo/test/vpc_peer/main.cc
+INPUT    = ./apollo/test/mapping/main.cc ./apollo/test/scale/main.cc ./apollo/test/subnet/main.cc ./apollo/test/tep/main.cc ./apollo/test/utils/api_base.hpp ./apollo/test/utils/base.hpp ./apollo/test/utils/feeder.hpp ./apollo/test/utils/workflow.hpp ./apollo/test/vnic/main.cc ./apollo/test/device/main.cc ./apollo/test/policy/main.cc ./apollo/test/route/main.cc ./apollo/test/mirror/main.cc ./apollo/test/vpc/main.cc ./apollo/test/nexthop/main.cc ./apollo/test/svc_mapping/main.cc ./apollo/test/tag/main.cc ./apollo/test/vpc_peer/main.cc
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
