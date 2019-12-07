@@ -87,13 +87,11 @@ TEST_F(if_test, if_workflow_7) {
 
 /// \brief Interface WF_8
 /// \ref WF_8
-/// NOTE: THIS TEST CASE IS INCORRECT (it is udpating an inteface that doesn't
-/// exist and expecting success) !!!
 TEST_F(if_test, DISABLED_if_workflow_8) {
     if_feeder feeder1, feeder1A, feeder1B;
-    feeder1.init(1);
-    feeder1A.init(10);
-    feeder1B.init(20);
+    feeder1.init(1, "80.1.1.1");
+    feeder1A.init(1, "80.1.2.1");
+    feeder1B.init(1, "80.1.3.1");
     workflow_8<if_feeder>(feeder1, feeder1A, feeder1B);
 }
 
