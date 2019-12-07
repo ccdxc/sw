@@ -75,8 +75,9 @@ type k8sServices struct {
 
 // struct holding the list of service instances and the associated desired replicas.
 type instances struct {
-	desiredNumberScheduled int32
+	desiredNumberScheduled int32    // applicable for deployments
 	list                   []string // list of instances
+	daemonSet              bool     // indicates whether the service is a daemon set or not
 }
 
 // NewClusterHealthMonitor create a new cluster health monitor object with the given params.
@@ -396,6 +397,7 @@ func (c *ClusterHealthMonitor) runUntilCancel() {
 		// kicks in during any node or service failures; this avoids failures from going unnoticed
 		case _, ok := <-c.updateCh:
 			if ok {
+				c.logger.Infof("received a signal on updateCh, looking for health updates")
 				for len(c.updateCh) > 0 { // drain the channel
 					<-c.updateCh
 				}
@@ -514,6 +516,10 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 	c.servicesHealth.RLock()
 	defer c.servicesHealth.RUnlock()
 
+	c.nodesHealth.RLock()
+	defer c.nodesHealth.RUnlock()
+	totalNumberOfNodes := len(c.nodesHealth.nodes)
+
 	// check if all the k8s k8sServices are populated
 	for svc := range k8sModules {
 		if _, ok := c.servicesHealth.services[svc]; !ok {
@@ -523,9 +529,20 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 
 	var reason []string
 	for svc, instances := range c.servicesHealth.services {
-		if instances.desiredNumberScheduled != int32(len(instances.list)) {
-			reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
-				instances.desiredNumberScheduled))
+		if !instances.daemonSet && instances.desiredNumberScheduled == 0 {
+			c.logger.Infof("something went wrong, service is neither a daemonset nor a deployment!?, %+v", instances)
+		}
+
+		if instances.daemonSet { // total number of instances to be running len(c.nodesHealth.nodes) on a daemonset
+			if totalNumberOfNodes != len(instances.list) {
+				reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
+					totalNumberOfNodes))
+			}
+		} else { // deployments
+			if instances.desiredNumberScheduled != int32(len(instances.list)) {
+				reason = append(reason, fmt.Sprintf("%s(%d/%d) running", svc, len(instances.list),
+					instances.desiredNumberScheduled))
+			}
 		}
 	}
 	if len(reason) > 0 {
@@ -577,21 +594,11 @@ func (c *ClusterHealthMonitor) processNodeEvent(et kvstore.WatchEventType, node 
 func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventType, ds *k8sv1beta1.DaemonSet) {
 	c.servicesHealth.Lock()
 
-	c.logger.Infof("daemonset watcher received event: %v, name: %s, spec: %+v", eventType, ds.Name, ds.Spec)
+	c.logger.Infof("daemonset watcher received event: %v, name: %s, status: %+v", eventType, ds.Name, ds.Status)
 
 	switch eventType {
 	case k8swatch.Added:
-		if c.servicesHealth.services[ds.Name] != nil {
-			c.servicesHealth.services[ds.Name].desiredNumberScheduled = ds.Status.DesiredNumberScheduled
-			c.servicesHealth.Unlock()
-			return
-		}
-		c.servicesHealth.services[ds.Name] = &instances{desiredNumberScheduled: ds.Status.DesiredNumberScheduled}
-	case k8swatch.Modified:
-		if c.servicesHealth.services[ds.Name] != nil &&
-			c.servicesHealth.services[ds.Name].desiredNumberScheduled != ds.Status.DesiredNumberScheduled {
-			c.servicesHealth.services[ds.Name].desiredNumberScheduled = ds.Status.DesiredNumberScheduled
-		}
+		c.servicesHealth.services[ds.Name] = &instances{daemonSet: true}
 	case k8swatch.Deleted, k8swatch.Error:
 		delete(c.servicesHealth.services, ds.Name)
 	}
@@ -602,7 +609,8 @@ func (c *ClusterHealthMonitor) processDaemonSetEvent(eventType k8swatch.EventTyp
 func (c *ClusterHealthMonitor) processDeploymentEvent(eventType k8swatch.EventType, deploy *k8sv1beta1.Deployment) {
 	c.servicesHealth.Lock()
 
-	c.logger.Infof("deployment watcher received event: %v, name: %s, spec: %+v", eventType, deploy.Name, deploy.Spec)
+	c.logger.Infof("deployment watcher received event: %v, name: %s, spec: %+v, status: %+v", eventType, deploy.Name,
+		deploy.Spec, deploy.Status)
 
 	switch eventType {
 	case k8swatch.Added:

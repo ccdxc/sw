@@ -45,8 +45,22 @@ var _ = Describe("cluster health tests", func() {
 		killCmdOut := ts.tu.CommandOutput(nodeIP, killCmd)
 		By(fmt.Sprintf("ts: %s (%s) output: %s", time.Now(), killCmd, killCmdOut))
 		Eventually(func() bool {
-			return checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_FALSE.String(),
-				fmt.Sprintf("%s(%d/%d) running", globals.EvtsMgr, ts.tu.NumQuorumNodes-1, ts.tu.NumQuorumNodes))
+			// if the expected condition is not met
+			if !checkClusterHealth(clusterIf, &obj, cmd.ConditionStatus_FALSE.String(),
+				fmt.Sprintf("%s(%d/%d) running", globals.EvtsMgr, ts.tu.NumQuorumNodes-1, ts.tu.NumQuorumNodes)) {
+				// in some cases, we observed that the process comes up the very next second once it is killed before
+				// the health check triggers. As a result, cluster health remains healthy.
+				// So, if the process starts running again, kill it again and check the status.
+				out := ts.tu.CommandOutput(nodeIP, fmt.Sprint("ps aux | grep [e]vtsmgr | awk '{print $2}'"))
+				if out != "" {
+					By(fmt.Sprintf("evtsmgr started, killing again"))
+					killCmd := fmt.Sprintf("kill -9 %s", out)
+					killCmdOut := ts.tu.CommandOutput(nodeIP, killCmd)
+					By(fmt.Sprintf("ts: %s (%s) output: %s", time.Now(), killCmd, killCmdOut))
+				}
+				return false
+			}
+			return true // expected condition is met
 		}, 150, 2).Should(BeTrue(),
 			fmt.Sprintf("ts: %s Cluster status is expected to be un-healthy as %s is not running on %s",
 				time.Now(), globals.EvtsMgr, nodeIP))
