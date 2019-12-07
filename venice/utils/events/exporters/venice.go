@@ -5,9 +5,11 @@ package exporters
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	emgrpc "github.com/pensando/sw/nic/agent/protos/evtprotos"
@@ -170,7 +172,8 @@ func (v *VeniceExporter) WriteEvents(events []*evtsapi.Event) error {
 	}
 
 	// check if the connection needs to be reset
-	if strings.Contains(err.Error(), "Unavailable") {
+	errStatus, ok := status.FromError(err)
+	if ok && (errStatus.Code() == codes.Unavailable || errStatus.Code() == codes.Internal) {
 		v.eventsMgr.Lock()
 		v.eventsMgr.connectionAlive = false
 		v.eventsMgr.Unlock()
