@@ -476,10 +476,12 @@ cpld_verify_idcode(void)
             idcode[i] = cpld_reg_rd(CPLD_CONF_FLASH_READ_BYTE + ARRAY_SIZE(idcode) - (i + 1));
         }
         if (idcode[3] == 0x43 && idcode[2] == 0xb0) {
+            pal_mem_trace("Id verified\n");
             close(fd);
             return true;
         }
     }
+    pal_mem_trace("Unable to verify id\n");
     close(fd);
     return false;
 }
@@ -497,6 +499,7 @@ cpld_erase_flash_cmd(int fd)
         usleep(1000);
         // Check for busy bit.
         if (busy_check_bit(fd) == -1) {
+            pal_mem_trace("cpld_erase_flash_cmd::busy bit check failed\n");
             return -1;
         }
         // Verify if erase actually happened
@@ -505,10 +508,12 @@ cpld_erase_flash_cmd(int fd)
                 read_status[i] = cpld_reg_rd(CPLD_CONF_FLASH_READ_BYTE + ARRAY_SIZE(read_status) - (i + 1));
             }
             if ((read_status[1] & CPLD_READ_STATUS_MASK) == 0) {
+                pal_mem_trace("cpld_erase_flash_cmd::erase done\n");
                 return 0;
             }
         }
     }
+    pal_mem_trace("cpld_erase_flash_cmd::erase failed\n");
     return -1;
 }
 
@@ -522,12 +527,14 @@ cpld_erase(void)
 
     //verify device id
     if (cpld_verify_idcode() == false) {
+        pal_mem_trace("cpld_erase::verify idcode failed\n");
         return -1;
     }
 
     // Open the spi device.
     if ((fd = open(spidev1_path, O_RDWR, 0)) < 0) {
-        return 0;
+        pal_mem_trace("cpld_erase::unable to open the spi dev\n");
+        return -1;
     }
     pal_mem_trace("Trying to initialize the device\n");
     // Put the device in ISC_ACCESSED mode
@@ -587,6 +594,7 @@ cpld_read_flash_cmd(int fd, uint8_t *buf, uint32_t len)
         } while(count < len);
         return 0;
     }
+    pal_mem_trace("cpld_read_flash_cmd::read flash failed\n");
     return -1;
 }
 
@@ -600,15 +608,18 @@ cpld_read_flash(uint8_t *buf, uint32_t len)
 
     //verify device id
     if (cpld_verify_idcode() == false) {
+        pal_mem_trace("cpld_read_flash::cannot verify id\n");
         return -1;
     }
 
     // Open the spi device.
     if ((fd = open(spidev1_path, O_RDWR, 0)) < 0) {
+        pal_mem_trace("cpld_read_flash::failed to open the spi dev\n");
         return -1;
     }
     // Put the device in ISC_ACCESSED mode
     if (cpld_send_cmd_spi(fd, lsc_enable_cmd, sizeof(lsc_enable_cmd)) == -1) {
+        pal_mem_trace("cpld_read_flash::cannot put it in the isc accessed mode\n");
         goto error;
     }
     // Delay 1ms
@@ -700,6 +711,7 @@ cpld_program_done_bit_cmd(int fd)
         usleep(1000);
         // Check for busy bit.
         if (busy_check_bit(fd) == -1) {
+            pal_mem_trace("cpld_program_done_bit_cmd::busy bit check failed\n");
             return -1;
         }
         // Verify if programmed happened actually happened
@@ -708,6 +720,7 @@ cpld_program_done_bit_cmd(int fd)
                 read_status[i] = cpld_reg_rd(CPLD_CONF_FLASH_READ_BYTE + ARRAY_SIZE(read_status) - (i + 1));
             }
             if ((read_status[1] & CPLD_READ_STATUS_MASK) == 0) {
+                pal_mem_trace("cpld_program_done_bit_cmd::program done\n");
                 return 0;
             }
         }
@@ -731,15 +744,18 @@ cpld_write_flash(const uint8_t *buf, uint32_t len, cpld_upgrade_status_cb_t cpld
 
     //verify device id
     if (cpld_verify_idcode() == false) {
+        pal_mem_trace("cpld_write_flash::verify id failed\n");
         return -1;
     }
 
     // Open the spi device.
     if ((fd = open(spidev1_path, O_RDWR, 0)) < 0) {
+        pal_mem_trace("cpld_write_flash::failed to open the spi dev\n");
         return -1;
     }
     // Put the device in ISC_ACCESSED mode
     if (cpld_send_cmd_spi(fd, lsc_enable_cmd, sizeof(lsc_enable_cmd)) == -1) {
+        pal_mem_trace("cpld_write_flash::unable to set isc accessed mode\n");
         goto error;
     }
     // Delay 1ms

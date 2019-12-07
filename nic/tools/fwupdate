@@ -1225,7 +1225,7 @@ pcie_swapout()
 {
     local path=$1
     if [ -f ${path}.real ]; then
-        ln -f ${path}.real $path
+        mv ${path}.real $path || true
     fi
 }
 

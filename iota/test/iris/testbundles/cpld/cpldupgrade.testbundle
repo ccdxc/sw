@@ -7,7 +7,6 @@ meta:
 testcases:
     -   name    : CPLD_UPGRADE_REVISION_CHECK
         testcase: testcases.cpld_upgrade.check_revision
-        ignore  : True
         stress  : True
 
 #    -   name    : CPLD_UPGRADE_CHECK

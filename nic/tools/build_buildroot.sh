@@ -155,7 +155,7 @@ echo 'Generating config'
 docker_exec "cd /sw/nic/buildroot && make capri_defconfig"
 
 echo 'Building buildroot'
-docker_exec "cd /sw/nic/buildroot && make -j 24"
+docker_exec "cd /sw/nic/buildroot && BUILDROOT_ASSET=1 make -j 24"
 
 echo 'Building extra uboot'
 uboot_extra

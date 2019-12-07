@@ -26,7 +26,7 @@ def Trigger(tc):
 
         # Find the naples cpld revision
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        api.Trigger_AddNaplesCommand(req, node, "/nic/tools/fwupdate -l")
+        api.Trigger_AddNaplesCommand(req, node, "LD_LIBRARY_PATH=/nic/lib:/platform/lib PATH=/nic/bin:$PATH /nic/tools/fwupdate -l")
         resp = api.Trigger(req)
         for cmd in resp.commands:
             if cmd.exit_code != 0:
@@ -42,6 +42,7 @@ def Trigger(tc):
                 api.Logger.error("Naples on node {} doesnt have the right fwupdate." .format(node))
                 return api.types.status.FAILURE
             naples_revision = out["cpld"]["bitfile"]["version"]
+        api.Logger.info("Naples cpld version is {}" .format(naples_revision))
 
         # Use manifest to check if cpld is the latest
         cpld_latest = False

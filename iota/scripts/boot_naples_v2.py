@@ -20,7 +20,7 @@ HOST_NAPLES_DIR                 = "/naples"
 NAPLES_TMP_DIR                  = "/data"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
-
+UPGRADE_TIMEOUT                 = 600
 
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
@@ -462,7 +462,8 @@ class NaplesManagement(EntityManagement):
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
         self.InstallPrep()
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image),
+                            "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
         if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
             raise Exception('failed to switch firmware to mainfwa')
@@ -470,7 +471,8 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#", timeout = 300)
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img),
+                            "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
     def __connect_to_console(self):
