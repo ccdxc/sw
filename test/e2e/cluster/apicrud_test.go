@@ -485,7 +485,7 @@ var _ = Describe("api crud tests", func() {
 			for _, ip := range ts.tu.QuorumNodes {
 				Eventually(func() string {
 					return ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get pods -o wide --no-headers | grep pen-apigw | grep %v", ip))
-				}, 10, 1).ShouldNot(BeEmpty(), "pen-apigateway container should be running on %s", ip)
+				}, 30, 1).ShouldNot(BeEmpty(), "pen-apigateway container should be running on %s", ip)
 			}
 		})
 
@@ -498,7 +498,7 @@ var _ = Describe("api crud tests", func() {
 					}
 				}
 				return ""
-			}, 10, 1).ShouldNot(BeEmpty(), "API server should be in running state")
+			}, 30, 1).ShouldNot(BeEmpty(), "API server should be in running state")
 		})
 	})
 

@@ -21,6 +21,12 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+const (
+	// This is the time systemd waits before restarting a system container if it exited
+	// It must match the RestartSec parameter in the *service file for CMD, etcd, kube-*
+	sysContainersHoldOffTimeSec = 10
+)
+
 var _ = Describe("cluster tests", func() {
 
 	Context("Failover test", func() {
@@ -164,7 +170,7 @@ func validateCluster() {
 	for _, ip := range ts.tu.VeniceNodeIPs {
 		Eventually(func() string {
 			return ts.tu.GetContainerOnNode(ip, "pen-cmd")
-		}, 10, 1).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
+		}, 3*sysContainersHoldOffTimeSec, 1).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
 	}
 
 	By(fmt.Sprintf("etcd should be running on all quorum nodes"))
@@ -172,7 +178,7 @@ func validateCluster() {
 		ip := ts.tu.NameToIPMap[qnode]
 		Eventually(func() string {
 			return ts.tu.GetContainerOnNode(ip, "pen-etcd")
-		}, 10, 1).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)", ts.tu.IPToNameMap[ip], ip)
+		}, 3*sysContainersHoldOffTimeSec, 1).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)", ts.tu.IPToNameMap[ip], ip)
 	}
 
 	By(fmt.Sprintf("etcd should not be running on non-quorum nodes"))
@@ -180,7 +186,7 @@ func validateCluster() {
 	for nonQnode := range ips {
 		Eventually(func() string {
 			return ts.tu.GetContainerOnNode(nonQnode, "pen-etcd")
-		}, 10, 1).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)", ts.tu.IPToNameMap[nonQnode], nonQnode)
+		}, 2*sysContainersHoldOffTimeSec, 1).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)", ts.tu.IPToNameMap[nonQnode], nonQnode)
 	}
 
 	By(fmt.Sprintf("kubernetes indicated all pods to be Running"))
