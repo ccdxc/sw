@@ -191,7 +191,7 @@ TEST_F(vpc, vpc_workflow_9) {
 
 /// \brief VPC WF_10
 /// \ref WF_10
-TEST_F(vpc, DISABLED_vpc_workflow_10) {
+TEST_F(vpc, vpc_workflow_10) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                   key4 = {.id = 100};
     vpc_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;

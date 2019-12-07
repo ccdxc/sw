@@ -79,7 +79,7 @@ TEST_F(tep_test, tep_workflow_b1) {
 
 /// \brief TEP WF_B2
 /// \ref WF_B2
-TEST_F(tep_test, DISABLED_tep_workflow_b2) {
+TEST_F(tep_test, tep_workflow_b2) {
     if (!apulu()) return;
 
     tep_feeder feeder1, feeder1A;
@@ -308,8 +308,10 @@ TEST_F(tep_test, tep_workflow_9) {
 
 /// \brief TEP WF_10
 /// \ref WF_10
-TEST_F(tep_test, DISABLED_tep_workflow_10) {
+TEST_F(tep_test, tep_workflow_10) {
     tep_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
+
+    if (!apulu()) return;
 
     if (artemis()) {
         feeder1.init(10, "10.10.1.1", 10, k_zero_encap,

@@ -200,7 +200,7 @@ TEST_F(nh_test, nh_workflow_9) {
 
 /// \brief NH WF_10
 /// \ref WF_10
-TEST_F(nh_test, DISABLED_nh_workflow_10) {
+TEST_F(nh_test, nh_workflow_10) {
     nexthop_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
     if (apulu()) {

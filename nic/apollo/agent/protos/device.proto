@@ -70,10 +70,30 @@ enum DeviceState {
   SWITCH_STATE_ERR  = 3;
 }
 
+// device health status, multiple conditions can happen
+enum DeviceHealth {
+  DEVICE_HEALTH_NONE            = 0;
+  DEVICE_HEALTH_OK              = 1;
+  DEVICE_HEALTH_SERVICE_DOWN    = 2;
+  DEVICE_HEALTH_REBOOT_REQUIRED = 3;
+  DEVICE_HEALTH_LOW_MEMORY      = 4;
+  DEVICE_HEALTH_HARDWARE_ERROR  = 5;
+}
+
 // operational status of the device, if any
 message DeviceStatus {
   // operaional state of the device
-  DeviceState state = 1;
+  DeviceState           State =  1;
+  // health of the device
+  repeated DeviceHealth Health = 2;
+  // System MAC address (can be used to uniquely identify the device in cluster)
+  string SystemMACAddress      = 3;
+  // serial number of the device
+  string SerialNumber          = 4;
+  // SKU/part numnber
+  string Sku                   = 5;
+  // version of the firmware running
+  string FirmwareVersion       = 6;
 }
 
 // stats of the device, if any
