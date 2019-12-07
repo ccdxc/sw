@@ -4,7 +4,7 @@ feature:
     package     : test.p4pt
     module      : p4pt
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
     - module:
