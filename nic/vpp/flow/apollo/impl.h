@@ -128,5 +128,10 @@ pds_flow_extract_nexthop_info(void * local_entry,
     return;
 }
 
-#endif    // __VPP_FLOW_APOLLO_IMPL_H__
+always_inline void
+pds_flow_nh_flags_add (void)
+{
+    return;
+}
 
+#endif    // __VPP_FLOW_APOLLO_IMPL_H__

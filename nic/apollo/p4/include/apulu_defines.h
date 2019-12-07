@@ -50,6 +50,7 @@
 #define NEXTHOP_TYPE_TUNNEL             2
 #define NEXTHOP_TYPE_NEXTHOP            3
 #define NEXTHOP_TYPE_NAT                4
+#define NEXTHOP_TYPE_MAX                5
 
 /*****************************************************************************/
 /* flow role                                                                 */

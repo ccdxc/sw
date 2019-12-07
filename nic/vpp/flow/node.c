@@ -961,7 +961,7 @@ pds_flow_init (vlib_main_t * vm)
                  no_of_threads - 1);
     clib_memset(fm->session_id_thr_local_pool, 0,
                 (sizeof(pds_flow_session_id_thr_local_pool_t) * no_of_threads));
-
+    pds_flow_nh_flags_add();
     if (0 != initialize_flow()) {
         ASSERT(0);
     }

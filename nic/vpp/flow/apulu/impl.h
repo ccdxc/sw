@@ -7,6 +7,8 @@
 
 #include <gen/p4gen/apulu/include/p4pd.h>
 
+extern pds_flow_main_t pds_flow_main;
+
 always_inline int
 pds_session_get_advance_offset (void)
 {
@@ -20,11 +22,11 @@ pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
     p4_rx_cpu_hdr_t *ses_info0 = vlib_buffer_get_current(b[0]);
     p4_rx_cpu_hdr_t *ses_info1 = vlib_buffer_get_current(b[1]);
     static session_actiondata_t actiondata = {0};
+    pds_flow_main_t *fm = &pds_flow_main;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     actiondata.action_u.session_session_info.tx_rewrite_flags =
-            ((TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-                    (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+        vec_elt(fm->nh_flags, (vnet_buffer(b[0])->pds_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
             ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
                     (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
@@ -39,6 +41,8 @@ pds_session_prog_x2 (vlib_buffer_t **b, u32 session_id0,
         vnet_buffer(b[0])->pds_data.flow_hash =
                 clib_net_to_host_u16(ses_info0->lif);
     }
+    actiondata.action_u.session_session_info.tx_rewrite_flags =
+        vec_elt(fm->nh_flags, (vnet_buffer(b[1])->pds_data.nexthop) >> 16);
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         next[1] = SESSION_PROG_NEXT_DROP;
     } else {
@@ -60,11 +64,11 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
 {
     p4_rx_cpu_hdr_t *ses_info0 = vlib_buffer_get_current(b);
     static session_actiondata_t actiondata = {0};
+    pds_flow_main_t *fm = &pds_flow_main;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     actiondata.action_u.session_session_info.tx_rewrite_flags =
-            ((TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-                    (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+        vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
             ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
                     (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
@@ -194,6 +198,24 @@ pds_flow_extract_nexthop_info(void * local_entry,
         }
     }
 
+}
+
+always_inline void
+pds_flow_nh_flags_add (void)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    u16 encap, mapping, nexthop, tunnel;
+
+    encap = (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+    nexthop = (TX_REWRITE_DMAC_FROM_NEXTHOP << TX_REWRITE_DMAC_START);
+    mapping = (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START);
+    tunnel = (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START);
+    fm->nh_flags = vec_new(u16, NEXTHOP_TYPE_MAX);
+    vec_elt(fm->nh_flags, NEXTHOP_TYPE_VPC) = mapping | encap;
+    vec_elt(fm->nh_flags, NEXTHOP_TYPE_ECMP) = nexthop | encap;
+    vec_elt(fm->nh_flags, NEXTHOP_TYPE_TUNNEL) = tunnel | encap;
+    vec_elt(fm->nh_flags, NEXTHOP_TYPE_NEXTHOP) = nexthop | encap;
+    vec_elt(fm->nh_flags, NEXTHOP_TYPE_NAT) = mapping | encap;
 }
 
 #endif    // __VPP_FLOW_APULU_IMPL_H__

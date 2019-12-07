@@ -134,6 +134,7 @@ typedef struct pds_flow_main_s {
     pds_flow_params_t **ip6_flow_params;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
+    u16 *nh_flags;
 } pds_flow_main_t;
 
 extern pds_flow_main_t pds_flow_main;

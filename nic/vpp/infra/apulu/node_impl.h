@@ -37,7 +37,7 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     vnet_buffer (p0)->pds_data.flow_hash = clib_net_to_host_u32(hdr0->flow_hash);
     vnet_buffer (p0)->pds_data.flags = flag_orig0;
     nexthop = clib_net_to_host_u16(hdr0->nexthop_id);
-    if (nexthop) {
+    if (NEXTHOP_TYPE_VPC != hdr0->nexthop_type) {
         vnet_buffer (p0)->pds_data.nexthop = nexthop | (hdr0->nexthop_type << 16);
     } else {
         vnet_buffer (p0)->pds_data.nexthop = 0;
@@ -52,7 +52,7 @@ pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     vnet_buffer (p1)->pds_data.flow_hash = clib_net_to_host_u32(hdr1->flow_hash);
     vnet_buffer (p1)->pds_data.flags = flag_orig1;
     nexthop = clib_net_to_host_u16(hdr1->nexthop_id);
-    if (nexthop) {
+    if (NEXTHOP_TYPE_VPC != hdr0->nexthop_type) {
         vnet_buffer (p1)->pds_data.nexthop = nexthop | (hdr1->nexthop_type << 16);
     } else {
         vnet_buffer (p1)->pds_data.nexthop = 0;
@@ -138,6 +138,7 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     u16 flag_orig;
+    u32 nexthop;
 
     flag_orig = clib_net_to_host_u16(hdr->flags);
     //flag_orig = VPP_CPU_FLAGS_IPV4_1_VALID;
@@ -147,6 +148,12 @@ pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 
     vnet_buffer (p)->pds_data.flow_hash = clib_net_to_host_u32(hdr->flow_hash);
     vnet_buffer (p)->pds_data.flags = flag_orig;
+    nexthop = clib_net_to_host_u16(hdr->nexthop_id);
+    if (NEXTHOP_TYPE_VPC != hdr->nexthop_type) {
+        vnet_buffer (p)->pds_data.nexthop = nexthop | (hdr->nexthop_type << 16);
+    } else {
+        vnet_buffer (p)->pds_data.nexthop = 0;
+    }
     vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
     vnet_buffer (p)->l3_hdr_offset =
             hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
