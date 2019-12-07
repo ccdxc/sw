@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
@@ -387,6 +388,8 @@ func (spc *NetworkSecurityPolicyCollection) Delete() error {
 		delete(pol.sm.sgpolicies, pol.venicePolicy.Name)
 	}
 
+	// Added temporarily to avoid race conditions due to back-to-back delete followed by create
+	time.Sleep(10 * time.Second)
 	return nil
 }
 
