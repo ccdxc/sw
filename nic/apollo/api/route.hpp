@@ -6,7 +6,7 @@
  * @brief   route table handling
  */
 
-#if !defined (__ROUTE_HPP__)
+#ifndef __ROUTE_HPP__
 #define __ROUTE_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -30,11 +30,9 @@ class route_table_state;
  */
 class route_table : public api_base {
 public:
-    /**
-     * @brief    factory method to allocate & initialize a route table instance
-     * @param[in] spec route table configuration
-     * @return    new instance of route table or NULL, in case of error
-     */
+    /// \brief    factory method to allocate & initialize a route table instance
+    /// \param[in] spec route table configuration
+    /// \return    new instance of route table or NULL, in case of error
     static route_table *factory(pds_route_table_spec_t *spec);
 
     /**
@@ -58,13 +56,6 @@ public:
     static sdk_ret_t free(route_table *table);
 
     /**
-     * @brief     initialize route table instance with the given config
-     * @param[in] api_ctxt API context carrying the configuration
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-    /**
      * @brief    allocate h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API
@@ -78,6 +69,13 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(void) override;
+
+    /**
+     * @brief     initialize route table instance with the given config
+     * @param[in] api_ctxt API context carrying the configuration
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -100,6 +98,14 @@ public:
         return SDK_RET_OK;
     }
 
+    /**
+     * @brief    compute all the objects depending on this object and add to
+     *           framework's dependency list
+     * @param[in] obj_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the
     ///           attrs provided in the update API call passed in the object
@@ -107,11 +113,7 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override {
-        // any change in routing table is considered as full update of
-        // the tables in the h/w
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -165,14 +167,6 @@ public:
 
     /**< @brief    initiate delay deletion of this object */
     virtual sdk_ret_t delay_delete(void) override;
-
-    /**
-     * @brief    compute all the objects depending on this object and add to
-     *           framework's dependency list
-     * @param[in] obj_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /**< @brief    return stringified key of the object (for debugging) */
     virtual string key2str(void) const override {
@@ -239,4 +233,4 @@ private:
 
 using api::route_table;
 
-#endif    /** __ROUTE_HPP__ */
+#endif    // __ROUTE_HPP__

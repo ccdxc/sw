@@ -6,7 +6,7 @@
  * @brief   policy handling
  */
 
-#if !defined (__POLICY_HPP__)
+#ifndef __POLICY_HPP__
 #define __POLICY_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -54,13 +54,6 @@ public:
     static sdk_ret_t free(policy *policy);
 
     /**
-     * @brief     initialize security policy instance with the given config
-     * @param[in] api_ctxt API context carrying the configuration
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-    /**
      * @brief    allocate h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API
@@ -68,6 +61,20 @@ public:
      */
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
+
+    /**
+     * @brief     release h/w resources reserved for this object, if any
+     *            (this API is invoked during the rollback stage)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t release_resources(void) override;
+
+    /**
+     * @brief     initialize security policy instance with the given config
+     * @param[in] api_ctxt API context carrying the configuration
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -78,19 +85,22 @@ public:
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     release h/w resources reserved for this object, if any
-     *            (this API is invoked during the rollback stage)
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t release_resources(void) override;
-
-    /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /**
+     * @brief    compute all the objects depending on this object and add to
+     *           framework's dependency list
+     * @param[in] obj_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the
@@ -99,11 +109,7 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override {
-        // any change in the policy is considered as full update of
-        // the tables in the h/w
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -127,6 +133,11 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
+
+    ///\brief read config
+    ///\param[out] info Pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_policy_info_t *info);
 
     /**
      * @brief     add given security policy to the database
@@ -170,16 +181,9 @@ public:
         return (void *)&(table->key_);
     }
 
-    ///\brief read config
-    ///\param[out] info Pointer to the info object
-    ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policy_info_t *info);
-
-    /**
-     * @brief     return impl instance of this security policy object
-     * @return    impl instance of the rout table object
-     */
-    impl_base *impl(void) { return impl_; }
+    /// \brief     return the policy key/id
+    /// \return    key/id of the policy
+    pds_policy_key_t key(void) const { return key_; }
 
     /**
      * @brief     return IP address family for this policy
@@ -192,6 +196,12 @@ public:
      * @return    RULE_DIR_INGRESS or RULE_DIR_EGRESS
      */
     rule_dir_t dir(void) const { return dir_; }
+
+    /**
+     * @brief     return impl instance of this security policy object
+     * @return    impl instance of the rout table object
+     */
+    impl_base *impl(void) { return impl_; }
 
 private:
     /**< @brief    constructor */
@@ -212,11 +222,14 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
+    pds_policy_key_t    key_;        /**< security policy key */
     uint8_t             af_;         /**< IP address family of this policy */
     rule_dir_t          dir_;        /**< traffic direction in which this policy is applied on */
-    pds_policy_key_t    key_;        /**< security policy key */
+
     ht_ctxt_t           ht_ctxt_;    /**< hash table context */
     impl_base           *impl_;      /**< impl object instance */
+
+    friend class policy_state;       // policy_state is friend of policy
 } __PACK__;
 
 /** @} */    // end of PDS_POLICY
@@ -225,4 +238,4 @@ private:
 
 using api::policy;
 
-#endif    /** __POLICY_HPP__ */
+#endif    // __POLICY_HPP__

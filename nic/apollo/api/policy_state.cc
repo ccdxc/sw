@@ -17,9 +17,6 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    constructor
- */
 policy_state::policy_state() {
     // TODO: need to tune multi-threading related params later
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
@@ -32,37 +29,31 @@ policy_state::policy_state() {
     SDK_ASSERT(policy_slab_ != NULL);
 }
 
-/**
- * @brief    destructor
- */
 policy_state::~policy_state() {
     ht::destroy(policy_ht_);
     slab::destroy(policy_slab_);
 }
 
-/**
- * @brief     allocate security policy instance
- * @return    pointer to the allocated security policy, NULL if no memory
- */
 policy *
 policy_state::alloc(void) {
     return ((policy *)policy_slab_->alloc());
 }
 
-/**
- * @brief      free security policy instance back to slab
- * @param[in]  rtrable pointer to the allocated security policy instance
- */
+sdk_ret_t
+policy_state::insert(policy *obj) {
+    return policy_ht_->insert_with_key(&obj->key_, obj, &obj->ht_ctxt_);
+}
+
+policy *
+policy_state::remove(policy *obj) {
+    return (policy *)(policy_ht_->remove(&obj->key_));
+}
+
 void
 policy_state::free(policy *policy) {
     policy_slab_->free(policy);
 }
 
-/**
- * @brief        lookup security policy in database with given key
- * @param[in]    policy_key security policy key
- * @return       pointer to the security policy instance found or NULL
- */
 policy *
 policy_state::find(pds_policy_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));

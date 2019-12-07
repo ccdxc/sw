@@ -115,11 +115,6 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-security_policy_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-
-sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                                 obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;

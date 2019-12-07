@@ -289,6 +289,8 @@ TEST_F(route_test, v4v6_route_table_workflow_7) {
 
 /// \brief Route table WF_8
 /// \ref WF_8
+/// NOTE: this test case is incorrect, we can't update more than 1 route table
+///       in batch because of N+1 update scheme
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
     route_table_feeder feeder1, feeder1A, feeder1B;
 
@@ -313,6 +315,8 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
 
 /// \brief Route table WF_9
 /// \ref WF_9
+/// NOTE: this test case is incorrect, we can't update more than 1 route table
+///       in batch because of N+1 update scheme
 TEST_F(route_test, DISABLED_v4v6_route_table_workflow_9) {
     route_table_feeder feeder1, feeder1A;
 

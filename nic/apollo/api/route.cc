@@ -25,7 +25,6 @@ typedef struct route_table_update_ctxt_s {
 } __PACK__ route_table_update_ctxt_t;
 
 route_table::route_table() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
 }
 
@@ -93,16 +92,6 @@ route_table::free(route_table *rtable) {
 }
 
 sdk_ret_t
-route_table::init_config(api_ctxt_t *api_ctxt) {
-    pds_route_table_spec_t    *spec;
-
-    spec = &api_ctxt->api_params->route_table_spec;
-    memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
-    this->af_ = spec->af;
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
@@ -118,13 +107,59 @@ route_table::nuke_resources_(void) {
 }
 
 sdk_ret_t
+route_table::init_config(api_ctxt_t *api_ctxt) {
+    pds_route_table_spec_t    *spec;
+
+    spec = &api_ctxt->api_params->route_table_spec;
+    memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
+    this->af_ = spec->af;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 route_table::program_create(obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
+route_table::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_route_table_spec_t *spec = &obj_ctxt->api_params->route_table_spec;
+
+    // we can enable/disable priority based routing and/or change individual
+    // routes in the route table but not the address family
+    if (af_ != spec->af) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
+                      "on route table %u", key_.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+static bool
+subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+    route_table_update_ctxt_t *upd_ctxt = (route_table_update_ctxt_t *)ctxt;
+
+    if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
+        (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
+        upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+    }
+    return false;
+}
+
+sdk_ret_t
+route_table::add_deps(obj_ctxt_t *obj_ctxt) {
+    route_table_update_ctxt_t upd_ctxt = { 0 };
+
+    upd_ctxt.rtable = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    return subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+}
+
+sdk_ret_t
 route_table::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // update is same as programming route table in different region
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -153,11 +188,6 @@ route_table::read(pds_route_table_info_t *info) {
 }
 
 sdk_ret_t
-route_table::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 route_table::add_to_db(void) {
     PDS_TRACE_VERBOSE("Adding route table %u to db", key_.id);
     return route_table_db()->insert(this);
@@ -172,29 +202,16 @@ route_table::del_from_db(void) {
 }
 
 sdk_ret_t
-route_table::delay_delete(void) {
-    return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
-}
-
-static bool
-subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
-    subnet_entry *subnet = (subnet_entry *)api_obj;
-    route_table_update_ctxt_t *upd_ctxt = (route_table_update_ctxt_t *)ctxt;
-
-    if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
-        (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
-        upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+route_table::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (route_table_db()->remove((route_table *)orig_obj)) {
+        return route_table_db()->insert(this);
     }
-    return false;
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
-route_table::add_deps(obj_ctxt_t *obj_ctxt) {
-    route_table_update_ctxt_t upd_ctxt = { 0 };
-
-    upd_ctxt.rtable = this;
-    upd_ctxt.obj_ctxt = obj_ctxt;
-    return subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+route_table::delay_delete(void) {
+    return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
 }
 
 }    // namespace api

@@ -44,6 +44,17 @@ public:
      */
     policy *alloc(void);
 
+    /// \brief    insert given policy instance into the policy db
+    /// \param[in] obj    policy to be added to the db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(policy *obj);
+
+    /// \brief     remove the given instance of policy object from db
+    /// \param[in] obj    policy entry to be deleted from the db
+    /// \return    pointer to the removed policy instance or NULL,
+    ///            if not found
+    policy *remove(policy *obj);
+
     /**
      * @brief      free security policy instance back to slab
      * @param[in]  policy   pointer to the allocated security

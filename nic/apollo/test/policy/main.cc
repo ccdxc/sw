@@ -227,6 +227,8 @@ TEST_F(policy, policy_workflow_7) {
 
 /// \brief POLICY WF_8
 /// \ref WF_8
+/// NOTE: this test case is incorrect, we can't update more than 1 policy table
+///       in batch because of N+1 update scheme
 TEST_F(policy, DISABLED_policy_workflow_8) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A, feeder1B;
@@ -258,6 +260,8 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
 
 /// \brief POLICY WF_9
 /// \ref WF_9
+/// NOTE: this test case is incorrect, we can't update more than 1 policy table
+///       in batch because of N+1 update scheme
 TEST_F(policy, DISABLED_policy_workflow_9) {
     pds_policy_key_t key = {.id = 1};
     policy_feeder feeder1, feeder1A;

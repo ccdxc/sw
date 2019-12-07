@@ -205,11 +205,23 @@ public:
     /// \return     IPv6 route table this subnet
     pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
 
+    /// \brief     return number of IPv4 ingress policies on the subnet
+    /// \return    number of IPv4 ingress policies on the subnet
+    uint8_t num_ing_v4_policy(void) const {
+        return num_ing_v4_policy_;
+    }
+
     /// \brief          return ingress IPv4 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         ingress IPv4 security policy of the subnet
     pds_policy_key_t ing_v4_policy(uint32_t n) const {
         return ing_v4_policy_[n];
+    }
+
+    /// \brief     return number of IPv6 ingress policies on the subnet
+    /// \return    number of IPv6 ingress policies on the subnet
+    uint8_t num_ing_v6_policy(void) const {
+        return num_ing_v6_policy_;
     }
 
     /// \brief          return ingress IPv6 security policy of the subnet
@@ -219,11 +231,23 @@ public:
         return ing_v6_policy_[n];
     }
 
+    /// \brief     return number of IPv4 egress policies on the subnet
+    /// \return    number of IPv4 egress policies on the subnet
+    uint8_t num_egr_v4_policy(void) const {
+        return num_egr_v4_policy_;
+    }
+
     /// \brief          return egress IPv4 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         egress IPv4 security policy of the subnet
     pds_policy_key_t egr_v4_policy(uint32_t n) const {
         return egr_v4_policy_[n];
+    }
+
+    /// \brief     return number of IPv6 egress policies on the subnet
+    /// \return    number of IPv6 egress policies on the subnet
+    uint8_t num_egr_v6_policy(void) const {
+        return num_egr_v6_policy_;
     }
 
     /// \brief          return egress IPv6 security policy of the subnet
