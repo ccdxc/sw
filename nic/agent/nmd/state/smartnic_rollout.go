@@ -192,18 +192,14 @@ func (n *NMD) issueNextPendingOp() {
 	log.Infof("Issuing %#v serialNumber %#v", n.ro.InProgressOp, n.config.Status.Fru.SerialNum)
 	switch n.ro.InProgressOp.Op {
 	case protos.DSCOp_DSCDisruptiveUpgrade:
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: upgrade completed")
+			go n.UpgSuccessful()
+			return
+		}
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
-			return
-		}
-		if n.config.Status.Fru.SerialNum == simSerialNumber {
-			log.Infof("SIM: upgrade completed")
-			rerr := os.Remove("/update/naples_fw.tar")
-			if rerr != nil {
-				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
-			}
-			go n.UpgSuccessful()
 			return
 		}
 		err = n.Upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
@@ -213,18 +209,14 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.DSCOp_DSCUpgOnNextHostReboot:
+		if n.config.Status.Fru.SerialNum == simSerialNumber {
+			log.Infof("SIM: upgrade completed")
+			go n.UpgSuccessful()
+			return
+		}
 		if _, err = os.Stat("/update/naples_fw.tar"); os.IsNotExist(err) {
 			log.Errorf("/update/naples_fw.tar not found %s", err)
 			go n.UpgFailed(&[]string{fmt.Sprintf("/update/naples_fw.tar not found %s", err)})
-			return
-		}
-		if n.config.Status.Fru.SerialNum == simSerialNumber {
-			log.Infof("SIM: upgrade completed")
-			rerr := os.Remove("/update/naples_fw.tar")
-			if rerr != nil {
-				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
-			}
-			go n.UpgSuccessful()
 			return
 		}
 		_, err = naplesHostDisruptiveUpgrade("naples_fw.tar")
@@ -261,6 +253,10 @@ func (n *NMD) issueNextPendingOp() {
 		cancel()
 		if n.config.Status.Fru.SerialNum == simSerialNumber {
 			log.Infof("SIM: image download completed")
+			rerr := os.Remove("/update/naples_fw.tar")
+			if rerr != nil {
+				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
+			}
 			go n.UpgPossible()
 			return
 		}
@@ -298,6 +294,10 @@ func (n *NMD) issueNextPendingOp() {
 		cancel()
 		if n.config.Status.Fru.SerialNum == simSerialNumber {
 			log.Infof("SIM: image download completed")
+			rerr := os.Remove("/update/naples_fw.tar")
+			if rerr != nil {
+				log.Errorf("SIM: removal of naples_fw.tar returned %v", rerr)
+			}
 			go n.UpgPossible()
 			return
 		}
