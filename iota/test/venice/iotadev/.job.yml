@@ -9,7 +9,7 @@ image:
 warmd:
   target:
     commands: ["sleep", "10000000"]
-    owners: ["email:shaleman@pensando.io"]
+    owners: ["email:enrico@pensando.io"]
   create:
     image: build-160
     count: 6

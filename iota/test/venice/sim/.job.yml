@@ -3,7 +3,7 @@ version: 2.0
 targets:
   mock-iota:
     commands: ["make ws-tools && make pull-assets && make fixtures && make palazzo && make -C iota && make -C iota/test/venice/sim mock-iota-test"]
-    owners: ["email:shaleman@pensando.io"]
+    owners: ["email:enrico@pensando.io"]
     area:
     sub-area:
     feature:
@@ -15,7 +15,7 @@ image:
 #warmd:
 #  target:
 #    commands: ["make ws-tools && make pull-assets && ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz && mkdir -p /usr/src && ln -s /go/src/github.com /usr/src/ && tar -zxf /sw/build_iris_x86.tar.gz -C / && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip && cd nic && ./tools/release.sh && cd .. && make -C iota && cat /warmd.json && make -C iota/test/venice"]
-#    owners: ["email:shaleman@pensando.io"]
+#    owners: ["email:enrico@pensando.io"]
 #    build-dependencies:
 #      - build-iris-x86
 #      - build-venice-image

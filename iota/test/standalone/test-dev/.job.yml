@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal + baremetal Esx test cases
  esx-6.7:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
@@ -30,7 +30,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  rhel-8.0:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
@@ -47,7 +47,7 @@ e2e-targets:
           BmOs: linux
  rhel-7.6:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
@@ -65,7 +65,7 @@ e2e-targets:
  
  ubuntu-18.04:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
@@ -82,7 +82,7 @@ e2e-targets:
           BmOs: linux
  freebsd-11.2:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:

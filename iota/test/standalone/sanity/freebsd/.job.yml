@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal
  e2e-freebsd-bm:
    commands: ["sh", "-c", "make freebsd"]
-   owners: ["email:sw-managers@pensando.io", "email:driver-team@pensando.io"]
+   owners: ["email:ci-stastus@pensando.io"]
    area:
    sub-area:
    feature:

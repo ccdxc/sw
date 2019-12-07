@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal + vm test case
  e2e-venice-2naples:
    commands: ["make", "-C", "iota/test/venice/hwtest/hwregression", "jobd"]
-   owners: ["email:shaleman@pensando.io", "email:ksmurty@pensando.io", "email:enrico@pensando.io", "email:jainvipin@pensando.io", "email:krishna@pensando.io"]
+   owners: ["email:enrico@pensando.io", "email:jainvipin@pensando.io", "email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:

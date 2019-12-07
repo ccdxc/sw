@@ -7,7 +7,7 @@ image:
 targets:
   linkmgr-25Gb:
     commands: ["sh", "-c", "make linkmgr-25Gb"]
-    owners: ["email:to-be-change@pensando.io"]
+    owners: ["email:ci-status@pensando.io"]
     area:
     sub-area:
     feature:

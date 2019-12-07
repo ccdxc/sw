@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal + vm test case
  e2e-venice-naples:
    commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:shaleman@pensando.io"]
+   owners: ["email:enrico@pensando.io"]
    area:
    sub-area:
    feature:

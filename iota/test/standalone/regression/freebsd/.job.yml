@@ -93,7 +93,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-eth:
    commands: ["sh", "-c", "make regression-eth"]
-   owners: ["email:platform-drivers-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
@@ -119,7 +119,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-infra:
    commands: ["sh", "-c", "make regression-infra"]
-   owners: ["email:sw-managers@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:

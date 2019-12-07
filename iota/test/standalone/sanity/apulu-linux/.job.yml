@@ -12,7 +12,7 @@ e2e-targets:
  e2e-linux-bm:
    commands: ["sh", "-c", "make apulu-linux"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-   owners: ["email:sw-team@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
