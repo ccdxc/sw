@@ -1718,7 +1718,7 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 		gomega.SetDefaultEventuallyTimeout(time.Minute * 30)
 		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
 	} else {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 3)
+		gomega.SetDefaultEventuallyTimeout(time.Minute * 6)
 		gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
 	}
 

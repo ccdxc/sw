@@ -383,7 +383,7 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 		AssertEventually(c, func() (bool, interface{}) {
 			_, nerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "test-sgpolicy"})
 			return (nerr != nil), nil
-		}, "NetworkSecurityPolicy still found on agent", "100ms", it.pollTimeout())
+		}, "NetworkSecurityPolicy still found on agent", "100ms", "60s")
 	}
 }
 
