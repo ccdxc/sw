@@ -14,8 +14,8 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
-#include "nic/apollo/test/utils/nexthop.hpp"
-#include "nic/apollo/test/utils/nexthop_group.hpp"
+#include "nic/apollo/test/api/utils/nexthop.hpp"
+#include "nic/apollo/test/api/utils/nexthop_group.hpp"
 
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"

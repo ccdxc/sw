@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+
 #ifndef __UNDERLAY_ECMP_IPS_FEEDER_HPP__
 #define __UNDERLAY_ECMP_IPS_FEEDER_HPP__
 
@@ -8,7 +9,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include <hals_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include <nbase.h>
 
 namespace pdsa_test {

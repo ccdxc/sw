@@ -7,7 +7,7 @@
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/base/base.hpp"
 
 namespace pdsa_test {
 

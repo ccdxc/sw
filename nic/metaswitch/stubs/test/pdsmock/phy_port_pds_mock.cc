@@ -7,7 +7,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/apollo/test/utils/if.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include <cstdlib>
 #include <cstdio>
 
@@ -23,7 +23,7 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
                                                 batch_spec_t& pds_batch) 
 {
     auto op = (op_create_)?API_OP_CREATE : API_OP_UPDATE;
-    api_test::if_feeder if_feeder;
+    test::api::if_feeder if_feeder;
     pds_if_spec_t spec = {0};
     spec.key.id = IFINDEX(IF_TYPE_L3, 1,input.phy_port,0);
    // spec.key.id = IFINDEX(IF_TYPE_L3, 1,1,0);

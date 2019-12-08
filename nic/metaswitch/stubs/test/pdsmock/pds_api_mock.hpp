@@ -4,25 +4,25 @@
 #ifndef __PDS_API_MOCK_HPP__
 #define __PDS_API_MOCK_HPP__
 
-#include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/nexthop.hpp"
-#include "nic/apollo/test/utils/nexthop_group.hpp"
-#include "nic/apollo/test/utils/policy.hpp"
-#include "nic/apollo/test/utils/route.hpp"
-#include "nic/apollo/test/utils/subnet.hpp"
-#include "nic/apollo/test/utils/svc_mapping.hpp"
-#include "nic/apollo/test/utils/tag.hpp"
-#include "nic/apollo/test/utils/tep.hpp"
-#include "nic/apollo/test/utils/vnic.hpp"
-#include "nic/apollo/test/utils/vpc.hpp"
-#include "nic/apollo/test/utils/vpc_peer.hpp"
+#include "nic/apollo/test/api/utils/device.hpp"
+#include "nic/apollo/test/api/utils/nexthop.hpp"
+#include "nic/apollo/test/api/utils/nexthop_group.hpp"
+#include "nic/apollo/test/api/utils/policy.hpp"
+#include "nic/apollo/test/api/utils/route.hpp"
+#include "nic/apollo/test/api/utils/subnet.hpp"
+#include "nic/apollo/test/api/utils/svc_mapping.hpp"
+#include "nic/apollo/test/api/utils/tag.hpp"
+#include "nic/apollo/test/api/utils/tep.hpp"
+#include "nic/apollo/test/api/utils/vnic.hpp"
+#include "nic/apollo/test/api/utils/vpc.hpp"
+#include "nic/apollo/test/api/utils/vpc_peer.hpp"
 #include "nic/apollo/framework/api.h"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 
 namespace pdsa_test {
 
 struct spec_t {
-    obj_id_t               obj_id; 
+    obj_id_t               obj_id;
     api_op_t               op;
     bool                   mock_fail = false;
     union {

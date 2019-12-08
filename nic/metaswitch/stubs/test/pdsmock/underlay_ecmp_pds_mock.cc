@@ -8,7 +8,6 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/apollo/test/utils/if.hpp"
 #include <cstdlib>
 #include <cstdio>
 
@@ -24,7 +23,7 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
 {
     auto op = (op_create_) ? API_OP_CREATE : API_OP_UPDATE;
 
-    api_test::nexthop_group_feeder nhgroup_feeder;
+    test::api::nexthop_group_feeder nhgroup_feeder;
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
                         input.pathset_id,    // ID
                         PDS_MAX_NEXTHOP_GROUP,

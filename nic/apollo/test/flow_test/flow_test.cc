@@ -9,7 +9,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/base/base.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"

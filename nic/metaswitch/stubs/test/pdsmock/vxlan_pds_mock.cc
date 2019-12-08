@@ -20,7 +20,7 @@ void vxlan_pds_mock_t::generate_addupd_specs(const vxlan_input_params_t& input,
                                              batch_spec_t& pds_batch) 
 {
     auto op = (op_create_)?API_OP_CREATE : API_OP_UPDATE;
-    api_test::tep_feeder tep_feeder;
+    test::api::tep_feeder tep_feeder;
     tep_feeder.init (input.tnl_ifindex,
                      0x0,  // No DMAC for now
                      ipaddr2str (&input.dest_ip),
@@ -34,7 +34,7 @@ void vxlan_pds_mock_t::generate_addupd_specs(const vxlan_input_params_t& input,
     auto& tep_spec = pds_batch.back().tep;
     tep_spec = tep_feeder.spec; 
 
-    api_test::nexthop_group_feeder nhgroup_feeder;
+    test::api::nexthop_group_feeder nhgroup_feeder;
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP,
                         input.tnl_ifindex,    // ID
                         PDS_MAX_NEXTHOP_GROUP,

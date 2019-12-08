@@ -19,7 +19,7 @@ pds_tep_mock_validate (const spec_t&  expected_pds,
         }
         return true;;
     }
-    api_test::tep_feeder feeder;
+    test::api::tep_feeder feeder;
     feeder.spec = expected_pds.tep; 
     if (!feeder.spec_compare (&rcvd_pds.tep)) {
         std::cout << "TEP compare failed" << std::endl;
@@ -43,7 +43,7 @@ pds_nhgroup_mock_validate (const spec_t&  expected_pds,
         }
         return true;;
     }
-    api_test::nexthop_group_feeder feeder;
+    test::api::nexthop_group_feeder feeder;
     feeder.spec = expected_pds.nhgroup;
     if (!feeder.spec_compare (&rcvd_pds.nhgroup)) {
         std::cout << "NH Group compare failed" << std::endl;
@@ -67,7 +67,7 @@ pds_if_mock_validate (const spec_t&  expected_pds,
         }
         return true;;
     }
-    api_test::if_feeder feeder;
+    test::api::if_feeder feeder;
     feeder.spec_feeder = expected_pds.intf; 
     if (!feeder.spec_compare (&rcvd_pds.intf)) {
         std::cout << "IF compare failed" << std::endl;

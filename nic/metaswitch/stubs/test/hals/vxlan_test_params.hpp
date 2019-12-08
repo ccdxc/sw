@@ -18,8 +18,8 @@ public:
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 
    virtual void init(const char *sip, const char* dip) {
-       api_test::extract_ip_addr (sip, &source_ip);
-       api_test::extract_ip_addr (dip, &dest_ip);
+       test::extract_ip_addr (sip, &source_ip);
+       test::extract_ip_addr (dip, &dest_ip);
    }
    void next(void) override {}; 
    virtual ~vxlan_input_params_t(void) {};

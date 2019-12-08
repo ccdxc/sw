@@ -16,7 +16,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
-#include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/base/base.hpp"
 
 #define TESTAPP_METER_NUM_PREFIXES                         16
 #define TESTAPP_SWITCH_VNIC_VLAN                           128

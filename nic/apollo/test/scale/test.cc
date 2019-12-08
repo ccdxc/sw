@@ -8,7 +8,6 @@
 #include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/api.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"

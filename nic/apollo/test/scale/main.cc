@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/pkt.hpp"
-#include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/base/base.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
@@ -21,23 +21,19 @@
 /// This test validates the hardware by configuring maximum objects supported.
 /// @{
 
-char *g_input_cfg_file = NULL;   ///< Test Config file
-char *g_cfg_file = NULL;         ///< HAL config file
-bool g_daemon_mode = false;      ///< Daemon mode
-string g_profile;                ///< Profile file
+char *g_input_cfg_file = NULL;   // test Config file
+char *g_cfg_file = NULL;         // hal config file
+bool g_daemon_mode = false;      // daemon mode
+string g_profile;                // profile file
 
-/// \brief scale test base class
+// scale test base class
 class scale_test : public pds_test_base {
 protected:
     scale_test() {}
     virtual ~scale_test() {}
-    /** called immediately after the constructor before each test */
     virtual void SetUp() {}
-    /** called immediately after each test before the destructor */
     virtual void TearDown() {}
-    /** called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
-        /* call base class function */
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         test_case_params_t params;
         params.cfg_file = g_cfg_file;
@@ -45,7 +41,6 @@ protected:
         params.profile = g_profile;
         pds_test_base::SetUpTestCase(params);
     }
-    /** called at the end of all test cases in this class */
     static void TearDownTestCase() {
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         pds_test_base::TearDownTestCase();

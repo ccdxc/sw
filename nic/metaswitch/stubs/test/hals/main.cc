@@ -24,7 +24,6 @@ extern "C"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/apollo/test/utils/base.hpp"
 #include <iostream>
 #include <fstream>
 
