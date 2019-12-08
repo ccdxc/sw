@@ -264,6 +264,21 @@ class EntityManagement:
         self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
         self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
 
+    def IpmiResetAndWait(self):
+        print('calling IpmiResetAndWait')
+        os.system("date")
+        IpmiReset()
+        print("sleeping 120 seconds after IpmiReset")
+        time.sleep(120)
+        print("finished 120 second sleep. Looking for prompt now...")
+        midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
+                               hdl = self.hdl, timeout = 120)
+        if midx == 0: return
+        # Got capri login prompt, send username/password.
+        self.SendlineExpect(GlobalOptions.username, "Password:")
+        ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+        if ret == 1: self.SendlineExpect("", "#")
+
     def SendlineExpect(self, line, expect, hdl = None,
                        timeout = GlobalOptions.timeout):
         os.system("date")
@@ -392,21 +407,6 @@ class NaplesManagement(EntityManagement):
         except:
             #Send Ctrl-c as we did not get IP
             self.SendlineExpect('\003', "#")
-
-    def IpmiResetAndWait(self):
-        print('calling IpmiResetAndWait')
-        os.system("date")
-        IpmiReset()
-        print("sleeping 120 seconds after IpmiReset")
-        time.sleep(120)
-        print("finished 120 second sleep. Looking for prompt now...")
-        midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                               hdl = self.hdl, timeout = 120)
-        if midx == 0: return
-        # Got capri login prompt, send username/password.
-        self.SendlineExpect(GlobalOptions.username, "Password:")
-        ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
-        if ret == 1: self.SendlineExpect("", "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
     def __login(self):
