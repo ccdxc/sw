@@ -159,6 +159,7 @@ nic/build/x86_64/iris/bin/cap_model                              /nic/bin/
 nic/build/x86_64/iris/bin/nic_infra_hntap                        /nic/bin/
 nic/build/x86_64/iris/bin/netagent                               /nic/bin/
 nic/build/x86_64/iris/bin/nmd                                    /nic/bin/
+nic/build/x86_64/iris/bin/ntsa                                   /nic/bin/
 nic/build/x86_64/iris/bin/tmagent                                /nic/bin/
 nic/build/x86_64/iris/bin/nevtsproxy                             /nic/bin/
 nic/build/x86_64/iris/bin/shmdump                                /nic/bin/

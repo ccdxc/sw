@@ -528,9 +528,9 @@ func (n *NMD) AdmitNaples() {
 				n.config.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
 			} else {
 				if 2*n.nicRegInterval <= 16 {
-					n.nicRegInterval = 2 * n.nicRegInterval
+					n.nicRegInterval = 2 * n.nicRegInterval * time.Second
 				} else {
-					n.nicRegInterval = globals.NicRegIntvl
+					n.nicRegInterval = globals.NicRegIntvl * time.Second
 
 					if len(n.config.Status.Controllers) == 0 {
 						log.Error("Controllers not passed or cleared. Exiting admission.")
