@@ -17,7 +17,7 @@ import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
 import { IClusterDistributedServiceCard, ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode,
-         ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+         ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition_type } from '@sdk/v1/models/generated/cluster';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
@@ -224,6 +224,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           { label: 'Unhealthy', value: NaplesConditionValues.UNHEALTHY },
           { label: 'Unknown', value: NaplesConditionValues.UNKNOWN },
           { label: 'Empty', value: NaplesConditionValues.EMPTY },
+          { label: 'Reboot Needed', value: NaplesConditionValues.REBOOT_NEEDED }
         ],
       }
     ];
@@ -295,6 +296,31 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
   }
 
+  getNapleCardStatusTooltip(conditionType: string): string {
+    if (conditionType === ClusterDSCCondition_type.healthy) {
+      return 'Healthy';
+    }
+    if (conditionType === ClusterDSCCondition_type.nic_health_unknown) {
+      return 'Health Unknown';
+    }
+    if (conditionType === ClusterDSCCondition_type.reboot_needed) {
+      return 'Reboot Needed';
+    }
+    return '';
+  }
+
+  getNapleCardStatusIcon(conditionType: string): string {
+    if (conditionType === ClusterDSCCondition_type.healthy) {
+      return 'verified_user';
+    }
+    if (conditionType === ClusterDSCCondition_type.nic_health_unknown) {
+      return 'battery_unknown';
+    }
+    if (conditionType === ClusterDSCCondition_type.reboot_needed) {
+      return 'settings_power';
+    }
+    return '';
+  }
 
   displayCondition(data: ClusterDistributedServiceCard): string {
     return Utility.getNaplesCondition(data);

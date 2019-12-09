@@ -52,6 +52,9 @@ describe('NaplesComponent', () => {
       'ip-config': {
         'ip-address': '0.0.0.0/0'
       },
+      'conditions': [
+        {'type': 'healthy', 'status': 'true', 'last-transition-time': '2019-12-05T21:36:31Z'}
+      ],
       'primary-mac': '00ae.cd00.1142',
       'admission-phase': 'pending',
       'DSCVersion': '1.0E',
@@ -76,6 +79,9 @@ describe('NaplesComponent', () => {
       'ip-config': {
         'ip-address': '0.0.0.10'
       },
+      'conditions': [
+        {'type': 'nic_health_unknown', 'status': 'true', 'last-transition-time': '2019-12-05T21:36:31Z'}
+      ],
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'admitted',
       'DSCVersion': '1.0E',
@@ -100,6 +106,10 @@ describe('NaplesComponent', () => {
       'ip-config': {
         'ip-address': '0.0.0.10'
       },
+      'conditions': [
+        {'type': 'healthy', 'status': 'true', 'last-transition-time': '2019-12-05T21:36:31Z'},
+        {'type': 'reboot_needed', 'status': 'true', 'last-transition-time': '2019-12-05T21:36:31Z'}
+      ],
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'rejected',
       'DSCVersion': '1.0E',
@@ -170,6 +180,14 @@ describe('NaplesComponent', () => {
           );
         } else {
           expect(fieldElem.nativeElement.textContent.length).toEqual(0);
+        }
+      },
+      'status.conditions': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+        expect(rowData.status.conditions.length).toBeGreaterThanOrEqual(0);
+        if (rowData.status.conditions.length > 0) {
+          expect(fieldElem.nativeElement.textContent).toContain(
+            component.getNapleCardStatusIcon(rowData.status.conditions[0].type)
+          );
         }
       }
     }, '', true);

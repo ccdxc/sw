@@ -8,6 +8,7 @@ export enum NaplesConditionValues {
     UNHEALTHY = 'unhealthy',
     UNKNOWN = 'unknown',
     EMPTY = '',
+    REBOOT_NEEDED = 'reboot_needed',
 }
 
 export enum NodeConditionValues {

@@ -107,7 +107,11 @@
       <ng-container *ngSwitchCase="'status.conditions'">
         <div
              [matTooltip]="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData) ? displayReasons(rowData) : ''">
-          {{displayCondition(rowData)}}
+          <mat-icon *ngFor="let condition of rowData.status.conditions" class="naples-status-icon"
+                    fxFlex="nogrow" [inline]="true"
+                    [matTooltip]="getNapleCardStatusTooltip(condition.type)">
+            {{getNapleCardStatusIcon(condition.type)}}
+          </mat-icon>
           <mat-icon *ngIf="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData)" fxFlex="nogrow"
                     [inline]="true"
                     class="global-alert-critical-icon naples-bad-indicator-icon ">error
