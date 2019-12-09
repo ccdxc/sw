@@ -160,6 +160,69 @@ testcases:
             command  : ['ib_send_bw']
             check_bw : [ 'yes' ]
 
+    -   name    : Rc_Fml_1KQP_port_flap
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [16384]
+            duration : [200]
+            numsges  : [8]
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            port_flap: ['true']
+
+    -   name    : RC_TCPCM_4KQPs_Send_BiDir_Port_Flap
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            duration : [200]
+            rxdepth  : [10]
+            txdepth  : [10]
+            size     : [65536]
+            numsges  : [8]
+            command  : ['ib_send_bw']
+            port_flap: ['true']
+
+    -   name    : RC_TCPCM_4KQPs_Read_BiDir_Port_Flap
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            duration : [200]
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [65536]
+            numsges  : [8]
+            command  : ['ib_read_bw']
+            port_flap: ['true']
+
+    -   name    : RC_TCPCM_4KQPs_Write_BiDir_Port_Flap
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            duration : [200]
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [65536]
+            numsges  : [8]
+            command  : ['ib_write_bw']
+            port_flap: ['true']
+
     #=======================================
     # Teardown
     #=======================================

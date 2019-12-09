@@ -121,6 +121,7 @@ def Trigger(tc):
     sq_drain_opt  = ''
     async_event_stats_opt = ''
     bw_opt        = ''
+    port_flap     = False
 
     #==============================================================
     # update non-default cmd options
@@ -189,6 +190,10 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'check_bw') and \
        tc.iterators.check_bw == 'yes' and num_qp == 1:
         bw_opt = ' -w {bw} '.format(bw = str(bw_dict[numsges, msg_size]))
+
+    if getattr(tc.iterators, 'port_flap', 'false') == 'true' and hasattr(tc.iterators, 'duration'):
+        port_flap = True
+        tc.client_bkg = True
     
     #==============================================================
     # run the cmds
@@ -257,7 +262,45 @@ def Trigger(tc):
                                tc.ib_prefix[client_idx] + cmd,
                                background=tc.client_bkg, timeout=125) #5 secs more than def test timeout=120
 
-    if tc.client_bkg:
+
+    #Do the port flap only for duration tests
+    if hasattr(tc.iterators, 'duration') and port_flap == True:
+        num_flaps = int(getattr(tc.iterators, 'duration')) // 20
+        num_flaps = num_flaps - 2 #Reduce the number of flaps so that we don't flap during connection close
+        
+        export_path_cmd = "export PATH=$PATH:/platform/bin:/nic/bin:/platform/tools:/nic/tools"
+        export_ld_path_cmd = "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib:/nic/lib"
+        port_down_cmd = "/nic/bin/halctl debug port --port 1  --admin-state down"
+        port_up_cmd = "/nic/bin/halctl debug port --port 1  --admin-state up"
+
+        #Sleep for 10 to make sure that we dont flap during connection create
+        cmd = 'sleep 10'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd, timeout = 20)
+
+        for i in range(num_flaps):
+            api.Trigger_AddNaplesCommand(req, w1.node_name, export_path_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, export_path_cmd)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, export_ld_path_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, export_ld_path_cmd)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, port_down_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, port_down_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, "sleep 1")
+            api.Trigger_AddNaplesCommand(req, w1.node_name, port_up_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, port_up_cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, "sleep 20")
+
+        #Sleep to let the tests complete before Terminating
+        cmd = 'sleep 30'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd, timeout = 40)
+
+
+    if tc.client_bkg and port_flap == False:
         # since the client is running in the background, sleep for 30 secs
         # to allow the test to complete before verifying the result
         # override default timeout to 35, slightly above the sleep duration 30 secs
