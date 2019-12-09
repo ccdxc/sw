@@ -1461,10 +1461,36 @@ func (sm *SysModel) CollectLogs() error {
 		return nil
 	}
 
+	// walk all venice nodes
+	trig := sm.tb.NewTrigger()
+	for _, node := range sm.tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			entity := node.NodeName + "_venice"
+			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s", entity), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("journalctl -a > /var/log/pensando/iotajournalctl"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("uptime > /var/log/pensando/uptime"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf  /pensando/iota/entities/%s/%s.tar /var/log/pensando/* /var/log/dmesg* /etc/pensando/ /var/lib/pensando/pki/ /var/lib/pensando/events/", entity, entity), entity, node.NodeName)
+		}
+	}
+
+	// trigger commands
+	_, err = trig.Run()
+	if err != nil {
+		log.Errorf("Failed to setup venice node. Err: %v", err)
+		return fmt.Errorf("Error triggering commands on venice nodes: %v", err)
+	}
+
+	for _, node := range sm.tb.Nodes {
+		switch node.Personality {
+		case iota.PersonalityType_PERSONALITY_VENICE:
+			sm.tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
+		}
+	}
+
 	// get token ao authenticate to agent
 	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
 	// get token ao authenticate to agent
-	trig := sm.tb.NewTrigger()
+	trig = sm.tb.NewTrigger()
 	if err == nil {
 		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
 		defer cancel()
