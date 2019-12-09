@@ -2,21 +2,40 @@
 
 .helpoverlay {
   @include primary-font(14px);
-  height: 100%;
-  width: 100%;
+  background-color: white;
+  height: 400px;
+  width: 400px;
+  max-height: calc(100vh - 200px);
+  max-width: calc(100vw - 60px);
+  min-height: 200px;
+  min-width: 220px;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+  resize: both;
+  overflow: auto;
 }
 
 .helpoverlay-header {
   background-color: #19191a;
   @include primary-font(24px, #ffffff);
+  height: 40px;
   padding: 0px 10px;
+  pointer-events: auto;
+}
+
+.helpoverlay-header.cdk-drag-handle {
+  cursor: move;
+}
+
+.helpoverlay-content-wrapper {
+  height: calc(100% - 40px);
+  overflow: visible;
 }
 
 .helpoverlay-content {
-  background-color: white;
-  padding: 15px;
-  overflow: scroll;
+  height: 100%;
+  width: calc(100% - 10px);
+  overflow: auto;
+  padding: 15px 5px 15px 15px;
 
   img {
     max-width: 100% !important;

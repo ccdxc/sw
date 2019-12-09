@@ -3,8 +3,8 @@
 </button>
 
 <ng-template cdkPortal #HelpShell="cdkPortal">
-  <div class="helpoverlay" fxFlex fxLayout="column" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
-    <div fxFlex="40px" fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header"
+  <div class="helpoverlay" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+    <div fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header"
          cdkDragHandle>
       <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="backClick()"
                 [ngClass]="isBackButtonDisabled() ? 'global-button-disabled' : ''">chevron_left
@@ -16,8 +16,10 @@
       <div fxFlex></div>
       <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
     </div>
-    <div fxFlex class="helpoverlay-content">
-      <ng-template [cdkPortalOutlet]="helpPortal"></ng-template>
+    <div class="helpoverlay-content-wrapper">
+      <div class="helpoverlay-content">
+        <ng-template [cdkPortalOutlet]="helpPortal"></ng-template>
+      </div>
     </div>
   </div>
 </ng-template>

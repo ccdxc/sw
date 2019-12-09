@@ -84,9 +84,7 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     this.helpOverlayRef = this.overlay.create({
-      height: '400px',
-      width: '400px',
-      positionStrategy: new GlobalPositionStrategy().right('30px').top('100px'),
+      positionStrategy: new GlobalPositionStrategy().left('calc(100vw - 430px)').top('100px'),
       panelClass: 'appcontent-help-panel'
     });
     this.setHelpContent();
