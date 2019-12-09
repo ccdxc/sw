@@ -621,8 +621,13 @@ func TestSgCreateDeleteWithAgent(t *testing.T) {
 		return true, nil
 	}, "Sg not found", "1ms", "1s")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 1, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 1 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Expected 1, got %v security groups", len(ag.securityGroups))
+	}, fmt.Sprintf("did not receive expected number of security groups from agent. Expected 1, got [%v]. Agent - %v", len(ag.securityGroups), ag), "100ms", "5s")
 
 	// delete the security group
 	err = stateMgr.ctrler.SecurityGroup().Delete(sg)
@@ -637,8 +642,13 @@ func TestSgCreateDeleteWithAgent(t *testing.T) {
 		return false, nil
 	}, "Sg still found", "1ms", "1s")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
 }
 
 func TestAggWatchWithSg(t *testing.T) {
@@ -676,8 +686,13 @@ func TestAggWatchWithSg(t *testing.T) {
 		return true, nil
 	}, "Sg not found", "1ms", "1s")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 1, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 1 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("security groups not received by agent")
+	}, fmt.Sprintf("Expected 1 security group, received %v. Agent : %v", len(ag.securityGroups), ag), "100ms", "5s")
 
 	// delete the security group
 	err = stateMgr.ctrler.SecurityGroup().Delete(sg)
@@ -692,8 +707,13 @@ func TestAggWatchWithSg(t *testing.T) {
 		return false, nil
 	}, "Sg still found", "1ms", "1s")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("security group not deleted")
+	}, fmt.Sprintf("Security groups not deleted. Found %v sgs. Agent : %v", len(ag.securityGroups), ag), "100ms", "5s")
 }
 
 func TestAggWatchWithSgList(t *testing.T) {
@@ -723,15 +743,24 @@ func TestAggWatchWithSgList(t *testing.T) {
 
 	go ag.client.WatchAggregate(context.Background(), []string{"SecurityGroup"}, ag)
 
-	time.Sleep(100 * time.Millisecond)
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 3 {
+			return true, nil
+		}
 
-	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
+		return false, fmt.Errorf("did not receive the expected security groups")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityGroups), ag), "100ms", "5s")
 
 	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("security groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted. Found %v sgs. Agent : %v", len(ag.securityGroups), ag), "100ms", "5s")
 }
 
 func TestAggWatchWithSgAndPoliciesList(t *testing.T) {
@@ -767,17 +796,42 @@ func TestAggWatchWithSgAndPoliciesList(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	Assert(t, len(ag.securityGroups) == 3, "received sg group by agent")
-	Assert(t, len(ag.securityPolicies) == 3, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("did not receive the expected security groups")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityGroups), ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("did not receive the expected security policies")
+	}, fmt.Sprintf("Security policies not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
 
 	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(300 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Policies not deleted")
+	}, fmt.Sprintf("Security policies not deleted for agent. %v", ag), "100ms", "5s")
 }
 
 func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
@@ -810,26 +864,47 @@ func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 
 	go ag.client.WatchAggregate(context.Background(), []string{"SecurityGroup"}, ag)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("did not receive the expected security groups")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityGroups), ag), "100ms", "5s")
+	time.Sleep(100 * time.Millisecond)
+	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
+
 	go ag.client.WatchAggregate(context.Background(), []string{"NetworkSecurityPolicy"}, ag)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ag.securityGroups) != 3 {
-			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityGroups), ag)
+		if len(ag.securityPolicies) == 3 {
+			return true, nil
 		}
-		if len(ag.securityPolicies) != 3 {
-			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityPolicies), ag)
-		}
-		return true, nil
-	}, fmt.Sprintf("Expected number of security groups or policies not found. %v", ag), "100ms", "1s")
+
+		return false, fmt.Errorf("did not receive the expected security policies")
+	}, fmt.Sprintf("Security policies not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
 
 	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
 	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("security policies not deleted")
+	}, fmt.Sprintf("Security policies not delted from Agent - %v", ag), "100ms", "5s")
 }
 
 func TestAggWatchWithSgAndUpdatePoliciesList(t *testing.T) {
@@ -944,14 +1019,20 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 	go ag.client.WatchAggregate(cancelCtx, []string{"SecurityGroup", "NetworkSecurityPolicy"}, ag)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ag.securityGroups) != 3 {
-			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityGroups), ag)
+		if len(ag.securityGroups) == 3 {
+			return true, nil
 		}
-		if len(ag.securityPolicies) != 3 {
-			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityPolicies), ag)
+
+		return false, fmt.Errorf("did not receive the expected security groups")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityGroups), ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 3 {
+			return true, nil
 		}
-		return true, nil
-	}, fmt.Sprintf("Expected number of security groups or policies not found. %v", ag), "100ms", "1s")
+
+		return false, fmt.Errorf("did not receive the expected security policies")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
 
 	time.Sleep(2 * time.Second)
 	err = propogationCompleteForPolicies(stateMgr, 0, 3)
@@ -990,9 +1071,21 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 	err = deletePolicies(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security policies not deleted")
+	}, fmt.Sprintf("Security policies not deleted for agent. %v", ag), "100ms", "5s")
 
 	synced = stateMgr.topics.AggregateTopic.WatcherInConfigSync(snic.Status.PrimaryMAC, "NetworkSecurityPolicy",
 		api.EventType_DeleteEvent)
@@ -1045,7 +1138,7 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 10, len(ag.apps), ag)
 		}
 		return true, nil
-	}, fmt.Sprintf("Expected number of security groups or policies or apps not found. %v", ag), "100ms", "1s")
+	}, fmt.Sprintf("Expected number of security groups or policies or apps not found. %v", ag), "100ms", "5s")
 
 	err = deleteSGs(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error creating security policies")
@@ -1055,10 +1148,29 @@ func TestAggWatchWithAppAndPolicyDep(t *testing.T) {
 	err = deleteApps(t, stateMgr, 0, 10)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "sg policy not deleted")
-	Assert(t, len(ag.apps) == 0, "apps not deleted")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security policies not deleted")
+	}, fmt.Sprintf("Security policies not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.apps) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Apps not deleted")
+	}, fmt.Sprintf("Apps not deleted for agent. %v", ag), "100ms", "5s")
 
 	synced := stateMgr.topics.AggregateTopic.WatcherInConfigSync(snic.Status.PrimaryMAC, "App",
 		api.EventType_CreateEvent)
@@ -1091,9 +1203,13 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 
 	go ag.client.WatchAggregate(context.Background(), []string{"App", "SecurityGroup", "NetworkSecurityPolicy"}, ag)
 
-	time.Sleep(100 * time.Millisecond)
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
 
-	Assert(t, len(ag.securityGroups) == 0, "received sg group by agent")
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
 	Assert(t, len(ag.apps) == 0, "received apps group by agent")
 	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 
@@ -1103,6 +1219,18 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	apps := generateApps(0, 3)
 	err = createPoliciesWithApps(t, stateMgr, 0, 3, apps)
 	AssertOk(t, err, "Error creating security policies")
+
+	time.Sleep(100 * time.Millisecond)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("did not receive the expected security groups")
+	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityGroups), ag), "100ms", "5s")
+	Assert(t, len(ag.apps) == 0, "received apps group by agent")
+	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
 
 	err = createApps(t, stateMgr, apps)
 	AssertOk(t, err, "Error creating Apps")
@@ -1126,18 +1254,54 @@ func TestAggWatchWithAppAndPolicyDepOutOfOrder(t *testing.T) {
 	err = deleteApps(t, stateMgr, 0, 3)
 	AssertOk(t, err, "Error deleting security policies")
 
-	time.Sleep(100 * time.Millisecond)
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
 
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.apps) == 0, "apps not deleted")
-	Assert(t, len(ag.securityPolicies) == 3, "sgpolicy not deleted")
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.apps) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Apps not not received")
+	}, fmt.Sprintf("Apps not received by agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 3 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security policies not received by agent")
+	}, fmt.Sprintf("Security policies not received by the agent. %v", ag), "100ms", "5s")
 
 	err = deletePolicies(t, stateMgr, 0, 3)
-
 	AssertOk(t, err, "Error deleting security policies")
-	time.Sleep(100 * time.Millisecond)
 
-	Assert(t, len(ag.securityGroups) == 0, "sg not deleted")
-	Assert(t, len(ag.securityPolicies) == 0, "received sg group by agent")
-	Assert(t, len(ag.apps) == 0, "App not deleted")
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityGroups) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security Groups not deleted")
+	}, fmt.Sprintf("Security groups not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.securityPolicies) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Security policies not deleted")
+	}, fmt.Sprintf("Security policies not deleted for agent. %v", ag), "100ms", "5s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(ag.apps) == 0 {
+			return true, nil
+		}
+
+		return false, fmt.Errorf("Apps not deleted")
+	}, fmt.Sprintf("Apps not deleted for agent. %v", ag), "100ms", "5s")
 }
