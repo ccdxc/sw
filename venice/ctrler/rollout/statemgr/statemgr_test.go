@@ -661,6 +661,36 @@ func TestSNICOrder(t *testing.T) {
 	// create recorder
 	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
 
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                   "1.0",
+			ScheduledStartTime:        nil,
+			ScheduledEndTime:          nil,
+			Strategy:                  "",
+			MaxParallel:               3,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  true,
+			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
+		},
+	}
+	ros := RolloutState{
+		Rollout:             &ro,
+		Statemgr:            nil,
+		eventChan:           nil,
+		stopChan:            make(chan bool),
+		fsm:                 nil,
+		restart:             false,
+		veniceRolloutFailed: false,
+	}
 	// create  state manager
 	stateMgr, err := NewStatemgr(&dummyWriter{}, evtsRecorder)
 
@@ -675,7 +705,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err := stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn := orderSmartNICs(nil, false, snStates, "1.0")
+	sn := orderSmartNICs(nil, false, snStates, &ros)
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 2, "first bucket should have 2 naples")
 	Assert(t, sn[0][0].Name != sn[0][1].Name, "names of naples should be different")
@@ -686,12 +716,12 @@ func TestSNICOrder(t *testing.T) {
 	AssertOk(t, err, "Error parsing label")
 
 	// match only for naples with label n1
-	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates, "1.0")
+	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates, &ros)
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, sn[0][0].Name == "naples1", "expecting naples1")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, "1.0")
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
@@ -702,7 +732,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, "1.0")
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 2, "second bucket should have 2 naples")
@@ -711,7 +741,7 @@ func TestSNICOrder(t *testing.T) {
 	createSNIC("naples4", map[string]string{"l": "n3"})
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
-	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates, "1.0")
+	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates, &ros)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 3, "first bucket should have 3 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")

@@ -49,9 +49,18 @@ func isPrecheckInProgress(op protos.DSCOp) bool {
 	return false
 }
 
+func checkComplete(dscName string, ros *RolloutState) bool {
+	for _, dscStatus := range ros.Status.DSCsStatus {
+		if dscStatus.Name == dscName && dscStatus.Phase == roproto.RolloutPhase_COMPLETE.String() {
+			return true
+		}
+	}
+	return false
+}
+
 // This function bins the smartNICs based on the user-requested labels and returns the slice of bins
 // Each bin of smartnics are expected to complete in that order
-func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bool, sn []*SmartNICState, version string) [][]*SmartNICState {
+func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bool, sn []*SmartNICState, ros *RolloutState) [][]*SmartNICState {
 	retval := make([][]*SmartNICState, 0)
 	curbin := make([]*SmartNICState, 0)
 
@@ -64,7 +73,12 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		for name, s := range snics {
 			if ls.Matches(labels.Set(s.ObjectMeta.Labels)) {
 				log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
-				if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
+				if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != ros.Spec.Version {
+					numRetries := atomic.LoadUint32(&ros.numRetries)
+					if ros.Spec.UpgradeType == roproto.RolloutSpec_OnNextHostReboot.String() && numRetries > 0 && checkComplete(s.Name, ros) {
+						log.Infof("SKIPDSC: Spec is OnNextReboot && status is complete for dsc %+v", s.Name)
+						continue
+					}
 					curbin = append(curbin, s)
 					delete(snics, name)
 				}
@@ -79,7 +93,12 @@ func orderSmartNICs(labelSels []*labels.Selector, smartNICMustMatchConstraint bo
 		// add the remaining SNICs
 		for _, s := range snics {
 			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
-			if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
+			if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != ros.Spec.Version {
+				numRetries := atomic.LoadUint32(&ros.numRetries)
+				if ros.Spec.UpgradeType == roproto.RolloutSpec_OnNextHostReboot.String() && numRetries > 0 && checkComplete(s.Name, ros) {
+					log.Infof("SKIPDSC: Spec is OnNextReboot && status is complete for dsc %+v", s.Name)
+					continue
+				}
 				curbin = append(curbin, s)
 			}
 		}
@@ -511,7 +530,7 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 		log.Errorf("Error %v listing smartNICs", err)
 		return
 	}
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros.Spec.Version)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros)
 
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
@@ -659,7 +678,7 @@ func (ros *RolloutState) computeProgressDelta() {
 		return
 	}
 
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros.Spec.Version)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros)
 
 	for _, s := range sn {
 		log.Infof("Status %s", spew.Sdump(s))
@@ -696,7 +715,7 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 		return
 	}
 
-	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros.Spec.Version)
+	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros)
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
 		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {

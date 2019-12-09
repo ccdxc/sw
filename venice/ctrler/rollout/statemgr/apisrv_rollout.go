@@ -187,7 +187,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 			log.Errorf("Error %v listing smartNICs", err)
 			return err
 		}
-		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, ros.Spec.Version)
+		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, &ros)
 
 		for _, s := range sn {
 			for _, snicState := range s {
@@ -613,7 +613,10 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 			endTime := api.Timestamp{}
 			endTime.SetTime(time.Now())
 			ros.Status.DSCsStatus[index].EndTime = &endTime
-			ros.Status.DSCsStatus[index].NumberOfRetries++
+			numRetries := atomic.LoadUint32(&ros.numRetries)
+			if numRetries > 0 {
+				ros.Status.DSCsStatus[index].NumberOfRetries++
+			}
 		}
 
 	case roproto.RolloutPhase_PRE_CHECK:

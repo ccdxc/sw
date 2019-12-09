@@ -329,16 +329,17 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 
 		timeInMinutes := numRounds*5 + numVenice*10
 		h.l.Infof("Number of Naples (%d) Number of Rounds (%d) timeInMinutes (%d)", numNaples, numRounds, timeInMinutes)
-		endTime := time.Now()
+		var endTime int64
 
 		if buf.Spec.ScheduledStartTime.Seconds > int64(time.Now().Second()) {
-			fromTime, _ := buf.Spec.ScheduledStartTime.Time()
-			endTime = fromTime.Add(time.Minute * time.Duration(timeInMinutes))
+			schedStartTimeSeconds := buf.Spec.ScheduledStartTime.Seconds
+			endTime = schedStartTimeSeconds + int64(timeInMinutes*60)
 		} else {
-			endTime = time.Now().Add(time.Minute * time.Duration(timeInMinutes))
+			startTimeInSeconds := time.Now().Second()
+			endTime = int64(startTimeInSeconds + int(timeInMinutes*60))
 		}
-
-		if buf.Spec.ScheduledEndTime.Seconds < int64(endTime.Second()) {
+		h.l.Infof("SchedStartTime.Seconds(%+v) EndTime.Second (%+v) SchedEndTime.Seconds(%+v)", buf.Spec.ScheduledStartTime.Seconds, endTime, buf.Spec.ScheduledEndTime.Seconds)
+		if buf.Spec.ScheduledEndTime.Seconds < endTime {
 			errmsg := fmt.Sprintf("Maintenance window duration not enough to perform upgrade. Need atleast %d minutes", timeInMinutes)
 			h.l.WarnLog("msg", errmsg)
 			return nil, false, errors.New(errmsg)
