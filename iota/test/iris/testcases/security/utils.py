@@ -41,9 +41,17 @@ def GetSecurityPolicy(workload=None, node_name=None):
             return None
     return cmd.stdout
 
-def clearNaplesSessions(node_name):
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node_name, "/nic/bin/halctl clear session")
+def clearNaplesSessions(node_name=None):
+    if not node_name:
+        for node_name in  api.GetNaplesHostnames():
+            req = api.Trigger_CreateExecuteCommandsRequest()
+            api.Trigger_AddNaplesCommand(req, node_name,
+                                         "/nic/bin/halctl clear session")
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        api.Trigger_AddNaplesCommand(req, node_name, "/nic/bin/halctl clear session")
+
+    resp = api.Trigger(req)
 
 def GetProtocolDirectory(proto):
     return api.GetTopologyDirectory() + "/gen/{}".format(proto)

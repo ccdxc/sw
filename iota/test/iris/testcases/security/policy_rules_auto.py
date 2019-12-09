@@ -102,7 +102,7 @@ def Trigger(tc):
 
                     tc.scale -= 1
 
-                utils.clearNaplesSessions(w1.node_name)
+            utils.clearNaplesSessions()
 
         for node,db in rule_db_map.items():
             result = utils.compareStats(db, node, tc.iterators.proto)
