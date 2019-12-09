@@ -365,6 +365,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     SDK_ASSERT(hal_cfg);
 
     HAL_TRACE_DEBUG("Starting FTE instance");
+    HAL_TRACE_FLUSH();
     if (hal_cfg->device_cfg.forwarding_mode != hal::HAL_FORWARDING_MODE_CLASSIC) {
         if (hal::is_platform_type_hw() && !getenv("DISABLE_FWLOG")) {
             logger_ = ipc_logger::factory();

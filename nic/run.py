@@ -278,6 +278,23 @@ def run_model(args):
 
 # HAL
 
+def wait_for_hal_and_fte():
+    # Wait until gRPC is listening on port
+    log2 = open(hal_log, "r")
+    loop = 1
+    hal_up = False
+    fte_up = False
+    while loop == 1:
+        for line in log2.readlines():
+            if "listening on" in line:
+                hal_up = True
+            if "Starting FTE instance" in line:
+                fte_up = True
+            if hal_up and fte_up:
+                loop = 0
+    log2.close()
+    return
+
 def wait_for_hal():
     # Wait until gRPC is listening on port
     log2 = open(hal_log, "r")
@@ -288,7 +305,6 @@ def wait_for_hal():
                 loop = 0
     log2.close()
     return
-
 
 def demote():
     if 'SUDO_USER' in os.environ:
@@ -395,7 +411,7 @@ def dump_coverage_data():
 
 # Run sw/platform's model_server
 def run_platform_model_server(args, standalone=False):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
     lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
@@ -420,7 +436,7 @@ def run_platform_model_server(args, standalone=False):
 
 # Run nicmgr gtest
 def run_nicmgr_gtest(args, standalone=False):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = os.path.join(nic_dir, "build/x86_64/iris/out/nicmgr_gtest")
     lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
@@ -447,7 +463,7 @@ def run_nicmgr_gtest(args, standalone=False):
 
 # Run nicmgr
 def run_nicmgr(args, standalone=False):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
     lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["DOL"] = "1"
@@ -498,7 +514,7 @@ def run_nicmgr_platform_model_server(args, standalone=False):
 
 # Run Storage DOL
 def run_storage_dol(port, args):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
     if args.rtl:
         if args.storage_test:
@@ -534,7 +550,7 @@ def run_storage_dol(port, args):
 
 # Run FIPS hal_test
 def run_hal_test_fips(port, args):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = nic_dir + "/build/x86_64/iris/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
     os.environ["ENGINE_LOG_DIR"] = nic_dir
@@ -551,7 +567,7 @@ def run_hal_test_fips(port, args):
 
 # Run offload test
 def run_offload_test(port, args):
-    wait_for_hal()
+    wait_for_hal_and_fte()
     bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
     os.environ["ENGINE_LOG_DIR"] = nic_dir
@@ -1098,6 +1114,8 @@ def bringup_naples_container(args):
     def wait_for_hal_to_be_up():
         wait_for_line_log(hal_log_file,
          "listening on", timeout=naples_hal_timeout)
+        wait_for_line_log(hal_log_file,
+         "Starting FTE instance", timeout=naples_hal_timeout)
 
     for file in [hal_log_file, naples_sim_log_file, agent_log_file]:
         if os.path.isfile(file):
@@ -1555,8 +1573,9 @@ def main():
         ec = os.system("grep ERROR " + model_log)
         if not ec:
             print "ERRORs found in " + model_log
-            sys.exit(1)
-        print "PASS: No errors found in " + model_log
+            status = 1
+        else:
+            print "PASS: No errors found in " + model_log
     print "Status = %d" % status
     os.system("echo %d > .run.status" % status)
     os.system("/sw/nic/tools/savelogs.sh")
