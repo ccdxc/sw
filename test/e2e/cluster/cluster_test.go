@@ -214,10 +214,12 @@ func validateCluster() {
 	Expect(err).ShouldNot(HaveOccurred())
 	clusterIf := apiClient.ClusterV1().Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
-	cl, err := clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
-
+	var cl *cmd.Cluster
+	Eventually(func() error {
+		cl, err = clusterIf.Get(ts.tu.MustGetLoggedInContext(context.Background()), &obj)
+		return err
+	}, 30, 1).ShouldNot(HaveOccurred())
 	By(fmt.Sprintf("Cluster fields should be ok"))
-	Expect(err).ShouldNot(HaveOccurred())
 	Expect(cl.Kind).Should(Equal("Cluster"))
 	Expect(cl.UUID).ShouldNot(BeEmpty())
 

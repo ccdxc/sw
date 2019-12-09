@@ -123,13 +123,13 @@ func (w *Watcher) initiateWatches(apicl apiclient.Services) {
 func (w *Watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) {
 	defer w.waitGrp.Done()
 
-	b := balancer.New(rslver)
-	grpcOpts := []rpckit.Option{rpckit.WithBalancer(b)}
-	if w.rpcOptions != nil {
-		grpcOpts = append(grpcOpts, w.rpcOptions...)
-	}
 	// loop forever
 	for {
+		b := balancer.New(rslver)
+		grpcOpts := []rpckit.Option{rpckit.WithBalancer(b)}
+		if w.rpcOptions != nil {
+			grpcOpts = append(grpcOpts, w.rpcOptions...)
+		}
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(name, apiSrvURL, w.logger, grpcOpts...)
 		if err != nil {
@@ -140,7 +140,7 @@ func (w *Watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) 
 			w.initiateWatches(apicl)
 			apicl.Close()
 		}
-
+		b.Close()
 		// if stop flag is set, we are done
 		if w.stopped() {
 			w.logger.InfoLog("method", "runWatcher", "msg", "Exiting API server watcher")

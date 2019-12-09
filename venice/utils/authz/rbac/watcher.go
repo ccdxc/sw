@@ -173,9 +173,9 @@ func (w *watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) 
 	// create logger
 	config := log.GetDefaultConfig("AuthzApiWatcher")
 	l := log.GetNewLogger(config)
-	b := balancer.New(rslver)
 	// loop forever
 	for {
+		b := balancer.New(rslver)
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(name, apiSrvURL, l, rpckit.WithBalancer(b))
 		if err != nil {
@@ -186,7 +186,7 @@ func (w *watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) 
 			w.initiateWatches(apicl)
 			apicl.Close()
 		}
-
+		b.Close()
 		// if stop flag is set, we are done
 		if w.stopped() {
 			log.Infof("Exiting API server watcher")

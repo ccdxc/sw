@@ -185,8 +185,10 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 	}, 30, 1).Should(BeTrue(), "Failed to get security groups on netagent")
 
 	// delete the sg policy
-	_, err = stg.suite.restSvc.SecurityV1().SecurityGroup().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
-	Expect(err).ShouldNot(HaveOccurred())
+	Eventually(func() error {
+		_, err = stg.suite.restSvc.SecurityV1().SecurityGroup().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
+		return err
+	}, 30, 1).ShouldNot(HaveOccurred())
 
 	// verify policy is gone from the agents
 	Eventually(func() bool {
