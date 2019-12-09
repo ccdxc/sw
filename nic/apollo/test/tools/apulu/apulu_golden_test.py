@@ -30,7 +30,10 @@ class P4ToARM(Packet):
             ShortField("mapping_xlate_id", 0),
             ShortField("tx_meter_id", 0),
             ShortField("nexthop_id", 0),
-            BitField("pad", 0, 5),
+            ShortField("vpc_id", 0),
+            ShortField("vnic_id", 0),
+            BitField("pad", 0, 4),
+            BitField("mapping_hit", 0, 1),
             BitEnumField("nexthop_type", 0, 2,
                 {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
             BitField("drop", 0, 1) ]
@@ -81,7 +84,8 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
 opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
                flow_hash=0x41f250eb, l2_1_offset=0x11, l3_1_offset=0x23, \
                l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
-               nexthop_id=0x1ef, nexthop_type='Tunnel') / \
+               nexthop_id=0x1ef, nexthop_type='Tunnel', \
+               vpc_id=0x2ec, vnic_id=0x2fe, mapping_hit=1) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \

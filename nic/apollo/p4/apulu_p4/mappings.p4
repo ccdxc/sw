@@ -213,6 +213,7 @@ action mapping_info(entry_valid,
             if (p4e_to_arm.valid == TRUE) {
                 modify_field(p4e_to_arm.nexthop_type, nexthop_type);
                 modify_field(p4e_to_arm.nexthop_id, nexthop_id);
+                modify_field(p4e_to_arm.mapping_hit, TRUE);
             } else {
                 modify_field(rewrite_metadata.nexthop_type, nexthop_type);
                 modify_field(p4e_i2e.nexthop_id, nexthop_id);

@@ -94,7 +94,7 @@ mapping_hit:
     phvwr.!c7.f     p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
     phvwrpair.c7.e  p.p4e_to_arm_nexthop_id, d.mapping_info_d.nexthop_id, \
                         p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
-    nop
+    phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 
 mapping_hash_hit:
     phvwr.e         p.egress_recirc_mapping_ohash, r2
