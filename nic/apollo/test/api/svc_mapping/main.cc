@@ -16,7 +16,7 @@ namespace test {
 namespace api {
 
 //----------------------------------------------------------------------------
-// Svc mapping test class
+// Service mapping test class
 //----------------------------------------------------------------------------
 
 class svc_mapping_test : public ::pds_test_base {
@@ -42,22 +42,35 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// Svc mapping test cases implementation
+// Service mapping test cases implementation
 //----------------------------------------------------------------------------
 
 /// \defgroup SVC_MAPPING_TEST Service Mapping Tests
 /// @{
 
-/// \brief SVC MAPPING WF_1
-/// \ref WF_1
+/// \brief Service mapping WF_B1
+/// \ref WF_B1
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_1) {
-    svc_mapping_feeder feeder;
+    if (!apulu()) return;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 10);
-    workflow_1<svc_mapping_feeder>(feeder);
+    svc_mapping_feeder feeder;
+    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 1);
+    workflow_b1<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_2
+/// \brief Service mapping WF_B2
+/// \ref WF_B2
+TEST_F(svc_mapping_test, svc_mapping_workflow_1) {
+    if (!apulu()) return;
+
+    svc_mapping_feeder feeder1, feeder1A;
+
+    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 1);
+    feeder1A.init("10.1.1.2", 10, 2, "20.1.1.1", 30, "30.1.1.2", 1);
+    workflow_b2<svc_mapping_feeder>(feeder1, feeder1A);
+}
+
+/// \brief Service mapping WF_2
 /// \ref WF_2
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_2) {
     svc_mapping_feeder feeder;
@@ -65,7 +78,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_2) {
     workflow_2<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_3
+/// \brief Service mapping WF_3
 /// \ref WF_3
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_3) {
     svc_mapping_feeder feeder1, feeder2, feeder3;
@@ -73,7 +86,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_3) {
     workflow_3<svc_mapping_feeder>(feeder1, feeder2, feeder3);
 }
 
-/// \brief SVC MAPPING WF_4
+/// \brief Service mapping WF_4
 /// \ref WF_4
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_4) {
     svc_mapping_feeder feeder;
@@ -81,7 +94,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_4) {
     workflow_4<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_5
+/// \brief Service mapping WF_5
 /// \ref WF_5
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_5) {
     svc_mapping_feeder feeder1, feeder2, feeder3;
@@ -89,7 +102,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_5) {
     workflow_5<svc_mapping_feeder>(feeder1, feeder2, feeder3);
 }
 
-/// \brief SVC MAPPING WF_6
+/// \brief Service mapping WF_6
 /// \ref WF_6
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_6) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
@@ -97,7 +110,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_6) {
     workflow_6<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
 
-/// \brief SVC MAPPING WF_7
+/// \brief Service mapping WF_7
 /// \ref WF_7
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow7) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
@@ -105,7 +118,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow7) {
     workflow_7<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
 
-/// \brief SVC MAPPING WF_8
+/// \brief Service mapping WF_8
 /// \ref WF_8
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow8) {
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
@@ -113,7 +126,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow8) {
     workflow_8<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
 
-/// \brief SVC MAPPING WF_9
+/// \brief Service mapping WF_9
 /// \ref WF_9
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow9) {
     svc_mapping_feeder feeder1, feeder1A;
@@ -121,7 +134,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow9) {
     workflow_9<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
-/// \brief SVC MAPPING WF_10
+/// \brief Service mapping WF_10
 /// \ref WF_10
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow10) {
     svc_mapping_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
@@ -130,7 +143,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow10) {
                             feeder3, feeder3A, feeder4);
 }
 
-/// \brief SVC MAPPING WF_N_1
+/// \brief Service mapping WF_N_1
 /// \ref WF_N_1
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_1) {
     svc_mapping_feeder feeder;
@@ -138,7 +151,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_1) {
     workflow_neg_1<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_N_2
+/// \brief Service mapping WF_N_2
 /// \ref WF_N_2
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_2) {
     svc_mapping_feeder feeder;
@@ -146,7 +159,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_2) {
     workflow_neg_2<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_N_3
+/// \brief Service mapping WF_N_3
 /// \ref WF_N_3
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_3) {
     svc_mapping_feeder feeder;
@@ -154,7 +167,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_3) {
     workflow_neg_3<svc_mapping_feeder>(feeder);
 }
 
-/// \brief SVC MAPPING WF_N_4
+/// \brief Service mapping WF_N_4
 /// \ref WF_N_4
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_4) {
     svc_mapping_feeder feeder1, feeder2;
@@ -162,7 +175,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_4) {
     workflow_neg_4<svc_mapping_feeder>(feeder1, feeder2);
 }
 
-/// \brief SVC MAPPING WF_N_5
+/// \brief Service mapping WF_N_5
 /// \ref WF_N_5
 TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow_neg_5) {
     svc_mapping_feeder feeder1, feeder1A;
@@ -170,7 +183,7 @@ TEST_F(svc_mapping_test, DISABLED_DISABLED_svc_mapping_workflow_neg_5) {
     workflow_neg_5<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
-/// \brief SVC MAPPING WF_N_6
+/// \brief Service mapping WF_N_6
 /// \ref WF_N_6
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_6) {
     svc_mapping_feeder feeder1, feeder1A;
@@ -178,7 +191,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_6) {
     workflow_neg_6<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
-/// \brief SVC MAPPING WF_N_7
+/// \brief Service mapping WF_N_7
 /// \ref WF_N_7
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_7) {
     svc_mapping_feeder feeder1, feeder1A, feeder2;
@@ -186,7 +199,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_7) {
     workflow_neg_7<svc_mapping_feeder>(feeder1, feeder1A, feeder2);
 }
 
-/// \brief SVC MAPPING WF_N_8
+/// \brief Service mapping WF_N_8
 /// \ref WF_N_8
 TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_8) {
     svc_mapping_feeder feeder1, feeder2;

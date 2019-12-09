@@ -54,7 +54,50 @@ protected:
 /// \defgroup POLICY_TEST Policy Tests
 /// @{
 
-/// \brief POLICY WF_1
+/// \brief Policy WF_B1
+/// \ref WF_B1
+TEST_F(policy, policy_workflow_b1) {
+    if (!apulu()) return;
+
+    pds_policy_key_t key = {.id = 1};
+    policy_feeder feeder;
+
+    // v4 policy
+    feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
+    workflow_b1<policy_feeder>(feeder);
+
+    // v6 policy
+    feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
+    workflow_b1<policy_feeder>(feeder);
+}
+
+/// \brief Policy WF_B2
+/// \ref WF_B2
+// TODO: Fix workflow to take one object at a time.
+TEST_F(policy, DISABLED_policy_workflow_b2) {
+    if (!apulu()) return;
+
+    pds_policy_key_t key = {.id = 1};
+    policy_feeder feeder1, feeder1A;
+
+    // v4 policy
+    feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
+    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_EGRESS,
+                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.0/16", 1);
+    workflow_b2<policy_feeder>(feeder1, feeder1A);
+
+    // v6 policy
+    feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "10001::1/64", 1);
+    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_EGRESS,
+                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "20001::1/64", 1);
+    workflow_b2<policy_feeder>(feeder1, feeder1A);
+}
+
+/// \brief Policy WF_1
 /// \ref WF_1
 TEST_F(policy, policy_workflow_1) {
     pds_policy_key_t key = {.id = 1};
@@ -73,7 +116,7 @@ TEST_F(policy, policy_workflow_1) {
     }
 }
 
-/// \brief POLICY WF_2
+/// \brief Policy WF_2
 /// \ref WF_2
 TEST_F(policy, policy_workflow_2) {
     pds_policy_key_t key = {.id = 1};
@@ -94,7 +137,7 @@ TEST_F(policy, policy_workflow_2) {
     }
 }
 
-/// \brief POLICY WF_3
+/// \brief Policy WF_3
 /// \ref WF_3
 TEST_F(policy, policy_workflow_3) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
@@ -122,7 +165,7 @@ TEST_F(policy, policy_workflow_3) {
     }
 }
 
-/// \brief POLICY WF_4
+/// \brief Policy WF_4
 /// \ref WF_4
 TEST_F(policy, policy_workflow_4) {
     pds_policy_key_t key = {.id = 1};
@@ -139,7 +182,7 @@ TEST_F(policy, policy_workflow_4) {
     }
 }
 
-/// \brief POLICY WF_5
+/// \brief Policy WF_5
 /// \ref WF_5
 TEST_F(policy, policy_workflow_5) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
@@ -164,7 +207,7 @@ TEST_F(policy, policy_workflow_5) {
     }
 }
 
-/// \brief POLICY WF_6
+/// \brief Policy WF_6
 /// \ref WF_6
 TEST_F(policy, policy_workflow_6) {
     pds_policy_key_t key = {.id = 1};
@@ -195,7 +238,7 @@ TEST_F(policy, policy_workflow_6) {
     }
 }
 
-/// \brief POLICY WF_7
+/// \brief Policy WF_7
 /// \ref WF_7
 TEST_F(policy, policy_workflow_7) {
     pds_policy_key_t key = {.id = 1};
@@ -226,7 +269,7 @@ TEST_F(policy, policy_workflow_7) {
     }
 }
 
-/// \brief POLICY WF_8
+/// \brief Policy WF_8
 /// \ref WF_8
 /// NOTE: this test case is incorrect, we can't update more than 1 policy table
 ///       in batch because of N+1 update scheme
@@ -259,7 +302,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
     }
 }
 
-/// \brief POLICY WF_9
+/// \brief Policy WF_9
 /// \ref WF_9
 /// NOTE: this test case is incorrect, we can't update more than 1 policy table
 ///       in batch because of N+1 update scheme
@@ -286,7 +329,7 @@ TEST_F(policy, DISABLED_policy_workflow_9) {
     }
 }
 
-/// \brief POLICY WF_10
+/// \brief Policy WF_10
 /// \ref WF_10
 TEST_F(policy, DISABLED_policy_workflow_10) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
@@ -339,7 +382,7 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
     }
 }
 
-/// \brief POLICY WF_N_1
+/// \brief Policy WF_N_1
 /// \ref WF_N_1
 TEST_F(policy, policy_workflow_neg_1) {
     pds_policy_key_t key = {.id = 1};
@@ -358,7 +401,7 @@ TEST_F(policy, policy_workflow_neg_1) {
     }
 }
 
-/// \brief POLICY WF_N_2
+/// \brief Policy WF_N_2
 /// \ref WF_N_2
 /// \brief Create more than maximum number of policies supported.
 /// [ Create SetMax+1] - Read
@@ -382,7 +425,7 @@ TEST_F(policy, policy_workflow_neg_2) {
     }
 }
 
-/// \brief POLICY WF_N_3
+/// \brief Policy WF_N_3
 /// \ref WF_N_3
 TEST_F(policy, policy_workflow_neg_3) {
     pds_policy_key_t key = {.id = 1};
@@ -401,7 +444,7 @@ TEST_F(policy, policy_workflow_neg_3) {
     }
 }
 
-/// \brief POLICY WF_N_4
+/// \brief Policy WF_N_4
 /// \ref WF_N_4
 TEST_F(policy, policy_workflow_neg_4) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
@@ -425,7 +468,7 @@ TEST_F(policy, policy_workflow_neg_4) {
     }
 }
 
-/// \brief POLICY WF_N_5
+/// \brief Policy WF_N_5
 /// \ref WF_N_5
 TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     pds_policy_key_t key = {.id = 1};
@@ -450,7 +493,7 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     }
 }
 
-/// \brief POLICY WF_N_6
+/// \brief Policy WF_N_6
 /// \ref WF_N_6
 TEST_F(policy, policy_workflow_neg_6) {
     pds_policy_key_t key = {.id = 1};
@@ -475,7 +518,7 @@ TEST_F(policy, policy_workflow_neg_6) {
     }
 }
 
-/// \brief POLICY WF_N_7
+/// \brief Policy WF_N_7
 /// \ref WF_N_7
 TEST_F(policy, policy_workflow_neg_7) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
@@ -506,7 +549,7 @@ TEST_F(policy, policy_workflow_neg_7) {
     }
 }
 
-/// \brief POLICY WF_N_8
+/// \brief Policy WF_N_8
 /// \ref WF_N_8
 TEST_F(policy, policy_workflow_neg_8) {
     pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
@@ -530,10 +573,8 @@ TEST_F(policy, policy_workflow_neg_8) {
     }
 }
 
-/// \brief POLICY WF_N_9
-/// \brief Create a set of policies. Delete the existing set and update a
-/// non-existing set of policies in the next batch.
-/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+/// \brief Policy WF_N_9
+/// \ref WF_N_9
 TEST_F(policy, policy_workflow_neg_9) {
     policy_feeder feeder1, feeder2;
     uint32_t num_policy = 341;

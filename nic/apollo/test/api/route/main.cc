@@ -29,8 +29,10 @@ static constexpr int k_max_v4_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_v6_route_table = PDS_MAX_ROUTE_TABLE;
 static constexpr int k_max_route_per_tbl = PDS_MAX_ROUTE_PER_TABLE;
 
-static const std::string k_base_v4_pfx = "100.100.100.1/21";
-static const std::string k_base_v6_pfx = "100:100:100:1:1::1/65";
+static const std::string k_base_v4_pfx  = "100.100.100.1/21";
+static const std::string k_base_v4_pfx1 = "101.100.100.1/21";
+static const std::string k_base_v6_pfx  = "100:100:100:1:1::1/65";
+static const std::string k_base_v6_pfx1 = "101:100:100:1:1::1/65";
 
 //----------------------------------------------------------------------------
 // Route table test class
@@ -96,23 +98,73 @@ protected:
 /// \defgroup ROUTE_TESTS Route table tests
 /// @{
 
+/// \brief Route table WF_B1
+/// \ref WF_B1
+TEST_F(route_test, v4v6_route_table_workflow_b1) {
+    route_table_feeder feeder;
+
+    // test one v4 route table with zero routes
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, 1);
+    workflow_b1<route_table_feeder>(feeder);
+
+    // test one v6 route table with zero routes
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
+    workflow_b1<route_table_feeder>(feeder);
+
+    // test one v4 route table with max routes
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, k_max_route_per_tbl, 1);
+    workflow_b1<route_table_feeder>(feeder);
+
+    // test one v6 route tables with max routes
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
+    workflow_b1<route_table_feeder>(feeder);
+}
+
+/// \brief Route table WF_B2
+/// \ref WF_B2
+// TODO: Fix workflow to take one object at a time.
+TEST_F(route_test, DISABLED_v4v6_route_table_workflow_b2) {
+    route_table_feeder feeder1, feeder1A;
+
+    // test one v4 route table with zero routes
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4, 0, 1);
+    feeder1A.init(k_base_v4_pfx1, IP_AF_IPV4, 0, 1);
+    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+
+    // test one v6 route table with zero routes
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
+    feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, 0, 1);
+    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+
+    // test one v4 route table with max routes
+    feeder1.init(k_base_v4_pfx, IP_AF_IPV4, k_max_route_per_tbl, 1);
+    feeder1A.init(k_base_v4_pfx1, IP_AF_IPV4, k_max_route_per_tbl, 1);
+    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+
+    // test one v6 route tables with max routes
+    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
+    feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, k_max_route_per_tbl, 1);
+    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+}
+
 /// \brief Route table WF_1
 /// \ref WF_1
 TEST_F(route_test, v4v6_route_table_workflow_1) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
-                0, k_max_v4_route_table);
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
+
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table);
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
     workflow_1<route_table_feeder>(feeder);
+
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
+
     // test max v6 route tables with max routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
@@ -125,17 +177,18 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
     route_table_feeder feeder;
 
     // test max v4 route tables with zero routes
-    feeder.init(k_base_v4_pfx, IP_AF_IPV4,
-                0, k_max_v4_route_table);
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
+
     // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table);
+    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
     workflow_2<route_table_feeder>(feeder);
+
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
+
     // test max v6 route tables with max routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);

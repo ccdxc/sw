@@ -41,6 +41,27 @@ protected:
 /// \defgroup DEVICE_TEST Device Tests
 /// @{
 
+/// \brief Device WF_B1
+/// \ref WF_B1
+TEST_F(device_test, device_workflow_b1) {
+    if (!apulu()) return;
+
+    device_feeder feeder;
+    feeder.init("2001:1::1", "00:02:01:00:00:01", "2001:1::2");
+    workflow_b1<device_feeder>(feeder);
+}
+
+/// \brief Device WF_B2
+/// \ref WF_B2
+TEST_F(device_test, device_workflow_b2) {
+    if (!apulu()) return;
+
+    device_feeder feeder1, feeder1A;
+    feeder1.init("1.0.0.1", "00:02:01:00:00:01", "1.0.0.2");
+    feeder1A.init("2.0.0.1", "00:02:01:00:0A:0B", "2.0.0.2");
+    workflow_b2<device_feeder>(feeder1, feeder1A);
+}
+
 /// \brief Device WF_1
 /// \ref WF_1
 TEST_F(device_test, device_workflow_1) {
