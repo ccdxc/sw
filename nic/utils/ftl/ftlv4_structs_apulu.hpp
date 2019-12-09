@@ -4,15 +4,16 @@
 #define FTLV4_APOLLO_ENTRY_NUM_HINTS 2
 struct __attribute__((__packed__)) ftlv4_entry_t {
     // data after key
-    uint32_t __pad_to_512b : 10;
+    uint32_t __pad_to_512b : 7;
     uint32_t entry_valid : 1;
     uint32_t nexthop_id : 16;
-    uint32_t more_hints : 18;
+    uint32_t flow_role : 1;
+    uint32_t more_hints : 20;
     uint32_t more_hashes : 1;
-    uint32_t hint2 : 18;
-    uint32_t hash2 : 11;
-    uint32_t hint1 : 18;
-    uint32_t hash1 : 11;
+    uint32_t hint2 : 20;
+    uint32_t hash2 : 9;
+    uint32_t hint1 : 20;
+    uint32_t hash1 : 9;
 
     // key
     uint32_t bd_id : 16;
@@ -25,8 +26,7 @@ struct __attribute__((__packed__)) ftlv4_entry_t {
     // data before key
     uint32_t nexthop_type : 2;
     uint32_t nexthop_valid : 1;
-    uint32_t flow_role : 1;
-    uint32_t session_id : 20;
+    uint32_t session_id : 21;
     uint32_t epoch : 8;
 
 #ifdef __cplusplus

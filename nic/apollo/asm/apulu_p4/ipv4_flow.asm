@@ -7,7 +7,7 @@ struct ipv4_flow_k_ k;
 struct ipv4_flow_d  d;
 struct phv_ p;
 
-#define FLOW_HASH_MSB 31:21
+#define FLOW_HASH_MSB 31:23
 
 %%
 

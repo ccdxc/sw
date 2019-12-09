@@ -7,6 +7,8 @@
 #define LOCAL_MAPPING_OHASH_TABLE_SIZE                      16384       // 16K
 #define SERVICE_MAPPING_TABLE_SIZE                          4096
 #define SERVICE_MAPPING_OTCAM_TABLE_SIZE                    1024
+#define IPV4_FLOW_TABLE_SIZE                                8388608     // 8M
+#define IPV4_FLOW_OHASH_TABLE_SIZE                          1048576     // 1M
 #define FLOW_TABLE_SIZE                                     2097152     // 2M
 #define FLOW_OHASH_TABLE_SIZE                               262144      // 256K
 #define NACL_TABLE_SIZE                                     512
@@ -15,7 +17,7 @@
 
 #define MAPPING_TABLE_SIZE                                  4194304     // 4M
 #define MAPPING_OHASH_TABLE_SIZE                            524288      // 512K
-#define SESSION_TABLE_SIZE                                  1048576     // 1M
+#define SESSION_TABLE_SIZE                                  2097152     // 2M
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define NAT_TABLE_SIZE                                      65536       // 64K
 #define NAT2_TABLE_SIZE                                     1024        // 1K

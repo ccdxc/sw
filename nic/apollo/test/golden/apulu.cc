@@ -664,7 +664,7 @@ flows_init (void)
     flow_hash_info->session_id = g_session_id1;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
-    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -678,7 +678,7 @@ flows_init (void)
     flow_hash_info->session_id = g_session_id1;
     flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
     flow_hash_info->epoch = EPOCH;
-    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -692,7 +692,7 @@ flows_init (void)
     flow_hash_info->session_id = g_session_id4;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
-    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 }
 
 static void

@@ -99,6 +99,8 @@ header_type scratch_metadata_t {
         local_mapping_hint  : 14;
         mapping_hash        : 10;
         mapping_hint        : 19;
+        ipv4_flow_hash      : 9;
+        ipv4_flow_hint      : 20;
         flow_hash           : 11;
         flow_hint           : 18;
         in_packets          : 64;

@@ -5,9 +5,10 @@
 
 struct __attribute__((__packed__)) ftlv6_entry_t {
     // data after key
-    uint32_t __pad_to_512b : 14;
+    uint32_t __pad_to_512b : 13;
     uint32_t entry_valid : 1;
     uint32_t nexthop_id : 16;
+    uint32_t flow_role : 1;
     uint32_t more_hints : 18;
     uint32_t more_hashes : 1;
     uint32_t hint4 : 18;
@@ -31,8 +32,7 @@ struct __attribute__((__packed__)) ftlv6_entry_t {
     // data before key
     uint32_t nexthop_type : 2;
     uint32_t nexthop_valid : 1;
-    uint32_t flow_role : 1;
-    uint32_t session_id : 20;
+    uint32_t session_id : 21;
     uint32_t epoch : 8;
 
 #ifdef __cplusplus

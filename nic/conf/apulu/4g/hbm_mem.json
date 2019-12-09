@@ -241,21 +241,21 @@
         },
         {
             "name": "ipv4_flow",
-            "size": "64M",
+            "size": "256M",
             "cache": "p4ig",
-            "_comment": "2M * 32B"
+            "_comment": "8M * 32B"
         },
         {
             "name": "ipv4_flow_ohash",
-            "size": "8M",
-            "cache": "p4ig",
-            "_comment": "256M * 32B"
-        },
-        {
-            "name": "session",
             "size": "32M",
             "cache": "p4ig",
             "_comment": "1M * 32B"
+        },
+        {
+            "name": "session",
+            "size": "64M",
+            "cache": "p4ig",
+            "_comment": "2M * 32B"
         },
         {
             "name": "mapping",
@@ -283,8 +283,8 @@
         },
         {
             "name": "session_stats",
-            "size": "32M",
-            "_comment": "1M * 16B * 2"
+            "size": "64M",
+            "_comment": "2M * 16B * 2"
         },
         {
             "name": "qos-hbm-fifo",
