@@ -45,7 +45,6 @@
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
-#include "gen/hal/svc/gft_svc_gen.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -74,97 +73,6 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
-
-
-
-
-void
-svc_reg (const std::string& server_addr,
-         hal::hal_feature_set_t feature_set)
-{
-    VrfServiceImpl           vrf_svc;
-    NetworkServiceImpl       nw_svc;
-    InterfaceServiceImpl     if_svc;
-    InternalServiceImpl      internal_svc;
-    RdmaServiceImpl          rdma_svc;
-    L2SegmentServiceImpl     l2seg_svc;
-    DebugServiceImpl         debug_svc;
-    TableServiceImpl         table_svc;
-    SessionServiceImpl       session_svc;
-    EndpointServiceImpl      endpoint_svc;
-    L4LbServiceImpl          l4lb_svc;
-    NwSecurityServiceImpl    nwsec_svc;
-    //DosServiceImpl           dos_svc;
-    QOSServiceImpl           qos_svc;
-    AclServiceImpl           acl_svc;
-    TelemetryServiceImpl     telemetry_svc;
-    ServerBuilder            server_builder;
-    ProxyServiceImpl         proxy_svc;
-    CpuCbServiceImpl         cpucb_svc;
-    EventServiceImpl         event_svc;
-    MulticastServiceImpl     multicast_svc;
-    GftServiceImpl           gft_svc;
-    SystemServiceImpl        system_svc;
-    SoftwarePhvServiceImpl   swphv_svc;
-
-    grpc_init();
-    HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
-
-    // listen on the given address (no authentication)
-    server_builder.AddListeningPort(server_addr,
-                                    grpc::InsecureServerCredentials());
-
-    // register all services
-    if (feature_set == hal::HAL_FEATURE_SET_IRIS) {
-        server_builder.RegisterService(&vrf_svc);
-        server_builder.RegisterService(&nw_svc);
-        server_builder.RegisterService(&if_svc);
-        server_builder.RegisterService(&internal_svc);
-        server_builder.RegisterService(&rdma_svc);
-        server_builder.RegisterService(&l2seg_svc);
-        server_builder.RegisterService(&debug_svc);
-        server_builder.RegisterService(&table_svc);
-        server_builder.RegisterService(&session_svc);
-        server_builder.RegisterService(&endpoint_svc);
-        server_builder.RegisterService(&l4lb_svc);
-        server_builder.RegisterService(&nwsec_svc);
-        //server_builder.RegisterService(&dos_svc);
-        server_builder.RegisterService(&qos_svc);
-        server_builder.RegisterService(&proxy_svc);
-        server_builder.RegisterService(&acl_svc);
-        server_builder.RegisterService(&telemetry_svc);
-        server_builder.RegisterService(&cpucb_svc);
-        server_builder.RegisterService(&event_svc);
-        server_builder.RegisterService(&multicast_svc);
-        server_builder.RegisterService(&system_svc);
-        server_builder.RegisterService(&swphv_svc);
-    } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
-        server_builder.RegisterService(&vrf_svc);
-        server_builder.RegisterService(&if_svc);
-        server_builder.RegisterService(&rdma_svc);
-        server_builder.RegisterService(&l2seg_svc);
-        server_builder.RegisterService(&gft_svc);
-        server_builder.RegisterService(&system_svc);
-        // Revisit. DOL was not able to create Lif without qos class
-        server_builder.RegisterService(&qos_svc);
-        // Revisit. DOL was not able to create Tenant with security profile.
-        server_builder.RegisterService(&nwsec_svc);
-        //server_builder.RegisterService(&dos_svc);
-        server_builder.RegisterService(&endpoint_svc);
-    }
-
-    HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
-    hal::utils::hal_logger()->flush();
-    HAL_SYSLOG_INFO("HAL-STATUS:UP");
-
-    // assemble the server
-    std::unique_ptr<Server> server(server_builder.BuildAndStart());
-
-    // wait for server to shutdown (some other thread must be responsible for
-    // shutting down the server or else this call won't return)
-    server->Wait();
-}
-
 
 class nwsec_policy_test : public fte_base_test {
 protected:

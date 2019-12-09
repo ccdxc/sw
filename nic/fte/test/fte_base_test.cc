@@ -6,7 +6,6 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
-#include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/l2segment.pb.h"
@@ -14,7 +13,6 @@
 #include "gen/proto/endpoint.pb.h"
 #include "gen/proto/nw.pb.h"
 #include "gen/proto/nwsec.pb.h"
-#include "gen/proto/nat.pb.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "lib/utils/time_profile.hpp"
 
@@ -146,7 +144,7 @@ hal_handle_t fte_base_test::add_enic(hal_handle_t l2segh, uint32_t useg, uint64_
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(spec, &resp);
     hal::hal_cfg_db_close();
-    EXPECT_EQ(ret, HAL_RET_OK); 
+    EXPECT_EQ(ret, HAL_RET_OK);
 
     return resp.mutable_status()->if_handle();
 }
@@ -279,7 +277,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
             if (rule.app.has_alg_opts) {
                 if (rule.app.alg == nwsec::APP_SVC_FTP) {
                     app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(\
-                                          rule.app.alg_opt.opt.ftp_opts.allow_mismatch_ip_address); 
+                                          rule.app.alg_opt.opt.ftp_opts.allow_mismatch_ip_address);
                 } else if (rule.app.alg == nwsec::APP_SVC_SUN_RPC) {
                     for (uint8_t idx=0; idx<rule.app.alg_opt.opt.sunrpc_opts.programid_sz; idx++) {
                         nwsec::AppData_RPCData *rpc_data = app_data->mutable_sun_rpc_option_info()->add_data();
@@ -289,7 +287,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
                         printf("Program id :%d str: %s\n", rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].program_id,
                                          str.c_str());
                         rpc_data->set_program_id(str);
-                        rpc_data->set_idle_timeout(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].timeout); 
+                        rpc_data->set_idle_timeout(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].timeout);
                     }
                 } else if (rule.app.alg == nwsec::APP_SVC_MSFT_RPC) {
                     for (uint8_t idx=0; idx<rule.app.alg_opt.opt.msrpc_opts.uuid_sz; idx++) {
@@ -411,52 +409,6 @@ hal_handle_t fte_base_test::add_route(hal_handle_t vrfh,
     return route_rsp.mutable_status()->route_handle();
 }
 
-hal_handle_t fte_base_test::add_nat_pool(hal_handle_t vrfh, uint32_t v4_addr, uint8_t prefix_len)
-{
-    hal_ret_t ret;
-    nat::NatPoolSpec spec;
-    nat::NatPoolResponse resp;
-
-    spec.mutable_key_or_handle()->mutable_pool_key()->mutable_vrf_kh()->set_vrf_handle(vrfh);
-    spec.mutable_key_or_handle()->mutable_pool_key()->set_pool_id(++pool_id_);
-    types::IPPrefix *prefix = spec.add_address()->mutable_prefix()->mutable_ipv4_subnet();
-    prefix->set_prefix_len(prefix_len);
-    prefix->mutable_address()->set_ip_af(types::IP_AF_INET);
-    prefix->mutable_address()->set_v4_addr(v4_addr);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::nat_pool_create(spec, &resp);
-    hal::hal_cfg_db_close();
-    EXPECT_EQ(ret, HAL_RET_OK);
-
-    return resp.mutable_pool_status()->pool_handle();
-}
-
-hal_handle_t fte_base_test::add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
-                                            hal_handle_t poolh, uint32_t *mapped_ip)
-{
-    hal_ret_t ret;
-    nat::NatMappingSpec spec;
-    nat::NatMappingResponse resp;
-
-    spec.mutable_key_or_handle()->mutable_svc()->mutable_vrf_kh()->set_vrf_handle(vrfh);
-    spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_ip_af(types::IP_AF_INET);
-    spec.mutable_key_or_handle()->mutable_svc()->mutable_ip_addr()->set_v4_addr(v4_addr);
-    spec.mutable_nat_pool()->set_pool_handle(poolh);
-    spec.set_bidir(true);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::nat_mapping_create(spec, &resp);
-    hal::hal_cfg_db_close();
-    EXPECT_EQ(ret, HAL_RET_OK);
-
-    if (mapped_ip) {
-        *mapped_ip = resp.mutable_status()->mapped_ip().v4_addr();
-    }
-
-    return resp.mutable_status()->handle();
-}
-
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
                                     std::vector<uint8_t *> &pkts, size_t pkt_len, bool copied_pkt_arg)
 {
@@ -542,7 +494,7 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
         hal::pd::pd_func_args_t pd_func_args = {0};
         lif_args.pi_if = sif;
         pd_func_args.pd_if_get_hw_lif_id = &lif_args;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);  
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
     }
 
     fte::cpu_rxhdr_t cpu_rxhdr = {};

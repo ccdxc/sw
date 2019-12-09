@@ -344,11 +344,11 @@ jobd/make/sdk:
 .PHONY: jobd/make/nic
 jobd/make/nic:
 	${MAKE} PIPELINE=iris
-	${MAKE} PIPELINE=iris ARCH=aarch64
+	${MAKE} PIPELINE=iris PLATFORM=hw ARCH=aarch64
 	${MAKE} PIPELINE=gft
-	${MAKE} PIPELINE=gft ARCH=aarch64
+	${MAKE} PIPELINE=gft PLATFORM=hw ARCH=aarch64
 	${MAKE} PIPELINE=apollo
-	${MAKE} PIPELINE=apollo ARCH=aarch64
+	${MAKE} PIPELINE=apollo PLATFORM=hw ARCH=aarch64
 
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}

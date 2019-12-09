@@ -2,7 +2,7 @@
 import pdb
 import os
 import json
-from collections import defaultdict 
+from collections import defaultdict
 
 import infra.common.defs            as defs
 import infra.common.utils           as utils
@@ -12,6 +12,7 @@ import infra.common.timeprofiler    as timeprofiler
 import iris.config.hal.api               as halapi
 import iris.config.resmgr                as resmgr
 
+from infra.common.glopts                     import GlobalOptions
 from iris.config.objects.uplink              import UplinkHelper
 from iris.config.objects.nic                 import NicHelper
 from iris.config.objects.uplinkpc            import UplinkPcHelper
@@ -28,11 +29,13 @@ from iris.config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from iris.config.objects.cpu                 import CpuHelper
 from iris.config.objects.app_redir_if        import AppRedirIfHelper
 from iris.config.objects.system              import SystemHelper
-from iris.config.objects.gft_hdr_group       import GftHeaderGroupHelper
-from iris.config.objects.gft_exm_profile     import GftExmProfileHelper
-from iris.config.objects.gft_flow            import GftFlowHelper
-from iris.config.objects.gft_transposition_profile import GftTranspositionProfileHelper
-from iris.config.objects.gft_transposition_hdr_group       import GftTranspositionHeaderGroupHelper
+
+if GlobalOptions.gft:
+    from iris.config.objects.gft_hdr_group                   import GftHeaderGroupHelper
+    from iris.config.objects.gft_exm_profile                 import GftExmProfileHelper
+    from iris.config.objects.gft_flow                        import GftFlowHelper
+    from iris.config.objects.gft_transposition_profile       import GftTranspositionProfileHelper
+    from iris.config.objects.gft_transposition_hdr_group     import GftTranspositionHeaderGroupHelper
 
 from infra.config.parser                    import ConfigParser as ConfigParser
 from iris.config.objects.swdr               import SwDscrRingHelper
@@ -42,7 +45,6 @@ from iris.config.objects.security_policy    import SecurityGroupPolicyHelper
 from infra.common.logging                   import logger as logger
 from infra.asic.model                       import ModelConnector
 from iris.config.store                      import Store
-from infra.common.glopts                    import GlobalOptions
 
 def process(topospec):
     # Device Mode
@@ -117,11 +119,13 @@ def process(topospec):
     AclHelper.main(topospec)
     TimerHelper.main(topospec)
 
-    GftHeaderGroupHelper.main(topospec)
-    GftExmProfileHelper.main(topospec)
-    GftTranspositionHeaderGroupHelper.main(topospec)
-    GftTranspositionProfileHelper.main(topospec)
-    GftFlowHelper.main()
+    if GlobalOptions.gft:
+        GftHeaderGroupHelper.main(topospec)
+        GftExmProfileHelper.main(topospec)
+        GftTranspositionHeaderGroupHelper.main(topospec)
+        GftTranspositionProfileHelper.main(topospec)
+        GftFlowHelper.main()
+
     return
 
 def main(topofile):
@@ -146,4 +150,4 @@ def SaveStoreToJson(conf_file):
     with open(conf_file, 'w') as fp:
         json.dump(config_dict, fp, indent=4)
     logger.info("Dumped configuration to file %s" % conf_file)
-    
+

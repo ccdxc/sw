@@ -40,18 +40,20 @@ export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \
                                 plugin_ep_learn \
                                 plugin_lb \
-                                plugin_nat \
                                 plugin_telemetry \
                                 plugin_app_redir
+ifeq ($(ARCH),x86_64)
+export NIC_HAL_DLOPEN_SOLIBS := ${NIC_HAL_DLOPEN_SOLIBS} \
+                                plugin_nat
+endif
 
 export NIC_HAL_PROTO_SOLIBS := halproto hal_svc_gen hal_svc
+
 export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_nw \
                                     cfg_plugin_rdma \
                                     cfg_plugin_nvme \
                                     cfg_plugin_aclqos \
-                                    cfg_plugin_nat \
-                                    cfg_plugin_gft \
                                     cfg_plugin_ipsec \
                                     cfg_plugin_mcast \
                                     cfg_plugin_telemetry \
@@ -60,6 +62,16 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_accel \
                                     cfg_plugin_sfw \
                                     plugin_alg_utils
+
+ifeq ($(ARCH),x86_64)
+export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
+								    cfg_plugin_nat
+endif
+
+ifeq ($(PIPELINE), gft)
+export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
+                                    cfg_plugin_gft
+endif
 
 export NIC_HAL_CFG_PLUGIN_SOLIBS_x86_64 := plugin_proxy
 

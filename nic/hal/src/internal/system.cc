@@ -129,6 +129,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_ENDPOINT_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_ENDPOINT_GET_FAIL));
         break;
+#ifdef GFT
     case sys::API_COUNTER_GFT_EXACT_MATCH_PROFILE_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_SUCCESS));
@@ -144,6 +145,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_FAIL));
         break;
+#endif
     case sys::API_COUNTER_GETPROGRAM_ADDRESS:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_GETPROGRAM_ADDRESS));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_GETPROGRAM_ADDRESS_SUCCESS));

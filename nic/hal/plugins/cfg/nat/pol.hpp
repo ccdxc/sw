@@ -59,9 +59,9 @@ typedef struct nat_sg_range_s {
 
 
 typedef struct nat_cfg_rule_action_s {
-    nat::NatAction    src_nat_action;
+    types::NatAction  src_nat_action;
     hal_handle_t      src_nat_pool;
-    nat::NatAction    dst_nat_action;
+    types::NatAction  dst_nat_action;
     hal_handle_t      dst_nat_pool;
 } nat_cfg_rule_action_t;
 

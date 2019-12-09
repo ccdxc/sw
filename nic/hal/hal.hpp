@@ -13,6 +13,9 @@
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/core/core.hpp"
 
+extern std::string g_grpc_server_addr;
+void svc_reg(hal::hal_cfg_t *hal_cfg);
+
 namespace hal {
 
 extern hal::hal_cfg_t g_hal_cfg;

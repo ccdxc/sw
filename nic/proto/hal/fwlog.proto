@@ -2,7 +2,6 @@
 
 syntax = "proto3";
 import "nwsec.proto";
-import "nat.proto";
 import "types.proto";
 
 package fwlog;
@@ -28,13 +27,13 @@ message FWEvent {
     types.IPProtocol      ipProt             = 9;  // flow key: Protocol
     uint32                direction          = 10;  // flow key: flow direction
     uint64                sipv61             = 11;  // flow key: V6 Source IP lower 64 bits
-    uint64                sipv62             = 12;  // flow key: V6 Source IP 
+    uint64                sipv62             = 12;  // flow key: V6 Source IP
     uint64                dipv61             = 13; // flow key: V6 Destination IP lower 64 bits
-    uint64                dipv62             = 14; // flow key: V6 Destination IP 
+    uint64                dipv62             = 14; // flow key: V6 Destination IP
     nwsec.SecurityAction  fwaction           = 15; // flow action: firewall action
-    nwsec.ALGName         alg                = 16; // flow action: firewall action ALG 
-    nat.NatAction         snataction         = 17; // flow action: Source NAT action 
-    nat.NatAction         dnataction         = 18; // flow action: Dest NAT action
+    nwsec.ALGName         alg                = 16; // flow action: firewall action ALG
+    types.NatAction       snataction         = 17; // flow action: Source NAT action
+    types.NatAction       dnataction         = 18; // flow action: Dest NAT action
     uint32                natsipv4           = 19; // flow action: Source NAT IPv4 address
     uint32                natdipv4           = 20; // flow action: Destination NAT IPv4 address
     uint32                natsport           = 21; // flow action: NAT sport

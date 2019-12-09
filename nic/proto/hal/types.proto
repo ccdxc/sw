@@ -472,3 +472,12 @@ enum RSASignatureScheme {
     RSASSA_PSS          = 0;
     RSASSA_PKCS1_v1_5   = 1;
 }
+
+// types of NAT actions supported
+enum NatAction {
+  NAT_TYPE_NONE                 = 0;
+  NAT_TYPE_STATIC_ADDRESS       = 1;
+  NAT_TYPE_DYNAMIC_ADDRESS      = 2;
+  NAT_TYPE_DYNAMIC_ADDRESS_PORT = 3;
+}
+

@@ -46,11 +46,15 @@
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 #include "nic/hal/src/debug/snake.hpp"
+#ifdef GFT
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
+#endif
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
+#ifdef SIM
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
+#endif
 #include "lib/periodic/periodic.hpp"
 #include "lib/twheel/twheel.hpp"
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"
@@ -362,6 +366,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+#ifdef SIM
     slab = register_slab(HAL_SLAB_NAT_POOL,
                          slab_args={.name="natpool",
                         .size=sizeof(hal::nat_pool_t), .num_elements=8,
@@ -379,6 +384,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                         .size=sizeof(hal::nat_cfg_pol_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
+#endif
 
     slab = register_slab(HAL_SLAB_NEXTHOP,
                          slab_args={.name="nexthop",
@@ -476,7 +482,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                         .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
-
+#ifdef GFT
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
@@ -497,6 +503,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
         SDK_ASSERT_RETURN((slab != NULL), false);
     }
+#endif
 
     return true;
 }
@@ -1047,6 +1054,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
+#ifdef SIM
     // initialize NAT related data structures
     HAL_HT_CREATE("natpool", nat_pool_ht_,
                   HAL_MAX_NAT_POOLS >> 1,
@@ -1061,6 +1069,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nat_mapping_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((nat_mapping_ht_ != NULL), false);
+#endif
 
     // initialize nexthop related data structures
     HAL_HT_CREATE("nexthop", nexthop_id_ht_,
@@ -1087,6 +1096,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 
     SDK_ASSERT_RETURN((route_acl_create() == HAL_RET_OK), false);
 
+#ifdef GFT
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
                       gft_exact_match_profile_id_ht_,
@@ -1112,6 +1122,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, mmgr);
         SDK_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
     }
+#endif
 
     return true;
 }
@@ -1262,11 +1273,13 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::nwsec_policy_key_size());
     SDK_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
 
+#ifdef SIM
     HAL_HT_CREATE("nat policy", nat_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nat_cfg_pol_key_func_get,
                   hal::nat_cfg_pol_key_size());
     SDK_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
+#endif
 
     HAL_HT_CREATE("ipsec policy", ipsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
@@ -1328,7 +1341,9 @@ hal_oper_db::hal_oper_db()
     session_hal_rflow_ht_ = NULL;
     l4lb_ht_ = NULL;
     nwsec_policy_ht_ = NULL;
+#ifdef SIM
     nat_policy_ht_ = NULL;
+#endif
     nwsec_group_ht_ = NULL;
     rule_cfg_ht_ = NULL;
     qos_class_ht_ = NULL;
@@ -1353,11 +1368,15 @@ hal_oper_db::hal_oper_db()
     proxyrcb_id_ht_ = NULL;
     proxyccb_id_ht_ = NULL;
     crypto_cert_store_id_ht_ = NULL;
+#ifdef GFT
     gft_exact_match_profile_id_ht_ = NULL;
     gft_hdr_transposition_profile_id_ht_ = NULL;
     gft_exact_match_flow_entry_id_ht_ = NULL;
+#endif
+#ifdef SIM
     nat_pool_ht_ = NULL;
     nat_mapping_ht_ = NULL;
+#endif
     nexthop_id_ht_ = NULL;
     route_ht_ = NULL;
     filter_ht_ = NULL;
@@ -1415,16 +1434,20 @@ hal_oper_db::~hal_oper_db()
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     rule_cfg_ht_ ? ht::destroy(rule_cfg_ht_) : HAL_NOP;
+#ifdef SIM
     nat_policy_ht_ ? ht::destroy(nat_policy_ht_) : HAL_NOP;
-    nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
     nat_pool_ht_ ? ht::destroy(nat_pool_ht_) : HAL_NOP;
     nat_mapping_ht_ ? ht::destroy(nat_mapping_ht_) : HAL_NOP;
+#endif
+    nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
     nexthop_id_ht_ ? ht::destroy(nexthop_id_ht_) : HAL_NOP;
     route_ht_ ? ht::destroy(route_ht_) : HAL_NOP;
     filter_ht_ ? ht::destroy(filter_ht_) : HAL_NOP;
+#ifdef GFT
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;
+#endif
     event_mgr_ ? eventmgr::destroy(event_mgr_) : HAL_NOP;
 }
 
@@ -2046,6 +2069,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->copp_slab()->free(elem);
         break;
 
+#ifdef GFT
     case HAL_SLAB_GFT_EXACT_MATCH_PROFILE:
         g_hal_state->gft_exact_match_profile_slab()->free(elem);
         break;
@@ -2057,6 +2081,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY:
         g_hal_state->gft_exact_match_flow_entry_slab()->free(elem);
         break;
+#endif
 
     case HAL_SLAB_V4ADDR_LIST_ELEM:
         g_hal_state->v4addr_list_elem_slab()->free(elem);
@@ -2082,6 +2107,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->mac_addr_list_elem_slab()->free(elem);
         break;
 
+#ifdef SIM
     case HAL_SLAB_NAT_CFG_RULE:
         g_hal_state->nat_cfg_rule_slab()->free(elem);
         break;
@@ -2090,12 +2116,13 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->nat_cfg_pol_slab()->free(elem);
         break;
 
-    case HAL_SLAB_NEXTHOP:
-        g_hal_state->nexthop_slab()->free(elem);
-        break;
-
     case HAL_SLAB_NAT_POOL:
         g_hal_state->nat_pool_slab()->free(elem);
+        break;
+#endif
+
+    case HAL_SLAB_NEXTHOP:
+        g_hal_state->nexthop_slab()->free(elem);
         break;
 
     case HAL_SLAB_ROUTE:

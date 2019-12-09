@@ -20,7 +20,7 @@ targets:
 
   # ====================== ARM Tests ===========================
   arm/build:
-    commands: ["make", "ARCH=aarch64"]
+    commands: ["make", "ARCH=aarch64", "PLATFORM=hw"]
     owners: ["email:dbarsky@pensando.io"]
     area:
     sub-area:
@@ -212,7 +212,7 @@ targets:
     build-dependencies:
     - build-iris-x86
   # IPSG table is moved to stage 5 of ingress. The test cases are doing span from drop_stats table
-  # in stage 5, which will not work as drop is being set in same stage 5. 
+  # in stage 5, which will not work as drop is being set in same stage 5.
   # dol/ipsg:
   #   commands: ["make", "jobd/dol/ipsg"]
   #   owners: ["email:bharat@pensando.io"]

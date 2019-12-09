@@ -127,7 +127,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
             rc = get_rule_data((acl_rule_t *)rule);
             nat_cfg = (const hal::nat_cfg_rule_t *) RULE_MATCH_USER_DATA(rc, hal::nat_cfg_rule_t, ref_count);
             // Handle for each NatAction: None, Static address, Dynamic address
-            if (!src_addr_entry && nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {
+            if (!src_addr_entry && nat_cfg->action.src_nat_action != ::types::NAT_TYPE_NONE) {
                 src_addr_entry = &src_nat_addr;
                 nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.src_nat_pool);
                 if (nat_pool) {
@@ -142,7 +142,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
                 }
             }
 
-            if (!dst_addr_entry && nat_cfg->action.dst_nat_action != ::nat::NAT_TYPE_NONE) {
+            if (!dst_addr_entry && nat_cfg->action.dst_nat_action != ::types::NAT_TYPE_NONE) {
                 dst_addr_entry = &dst_nat_addr;
                 nat_pool_t *nat_pool = find_nat_pool_by_handle(nat_cfg->action.dst_nat_pool);
                 if (nat_pool) {

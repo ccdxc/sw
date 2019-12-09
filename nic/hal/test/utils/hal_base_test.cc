@@ -31,73 +31,13 @@ std::string g_grpc_server_addr;
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
-#include "gen/hal/svc/nat_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
-#include "gen/hal/svc/gft_svc_gen.hpp"
 #include "gen/hal/svc/l4lb_svc_gen.hpp"
-
-#if 0
-static void *
-grpc_server_run (void *ctxt)
-{
-    VrfServiceImpl           vrf_svc;
-    NetworkServiceImpl       nw_svc;
-    InterfaceServiceImpl     if_svc;
-    InternalServiceImpl      internal_svc;
-    L2SegmentServiceImpl     l2seg_svc;
-    DebugServiceImpl         debug_svc;
-    TableServiceImpl         table_svc;
-    NicServiceImpl           nic_svc;
-    NatServiceImpl           nat_svc;
-    SessionServiceImpl       session_svc;
-    EndpointServiceImpl      endpoint_svc;
-    NwSecurityServiceImpl    nwsec_svc;
-    QOSServiceImpl           qos_svc;
-    AclServiceImpl           acl_svc;
-    TelemetryServiceImpl     telemetry_svc;
-    ProxyServiceImpl         proxy_svc;
-    IpsecServiceImpl         ipsec_svc;
-    CpuCbServiceImpl         cpucb_svc;
-    TcpProxyServiceImpl      tcp_proxy_svc;
-    EventServiceImpl         event_svc;
-    MulticastServiceImpl     multicast_svc;
-    GftServiceImpl           gft_svc;
-    SystemServiceImpl        system_svc;
-    SoftwarePhvServiceImpl   swphv_svc;
-    L4LbServiceImpl          l4lb_svc;
-
-    HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
-    // register all services
-    if (hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_IRIS) {
-        server_builder->RegisterService(&internal_svc);
-        server_builder->RegisterService(&debug_svc);
-        server_builder->RegisterService(&table_svc);
-        server_builder->RegisterService(&nic_svc);
-        server_builder->RegisterService(&proxy_svc);
-        server_builder->RegisterService(&cpucb_svc);
-        server_builder->RegisterService(&tcp_proxy_svc);
-        server_builder->RegisterService(&event_svc);
-        server_builder->RegisterService(&system_svc);
-        server_builder->RegisterService(&swphv_svc);
-    } else if (hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_GFT) {
-        server_builder->RegisterService(&system_svc);
-        server_builder->RegisterService(&debug_svc);
-    }
-
-    HAL_TRACE_DEBUG("gRPC server listening on ... {}",
-                    g_grpc_server_addr.c_str());
-
-    // start grpc server
-    server = server_builder->BuildAndStart();
-    server->Wait();
-    return NULL;
-}
-#endif
 
 static void inline
 hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)

@@ -19,7 +19,6 @@
 #include "gen/proto/debug.grpc.pb.h"
 #include "gen/proto/endpoint.grpc.pb.h"
 #include "gen/proto/session.grpc.pb.h"
-#include "gen/proto/gft.grpc.pb.h"
 #include "gen/proto/telemetry.grpc.pb.h"
 #include "gen/proto/qos.grpc.pb.h"
 #include "nic/sdk/lib/pal/pal.hpp"
@@ -170,11 +169,6 @@ using debug::SlabStats;
 using types::EncapInfo;
 using types::IPAddress;
 
-using gft::GftExactMatchFlowEntryRequestMsg;
-using gft::GftExactMatchFlowEntrySpec;
-using gft::GftHeaderGroupExactMatch;
-using gft::GftHeaderGroupTransposition;
-
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
 using telemetry::MirrorSessionStatus;
@@ -273,7 +267,7 @@ min(uint64_t a, uint64_t b) {
 
 class hal_client {
 public:
-    hal_client(std::shared_ptr<Channel> channel) : 
+    hal_client(std::shared_ptr<Channel> channel) :
     channel_ready(wait_channel_ready(channel)),
     vrf_stub_(Vrf::NewStub(channel)),
     l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
@@ -293,7 +287,7 @@ public:
 
         std::cout << "Waiting for HAL channel ready" << std::endl;
 
-        for (start = std::time(nullptr), end = start, elapsed = 0; 
+        for (start = std::time(nullptr), end = start, elapsed = 0;
              elapsed < HAL_WAIT_READY_TIMEOUT_SECS;
              end = std::time(nullptr)) {
 
@@ -2618,7 +2612,7 @@ public:
         std::vector<fips_rsa_siggen15_group_t> groups;
         struct stat st;
         types::HashType     hash_type;
-        int                 entry_idx = 0; 
+        int                 entry_idx = 0;
         char                s[512];
         char                outfile[128];
         FILE                *ofile = NULL;
@@ -2670,7 +2664,7 @@ public:
                     hash_type = types::SHA512;
                 }
                 else {
-                    std::cout << "Skipping unsupported SHA Alg:" 
+                    std::cout << "Skipping unsupported SHA Alg:"
                         << (*it).entries[entry_idx].sha_algo << std::endl;
                     continue;
                 }
@@ -2691,7 +2685,7 @@ public:
         }
         return 0;
     }
-    
+
     int sha3_hash_gen(int digest_len, char *msg, int msg_len, char *hash)
     {
         CryptoApiRequestMsg     req_msg;
@@ -2749,7 +2743,7 @@ public:
                         (*it).entries[idx].msg_len,
                         (*it).entries[idx].digest);
                 if (ret) {
-                    std::cout << "Failed to generate digest for entry " << idx 
+                    std::cout << "Failed to generate digest for entry " << idx
                         << std::endl;
                 }
             }
@@ -2763,7 +2757,7 @@ public:
 
     int fips_sha3_monte_group_hash_gen(fips_sha3_monte_group_t &group)
     {
-        int                 ret = 0; 
+        int                 ret = 0;
         uint32_t            idx = 0;
         uint16_t            entry_idx = 0;
         char                digest[64];
@@ -2776,7 +2770,7 @@ public:
                     group.digest_len,
                     digest);
             if (ret) {
-                std::cout << "Failed to generate digest for iteration " << idx 
+                std::cout << "Failed to generate digest for iteration " << idx
                     << std::endl;
                 return ret;
             }
@@ -2808,7 +2802,7 @@ public:
         return ret;
     }
 
-    int fips_ecc_cdh_gen(uint16_t key_size_bytes, 
+    int fips_ecc_cdh_gen(uint16_t key_size_bytes,
             char *p, char *n, char *gx, char *gy, char *a, char *b,
             char *diut, char *qcavsx, char *qcavsy,
             char *ziut)
@@ -3172,175 +3166,6 @@ max_uint64 (void)
     return std::numeric_limits<unsigned long long>::max();
 }
 
-static void
-gft_proto_size_gftheaders_check (gft::GftHeaders *headers)
-{
-    headers->set_ethernet_header(true);
-    headers->set_ipv4_header(true);
-    headers->set_ipv6_header(true);
-    headers->set_tcp_header(true);
-    headers->set_udp_header(true);
-    headers->set_icmp_header(true);
-    headers->set_no_encap(true);
-    headers->set_ip_in_ip_encap(true);
-    headers->set_ip_in_gre_encap(true);
-    headers->set_nvgre_encap(true);
-    headers->set_vxlan_encap(true);
-}
-
-static void
-gft_proto_size_gftheaderfields_check (gft::GftHeaderFields *header_fields)
-{
-    header_fields->set_dst_mac_addr(true);
-    header_fields->set_src_mac_addr(true);
-    header_fields->set_eth_type(true);
-    header_fields->set_customer_vlan_id(true);
-    header_fields->set_provider_vlan_id(true);
-    header_fields->set_dot1p_priority(true);
-    header_fields->set_src_ip_addr(true);
-    header_fields->set_dst_ip_addr(true);
-    header_fields->set_ip_ttl(true);
-    header_fields->set_ip_protocol(true);
-    header_fields->set_ip_dscp(true);
-    header_fields->set_src_port(true);
-    header_fields->set_dst_port(true);
-    header_fields->set_tcp_flags(true);
-    header_fields->set_tenant_id(true);
-    header_fields->set_icmp_type(true);
-    header_fields->set_icmp_code(true);
-    header_fields->set_oob_vlan(true);
-    header_fields->set_oob_tenant_id(true);
-    header_fields->set_gre_protocol(true);
-}
-
-static void
-gft_proto_size_ethfields_check (gft::GftEthFields *eth_fields)
-{
-    eth_fields->set_dst_mac_addr(max_uint64());
-    eth_fields->set_src_mac_addr(max_uint64());
-    eth_fields->set_eth_type(max_uint32());
-    eth_fields->set_customer_vlan_id(max_uint32());
-    eth_fields->set_provider_vlan_id(max_uint32());
-    eth_fields->set_priority(max_uint32());
-}
-
-static void
-gft_proto_size_gftheader_group_exact_match_check (
-                            GftExactMatchFlowEntrySpec *match_flow_spec)
-{
-    std::string ipv6_ip = "00010001000100010001000100010001";
-    GftHeaderGroupExactMatch *hdr_grp_match
-                                = match_flow_spec->add_exact_matches();
-
-    gft_proto_size_gftheaders_check(hdr_grp_match->mutable_headers());
-    gft_proto_size_gftheaderfields_check(hdr_grp_match->mutable_match_fields());
-    gft_proto_size_ethfields_check(hdr_grp_match->mutable_eth_fields());
-
-    types::IPAddress *src_ip = hdr_grp_match->mutable_src_ip_addr();
-    src_ip->set_ip_af(types::IP_AF_INET6);
-    src_ip->set_v6_addr(ipv6_ip);
-
-    types::IPAddress *dst_ip = hdr_grp_match->mutable_dst_ip_addr();
-    dst_ip->set_ip_af(types::IP_AF_INET6);
-    dst_ip->set_v6_addr(ipv6_ip);
-
-    hdr_grp_match->set_ip_ttl(max_uint32());
-    hdr_grp_match->set_ip_dscp(max_uint32());
-    hdr_grp_match->set_ip_protocol(max_uint32());
-
-    gft::TcpMatchFields *encap_tcp_fields =
-            hdr_grp_match->mutable_encap_or_transport()->mutable_tcp_fields();
-    encap_tcp_fields->set_sport(max_uint32());
-    encap_tcp_fields->set_dport(max_uint32());
-    encap_tcp_fields->set_tcp_flags(max_uint32());
-}
-
-static void
-gft_proto_size_gftheader_group_trans_check (
-                    GftExactMatchFlowEntrySpec *match_flow_spec)
-{
-    std::string ipv6_ip = "00010001000100010001000100010001";
-    GftHeaderGroupTransposition *hdr_grp_trans
-                              = match_flow_spec->add_transpositions();
-    hdr_grp_trans->set_action(gft::TRANSPOSITION_ACTION_MODIFY);
-
-    gft_proto_size_gftheaders_check(hdr_grp_trans->mutable_headers());
-    gft_proto_size_gftheaderfields_check(hdr_grp_trans->mutable_header_fields());
-    gft_proto_size_ethfields_check(hdr_grp_trans->mutable_eth_fields());
-
-    types::IPAddress *src_ip = hdr_grp_trans->mutable_src_ip_addr();
-    src_ip->set_ip_af(types::IP_AF_INET6);
-    src_ip->set_v6_addr(ipv6_ip);
-
-    types::IPAddress *dst_ip = hdr_grp_trans->mutable_dst_ip_addr();
-    dst_ip->set_ip_af(types::IP_AF_INET6);
-    dst_ip->set_v6_addr(ipv6_ip);
-
-    hdr_grp_trans->set_ip_ttl(max_uint32());
-    hdr_grp_trans->set_ip_dscp(max_uint32());
-    hdr_grp_trans->set_ip_protocol(max_uint32());
-
-    gft::TcpTranspositionFields *encap_fields =
-            hdr_grp_trans->mutable_encap_or_transport()->mutable_tcp_fields();
-    encap_fields->set_sport(max_uint32());
-    encap_fields->set_dport(max_uint32());
-}
-
-static void
-gft_proto_size_check (void)
-{
-    GftExactMatchFlowEntryRequestMsg req_msg;
-    GftExactMatchFlowEntrySpec  *match_flow_spec = req_msg.add_request();
-
-    std::cout << "GftExactMatchFlowEntrySpec Init size: "
-              << match_flow_spec->ByteSizeLong()
-              << std::endl;
-
-    match_flow_spec->set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
-    match_flow_spec->mutable_key_or_handle()->set_flow_entry_id(max_uint64());
-    match_flow_spec->mutable_exact_match_profile()->set_profile_id(max_uint64());
-    match_flow_spec->mutable_transposition_profile()->set_profile_id(max_uint64());
-
-    match_flow_spec->set_add_in_activated_state(true);
-    match_flow_spec->set_rdma_flow(true);
-    match_flow_spec->set_redirect_to_vport_ingress_queue(true);
-    match_flow_spec->set_redirect_to_vport_egress_queue(true);
-    match_flow_spec->set_redirect_to_vport_ingress_queue_if_ttl_is_one(true);
-    match_flow_spec->set_redirect_to_vport_egress_queue_if_ttl_is_one(true);
-    match_flow_spec->set_copy_all_packets(true);
-    match_flow_spec->set_copy_first_packet(true);
-    match_flow_spec->set_copy_when_tcp_flag_set(true);
-    match_flow_spec->set_custom_action_present(true);
-    match_flow_spec->set_meta_action_before_transposition(true);
-    match_flow_spec->set_copy_after_tcp_fin_flag_set(true);
-    match_flow_spec->set_copy_after_tcp_rst_flag_set(true);
-    match_flow_spec->set_vport_id(max_uint32());
-    match_flow_spec->set_redirect_vport_id(max_uint32());
-    match_flow_spec->set_ttl_one_redirect_vport_id(max_uint32());
-
-    std::cout << "GftExactMatchFlowEntrySpec before GftHeaderGroupExactMatch size: "
-              << match_flow_spec->ByteSizeLong()
-              << std::endl;
-
-    int count = 3;
-
-    for (int i = 0; i < count; ++i) {
-        gft_proto_size_gftheader_group_exact_match_check(match_flow_spec);
-    }
-
-    std::cout << "GftExactMatchFlowEntrySpec after GftHeaderGroupExactMatch size: "
-              << match_flow_spec->ByteSizeLong()
-              << std::endl;
-
-    for (int i = 0; i < count; ++i) {
-        gft_proto_size_gftheader_group_trans_check(match_flow_spec);
-    }
-
-    std::cout << "GftExactMatchFlowEntrySpec total size: "
-              << match_flow_spec->ByteSizeLong()
-              << std::endl;
-}
-
 int proxy_parse_args(int argc, char** argv,
         uint64_t *vrf_id,
         in_addr_t *src_range_start,
@@ -3435,7 +3260,6 @@ main (int argc, char** argv)
     bool         test_port_get = false;
     std::string  svc_endpoint;
 
-    bool         size_check = false;
     bool         ep_delete_test = false;
     bool         session_delete_test = false;
     bool         session_create = false;
@@ -3523,8 +3347,6 @@ main (int argc, char** argv)
         } else if (!strcmp(argv[1], "port_get")) {
             test_port_get = true;
             svc_endpoint = linkmgr_svc_endpoint_;
-        } else if (!strcmp(argv[1], "size_check")) {
-            size_check = true;
         } else if (!strcmp(argv[1], "system_get")) {
             system_get = true;
         } else if (!strcmp(argv[1], "def_sec_prof_reset")) {
@@ -3713,9 +3535,6 @@ main (int argc, char** argv)
     } else if (test_port_get == true) {
         // ports_enable(&hclient, vrf_id);
         ports_get(&hclient, vrf_id);
-        return 0;
-    } else if (size_check == true) {
-        gft_proto_size_check();
         return 0;
     } else if (system_get == true) {
         hclient.system_get();

@@ -30,11 +30,12 @@ import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import multicast_pb2        as multicast_pb2
 import system_pb2           as system_pb2
-import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
 import nic_pb2              as nic_pb2
 import internal_pb2         as internal_pb2
 import nvme_pb2             as nvme_pb2
+if GlobalOptions.gft:
+    import gft_pb2              as gft_pb2
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -53,7 +54,7 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
     if (req_msg.DESCRIPTOR.fields_by_name["request"].label == 3):
         num_req_specs = len(req_msg.request)
         num_resp_specs = len(resp_msg.response)
-            
+
         if num_req_specs != num_resp_specs:
             logger.error(" - Bad # of resp_specs:%d Expected:%d" %\
                         (num_resp_specs, num_req_specs))
@@ -789,16 +790,18 @@ def ConfigureQosClass(objlist):
 
 def ConfigureGftExmProfiles(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = gft_pb2.GftStub(HalChannel)
-    __config(objlist, gft_pb2.GftExactMatchProfileRequestMsg,
-             stub.GftExactMatchProfileCreate)
+    if GlobalOptions.gft:
+        stub = gft_pb2.GftStub(HalChannel)
+        __config(objlist, gft_pb2.GftExactMatchProfileRequestMsg,
+                 stub.GftExactMatchProfileCreate)
     return
 
 def ConfigureGftFlows(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = gft_pb2.GftStub(HalChannel)
-    __config(objlist, gft_pb2.GftExactMatchFlowEntryRequestMsg,
-             stub.GftExactMatchFlowEntryCreate)
+    if GlobalOptions.gft:
+        stub = gft_pb2.GftStub(HalChannel)
+        __config(objlist, gft_pb2.GftExactMatchFlowEntryRequestMsg,
+                 stub.GftExactMatchFlowEntryCreate)
     return
 
 def GetSystem(objlist):

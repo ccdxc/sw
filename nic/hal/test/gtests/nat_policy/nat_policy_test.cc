@@ -160,9 +160,9 @@ typedef struct nat_test_rule_match_s {
 } nat_test_rule_match_t;
 
 typedef struct nat_test_rule_action_s {
-    nat::NatAction       src_nat_action;
+    types::NatAction     src_nat_action;
     hal_handle_t         src_nat_pool;
-    nat::NatAction       dst_nat_action;
+    types::NatAction     dst_nat_action;
     hal_handle_t         dst_nat_pool;
 } nat_test_rule_action_t;
 
@@ -184,7 +184,7 @@ static inline void
 nat_test_rule_action_fill (nat_test_rule_action_t *action, hal_handle_t pool_hdl)
 {
     action->src_nat_action = action->dst_nat_action =
-        nat::NatAction::NAT_TYPE_DYNAMIC_ADDRESS;
+        types::NatAction::NAT_TYPE_DYNAMIC_ADDRESS;
     action->src_nat_pool = pool_hdl;
     action->dst_nat_pool = pool_hdl;
 }

@@ -38,7 +38,9 @@
 #include "nic/sdk/include/sdk/crypto_apis.hpp"
 #include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
+#ifdef GFT
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
+#endif
 #include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/tcp_msg_api.hpp"
@@ -3016,6 +3018,7 @@ typedef struct pd_accel_rgroup_misc_get_args_s {
     void *usr_ctx;
 } __PACK__ pd_accel_rgroup_misc_get_args_t;
 
+#ifdef GFT
 // gft
 typedef struct pd_gft_exact_match_profile_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
@@ -3083,6 +3086,7 @@ pd_gft_exact_match_flow_entry_make_clone_args_init (pd_gft_exact_match_flow_entr
     args->exact_match_flow_entry = NULL;
     args->clone = NULL;
 }
+#endif
 
 // clock
 typedef struct pd_conv_hw_clock_to_sw_clock_args_s {
@@ -3989,6 +3993,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_add_pend_req);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_poll_pend_req);
 
+#ifdef GFT
         // gft exact match profile apis
         PD_UNION_ARGS_FIELD(pd_gft_exact_match_profile);
         PD_UNION_ARGS_FIELD(pd_gft_exact_match_profile_make_clone);
@@ -4000,6 +4005,7 @@ typedef struct pd_func_args_s {
         // gft match flow entry
         PD_UNION_ARGS_FIELD(pd_gft_exact_match_flow_entry);
         PD_UNION_ARGS_FIELD(pd_gft_exact_match_flow_entry_make_clone);
+#endif
 
         // clock
         PD_UNION_ARGS_FIELD(pd_conv_hw_clock_to_sw_clock);
@@ -4484,6 +4490,7 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_add_pend_req);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_poll_pend_req);
 
+#ifdef GFT
 // gft exact match profile apis
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_create);
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_delete);
@@ -4504,6 +4511,7 @@ PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_delete);
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_update);
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_mem_free);
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_make_clone);
+#endif
 
 // clock
 PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);

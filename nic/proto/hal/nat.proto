@@ -31,14 +31,6 @@ service Nat {
   rpc NatMappingGet (NatMappingGetRequestMsg) returns (NatMappingGetResponseMsg) {}
 }
 
-// types of NAT actions supported
-enum NatAction {
-  NAT_TYPE_NONE                 = 0;
-  NAT_TYPE_STATIC_ADDRESS       = 1;
-  NAT_TYPE_DYNAMIC_ADDRESS      = 2;
-  NAT_TYPE_DYNAMIC_ADDRESS_PORT = 3;
-}
-
 // NAT pool configuration
 // NOTE: addresses inside the NAT pool are "owned" by the device, so device is
 // expected to advertise the routes for the same and respond to ARP requests
@@ -117,8 +109,8 @@ message NatPoolGetResponseMsg {
 }
 
 message NatRuleAction {
-  NatAction              src_nat_action  = 1 [(gogoproto.moretags) = "venice:immutable"];    // src NAT action related to the rule
-  NatAction              dst_nat_action  = 2 [(gogoproto.moretags) = "venice:immutable"];    // dst NAT action related to the rule
+  types.NatAction        src_nat_action  = 1 [(gogoproto.moretags) = "venice:immutable"];    // src NAT action related to the rule
+  types.NatAction        dst_nat_action  = 2 [(gogoproto.moretags) = "venice:immutable"];    // dst NAT action related to the rule
   kh.NatPoolKeyHandle    src_nat_pool    = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={nat.NatRuleAction.src_nat_action!=nat_pb2.NAT_TYPE_NONE}"];  // src NAT pool
   kh.NatPoolKeyHandle    dst_nat_pool    = 4 [(gogoproto.moretags) = "venice:ref,venice:constraints={nat.NatRuleAction.dst_nat_action!=nat_pb2.NAT_TYPE_NONE}"];    // dst NAT pool
 }
