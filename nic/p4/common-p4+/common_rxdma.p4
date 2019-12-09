@@ -884,6 +884,7 @@ table rx_table_s1_t1 {
         rx_table_s1_t1_action;
         rx_table_s1_t1_action1;
         rx_table_s1_t1_action2;
+        rx_table_s1_t1_action3;
         rx_table_s1_t1_cfg_action;
     }
 }

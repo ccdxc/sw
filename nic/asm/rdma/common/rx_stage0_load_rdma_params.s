@@ -49,6 +49,7 @@ rx_stage0_load_rdma_params:
 rq:
     #add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
     #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.resp_rx.log_num_kt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_kt_entries)
 
     // stage 2 for rqwqe
     // Accomodate smac (32 bits) + vlan_ethertype (16 bits) + vlan (16 bits) + ethertype (5 bits) for UD packets

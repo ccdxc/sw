@@ -174,7 +174,9 @@ struct rqcb1_t {
     busy: 1; // set to 1 by S0, to 0 by S3
     // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
     congestion_mgmt_type: 2;
-    rsvd1: 5;
+    dcqcn_cfg_id: 4;
+    rsvd1: 1;
+
     in_progress: 1;         // written by S4, read by S0
     rsvd2: 7;
     spec_cindex: 16;  // cindex used for speculation

@@ -26,7 +26,7 @@ struct resp_rx_s1_t1_k k;
 #define TO_S_WB1_P  to_s5_wb1_info
 #define TO_S_CQCB_P to_s6_cqcb_info
 
-#define K_RSQWQE_PTR CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit7, rsqwqe_ptr_sbit16_ebit63)
+#define K_RSQWQE_PTR CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit7, rsqwqe_ptr_sbit40_ebit63)
 #define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)

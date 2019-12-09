@@ -116,7 +116,7 @@ process_send:
                               
         // if (sqcb0_p->fence) goto fence
         seq            c3, d.fence, 1 // Branch Delay Slot
-        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, SPEC_SQ_C_INDEX)
         bcf            [c3], fence
         
         // if (sqcb0_p->in_progress) goto in_progress
@@ -259,7 +259,7 @@ in_progress:
         // do not speculate for in_progress processing
         add            r4, r0, SQ_C_INDEX // Branch Delay Slot
         // r1 is base address of PHV_GLOBAL. Preserve it.
-        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, r4)
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, r4)
 
         // Set rexmit bit if spec-cindex is behind sqd-cindex
         sub            r2, SQ_P_INDEX, d.sqd_cindex
@@ -517,7 +517,7 @@ restart_timer:
         nop
 
     .brcase        MAX_SQ_DOORBELL_RINGS
-        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
+        CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, SPEC_SQ_C_INDEX)
 
         crestore  [c2], d.poll_for_work, 0x1
         crestore  [c1], d.poll_in_progress, 0x1
@@ -575,7 +575,7 @@ fence:
 
     // Reset spec-cindex to cindex to re-process wqe.
     tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, SPEC_SQ_C_INDEX)
 
     // Set rexmit bit if spec-cindex is behind sqd-cindex
     sub            r2, SQ_P_INDEX, d.sqd_cindex
@@ -627,7 +627,7 @@ end:
 frpmr:
     // Reset spec_cindex and trigger dcqcn/sqcb_write_back/sqcb2_write_back to update cindex-copy everywhere.
     tblwr      SPEC_SQ_C_INDEX, SQ_C_INDEX
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, spec_cindex, SPEC_SQ_C_INDEX)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, SPEC_SQ_C_INDEX)
 
     // Set rexmit bit if spec-cindex is behind sqd-cindex
     sub            r2, SQ_P_INDEX, d.sqd_cindex

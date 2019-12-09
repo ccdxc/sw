@@ -357,6 +357,9 @@ struct sqcb5_t {
     qp_err_dis_phv_intrinsic_error   :    1;
     qp_err_dis_table_resp_error      :    1;
     qp_err_dis_rsvd                  :    16;
+    // dcqcn stats
+    np_ecn_marked_packets            :    16;
+    dcqcn_rsvd                       :    48;
     //a packet which went thru too many recirculations in req_rx had to be terminated and qp had to 
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.
@@ -364,7 +367,7 @@ struct sqcb5_t {
     recirc_bth_opcode: 8;
     recirc_reason: 4;
     max_recirc_cnt_err: 1;
-    pad: 219;
+    pad: 155;
 };
 
 struct sqcb_t {

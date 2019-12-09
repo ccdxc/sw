@@ -1,8 +1,10 @@
 #include "capri.h"
 #include "resp_rx.h"
 #include "rqcb.h"
+#include "sqcb.h"
 #include "common_phv.h"
 #include "defines.h"
+#include "nic/p4/common/defines.h"
 
 struct resp_rx_phv_t p;
 struct rqcb1_t d;
@@ -20,6 +22,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S_STATS_INFO_P to_s7_stats_info
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
+#define TO_S1_DCQCN_P to_s1_dcqcn_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 #define TO_S_RKEY_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
@@ -44,10 +47,10 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_rqcb3_in_progress_process
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rqcb1_recirc_sge_process
-    .param    resp_rx_dcqcn_ecn_process
     .param    resp_rx_rome_pkt_process
     .param    resp_rx_rome_cnp_process
     .param    resp_rx_dcqcn_cnp_process
+    .param    resp_rx_dcqcn_config_load_process
     .param    rdma_atomic_resource_addr
     .param    resp_rx_read_mpu_only_process
     .param    resp_rx_atomic_resource_process
@@ -147,18 +150,22 @@ dcqcn_ecn_process:
     //Check if ECN bits are set in Packet
     sne      c2, k.rdma_bth_ecn, 3  
     bcf      [c2], skip_cnp_send
+    nop     // BD Slot
 
-    //Process sending CNP packet to the requester.
-    add      r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
-    CAPRI_RESET_TABLE_3_ARG() 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
+    phvwr CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, np_ecn_marked_packets), 1
+    // Trigger local doorbell to TXDMA CNP ring.
+    DOORBELL_INC_PINDEX(CAPRI_RXDMA_INTRINSIC_LIF, Q_TYPE_RDMA_SQ, CAPRI_RXDMA_INTRINSIC_QID, CNP_RING_ID, DB_ADDR, DB_DATA)
 
 skip_cnp_send:
     // Check if its CNP packet.
     bcf      [!c4], skip_cnp_receive
 
-    add      r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5)
+    add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dcqcn_cnp_process, r5)
+
+    phvwr   CAPRI_PHV_FIELD(TO_S1_DCQCN_P, dcqcn_cfg_id), d.dcqcn_cfg_id
+    // mpu-only process
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dcqcn_config_load_process, r0)
 
 skip_cnp_receive:
     // TODO: Migrate ACK_REQ flag to P4 table

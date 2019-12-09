@@ -32,14 +32,16 @@ rdma_aq_tx_rqcb0_process:
 
 hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, dst_qp
-    seq         c1, K_CONGESTION_ENABLE, 1  // BD Slot
+    add         r2, r0, K_CONGESTION_ENABLE
     
     tblwr     d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr     d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
     // Update cos(tm_iq) in qstate.
-    tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
-    tblwr.c1    d.dcqcn_cfg_id, K_DCQCN_PROFILE
-    tblwr.c1    d.congestion_mgmt_type, 1
+    beq         r2, r0, dst_qp
+    tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ // BD Slot
+    tblwr       d.dcqcn_cfg_id, K_DCQCN_PROFILE
+    tblwr       d.congestion_mgmt_type, 1
+    phvwr       p.rdma_feedback.modify_qp.dcqcn_cfg_id, K_DCQCN_PROFILE
 
 dst_qp:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P, dst_qp_valid), 1, rsq_base

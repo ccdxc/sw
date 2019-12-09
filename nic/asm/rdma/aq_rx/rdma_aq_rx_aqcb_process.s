@@ -198,7 +198,7 @@ modify_qp:
     CAPRI_RESET_TABLE_2_ARG() 
     phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, ah_len, pmtu_valid), k.{rdma_aq_feedback_mqp_ah_len...rdma_aq_feedback_mqp_pmtu_valid}
     phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_MQP_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, sqd_async_notify_en), K_SQD_ASYNC_NOTIFY_EN
-    phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, access_flags_valid, congestion_mgmt_enable), k.{rdma_aq_feedback_mqp_access_flags_valid...rdma_aq_feedback_mqp_congestion_mgmt_enable}
+    phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, access_flags_valid, dcqcn_cfg_id), k.{rdma_aq_feedback_mqp_access_flags_valid...rdma_aq_feedback_mqp_dcqcn_cfg_id}
     phvwr       CAPRI_PHV_RANGE(TO_S4_INFO, rrq_base_addr, rnr_retry_count_valid), k.{rdma_aq_feedback_mqp_rrq_base_addr_sbit0_ebit4...rdma_aq_feedback_mqp_rnr_retry_valid}
     phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, q_key_rsq_base_addr, rsq_valid), k.{rdma_aq_feedback_mqp_q_key_rsq_base_addr_sbit0_ebit5...rdma_aq_feedback_mqp_rsq_valid}
     phvwrpair   CAPRI_PHV_FIELD(TO_S5_INFO, rq_psn), K_MQP_RQ_PSN, CAPRI_PHV_FIELD(TO_S5_INFO, rq_psn_valid), k.{rdma_aq_feedback_mqp_rq_psn_valid}

@@ -231,7 +231,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # validate cqcb pindex and color
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC_2'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC_1'):
             return False
 
     elif step.step_id == 4:

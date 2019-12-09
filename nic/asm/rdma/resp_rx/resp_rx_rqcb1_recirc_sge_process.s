@@ -17,7 +17,7 @@ struct resp_rx_s1_t0_k k;
 #define IN_P            t0_s2s_rqcb_to_rqcb1_info
 #define TO_S2_P         to_s2_wqe_info
 
-#define IN_TO_S_CURR_WQE_PTR      CAPRI_KEY_RANGE(IN_TO_S_P, curr_wqe_ptr_sbit0_ebit47, curr_wqe_ptr_sbit48_ebit63)
+#define IN_TO_S_CURR_WQE_PTR      CAPRI_KEY_RANGE(IN_TO_S_P, curr_wqe_ptr_sbit0_ebit15, curr_wqe_ptr_sbit48_ebit63)
 #define IN_TO_S_CURR_SGE_OFFSET   CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
 #define IN_TO_S_REM_PYLD_BYTES    CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define IN_LOG_RQ_PAGE_SIZE       CAPRI_KEY_FIELD(IN_P, log_rq_page_size)

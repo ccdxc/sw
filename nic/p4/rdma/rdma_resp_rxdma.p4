@@ -84,9 +84,10 @@
 #define rx_table_s1_t1_action resp_rx_write_dummy_process
 #define rx_table_s1_t1_action1 resp_rx_read_mpu_only_process
 #define rx_table_s1_t1_action2 resp_rx_atomic_resource_process
-#define rx_table_s1_t2_action resp_rx_dcqcn_cnp_process
-#define rx_table_s1_t2_action1 resp_rx_recirc_mpu_only_process
-#define rx_table_s1_t2_action2 resp_rx_rome_cnp_process
+#define rx_table_s1_t1_action3 resp_rx_dcqcn_config_load_process
+
+#define rx_table_s1_t2_action resp_rx_recirc_mpu_only_process
+#define rx_table_s1_t2_action1 resp_rx_rome_cnp_process
 
 #define rx_table_s1_t3_action resp_rx_dcqcn_ecn_process
 #define rx_table_s1_t3_action1 resp_rx_rome_pkt_process
@@ -98,6 +99,7 @@
 
 #define rx_table_s3_t0_action1 resp_rx_rqwqe_wrid_process
 #define rx_table_s3_t0_action2 resp_rx_rqsge_process
+#define rx_table_s3_t2_action resp_rx_dcqcn_cnp_process
 
 #define rx_table_s4_t0_action resp_rx_rqlkey_mr_cookie_process
 
@@ -138,7 +140,8 @@
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
     modify_field(phv_global_common_scr.spec_cindex, phv_global_common.spec_cindex);\
-    modify_field(phv_global_common_scr.rsvd, phv_global_common.rsvd);\
+    modify_field(phv_global_common_scr.log_num_kt_entries, phv_global_common.log_num_kt_entries);\
+    modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
     modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
     modify_field(phv_global_common_scr._ring_dbell, phv_global_common._ring_dbell);\
     modify_field(phv_global_common_scr._ack_req, phv_global_common._ack_req);\
@@ -372,7 +375,8 @@ header_type phv_global_common_t {
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
         spec_cindex                      :   16;
-        rsvd                             :    6;
+        log_num_kt_entries               :    5;
+        pad                              :    1;
         _ud                              :    1;
         _ring_dbell                      :    1;
         _ack_req                         :    1;
@@ -512,6 +516,14 @@ header_type resp_rx_to_stage_wqe_info_t {
         priv_oper_enable                 :   1;
         page_boundary                    :   1;
         pad                              :   1;
+    }
+}
+
+header_type resp_rx_to_stage_dcqcn_info_t {
+    fields {
+        dcqcn_cfg_id                     :    4;
+        min_time_btwn_cnps               :   32;
+        pad                              :   92;
     }
 }
 
@@ -675,6 +687,11 @@ metadata resp_rx_to_stage_rqpt_info_t to_s1_rqpt_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_rqpt_info_t to_s1_rqpt_info_scr;
 
+@pragma pa_header_union ingress to_stage_1
+metadata resp_rx_to_stage_dcqcn_info_t to_s1_dcqcn_info;
+@pragma scratch_metadata
+metadata resp_rx_to_stage_dcqcn_info_t to_s1_dcqcn_info_scr;
+
 @pragma pa_header_union ingress to_stage_2
 metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info;
 @pragma scratch_metadata
@@ -684,6 +701,11 @@ metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info_scr;
 metadata resp_rx_to_stage_wqe_info_t to_s2_wqe_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_wqe_info_t to_s2_wqe_info_scr;
+
+@pragma pa_header_union ingress to_stage_3
+metadata resp_rx_to_stage_dcqcn_info_t to_s3_dcqcn_info;
+@pragma scratch_metadata
+metadata resp_rx_to_stage_dcqcn_info_t to_s3_dcqcn_info_scr;
 
 @pragma pa_header_union ingress to_stage_4
 metadata resp_rx_to_stage_lkey_info_t to_s4_lkey_info;
@@ -1382,11 +1404,25 @@ action resp_rx_atomic_resource_process () {
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.pad, t1_s2s_rqcb_to_read_atomic_rkey_info.pad);
 
 }
+action resp_rx_dcqcn_config_load_process() {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_dcqcn_info_scr.dcqcn_cfg_id, to_s1_dcqcn_info.dcqcn_cfg_id);
+    modify_field(to_s1_dcqcn_info_scr.min_time_btwn_cnps, to_s1_dcqcn_info.min_time_btwn_cnps);
+    modify_field(to_s1_dcqcn_info_scr.pad, to_s1_dcqcn_info.pad);
+
+    // stage to stage
+}
 action resp_rx_dcqcn_cnp_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_dcqcn_info_scr.dcqcn_cfg_id, to_s3_dcqcn_info.dcqcn_cfg_id);
+    modify_field(to_s3_dcqcn_info_scr.min_time_btwn_cnps, to_s3_dcqcn_info.min_time_btwn_cnps);
+    modify_field(to_s3_dcqcn_info_scr.pad, to_s3_dcqcn_info.pad);
 
     // stage to stage
     modify_field(t2_s2s_ecn_info_scr.p_key, t2_s2s_ecn_info.p_key);

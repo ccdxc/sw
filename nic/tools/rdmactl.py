@@ -557,11 +557,14 @@ class RdmaReqRxStats(Packet):
         BitField("qp_err_dis_table_resp_error", 0, 1),
         BitField("qp_err_dis_rsvd", 0, 16),
 
+        ShortField("np_ecn_marked_packets", 0),
+        BitField("dcqcn_rsvd", 0, 48),
+
         X3BytesField("sqcb5_recirc_bth_psn", 0),
         ByteField("sqcb5_recirc_bth_opcode", 0),
         BitField("sqcb5_recirc_reason", 0, 4),
         BitField("sqcb5_max_recirc_cnt_err", 0, 1),
-        BitField("sqcb5", 0, 219),
+        BitField("sqcb5", 0, 155),
 
     ]
 

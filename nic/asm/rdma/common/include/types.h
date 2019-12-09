@@ -546,6 +546,23 @@ union roce_opcode_flags_t {
     struct resp_tx_flags_t resp_tx;
 }; 
 
+struct req_tx_phv_global_pad_t {
+    spec_cindex: 16;
+    rsvd: 6;
+};
+
+struct resp_rx_phv_global_pad_t {
+    spec_cindex: 16;
+    log_num_kt_entries: 5;
+    pad: 1;
+};
+
+union phv_global_pad_t {
+    pad: 22;
+    struct req_tx_phv_global_pad_t req_tx;
+    struct resp_rx_phv_global_pad_t resp_rx;
+};
+
 struct ack_info_t {
     psn: 24;
     msn: 24;
@@ -1602,7 +1619,8 @@ struct rdma_aq_feedback_t {
             cur_state                :  3;
             cur_state_valid          :  1;
             congestion_mgmt_enable   :  1;
-            rsvd                     :  5;
+            dcqcn_cfg_id             :  4;
+            rsvd                     :  1;
         } modify_qp;
         struct {
             rq_id                    : 24;

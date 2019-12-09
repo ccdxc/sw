@@ -128,13 +128,11 @@ dcqcn_ecn_process:
     sne            c5, k.rdma_bth_ecn, 3  // BD-Slot
     sne            c6, d.congestion_mgmt_type, 1
     bcf            [c5 | c6], process_rx_pkt
+    nop // BD Slot
 
-    // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
-    CAPRI_RESET_TABLE_3_ARG() //BD Slot
-    phvwr   CAPRI_PHV_FIELD(ECN_INFO_P, p_key), CAPRI_APP_DATA_BTH_P_KEY
-
-    // r2 has been calculated in BD Slot
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_dcqcn_ecn_process, r2)
+    phvwr CAPRI_PHV_FIELD(TO_S7_P, np_ecn_marked_packets), 1
+    // Trigger local doorbell to TXDMA CNP ring.
+    DOORBELL_INC_PINDEX(CAPRI_RXDMA_INTRINSIC_LIF, Q_TYPE_RDMA_SQ, CAPRI_RXDMA_INTRINSIC_QID, CNP_RING_ID, r5, r6)
 
 process_rx_pkt:
     // Get SQCB2 base address 

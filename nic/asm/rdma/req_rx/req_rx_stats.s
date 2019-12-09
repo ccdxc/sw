@@ -27,9 +27,9 @@ struct sqcb5_t d;
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, table_error, table_resp_error)
 
 #define K_MAX_RECIRC_CNT_ERR CAPRI_KEY_FIELD(IN_P, max_recirc_cnt_err) 
-#define K_RECIRC_REASON CAPRI_KEY_RANGE(IN_P, recirc_reason_sbit0_ebit0, recirc_reason_sbit1_ebit3)
-#define K_RECIRC_BTH_OPCODE CAPRI_KEY_RANGE(IN_P, recirc_bth_opcode_sbit0_ebit4, recirc_bth_opcode_sbit5_ebit7)
-#define K_RECIRC_BTH_PSN CAPRI_KEY_RANGE(IN_P, recirc_bth_psn_sbit0_ebit4, recirc_bth_psn_sbit21_ebit23) 
+#define K_RECIRC_REASON CAPRI_KEY_FIELD(IN_P, recirc_reason)
+#define K_RECIRC_BTH_OPCODE CAPRI_KEY_RANGE(IN_P, recirc_bth_opcode_sbit0_ebit3, recirc_bth_opcode_sbit4_ebit7)
+#define K_RECIRC_BTH_PSN CAPRI_KEY_RANGE(IN_P, recirc_bth_psn_sbit0_ebit3, recirc_bth_psn_sbit20_ebit23) 
 
 %%
 
@@ -46,7 +46,7 @@ req_rx_stats_process:
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
     bbeq             K_MAX_RECIRC_CNT_ERR, 1, max_recirc_cnt_err 
-    nop // BD-slot
+    tbladd           d.np_ecn_marked_packets, CAPRI_KEY_FIELD(to_s7_stats_info, np_ecn_marked_packets)  // BD Slot
 
     bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
     tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES //BD Slot

@@ -15,10 +15,11 @@ struct aq_rx_s5_t2_k k;
 
 #define R_RQCB_ADDR     r2  // RQCB1 Address
 
-#define K_SQCB_ADDR   CAPRI_KEY_RANGE(IN_P, sqcb_addr_sbit0_ebit2, sqcb_addr_sbit27_ebit31)
+#define K_SQCB_ADDR   CAPRI_KEY_RANGE(IN_P, sqcb_addr_sbit0_ebit6, sqcb_addr_sbit31_ebit31)
 #define K_CONGESTION_MGMT_ENABLED CAPRI_KEY_FIELD(IN_P, congestion_mgmt_enable)
 #define K_ACCESS_FLAGS_VALID CAPRI_KEY_FIELD(IN_P, access_flags_valid)
 #define K_ACCESS_FLAGS CAPRI_KEY_FIELD(IN_P, access_flags)
+#define K_DCQCN_CFG_ID CAPRI_KEY_RANGE(IN_P, dcqcn_cfg_id_sbit0_ebit2, dcqcn_cfg_id_sbit3_ebit3)
 
 %%
 
@@ -40,9 +41,10 @@ rdma_aq_rx_rqcb1_process:
 
 hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rsq_base
-    nop
+    seq         c2, K_CONGESTION_MGMT_ENABLED, 1    // BD Slot
 
     tblwr       d.congestion_mgmt_type, K_CONGESTION_MGMT_ENABLED
+    tblwr.c2    d.dcqcn_cfg_id, K_DCQCN_CFG_ID
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr       d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
 

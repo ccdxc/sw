@@ -161,6 +161,8 @@ resp_rx_key_list = [
     "qp_err_dis_phv_intrinsic_error",
     "qp_err_dis_table_resp_error",
     "qp_err_dis_rsvd",
+    "np_ecn_marked_packets",
+    "dcqcn_rsvd",
     "recirc_bth_psn",
     "last_bth_opcode",
     "recirc_reason",
