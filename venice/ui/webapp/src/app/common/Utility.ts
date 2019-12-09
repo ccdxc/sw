@@ -214,14 +214,14 @@ export class Utility {
     return 10; // For future code refactoring, we are planning to use user-preferences and env.variable
   }
 
-  public static getHeroCardDisplayValue(value: string , maxLen: number = this.HERO_CARD_THIRDVALUE_LENGTH): string {
-    if ( value && value.length > maxLen) {
-      return  value.substring(0, 15) + '...';
-     }
-     return value;
+  public static getHeroCardDisplayValue(value: string, maxLen: number = this.HERO_CARD_THIRDVALUE_LENGTH): string {
+    if (value && value.length > maxLen) {
+      return value.substring(0, 15) + '...';
+    }
+    return value;
   }
 
-  public static  customizeHeroCardThirdStat(thirdStat: string, heroCard: HeroCardOptions, thirdStatName: string) {
+  public static customizeHeroCardThirdStat(thirdStat: string, heroCard: HeroCardOptions, thirdStatName: string) {
     if (thirdStat.length > Utility.HERO_CARD_THIRDVALUE_LENGTH) {
       if (heroCard.thirdStat.tooltip.indexOf(thirdStatName) < 0) {
         heroCard.thirdStat.tooltip += ' (' + thirdStatName + ')';
@@ -1619,23 +1619,23 @@ export class Utility {
     };
   }
 
-  public static isValueInRangeValdator( minValue: number, maxValue: number,  objectname: string,  msg: string = 'Value is out of range', delimitor: string = ','): ValidatorFn {
+  public static isValueInRangeValdator(minValue: number, maxValue: number, objectname: string, msg: string = 'Value is out of range', delimitor: string = ','): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (!control || ! control.value || control.value.length === 0 ) {
+      if (!control || !control.value || control.value.length === 0) {
         return null;
       }
       const values = control.value;
       const valueList = values.split(delimitor);
-      for (let i = 0; i < valueList.length; i ++ ) {
-          const value = valueList[i];
-          if (value < minValue || value > maxValue) {
-            return {
-              objectname: {
-                required: true,
-                message: msg
-              }
-            };
-          }
+      for (let i = 0; i < valueList.length; i++) {
+        const value = valueList[i];
+        if (value < minValue || value > maxValue) {
+          return {
+            objectname: {
+              required: true,
+              message: msg
+            }
+          };
+        }
       }
       return null;
     };
@@ -1692,7 +1692,7 @@ export class Utility {
 
   public static getNaplesConditionObject(naples: Readonly<ClusterDistributedServiceCard>): NaplesCondition {
     if (!naples || naples.status['admission-phase'] !== ClusterDistributedServiceCardStatus_admission_phase.admitted) {
-      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY)};
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY) };
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
       return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
     } else {
@@ -1772,8 +1772,8 @@ export class Utility {
     const r = (bigint >> 16) & 255;
     const g = (bigint >> 8) & 255;
     const b = bigint & 255;
-     /* tslint:enable:no-bitwise */
-    return {r: r, g: g, b: b};
+    /* tslint:enable:no-bitwise */
+    return { r: r, g: g, b: b };
   }
 
   public static getRgbaFromHex(color: string, opacity) {
@@ -1881,4 +1881,5 @@ export class Utility {
   setCurrentRollout(rollout: RolloutRollout) {
     this._currentRollout = rollout;
   }
+
 }

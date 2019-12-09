@@ -1,10 +1,14 @@
-@import 'src/global-mixins';
+@import "src/global-mixins";
 
 .newuser {
   border-bottom: 1px solid #eee;
   padding: 10px 5px;
   width: 100%;
   margin-bottom: 5px;
+
+  .newuser-panel-rolegroup-header-add-row {
+    max-width: 95%;
+  }
 }
 
 .newuser-panel-rolegroup-column {
@@ -14,6 +18,7 @@
 .newuser .newuser-panel-rolegroup-header-add-property-label {
   width: 150px;
   margin: 5px;
+  min-width: 70px;
 }
 
 .newuser .newuser-input-item {
@@ -24,7 +29,7 @@
 
 .newuser-addnewuser {
   font-size: 16px;
-  width: 80px
+  width: 80px;
 }
 
 .newuser-addnewuser-clear {
@@ -38,14 +43,21 @@
 .newuser-addnewuser-save:disabled {
   cursor: not-allowed !important;
   box-shadow: none !important;
-  opacity: .25 !important;
+  opacity: 0.25 !important;
 }
 
 .newuser-rolebinding-select {
   height: 28px !important;
-  padding-bottom: 0px !important;
-  margin-left: -5px;
   margin-top: 5px;
+  text-indent: 0px;
+  float: left;
+  padding: 0px !important;
+}
+
+.newuser-rolebinding {
+  padding: 0px !important;
+  margin: 0 5px 0 5px;
+  text-indent: 8px;
 }
 
 .newuser .newuser-rolebinding-select.ui-multiselect .ui-multiselect-label {

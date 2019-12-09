@@ -1,24 +1,18 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Observable, forkJoin, throwError } from 'rxjs';
-
 import { map, switchMap, tap, catchError, buffer } from 'rxjs/operators';
-
 import { SelectItem } from 'primeng/primeng';
 import { ErrorStateMatcher } from '@angular/material';
-
 import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-
 import { Utility } from '@app/common/Utility';
-import { UserDataReadyMap} from './';
+import { UserDataReadyMap } from './';
 import { AUTH_BODY } from '@app/core';
-
 import { AuthUserSpec_type } from '@sdk/v1/models/generated/auth/enums.ts';
-
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
 import {
@@ -74,6 +68,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   public static PASSWORD_REGEX: string = '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{9,}$';
   public static PASSWORD_MESSAGE: string = 'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character';
+  public static CONFIRM_PASSWORD_DESCRIPTION: string = 'Confirmation password should match with original password';
+  public static CONFIRM_PASSWORD_MESSAGE: string = 'Confirmation password does not match with original password';
 
 
   public static UI_PANEL_USER = 'user';
@@ -189,7 +185,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   // Local and External Admin can update all local users
   // Local Current User can update itself
   // External Users can't be updated
-  canCurrentUserUpdate(user: any|null): boolean {
+  canCurrentUserUpdate(user: any | null): boolean {
     const currentUser = Utility.getInstance().getLoginUser();
     if (user != null && user.meta != null && user.spec != null && currentUser != null && currentUser.spec != null) {
       if (user.spec.type === AuthUserSpec_type.local && (this.isAuthAdmin() || user.meta.name === currentUser.meta.name)) {
@@ -314,8 +310,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         if (authRoleList.items.length > 0) {
           this.authRoles.length = 0;
           this.authRoles = authRoleList.items;
-          this.authRoles.forEach( (authRole) => {
-            authRole.spec.permissions.forEach( (permission) => {
+          this.authRoles.forEach((authRole) => {
+            authRole.spec.permissions.forEach((permission) => {
               // For kinds that have no group, we put under monitoring
               if (permission['resource-group'] == null) {
                 permission['resource-group'] = 'monitoring';
@@ -394,7 +390,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    */
   onAddUser($event) {
-      this.isToShowAddUserPanel = true;
+    this.isToShowAddUserPanel = true;
   }
 
   /**
@@ -402,8 +398,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    */
   onAddRole($event) {
-      this.isToShowAddRolePanel = true;
-      this.selectedAuthRole = null;
+    this.isToShowAddRolePanel = true;
+    this.selectedAuthRole = null;
   }
 
   /**
@@ -849,7 +845,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * Invoke REST API to change user password
    */
   changeUserPassword() {
-    this._authService.PasswordChange(this.selectedAuthUser.meta.name, this.authPasswordChangeRequest.getFormGroupValues()).subscribe(
+    const changePasswordRequest = this.authPasswordChangeRequest.getFormGroupValues();
+
+    // Remove the confirmation-new-password field , we are not storing in back-end , only used in UI
+    delete changePasswordRequest['confirm-new-password'];
+    this._authService.PasswordChange(this.selectedAuthUser.meta.name, changePasswordRequest).subscribe(
       response => {
         this._controllerService.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
         const updatedAuthUser: AuthUser = response.body as AuthUser;
@@ -1065,7 +1065,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     const newControl = new FormControl(this['confirm-new-password'], [required,
       patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE),
       this.isConfirmPasswordMathcNewPassword(this.authPasswordChangeRequest.$formGroup.get(['new-password']))
-     ]);
+    ]);
     this.authPasswordChangeRequest.$formGroup.addControl('confirm-new-password', newControl);
 
     const selectedUserData = this.selectedAuthUser.getFormGroupValues();

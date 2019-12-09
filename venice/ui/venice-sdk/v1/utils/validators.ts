@@ -202,6 +202,7 @@ export const patternValidator = (pattern: string | RegExp, message: string): Val
         regex = pattern;
     }
     return (control: AbstractControl): ValidationErrors | null => {
+
         if (isEmptyInputValue(control.value)) {
             return null;  // don't validate empty values to allow optional controls
         }
@@ -230,4 +231,3 @@ export const CustomFormGroup = (formGroup, isRequired) => {
     }
     return formGroup
 }
-

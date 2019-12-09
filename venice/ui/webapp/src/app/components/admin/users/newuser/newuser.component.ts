@@ -1,8 +1,8 @@
+import { CustomFormControl } from './../../../../../../../venice-sdk/v1/utils/validators';
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
+import { ValidationErrors, FormControl, Validators, FormGroup } from '@angular/forms';
 import { Observable, forkJoin } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-
 import { UsersComponent, ACTIONTYPE } from '../users.component';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
@@ -13,8 +13,7 @@ import { AuthRoleBinding, AuthUser } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
 import { StagingBuffer } from '@sdk/v1/models/generated/staging';
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-
-import { required , patternValidator} from '@sdk/v1/utils/validators';
+import { required, patternValidator } from '@sdk/v1/utils/validators';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
@@ -40,20 +39,32 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
     protected stagingService: StagingService,
-    protected _uiconfigsService: UIConfigsService
+    protected _uiconfigsService: UIConfigsService,
   ) {
     super(_controllerService, _authService, stagingService, _uiconfigsService);
   }
 
   ngOnInit() {
+
     this.newAuthUser = new AuthUser();
     // set validation rules.  Angular does not have api to get existing validators. Thus, we reset all validators
     // meta.nam is required and must be unique
+
+    const popInfo = { description: UsersComponent.CONFIRM_PASSWORD_DESCRIPTION, default: false, };
+
+    this.newAuthUser.$formGroup.addControl('confirmPassword', CustomFormControl(new FormControl('', [Validators.required]), popInfo));
     this.newAuthUser.$formGroup.get(['meta', 'name']).setValidators([
       this.newAuthUser.$formGroup.get(['meta', 'name']).validator,
       this.isUsernameValid(this.authUsers)
     ]);
-    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE )]);
+    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE)]);
+    this.newAuthUser.$formGroup.get(['confirmPassword']).setValidators([
+      Utility.isControlValueMatchOtherControlValueValidator(
+        this.newAuthUser.$formGroup.get(['spec', 'password']),
+        'confirmPassword',
+        UsersComponent.CONFIRM_PASSWORD_MESSAGE)
+    ]);
+
   }
 
   ngAfterViewInit() {
@@ -120,6 +131,9 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    */
   addUser_with_staging() {
     const newUser = this.newAuthUser.getFormGroupValues();
+
+    // Removed the confirmation Password field from form value as it's used to confirm only in UI.
+    delete newUser.confirmPassword;
     let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
     let buffername = null; // createdBuffer.meta.name;
     const observables: Observable<any>[] = [];
@@ -139,8 +153,8 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
                 }
               });
               if (observables.length > 0) {
-              // Update all role-binding - add newly created usernam to selected role-binding
-              return this.invokeForkJoin(observables, buffername);
+                // Update all role-binding - add newly created usernam to selected role-binding
+                return this.invokeForkJoin(observables, buffername);
               } else {
                 return this.commitStagingBuffer(buffername);
               }
