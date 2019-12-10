@@ -4,9 +4,9 @@ INC = -I../../../../../common
 default: devc
 
 %.o: %.c
-	gcc $(INC) -c $< -o $@
+	gcc $(INC) -c $<
 
-program: $(OBJECTS)
+devc: $(OBJECTS)
 	gcc $(OBJECTS) -o $@
 
 clean:

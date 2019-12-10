@@ -34,14 +34,15 @@ typedef u8 bool;
 union dev_cmd_regs *cmd_regs;
 union dev_info_regs *info_regs;
 
+char *progname;
 
 static void usage(char **argv)
 {
-	printf("%s nop\n", argv[0]);
-	printf("%s reset\n", argv[0]);
-	printf("%s identify\n", argv[0]);
-	printf("%s lif_init <index>\n", argv[0]);
-	printf("%s vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n", argv[0]);
+	printf("%s <pci> nop\n", progname);
+	printf("%s <pci> reset\n", progname);
+	printf("%s <pci> identify\n", progname);
+	printf("%s <pci> lif_init <index>\n", progname);
+	printf("%s <pci> vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n", progname);
 	exit(1);
 }
 
@@ -259,12 +260,59 @@ int main(int argc, char **argv)
 	int fd;
 	char *path = "/dev/mem";
 	char *cmd;
-	off_t bar_addr = 0xfbb50000;
+	off_t bar_addr = 0;
 	void *mapped;
 	size_t map_size = 4096;
+	char *errmsg;
+	char buf[128];
+	char cmdbuf[128];
+	FILE *fp;
+	char *pciaddr;
 
-	if (argc < 2)
+	progname = argv[0];
+
+	if (argc < 3)
 		usage(argv);
+
+	/* get the 64-bit bar offset from setpci in two 32-bit chunks */
+	pciaddr = argv[1];
+	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %s base_address_0 base_address_1", pciaddr);
+	fp = popen(cmdbuf, "r");
+	if (!fp) {
+		perror("popen for setpci");
+		exit(1);
+	}
+	buf[0] = '0';
+	buf[1] = 'x';
+	if (fgets(&buf[2], sizeof(buf)-2, fp) == NULL) {
+		printf("no data from setpci\n");
+		exit(1);
+	}
+	errno = 0;
+	bar_addr = strtoul(buf, NULL, 0);
+	if (errno) {
+		perror("strtoul");
+		exit(1);
+	}
+
+	if (fgets(&buf[2], sizeof(buf)-2, fp) == NULL) {
+		printf("no data from setpci\n");
+		exit(1);
+	}
+	errno = 0;
+	bar_addr |= (strtoul(buf, NULL, 0) << 32);
+	if (errno) {
+		perror("strtoul");
+		exit(1);
+	}
+
+	bar_addr &= ~0xfULL;
+
+	fclose(fp);
+
+	/* skip over the pci addr and continue on */
+	argv++;
+	argc--;
 
 	fd = open(path, O_RDWR | O_SYNC);
 	if (fd == -1) {
