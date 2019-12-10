@@ -18,6 +18,9 @@ import (
 
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
+	it.DeleteSgpolicy("default", "default", "test-sgpolicy")
+	it.DeleteSgpolicy("default", "default", "testpolicy")
+	it.DeleteSgpolicy("default", "default", "sgpolicy-0")
 	// if not present create the default tenant
 	it.CreateTenant("default")
 	// create sg in watcher
