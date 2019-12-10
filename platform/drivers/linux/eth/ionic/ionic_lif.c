@@ -3026,6 +3026,8 @@ int ionic_lifs_register(struct ionic *ionic)
 	ionic_link_status_check_request(ionic->master_lif);
 	ionic->master_lif->registered = true;
 
+	ionic_lif_set_netdev_info(ionic->master_lif);
+
 	return 0;
 }
 
