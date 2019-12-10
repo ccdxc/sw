@@ -59,6 +59,9 @@ import { DerivativeTransform } from '../transforms/derivative.transform';
   animations: [Animations]
 })
 export class TelemetrychartComponent extends BaseComponent implements OnInit, OnChanges, OnDestroy {
+  public static MAX_LEGEND_EDIT_MODE: number = 20;
+  public static MAX_LEGEND_VIEW_MODE: number = 7;
+
   @ViewChild('pChart') chartContainer: UIChartComponent;
   @Input() chartConfig: GraphConfig;
   @Input() inEditMode: boolean = false;
@@ -723,6 +726,11 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       dataset.hidden = hiddenDatasets[key] != null ? hiddenDatasets[key] : false;
       dataset.steppedLine = (dataset.sourceMeasurement === 'Cluster') ? 'middle' : false; // VS-741 make cluster chart using stepped-line style
     });
+
+    // modifications to legend after transforms
+    if ((this.inEditMode && resDataSets.length > TelemetrychartComponent.MAX_LEGEND_EDIT_MODE) || (!this.inEditMode && resDataSets.length > TelemetrychartComponent.MAX_LEGEND_VIEW_MODE)) {
+      newGraphOptions.legend.display = false;
+    }
 
     this.graphOptions = newGraphOptions;
 
