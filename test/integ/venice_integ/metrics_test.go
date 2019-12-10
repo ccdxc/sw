@@ -10,6 +10,7 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/api/login"
@@ -295,7 +296,12 @@ func (it *veniceIntegSuite) TestFlowMetrics(c *C) {
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
 	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
 	AssertOk(c, err, "Error creating metrics client")
-
+	testFields := map[string]string{"source": "1.2.3.4",
+		"source-port":      "20",
+		"destination-port": "200",
+		"protocol":         "7",
+		"destination":      "16.16.16.16",
+	}
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error in logged in context")
 	AssertEventually(c, func() (bool, interface{}) {
@@ -306,6 +312,18 @@ func (it *veniceIntegSuite) TestFlowMetrics(c *C) {
 				{
 					TypeMeta: api.TypeMeta{
 						Kind: "IPv4FlowDropMetrics",
+					},
+					Selector: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:    "source",
+								Values: []string{"1.2.3.4"},
+							},
+							{
+								Key:    "destination",
+								Values: []string{"16.16.16.16"},
+							},
+						},
 					},
 				},
 			},
@@ -318,6 +336,27 @@ func (it *veniceIntegSuite) TestFlowMetrics(c *C) {
 
 		if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
 			return false, res
+		}
+
+		for _, r := range res.Results[0].Series {
+			// get index
+			cIndex := map[string]int{}
+			for i, c := range r.Columns {
+				if _, ok := testFields[c]; ok {
+					cIndex[c] = i
+				}
+			}
+
+			for _, t := range r.Values {
+				for k, v := range cIndex {
+					it.logger.Infof("received %v: %v", k, t[v])
+					if t[v] != testFields[k] {
+						it.logger.Infof("received %v : %v expected : %v", k, t[v], testFields[k])
+						return false, res
+
+					}
+				}
+			}
 		}
 
 		return true, res

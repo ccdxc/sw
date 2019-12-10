@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -133,5 +134,57 @@ func (act *ActionCtx) VerifyRuleStats(timestr string, spc *NetworkSecurityPolicy
 		return fmt.Errorf("Rule stats not found: %v", notFound)
 	}
 
+	return nil
+}
+
+func (act *ActionCtx) QueryDropMetricsForWorkloadPairs(wpc *WorkloadPairCollection, timestr string) error {
+	for _, pair := range wpc.pairs {
+		dstIpAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
+		srcIpAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
+		sel := fields.Selector{
+			Requirements: []*fields.Requirement{
+				{
+					Key:    "source",
+					Values: []string{srcIpAddr},
+				},
+				{
+					Key:    "destination",
+					Values: []string{dstIpAddr},
+				},
+			},
+		}
+		res, err := act.model.QueryMetricsSelector("IPv4FlowDropMetrics", timestr, sel)
+		if err != nil {
+			return err
+		}
+		log.Infof("Done with query selection")
+		testFields := map[string]string{
+			"DropPackets": "1",
+			"DropReason":  "1",
+		}
+
+		for _, rslt := range res.Results {
+			log.Infof("Results %d", len(rslt.Series))
+			for _, series := range rslt.Series {
+				// find the column
+				log.Infof("series")
+				cIndex := map[string]int{}
+				for i, c := range series.Columns {
+					if _, ok := testFields[c]; ok {
+						cIndex[c] = i
+
+					}
+				}
+				for _, t := range series.Values {
+					for k, v := range cIndex {
+						temp := fmt.Sprintf("%d", int(t[v].(float64)))
+						if temp != testFields[k] {
+							return fmt.Errorf("received %v : %v expected: %v", k, temp, testFields[k])
+						}
+					}
+				}
+			}
+		}
+	}
 	return nil
 }

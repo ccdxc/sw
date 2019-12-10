@@ -102,6 +102,52 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 }
 
 // PingPairs action verifies ping works between collection of workload pairs
+func (act *ActionCtx) TriggerHping(wpc *WorkloadPairCollection, cmd string) error {
+	if wpc.HasError() {
+		return wpc.Error()
+	}
+
+	cmds := []*iota.Command{}
+	var pairNames []string
+	for _, pair := range wpc.pairs {
+		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.first.iotaWorkload.WorkloadName, pair.second.iotaWorkload.WorkloadName))
+		ipAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
+		cmd := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("sudo hping3 %s %v", cmd, ipAddr),
+			EntityName: pair.first.iotaWorkload.WorkloadName,
+			NodeName:   pair.first.iotaWorkload.NodeName,
+		}
+		cmds = append(cmds, &cmd)
+	}
+
+	log.Infof("Testing ping between workloads %v ", pairNames)
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !act.model.tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to trigger a ping. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got ping Trigger resp: %+v", triggerResp)
+
+	return nil
+}
+
+// PingPairs action verifies ping works between collection of workload pairs
 func (act *ActionCtx) PingPairs(wpc *WorkloadPairCollection) error {
 	if wpc.HasError() {
 		return wpc.Error()
@@ -883,3 +929,16 @@ func (act *ActionCtx) NetcatWrapper(wpc *WorkloadPairCollection, serverOpt, clie
 	return act.netcatTrigger(wpc, serverOpt, clientOpt, port, expFail, expClientExitCode, expOutput)
 }
 
+func (act *ActionCtx) DropIcmpFlowTTLSession(wpc *WorkloadPairCollection, cmd string) error {
+	if wpc.err != nil {
+		return wpc.err
+	}
+	if act.model.tb.mockMode {
+		return nil
+	}
+	//Setup session
+	act.TriggerHping(wpc, cmd)
+	// Trigger -ttl 0
+	act.TriggerHping(wpc, cmd+" --ttl 0")
+	return nil
+}

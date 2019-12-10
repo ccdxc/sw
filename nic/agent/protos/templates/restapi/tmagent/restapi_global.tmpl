@@ -79,11 +79,17 @@ func NewRestServer(tpAgent tpa.CtrlerIntf, keyTranslator *ntranslate.Translator,
 
 // getTagsFromMeta returns tags to store in Venice TSDB
 func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
-	return map[string]string{
+    key := map[string]string{
 		"tenant":    meta.Tenant,
 		"namespace": meta.Namespace,
 		"name":      meta.Name,
 	}
+    if len(meta.Labels) !=0 {
+        for k,v := range meta.Labels {
+            key[k] = v
+        }
+    }
+    return key
 }
 
 // GetObjectMeta is a wrapper around  translate function to set default meta
