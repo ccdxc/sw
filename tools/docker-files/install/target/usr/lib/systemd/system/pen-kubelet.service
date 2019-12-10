@@ -28,5 +28,5 @@ ExecStart=/usr/pensando/bin/kubelet \
   $IMAGE_GC_LOW_THRESHOLD \
 
 Restart=always
-RestartSec=10s
+RestartSec=1s
 LimitNOFILE=40000
