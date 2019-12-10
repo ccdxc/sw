@@ -174,11 +174,6 @@ mirror_session::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-mirror_session::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 mirror_session::add_to_db(void) {
     // mirror sessions are not added to s/w db, so its a no-op
     return SDK_RET_OK;
@@ -188,6 +183,11 @@ sdk_ret_t
 mirror_session::del_from_db(void) {
     // mirror sessions are not added to s/w db, so its a no-op
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+mirror_session::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

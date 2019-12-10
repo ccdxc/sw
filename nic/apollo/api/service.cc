@@ -192,9 +192,10 @@ svc_mapping::del_from_db(void) {
 
 sdk_ret_t
 svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // service mappings are not added to s/w db, so its a no-op, however, since
-    // update operation is not supported on this object, we shouldn't endup here
-    return sdk::SDK_RET_INVALID_OP;
+    if (svc_mapping_db()->remove((svc_mapping *)orig_obj)) {
+        return svc_mapping_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

@@ -29,6 +29,8 @@ public:
      /// \brief Constructor
     api_base() {
         in_dirty_list_ = false;
+        in_deps_list_ = false;
+        rsvd_rsc_ = false;
         stateless_ = false;
     };
 
@@ -39,7 +41,7 @@ public:
     /// \param[in] api_ctxt API context carrying object related configuration
     static api_base *factory(api_ctxt_t *api_ctxt);
 
-    /// \brief Build method to instantiate an object based on current (s/w
+    /// \brief build method to instantiate an object based on current (s/w
     //         and/or hw state)
     /// \param[in] api_ctxt API context carrying object related configuration
     /// \remark
@@ -215,7 +217,7 @@ public:
     /// \brief Mark the object as dirty
     void set_in_dirty_list(void) { in_dirty_list_ = true; }
 
-    /// \brief Returns true if the object is in dirty list
+    /// \brief returns true if the object is in dirty list
     bool in_dirty_list(void) const { return in_dirty_list_; }
 
     /// \brief Clear the dirty bit on this object
@@ -224,28 +226,38 @@ public:
     /// \brief Mark the object as dependent object
     void set_in_deps_list(void) { in_deps_list_ = true; }
 
-    /// \brief Returns true if the object is in dependent list
+    /// \brief returns true if the object is in dependent list
     bool in_deps_list(void) const { return in_deps_list_; }
 
     /// \brief Clear the dependent object bit on this object
     void clear_in_deps_list(void) { in_deps_list_ = false; }
 
-    /// \brief Return true if this is 'stateless' object
+    /// \brief return true if this is 'stateless' object
     bool stateless(void) { return stateless_; }
 
-    /// \brief Return true if object is 'stateless' given an object id
+    /// \brief return true if object is 'stateless' given an object id
     static bool stateless(obj_id_t obj_id);
 
-    /// \brief Return stringified key of the object (for debugging)
+    /// \brief return true if object reserved any h/w resources
+    bool rsvd_rsc(void) const { return rsvd_rsc_; }
+
+    /// \brief set reserved resources flag on this object
+    void set_rsvd_rsc(void) { rsvd_rsc_ = true; }
+
+    /// \brief clear reserved resources flag on this object
+    void clear_rsvd_rsc(void) { rsvd_rsc_ = false; }
+
+    /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const { return "api_base_key"; }
 
-    /// \brief Return stringified contents of the obj (for debugging)
+    /// \brief return stringified contents of the obj (for debugging)
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    bool in_dirty_list_;    ///< True if object is in the dirty list
-    bool in_deps_list_;     ///< True if object is in dependent object list
-    bool stateless_;        ///< True this object doesn't go into any dbs
+    bool in_dirty_list_;    ///< true if object is in the dirty list
+    bool in_deps_list_;     ///< true if object is in dependent object list
+    bool rsvd_rsc_;         ///< true if resources are reserved
+    bool stateless_;        ///< true this object doesn't go into any dbs
 } __PACK__;
 
 }    // namespace api

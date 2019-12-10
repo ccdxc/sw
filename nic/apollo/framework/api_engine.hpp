@@ -36,8 +36,8 @@ typedef enum api_batch_stage_e {
     API_BATCH_STAGE_NONE,                 ///< Invalid stage
     API_BATCH_STAGE_INIT,                 ///< Initialization stage
     API_BATCH_STAGE_PRE_PROCESS,          ///< Pre-processing stage
-    API_BATCH_STAGE_OBJ_DEPENDENCY,       ///< Dependency resolution stage
     API_BATCH_STAGE_RESERVE_RESOURCES,    ///< Reserve resources, if any
+    API_BATCH_STAGE_OBJ_DEPENDENCY,       ///< Dependency resolution stage
     API_BATCH_STAGE_PROGRAM_CONFIG,       ///< Table programming stage
     API_BATCH_STAGE_CONFIG_ACTIVATE,      ///< Epoch activation stage
     API_BATCH_STAGE_ABORT,                ///< Abort stage
@@ -126,7 +126,11 @@ typedef struct api_batch_ctxt_s {
 
 /// \brief API counters maintained by API engine
 typedef struct api_counters_s {
+    // pre-process stage specific counters
     struct {
+        // common counters
+        uint32_t invalid_op_err;
+        // CREATE specific counters
         struct {
             uint32_t ok;
             uint32_t oom_err;
@@ -136,11 +140,13 @@ typedef struct api_counters_s {
             uint32_t invalid_op_err;
             uint32_t invalid_upd_err;
         } create;
+        // DELETE specific counters
         struct {
             uint32_t ok;
             uint32_t obj_build_err;
             uint32_t not_found_err;
         } del;
+        // UPDATE specific counters
         struct {
             uint32_t ok;
             uint32_t obj_build_err;
@@ -151,6 +157,81 @@ typedef struct api_counters_s {
             uint32_t invalid_upd_err;
         } upd;
     } preprocess;
+    // resource reservation stage specific counters
+    struct {
+        // CREATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } create;
+        // DELETE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } del;
+        // UPDATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } rsv_rsc;
+    // object dependency stage specific counters
+    struct {
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } obj_dep;
+    // program config stage specific counters
+    struct {
+        // CREATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } create;
+        // DELETE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } del;
+        // UPDATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } pgm_cfg;
+    // activate config stage specific counters
+    struct {
+        // CREATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } create;
+        // DELETE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } del;
+        // UPDATE specific counters
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } act_cfg;
+    // re-program config stage specific counters
+    struct {
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } re_pgm_cfg;
+    // re-activate config stage specific counters
+    struct {
+        struct {
+            uint32_t ok;
+            uint32_t err;
+        } upd;
+    } re_act_cfg;
 } api_counters_t;
 
 /// \brief Encapsulation for all API processing framework

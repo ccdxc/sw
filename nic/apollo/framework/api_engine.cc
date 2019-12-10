@@ -17,6 +17,8 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 
+#define PDS_API_PREPROCESS_COUNTER_INC(cntr_, val)           \
+            counters_.preprocess.cntr_ += (val)
 #define PDS_API_PREPROCESS_CREATE_COUNTER_INC(cntr_, val)    \
             counters_.preprocess.create.cntr_ += (val)
 #define PDS_API_PREPROCESS_DELETE_COUNTER_INC(cntr_, val)    \
@@ -24,7 +26,41 @@
 #define PDS_API_PREPROCESS_UPDATE_COUNTER_INC(cntr_, val)    \
             counters_.preprocess.upd.cntr_ += (val)
 
-// TODO: is there a need to clone a stateless obj ? can we reuse built obj ?
+#define PDS_API_RSV_RSC_COUNTER_INC(cntr_, val)              \
+            counters_.rsv_rsc.cntr_ += (val)
+#define PDS_API_RSV_RSC_CREATE_COUNTER_INC(cntr_, val)       \
+            counters_.rsv_rsc.create.cntr_ += (val)
+#define PDS_API_RSV_RSC_DELETE_COUNTER_INC(cntr_, val)       \
+            counters_.rsv_rsc.del.cntr_ += (val)
+#define PDS_API_RSV_RSC_UPDATE_COUNTER_INC(cntr_, val)       \
+            counters_.rsv_rsc.upd.cntr_ += (val)
+
+#define PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(cntr_, val)       \
+            counters_.obj_dep.upd.cntr_ += (val)
+
+#define PDS_API_PGMCFG_COUNTER_INC(cntr_, val)               \
+            counters_.pgm_cfg.cntr_ += (val)
+#define PDS_API_PGMCFG_CREATE_COUNTER_INC(cntr_, val)        \
+            counters_.pgm_cfg.create.cntr_ += (val)
+#define PDS_API_PGMCFG_DELETE_COUNTER_INC(cntr_, val)        \
+            counters_.pgm_cfg.del.cntr_ += (val)
+#define PDS_API_PGMCFG_UPDATE_COUNTER_INC(cntr_, val)        \
+            counters_.pgm_cfg.upd.cntr_ += (val)
+
+#define PDS_API_ACTCFG_COUNTER_INC(cntr_, val)               \
+            counters_.act_cfg.cntr_ += (val)
+#define PDS_API_ACTCFG_CREATE_COUNTER_INC(cntr_, val)        \
+            counters_.act_cfg.create.cntr_ += (val)
+#define PDS_API_ACTCFG_DELETE_COUNTER_INC(cntr_, val)        \
+            counters_.act_cfg.del.cntr_ += (val)
+#define PDS_API_ACTCFG_UPDATE_COUNTER_INC(cntr_, val)        \
+            counters_.act_cfg.upd.cntr_ += (val)
+
+#define PDS_API_REPGMCFG_UPDATE_COUNTER_INC(cntr_, val)      \
+            counters_.re_pgm_cfg.upd.cntr_ += (val)
+
+#define PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(cntr_, val)     \
+            counters_.re_act_cfg.upd.cntr_ += (val)
 
 namespace api {
 
@@ -61,9 +97,13 @@ get_current_epoch (void)
 }
 
 sdk_ret_t
+//obj_ctxt_t::add_deps(api_base *obj, api_base *api_obj, api_op_t api_op) {
 obj_ctxt_t::add_deps(api_base *api_obj, api_op_t api_op) {
     sdk_ret_t ret;
 
+    //PDS_TRACE_DEBUG("Adding %s to dependent obj list/map due to object %s",
+                    //api_obj->key2str(), obj->key2str());
+    PDS_TRACE_DEBUG("Adding %s to dependent obj list/map", api_obj->key2str());
     ret = g_api_engine.add_to_deps_list_(api_obj, api_op);
     if (ret == SDK_RET_OK) {
         api_obj->add_deps(this);
@@ -87,7 +127,6 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         // instantiate a new object
         api_obj = api_base::factory(api_ctxt);
         if (unlikely(api_obj == NULL)) {
-            batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
             PDS_API_PREPROCESS_CREATE_COUNTER_INC(oom_err, 1);
             return SDK_RET_ERR;
         }
@@ -388,14 +427,14 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
         break;
 
     default:
+        PDS_API_PREPROCESS_COUNTER_INC(invalid_op_err, 1);
         ret = sdk::SDK_RET_INVALID_OP;
         break;
     }
 
-    if (ret != SDK_RET_OK) {
+    if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failure in pre-process stage, api op %u, obj id %u, "
                       "err %u", api_ctxt->api_op, api_ctxt->obj_id, ret);
-        batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     }
     return ret;
 }
@@ -418,7 +457,6 @@ api_engine::pre_process_stage_(void) {
 
 error:
 
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     return ret;
 }
 
@@ -432,108 +470,42 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_CREATE:
         ret = api_obj->reserve_resources(api_obj, obj_ctxt);
-        obj_ctxt->rsvd_rscs = 1;   // TODO: why do we need this ?
+        // set rsvd_rscs to TRUE even if we fail or partially reserved resources
+        // so we can cleanup at the end
+        obj_ctxt->rsvd_rscs = 1;
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failure in resource reservation stage during create of "
+                          "obj %s,  err %u", api_obj->key2str().c_str(), ret);
+            PDS_API_RSV_RSC_CREATE_COUNTER_INC(err, 1);
+            return ret;
+        }
+        PDS_API_RSV_RSC_CREATE_COUNTER_INC(ok, 1);
         break;
 
     case API_OP_DELETE:
         // no additional resources needed for delete operation
-        return sdk::SDK_RET_OK;
+        PDS_API_RSV_RSC_DELETE_COUNTER_INC(ok, 1);
+        break;
 
     case API_OP_UPDATE:
+        // reserve resources on the cloned object
         ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);
+        // set rsvd_rscs to TRUE even if we fail or partially reserved resources
+        // so we can cleanup at the end
         obj_ctxt->rsvd_rscs = 1;
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failure in resource reservation stage during update of "
+                          "obj %s,  err %u", api_obj->key2str().c_str(), ret);
+            PDS_API_RSV_RSC_UPDATE_COUNTER_INC(err, 1);
+            return ret;
+        }
+        PDS_API_RSV_RSC_UPDATE_COUNTER_INC(ok, 1);
         break;
 
     default:
-        return sdk::SDK_RET_INVALID_OP;
-        break;
+        SDK_ASSERT_RETURN(FALSE, sdk::SDK_RET_INVALID_OP);
     }
-
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failure in resource reservation stage, "
-                      "obj %s, op %u, err %u", api_obj->key2str().c_str(),
-                      obj_ctxt->api_op, ret);
-    }
-    return ret;
-}
-
-sdk_ret_t
-api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t     ret;
-
-    switch (obj_ctxt->api_op) {
-    case API_OP_NONE:
-        // no-op, but during ACTIVATE_EPOCH/ABORT stage, free the object
-        SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        return SDK_RET_OK;
-        break;
-
-    case API_OP_CREATE:
-        // call program_create() callback on the object, note that the object
-        // should have been in the s/w db already by this time marked as dirty
-        SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        ret = api_obj->program_create(obj_ctxt);
-        break;
-
-    case API_OP_DELETE:
-        // call cleanup_config() callback on existing object and mark it for
-        // deletion (cloned_obj, if one exists, doesn't matter and needs to be
-        // freed eventually)
-        // NOTE: delete is same as updating the h/w entries with latest
-        //       epoch, which will be activated later in the commit()
-        //       stage (by programming tables in stage 0, if needed)
-        // TODO: this doesn't sound correct --> for delete we should
-        // program stage0 1st and then update non-stage0 tables, so
-        // activate_config() is the right thing here and then we should
-        // call cleanup_config() in the next stage of API processing
-        ret = api_obj->cleanup_config(obj_ctxt);
-        break;
-
-    case API_OP_UPDATE:
-        // call program_update() callback on the cloned object so new config
-        // can be programmed in the h/w everywhere except stage0, which will
-        // be programmed during commit() stage later
-        // NOTE: during commit() stage, for update case, we will swap new
-        //       obj with old/current one in the all the dbs as well before
-        //       activating epoch is activated in h/w stage 0 (and old
-        //       object should be freed back)
-        // TODO: we may need to pass the original object also here ??
-        SDK_ASSERT(obj_ctxt->cloned_obj != NULL);
-        ret = obj_ctxt->cloned_obj->program_update(api_obj, obj_ctxt);
-        break;
-
-    default:
-        return sdk::SDK_RET_INVALID_OP;
-        break;
-    }
-
-    // remember that hw is dirtied at this time, so we can rollback if needed
-    // additionally, if there is a case where hw entry needs to be restored to
-    // its original state, in the event of rollback, object implementation of
-    // the above callbacks must read current state of respective entries from
-    // hw, stash them in the obj_ctxt_t, so the same state can be rewritten back
-    // to hw
-    obj_ctxt->hw_dirty = 1;
-
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failure in program config stage, "
-                      "obj %s, op %u, err %u", api_obj->key2str().c_str(),
-                      obj_ctxt->api_op, ret);
-    }
-    return ret;
-}
-
-sdk_ret_t
-api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    if (obj_ctxt->api_op != API_OP_UPDATE) {
-        // currently we need to add object dependencies only when a object is
-        // updated, however, it is possible in future that add or delete of
-        // an object might impact other objects as well ... current assumption
-        // is that it is handled in the agent when such a case arises
-        return SDK_RET_OK;
-    }
-    // NOTE: we are invoking this method on the original unmodified object
-    return api_obj->add_deps(obj_ctxt);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -556,8 +528,20 @@ api_engine::resource_reservation_stage_(void)
 
 error:
 
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     return ret;
+}
+
+sdk_ret_t
+api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    if (obj_ctxt->api_op != API_OP_UPDATE) {
+        // currently we need to add object dependencies only when a object is
+        // updated, however, it is possible in future that add or delete of
+        // an object might impact other objects as well ... current assumption
+        // is that it is handled in the agent when such a case arises
+        return SDK_RET_OK;
+    }
+    // NOTE: we are invoking this method on the original unmodified object
+    return api_obj->add_deps(obj_ctxt);
 }
 
 sdk_ret_t
@@ -573,15 +557,103 @@ api_engine::obj_dependency_computation_stage_(void)
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
         ret = add_deps_(*it, &batch_ctxt_.dirty_obj_map[*it]);
-        if (ret != SDK_RET_OK) {
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
             goto error;
         }
     }
+    PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
     return SDK_RET_OK;
 
 error:
 
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
+}
+
+sdk_ret_t
+api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t     ret;
+
+    switch (obj_ctxt->api_op) {
+    case API_OP_NONE:
+        // no-op, but during ACTIVATE_EPOCH/ABORT stage, free the object
+        SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
+        break;
+
+    case API_OP_CREATE:
+        // call program_create() callback on the object, note that the object
+        // should have been in the s/w db already by this time marked as dirty
+        SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
+        ret = api_obj->program_create(obj_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_PGMCFG_CREATE_COUNTER_INC(err, 1);
+            goto error;
+        }
+        PDS_API_PGMCFG_CREATE_COUNTER_INC(ok, 1);
+        break;
+
+    case API_OP_DELETE:
+        // call cleanup_config() callback on existing object and mark it for
+        // deletion
+        // NOTE:
+        // 1. cloned_obj, if one exists, doesn't matter and needs to be freed
+        //    eventually
+        // 2. delete is same as updating the h/w entries with latest epoch,
+        //    which will be activated later in the commit() stage (by
+        //    programming tables in stage 0, if needed)
+        // 3. if the datapath packs multi-epoch data in same entry, calling
+        //    cleanup_config() callback is the right thing here as this doesn't
+        //    affect traffic at this stage until activation stage later on ...
+        //    however, if the datapath doesn't pack multi-epoch data in same
+        //    entry, right thing to do here is to not do anything (and that
+        //    means not even cleaning up stage0 tables) as touching any stage0
+        //    or non-stage0 tables here will affect the packets (and that is
+        //    allowed only in activation stage)
+        ret = api_obj->cleanup_config(obj_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_PGMCFG_DELETE_COUNTER_INC(err, 1);
+            goto error;
+        }
+        PDS_API_PGMCFG_DELETE_COUNTER_INC(ok, 1);
+        break;
+
+    case API_OP_UPDATE:
+        // call program_update() callback on the cloned object so new config
+        // can be programmed in the h/w everywhere except stage0, which will
+        // be programmed during commit() stage later
+        // NOTE: during commit() stage, for update case, we will swap new
+        //       obj with old/current one in the all the dbs as well before
+        //       activating epoch is activated in h/w stage 0 (and old
+        //       object should be freed back)
+        SDK_ASSERT(obj_ctxt->cloned_obj != NULL);
+        ret = obj_ctxt->cloned_obj->program_update(api_obj, obj_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_PGMCFG_UPDATE_COUNTER_INC(err, 1);
+            goto error;
+        }
+        PDS_API_PGMCFG_UPDATE_COUNTER_INC(ok, 1);
+        break;
+
+    default:
+        SDK_ASSERT_RETURN(FALSE, sdk::SDK_RET_INVALID_OP);
+    }
+
+    // remember that hw is dirtied at this time, so we can rollback if needed
+    // additionally, if there is a case where hw entry needs to be restored to
+    // its original state (e.g., in the event of rollback) object implementation
+    // of the above callbacks must read current state of respective entries from
+    // hw (as the original spec is not available anymore), stash them in the
+    // obj_ctxt_t, so the same state can be rewritten back to hw
+    obj_ctxt->hw_dirty = 1;
+    return SDK_RET_OK;
+
+error:
+
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failure in program config stage, "
+                      "obj %s, op %u, err %u", api_obj->key2str().c_str(),
+                      obj_ctxt->api_op, ret);
+    }
     return ret;
 }
 
@@ -598,23 +670,9 @@ api_engine::program_config_stage_(void) {
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
         ret = program_config_(*it, &batch_ctxt_.dirty_obj_map[*it]);
         if (ret != SDK_RET_OK) {
-            goto error;
+            break;
         }
     }
-
-    // walk over all the dependent objects and reprogram hw, if any
-    for (auto it = batch_ctxt_.dep_obj_list.begin();
-         it != batch_ctxt_.dep_obj_list.end(); ++it) {
-        ret = (*it)->reprogram_config(batch_ctxt_.dep_obj_map[*it]);
-        if (ret != SDK_RET_OK) {
-            goto error;
-        }
-    }
-    return SDK_RET_OK;
-
-error:
-
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     return ret;
 }
 
@@ -630,7 +688,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
-        api_obj->delay_delete();
+        api_base::free(obj_ctxt->obj_id, api_obj);
         break;
 
     case API_OP_CREATE:
@@ -640,7 +698,6 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_CREATE,
                                        api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
-        obj_ctxt->hw_dirty = 0;
         del_from_dirty_list_(it, api_obj);
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
@@ -648,6 +705,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                               api_obj->key2str().c_str());
             api_base::soft_delete(obj_ctxt->obj_id, api_obj);
         }
+        PDS_API_ACTCFG_CREATE_COUNTER_INC(ok, 1);
         break;
 
     case API_OP_DELETE:
@@ -657,18 +715,21 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // from all s/w dbs and enqueue for delay deletion (until then table
         // indices won't be freed, because there could be packets
         // circulating in the pipeline that picked older epoch still
-        // (note that s/w can't access this obj anymore from this point
-        //  onwards by doing lookups)
+        // NOTE:
+        // 1. s/w can't access this obj anymore from this point onwards by
+        //    doing db lookups
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_DELETE,
                                        api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
+        // if a cloned object exits, simply free the memory (no need to do delay
+        // delete here because this cloned object was never part of object db)
         if (obj_ctxt->cloned_obj) {
             api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
-            //obj_ctxt->cloned_obj->delay_delete();
         }
+        PDS_API_ACTCFG_DELETE_COUNTER_INC(ok, 1);
         break;
 
     case API_OP_UPDATE:
@@ -676,6 +737,9 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // with this epoch, so update stage 0 now; but before doing that we
         // need to switch the latest epcoh in s/w, otherwise packets can
         // come to FTEs with new epoch even before s/w swich is done
+        // NOTE:
+        // 1. update_db() and activate_config() configs are called on cloned
+        //    object
         ret = obj_ctxt->cloned_obj->update_db(api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         ret = obj_ctxt->cloned_obj->activate_config(batch_ctxt_.epoch,
@@ -694,14 +758,15 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                 api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
             }
         }
-        // TODO: this shouldn't be soft_delete() as that removes the obj from db
-        // api_base::free(obj_ctxt->obj_id, api_obj);
-        api_base::soft_delete(obj_ctxt->obj_id, api_obj);
+        // just free the original object
+        api_base::free(obj_ctxt->obj_id, api_obj);
+        PDS_API_ACTCFG_UPDATE_COUNTER_INC(ok, 1);
         break;
 
     default:
         return sdk::SDK_RET_INVALID_OP;
     }
+    obj_ctxt->hw_dirty = 0;
     return SDK_RET_OK;
 }
 
@@ -721,20 +786,31 @@ api_engine::activate_config_stage_(void) {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
 
+    // walk over all the dependent objects and reprogram hw, if any
+    for (auto it = batch_ctxt_.dep_obj_list.begin();
+         it != batch_ctxt_.dep_obj_list.end(); ++it) {
+        ret = (*it)->reprogram_config(batch_ctxt_.dep_obj_map[*it]);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_REPGMCFG_UPDATE_COUNTER_INC(err, 1);
+            goto error;
+        }
+        PDS_API_REPGMCFG_UPDATE_COUNTER_INC(ok, 1);
+    }
+
     // walk over all the dependent objects & re-activate their config hw, if any
     for (auto it = batch_ctxt_.dep_obj_list.begin();
          it != batch_ctxt_.dep_obj_list.end(); ++it) {
         ret = (*it)->reactivate_config(batch_ctxt_.epoch,
                                        batch_ctxt_.dep_obj_map[*it]);
-        if (ret != SDK_RET_OK) {
-            goto error;
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(err, 1);
+            break;
         }
+        PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(ok, 1);
     }
-    return SDK_RET_OK;
 
 error:
 
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     return ret;
 }
 
@@ -747,20 +823,23 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
     case API_OP_NONE:
         // only case where a dirty obj ends up with this opcode is when new
         // object is created and (eventually) deleted in the same batch. so far
-        // we haven't done any h/w programming, so we just delete the obj from
-        // db(s) and delay delete the slab object
+        // we haven't reserved any h/w resources (and so not done any h/w
+        // programming) so we can just delete the obj from db(s) and delay
+        // delete the slab object
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
-        api_obj->delay_delete();
+        api_base::free(obj_ctxt->obj_id, api_obj);
         break;
 
     case API_OP_CREATE:
         // so far we did the following for the API_OP_CREATE:
-        // 1. instantiated the object
-        // 2. initialized config (in s/w)
-        // 3. added the object to the db(s)
-        // 4. programmed the h/w (if program_config_stage_() got to this object
+        // 1. instantiated the object (both stateful and stateless) and
+        //    iniitialized config (in s/w)
+        // 2. added the object to the db(s)
+        // 3. added the object to the dirty list/map
+        // 4. potentially reserved some resources needed for the object
+        // 5. programmed the h/w (if program_config_stage_() got to this object
         //    in dirty list) before failing (i.e., set hw_dirty bit to true)
         // so, now we have to undo these actions
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
@@ -768,25 +847,38 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
             api_obj->cleanup_config(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
-        api_obj->del_from_db();
+        if (obj_ctxt->rsvd_rscs) {
+            api_obj->release_resources();
+        }
         del_from_dirty_list_(it, api_obj);
-        api_obj->delay_delete();
+        // for both stateful and stateless objects, we have to remove the
+        // object from db and free the object
+        api_obj->del_from_db();
+        api_base::free(obj_ctxt->obj_id, api_obj);
+        // TODO:
+        // As a cleanup
+        // soft_delete() can be implemented on all objects by doing
+        // 1. api_obj->del_from_db();
+        // 2. api_base::free(obj_ctxt->obj_id, api_obj);
+        // and use soft_delete() here instead of making 2 calls
         break;
 
     case API_OP_DELETE:
         // so far we did the following for the API_OP_DELETE:
-        // 1. for stateless objs, we built the object and added to db
-        // 2. added the object to the dirty list
+        // 1. for stateless objs, we built the object on the fly and added to db
+        // 2. added the object to the dirty list/map
         // 3. potentially cloned the original object (UPD-XXX-DEL case)
-        // 4. potentially called cleanup_config() to clear entries in hw and
-        // 5. called set_hw_dirty()
+        // 4. potentially called cleanup_config() to clear (non-stage0) entries
+        //    in hw (i.e., set hw_dirty bit to true)
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
-            //api_obj->program_create(obj_ctxt);  // TODO: don't see a need for this !!
+            api_obj->program_create(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
+        // if a cloned object exits, simply free the memory (no need to do delay
+        // delete here because this cloned object was never part of object db)
         if (obj_ctxt->cloned_obj) {
-            obj_ctxt->cloned_obj->delay_delete();
+            api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         }
         del_from_dirty_list_(it, api_obj);
         if (api_obj->stateless()) {
@@ -798,21 +890,33 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 
     case API_OP_UPDATE:
         // so far we did the following for the API_OP_UPDATE:
-        // 1. for stateless objs, we built the object and added to db
-        // 2. cloned the original object
-        // 3. added original object to dirty list
+        // 1. for stateless objs, we built the object on the fly and added to db
+        // 2. cloned the original/built (if object is stateless) object
+        // 3. added original/built object to dirty list
         // 4. updated cloned obj's s/w cfg to cfg specified in latest update
-        // 5. called program_update() on cloned obj
-        // 6. called set_hw_dirty() on original object
+        // 5. potentially reserved resources for the cloned obj
+        // 6. potentially called program_update() on cloned obj (i.e., set
+        //    hw_dirty to true)
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
-            // TODO: isn't this needed ?
-            // api_obj->program_create(obj_ctxt);
+            // we can't call program_create() here as there is no full spec,
+            // expectation is that the program_update() on cloned object
+            // earlier saved the original state of the table entries in the
+            // datapath (e.g., by reading before modifying)
+            // TODO: perhaps we need a new callback like restore_cfg() as we
+            //       have to differentiate between this case and the case where
+            //       program_update() is called in program_config_() function -
+            //       in this case, spec should not be used in program_update()
+            //       where as in program_config_()_ case spec must be used
+            api_obj->program_update(api_obj, obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
-        api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
+        if (obj_ctxt->cloned_obj->rsvd_rsc()) {
+            obj_ctxt->cloned_obj->release_resources();
+        }
         del_from_dirty_list_(it, api_obj);
+        api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         if (api_obj->stateless()) {
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                               api_obj->key2str().c_str());
@@ -824,7 +928,6 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         ret = sdk::SDK_RET_INVALID_OP;
         break;
     }
-
     return ret;
 }
 
@@ -834,10 +937,14 @@ api_engine::batch_abort_(void) {
     dirty_obj_list_t::iterator    next_it;
     obj_ctxt_t                    octxt;
 
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
-                      sdk::SDK_RET_INVALID_ARG);
+    PDS_TRACE_DEBUG("Initiating batch abort for epoch %u", batch_ctxt_.epoch);
 
-    PDS_TRACE_INFO("Starting rollback config stage");
+    // beyond API_BATCH_STAGE_PROGRAM_CONFIG stage is a point of no return
+    SDK_ASSERT_RETURN((batch_ctxt_.stage <= API_BATCH_STAGE_PROGRAM_CONFIG),
+                      sdk::SDK_RET_INVALID_ARG);
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+
+    PDS_TRACE_INFO("Starting config rollback stage");
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
          it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
@@ -845,31 +952,28 @@ api_engine::batch_abort_(void) {
         ret = rollback_config_(it, *it, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
-    PDS_TRACE_INFO("Finished rollback config stage");
+    PDS_TRACE_INFO("Finished config rollback stage");
+
+    // end the table mgmt. lib transaction
+    PDS_TRACE_INFO("Initiating table transaction end for epoch %u",
+                   batch_ctxt_.epoch);
+    impl_base::pipeline_impl()->table_transaction_end();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
+        return ret;
+    }
 
     // clear all batch related info
-    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
-    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-
-    // walk dirty object map/list & release all stateless object memory
-    PDS_TRACE_INFO("Clearing dirty object map/list ...");
-#if 0
-    // TODO: handle stateless case inside rollback_config_() itself
-    //       (similar to activate_config_())
-    for (auto it = batch_ctxt_.dirty_obj_list.begin();
-         it != batch_ctxt_.dirty_obj_list.end(); ) {
-        api_obj = it->first;
-        if (api_obj->stateless()) {
-            // destroy this object as it is not needed anymore
-            api_obj->delay_delete();
-        }
-        batch_ctxt_.dirty_obj_list.erase(it++);
-    }
-#endif
+    PDS_TRACE_INFO("Clearing dirty object list, map (%u, %u)",
+                   batch_ctxt_.dirty_obj_list.size(),
+                   batch_ctxt_.dirty_obj_map.size());
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
 
+    // reset epoch and stage information
+    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
+    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
     return SDK_RET_OK;
 }
 
@@ -896,6 +1000,8 @@ api_engine::batch_commit(batch_info_t *batch) {
                    batch_ctxt_.dirty_obj_map.size());
 
     // start table mgmt. lib transaction
+    PDS_TRACE_INFO("Initiating table transaction begin for epoch %u",
+                   batch_ctxt_.epoch);
     impl_base::pipeline_impl()->table_transaction_begin();
 
     PDS_TRACE_INFO("Starting resource reservation phase");
@@ -940,19 +1046,24 @@ api_engine::batch_commit(batch_info_t *batch) {
     ret = activate_config_stage_();
     PDS_TRACE_INFO("Finished activate config stage for epoch %u",
                    batch_ctxt_.epoch);
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
 
     // end the table mgmt. lib transaction
+    PDS_TRACE_INFO("Initiating table transaction end for epoch %u",
+                   batch_ctxt_.epoch);
     impl_base::pipeline_impl()->table_transaction_end();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
         return ret;
     }
 
-    // walk dirty object map/list & release all stateless object memory
-    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+    PDS_TRACE_INFO("Clearing dirty object list, map (%u, %u)",
                    batch_ctxt_.dirty_obj_list.size(),
                    batch_ctxt_.dirty_obj_map.size());
-    PDS_TRACE_INFO("Clearing dirty object map/list ...");
+    SDK_ASSERT(batch_ctxt_.dirty_obj_list.size() == 0);
+    SDK_ASSERT(batch_ctxt_.dirty_obj_map.size() == 0);
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");

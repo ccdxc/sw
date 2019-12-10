@@ -179,13 +179,6 @@ mapping_entry::read(pds_mapping_key_t *key, pds_mapping_info_t *info) {
                           (impl::obj_info_t *)info);
 }
 
-sdk_ret_t
-mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // mappings are not added to s/w db, so its a no-op, however, since update
-    // operation is not supported on this object, we shouldn't endup here
-    return sdk::SDK_RET_INVALID_OP;
-}
-
 // even though mapping object is stateless, we need to temporarily insert
 // into the db as back-to-back operations on the same object can be issued
 // in same batch
@@ -198,6 +191,14 @@ sdk_ret_t
 mapping_entry::del_from_db(void) {
     if (mapping_db()->remove(this)) {
         return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    if (mapping_db()->remove((mapping_entry *)orig_obj)) {
+        return mapping_db()->insert(this);
     }
     return SDK_RET_ENTRY_NOT_FOUND;
 }
