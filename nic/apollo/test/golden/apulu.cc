@@ -55,7 +55,8 @@ using namespace sdk::platform::capri;
 #define TXDMA_SYMBOLS_MAX   1
 
 #define UDP_SPORT_OFFSET    34
-#define UDP2_SPORT_OFFSET   66
+#define UDP21_SPORT_OFFSET  66
+#define UDP22_SPORT_OFFSET  84
 #define UDP_SPORT_SIZE      2
 
 typedef struct __attribute__((__packed__)) lifqstate_ {
@@ -128,6 +129,12 @@ uint32_t g_nexthop_id4 = 0x2E4;
 uint32_t g_tunnel2_id4 = 0x74;
 uint32_t g_vni4 = 0xFEED;
 
+uint32_t g_dip5 = 0x0A0A0203;
+uint32_t g_tunnel_id5 = 0x1E5;
+uint32_t g_nexthop_id5 = 0x2E5;
+uint32_t g_tunnel2_id5 = 0x75;
+uint32_t g_vni5 = 0xAFEED;
+
 mpartition *g_mempartition;
 
 class sort_mpu_programs_compare {
@@ -189,20 +196,23 @@ is_equal_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
 }
 
 static bool
-is_equal_double_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2)
+is_equal_double_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2,
+                           uint8_t encap_type)
 {
     if (pkt1.size() != pkt2.size()) {
        return false;
     }
 
+    uint8_t udp2_sport_offset = (encap_type == TX_REWRITE_ENCAP_VXLAN) ?
+        UDP22_SPORT_OFFSET : UDP21_SPORT_OFFSET;
     return (std::equal(pkt1.begin(),
                        pkt1.begin() + UDP_SPORT_OFFSET, pkt2.begin()) &&
             std::equal(pkt1.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE,
-                       pkt1.begin() + UDP2_SPORT_OFFSET,
+                       pkt1.begin() + udp2_sport_offset,
                        pkt2.begin() + UDP_SPORT_OFFSET + UDP_SPORT_SIZE) &&
-            std::equal(pkt1.begin() + UDP2_SPORT_OFFSET + UDP_SPORT_SIZE,
+            std::equal(pkt1.begin() + udp2_sport_offset + UDP_SPORT_SIZE,
                        pkt1.end(),
-                       pkt2.begin() + UDP2_SPORT_OFFSET + UDP_SPORT_SIZE));
+                       pkt2.begin() + udp2_sport_offset + UDP_SPORT_SIZE));
 }
 #endif
 
@@ -641,6 +651,19 @@ mappings_init (void)
     mapping_info->egress_bd_id = g_egress_bd_id1;
     memcpy(mapping_info->dmaci, &g_dmaci1, 6);
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip5, 4);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+    mapping_info->nexthop_id = g_tunnel_id5;
+    mapping_info->egress_bd_id = g_egress_bd_id1;
+    memcpy(mapping_info->dmaci, &g_dmaci1, 6);
+    entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 
 static void
@@ -685,6 +708,20 @@ flows_init (void)
     key.vnic_metadata_bd_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip4;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_id = g_session_id4;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip5;
     key.key_metadata_proto = g_proto1;
     key.key_metadata_sport = g_sport1;
     key.key_metadata_dport = g_dport1;
@@ -762,6 +799,13 @@ tunnels_init (void)
     tunnel_info->nexthop_base = g_nexthop_id4;
     tunnel_info->num_nexthops = 1;
     entry_write(tbl_id, g_tunnel_id4, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    memcpy(tunnel_info->dipo, &g_dipo1, 4);
+    tunnel_info->ip_type = IPTYPE_IPV4;
+    tunnel_info->nexthop_base = g_nexthop_id5;
+    tunnel_info->num_nexthops = 1;
+    entry_write(tbl_id, g_tunnel_id5, 0, 0, &data, false, 0);
 }
 
 static void
@@ -777,6 +821,7 @@ nexthops_init (void)
     entry_write(tbl_id, g_nexthop_id_arm, 0, 0, &data, false, 0);
     memset(&data, 0, sizeof(data));
 
+    memset(&data, 0, sizeof(data));
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_1;
     memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
@@ -789,6 +834,7 @@ nexthops_init (void)
     nexthop_info->vlan = g_ctag1;
     entry_write(tbl_id, g_nexthop_id2, 0, 0, &data, false, 0);
 
+    memset(&data, 0, sizeof(data));
     data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->port = TM_PORT_UPLINK_1;
     memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
@@ -796,6 +842,15 @@ nexthops_init (void)
     nexthop_info->tunnel2_id = g_tunnel2_id4;
     nexthop_info->vlan = g_vni4;
     entry_write(tbl_id, g_nexthop_id4, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    nexthop_info->port = TM_PORT_UPLINK_1;
+    memcpy(nexthop_info->dmaco, &g_dmaco1, 6);
+    memcpy(nexthop_info->smaco, &g_device_mac, 6);
+    nexthop_info->tunnel2_id = g_tunnel2_id5;
+    nexthop_info->vlan = g_vni5;
+    entry_write(tbl_id, g_nexthop_id5, 0, 0, &data, false, 0);
 }
 
 static void
@@ -808,7 +863,14 @@ tunnel2_init (void)
     memset(&data, 0, sizeof(data));
     memcpy(tunnel2_info->dipo, &g_dipo4, 4);
     tunnel2_info->ip_type = IPTYPE_IPV4;
+    tunnel2_info->encap_type = TX_REWRITE_ENCAP_MPLSoUDP;
     entry_write(tbl_id, g_tunnel2_id4, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    memcpy(tunnel2_info->dipo, &g_dipo4, 4);
+    tunnel2_info->ip_type = IPTYPE_IPV4;
+    tunnel2_info->encap_type = TX_REWRITE_ENCAP_VXLAN;
+    entry_write(tbl_id, g_tunnel2_id5, 0, 0, &data, false, 0);
 }
 
 class apulu_test : public ::testing::Test {
@@ -1040,13 +1102,36 @@ TEST_F(apulu_test, test1)
         memcpy(ipkt.data(), g_snd_pkt4, sizeof(g_snd_pkt4));
         epkt.resize(sizeof(g_rcv_pkt4));
         memcpy(epkt.data(), g_rcv_pkt4, sizeof(g_rcv_pkt4));
-        std::cout << "[TCID=" << tcid << "] Tx:P4I-P4E:DoubleEncap" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Tx:P4I-P4E:DoubleEncap:MPLS"
+            << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(is_equal_double_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(is_equal_double_encap_pkt(opkt, epkt,
+                            TX_REWRITE_ENCAP_MPLSoUDP));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt5));
+        memcpy(ipkt.data(), g_snd_pkt5, sizeof(g_snd_pkt5));
+        epkt.resize(sizeof(g_rcv_pkt5));
+        memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
+        std::cout << "[TCID=" << tcid << "] Tx:P4I-P4E:DoubleEncap:VxLAN"
+            << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_double_encap_pkt(opkt, epkt,
+                            TX_REWRITE_ENCAP_VXLAN));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);

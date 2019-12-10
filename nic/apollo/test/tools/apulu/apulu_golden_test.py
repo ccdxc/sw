@@ -109,3 +109,20 @@ opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 dump_pkt(ipkt, 'g_snd_pkt4')
 dump_pkt(opkt, 'g_rcv_pkt4')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.2.3', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='13.13.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0x0, dport=4789, chksum=0) / VXLAN(vni=0xAFEED) / \
+        Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0x0, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:11:12:13:14:15', src='00:D1:D2:D3:D4:D5') / \
+        IP(dst='10.10.2.3', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+dump_pkt(ipkt, 'g_snd_pkt5')
+dump_pkt(opkt, 'g_rcv_pkt5')

@@ -68,6 +68,7 @@ header ipv4_t ipv4_00;
 header ipv6_t ipv6_00;
 header udp_t udp_00;
 header mpls_t mpls_00;
+header vxlan_t vxlan_00;
 
 // layer 0
 header ethernet_t ethernet_0;
@@ -574,6 +575,7 @@ parser deparse_egress {
     extract(ipv6_00);
     extract(udp_00);
     extract(mpls_00);
+    extract(vxlan_00);
 
     // layer 0
     extract(ethernet_0);

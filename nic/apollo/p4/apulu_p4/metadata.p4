@@ -126,6 +126,7 @@ header_type scratch_metadata_t {
         update_ip_chksum    : 1;
         update_l4_chksum    : 1;
         cpu_flags           : 16;
+        encap_type          : 2;
 
         // policer
         policer_valid       : 1;
