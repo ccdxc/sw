@@ -123,6 +123,10 @@ class LifObject(base.ConfigObjectBase):
 
             # Generate RDMA LIF owned resources
             self.slabs = objects.ObjectDatabase()
+
+            # Generate KernelSlab of 4KB and 10 MB for FRPMR 
+            self.kslab_4KB = slab.SlabObject(self, 4096, True) 
+
             self.obj_helper_slab = slab.SlabObjectHelper()
             #slab_spec = spec.rdma.slab.Get(Store)
             #self.obj_helper_slab.Generate(self, slab_spec)
@@ -283,6 +287,8 @@ class LifObject(base.ConfigObjectBase):
                 assert(0)
 
             self.obj_helper_slab.Configure()
+            self.kslab_4KB.Configure()
+
             if len(self.obj_helper_eq.eqs):
                 self.obj_helper_eq.Configure()
             halapi.ConfigureCqs([self.cq])
