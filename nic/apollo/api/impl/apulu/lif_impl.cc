@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
@@ -269,12 +270,13 @@ error:
     return ret;
 }
 
+#define p4i_device_info    action_u.p4i_device_info_p4i_device_info
 sdk_ret_t
 lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
-    uint32_t idx;
     if_impl *intf;
     sdk_ret_t ret;
     nacl_swkey_t key;
+    uint32_t idx, tm_port;
     p4pd_error_t p4pd_ret;
     sdk::policer_t policer;
     nacl_swkey_mask_t mask;
@@ -284,6 +286,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     sdk_table_api_params_t tparams;
     lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
+    p4i_device_info_actiondata_t p4i_device_info_data;
 
     snprintf(name_, SDK_MAX_NAME_LEN, "dsc%u", inb_lif++);
     PDS_TRACE_DEBUG("Creating inband lif %s, key %u", name_, key_);
@@ -298,7 +301,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
 
     // program the nexthop for ARM to uplink traffic
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.port =
+    tm_port = nh_data.nexthop_info.port =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
@@ -417,6 +420,30 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                     nh_idx_, nh_data.nexthop_info.lif,
                     //nh_idx_ + 1, nh_data.nexthop_info.lif,
                     nh_data.nexthop_info.port);
+
+    // program the device info table with the MAC of this lif by
+    // doing read-modify-write
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                      NULL, NULL, &p4i_device_info_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    // TODO: cleanup capri dependency
+    if (tm_port == TM_PORT_UPLINK_0) {
+        sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
+                         spec->mac, ETH_ADDR_LEN);
+    } else if (tm_port == TM_PORT_UPLINK_1) {
+        sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr2,
+                         spec->mac, ETH_ADDR_LEN);
+    }
+    // program the P4I_DEVICE_INFO table
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                       NULL, NULL, &p4i_device_info_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
 
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
@@ -941,12 +968,10 @@ lif_impl::create(pds_lif_spec_t *spec) {
         break;
     case sdk::platform::LIF_TYPE_MNIC_CPU:
         ret = create_datapath_mnic_(spec);
-        ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST_MGMT:
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
         ret = create_internal_mgmt_mnic_(spec);
-        ret = SDK_RET_OK;
         break;
     case sdk::platform::LIF_TYPE_HOST:
         ret = create_host_lif_(spec);

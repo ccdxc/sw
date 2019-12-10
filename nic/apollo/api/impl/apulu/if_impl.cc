@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -126,7 +127,14 @@ if_impl::program_l3_if_(pds_if_spec_t *spec) {
     p4pd_error_t p4pd_ret;
     p4i_device_info_actiondata_t p4i_device_info_data;
 
-    // expecting MAC to passed in L3 interface configuration
+    // if MAC is explicitly set in the spec, use it or else continue using the
+    // MAC from the corresponding lif
+    if (!is_mac_set(spec->l3_if_info.mac_addr)) {
+        return SDK_RET_OK;
+    }
+
+    // perform a read-modify-write of the device entry to update the MAC with
+    // the given MAC
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                       NULL, NULL, &p4i_device_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
