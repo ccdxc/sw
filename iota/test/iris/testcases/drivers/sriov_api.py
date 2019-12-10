@@ -23,6 +23,11 @@ def _getSupportedVFs(hostname, intf):
     api.Trigger_AddHostCommand(req, hostname, cmd)
 
     resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to trigger cmd on host %s" % hostname)
+        api.Logger.error(" cmd=" + cmd)
+        return 0
+
     cmd = resp.commands.pop()
     if cmd.exit_code != 0:
         api.Logger.error("Failed to get supported VF total from host %s interface %s" % (hostname, intf))
@@ -38,6 +43,11 @@ def _startVFs(hostname, intf, target_nvfs):
     api.Trigger_AddHostCommand(req, hostname, cmd)
 
     resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to trigger cmd on host %s" % hostname)
+        api.Logger.error(" cmd=" + cmd)
+        return api.types.status.FAILURE
+
     cmd = resp.commands.pop()
     if cmd.exit_code != 0:
         api.Logger.error("Failed to do %d VFs on host %s interface %s" % (target_nvfs, hostname, intf))
@@ -46,22 +56,60 @@ def _startVFs(hostname, intf, target_nvfs):
 
     return api.types.status.SUCCESS
 
+def _getVFname(hostname, intf, vfid):
+    # return the vf's netdev name based on the pf intf and the vfid
+    #   ls /sys/class/net/<intf>/device/virtfn<vfid>/net
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ls /sys/class/net/%s/device/virtfn%d/net" % (intf, vfid)
+    api.Trigger_AddHostCommand(req, hostname, cmd)
+
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to trigger command on host %s intf %s" % (hostname, intf))
+        api.Logger.error(" cmd=" + cmd)
+        return api.types.status.FAILURE
+
+    cmd = resp.commands.pop()
+    if cmd.exit_code != 0:
+        api.Logger.error("Failed to get VF name for %s vf %d" % (intf, vfid))
+        api.PrintCommandResults(cmd)
+        return None
+
+    vfname = cmd.stdout.strip()
+
+    return vfname
+
 def _setip(hostname, intf, ip):
-    # see code from sriov.py
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ifconfig " + intf + " " + ip
+    api.Trigger_AddHostCommand(req, hostname, cmd)
+
+    api.Logger.info("Setting host %s interface %s to %s" % (hostname, intf, ip))
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to trigger cmd on host %s" % hostname)
+        api.Logger.error(" cmd=" + cmd)
+        return api.types.status.FAILURE
+
+    cmd = resp.commands.pop()
+    if cmd.exit_code != 0:
+        api.Logger.error("Failed to set host %s interface %s to %s" % (hostname, intf, ip))
+        api.PrintCommandResults(cmd)
+        return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def _ping(hostname, ip):
     # see code from sriov.py
     return api.types.status.SUCCESS
 
-def _checkVFDefaults(hostname, intf, vfid):
+def _checkVFDefaults(hostname, intf, vfid, mac):
     # verify that
     #   mac address is 00:...:00
     #   trust is off
     #   link state is auto
     #   vf 0 MAC 00:00:00:00:00:00, spoof checking off, link-state auto, trust off
-
-    api.Logger.info("Check VF Defaults on host %s interface %s vfid %d" % (hostname, intf, vfid))
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd = "ip link show %s | grep 'vf %d MAC'" % (intf, vfid)
@@ -70,7 +118,7 @@ def _checkVFDefaults(hostname, intf, vfid):
     resp = api.Trigger(req)
     if resp is None:
         api.Logger.error("Failed to trigger command on host %s intf %s" % (hostname, intf))
-        api.PrintCommandResults(cmd)
+        api.Logger.error(" cmd=" + cmd)
         return None
 
     cmd = resp.commands.pop()
@@ -80,8 +128,11 @@ def _checkVFDefaults(hostname, intf, vfid):
         return None
 
     info = cmd.stdout.strip()
-    target = "vf %d MAC 00:00:00:00:00:00, spoof checking off, link-state auto, trust off" % vfid
+    target = "vf %d MAC %s, spoof checking off, link-state auto, trust off" % (vfid, mac)
     if info != target:
+        api.Logger.error("vf settings check failed host %s intf %s" % (vfid, hostname, intf))
+        api.Logger.error("    should have: " + target)
+        api.Logger.error("    got        : " + info)
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -89,15 +140,35 @@ def _checkVFDefaults(hostname, intf, vfid):
 def _checkVFAddress(hostname, intf, vfid):
     # see code from sriov.py
     #
-    # need to check ifconfig with both trust off (default) and trust on
-    #    ifconfig <vf> hw ether <macaddr>
-    #    with trust off, should fail with no permission
-    #       ip link set dev <PF> vf <vf-id> trust off
-    #    with trust on, should succeed
-    #       ip link set dev <PF> vf <vf-id> trust on
-    #
-    # need to check ip command
-    #    ip link set <pf> vf <vf-id> <vf-mac>
+    # need to check both set and clear ip commands
+    #    ip link set <pf> vf <vf-id> mac <vf-mac>
+
+    api.Logger.info("Check VF set mac host %s interface %s vfid %d" % (hostname, intf, vfid))
+
+    # set it to something and check it, then set it back to 00
+    for mac in ("00:22:44:66:88:aa", "00:00:00:00:00:00"):
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        cmd = "ip link set %s vf %d mac %s" % (intf, vfid, mac)
+        api.Trigger_AddHostCommand(req, hostname, cmd)
+
+        resp = api.Trigger(req)
+        if resp is None:
+            api.Logger.error("Failed to trigger command on host %s intf %s" % (hostname, intf))
+            api.Logger.error(" cmd=" + cmd)
+            return api.types.status.FAILURE
+
+        cmd = resp.commands.pop()
+        if cmd.exit_code != 0:
+            api.Logger.error("get vf %d info failed on host %s intf %s" % (vfid, hostname, intf))
+            api.PrintCommandResults(cmd)
+            if cmd.stderr.find("RTNETLINK answers: Input/output error") != -1:
+                api.Logger.error("Is the VF API not supported in this FW?")
+                return api.types.status.FAILURE
+
+        if _checkVFDefaults(hostname, intf, vfid, mac) == api.types.status.FAILURE:
+            api.Logger.error("set vf mac failed on host %s intf %s" % (vfid, hostname, intf))
+            return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def _checkVFRate(hostname, intf, vfid):
@@ -119,6 +190,20 @@ def _checkVFLink(hostname, intf, vfid):
 def _checkVFStats(hostname, intf, vfid):
     # check that there have been packets showing up after previous tests
     #       ip -s link show <pf>
+    return api.types.status.SUCCESS
+
+def _checkVFTrust(hostname, intf, vfid):
+    # need to check ifconfig with both trust off (default) and trust on
+    #
+    #    assume trust is off by default
+    #    get VF name
+    #    try ifconfig <vfname> hw ether <macaddr>
+    #        with trust off, should fail with no permission
+    #    ip link set dev <PF> vf <vf-id> trust on
+    #    try ifconfig <vfname> hw ether <macaddr>
+    #        with trust on, should succeed
+    #    ip link set dev <PF> vf <vf-id> trust off
+    #
     return api.types.status.SUCCESS
 
 def _checkVFSpoof(hostname, intf, vfid):
@@ -182,10 +267,10 @@ def Trigger(tc):
     hostname = tc.nodes[0]
     intf = tc.intf
     vfid = tc.num_vfs - 1
-    api.Logger.info("SR-IOV API test on host %s interface %s vfid %d" % (hostname, intf, vfid))
 
     fail = 0
-    ret = _checkVFDefaults(hostname, intf, vfid)
+    api.Logger.info("Check VF defaults on host %s interface %s vfid %d" % (hostname, intf, vfid))
+    ret = _checkVFDefaults(hostname, intf, vfid, "00:00:00:00:00:00")
     if ret != api.types.status.SUCCESS:
         fail = fail + 1
 
@@ -202,6 +287,10 @@ def Trigger(tc):
         fail = fail + 1
 
     ret = _checkVFStats(hostname, intf, vfid)
+    if ret != api.types.status.SUCCESS:
+        fail = fail + 1
+
+    ret = _checkVFTrust(hostname, intf, vfid)
     if ret != api.types.status.SUCCESS:
         fail = fail + 1
 
