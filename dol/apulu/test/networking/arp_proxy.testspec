@@ -1,51 +1,48 @@
-# Test Spec for local2remote scenarios from Host
+# Test Spec
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 1
-    flow: filter://any
+    maxlimits: 5
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet
+        id          : FROM_HOST_PKT
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        template    : ref://factory/packets/id=ETH_ARP
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/MACAddr
+                dst     : ff:ff:ff:ff:ff:ff
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-            ipv4:
-                src     : ref://testcase/config/localmapping/IP
-                dst     : ref://testcase/config/remotemapping/IP
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/localmapping/IP
-                dst     : ref://testcase/config/remotemapping/IP
-                hlim    : 64
-            tcp:
-                sport   : 100
-                dport   : 200
+            arp:
+                op      : 1 # ARP_REQ
+                hwsrc   : ref://testcase/config/localmapping/VNIC/MACAddr
+                hwdst   : 00:00:00:00:00:00
+                psrc    : ref://testcase/config/localmapping/IP
+                pdst    : ref://testcase/config/remotemapping/IP
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TO_SWITCH_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        id          : TO_HOST_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_ARP
         headers     :
-            outereth:
-                src     : callback://networking/packets/GetUplinkPortMac
-                dst     : callback://networking/packets/GetUnderlayRemoteMac
-            outeripv4:
-                src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/remotemapping/TunIP
-                ttl     : 64
-                tos     : 0
-                id      : 0
-            vxlan:
-                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
+            eth:
+                src   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst   : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan  : ref://testcase/config/localmapping/VNIC/VlanId
+            arp:
+                op    : 2 # ARP_REPLY
+                hwsrc : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                hwdst : ref://testcase/config/localmapping/VNIC/MACAddr
+                psrc  : ref://testcase/config/remotemapping/IP
+                pdst  : ref://testcase/config/localmapping/IP
+            payload:
+                data  : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 buffers:
     - buffer:
@@ -82,7 +79,7 @@ session:
             delay    :    1
             packets:
                 - packet:
-                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_HOST_PKT
                     port    : callback://networking/packets/GetExpectedEgressUplinkPort
             descriptors:
                 - descriptor:
