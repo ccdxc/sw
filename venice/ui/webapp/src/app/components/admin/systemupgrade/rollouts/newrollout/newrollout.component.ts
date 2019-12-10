@@ -354,17 +354,19 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.validationMessage = 'No matching DSCs were found for the given constraints.';
       return false;
     }
+    /* 2019-12-09, product time want to have -  “ I do not think End Time should be mandatory, if a user select "Continuous Retry".
+     comment out the following block for now.
     if (!this.isRetryEndTimeValueCorrect()) {
       this.validationMessage = 'An end time is required when "retry failed DSCs" is true.';
       return false;
-    }
+    } */
     if (this.newRollout.$formGroup.get(['spec', 'dsc-must-match-constraint']).value) {
 
       const orders = this.getOrderConstraints();
       for (let ix = 0; ix < orders.length; ix++) {
         const repeaterSearchExpression: SearchExpression[] = this.convertFormArrayToSearchExpression(orders[ix].value);
         if (repeaterSearchExpression.length === 0) {
-          this.validationMessage = 'An end time is required when "retry failed DSCs" is true.';
+          this.validationMessage = 'No DSC search criteria is specified.';
           return false;
         } else {
           for (let i = 0; i < repeaterSearchExpression.length; i++) {

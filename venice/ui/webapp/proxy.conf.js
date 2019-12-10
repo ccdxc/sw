@@ -1,6 +1,6 @@
-// const URL = "10.7.100.108:10001"
- const URL = "10.7.100.21:10001"
-// const URL = "10.7.100.75:10001'
+// const URL = "10.7.100.108:10001"  // Rohan's
+// const URL = "10.7.100.21:10001"  // Jeff's dev
+// const URL = "10.7.100.75:10001"  // For CalSoftInc
 // const URL = "192.168.71.124:10001" // Ubuntu Box
 // const URL = "10.8.101.146"  // Vipin's setup
 // const URL = "10.7.100.53:10001"; // Jay
@@ -17,7 +17,7 @@
 // const URL = "192.168.129.38";
 // const URL =  "192.168.78.243"
 // const URL =  "192.168.129.42";  // many NICS
-//  const URL =  "192.168.76.201"
+const URL =  "192.168.76.201"
 
 const PROXY_CONFIG =
   {

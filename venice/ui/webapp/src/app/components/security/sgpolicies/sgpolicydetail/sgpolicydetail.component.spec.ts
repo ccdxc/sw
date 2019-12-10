@@ -646,7 +646,7 @@ describe('SgpolicydetailComponent', () => {
     expect(getOverlayText().nativeElement.textContent).toContain('policy2 does not exist');
     let buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
-    expect(buttons[0].nativeElement.textContent).toContain('SG POLICIES');
+    expect(buttons[0].nativeElement.textContent).toContain('POLICIES');
     expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
     // Form controls should be disabled
     expect(getSourceIpInput().nativeElement.disabled).toBeTruthy();
@@ -690,7 +690,7 @@ describe('SgpolicydetailComponent', () => {
     expect(getOverlayText().nativeElement.textContent).toContain('policy2 has been deleted');
     buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
-    expect(buttons[0].nativeElement.textContent).toContain('SG POLICIES');
+    expect(buttons[0].nativeElement.textContent).toContain('POLICIES');
     expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
     // Form controls should be disabled
     expect(getSourceIpInput().nativeElement.disabled).toBeTruthy();

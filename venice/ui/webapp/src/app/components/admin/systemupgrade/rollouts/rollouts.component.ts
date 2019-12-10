@@ -194,10 +194,14 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     return toolbarData;
   }
 
+  /**
+   * This API controls whether to build [Create Rollout] button
+   */
   isToBuildCreateButton(): boolean {
     const isBuild = true;
     for  (let i = 0; i < this.dataObjects.length; i++) {
-      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.progressing || this.dataObjects[i].status.state === RolloutRolloutStatus_state['precheck-in-progress'] || this.dataObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress']) {
+      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.progressing || this.dataObjects[i].status.state === RolloutRolloutStatus_state['precheck-in-progress']
+          || this.dataObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress'] || this.dataObjects[i].status.state === RolloutRolloutStatus_state['scheduled-for-retry']) {
         return false;
       }
     }

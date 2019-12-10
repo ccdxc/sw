@@ -25,8 +25,8 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 })
 export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterHost> implements OnInit {
 
-  public static  HOST_FIELD_DSCS: string  = 'processedSmartNics';
-  public static  HOST_FIELD_WORKLOADS: string  = 'processedWorkloads';
+  public static HOST_FIELD_DSCS: string = 'processedSmartNics';
+  public static HOST_FIELD_WORKLOADS: string = 'processedWorkloads';
 
   bodyicon: Icon = {
     margin: {
@@ -58,11 +58,11 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   notAdmittedCount: number = 0;
 
   cols: TableCol[] = [
-    {field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 15},
-    {field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: false , width: 25},
-    {field: 'workloads', header: 'Associated Workloads', class: 'hosts-column-workloads', sortable: false, width: 25},
-    {field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px'},
-    {field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px'},
+    { field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 15 },
+    { field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: false, width: 25 },
+    { field: 'workloads', header: 'Associated Workloads', class: 'hosts-column-workloads', sortable: false, width: 25 },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px' },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px' },
   ];
 
   exportFilename: string = 'Venice-hosts';
@@ -71,13 +71,13 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
   hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; };
 
-  maxWorkloadsPerRow: number = 10;
+  maxWorkloadsPerRow: number = 8;
 
   constructor(private clusterService: ClusterService,
-              private workloadService: WorkloadService,
-              protected cdr: ChangeDetectorRef,
-              protected uiconfigsService: UIConfigsService,
-              protected controllerService: ControllerService) {
+    private workloadService: WorkloadService,
+    protected cdr: ChangeDetectorRef,
+    protected uiconfigsService: UIConfigsService,
+    protected controllerService: ControllerService) {
     super(controllerService, cdr, uiconfigsService);
   }
 
@@ -87,15 +87,31 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     const subscription = this.clusterService.WatchHost().subscribe(
       response => {
         this.hostsEventUtility.processEvents(response);
-        this.hostWorkloadsTuple  = ObjectsRelationsUtility.buildHostWorkloadsMap(this.workloads, this.dataObjects  );
-        this.dataObjects.map(host => {
-          host[HostsComponent.HOST_FIELD_DSCS] = this.processSmartNics(host);
-          host[HostsComponent.HOST_FIELD_WORKLOADS] = this.getHostWorkloads(host);
-        });
+        this.buildHostWorkloadsMap();  // host[i] -> workloads[] map
       },
       this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
     );
     this.subscriptions.push(subscription);
+  }
+
+  /**
+   * This API build host[i] -> workloads[] map
+   * As # of workloads are much greater that of hosts, we invoke this api in both getHosts() and getWorkloads()
+   * Backend keeps push workload records to UI when there is no more hosts received from web-sockets.
+   * We have to keep building host[i] -> workloads[] map to show data in UI.
+   *
+   * TODO: tune performance.
+   * In https://192.168.76.198, there 5000 workloads and 600 hosts.  Browser will be very busy.
+   *
+   */
+  buildHostWorkloadsMap() {
+    if (this.workloads && this.dataObjects) {
+      this.hostWorkloadsTuple = ObjectsRelationsUtility.buildHostWorkloadsMap(this.workloads, this.dataObjects);
+      this.dataObjects.map(host => {
+        host[HostsComponent.HOST_FIELD_DSCS] = this.processSmartNics(host);
+        host[HostsComponent.HOST_FIELD_WORKLOADS] = this.getHostWorkloads(host);
+      });
+    }
   }
 
   getNaples() {
@@ -129,6 +145,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
+        this.buildHostWorkloadsMap();
       },
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
@@ -159,7 +176,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
     this.controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{label: 'Hosts', url: Utility.getBaseUIUrl() + 'cluster/hosts'}]
+      breadcrumb: [{ label: 'Hosts', url: Utility.getBaseUIUrl() + 'cluster/hosts' }]
     });
   }
 
@@ -241,15 +258,15 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
    * @param host
    */
   buildMoreWorkloadTooltip(host: ClusterHost): string {
-     const wltips = [];
-     const workloads = host[HostsComponent.HOST_FIELD_WORKLOADS] ;
-     for ( let i = 0; i < workloads.length ; i ++ ) {
-       if (i >= this.maxWorkloadsPerRow) {
-         const workload = workloads[i];
-         wltips.push(workload.meta.name);
-       }
-     }
-     return wltips.join(' , ');
+    const wltips = [];
+    const workloads = host[HostsComponent.HOST_FIELD_WORKLOADS];
+    for (let i = 0; i < workloads.length; i++) {
+      if (i >= this.maxWorkloadsPerRow) {
+        const workload = workloads[i];
+        wltips.push(workload.meta.name);
+      }
+    }
+    return wltips.join(' , ');
   }
 
 

@@ -109,7 +109,7 @@
                          placeholder="Max DSC Failures Allowed." min='1' max='2000'>
                   <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
                               formControlName="retry"
-                              label="Continuously retry failed DSCs."
+                              label="Retry for failed DSCs"
                               [matTooltip]="'To enable, set Max Allowed DSCs Failure greater than 0. '"
                               labelStyleClass="newrollout-schedulenow-text"
                               (onChange)="onRolloutDSCRetryChange($event)"></p-checkbox>

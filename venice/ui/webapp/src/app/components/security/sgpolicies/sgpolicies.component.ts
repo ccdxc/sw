@@ -60,7 +60,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   }
 
   postNgInit() {
-    this.getSGPolicies();
+    this.getSecurityPolicies();
   }
 
   setDefaultToolbar() {
@@ -79,14 +79,14 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
     });
   }
 
-  getSGPolicies() {
+  getSecurityPolicies() {
     this.sgPoliciesEventUtility = new HttpEventUtility<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy);
     this.dataObjects = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
       },
-      this._controllerService.webSocketErrorHandler('Failed to get SG Policies')
+      this._controllerService.webSocketErrorHandler('Failed to get security policies')
     );
     this.subscriptions.push(subscription);
   }

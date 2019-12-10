@@ -44,7 +44,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'techsupportrequests-column-name', sortable: true, width: 15, notReorderable: true },
-    { field: 'meta.mod-time', header: 'Time', class: 'techsupportrequests-column-date', sortable: true, width: '180px' , notReorderable: true  },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'techsupportrequests-column-date', sortable: true, width: '180px' , notReorderable: true  },
     { field: 'spec.node-selector', header: 'Selected Nodes', class: ' techsupportrequests-column-node_selector', sortable: false, width: 45 },
     { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true,  width: 15}
   ];

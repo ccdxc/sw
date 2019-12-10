@@ -82,7 +82,7 @@
        fxLayout="row" fxLayoutGap="5px" *ngIf="showDeleteIcon(rowData)">
     <!-- only admin role can run config restore -->
     <mat-icon matTooltip="Restore config" *roleGuard="'adminrole'"
-              class="global-table-action-icon"
+              class="global-table-action-icon snapshot-table-row-action-restore"
               (click)="onRestoreSnapshotClick($event, rowData)">restore
     </mat-icon>
     <mat-icon *roleGuard="'objstorebucket_delete'" matTooltip="Delete config"

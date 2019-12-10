@@ -321,7 +321,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
           }
         }
       },
-      this.controllerService.webSocketErrorHandler('Failed to get SG Policies')
+      this.controllerService.webSocketErrorHandler('Failed to get security policies')
     );
     this.subscriptions.push(subscription);
   }

@@ -11,8 +11,37 @@ import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.compo
 import { TelemetryPollingMetricQueries, MetricsPollingQuery, MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+/**
+SessionSummaryMetrics table looks like this
 
+time	dsc	TotalActiveSession
+t0-1	dsc-1	1
+t0-1	dsc-2	2
+t0-1	dsc-3	3
+t0-1	dsc-4	4
+t0-1	dsc-5	5	 15	t0-1 window all DSCs total sessions. avg 15/5=3
+t0-2	dsc-1	11
+t0-2	dsc-2	12
+t0-2	dsc-3	13
+t0-2	dsc-4	14
+t0-2	dsc-5	15	65
+t1-1	dsc-1	21
+t1-1	dsc-2	22
+t1-1	dsc-3	23
+t1-1	dsc-4	24
+t1-1	dsc-5	25	115
+t1-2	dsc-1	31
+t1-2	dsc-2	32
+t1-2	dsc-3	33
+t1-2	dsc-4	34
+t1-2	dsc-5	35	165	current active sessions (dsc1-dsc5)
+
+Where from t0-1 to t0-2, there are 30 seconds time gap.
+===
+In t0 window, dsc-1 total sessions is 1+11 = 12, averge is 6. However, (t0-2	dsc-1	11) may contain the session in (t0-1	dsc-1	1)
+
+ */
 @Component({
   selector: 'app-dsbdpolicyhealth',
   templateUrl: './policyhealth.component.html',
@@ -55,7 +84,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     graphId: 'dsbdpolicyhealth-activeFlows',
     defaultValue: 0,
     defaultDescription: 'Avg',
-    hoverDescription: 'Flows',
+    hoverDescription: 'Sessions',
     isPercentage: false,
     scaleMin: 0,
   };
@@ -145,7 +174,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
       bodyFontFamily: 'Fira Sans Condensed',
       bodyFontSize: 14,
       callbacks: {
-        label: function(tooltipItem, data) {
+        label: function (tooltipItem, data) {
           const dataset = data.datasets[tooltipItem.datasetIndex];
           const label = data.labels[tooltipItem.index];
           const val = dataset.data[tooltipItem.index];
@@ -179,7 +208,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
   currActiveFlows: number;
 
   constructor(private router: Router,
-              protected metricsqueryService: MetricsqueryService) { }
+    protected metricsqueryService: MetricsqueryService) { }
 
   toggleFlip() {
     // this.flipState = FlipComponent.toggleState(this.flipState);
@@ -208,11 +237,11 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
-    queryList.queries.push(this.sessionTimeSeriesQuery());
+    queryList.queries.push(this.sessionTimeSeriesQuery()); // time series. Every 5 minutes last Sum(all DSC TotalActiveSessions)
     queryList.queries.push(this.cpsTimeSeriesQuery());
     queryList.queries.push(this.sessionAvgQuery());
     queryList.queries.push(this.cpsAvgQuery());
-    queryList.queries.push(this.sessionCurrentQuery());
+    queryList.queries.push(this.sessionCurrentQuery());  // current TotalActiveSessions of all DSCs
 
     const sub = this.metricsqueryService.pollMetrics('policyHealthCards', queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
@@ -287,12 +316,64 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     }
   }
 
+  /**
+   Every 5 minutes window, take 5-minutes-window's mean(all DSC average TotalActiveSessions)
+   {
+      "tenant": "default",
+      "namespace": null,
+      "queries": [
+        {
+          "kind": "SessionSummaryMetrics",
+          "api-version": null,
+          "name": null,
+          "function": "mean",
+          "start-time": "2019-12-05T19:00:25.195Z",
+          "end-time": "now()",
+          "group-by-time": "5m",
+          "sort-order": "ascending"
+        }
+      ]
+    }
+   */
   sessionTimeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics', []);
+    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics', [], null, Telemetry_queryMetricsQuerySpec_function.mean);
   }
 
+  /**
+   * 2019-12-05 Per discussion with Ranjith and Jeff
+   * metrics query request JSON as below (we want to have Sum(all DSC the lastest record's TotalActiveSessions )
+   {
+      "tenant": "default",
+      "namespace": null,
+      "queries": [
+        {
+          "kind": "SessionSummaryMetrics",
+          "api-version": null,
+          "name": null,
+          "function": "max",
+          "start-time": "2019-12-05T19:12:25.195Z",
+          "end-time": "now()",
+          "group-by-time": null,
+          "group-by-field": null,
+          "sort-order": "ascending"
+        }
+      ]
+    }
+   */
+  /**
+   TODO: // why we want to use "max" function for now 2019-12-09
+   Say we have the following points, reported in the given order:
+
+    t1-2	dsc-3	90
+    t1-2	dsc-4	90
+    t1-2	dsc-5	0
+   the "last" function will return 0 since dsc-5 returned 0.
+   The last function won't aggregate across the naples before picking a value, it will just pick the last reported point. This value isn't indicative of the actual current CPS
+
+   Ideally, we should get have a "sum" function. This will give as 180 (90 + 90 + 0).  That is all the active sessions across all dsc-(3 to 5)
+   */
   sessionCurrentQuery(): MetricsPollingQuery {
-    return MetricsUtility.currentFiveMinPolling('SessionSummaryMetrics');
+    return MetricsUtility.currentFiveMinPolling('SessionSummaryMetrics', null, ['TotalActiveSessions'],  Telemetry_queryMetricsQuerySpec_function.max);
   }
 
   sessionAvgQuery(): MetricsPollingQuery {

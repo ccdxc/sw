@@ -135,12 +135,14 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(timeSeriesQuery);
   }
 
-  public static timeSeriesQueryPolling(kind: string, fields: string[], selector: IFieldsSelector = null): MetricsPollingQuery {
+  public static timeSeriesQueryPolling(kind: string, fields: string[], selector: IFieldsSelector = null,
+                                      functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean
+    ): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.createTimeSeriesQueryMerge()
     };
-    return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector), pollingOptions: pollOptions };
+    return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector, functionToUse), pollingOptions: pollOptions };
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
@@ -184,6 +186,7 @@ export class MetricsUtility {
   }
 
   public static currentFiveMinQuery(kind: string, selector: IFieldsSelector = null,
+    tablefields: string[] = [],
     functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
     sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending): Telemetry_queryMetricsQuerySpec {
     const query: ITelemetry_queryMetricsQuerySpec = {
@@ -195,18 +198,19 @@ export class MetricsUtility {
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
-      fields: [],
+      fields: tablefields,
       'start-time': Utility.roundDownTime(5).toISOString() as any,
       'end-time': 'now()' as any,
     };
     return new Telemetry_queryMetricsQuerySpec(query);
   }
 
-  public static currentFiveMinPolling(kind: string, selector: IFieldsSelector = null): MetricsPollingQuery {
+  public static currentFiveMinPolling(kind: string, selector: IFieldsSelector = null, tablefields: string[] = [],
+                                      functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.currentFiveMinQueryUpdate,
     };
-    return { query: MetricsUtility.currentFiveMinQuery(kind, selector), pollingOptions: pollOptions };
+    return { query: MetricsUtility.currentFiveMinQuery(kind, selector, tablefields, functionToUse), pollingOptions: pollOptions };
   }
 
   public static currentFiveMinQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {

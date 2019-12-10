@@ -18,7 +18,7 @@ import { ClusterVersion } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription, timer, interval } from 'rxjs';
 import { map, takeUntil, tap, retryWhen, delayWhen } from 'rxjs/operators';
-import { BaseComponent} from '@app/components/base/base.component';
+import { BaseComponent } from '@app/components/base/base.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
@@ -29,7 +29,7 @@ import { sideNavMenu, SideNavItem } from './appcontent.sidenav';
 import { TemplatePortalDirective } from '@angular/cdk/portal';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { RolloutService } from '@app/services/generated/rollout.service';
-import { RolloutRollout, RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
+import { RolloutRollout, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { ConfirmDialog } from 'primeng/primeng';
 import { SearchService } from './services/generated/search.service';
 import { ISearchSearchRequest, SearchSearchRequest_mode, SearchSearchRequest, FieldsRequirement_operator, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
@@ -144,7 +144,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
     this._subscribeToEvents();
     this._bindtoStore();
-    this.userName = Utility.getInstance().getLoginName() ;
+    this.userName = Utility.getInstance().getLoginName();
     this.setMomentJSSettings();
 
     this.clocktimer = setInterval(() => {
@@ -168,7 +168,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
           // When a primeng alert is created, it tries to "focus" on a button, not adding a button returns an error.
           // So we create a button but hide it later.
         }
-        });
+      });
       setTimeout(() => {
         this.confirmDialog.acceptVisible = false;
       }, 0);
@@ -194,9 +194,9 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   }
 
   checkRollouts() {
-    for  (let i = 0; i < this.rolloutObjects.length; i++) {
-      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.progressing  ||
-         this.rolloutObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress'] ) {
+    for (let i = 0; i < this.rolloutObjects.length; i++) {
+      if (this.rolloutObjects[i].status.state === RolloutRolloutStatus_state.progressing ||
+        this.rolloutObjects[i].status.state === RolloutRolloutStatus_state['suspend-in-progress']) {
         // VS-842. Venice appliance may reboot while suspending rollout. At that monment, rollout is not done.
         this.currentRollout = this.rolloutObjects[i];
         break;
@@ -210,21 +210,21 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
   setMomentJSSettings() {
     moment.updateLocale('en', {
-      relativeTime : {
-          future: 'in %s',
-          past:   '%s ago',
-          s  : 'one seconds',
-          ss : '%d seconds',
-          m:  'one minute',
-          mm: '%d minutes',
-          h:  'one hour',
-          hh: '%d hours',
-          d:  'one day',
-          dd: '%d days',
-          M:  'one month',
-          MM: '%d months',
-          y:  'one year',
-          yy: '%d years'
+      relativeTime: {
+        future: 'in %s',
+        past: '%s ago',
+        s: 'one seconds',
+        ss: '%d seconds',
+        m: 'one minute',
+        mm: '%d minutes',
+        h: 'one hour',
+        hh: '%d hours',
+        d: 'one day',
+        dd: '%d days',
+        M: 'one month',
+        MM: '%d months',
+        y: 'one year',
+        yy: '%d years'
       }
     });
     moment.relativeTimeThreshold('ss', 0);
@@ -256,7 +256,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   handleWatchVersionResponse(response) {
     this.versionEventUtility.processEvents(response);
     if (this.versionArray.length > 0 && this.version.status['rollout-build-version'] !== this.versionArray[0].status['rollout-build-version']) {
-      if (!!this.versionArray[0].status['rollout-build-version'] ) {
+      if (!!this.versionArray[0].status['rollout-build-version']) {
         this.updateRolloutUIBlock();
         Utility.getInstance().setMaintenanceMode(true);
       } else {
@@ -287,7 +287,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
               this.getVersion();  // Watch ends during rollout, try again so new updates can be shown on UI
             }, 3000);
           } else {
-          this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
+            this._controllerService.webSocketErrorToaster('Failed to get Cluster Version', error);
           }
         },
         () => {
@@ -308,7 +308,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   ngOnDestroy() {
     this.unsubscribeStore$.next();
     this.unsubscribeStore$.complete();
-    this.subscriptions.forEach( (sub) => {
+    this.subscriptions.forEach((sub) => {
       sub.unsubscribe();
     });
     this._boolInitApp = false;
@@ -508,16 +508,31 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   }
 
   onRolloutComplete() {
+    // Per VS-932. We want to logout user if rollout succeeded.
+    let isRolloutSucceeded: boolean = false;
     let msg = 'Rollout completed'; // VS-849
-    if (this.currentRollout && this.currentRollout.status.state === RolloutRolloutStatus_state.scheduled) {
-      msg = 'Rollout suspended';
+    if (this.currentRollout) {
+      if (this.currentRollout.status.state === RolloutRolloutStatus_state.scheduled) {
+        msg = 'Rollout suspended';
+      }
+      if (this.currentRollout.status.state === RolloutRolloutStatus_state.success) {
+        msg = 'Rollout succeeded';
+        isRolloutSucceeded = true;
+      }
     }
     this.currentRollout = null;
     Utility.getInstance().setCurrentRollout(null);
-    this._controllerService.invokeInfoToaster('Rollout', msg + '. Page will reload in 5 seconds.');
-    setTimeout(() => {
-      window.location.reload();
-    }, 5000);
+    if (isRolloutSucceeded) {
+      this._controllerService.invokeInfoToaster('Rollout', msg + '. You will be logged out in 5 seconds. Please refresh browser.');
+      setTimeout(() => {
+        this._controllerService.publish(Eventtypes.LOGOUT, {'reason': 'Rollout succeeded'});
+      }, 5000);
+    } else {
+      this._controllerService.invokeInfoToaster('Rollout', msg + '. Page will reload in 5 seconds.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+    }
   }
 
   /**
@@ -550,7 +565,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   updateHighestSeverity() {
     this.alertHighestSeverity = 'info';
     let alert: MonitoringAlert;
-    for (let i = 0 ; i < this.alerts.length ; i++) {
+    for (let i = 0; i < this.alerts.length; i++) {
       alert = this.alerts[i];
       if (alert.status.severity === 'critical') {
         this.alertHighestSeverity = 'critical';
@@ -580,13 +595,13 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     }
     const query: SearchSearchRequest = new SearchSearchRequest({
       query: {
-        kinds:  ['Alert'],
+        kinds: ['Alert'],
         fields: {
-         'requirements': [{
-           key: 'spec.state',
-           operator: FieldsRequirement_operator.equals,
-           values: ['open']
-         }]
+          'requirements': [{
+            key: 'spec.state',
+            operator: FieldsRequirement_operator.equals,
+            values: ['open']
+          }]
         }
       },
       'max-results': 2,
@@ -632,7 +647,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
             this._controllerService.invokeInfoToaster('Alert', alertMsg);
           }
         }
-        if (this.startingAlertCount <= 0  ) {
+        if (this.startingAlertCount <= 0) {
           this.alertNumbers = this.alerts.length;
         } else {
           this.alertNumbers = Math.max(this.startingAlertCount, this.alerts.length);
