@@ -19,7 +19,6 @@
 namespace api {
 
 svc_mapping::svc_mapping() {
-    stateless_ = true;
     ht_ctxt_.reset();
     impl_ = NULL;
 }

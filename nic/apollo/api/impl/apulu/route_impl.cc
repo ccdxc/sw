@@ -71,11 +71,15 @@ route_table_impl::free(route_table_impl *impl) {
 //       API_OP_UPDATE as update doesn't reuse any of the existing resources
 //       for this object
 sdk_ret_t
-route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+route_table_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t                  lpm_block_id;
     pds_route_table_spec_t    *spec;
 
     spec = &obj_ctxt->api_params->route_table_spec;
+    // record the fact that resource reservation was attempted
+    // NOTE: even if we partially acquire resources and fail eventually,
+    //       this will ensure that proper release of resources will happen
+    api_obj->set_rsvd_rsc();
     // allocate free lpm slab for this route table
     if (spec->af == IP_AF_IPV4) {
         if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=

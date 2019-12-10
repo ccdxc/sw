@@ -471,12 +471,10 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_CREATE:
         ret = api_obj->reserve_resources(api_obj, obj_ctxt);
-        // set rsvd_rscs to TRUE even if we fail or partially reserved resources
-        // so we can cleanup at the end
-        obj_ctxt->rsvd_rscs = 1;
         if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failure in resource reservation stage during create of "
-                          "obj %s,  err %u", api_obj->key2str().c_str(), ret);
+            PDS_TRACE_ERR("Failure in resource reservation stage during create "
+                          "of obj %s,  err %u",
+                          api_obj->key2str().c_str(), ret);
             PDS_API_RSV_RSC_CREATE_COUNTER_INC(err, 1);
             return ret;
         }
@@ -491,12 +489,10 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     case API_OP_UPDATE:
         // reserve resources on the cloned object
         ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);
-        // set rsvd_rscs to TRUE even if we fail or partially reserved resources
-        // so we can cleanup at the end
-        obj_ctxt->rsvd_rscs = 1;
         if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failure in resource reservation stage during update of "
-                          "obj %s,  err %u", api_obj->key2str().c_str(), ret);
+            PDS_TRACE_ERR("Failure in resource reservation stage during update "
+                          "of obj %s,  err %u",
+                          api_obj->key2str().c_str(), ret);
             PDS_API_RSV_RSC_UPDATE_COUNTER_INC(err, 1);
             return ret;
         }
@@ -700,7 +696,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                                        api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(it, api_obj);
-        if (api_obj->stateless()) {
+        if (api_base::stateless(obj_ctxt->obj_id)) {
             // destroy this object as it is not needed anymore
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                               api_obj->key2str().c_str());
@@ -751,15 +747,13 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // the current obj is already deleted from the s/w db and swapped with
         // cloned_obj when update_db() was called on cloned_obj above
         del_from_dirty_list_(it, api_obj);
-        if (api_obj->stateless()) {
+        if (api_base::stateless(obj_ctxt->obj_id)) {
             // destroy cloned object as it is not needed anymore
-            if (obj_ctxt->cloned_obj->stateless()) {
-                PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
-                                  api_obj->key2str().c_str());
-                api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
-            }
+            PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
+                              api_obj->key2str().c_str());
+            api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         }
-        // just free the original object
+        // just free the original/built object (if object type is stateless)
         api_base::free(obj_ctxt->obj_id, api_obj);
         PDS_API_ACTCFG_UPDATE_COUNTER_INC(ok, 1);
         break;
@@ -848,7 +842,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
             api_obj->cleanup_config(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
-        if (obj_ctxt->rsvd_rscs) {
+        if (api_obj->rsvd_rsc()) {
             api_obj->release_resources();
         }
         del_from_dirty_list_(it, api_obj);
@@ -882,7 +876,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
             api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         }
         del_from_dirty_list_(it, api_obj);
-        if (api_obj->stateless()) {
+        if (api_base::stateless(obj_ctxt->obj_id)) {
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                               api_obj->key2str().c_str());
             api_base::soft_delete(obj_ctxt->obj_id, api_obj);
@@ -918,7 +912,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         }
         del_from_dirty_list_(it, api_obj);
         api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
-        if (api_obj->stateless()) {
+        if (api_base::stateless(obj_ctxt->obj_id)) {
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                               api_obj->key2str().c_str());
             api_base::soft_delete(obj_ctxt->obj_id, api_obj);

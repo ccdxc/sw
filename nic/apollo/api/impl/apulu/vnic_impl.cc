@@ -74,7 +74,7 @@ vnic_impl::free(vnic_impl *impl) {
 }
 
 sdk_ret_t
-vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vnic_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     lif_impl *lif;

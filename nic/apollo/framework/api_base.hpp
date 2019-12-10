@@ -28,10 +28,9 @@ class api_base : public obj_base {
 public:
      /// \brief Constructor
     api_base() {
-        in_dirty_list_ = false;
-        in_deps_list_ = false;
-        rsvd_rsc_ = false;
-        stateless_ = false;
+        in_dirty_list_ = 0;
+        in_deps_list_ = 0;
+        rsvd_rsc_ = 0;
     };
 
      /// \brief Destructor
@@ -215,37 +214,34 @@ public:
     }
 
     /// \brief Mark the object as dirty
-    void set_in_dirty_list(void) { in_dirty_list_ = true; }
+    void set_in_dirty_list(void) { in_dirty_list_ = 1; }
 
     /// \brief returns true if the object is in dirty list
-    bool in_dirty_list(void) const { return in_dirty_list_; }
+    bool in_dirty_list(void) const { return in_dirty_list_ ? true : false; }
 
     /// \brief Clear the dirty bit on this object
-    void clear_in_dirty_list(void) { in_dirty_list_ = false; }
+    void clear_in_dirty_list(void) { in_dirty_list_ = 0; }
 
     /// \brief Mark the object as dependent object
-    void set_in_deps_list(void) { in_deps_list_ = true; }
+    void set_in_deps_list(void) { in_deps_list_ = 1; }
 
     /// \brief returns true if the object is in dependent list
-    bool in_deps_list(void) const { return in_deps_list_; }
+    bool in_deps_list(void) const { return in_deps_list_ ? true : false; }
 
     /// \brief Clear the dependent object bit on this object
-    void clear_in_deps_list(void) { in_deps_list_ = false; }
-
-    /// \brief return true if this is 'stateless' object
-    bool stateless(void) { return stateless_; }
+    void clear_in_deps_list(void) { in_deps_list_ = 0; }
 
     /// \brief return true if object is 'stateless' given an object id
     static bool stateless(obj_id_t obj_id);
 
     /// \brief return true if object reserved any h/w resources
-    bool rsvd_rsc(void) const { return rsvd_rsc_; }
+    bool rsvd_rsc(void) const { return rsvd_rsc_ ? true : false; }
 
     /// \brief set reserved resources flag on this object
-    void set_rsvd_rsc(void) { rsvd_rsc_ = true; }
+    void set_rsvd_rsc(void) { rsvd_rsc_ = 1; }
 
     /// \brief clear reserved resources flag on this object
-    void clear_rsvd_rsc(void) { rsvd_rsc_ = false; }
+    void clear_rsvd_rsc(void) { rsvd_rsc_ = 0; }
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const { return "api_base_key"; }
@@ -254,10 +250,9 @@ public:
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    bool in_dirty_list_;    ///< true if object is in the dirty list
-    bool in_deps_list_;     ///< true if object is in dependent object list
-    bool rsvd_rsc_;         ///< true if resources are reserved
-    bool stateless_;        ///< true this object doesn't go into any dbs
+    uint8_t in_dirty_list_:1;    ///< true if object is in the dirty list
+    uint8_t in_deps_list_:1;     ///< true if object is in dependent object list
+    uint8_t rsvd_rsc_:1;         ///< true if resources are reserved
 } __PACK__;
 
 }    // namespace api

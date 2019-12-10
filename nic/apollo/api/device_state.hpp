@@ -45,6 +45,13 @@ public:
     /// \return pointer to the removed device instance or NULL, if not found
     device_entry *remove(void);
 
+    /// \brief    remove current object from the databse(s) and swap it with the
+    ///           new instance of the obj (with same key)
+    /// \param[in] curr_obj    current instance of the object
+    /// \param[in] new_obj     new instance of the object
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(device_entry *curr_obj, device_entry *new_obj);
+
     /// \brief     free device instance back to slab
     /// \param[in] device pointer to the allocated device
     void free(device_entry *device);

@@ -115,7 +115,7 @@ tag_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tag_entry::program_create(obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming tag %u", key_);
+    PDS_TRACE_DEBUG("Programming tag tree %u", key_);
     return impl_->program_hw(this, obj_ctxt);
 }
 

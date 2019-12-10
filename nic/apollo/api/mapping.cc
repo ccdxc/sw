@@ -23,7 +23,6 @@ namespace api {
  */
 
 mapping_entry::mapping_entry() {
-    stateless_ = true;
     is_local_ = false;
     public_ip_valid_ = false;
     ht_ctxt_.reset();

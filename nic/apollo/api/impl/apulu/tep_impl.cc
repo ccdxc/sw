@@ -67,6 +67,10 @@ tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
             tep = tep_db()->find(&spec->tep);
             if (tep == NULL) {

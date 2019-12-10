@@ -50,12 +50,13 @@ tep_impl::destroy(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     sdk_table_api_params_t tparams;
 
     // reserve an entry in TEP_table
+    api_obj->set_rsvd_rsc();
     PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&tparams, idx, NULL, NULL);
     ret = tep_impl_db()->tep_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {

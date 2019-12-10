@@ -67,7 +67,7 @@ subnet_impl::free(subnet_impl *impl) {
 }
 
 sdk_ret_t
-subnet_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
@@ -76,6 +76,10 @@ subnet_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         // reserve a hw id for this subnet
         ret = subnet_impl_db()->subnet_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {

@@ -21,7 +21,6 @@ namespace api {
 
 vpc_peer_entry::vpc_peer_entry() {
     // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    stateless_ = true;
 }
 
 vpc_peer_entry *

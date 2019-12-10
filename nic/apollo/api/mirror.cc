@@ -27,7 +27,6 @@ namespace api {
 
 mirror_session::mirror_session() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    stateless_ = true;
 }
 
 mirror_session *

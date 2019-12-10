@@ -59,7 +59,7 @@ nexthop_impl::free(nexthop_impl *impl) {
 }
 
 sdk_ret_t
-nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
@@ -67,6 +67,10 @@ nexthop_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
         spec = &obj_ctxt->api_params->nexthop_spec;
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         // for blackhole nexthop, (re)use PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID
         if (spec->type != PDS_NH_TYPE_BLACKHOLE) {
             // reserve an entry in NEXTHOP table

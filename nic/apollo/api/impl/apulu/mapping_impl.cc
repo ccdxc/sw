@@ -316,7 +316,7 @@ mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
 }
 
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     pds_mapping_spec_t *spec;
 
@@ -330,7 +330,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                         spec->subnet.id, spec->vnic.id,
                         spec->public_ip_valid, ipaddr2str(&spec->public_ip));
         // reserve all local IP mapping resources
-        return reserve_local_mapping_resources_(orig_obj, vpc, spec);
+        return reserve_local_mapping_resources_(api_obj, vpc, spec);
     }
     // reserve all remote MAC or IP mapping resources
     PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
@@ -340,7 +340,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
                         spec->tep.id : spec->nh_group.id);
-    return reserve_remote_mapping_resources_(orig_obj, vpc, spec);
+    return reserve_remote_mapping_resources_(api_obj, vpc, spec);
 }
 
 sdk_ret_t

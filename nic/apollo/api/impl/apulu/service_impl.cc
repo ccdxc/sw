@@ -128,7 +128,7 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
 }
 
 sdk_ret_t
-svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     pds_svc_mapping_spec_t *spec;
@@ -137,6 +137,10 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         spec = &obj_ctxt->api_params->svc_mapping_spec;
         vpc = vpc_db()->find(&spec->key.vpc);
 

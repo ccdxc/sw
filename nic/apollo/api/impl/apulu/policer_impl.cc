@@ -77,7 +77,7 @@ policer_impl::free(policer_impl *impl) {
 }
 
 sdk_ret_t
-policer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_policer_spec_t *spec;
@@ -85,6 +85,10 @@ policer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
         spec = &obj_ctxt->api_params->policer_spec;
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         if (spec->dir == PDS_POLICER_DIR_INGRESS) {
             // reserve an entry in Rx policer table
             ret = policer_impl_db()->rx_idxr()->alloc(&idx);

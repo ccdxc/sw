@@ -75,10 +75,10 @@ public:
     static void soft_delete(svc_mapping_impl *impl);
 
     /// \brief      allocate/reserve h/w resources for this object
-    /// \param[in]  orig_obj old version of the unmodified object
+    /// \param[in]  api_obj API object for which resources are being reserved
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
+    virtual sdk_ret_t reserve_resources(api_base *api_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      free h/w resources used by this object, if any

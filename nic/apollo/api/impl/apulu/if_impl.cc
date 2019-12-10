@@ -62,7 +62,7 @@ if_impl::free(if_impl *impl) {
 }
 
 sdk_ret_t
-if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+if_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
@@ -74,6 +74,10 @@ if_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         ret = if_impl_db()->lif_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to alloc lif hw id for uplink 0x%x, err %u",

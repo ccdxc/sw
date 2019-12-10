@@ -57,12 +57,16 @@ security_policy_impl::free(security_policy_impl *impl) {
 }
 
 sdk_ret_t
-security_policy_impl::reserve_resources(api_base *orig_obj,
+security_policy_impl::reserve_resources(api_base *api_obj,
                                         obj_ctxt_t *obj_ctxt) {
     uint32_t             policy_block_id;
     pds_policy_spec_t    *spec;
 
     spec = &obj_ctxt->api_params->policy_spec;
+    // record the fact that resource reservation was attempted
+    // NOTE: even if we partially acquire resources and fail eventually,
+    //       this will ensure that proper release of resources will happen
+    api_obj->set_rsvd_rsc();
     // allocate available block for this security policy
     if (security_policy_impl_db()->security_policy_idxr(spec->af,
                                        spec->direction)->alloc(&policy_block_id) !=
