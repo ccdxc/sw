@@ -317,6 +317,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
+				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(ag.nagent.NetworkAgent.ListEndpoint()))
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
@@ -340,7 +341,6 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// wait for all goroutines to complete
 	for i := 0; i < it.numAgents; i++ {
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
-
 	}
 
 	// now delete the endpoints
