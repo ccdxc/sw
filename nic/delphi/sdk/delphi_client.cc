@@ -1,6 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 #include <iostream>
+#include "time.h"
 #include "delphi_client.hpp"
 #include "gen/proto/client.delphi.hpp"
 
@@ -236,10 +237,20 @@ error DelphiClient::HandleNotify(vector<ObjectData *> objlist) {
         // find the watcher for the kind
         ReactorListPtr rl = this->GetReactorList(kind);
         if (rl != NULL) {
+            clock_t start, end;
+            double cpu_time_used;
+            
             LogDebug("Triggering event {} for object {}", (*oi)->op(), (*oi)->DebugString());
+
+            start = clock();
 
             // trigger events on the object
             error err = objinfo->TriggerEvent(oldObj, (*oi)->op(), rl);
+            
+            end = clock();
+            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+            assert(cpu_time_used < MAX_CALLBACK_DURATION);
+            
             if (err.IsNotOK()) {
                 LogError("Error triggering event {} on object {}", (*oi)->op(), key);
                 return err;
@@ -665,11 +676,20 @@ void DelphiClient::eventTimerHandler(ev::timer &watcher, int revents) {
             // find the watcher for the kind
             ReactorListPtr rl = this->GetReactorList(newObj->GetMeta()->kind());
             if (rl != NULL) {
+                clock_t start, end;
+                double cpu_time_used;
 
                 LogDebug("Triggering event {} for object {}", op, newObj->GetMeta()->DebugString());
 
+                start = clock();
+                
                 // trigger events on the object
                 error err = newObj->TriggerEvent(oldObj, op, rl);
+
+                end = clock();
+                cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+                assert(cpu_time_used < MAX_CALLBACK_DURATION);
+
                 if (err.IsNotOK()) {
                     LogError("Error triggering event {} on object {}", op, newObj->GetKey());
                 }
