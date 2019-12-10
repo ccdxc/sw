@@ -2922,6 +2922,8 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 
     uint64_t addr, req_db_addr;
 
+    ++lif_status->eid;
+
     // Send the xcvr notification
     struct xcvr_event msg = {
         .eid = lif_status->eid,
