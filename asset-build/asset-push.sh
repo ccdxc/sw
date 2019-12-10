@@ -3,7 +3,7 @@
 if [ -z $RELEASE ]
 then
   echo "RELEASE is not set, return"
-  exit 1
+  exit 0
 fi
 
 echo "Get Naples firmware..."
@@ -88,6 +88,7 @@ mv bin/pxe/tftpboot/pxelinux.0 /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/pxelinux.cfg/default /sw/output/pxe/tftpboot/pxelinux.cfg/
 
 mkdir -p /sw/output/venice-install
+mv bin/venice-install/initrd0.img /sw/output/venice-install
 mv bin/venice-install/squashfs.img /sw/output/venice-install
 mv tools/docker-files/vinstall/PEN-VERSION /sw/output/venice-install
 
