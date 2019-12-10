@@ -42,6 +42,14 @@ enum {
     NICMGR_TIMER_ID_MAX                      = 2,
 };
 
+enum {
+    NICMGR_MAC_DEV_CAP              = 0x1000000,
+    NICMGR_MAC_DEV_MASK             = 0xffffff,
+    NICMGR_DEF_MAC_COUNT            = 24,
+    NICMGR_MIN_MAC_COUNT            = 8,
+};
+
+
 enum UpgradeState {
     UNKNOWN_STATE,
     DEVICES_ACTIVE_STATE,

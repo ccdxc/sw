@@ -252,6 +252,105 @@ DeviceManager::CreateUplinks(uint32_t id, uint32_t port, bool is_oob)
 
 }
 
+static bool
+valid_mac_base(string where, uint64_t mac_base, uint32_t &mac_count)
+{
+    char mac_str[32] = {0};
+    if (!is_unicast_mac_addr(&mac_base)) {
+        NIC_LOG_INFO("Invalid {} mac address {}", where, mac_to_str(&mac_base, mac_str, sizeof(mac_str)));
+        return false;
+    }
+    NIC_LOG_INFO("Valid {} mac address {}", where, mac_to_str(&mac_base, mac_str, sizeof(mac_str)));
+
+    if ((mac_base & NICMGR_MAC_DEV_MASK) + mac_count > NICMGR_MAC_DEV_CAP) {
+        NIC_LOG_INFO("Invalid {} mac count {}", where, mac_count);
+        mac_count = NICMGR_MAC_DEV_CAP - (mac_base & NICMGR_MAC_DEV_MASK);
+        NIC_LOG_INFO("Clamped {} mac count {}", where, mac_count);
+    }
+    if (mac_count < NICMGR_MIN_MAC_COUNT) {
+        NIC_LOG_INFO("Invalid {} mac count {} fewer than min {}", where, mac_count, NICMGR_MIN_MAC_COUNT);
+        return false;
+    }
+    NIC_LOG_INFO("Valid {} mac count {}", where, mac_count);
+
+    return true;
+}
+
+#ifdef __aarch64__
+static bool
+read_fru_mac_base(uint64_t &mac_base, uint32_t &mac_count)
+{
+    string tmp_str;
+
+    if (sdk::platform::readFruKey(MACADDRESS_KEY, tmp_str) == 0) {
+        mac_from_str(&mac_base, tmp_str.c_str());
+    } else {
+        NIC_LOG_ERR("Failed to read MAC address from FRU");
+        return false;
+    }
+
+    if (sdk::platform::readFruKey(NUMMACADDR_KEY, tmp_str) == 0) {
+        mac_count = std::stoi(tmp_str);
+    } else {
+        NIC_LOG_ERR("Failed to read MAC address count from FRU");
+        mac_count = NICMGR_DEF_MAC_COUNT;
+    }
+
+    return valid_mac_base("FRU", mac_base, mac_count);
+}
+#endif
+
+static bool
+read_env_mac_base(uint64_t &mac_base, uint32_t &mac_count)
+{
+    if (getenv("SYSUUID") != NULL) {
+        mac_from_str(&mac_base, getenv("SYSUUID"));
+    } else {
+        NIC_LOG_DEBUG("SYSUUID environment variable is not set");
+        return false;
+    }
+
+    mac_count = NICMGR_DEF_MAC_COUNT;
+
+    return valid_mac_base("SYSUUID", mac_base, mac_count);
+}
+
+static bool
+read_spec_mac_base(uint64_t &mac_base, uint32_t &mac_count,
+                   boost::property_tree::ptree &spec)
+{
+    if (!spec.get_child_optional("network") ||
+        !spec.get_child_optional("network.mac_addr")) {
+        return false;
+    }
+
+    auto base = spec.get_optional<string>("network.mac_addr.base");
+    if (base) {
+        mac_from_str(&mac_base, base->c_str());
+    } else {
+        NIC_LOG_DEBUG("DEVSPEC network.mac_addr.base is not set");
+        return false;
+    }
+
+    auto count = spec.get_optional<uint32_t>("network.mac_addr.count");
+    if (count) {
+        mac_count = *count;
+    } else {
+        NIC_LOG_DEBUG("DEVSPEC network.mac_addr.count is not set");
+        mac_count = NICMGR_DEF_MAC_COUNT;
+    }
+
+    return valid_mac_base("DEVSPEC", mac_base, mac_count);
+}
+
+static bool
+deadbeef_mac_base(uint64_t &mac_base, uint32_t &mac_count)
+{
+    mac_from_str(&mac_base, "00:de:ad:be:ef:00");
+    mac_count = NICMGR_DEF_MAC_COUNT;
+    return true;
+}
+
 int
 DeviceManager::LoadConfig(string path)
 {
@@ -262,54 +361,28 @@ DeviceManager::LoadConfig(string path)
     boost::property_tree::read_json(path, spec);
 
     // Determine the base mac address
-    uint64_t sys_mac_base = 0;
     uint64_t host_mac_base = 0;
     uint64_t mnic_mac_base = 0;
-    uint64_t fru_mac = 0;
-    uint64_t cfg_mac = 0;
-    uint32_t num_macs = 24;
-    string mac_str;
-    string num_macs_str;
-#ifdef __aarch64__
-    if (sdk::platform::readFruKey(MACADDRESS_KEY, mac_str) == 0) {
-        mac_from_str(&fru_mac, mac_str.c_str());
-    } else {
-        NIC_LOG_ERR("Failed to read MAC address from FRU");
-    }
-    if (sdk::platform::readFruKey(NUMMACADDR_KEY, num_macs_str) == 0) {
-        num_macs = std::stoi(num_macs_str);
-    } else {
-        NIC_LOG_ERR("Failed to read MAC address from FRU");
-    }
-#endif
-    if (getenv("SYSUUID") != NULL) {
-        mac_from_str(&cfg_mac, getenv("SYSUUID"));
-    } else {
-        NIC_LOG_DEBUG("MAC address environment variable is not set");
-    }
+    uint64_t sys_mac_base = 0;
+    uint32_t sys_mac_count = 0;
 
-    // Validate & set base mac address
-    if (is_unicast_mac_addr(&fru_mac)) {
-        NIC_LOG_INFO("FRU mac address {:#x}", fru_mac);
-        sys_mac_base = fru_mac;
-    } else if (is_unicast_mac_addr(&cfg_mac)) {
-        NIC_LOG_INFO("Configured mac address {:#x}", cfg_mac);
-        sys_mac_base = cfg_mac;
-    } else {
-        NIC_LOG_DEBUG("Invalid mac addresses: FRU {:#x} and config {:#x}",
-            fru_mac, cfg_mac);
-        mac_from_str(&sys_mac_base, "00:de:ad:be:ef:00");
-    }
+    // Read & validate & set base mac address
+    read_spec_mac_base(sys_mac_base, sys_mac_count, spec) ||
+#ifdef __aarch64__
+        read_fru_mac_base(sys_mac_base, sys_mac_count) ||
+#endif
+        read_env_mac_base(sys_mac_base, sys_mac_count) ||
+        deadbeef_mac_base(sys_mac_base, sys_mac_count);
 
     /*
      * Host Ifs: <sys_mac_base .....
      * Mnic Ifs: ......mnic_mac_base>
      */
     host_mac_base = sys_mac_base;
-    mnic_mac_base = host_mac_base + num_macs - 1;
+    mnic_mac_base = sys_mac_base + sys_mac_count - 1;
 
     char sys_mac_str[32] = {0};
-    NIC_LOG_INFO("Number of Macs: {}", num_macs);
+    NIC_LOG_INFO("Number of Macs: {}", sys_mac_count);
     NIC_LOG_INFO("Base mac address {}", mac_to_str(&sys_mac_base, sys_mac_str, sizeof(sys_mac_str)));
     NIC_LOG_INFO("Host Base: {}", mac_to_str(&host_mac_base, sys_mac_str, sizeof(sys_mac_str)));
     NIC_LOG_INFO("Mnic Base: {}",mac_to_str(&mnic_mac_base, sys_mac_str, sizeof(sys_mac_str)));
@@ -332,7 +405,10 @@ DeviceManager::LoadConfig(string path)
         for (const auto &node : spec.get_child("mnic_dev")) {
 
             eth_spec = Eth::ParseConfig(node);
-            eth_spec->mac_addr = mnic_mac_base--;
+
+            if (eth_spec->mac_addr == 0) {
+                eth_spec->mac_addr = mnic_mac_base--;
+            }
 
             AddDevice(ETH, (void *)eth_spec);
         }
@@ -344,11 +420,15 @@ DeviceManager::LoadConfig(string path)
         for (const auto &node : spec.get_child("eth_dev")) {
 
             eth_spec = Eth::ParseConfig(node);
-            if (host_mac_base == mnic_mac_base) {
-                NIC_LOG_ERR("Number of macs {} not enough for Host ifs and Mnic ifs.",
-                        num_macs);
+
+            if (eth_spec->mac_addr == 0) {
+                if (host_mac_base >= mnic_mac_base) {
+                    NIC_LOG_ERR("Number of macs {} not enough for Host ifs and Mnic ifs.",
+                                sys_mac_count);
+                }
+                eth_spec->mac_addr = host_mac_base++;
             }
-            eth_spec->mac_addr = host_mac_base++;
+
             eth_spec->host_dev = true;
 
             AddDevice(ETH, (void *)eth_spec);

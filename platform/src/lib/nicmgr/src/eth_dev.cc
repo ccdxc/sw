@@ -32,6 +32,7 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 
@@ -613,6 +614,11 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
     eth_spec->intr_count = val.get<uint64_t>("intr_count");
     eth_spec->barmap_size = val.get<uint16_t>("cmb_size", 0);
+
+    auto mac_addr = val.get_optional<string>("mac_addr");
+    if (mac_addr) {
+        mac_from_str(&eth_spec->mac_addr, mac_addr->c_str());
+    }
 
     if (val.get_optional<string>("rdma")) {
         eth_spec->enable_rdma = true;
