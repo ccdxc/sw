@@ -48,10 +48,22 @@ pdsa_row_update_sck (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_STUBS_SCK_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_SCK);
-    conf->entity_index  = 1;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_sck); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_sck_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_sck_stub_create");
+
+    // sckTable 
+    conf->entity_index  = PDSA_SCK_ENT_INDEX;
+    pdsa_row_update_sck (conf);
 
     NBB_TRC_EXIT();
     return;

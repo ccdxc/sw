@@ -5,7 +5,7 @@
 
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <hals_c_includes.hpp>
 #include <hals_nhpi_slave_join.hpp>

@@ -8,7 +8,7 @@ MODULE_PIPELINE = apulu
 MODULE_ARCH     = x86_64
 MODULE_INCS 	= $(addprefix $(MS_ROOT)/,$(MS_INCLPATH)) ${MODULE_GEN_DIR}
 MODULE_FLAGS	= $(addprefix -D,$(MS_COMPILATION_SWITCH))
-MODULE_SOLIBS   = pdsamgmt pdsamgmtsvc pdsahals_mock thread logger pdsgenproto
+MODULE_SOLIBS   = pdsamgmt pdsacommon pdsamgmtsvc pdsahals_mock thread logger pdsgenproto
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = $(MS_LD_LIBS) ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_COMMON_LDLIBS} edit ncurses

@@ -3,7 +3,7 @@
 // PDS MS interface index conversion routines
 //--------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -109,7 +109,7 @@ uint32_t pds_port_to_ms_ifindex_and_ifname (uint32_t port, std::string* ifname)
     auto pds_ifindex = IFINDEX(IF_TYPE_UPLINK, 0, port, ETH_IF_DEFAULT_CHILD_PORT);
     *ifname = pds_ifindex_to_ifname (pds_ifindex);
     // Convert to MS IfIndex
-    return pds_to_ms_ifindex(pds_ifindex);
+    return pds_to_ms_ifindex(pds_ifindex, IF_TYPE_ETH);
 }
 
 } // End namespace

@@ -47,5 +47,4 @@ NBB_VOID pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t  *conf,
     NBS_EXIT_SHARED_CONTEXT(); \
     NBB_TRC_EXIT(); \
     NBB_DESTROY_THREAD_CONTEXT
-
 #endif /*__PDSA_CTM_HPP__*/

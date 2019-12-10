@@ -27,10 +27,28 @@ extern "C" {
 #include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
 #include "gen/proto/types.pb.h"
+#include "gen/proto/internal.pb.h"
+#include "gen/proto/bgp.pb.h"
 
-#define PDSA_CTM_CORRELATOR 0x100
+#define PDSA_CTM_CORRELATOR     0x100
 #define PDSA_CTM_GRPC_CORRELATOR 0x101
 #define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
+#define PDSA_BGP_RM_ENT_INDEX   1
+#define PDSA_BGP_NM_ENT_INDEX   1
+#define PDSA_SCK_ENT_INDEX      1
+#define PDSA_I3_ENT_INDEX       1
+#define PDSA_LI_ENT_INDEX       1
+#define PDSA_LIM_ENT_INDEX      1
+#define PDSA_L2F_ENT_INDEX      1
+#define PDSA_NAR_ENT_INDEX      1
+#define PDSA_NRM_ENT_INDEX      1
+#define PDSA_RTM_ENT_INDEX      1
+#define PDSA_PSM_ENT_INDEX      1
+#define PDSA_SMI_ENT_INDEX      1
+#define PDSA_FTM_ENT_INDEX      1
+#define PDSA_FT_ENT_INDEX       1
+#define PDSA_HALS_ENT_INDEX     1
+#define PDSA_EVPN_ENT_INDEX     1
 
 NBB_VOID  pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 
                                                NBB_LONG      *type, 
@@ -57,58 +75,43 @@ NBB_LONG pdsa_nbb_get_long(NBB_BYTE *byteVal);
 types::IPAddress* pdsa_get_address(const NBB_CHAR  *tableName,
                                   const NBB_CHAR  *fieldName,
                                   NBB_VOID    *src);
+namespace pds {
+NBB_VOID pdsa_fill_lim_vrf_name_field (LimVrfSpec req, AMB_GEN_IPS *mib_msg);
+NBB_VOID pdsa_fill_lim_vrf_name_oid (LimVrfSpec& req, NBB_ULONG *oid);
+NBB_VOID pdsa_fill_evpn_vrf_name_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg);
+NBB_VOID pdsa_fill_evpn_vrf_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
+NBB_VOID pdsa_fill_evpn_evi_rd_field (EvpnEviSpec req, AMB_GEN_IPS *mib_msg);
+NBB_VOID pdsa_fill_evpn_vrf_rd_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg);
+NBB_VOID pdsa_fill_lim_if_cfg_vrf_name_field (LimInterfaceCfgSpec req, AMB_GEN_IPS *mib_msg);
+NBB_VOID bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req, 
+                               AMB_GEN_IPS        *mib_msg, 
+                               AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
+                               NBB_LONG           row_status);
+NBB_VOID bgp_peer_fill_func (pds::BGPPeerSpec&   req,
+                             AMB_GEN_IPS         *mib_msg,
+                             AMB_BGP_PEER        *v_amb_bgp_peer,
+                             NBB_LONG            row_status);
+} // namespace pds
 
 namespace pdsa_stub {
-NBB_VOID pdsa_row_update_l2f (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_li (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_li_mj (pdsa_config_t *conf,
-                                NBB_ULONG   interface_id,
-                                NBB_ULONG   partner_type,
-                                NBB_ULONG   partner_index,
-                                NBB_ULONG   sub_index);
-NBB_VOID pdsa_row_update_lim (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_lim_mj (pdsa_config_t *conf,
-                                 NBB_ULONG   interface_id,
-                                 NBB_ULONG   partner_type,
-                                 NBB_ULONG   partner_index,
-                                 NBB_ULONG   sub_index);
-NBB_VOID pdsa_row_update_sck (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_smi (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_ftm (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_hals (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_nar (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_nrm (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_psm (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_ftm_mj (pdsa_config_t *conf,
-                                 NBB_ULONG   interface_id,
-                                 NBB_ULONG   partner_type,
-                                 NBB_ULONG   partner_index,
-                                 NBB_ULONG   sub_index);
-NBB_VOID pdsa_row_update_nrm_mj (pdsa_config_t *conf,
-                                 NBB_ULONG   interface_id,
-                                 NBB_ULONG   partner_type,
-                                 NBB_ULONG   partner_index,
-                                 NBB_ULONG   sub_index);
-NBB_VOID pdsa_row_update_psm_mj (pdsa_config_t *conf,
-                                 NBB_ULONG   interface_id,
-                                 NBB_ULONG   partner_type,
-                                 NBB_ULONG   partner_index,
-                                 NBB_ULONG   sub_index);
-NBB_VOID pdsa_row_update_fts (pdsa_config_t *conf, NBB_LONG  admin_status);
-NBB_VOID pdsa_row_update_rtm (pdsa_config_t *conf, NBB_LONG  admin_status);
-NBB_VOID pdsa_row_update_rtm_mj (pdsa_config_t *conf, NBB_LONG slave_type);
-NBB_VOID pdsa_rtm_redis_connected (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_bgp_nm (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_bgp_rm_afm_join (pdsa_config_t *conf,
-                                          NBB_LONG  join,
-                                          NBB_LONG  afi,
-                                          NBB_LONG  safi);
-NBB_VOID pdsa_row_update_evpn (pdsa_config_t *conf);
-NBB_VOID pdsa_row_update_evpn_mj (pdsa_config_t *conf,
-                                  NBB_ULONG   interface_id,
-                                  NBB_ULONG   partner_type,
-                                  NBB_ULONG   partner_index,
-                                  NBB_ULONG   sub_index);
+NBB_VOID pdsa_li_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_l2f_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_smi_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_sck_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_hals_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_nar_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_ft_stub_create (pdsa_config_t *conf);
+NBB_VOID pdsa_lim_create (pdsa_config_t *conf);
+NBB_VOID pdsa_ftm_create (pdsa_config_t *conf);
+NBB_VOID pdsa_nrm_create (pdsa_config_t *conf);
+NBB_VOID pdsa_psm_create (pdsa_config_t *conf);
+NBB_VOID pdsa_rtm_create (pdsa_config_t *conf);
+NBB_VOID pdsa_bgp_create (pdsa_config_t *conf);
+NBB_VOID pdsa_evpn_create (pdsa_config_t *conf);
 }
 
+namespace pds_ms_test {
+NBB_VOID pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr,
+                                              NBB_ULONG host_ifindex);
+} // end namespace pds_ms_test
 #endif /*__PDSA_MGMT_UTILS_HPP__*/

@@ -54,11 +54,23 @@ pdsa_row_update_hals (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_HALS_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_HALS_ENT);
-    conf->entity_index  = 1;
-    conf->stateful      = AMB_FALSE;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_hals_ent); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_hals_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_hals_stub_create");
+
+    // halsEntTable
+    conf->entity_index  = PDSA_HALS_ENT_INDEX;
+    conf->stateful      = AMB_FALSE;
+    pdsa_row_update_hals (conf);
 
     NBB_TRC_EXIT();
     return;

@@ -96,7 +96,6 @@ pdsa_row_update_psm (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_PSM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_PSM_ENT);
-    conf->entity_index  = 1;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_psm_ent); 
@@ -106,25 +105,50 @@ pdsa_row_update_psm (pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_psm_mj (pdsa_config_t  *conf,
-                        NBB_ULONG      interface_id,
-                        NBB_ULONG      partner_type,
-                        NBB_ULONG      partner_index,
-                        NBB_ULONG      sub_index)
+pdsa_row_update_psm_mj (pdsa_config_t  *conf)
 {
     NBB_TRC_ENTRY ("pdsa_row_update_ftm_mj");
 
     // Set params
     conf->oid_len       = AMB_PSM_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_PSM_MJ);
-    conf->entity_index  = 1;
-    conf->interface_id  = interface_id;
-    conf->partner_type  = partner_type;
-    conf->partner_index = partner_index;
-    conf->sub_index     = sub_index;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_psm_mj); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_psm_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_psm_create");
+
+    // psmEntTable
+    conf->entity_index   = PDSA_PSM_ENT_INDEX;
+    pdsa_row_update_psm (conf);
+
+    // psmMjTable - AMB_PSM_IF_ATG_NHPI
+    conf->interface_id   = AMB_PSM_IF_ATG_NHPI;
+    conf->partner_type   = AMB_PSM_MJ_PARTNER_HALS;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_psm_mj (conf);
+
+    // psmMjTable - AMB_PSM_IF_ATG_NRI
+    conf->interface_id   = AMB_PSM_IF_ATG_NRI;
+    conf->partner_type   = AMB_PSM_MJ_PARTNER_NRM;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_psm_mj (conf);
+
+    // psmMjTable - AMB_PSM_IF_ATG_NHPI
+    conf->interface_id   = AMB_PSM_IF_ATG_I3;
+    conf->partner_type   = AMB_PSM_MJ_PARTNER_LIM;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_psm_mj (conf);
 
     NBB_TRC_EXIT();
     return;

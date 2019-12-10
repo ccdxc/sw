@@ -147,6 +147,11 @@ pdsa_set_address_oid(NBB_ULONG *oid,
         } else {
             assert(0);
         }
+    } else if (strcmp(fieldName, "ipaddress")  == 0) {
+        if (strcmp(tableName, "limL3InterfaceAddressTable") == 0) {
+            oidAddrTypeIdx = AMB_LIM_L3_ADDR_IPDDR_TYP_INDEX;
+            oidAddrIdx = AMB_LIM_L3_ADDR_IPADDR_INDEX;
+        }
     } else {
         assert(0);
     }
@@ -217,6 +222,16 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
         } else {
             assert(0);
         }
+    } else if (strcmp(fieldName, "ipaddress")  == 0) {
+        if (strcmp(tableName, "limL3InterfaceAddressTable") == 0) {
+            AMB_LIM_L3_IF_ADDR *data = (AMB_LIM_L3_IF_ADDR *)dest;
+            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+                                                 &data->ipaddr_type, 
+                                                 &data->ipaddress_len,
+                                                 data->ipaddress);
+            addrIdx  = AMB_OID_LIM_L3_ADDR_IPADDR;
+            addrType = AMB_OID_LIM_L3_ADDR_TYPE; 
+        }
     } else {
         assert(0);
     }
@@ -279,3 +294,110 @@ pdsa_get_address(const NBB_CHAR  *tableName,
     ip_addr_to_spec(&pdsa_ip_addr, &res);
     return &res;
 }
+
+// TODO: Temporary APIs to fill bytes fields of internal.proto. 
+// These APIs will be auto-generated and removed later
+
+namespace pds {
+NBB_VOID
+pdsa_fill_lim_vrf_name_field (LimVrfSpec req, AMB_GEN_IPS *mib_msg)
+{
+    AMB_LIM_VRF *data = NULL;
+
+    data = (AMB_LIM_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    data->vrf_name_len = (ulong)req.vrfnamelen();
+    NBB_MEMCPY (data->vrf_name, req.vrfname().c_str(), data->vrf_name_len); 
+
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME);
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME_LEN);
+}
+
+NBB_VOID
+pdsa_fill_lim_vrf_name_oid (LimVrfSpec& req, NBB_ULONG *oid)
+{
+    NBB_ULONG   ii = 0;
+    NBB_ULONG   vrf_name_len = 0;
+    NBB_BYTE    vrf_name[AMB_VRF_NAME_MAX_LEN] = {0};
+
+    vrf_name_len = (ulong)req.vrfnamelen();
+    NBB_MEMCPY (vrf_name, req.vrfname().c_str(), vrf_name_len); 
+    for (ii = 0; ii < vrf_name_len; ii++)
+    {
+        oid[AMB_LIM_VRF_NAME_INDEX + ii] = (NBB_ULONG)vrf_name[ii];
+    }
+    oid[AMB_LIM_VRF_NAME_LEN_INDEX] = vrf_name_len;
+}
+
+NBB_VOID
+pdsa_fill_evpn_vrf_name_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg)
+{
+    AMB_EVPN_IP_VRF *data = NULL;
+
+    data = (AMB_EVPN_IP_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    data->vrf_name_len = (ulong)req.vrfnamelen();
+    NBB_MEMCPY (data->vrf_name, req.vrfname().c_str(), (ulong)req.vrfnamelen()); 
+
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_NAME);
+}
+
+NBB_VOID
+pdsa_fill_evpn_vrf_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid)
+{
+    NBB_ULONG ii = 0;
+    NBB_ULONG vrf_name_len = 0;
+    NBB_BYTE  vrf_name[AMB_VRF_NAME_MAX_LEN] = {0};      
+
+    vrf_name_len = (ulong)req.vrfnamelen();
+    NBB_MEMCPY (vrf_name, req.vrfname().c_str(), vrf_name_len); 
+    for (ii = 0; ii < vrf_name_len; ii++)
+    {
+        oid[AMB_EVPN_IP_VRF_NAME_INDEX + ii] = (NBB_ULONG)vrf_name[ii];
+    }
+    oid[AMB_EVPN_IP_VRF_NAME_LEN_INDEX] = vrf_name_len;
+}
+
+NBB_VOID
+pdsa_fill_evpn_evi_rd_field (EvpnEviSpec req, AMB_GEN_IPS *mib_msg)
+{
+    AMB_EVPN_EVI *data = NULL;
+
+    data = (AMB_EVPN_EVI *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    if (req.autord() == AMB_EVPN_CONFIGURED) {
+        NBB_MEMCPY (data->cfg_rd, req.cfgrd().c_str(), AMB_EVPN_EXT_COMM_LENGTH); 
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_CFG_RD);
+    }
+}
+
+NBB_VOID
+pdsa_fill_evpn_vrf_rd_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg)
+{
+    AMB_EVPN_IP_VRF *data = NULL;
+
+    data = (AMB_EVPN_IP_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    // if not default RD then set it
+    if (req.defaultrd() != AMB_TRUE)  {
+        NBB_MEMCPY (data->route_distinguisher, req.rd().c_str(), AMB_EVPN_EXT_COMM_LENGTH); 
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_NAME);
+    }
+}
+
+NBB_VOID
+pdsa_fill_lim_if_cfg_vrf_name_field (LimInterfaceCfgSpec req, AMB_GEN_IPS *mib_msg)
+{
+    AMB_LIM_IF_CFG *data = NULL;
+
+    data = (AMB_LIM_IF_CFG *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    
+    data->bind_vrf_name_len= (ulong)req.vrfnamelen();
+    if (data->bind_vrf_name_len) {
+        NBB_MEMCPY (data->bind_vrf_name, req.vrfname().c_str(), (ulong)req.vrfnamelen()); 
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_IF_CFG_BIND_VRFNAME);
+    }
+}
+} // namespace pds
+// End of Temporary APIs

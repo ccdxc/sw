@@ -4,7 +4,7 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pds_ms_smi_hw_desc.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include <lipi.h>
 #include <lim_smi_mac.hpp>

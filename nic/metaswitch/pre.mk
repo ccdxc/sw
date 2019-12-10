@@ -52,6 +52,7 @@ MS_INCLPATH = \
 	code/lim                 \
 	code/stubs/l2/unix       \
 	code/comn/worker         \
+	code/lim                 \
 	output/$(GMK_TARGETOS)
 
 MS_LD_LIBS = dcsmi si

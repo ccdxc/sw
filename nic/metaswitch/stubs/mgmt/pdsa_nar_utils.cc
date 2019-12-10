@@ -47,10 +47,22 @@ pdsa_row_update_nar (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_NAR_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_NAR_ENT);
-    conf->entity_index  = 1;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nar_ent); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID 
+pdsa_nar_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_nar_stub_create");
+
+    // narEntTable
+    conf->entity_index  = PDSA_NAR_ENT_INDEX;
+    pdsa_row_update_nar (conf);
 
     NBB_TRC_EXIT();
     return;

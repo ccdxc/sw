@@ -7,7 +7,7 @@
 namespace pdsa_stub {
 
 // Fill liEntTable: AMB_STUBS_LI_ENT
-NBB_VOID
+static NBB_VOID
 pdsa_fill_amb_li_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 { 
     // Local variables
@@ -46,7 +46,7 @@ pdsa_fill_amb_li_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 // Fill liMjTable: AMB_STUBS_LI_MJ
-NBB_VOID
+static NBB_VOID
 pdsa_fill_amb_li_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 { 
     // Local variables
@@ -95,7 +95,7 @@ pdsa_fill_amb_li_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 
-NBB_VOID
+static NBB_VOID
 pdsa_row_update_li (pdsa_config_t *conf)
 {
     NBB_TRC_ENTRY ("pdsa_row_update_li");
@@ -103,8 +103,6 @@ pdsa_row_update_li (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_LI_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_LI_ENT);
-    conf->entity_index  = 1;
-    conf->stateful      = AMB_FALSE;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_li_ent); 
@@ -113,26 +111,39 @@ pdsa_row_update_li (pdsa_config_t *conf)
     return;
 }
 
-NBB_VOID
-pdsa_row_update_li_mj (pdsa_config_t   *conf,
-                       NBB_ULONG       interface_id,
-                       NBB_ULONG       partner_type,
-                       NBB_ULONG       partner_index,
-                       NBB_ULONG       sub_index)
+static NBB_VOID
+pdsa_row_update_li_mj (pdsa_config_t   *conf)
 {
     NBB_TRC_ENTRY ("pdsa_row_update_li_mj");
 
     // Set params
     conf->oid_len       = AMB_LI_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_LI_MJ);
-    conf->entity_index  = 1;
-    conf->interface_id  = interface_id;
-    conf->partner_type  = partner_type;
-    conf->partner_index = partner_index;
-    conf->sub_index     = sub_index;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_li_mj); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_li_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_li_stub_create");
+
+    // liEntTable
+    conf->entity_index   = PDSA_LI_ENT_INDEX;
+    conf->stateful       = AMB_FALSE;
+    pdsa_row_update_li (conf);
+
+    // liMjTable
+    conf->entity_index   = PDSA_LI_ENT_INDEX;
+    conf->interface_id   = AMB_LI_IF_ATG_FRI;
+    conf->partner_type   = AMB_LI_MJ_PARTNER_LIM;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_li_mj (conf);
 
     NBB_TRC_EXIT();
     return;

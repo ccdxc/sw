@@ -48,10 +48,22 @@ pdsa_row_update_smi (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_SMI_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_SMI_ENT);
-    conf->entity_index  = 1;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_smi_ent); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_smi_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_smi_stub_create");
+
+    // smiEntTable
+    conf->entity_index   = PDSA_SMI_ENT_INDEX;
+    pdsa_row_update_smi (conf);
 
     NBB_TRC_EXIT();
     return;

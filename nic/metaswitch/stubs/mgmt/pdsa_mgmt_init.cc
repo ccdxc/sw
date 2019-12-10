@@ -1,10 +1,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Initialize Mgmt Stub
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_test_init.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {

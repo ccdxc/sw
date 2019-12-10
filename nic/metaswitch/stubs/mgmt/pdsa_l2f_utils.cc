@@ -6,6 +6,7 @@
 #include <iostream>
 
 using namespace std;
+#define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
 namespace pdsa_stub {
 
@@ -49,14 +50,47 @@ pdsa_fill_amb_l2f_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     return;
 }
 
+NBB_VOID
+pdsa_row_update_l2f (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_row_update_l2f");
+
+    conf->oid_len       = AMB_L2F_ENT_OID_LEN;
+    conf->data_len      = sizeof (AMB_STUBS_L2F_ENT);
+
+    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_l2f_ent); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID 
+pdsa_l2f_stub_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_l2f_stub_create");
+
+    // l2fEntTable
+    conf->entity_index  = PDSA_L2F_ENT_INDEX;
+    conf->stateful      = AMB_FALSE;
+    pdsa_row_update_l2f (conf);
+
+    NBB_TRC_EXIT();
+    return;
+}
+}
+
+namespace pds_ms_test {
 // Fill l2fMacIpCfgTable: AMB_STUBS_L2F_MAC_IP_CFG
 NBB_VOID
-pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg,
+                              ip_addr_t ip_addr,
+                              NBB_ULONG host_ifindex)
 {
     // Local variables
     NBB_ULONG                   *oid = NULL; 
     AMB_STUBS_L2F_MAC_IP_CFG    *data = NULL;
     NBB_ULONG                   ii = 0;
+    NBB_BYTE                    mac_address[AMB_MAC_ADDR_LEN] = {0x12, 0x34, 0x56, 0x78, 0x90, 0x12};
 
     NBB_TRC_ENTRY ("pdsa_fill_amb_l2f_mac_ip_cfg");
 
@@ -72,30 +106,30 @@ pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     oid[1] = AMB_FAM_STUBS_L2F_MAC_IP_CFG;
 
     // Set all incoming fields
-    data->ent_index                         = conf->entity_index;
-    oid[AMB_L2F_MAC_IP_CFG_ENT_IX_INDEX]    = conf->entity_index;
+    data->ent_index                         = PDSA_L2F_ENT_INDEX;
+    oid[AMB_L2F_MAC_IP_CFG_ENT_IX_INDEX]    = PDSA_L2F_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_ENT_IX);
 
-    data->bd_type                           = conf->bd_type;
-    oid[AMB_L2F_MAC_IP_CFG_BD_TYP_INDEX]    = conf->bd_type;
+    data->bd_type                           = AMB_L2_BRIDGE_DOMAIN_EVPN;
+    oid[AMB_L2F_MAC_IP_CFG_BD_TYP_INDEX]    = AMB_L2_BRIDGE_DOMAIN_EVPN;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_BD_TYP);
 
-    data->bd_index                      = conf->bd_index;
-    oid[AMB_L2F_MAC_IP_CFG_BD_IX_INDEX] = conf->bd_index; 
+    data->bd_index                      = 1;
+    oid[AMB_L2F_MAC_IP_CFG_BD_IX_INDEX] = 1;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_BD_IX);
 
-    data->bd_sub_index                  = conf->bd_sub_index;
-    oid[AMB_L2F_MAC_IP_CFG_BD_SB_INDEX] = conf->bd_sub_index;
+    data->bd_sub_index                  = 0;
+    oid[AMB_L2F_MAC_IP_CFG_BD_SB_INDEX] = 0;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_BD_SUB);
 
     for (ii = 0; ii < AMB_MAC_ADDR_LEN; ii++)
     {
-        data->mac_address[ii]                       = conf->mac_address[ii];
-        oid[AMB_L2F_MAC_IP_CFG_MC_ADD_INDEX + ii]   = (NBB_ULONG)conf->mac_address[ii];
+        data->mac_address[ii]                       = mac_address[ii];
+        oid[AMB_L2F_MAC_IP_CFG_MC_ADD_INDEX + ii]   = (NBB_ULONG)mac_address[ii];
     }
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_MAC_ADD);
 
-    pdsa_convert_ip_addr_to_amb_ip_addr(conf->ip_addr, 
+    pdsa_convert_ip_addr_to_amb_ip_addr(ip_addr,
                                         &data->ip_address_type, 
                                         &data->ip_address_len,
                                         data->ip_address);
@@ -110,13 +144,13 @@ pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_IP_TYPE);
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_IP_ADDR);
 
-    data->row_status = conf->row_status;
+    data->row_status = AMB_ROW_ACTIVE;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_RW_STA);
 
-    if (conf->row_status != AMB_ROW_DESTROY)
+    if (data->row_status != AMB_ROW_DESTROY)
     {
         NBB_TRC_FLOW((NBB_FORMAT "Not destroying MAI: fill in fields"));
-        data->if_index = conf->if_index;
+        data->if_index = host_ifindex;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_L2F_MAC_IP_CFG_IF_IX);
     }
 
@@ -125,47 +159,28 @@ pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_l2f (pdsa_config_t *conf)
+pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr, NBB_ULONG host_ifindex)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_l2f");
-
-    conf->oid_len       = AMB_L2F_ENT_OID_LEN;
-    conf->data_len      = sizeof (AMB_STUBS_L2F_ENT);
-    conf->entity_index  = 1;
-    conf->stateful      = AMB_FALSE;
-
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_l2f_ent); 
-
-    NBB_TRC_EXIT();
-    return;
-}
-
-// TODO: Test Config
-NBB_VOID
-pdsa_test_row_update_l2f_mac_ip_cfg (pdsa_config_t *conf)
-{
-    // Local variables
-    NBB_BYTE                    mac_addr[AMB_MAC_ADDR_LEN] = {0x12, 0x34, 0x56, 0x78, 0x90, 0x12};
+    ATG_CPI_ROW_UPDATE  *row_update = NULL;
+    AMB_GEN_IPS         *mib_msg = NULL;
 
     NBB_TRC_ENTRY ("pdsa_test_row_update_l2f_mac_ip_cfg");
 
-    // Set params
-    conf->oid_len       = AMB_L2F_MAC_IP_CFG_OID_LEN;
-    conf->data_len      = sizeof (AMB_STUBS_L2F_MAC_IP_CFG);
-    conf->entity_index  = 1;
-    conf->row_status    = AMB_ROW_ACTIVE;
-    conf->bd_type       = AMB_L2_BRIDGE_DOMAIN_EVPN;
-    conf->bd_index      = 1;
-    conf->bd_sub_index  = 0;
-    conf->if_index      = 7;
+    // Build row update
+    row_update = pdsa_ctm_bld_row_update_common ( &mib_msg,
+                                                  sizeof (AMB_STUBS_L2F_MAC_IP_CFG),
+                                                  AMB_L2F_MAC_IP_CFG_OID_LEN,
+                                                  AMB_ROW_ACTIVE,
+                                                  PDSA_CTM_CORRELATOR);
+    NBB_ASSERT_PTR_NE (row_update, NULL);
+    NBB_ASSERT_PTR_NE (mib_msg, NULL);
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ac_ip, &conf->ip_addr);
-    NBB_MEMCPY (conf->mac_address, mac_addr, AMB_MAC_ADDR_LEN);
+    pdsa_fill_amb_l2f_mac_ip_cfg (mib_msg, ip_addr, host_ifindex);
 
-    // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_l2f_mac_ip_cfg); 
+    // Send the Row Update request to CSS
+    NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
 
     NBB_TRC_EXIT();
     return;
 }
-}
+} // end namespace pds_ms_test

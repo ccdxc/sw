@@ -25,6 +25,7 @@ state_t::state_t(void)
     if_slab_init(slabs_, PDSA_IF_SLAB_ID);
     host_lif_slab_init(slabs_, PDSA_HOST_LIF_SLAB_ID);
     bd_slab_init(slabs_, PDSA_BD_SLAB_ID);
+    vpc_slab_init (slabs_, PDSA_VPC_SLAB_ID);
 
     slabs_[PDSA_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDSA-COOKIE", 

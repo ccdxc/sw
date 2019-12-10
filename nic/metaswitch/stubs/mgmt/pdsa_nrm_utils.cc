@@ -96,7 +96,6 @@ pdsa_row_update_nrm (pdsa_config_t *conf)
     // Set params
     conf->oid_len       = AMB_NRM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_NRM_ENT);
-    conf->entity_index  = 1;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nrm_ent); 
@@ -106,25 +105,57 @@ pdsa_row_update_nrm (pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_nrm_mj (pdsa_config_t  *conf,
-                        NBB_ULONG      interface_id,
-                        NBB_ULONG      partner_type,
-                        NBB_ULONG      partner_index,
-                        NBB_ULONG      sub_index)
+pdsa_row_update_nrm_mj (pdsa_config_t  *conf)
 {
     NBB_TRC_ENTRY ("pdsa_row_update_nrm_mj");
 
     // Set params
     conf->oid_len       = AMB_NRM_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_NRM_MJ);
-    conf->entity_index  = 1;
-    conf->interface_id  = interface_id;
-    conf->partner_type  = partner_type;
-    conf->partner_index = partner_index;
-    conf->sub_index     = sub_index;
 
     // Convert to row_update and send
     pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nrm_mj); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
+NBB_VOID
+pdsa_nrm_create (pdsa_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pdsa_nrm_create");
+
+    // nrmEntTable
+    conf->entity_index   = PDSA_NRM_ENT_INDEX;
+    pdsa_row_update_nrm (conf);
+
+    // nrmMjTable - AMB_NRM_IF_ATG_NARI
+    conf->interface_id   = AMB_NRM_IF_ATG_NARI;
+    conf->partner_type   = AMB_NRM_MJ_PARTNER_NAR;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_nrm_mj (conf);
+
+    // nrmMjTable - AMB_NRM_IF_ATG_NBPI
+    conf->interface_id   = AMB_NRM_IF_ATG_NBPI;
+    conf->partner_type   = AMB_NRM_MJ_PARTNER_HALS;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_nrm_mj (conf);
+
+    // nrmMjTable - AMB_NRM_IF_ATG_MMI 
+    conf->interface_id   = AMB_NRM_IF_ATG_MMI;
+    conf->partner_type   = AMB_NRM_MJ_PARTNER_L2FST;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_nrm_mj (conf);
+
+    // nrmMjTable - AMB_NRM_IF_ATG_I3 
+    conf->interface_id   = AMB_NRM_IF_ATG_I3;
+    conf->partner_type   = AMB_NRM_MJ_PARTNER_LIM;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_nrm_mj (conf);
 
     NBB_TRC_EXIT();
     return;

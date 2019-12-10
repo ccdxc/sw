@@ -6,7 +6,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>

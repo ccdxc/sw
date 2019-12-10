@@ -138,7 +138,9 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             status = types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED;
             break;
     }
-    if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
+
+    if ((trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) ||
+       (trans_done->trans_correlator.correlator1 == PDSA_CTM_CORRELATOR)) {
         // Unblock the GRPC thread which is waiting for the response
         pds_ms::mgmt_state_t::ms_response_ready(status);
     } else if (trans_done->trans_correlator.correlator1 ==
@@ -151,6 +153,8 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
         auto ctx = pds_ms::mgmt_state_t::thread_context();
         ctx.state()->nbase_thread()->set_ready(true);
     }
+
+    
     NBB_TRC_EXIT();
     return;
 }

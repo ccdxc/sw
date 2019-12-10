@@ -1,0 +1,127 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+
+syntax = "proto3";
+package pds;
+import "pdsa.proto";
+import "types.proto";
+
+enum EvpnEncaps {
+    EVPN_ENCAPS_NONE    = 0;
+    EVPN_ENCAPS_MPLS    = 1;
+    EVPN_ENCAPS_VXLAN   = 2;
+}
+
+message EvpnBdSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_EVPN_BD_OID_LEN",
+        Mib:    "evpnBdTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_BD_ENTITY_IX_INDEX"}];
+    uint32 EviIndex     = 2 [(venice.pdsaFields) = {Field:"evi_index", SetKeyOidIndex: "AMB_EVPN_BD_EVI_INDEX_INDEX"}];
+    uint32 VNI          = 3 [(venice.pdsaFields) = {Field:"vni"}];
+
+}
+
+message EvpnEviSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_EVPN_EVI_OID_LEN",
+        Mib:    "evpnEviTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_EVI_ENTITY_IX_INDEX"}];
+    uint32 EVIIndex     = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}];
+    uint32 AutoRD       = 3 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
+    bytes  CfgRD        = 4 [(venice.pdsaFields) = {Field:"cfg_rd", SetFieldFn: "pdsa_fill_evpn_evi_rd_field"}];
+    EvpnEncaps Encap    = 5 [(venice.pdsaFields) = {Field:"encapsulation"}, (gogoproto.moretags) = "meta.default=EVPN_ENCAPS_VXLAN"];
+}
+
+message EvpnIfBindCfgSpec { 
+
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_EVPN_IF_BIND_CFG_OID_LEN",
+        Mib:    "evpnIfBindCfgTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_IF_BIND_CFG_ENT_INDEX"}];
+    uint32 IfIndex      = 2 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_EVPN_IF_BIND_CFG_IF_INDEX"}];
+    uint32 EviIndex     = 3 [(venice.pdsaFields) = {Field:"evi_index"}];
+}
+
+message EvpnIpVrfSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
+        Mib:    "evpnIpVrfTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_IP_VRF_ENT_INDEX"}];
+    uint32 VrfNameLen   = 2; //[(venice.pdsaFields) = {Field:"vrf_name_len", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX"}];
+    string VrfName      = 3 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "pdsa_fill_evpn_vrf_name_field", SetKeyOidFn: "pdsa_fill_evpn_vrf_name_oid"}]; // TODO: SetFieldFn should be converted to auto-gen
+    uint32 VNI          = 4 [(venice.pdsaFields) = {Field:"vni"}];
+    uint32 DefaultRD    = 5;
+    bytes  RD           = 6 [(venice.pdsaFields) = {Field:"route_distinguisher", SetFieldFn:"pdsa_fill_evpn_vrf_rd_field"}]; // TODO: SetFieldFn should be converted to auto-gen
+}
+
+message LimVrfSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_LIM_VRF_OID_LEN",
+        Mib:    "limVrfTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_VRF_ENT_IX_INDEX"}];
+    string VrfName      = 2 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "pdsa_fill_lim_vrf_name_field", SetKeyOidFn: "pdsa_fill_lim_vrf_name_oid"}]; // TODO: SetFieldFn should be converted to auto-gen
+    uint32 VrfNameLen   = 3; //[(venice.pdsaFields) = {Field:"vrf_name_len", SetKeyOidIndex: "AMB_LIM_VRF_NAME_LEN_INDEX"}];
+}
+
+message LimGenIrbIfSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_LIM_GEN_IRB_INTF_OID_LEN",
+        Mib:    "limGenIrbInterfaceTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_ENT_IX_INDEX"}];
+    uint32 BDIndex      = 2 [(venice.pdsaFields) = {Field:"bd_type", SetKeyOidIndex: "AMB_OID_LIM_GEN_IRB_IF_BD_TYPE"}];
+    uint32 BDType       = 3 [(venice.pdsaFields) = {Field:"bd_index", SetKeyOidIndex: "AMB_OID_LIM_GEN_IRB_IF_BD_ID"}];
+}
+
+message LimInterfaceCfgSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_LIM_INTERFACE_CFG_OID_LEN",
+        Mib:    "limInterfaceCfgTable"
+    };
+
+    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_IF_CFG_ENT_IX_INDEX"}];
+    uint32 IfIndex      = 2 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_LIM_IF_CFG_IF_IX_INDEX"}];
+    uint32 IfEnable     = 3 [(venice.pdsaFields) = {Field:"enable"}];
+    uint32 IPv4Enabled  = 4 [(venice.pdsaFields) = {Field:"ipv4_enabled"}];
+    uint32 IPv4Fwding   = 5 [(venice.pdsaFields) = {Field:"ipv4_forwarding"}];
+    uint32 IPv6Enabled  = 6 [(venice.pdsaFields) = {Field:"ipv6_enabled"}];
+    uint32 IPv6Fwding   = 7 [(venice.pdsaFields) = {Field:"ipv6_forwarding"}];
+    uint32 FwdingMode   = 8 [(venice.pdsaFields) = {Field:"forwarding_mode"}];
+    uint32 VrfNameLen   = 9;
+    string VrfName      = 10 [(venice.pdsaFields) = {Field:"bind_vrf_name", SetFieldFn: "pdsa_fill_lim_if_cfg_vrf_name_field"}];
+}
+
+message LimInterfaceAddrSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_LIM_L3_ADDRESS_OID_LEN",
+        Mib:    "limL3InterfaceAddressTable"
+    };
+
+    uint32 EntityIndex       = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_L3_ADDR_ENT_IX_INDEX"}];
+    uint32 IfIndex           = 2 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_LIM_L3_ADDR_IF_IX_INDEX"}];
+    types.IPAddress IfIPAddr = 3 [(venice.pdsaFields) = {Field:"ipaddress"}];
+    uint32 PrefixLen         = 4 [(venice.pdsaFields) = {Field:"prefix_len"}];
+}
+
+message LimSoftwIfSpec {
+    option (venice.pdsaSetGlobOpts) = {
+        OidLen: "AMB_LIM_SOFTWIF_OID_LEN",
+        Mib:    "limSoftwareInterfaceTable"
+    };
+
+    uint32 EntityIndex = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_ENT_IX_INDEX"}];
+    uint32 IfIndex     = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
+    uint32 IfType      = 3 [(venice.pdsaFields) = {Field:"type", SetKeyOidIndex: "AMB_LIM_SOFTWIF_IF_TYPE"}];
+}

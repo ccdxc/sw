@@ -3,7 +3,7 @@
 // Mock PDS MS interface index conversion routines
 //--------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 
 namespace pds_ms {
 

@@ -91,6 +91,7 @@ message BGPGlobalSpec {
   option (venice.pdsaSetGlobOpts) = {
       OidLen: "AMB_BGP_RM_OID_LEN",
       Mib:    "bgpRmEntTable"
+      FillFn: "bgp_rm_ent_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_RM_OID_LEN",
@@ -173,6 +174,7 @@ message BGPPeerSpec {
   option (venice.pdsaSetGlobOpts) = {
       OidLen: "AMB_BGP_PER_OID_LEN",
       Mib:    "bgpPeerTable"
+      FillFn: "bgp_peer_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_PRST_OID_LEN",

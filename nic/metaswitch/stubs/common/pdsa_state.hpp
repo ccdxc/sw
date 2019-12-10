@@ -11,7 +11,8 @@
 #include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_vpc_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/port.hpp"
@@ -73,6 +74,7 @@ public:
     bd_store_t&  bd_store(void) {return bd_store_;}
     if_store_t&  if_store(void) {return if_store_;}
     host_lif_store_t&  host_lif_store(void) {return host_lif_store_;}
+    vpc_store_t& vpc_store(void) {return vpc_store_;}
 
     uint32_t get_slab_in_use(pdsa_tep_slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -101,6 +103,7 @@ private:
     bd_store_t bd_store_; 
     if_store_t if_store_; 
     host_lif_store_t host_lif_store_;
+    vpc_store_t vpc_store_;
 
     static state_t* g_state_;
     static std::mutex g_mtx_;

@@ -13,6 +13,8 @@ extern "C" {
 #include <a0spec.h>
 #include <o0mac.h>
 #include <a0user.h>
+#include "smsiincl.h"
+#include "smsincl.h"
 }
 
 namespace pds_ms {
@@ -26,16 +28,32 @@ NBB_LONG ms_to_lnx_ifindex(NBB_LONG ms_ifindex, NBB_ULONG location);
 NBB_LONG lnx_to_ms_ifindex(NBB_LONG lnx_ifindex, NBB_ULONG location);
 
 // Used in the Mgmt Stubs to convert from PDS IfIndex to MS IfIndex
-static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex) {
-    // MSB is reserved for MS
-    // Assumption -
-    // Resetting Type and Slot bits in PDS IfIndex will reset MSB.
-    // So the rest of the info is still there for us to reverse-generate the 
-    // PDS IfIndex from the MS IfIndex.
-    return pds_ifindex & ~((IF_TYPE_MASK << IF_TYPE_SHIFT) | 
-                           (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
+static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type) {
+    if (if_type == IF_TYPE_ETH) {
+        // MSB is reserved for MS
+        // Assumption -
+        // Resetting Type and Slot bits in PDS IfIndex will reset MSB.
+        // So the rest of the info is still there for us to reverse-generate the 
+        // PDS IfIndex from the MS IfIndex.
+        return pds_ifindex & ~((IF_TYPE_MASK << IF_TYPE_SHIFT) | 
+                (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
+    } else if (if_type == IF_TYPE_LIF) {
+        // Get SW ifindex base, add dummy interface type and bd_id and OR it with LIM Index Base
+        return ((lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE + LIF_IFINDEX_TO_LIF_ID  (pds_ifindex) +
+                (AMB_LIM_SOFTWIF_DUMMY << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT)) |
+                lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+    }
+    // Return the pds_ifindex if it is not Eth or Lif
+    return pds_ifindex;
 }
  
+// Used in Mgmt stubs to convert BD ID to MS IRB IfIndex
+static inline uint32_t bd_id_to_ms_ifindex (uint32_t bd_id) {
+    return ((lim::IfIndexBase::IRB_IF_INDEX_BASE + bd_id +
+            (AMB_LIM_BRIDGE_DOMAIN_EVPN << lim::IfIndexBase::IRB_BASE_BIT_SHIFT)) |
+            lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+}
+
 // Used at MS initialization to set up SMI HW Desc from the PDS catalog
 uint32_t pds_port_to_ms_ifindex_and_ifname(uint32_t port, std::string* ifname);
 
