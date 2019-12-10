@@ -73,7 +73,7 @@ def ethtool_indirection_table(node, intf,op):
     elif op == "w2":
         return " ".join(["ethtool", "-X", intf, "weight 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2"])
     elif op == "equal":
-        return " ".join(["ethtool", "-X", intf, "equal 16"])
+        return " ".join(["ethtool", "-X", intf, "equal 4"])
     else :
         return " ".join(["ethtool", "-X",  intf, op])
 

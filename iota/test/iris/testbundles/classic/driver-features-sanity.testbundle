@@ -178,13 +178,13 @@ testcases:
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
         disable : False
-        ignore  : True
+        ignore  : False
         iterators :
             type               : nested
             proto              : [ 'tcp']
             ipproto            : [ 'v4']
             hkey               : [ 'symmetric']
-            indirection_table  : [ 'equal']
+            indirection_table  : [ 'equal', 'default']
             rx-flow-hash       : [ 'tcp4']
             vlantag            : ['on', 'off']
         args    :
