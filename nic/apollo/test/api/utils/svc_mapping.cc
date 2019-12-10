@@ -2,7 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
-
+//
+#include "nic/apollo/test/api/utils/vpc.hpp"
 #include "nic/apollo/test/api/utils/svc_mapping.hpp"
 
 namespace test {
@@ -28,7 +29,7 @@ svc_mapping_feeder::init(std::string vip_str, uint16_t svc_port,
 
 void
 svc_mapping_feeder::iter_next(int width) {
-    spec.key.vpc.id += width;
+    spec.key.vpc.id = (spec.key.vpc.id + width) % PDS_MAX_VPC + 1;
     spec.key.backend_ip.addr.v6_addr.addr64[1] += width;
     spec.key.backend_port += width;
     spec.vip.addr.v6_addr.addr64[1] += width;

@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = ${PIPELINE}_svc_mapping_test.gtest
-MODULE_PIPELINE = artemis
+MODULE_PIPELINE = artemis apulu
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   pdstest pdstestapiutils \

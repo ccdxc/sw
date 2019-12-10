@@ -26,6 +26,7 @@ run_gtest tep
 run_gtest if
 run_gtest mapping LOG="/dev/null"
 run_gtest mirror_session
+run_gtest svc_mapping
 
 # end of script
 clean_exit

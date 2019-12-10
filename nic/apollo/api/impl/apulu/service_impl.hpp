@@ -172,6 +172,20 @@ private:
                                        pds_svc_mapping_key_t *key,
                                        svc_mapping* mapping);
 
+    /// \brief      fill the service mapping spec
+    /// \param[out] spec specification
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_svc_mapping_spec_t *spec);
+
+    /// \brief      fill the service mapping stats
+    /// \param[out] stats statistics
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_stats_(pds_svc_mapping_stats_t *stats);
+
+    /// \brief      fill the service mapping status
+    /// \param[out] status status
+    void fill_status_(pds_svc_mapping_status_t *status);
+
 private:
     // handles or indices to NAT/NAT2 table(s)
     uint32_t    to_vip_nat_idx_;

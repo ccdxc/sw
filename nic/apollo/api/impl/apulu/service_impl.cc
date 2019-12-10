@@ -94,7 +94,37 @@ svc_mapping_impl::soft_delete(svc_mapping_impl *impl) {
 
 svc_mapping_impl *
 svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
-    return NULL;
+    svc_mapping_impl *impl;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    sdk_table_api_params_t tparams;
+    service_mapping_swkey_t svc_mapping_key;
+    service_mapping_actiondata_t svc_mapping_data;
+
+    vpc = vpc_db()->find(&key->vpc);
+    if (unlikely(vpc == NULL)) {
+        return NULL;
+    }
+    PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
+                                    vpc->hw_id(), &key->backend_ip,
+                                    key->backend_port);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
+                                   &svc_mapping_data,
+                                   SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return NULL;
+    }
+
+    impl = svc_mapping_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
+    new (impl) svc_mapping_impl();
+    impl->to_vip_nat_idx_ = svc_mapping_data.svc_mapping_action.xlate_id;
+    impl->to_vip_handle_ = tparams.handle;
+    return impl;
 }
 
 sdk_ret_t
@@ -270,8 +300,10 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
     sdk_ret_t ret;
     vpc_entry *vpc;
     sdk_table_api_params_t tparams;
+    p4pd_error_t p4pd_ret;
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
+    nat_actiondata_t nat_data = { 0 };
 
     // update the service mapping xlation idx to PDS_IMPL_RSVD_NAT_HW_ID to
     // disable NAT
@@ -286,12 +318,17 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
                                    sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to deactivate (PIP %s, PIP port %u) -> "
+        PDS_TRACE_ERR("Failed to deactivate (%s) -> "
                       "(VIP, svc port) xlation in SERVICE_MAPPING table, "
-                      "err %u", ipaddr2str(&key->backend_ip),
-                      key->backend_port, ret);
+                      "err %u", mapping->key2str().c_str(), ret);
         return ret;
     }
+
+    /* save the handle 'update' returns */
+    if (!to_vip_handle_.valid()) {
+        to_vip_handle_ = tparams.handle;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -327,7 +364,85 @@ svc_mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 }
 
 sdk_ret_t
+svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    vpc_entry *vpc;
+    uint32_t xlate_idx;
+    sdk_table_api_params_t tparams;
+    service_mapping_swkey_t svc_mapping_key;
+    service_mapping_actiondata_t svc_mapping_data;
+    nat_actiondata_t nat_data;
+    pds_svc_mapping_key_t *key = &spec->key;
+
+    vpc = vpc_db()->find(&key->vpc);
+    PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
+                                    vpc->hw_id(), &key->backend_ip,
+                                    key->backend_port);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
+                                   &svc_mapping_data,
+                                   SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = svc_mapping_impl_db()->svc_mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get svc-(%u, %s:%u) "
+                      "xlation in SERVICE_MAPPING table, "
+                      "err %u", vpc->key().id, ipaddr2str(&key->backend_ip),
+                      key->backend_port, ret);
+        return ret;
+    }
+
+    // now, read the NAT table to get the (VIP, svc port) tuple
+    xlate_idx = svc_mapping_data.svc_mapping_action.xlate_id;
+    if (xlate_idx == PDS_IMPL_RSVD_NAT_HW_ID) {
+        // if the entry exists but points to the reserved NAT hardware id,
+        // the entry existed but has been deleted since.
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT, xlate_idx, NULL, NULL,
+                                      &nat_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read NAT table entry %u for "
+                      "svc-(%u, %s:%u) xlation",
+                      xlate_idx, vpc->key().id, ipaddr2str(&key->backend_ip),
+                      key->backend_port);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // copy out the data to the spec
+    P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, spec->vip, key->backend_ip.af);
+    spec->svc_port = nat_data.nat_action.port;
+    memcpy(&spec->backend_provider_ip, &key->backend_ip, sizeof(ip_addr_t));
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+svc_mapping_impl::fill_stats_(pds_svc_mapping_stats_t *stats) {
+    return SDK_RET_OK;
+}
+
+void
+svc_mapping_impl::fill_status_(pds_svc_mapping_status_t *status) {
+}
+
+sdk_ret_t
 svc_mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_svc_mapping_info_t *svc_mapping_info = (pds_svc_mapping_info_t *)info;
+
+    // populate the key in the spec
+    memcpy(&svc_mapping_info->spec.key, key, sizeof(pds_svc_mapping_key_t));
+    ret = fill_spec_(&svc_mapping_info->spec);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // fill in status and stats also, though they are no-ops now
+    fill_stats_(&svc_mapping_info->stats);
+    fill_status_(&svc_mapping_info->status);
+
     return SDK_RET_OK;
 }
 

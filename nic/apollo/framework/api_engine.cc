@@ -309,6 +309,7 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
         // add the object to dirty list
         obj_ctxt.api_op = API_OP_DELETE;
         obj_ctxt.obj_id = api_ctxt->obj_id;
+        obj_ctxt.api_params = api_ctxt->api_params;
         add_to_dirty_list_(api_obj, obj_ctxt);
     }
     PDS_API_PREPROCESS_DELETE_COUNTER_INC(ok, 1);

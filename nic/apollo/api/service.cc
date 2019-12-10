@@ -11,6 +11,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
@@ -128,6 +129,9 @@ svc_mapping::release_resources(void) {
 
 sdk_ret_t
 svc_mapping::nuke_resources_(void) {
+    if (impl_ == NULL) {
+        return SDK_RET_OK;
+    }
     return impl_->nuke_resources(this);
 }
 
@@ -165,7 +169,7 @@ svc_mapping::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 svc_mapping::activate_config(pds_epoch_t epoch, api_op_t api_op,
                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
@@ -202,5 +206,17 @@ sdk_ret_t
 svc_mapping::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_SVC_MAPPING, this);
 }
+
+string
+svc_mapping::key2str(void) const {
+    std::string ret("svc-(");
+
+    ret += std::to_string(key_.vpc.id) + "," + ipaddr2str(&key_.backend_ip);
+    ret += ":" + std::to_string(key_.backend_port) + ")";
+
+    return ret;
+}
+
+/** @} */    // end of PDS_SVC_MAPPING
 
 }    // namespace api

@@ -176,9 +176,18 @@ public:
     }
 
     /// \brief    return stringified key of the object (for debugging)
-    virtual string key2str(void) const override {
-        return "svc-";
+    virtual string key2str(void) const override;
+
+    /// \brief   helper function to get size of key
+    /// \return  size of key
+    static uint32_t key_size(void) {
+        return sizeof(pds_svc_mapping_key_t);
     }
+
+    /// \brief          return the svc_mapping entry's key/id
+    /// \return         key/id of the svc_mapping entry
+    pds_svc_mapping_key_t key(void) const { return key_; }
+
 
     ///\brief read config
     ///\param[in]  key Pointer to the key object
