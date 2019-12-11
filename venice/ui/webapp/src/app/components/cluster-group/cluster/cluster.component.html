@@ -1,10 +1,4 @@
 <app-pagebody [icon]="bodyicon" header="Cluster Overview">
-  <div fxFlex="none" fxLayout="column" class="tableviewedit-widget">
-    <div [@slideInOut] *ngIf="certMode" fxFlex="none" fxLayout="column">
-      <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
-    </div>
-  </div>
-
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="cluster-card-container">
       <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
@@ -33,10 +27,6 @@
     <app-shared-alertsevents></app-shared-alertsevents>
   </div>
 </app-pagebody>
-
-<ng-template #createTemplate>
-  <app-certificate (cancelEvent)="onCertificateCancel($event)"></app-certificate>
-</ng-template>
 
 <ng-template #nodeTable>
   <div fxFlex="none" fxLayout="column" class="cluster-node-table-container">

@@ -13,7 +13,6 @@ import { ClusterComponent } from './cluster.component';
 import { ClusterRoutingModule } from './cluster.route';
 import { SharedModule } from '@app/components/shared//shared.module';
 import { NodedetailComponent } from './nodedetail/nodedetail.component';
-import { CertificateComponent } from './certificate/certificate.component';
 import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
 
 @NgModule({
@@ -30,7 +29,7 @@ import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component'
     ClusterRoutingModule,
     SharedModule
   ],
-  declarations: [ClusterComponent, NodedetailComponent, CertificateComponent, ClusterupdateComponent],
+  declarations: [ClusterComponent, NodedetailComponent, ClusterupdateComponent],
   entryComponents: [ClusterupdateComponent]
 })
 export class ClusterModule { }

@@ -1,18 +1,21 @@
 <div fxFlex="auto" fxLayout="column">
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="certificate-container">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start"
+       class="updateclustertlsCert-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row" [style.max-width]="'1300px'"
-         fxLayoutAlign="start stretch" class="certificate-content">
+         fxLayoutAlign="start stretch" class="updateclustertlsCert-content">
       <div fxFlex="10px"></div>
       <div fxFlex fxLayout="column" [formGroup]="newCert.$formGroup">
         <div fxFlex="nogrow" fxLayout="row" class="">
-          <textarea fxFlex="100" formControlName="key" class="certificate-key" appErrorTooltip
+          <textarea fxFlex="100" formControlName="key" class="updateclustertlsCert-key"
+                    appErrorTooltip
                     spellcheck="false" type="text" pInputTextarea autoResize="autoResize"
                     placeholder="Key"></textarea>
         </div>
-        <div class="certificate-divider"></div>
+        <div class="updateclustertlsCert-divider"></div>
         <div fxFlex="nogrow" fxLayout="row" class="">
-          <textarea fxFlex="100" formControlName="certs" class="certificate-certs" appErrorTooltip
+          <textarea fxFlex="100" formControlName="certs" class="updateclustertlsCert-certs"
+                    appErrorTooltip
                     spellcheck="false" type="text" pInputTextarea autoResize="autoResize"
                     placeholder="Certs"></textarea>
         </div>
@@ -21,6 +24,6 @@
     </div>
   </div>
 
-  <div fxFlex="0px" class="certificate-border"></div>
+  <div fxFlex="0px" class="updateclustertlsCert-border"></div>
 
 </div>

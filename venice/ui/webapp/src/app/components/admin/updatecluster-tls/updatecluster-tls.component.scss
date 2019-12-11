@@ -1,0 +1,39 @@
+@import 'src/global-mixins';
+
+.updateclustertls-toolbar-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  text-align: center;
+  width: 120px;
+  display: block;
+  padding: 0px 10px;
+}
+
+.updateclustertls-toolbar-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  padding: 0px 10px;
+  min-width: 80px;
+}
+
+.updateclustertls-widget {
+  @include primary-font();
+}
+
+.updateclustertls-failed-text {
+  @include primary-font(22px);
+  margin-left: 10px;
+}
+
+.updateclustertls-failed-icon {
+  color: #e57553;
+  font-size: 32px;
+  margin-bottom: 13px;
+}
+
+.updateclustertls-container {
+  margin: 10px 10px 10px 5px
+}

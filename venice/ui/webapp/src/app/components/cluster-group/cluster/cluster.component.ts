@@ -95,18 +95,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.getNodes();
     this.getMetrics();
 
-    let buttons = [];
-
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.clustercluster_create)) {
-      buttons = [{
-        cssClass: 'global-button-primary cluster-toolbar-button',
-        text: 'UPDATE TLS',
-        callback: () => { this.certMode =  !this.certMode; },
-      }];
-    }
-
     this._controllerService.setToolbarData({
-      buttons: buttons,
       breadcrumb: [{ label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' }]
     });
   }
@@ -298,10 +287,6 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     }
   }
 
-
-  onCertificateCancel(event) {
-    this.certMode = false;
-  }
   ngOnDestroy() {
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();

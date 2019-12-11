@@ -33,7 +33,6 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
-import {CertificateComponent} from '@components/cluster-group/cluster/certificate/certificate.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { AuthService } from '@app/services/auth.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -53,7 +52,6 @@ describe('ClusterComponent', () => {
       declarations: [
         ClusterComponent,
         DummyComponent,
-        CertificateComponent,
         ClusterupdateComponent
       ],
       imports: [
@@ -157,18 +155,6 @@ describe('ClusterComponent', () => {
         const controllerService = TestBed.get(ControllerService);
         toolbarSpy = spyOn(controllerService, 'setToolbarData');
       });
-
-      it('cert option has access', () => {
-        TestingUtility.addPermissions([UIRolePermissions.clustercluster_create]);
-        fixture.detectChanges();
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
-      });
-
-      it('cert option no access', () => {
-        fixture.detectChanges();
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
-      });
-
       it('nodes table', () => {
         TestingUtility.addPermissions([UIRolePermissions.clusternode_read]);
         fixture.detectChanges();

@@ -1,38 +1,38 @@
-import {AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation, EventEmitter, Output} from '@angular/core';
-import {BaseComponent} from '@components/base/base.component';
-import {ClusterService} from '@app/services/generated/cluster.service';
-import {ControllerService} from '@app/services/controller.service';
-import {IClusterUpdateTLSConfigRequest, ClusterUpdateTLSConfigRequest} from '@sdk/v1/models/generated/cluster';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation , EventEmitter , Output, OnDestroy} from '@angular/core';
 import {Animations} from '@app/animations';
+import {IClusterUpdateTLSConfigRequest, ClusterUpdateTLSConfigRequest} from '@sdk/v1/models/generated/cluster';
+import { ControllerService } from '@app/services/controller.service';
 import {required} from '@sdk/v1/utils/validators';
-import {Utility} from '@common/Utility';
+import { Utility } from '@app/common/Utility';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { BaseComponent } from '@app/components/base/base.component';
 
 
 @Component({
-  selector: 'app-certificate',
-  templateUrl: './certificate.component.html',
-  styleUrls: ['./certificate.component.scss'],
-  animations: [Animations],
+  selector: 'app-updateclustertls',
+  templateUrl: './updateclustertls.component.html',
   encapsulation: ViewEncapsulation.None,
+  animations: [Animations],
+  styleUrls: ['./updateclustertls.component.scss']
 })
-export class CertificateComponent extends BaseComponent implements OnInit, OnDestroy {
+export class UpdateclustertlsComponent extends BaseComponent implements OnInit, OnDestroy {
   newCert: ClusterUpdateTLSConfigRequest;
   subscriptions = [];
   oldToolbarData;
   @Output() cancelEvent: EventEmitter<any> = new EventEmitter();
 
   constructor(private clusterService: ClusterService,
-              protected controllerService: ControllerService, ) {
-    super(controllerService);
-  }
+    protected controllerService: ControllerService, ) {
+      super(controllerService);
+}
 
   ngOnInit() {
-    // store old toolbar data
+    // store  toolbar data
     this.oldToolbarData = this.controllerService.getToolbarData();
     const newToolbarData = this.controllerService.getToolbarData();
     newToolbarData.buttons = [
       {
-        cssClass: 'global-button-primary certificate-toolbar-button',
+        cssClass: 'global-button-primary updateclustertlsCert-toolbar-button',
         text: 'UPLOAD',
         callback: () => {
           this.upload();
@@ -40,7 +40,7 @@ export class CertificateComponent extends BaseComponent implements OnInit, OnDes
         computeClass: () => this.isAllInputsValidated() ? '' : 'global-button-disabled',
       },
       {
-        cssClass: 'global-button-neutral certificate-toolbar-button',
+        cssClass: 'global-button-neutral updateclustertlsCert-toolbar-button',
         text: 'CANCEL',
         callback: () => {
           this.cancel();
@@ -82,5 +82,4 @@ export class CertificateComponent extends BaseComponent implements OnInit, OnDes
       subscription.unsubscribe();
     });
   }
-
 }

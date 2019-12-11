@@ -278,6 +278,15 @@ export const sideNavMenu: SideNavItem[] = [
         roleGuard: UIRolePermissions.objstorebucket_read,
         link: ['/admin', 'snapshots']
       },
+      {
+        label: 'Update TLS',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'security'
+          },
+          roleGuard: UIRolePermissions.adminrole,
+        link: ['/admin', 'updateTLS']
+      }
     ]
   },
 ];

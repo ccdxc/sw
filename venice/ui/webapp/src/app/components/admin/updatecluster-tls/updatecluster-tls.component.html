@@ -1,0 +1,19 @@
+<app-pagebody>
+  <div fxFlex="none" fxLayout="column" class="updateclustertls-widget">
+    <ng-container>
+      <div class="updateclustertls-container">
+        <mat-icon fxFlex="nogrow" class="updateclustertls-failed-icon">error_outline</mat-icon>
+        <div fxFlex="nogrow" class="updateclustertls-failed-text">Updating TLS changes SSL
+          certificate. This action can not be reversed!</div>
+      </div>
+    </ng-container>
+    <div [@slideInOut] *ngIf="certMode" fxFlex="none" fxLayout="column">
+      <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
+
+    </div>
+  </div>
+
+  <ng-template #createTemplate>
+    <app-updateclustertls (cancelEvent)="onCertificateCancel($event)"></app-updateclustertls>
+  </ng-template>
+</app-pagebody>

@@ -52,7 +52,16 @@ const routes: Routes = [
       }
     ]
   },
-];
+  {
+    path: 'updateTLS',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/admin/updatecluster-tls/updatecluster-tls.module#UpdateclusterTLSModule'
+      }
+    ]
+  }
+  ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
