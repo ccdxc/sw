@@ -653,7 +653,6 @@ endpoint_create_process_sessions (ep_t *ep)
         hal::session_t *session = (session_t *)entry;
         ep_sess_walk_t *ep_ctxt = (ep_sess_walk_t *)ctxt;
         ep_t *ep = ep_ctxt->ep;
-        flow_t *flow = NULL;
 
         HAL_TRACE_DEBUG("Procession session: {}", session->hal_handle);
 
@@ -727,7 +726,7 @@ ep_create_session_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     ep_sess_upd_ctxt_t *ep_ctxt = (ep_sess_upd_ctxt_t *)ctxt;
     ep_create_sess_ctxt_t ep_cr_ctxt;
     uint32_t count = 0;
-    hal_handle_t *sess_hdl_list = NULL, *sess_hdl;
+    hal_handle_t *sess_hdl;
 
     HAL_TRACE_DEBUG("Ep create: Session update walk cb");
 
@@ -2501,12 +2500,12 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Couldnt delete session with handle: {}", entry->handle_id);
             }
-        }
-        // clean up the session to ctxt reference
-        if (curr == session->sep_sess_list_entry_ctxt) {
-            session->sep_sess_list_entry_ctxt = NULL;
-        } else if (curr == session->dep_sess_list_entry_ctxt) {
-            session->dep_sess_list_entry_ctxt = NULL;
+            // clean up the session to ctxt reference
+            if (curr == session->sep_sess_list_entry_ctxt) {
+                session->sep_sess_list_entry_ctxt = NULL;
+            } else if (curr == session->dep_sess_list_entry_ctxt) {
+                session->dep_sess_list_entry_ctxt = NULL;
+            }
         }
         // Remove from list
         dllist_del(&entry->dllist_ctxt);
@@ -3012,7 +3011,7 @@ ep_del_session (ep_t *ep, session_t *session)
 {
     hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *curr = NULL, *next = NULL;
+    dllist_ctxt_t               *curr = NULL;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
 
