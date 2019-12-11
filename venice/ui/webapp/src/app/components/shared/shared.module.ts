@@ -40,6 +40,7 @@ import { FeatureGuardDirective } from './directives/featureGuard.directive';
 import { AlertstableComponent } from './alertsevents/alertstable/alertstable.component';
 import { EventstableComponent } from './alertsevents/eventstable/eventstable.component';
 import { SyslogComponent } from './syslog/syslog.component';
+import { LabelDirective } from './directives/label.directive';
 
 @NgModule({
   imports: [
@@ -73,6 +74,7 @@ import { SyslogComponent } from './syslog/syslog.component';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    LabelDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,
@@ -107,6 +109,7 @@ import { SyslogComponent } from './syslog/syslog.component';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    LabelDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,
