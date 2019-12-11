@@ -29,7 +29,7 @@ using namespace delphi::messenger;
 #define CLIENT_MAX_RECONNECT_PERIOD     0.250
 
 // The maximum duration for a callback. Callbacks shouldn't be blocking.
-#define MAX_CALLBACK_DURATION 1.0
+#define MAX_CALLBACK_DURATION 30.0
 
 // max service id
 #define MAX_SERVICE_ID (0xFFFF)
