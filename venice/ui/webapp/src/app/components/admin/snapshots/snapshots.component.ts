@@ -110,7 +110,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
           cssClass: 'global-button-primary snapshots-toolbar-button snapshots-toolbar-button-ADD',
           text: 'SAVE A CONFIG SNAPSHOT',
           computeClass: () => this.shouldEnable_takesnapshot_button ? '' : 'global-button-disabled',
-          callback: () => { this.saveConfigSnapshot(); }
+          callback: () => { this.checkAndSaveConfigSnapshot(); }
         };
         buttons.push(saveButton);
       }
@@ -125,11 +125,24 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     this.getSnapshots();
   }
 
+  /**
+   * API to save Config Snapshot.
+   * - check for existing Config
+   * - if no Config exists, create one before calling save request
+   */
+  checkAndSaveConfigSnapshot() {
+    const sub = this.clusterService.GetConfigurationSnapshot().subscribe(
+      () => this.saveConfigSnapshot(),
+      () => this.generateConfigSnapshot(() => this.saveConfigSnapshot())
+    );
+    this.subscriptions.push(sub);
+  }
+
   saveConfigSnapshot() {
     const clusterConfigurationSnapshotRequest: IClusterConfigurationSnapshotRequest = new ClusterConfigurationSnapshotRequest();
     this.clusterService.Save(clusterConfigurationSnapshotRequest).subscribe(
-      (response) => {
-        this.controllerService.invokeSuccessToaster('Success.', 'Saved configuration snapshot.' );
+      () => {
+        this.controllerService.invokeSuccessToaster('Success.', 'Saved configuration snapshot.');
         this.refresh();
       },
       (error) => {
@@ -169,11 +182,11 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
    */
   checkAndMakeSnapshotPolicy() {
     const sub = this.clusterService.GetConfigurationSnapshot().subscribe(
-      (response) => {
-          //  We found existing Snapshot config.  So do nonthing.
+      () => {
+        //  We found existing Snapshot config.  So do nonthing.
       },
-      (error) => {
-        console.error(this.getClassName() +  'checkAndMakeSnapshotPolicy(). Found not snapshot policy. Create one');
+      () => {
+        console.error(this.getClassName() + 'checkAndMakeSnapshotPolicy(). Found no snapshot policy, creating one.');
         this.generateConfigSnapshot();
       }
     );
@@ -184,8 +197,8 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
    * ClusterConfigurationSnapshot is a singleton object in Venice.
    * At 2019-11-26, we only have one configuration as below. It means configure snapshot will be saved in objectstore.
    */
-  generateConfigSnapshot() {
-    const config =   {
+  generateConfigSnapshot(next: () => void = null) {
+    const config = {
       'kind': 'ConfigSnapshot',
       'meta': {
         'name': 'GlobalSnapshot'
@@ -202,11 +215,13 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     };
     const myConfigurationSnapshot: IClusterConfigurationSnapshot = new ClusterConfigurationSnapshot(config);
     const sub = this.clusterService.AddConfigurationSnapshot(myConfigurationSnapshot).subscribe(
-      (response) => {
-          //  We found existing Snapshot config.  So do nonthing.
+      () => {
+        if (next) {
+          next();
+        }
       },
-      (error) => {
-        this.controllerService.invokeErrorToaster('Creating Snapshot Failed', 'Failed to generate Global Configuration Policy, Please contact system administrator.');
+      () => {
+        this.controllerService.invokeErrorToaster('Creating Snapshot Failed', 'Failed to generate Global Configuration Policy, please contact system administrator.');
       }
     );
     this.subscriptions.push(sub);
