@@ -1081,7 +1081,9 @@ validate_port_update (port *port_p, port_args_t *args)
 
     // validate speed against num_lanes only if AN=false
     if (args->auto_neg_enable == false) {
-        return validate_speed_lanes(args->port_speed, args->num_lanes);
+        if (args->num_lanes == port_p->num_lanes()) {
+            return validate_speed_lanes(args->port_speed, args->num_lanes);
+        }
     }
 
     return true;

@@ -7,7 +7,7 @@
     "emmc_size": "8",
     "memory_size": "8",
     "num_asics" : "1",
-    "board_type" : "Naples100",
+    "board_type" : "Naples25",
     "voltages" :
     {
         "startup_arm" : "",
