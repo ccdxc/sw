@@ -2724,6 +2724,10 @@ ionic_notifyq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 			&notifyq->intr.vector, 0, "Interrupt vector");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
 			&lif->last_eid, "Last event Id");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "isr_count", CTLFLAG_RD,
+			&notifyq->isr_count, "ISR count");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_count", CTLFLAG_RD,
+			&notifyq->comp_count, "NQ completions processed");
 }
 
 static void

@@ -336,22 +336,21 @@ ionic_calc_rx_size(struct ionic_lif *lif)
 }
 
 /*
- * Read the notifyQ to get the latest link event.
+ * Read the lif status to read the most recent link status.
  */
 static void
-ionic_read_notify_block(struct ionic_lif *lif)
+ionic_get_link_status(struct ionic_lif *lif)
 {
-	struct lif_status *nb = &lif->info->status;
+	struct lif_status *ls = &lif->info->status;
 
-	if (nb == NULL)
+	if (ls == NULL)
 		return;
 
-	if (nb->eid < lif->last_eid)
+	if (ls->eid < lif->last_eid)
 		return;
 
-	lif->last_eid = nb->eid;
-	lif->link_speed = nb->link_speed;
-	lif->link_up = (nb->link_status == PORT_OPER_STATUS_UP);
+	lif->link_speed = ls->link_speed;
+	lif->link_up = (ls->link_status == PORT_OPER_STATUS_UP);
 }
 
 /*
@@ -2929,30 +2928,42 @@ ionic_lif_adminq_init(struct ionic_lif *lif)
 	return (err);
 }
 
-static void
+static bool
 ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 {
 	struct ionic_lif *lif = notifyq->lif;
 	struct ifnet *ifp = lif->netdev;
+	uint64_t comp_eid;
+
+	if (__IONIC_DEBUG) {
+		IONIC_NETDEV_INFO(ifp, " notifyq event:\n");
+		print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
+		    comp, sizeof(union notifyq_comp), true);
+	}
+
+	comp_eid = le64_to_cpu(comp->event.eid);
+	if ((int64_t)(comp_eid - lif->last_eid) <= 0) {
+		return (false);
+	}
+
+	if (comp_eid != lif->last_eid + 1) {
+		IONIC_QUE_WARN(notifyq,
+		    "NQ OOO event, eid: %ld != expected eid: %ld\n",
+		    comp_eid, lif->last_eid + 1);
+	}
+
+	lif->last_eid = comp_eid;
 
 	switch (comp->event.ecode) {
 	case EVENT_OPCODE_LINK_CHANGE:
 		IONIC_LIF_LOCK(lif);
-		ionic_read_notify_block(lif);
-
+		lif->link_speed = comp->link_change.link_speed;
+		lif->link_up = comp->link_change.link_status ?  true : false;
+	
+		ionic_get_link_status(lif);
 		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
-		    lif->last_eid, (lif->link_up ? "up" : "down"),
+		    comp_eid, (lif->link_up ? "up" : "down"),
 		    lif->link_speed);
-
-		if (lif->last_eid < comp->event.eid) {
-			if_printf(ifp, "comp eid: %ld > last_eid: %ld\n",
-			    comp->event.eid, lif->last_eid);
-			lif->link_speed = comp->link_change.link_speed;
-			lif->link_up = comp->link_change.link_status ?
-			    true : false;
-			lif->last_eid = comp->event.eid;
-		}
-
 		ionic_open_or_stop(lif);
 
 		IONIC_LIF_UNLOCK(lif);
@@ -2960,30 +2971,32 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 
 	case EVENT_OPCODE_RESET:
 		if_printf(ifp, "[eid:%ld]reset code: %d state: %d\n",
-		    comp->event.eid, comp->reset.reset_code,
+		    comp_eid, comp->reset.reset_code,
 		    comp->reset.state);
 		break;
 
 	case EVENT_OPCODE_HEARTBEAT:
-		if_printf(ifp, "[eid:%ld]heartbeat\n", comp->event.eid);
+		if_printf(ifp, "[eid:%ld]heartbeat\n", comp_eid);
 		break;
 
 	case EVENT_OPCODE_LOG:
-		if_printf(ifp, "[eid:%ld]log \n", comp->event.eid);
+		if_printf(ifp, "[eid:%ld]log \n", comp_eid);
 		print_hex_dump(KERN_INFO, "nq log", DUMP_PREFIX_OFFSET,
 		    16, 1, comp->log.data, sizeof(comp->log.data), true);
 		break;
 
 	case EVENT_OPCODE_XCVR:
-		if_printf(ifp, "[eid:%ld]xcvr event\n", comp->event.eid);
+		if_printf(ifp, "[eid:%ld]xcvr event\n", comp_eid);
 		ionic_ifmedia_xcvr(lif);
 		break;
 
 	default:
 		if_printf(ifp, "[eid:%ld]unknown event: %d\n",
-		    comp->event.eid, comp->event.ecode);
+		    comp_eid, comp->event.ecode);
 		break;
 	}
+
+	return (true);
 }
 
 /*
@@ -2992,9 +3005,8 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 int
 ionic_notifyq_clean(struct ionic_notifyq* notifyq)
 {
-	struct ionic_lif *lif = notifyq->lif;
-	int comp_index = notifyq->comp_index;
-	union notifyq_comp *comp = &notifyq->comp_ring[comp_index];
+	int i, comp_index;
+	union notifyq_comp *comp;
 
 	/* Sync every time descriptors. */
 	bus_dmamap_sync(notifyq->cmd_dma.dma_tag, notifyq->cmd_dma.dma_map,
@@ -3003,27 +3015,17 @@ ionic_notifyq_clean(struct ionic_notifyq* notifyq)
 	IONIC_QUE_INFO(notifyq, " enter comp index: %d\n",
 	    notifyq->comp_index);
 
-	if (comp->event.eid < lif->last_eid) {
-		IONIC_QUE_WARN(notifyq,
-		    "out of order comp: %d, eid: %ld, expected eid: %ld\n",
-		    comp_index, comp->event.eid, lif->last_eid);
-		return (lif->last_eid - comp->event.eid);
+	for (i = 0; i < notifyq->num_descs; i++) {
+		comp_index = notifyq->comp_index;
+		comp = &notifyq->comp_ring[comp_index];
+		if (!ionic_process_event(notifyq, comp))
+			break;
+		notifyq->comp_index = IONIC_MOD_INC(notifyq, comp_index);
 	}
 
-	IONIC_QUE_INFO(notifyq, "comp: %d event id: %ld expected: %ld\n",
-	    comp_index, comp->event.eid, lif->last_eid);
-	lif->last_eid = comp->event.eid;
+	notifyq->comp_count += i;
 
-	IONIC_NETDEV_INFO(lif->netdev, " notifyq event:\n");
-	if (__IONIC_DEBUG)
-		print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
-		    comp, sizeof(union notifyq_comp), true);
-
-	ionic_process_event(notifyq, comp);
-
-	notifyq->comp_index = IONIC_MOD_INC(notifyq, comp_index);
-
-	return (1);
+	return (i);
 }
 
 static void
@@ -3035,10 +3037,10 @@ ionic_notifyq_task_handler(void *arg, int pendindg)
 
 	KASSERT(notifyq, ("notifyq == NULL"));
 
-	/* XXX: process multiple events. */
 	processed = ionic_notifyq_clean(notifyq);
 
-	IONIC_QUE_INFO(notifyq, "processed %d\n", processed);
+	if (!processed)
+		IONIC_QUE_INFO(notifyq, "nothing processed in notifyq\n");
 
 	ionic_intr_credits(idev->intr_ctrl, notifyq->intr.index,
 	    processed, IONIC_INTR_CRED_REARM);
@@ -3049,6 +3051,7 @@ ionic_notifyq_isr(int irq, void *data)
 {
 	struct ionic_notifyq* notifyq = data;
 
+	notifyq->isr_count++;
 	/* Schedule the task to process the notifyQ events. */
 	taskqueue_enqueue(notifyq->taskq, &notifyq->task);
 
@@ -3981,7 +3984,7 @@ ionic_lif_init(struct ionic_lif *lif, bool wdog_reset_path)
 		goto err_out_rss_deinit;
 	}
 
-	ionic_read_notify_block(lif);
+	ionic_get_link_status(lif);
 
 	/* Start the watchdogs */
 	if (!wdog_reset_path) {

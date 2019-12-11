@@ -79,7 +79,7 @@ struct ionic_rx_stats {
 	/* Only for debugging. */
 	uint64_t mbuf_alloc;
 	uint64_t mbuf_free;
-	uint64_t isr_count; 	// Not required.
+	uint64_t isr_count;
 	uint64_t task;	/* Number of time task was invoked. */
 	uint64_t comp_err;
 	uint64_t length_err;
@@ -170,6 +170,8 @@ struct ionic_notifyq {
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
 	int comp_index;						/* Index for completion descriptors. */
+	uint64_t isr_count;
+	uint64_t comp_count;
 
 	struct intr intr;
 
