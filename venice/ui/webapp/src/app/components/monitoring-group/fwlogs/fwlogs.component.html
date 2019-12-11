@@ -50,7 +50,7 @@
     </ng-container>
     <ng-container *ngSwitchCase="'reporter-id'">
       <a
-         routerLink="/cluster/naples/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
+         routerLink="/cluster/dscs/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
     </ng-container>
     <ng-container *ngSwitchCase="'policy'">
       <div *ngIf="displayPolicyName(rowData)" class="fwlogs-sgpolicyredirect">

@@ -50,7 +50,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-cluster-naples'
         },
         roleGuard: UIRolePermissions.clusterdistributedservicecard_read,
-        link: ['/cluster/', 'naples']
+        link: ['/cluster/', 'dscs']
       },
       {
         label: 'Hosts',

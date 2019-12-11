@@ -1023,7 +1023,7 @@ export class Utility {
       case 'Node':
         return cat + '/cluster' + (name ? '/' + name : '');
       case 'DistributedServiceCard':
-        return cat + '/naples';
+        return cat + '/dscs';
       case 'Host':
         return cat + '/hosts';
       case 'Workload':

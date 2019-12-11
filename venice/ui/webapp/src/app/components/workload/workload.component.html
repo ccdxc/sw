@@ -71,7 +71,7 @@
       <div *ngIf="rowData.dscs && rowData.dscs.length>0"> DSCS:
         <ng-container *ngFor="let dsc of rowData.dscs">
           <a [matTooltip]="'Disctributed Services Card'"
-             routerLink="/cluster/naples/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
+             routerLink="/cluster/dscs/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
         </ng-container>
       </div>
       <div *ngIf="rowData.linkedsecuritygroups && rowData.linkedsecuritygroups.length>0"> SECURITY

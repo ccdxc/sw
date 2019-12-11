@@ -59,7 +59,7 @@ export class UIConfigsService {
         UIRolePermissions.clusternode_read,
       ],
     },
-    'cluster/naples': {
+    'cluster/dscs': {
       requiredPerm: [
         UIRolePermissions.clusterdistributedservicecard_read,
       ],

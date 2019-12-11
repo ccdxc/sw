@@ -19,7 +19,7 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'naples',
+    path: 'dscs',
     children: [
       {
         path: '',

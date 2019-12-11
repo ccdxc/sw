@@ -178,7 +178,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.provideCustomOptions();
     this.controllerService.setToolbarData({
       buttons: [],
-      breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/naples' }]
+      breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/dscs' }]
     });
   }
 
@@ -475,7 +475,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
             // VS-736 end
             thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
             heroCard.thirdStat.value = thirdStat;
-            heroCard.thirdStat.url = '/cluster/naples/' + thirdStatNaples.meta.name;
+            heroCard.thirdStat.url = '/cluster/dscs/' + thirdStatNaples.meta.name;
             heroCard.thirdStat.numericValue = Math.round(maxNaples.max);
           }
         } else {

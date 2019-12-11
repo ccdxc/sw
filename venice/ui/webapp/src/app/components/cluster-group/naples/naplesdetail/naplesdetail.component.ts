@@ -154,8 +154,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this._controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [
-        { label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/naples' },
-        { label: nicName, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }
+        { label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/dscs' },
+        { label: nicName, url: Utility.getBaseUIUrl() + 'cluster/dscs/' + id }
       ]
     });
   }

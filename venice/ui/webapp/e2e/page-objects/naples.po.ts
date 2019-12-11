@@ -6,13 +6,13 @@ export class Naples {
     }
 
     navigateTo() {
-        return browser.get('/#/cluster/naples');
+        return browser.get('/#/cluster/dscs');
     }
 
     async verifyPage() {
         const EC = protractor.ExpectedConditions;
         const naplesPageComponent = element(by.css('app-naples'));
-        const urlEC = EC.urlContains('/cluster/naples');
+        const urlEC = EC.urlContains('/cluster/dscs');
         const componentEC = EC.presenceOf(naplesPageComponent);
         await browser.wait(EC.and(urlEC, componentEC));
     }

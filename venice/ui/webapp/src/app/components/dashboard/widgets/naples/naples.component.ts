@@ -304,7 +304,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   }
 
   goToNaples() {
-    this.router.navigateByUrl('/cluster/naples');
+    this.router.navigateByUrl('/cluster/dscs');
   }
 
   tryGenMetrics() {

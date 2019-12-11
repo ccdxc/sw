@@ -62,7 +62,7 @@
     <ng-container *ngSwitchCase="'spec.dscs'">
       <div *ngFor="let v of rowData['processedSmartNics']">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
-          <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
+          <a *ngIf="v.mac != ''" routerLink="/cluster/dscs/{{v.mac}}">{{v.text}}</a>
           <a *ngIf="v.mac == ''">{{v.text}}</a>
         </ng-container>
         <ng-container

@@ -55,7 +55,7 @@
         <div class="sgpolicy-summary-panel-content-pendingNaples-grid">
           <div
                *ngFor="let nicMac of selectedPolicy?.status['propagation-status']['pending-dscs']">
-            <a routerLink="/cluster/naples/{{nicMac}}"
+            <a routerLink="/cluster/dscs/{{nicMac}}"
                class="sgpolicy-summary-panel-content-nic-div-link">{{getNaplesName(nicMac)}}</a>
           </div>
         </div>
