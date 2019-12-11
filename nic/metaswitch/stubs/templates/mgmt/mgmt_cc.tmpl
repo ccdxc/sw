@@ -260,9 +260,14 @@
             /* This GET response contains entry from {{$struct}}                     */
             /*************************************************************************/
             NBB_TRC_FLOW((NBB_FORMAT "Got a valid {{$struct}} entry"));
-
+            bool specific_get = false;
             v_{{$struct | ToLower}} = ({{$struct}} *)NTL_OFF_GET_POINTER(v_amb_get,
                                                         &v_amb_get->bulk_data_offset);
+            if (v_{{$struct | ToLower}} == NULL) {
+                specific_get = true;
+                v_{{$struct | ToLower}} = ({{$struct}} *)((NBB_BYTE *)v_amb_get +
+                                                       v_amb_get->data_offset);
+            }
 
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
@@ -314,12 +319,33 @@
                                         NBB_ALIGN_OFFSET(v_amb_get->data_len));
             }
 
-            /*************************************************************************/
-            /* Send back the GET response as a GET request.  Because the             */
-            /* get_next_object flag is set, it will return the next {{$struct}} entry*/
-            /*************************************************************************/
-            NBB_SEND_IPS(SHARED.sm_pid, AMB_MIB_Q, v_amb_get);
-            SMS_GET_INC();
+            if (specific_get) {
+                /*************************************************************************/
+                /* Send response back to the caller.                                     */
+                /*************************************************************************/
+                pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
+                v_amb_get->correlator.pds_ms_resp_ctx = NULL;
+
+                /*************************************************************************/
+                /* Free the buffer.                                                      */
+                /*************************************************************************/
+                NBB_FREE_BUFFER(v_amb_get);
+
+                /*************************************************************************/
+                /* The wait_check_get callback determines which procedure is responsible */
+                /* for incoming GET response signals.  The last GET response has been    */
+                /* received, and we are no longer responsible for incoming GETs.  Clear  */
+                /* the callback.                                                         */
+                /*************************************************************************/
+                SHARED.wait_check_get = NULL;
+            } else {
+                /*************************************************************************/
+                /* Send back the GET response as a GET request.  Because the             */
+                /* get_next_object flag is set, it will return the next {{$struct}} entry*/
+                /*************************************************************************/
+                NBB_SEND_IPS(SHARED.sm_pid, AMB_MIB_Q, v_amb_get);
+                SMS_GET_INC();
+            }
             v_amb_get = NULL;
         }
         else if (v_amb_get->ret_code == AMB_RC_GET_RESCHEDULE)

@@ -55,18 +55,37 @@ class Client {
         auto ent = req.add_request();
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
-        peeraddr->set_v4addr(inet_network("172.17.0.27"));
+        peeraddr->set_v4addr(inet_addr("172.17.0.13"));
         ent->set_vrfid(1);
         ent->set_peerport(0);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
-        localaddr->set_v4addr(inet_network("172.17.0.13"));
+        localaddr->set_v4addr(inet_addr("172.17.0.27"));
         ent->set_localport(0);
         ent->set_ifid(0);
         grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "got 1 entry" << std::endl;
+            for (int i=0; i<res.response_size(); i++) {
+                auto resp = res.response(i);
+                std::cout << "===== Entry #" << i << " =====" << std::endl;
+                std::cout << "vrfid: " << resp.vrfid() << std::endl;
+                std::cout << "peerport: " << resp.peerport() << std::endl;
+                auto paddr = resp.peeraddr().v4addr();
+                struct in_addr ip_addr;
+                ip_addr.s_addr = paddr;
+                std::cout << "peeraf: " << resp.peeraddr().af() << " peeraddr: " << inet_ntoa(ip_addr) << std::endl;
+                std::cout << "localport: " << resp.localport() << std::endl;
+                paddr = resp.localaddr().v4addr();
+                ip_addr.s_addr = paddr;
+                std::cout << "localaf: " << resp.localaddr().af() << " localaddr: " << inet_ntoa(ip_addr) << std::endl;
+                std::cout << "ifid: " << resp.ifid() << std::endl;
+                std::cout << "adminen: " << resp.adminen() << std::endl;
+                std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
+                std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
+                std::cout << "localasn: " << resp.localasn() << std::endl;
+            }
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;
