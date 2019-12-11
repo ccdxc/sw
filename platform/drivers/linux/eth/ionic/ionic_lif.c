@@ -804,6 +804,11 @@ static bool ionic_notifyq_service(struct ionic_cq *cq,
 	if ((s64)(eid - lif->last_eid) <= 0)
 		return false;
 
+	/* Have we missed any events? */
+	if (eid != lif->last_eid + 1)
+		netdev_warn(netdev, "Notifyq missed events, eid=%lld, expected=%lld\n",
+			    eid, lif->last_eid + 1);
+
 	lif->last_eid = eid;
 
 	dev_dbg(lif->ionic->dev, "notifyq event:\n");
