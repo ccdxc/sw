@@ -187,7 +187,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 			log.Errorf("Error %v listing smartNICs", err)
 			return err
 		}
-		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, &ros)
+		sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.DSCMustMatchConstraint, snStates, &ros, op)
 
 		for _, s := range sn {
 			for _, snicState := range s {

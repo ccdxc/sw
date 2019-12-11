@@ -705,7 +705,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err := stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn := orderSmartNICs(nil, false, snStates, &ros)
+	sn := orderSmartNICs(nil, false, snStates, &ros, protos.DSCOp_DSCNoOp)
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 2, "first bucket should have 2 naples")
 	Assert(t, sn[0][0].Name != sn[0][1].Name, "names of naples should be different")
@@ -716,12 +716,12 @@ func TestSNICOrder(t *testing.T) {
 	AssertOk(t, err, "Error parsing label")
 
 	// match only for naples with label n1
-	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates, &ros)
+	sn = orderSmartNICs([]*labels.Selector{l1}, true, snStates, &ros, protos.DSCOp_DSCNoOp)
 	Assert(t, len(sn) == 1, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, sn[0][0].Name == "naples1", "expecting naples1")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros)
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros, protos.DSCOp_DSCNoOp)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
@@ -732,7 +732,7 @@ func TestSNICOrder(t *testing.T) {
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
 
-	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros)
+	sn = orderSmartNICs([]*labels.Selector{l1}, false, snStates, &ros, protos.DSCOp_DSCNoOp)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 1, "first bucket should have 1 naples")
 	Assert(t, len(sn[1]) == 2, "second bucket should have 2 naples")
@@ -741,7 +741,7 @@ func TestSNICOrder(t *testing.T) {
 	createSNIC("naples4", map[string]string{"l": "n3"})
 	snStates, err = stateMgr.ListSmartNICs()
 	AssertOk(t, err, "Error listing smartNICs")
-	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates, &ros)
+	sn = orderSmartNICs([]*labels.Selector{l12}, false, snStates, &ros, protos.DSCOp_DSCNoOp)
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 3, "first bucket should have 3 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
