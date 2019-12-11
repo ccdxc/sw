@@ -1,14 +1,8 @@
-/*
- *  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
 
-#include <vlib/vlib.h>
-#include <vnet/ip/ip.h>
-#include <vnet/ethernet/arp.h>
-#include <vnet/plugin/plugin.h>
-#include <pkt.h>
-#include "pi_impl.h"
-#include "arp_proxy.h"
+#include "includes.h"
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
@@ -17,24 +11,6 @@ VLIB_PLUGIN_REGISTER () = {
 // *INDENT-ON*
 
 vlib_node_registration_t arp_proxy_node;
-
-always_inline void
-vr_mac_get (u8* mac, vnic_t vnic)
-{
-    memcpy(mac, vnic.vr_mac, 6);
-}
-
-always_inline word
-arp_offset_get(vlib_buffer_t *p0, vnic_t vnic)
-{
-    if (vnic.vlan_id) {
-        return (sizeof(ethernet_header_t) + sizeof(ethernet_vlan_header_t));
-    } else {
-        return (sizeof(ethernet_header_t));
-        //return (sizeof(ethernet_header_t) + sizeof(ip4_header_t) +
-        //        sizeof(udp_header_t) + 8 + sizeof(ethernet_header_t));
-    }
-}
 
 always_inline void
 arp_proxy_next_node_fill (u8 idx, u16 *next, u32 *counters, u16 node,
@@ -46,63 +22,66 @@ arp_proxy_next_node_fill (u8 idx, u16 *next, u32 *counters, u16 node,
 
 always_inline void
 arp_proxy_trace_add (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
-                     vnic_t *vnic, u32 vnic_id)
+                     mac_addr_t mac, u32 id)
 {
     clib_memcpy(&trace->src, &arp->ip4_over_ethernet[0].ip4,
                 sizeof(ip4_address_t));
     clib_memcpy(&trace->dst, &arp->ip4_over_ethernet[1].ip4,
                 sizeof(ip4_address_t));
     clib_memcpy(&trace->smac, &arp->ip4_over_ethernet[0].mac,
-                6);
-    clib_memcpy(trace->vr_mac, vnic->vr_mac, 6);
-    trace->vnic = vnic_id;
+                ETH_ADDR_LEN);
+    clib_memcpy(trace->vr_mac, mac, ETH_ADDR_LEN);
+    trace->bd = id;
 }
 
 always_inline void
 arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
                     vlib_node_runtime_t *node, vlib_main_t *vm)
 {
-    u32 vnic_id = 0;
     ethernet_header_t *e0;
-    ethernet_arp_header_t *arp;
-    u32 offset;
-    vnic_t vnic = {};
+    ethernet_arp_header_t *arp = NULL;
+    u32 offset = 0;
     arp_proxy_trace_t *trace;
+    void *p4_rx_meta = NULL;
+    mac_addr_t vr_mac;
+    u32 bd_id = 0;
+    bool remote = FALSE; // knob based on config for arp-proxy
+    u32 dst_addr;
 
-    //vnic_id = vnet_buffer (p0)->pds_data.vnic_id;
-    if (PREDICT_FALSE(egress_vnic_read(vnic_id, &vnic)))
-        goto error;
-    if (PREDICT_FALSE(!(offset = arp_offset_get(p0, vnic))))
+    p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
+    bd_id = pds_ingress_bd_id_get(p4_rx_meta);
+    if (PREDICT_FALSE(!(offset = pds_arp_pkt_offset_get(p4_rx_meta))))
         goto error;
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
-    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
-                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
-        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-        arp_proxy_trace_add(trace, arp, &vnic, vnic_id);
-    }
+    dst_addr = arp->ip4_over_ethernet[1].ip4.data_u32;
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
-        u8 vr_mac[6];
-        vr_mac_get(vr_mac, vnic);
+        pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst_addr);
+
         // Ethernet
-        e0 = vlib_buffer_get_current(p0);
-        clib_memcpy(&e0->dst_address, &e0->src_address, 6);
-        clib_memcpy(&e0->src_address, vr_mac, 6);
+        e0 = vlib_buffer_get_current(p0 + sizeof(p4_rx_cpu_hdr_t));
+        clib_memcpy(&e0->dst_address, &e0->src_address, ETH_ADDR_LEN);
+        clib_memcpy(&e0->src_address, vr_mac, ETH_ADDR_LEN);
+
         // ARP Reply
         arp->opcode = clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_reply);
         clib_memswap(&arp->ip4_over_ethernet[1].ip4.data_u32,
                      &arp->ip4_over_ethernet[0].ip4.data_u32,
                      sizeof(u32));
         clib_memcpy(&arp->ip4_over_ethernet[1].mac,
-                    &arp->ip4_over_ethernet[0].mac, 6);
+                    &arp->ip4_over_ethernet[0].mac, ETH_ADDR_LEN);
         clib_memcpy(&arp->ip4_over_ethernet[0].mac,
-                    vr_mac, 6);
+                    vr_mac, ETH_ADDR_LEN);
         arp_proxy_next_node_fill(*next_idx, nexts, counter,
                                  ARP_PROXY_NEXT_INTF_OUT,
                                  ARP_PROXY_COUNTER_REPLY_SUCCESS);
         (*next_idx)++;
-
+        if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
+                          p0->flags & VLIB_BUFFER_IS_TRACED)) {
+            trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
+            arp_proxy_trace_add(trace, arp, vr_mac, bd_id);
+        }
     } else {
         // TODO
         goto error;
@@ -114,6 +93,11 @@ error:
                              ARP_PROXY_NEXT_DROP,
                              ARP_PROXY_COUNTER_REPLY_FAILED);
     (*next_idx)++;
+    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
+                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
+        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
+        arp_proxy_trace_add(trace, arp, vr_mac, bd_id);
+    }
     return;
 }
 
@@ -195,7 +179,11 @@ VLIB_REGISTER_NODE (arp_proxy_node) = {
 static clib_error_t *
 arp_proxy_init (vlib_main_t * vm)
 {
+    pds_mapping_table_init();
     return 0;
 }
 
-VLIB_INIT_FUNCTION (arp_proxy_init);
+VLIB_INIT_FUNCTION (arp_proxy_init) =
+{
+    .runs_after = VLIB_INITS("pds_infra_init"),
+};

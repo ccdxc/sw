@@ -2,8 +2,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_ARP_PROXY_ARP_PROXY_H__
-#define __VPP_ARP_PROXY_ARP_PROXY_H__
+#include <nic/vpp/infra/utils.h>
+
+#ifndef __VPP_ARP_PROXY_NODE_H__
+#define __VPP_ARP_PROXY_NODE_H__
 
 #define foreach_arp_proxy_counter                           \
     _(REPLY_SUCCESS, "Reply success" )                      \
@@ -12,8 +14,6 @@
 #define foreach_arp_proxy_next                              \
         _(INTF_OUT, "interface-tx" )                        \
         _(DROP, "error-drop")                               \
-
-#define ETH_ADDR_LEN 6
 
 typedef enum
 {
@@ -33,8 +33,8 @@ typedef enum
 
 typedef struct arp_proxy_trace_s {
     ip4_address_t src, dst;
-    u8 smac[6], vr_mac[6];
-    u16 vnic;
+    mac_addr_t smac, vr_mac;
+    u16 bd;
 } arp_proxy_trace_t;
 
-#endif    // __VPP_ARP_PROXY_ARP_PROXY_H__
+#endif    // __VPP_ARP_PROXY_NODE_H__

@@ -7,6 +7,7 @@
 #define __VPP_INFRA_ARTEMIS_P4_CPU_HDR_H___
 
 #include <nic/apollo/p4/include/artemis_defines.h>
+#include <vppinfra/clib.h>
 
 #define VPP_CPU_FLAGS_VLAN_VALID           ARTEMIS_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         ARTEMIS_CPU_FLAGS_IPV4_1_VALID

@@ -7,6 +7,7 @@
 #define __VPP_INFRA_APOLLO_P4_CPU_HDR_H__
 
 #include <nic/apollo/p4/include/defines.h>
+#include <vppinfra/clib.h>
 
 #define VPP_CPU_FLAGS_VLAN_VALID           APOLLO_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         APOLLO_CPU_FLAGS_IPV4_1_VALID
