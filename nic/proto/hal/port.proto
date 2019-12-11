@@ -110,6 +110,7 @@ enum PortXcvrPid {
   XCVR_PID_SFP_10GBASE_CU   = 68;
   XCVR_PID_QSFP_100G_CWDM4  = 69;
   XCVR_PID_QSFP_100G_PSM4   = 70;
+  XCVR_PID_SFP_25GBASE_ACC  = 71;
 }
 
 enum CableType {

@@ -3522,6 +3522,10 @@ ionic_ifmedia_xcvr(struct ionic_lif *lif)
 		media |= IFM_25G_AOC;
 		break;
 
+	case XCVR_PID_SFP_25GBASE_ACC:
+		media |= IFM_25G_ACC;
+		break;
+
 	case XCVR_PID_SFP_10GBASE_SR:
 		media |= IFM_10G_SR;
 		break;

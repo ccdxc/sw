@@ -190,6 +190,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 #ifdef HAVE_ETHTOOL_25G_BITS
 	case XCVR_PID_SFP_25GBASE_SR:
 	case XCVR_PID_SFP_25GBASE_AOC:
+	case XCVR_PID_SFP_25GBASE_ACC:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     25000baseSR_Full);
 		break;
