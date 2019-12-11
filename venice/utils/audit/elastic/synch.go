@@ -53,7 +53,7 @@ func NewSynchAuditor(elasticServer string, rslver resolver.Interface, logger log
 }
 
 func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(6*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
 	defer cancel()
 	// index single audit event; it is costly to perform bulk operation for a single event (doc)
 	if len(events) == 1 {
