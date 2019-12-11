@@ -203,7 +203,7 @@ def write_log(msg, verbose=0):
 # Parse tha command line argument
 parser = argparse.ArgumentParser()
 parser.add_argument("VENICE_IP", nargs="+", help="List of venice IPs")
-parser.add_argument("-password", help="Venice gui password (Default=Penando0$)", default="Pensando0$", type=str)
+parser.add_argument("-password", help="Venice gui password (Default=Pensando0$)", default="Pensando0$", type=str)
 parser.add_argument("-domain", help="Domain name for admin user", default="pensando.io", type=str)
 parser.add_argument("-ntpservers", help="NTP servers (multiple needs to be separated by comma (,)", default="0.us.pool.ntp.org,1.us.pool.ntp.org", type=str)
 parser.add_argument("-timeout", help="Total time to retry a transaction in seconds (default=300)", default=300, type=int)
