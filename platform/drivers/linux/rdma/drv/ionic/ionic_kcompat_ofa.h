@@ -56,6 +56,14 @@
 #define MLNX_OFED_4_5__4_20		1
 #define MLNX_OFED_4_5__5_0		1
 
+/* MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64 */
+#define OFA_COMPAT_a2cfe08		MLNX_OFED_4_6
+
+#define MLNX_OFED_4_6__support		1
+#define MLNX_OFED_4_6__umem_get		1
+#define MLNX_OFED_4_6__reg_user_mr	1
+#define MLNX_OFED_4_6__5_0		1
+
 /* macro magic...
  * OFA_COMPAT_CHECK(OFA_KERNEL, OFA)
  * -> _OFA_COMPAT_CHECK(OFA_COMPAT_ ## f8de107, support)

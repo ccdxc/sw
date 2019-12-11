@@ -54,6 +54,8 @@ ETH_KOPT += CONFIG_IONIC=m
 ETH_KOPT += CONFIG_IONIC_MNIC=_
 ETH_KOPT += CONFIG_MNET=_
 
+KCFLAGS = -Werror
+
 # Ionic rdma driver, if present
 ifneq ($(wildcard $(IONIC_RDMA_SRC)),)
 ALL += rdma
@@ -81,10 +83,13 @@ OFA_KOPT += KBUILD_EXTRA_SYMBOLS='$(OFA_KSRC)/Module.symvers'
 OFA_HASH := $(shell cat '$(OFA_KSRC)/compat_version')
 OFA_KOPT += KCPPFLAGS="-DOFA_KERNEL=$(OFA_HASH)"
 # Relying on undefined macros evaluate to zero, do not warn.
-OFA_KOPT += KCFLAGS="-Wno-undef"
+KCFLAGS += -Wno-undef
 endif
 endif
 endif
+
+# TODO: Turn on -Werror for eth, too
+RDMA_KOPT += KCFLAGS="$(KCFLAGS)"
 
 all: $(ALL)
 

@@ -59,25 +59,16 @@ is_ofa() {
 }
 
 test_linux() {
-    OFA_KSRC=
-    echo -e "\n$MARK\n$KSRC kernel\n$MARK\n"
+    echo -e "\n$MARK\n$TAG kernel\n$MARK\n"
     cd drivers
-    make clean && make -k || fail "$KSRC kernel"
+    make clean && make -k || fail "$TAG kernel"
     cd ..
 }
 
 test_krping() {
-    OFA_KSRC=
-    echo -e "\n$MARK\n$KSRC krping\n$MARK\n"
+    echo -e "\n$MARK\n$TAG krping\n$MARK\n"
     cd krping
-    make clean && make || fail "$KSRC krping"
-    cd ..
-}
-
-test_ofa() {
-    echo -e "\n$MARK\n$OFA_KSRC\n$MARK\n"
-    cd drivers
-    make clean && make -k || fail "$OFA_KSRC"
+    make clean && make || fail "$TAG krping"
     cd ..
 }
 
@@ -91,28 +82,30 @@ test_rdmacore() {
 if [ $# -eq 0 ] ; then
     # build-test for each kernel version that has installed headers
     for KSRC in ${@:-$SRC/linux*/ $SRC/kernels/*/} ; do
+        TAG=$KSRC
         is_linux && test_linux && test_krping
     done
 
     # build-test for each ofed rdma stack
     for OFA_KSRC in ${@:-$SRC/ofa_kernel-*/*} ; do
-        is_ofa && test_ofa
+        TAG=$OFA_KSRC
+        is_ofa && test_linux && test_krping
     done
 
     # build-test the user space driver
     test_rdmacore
 else
     # build-test each user supplied parameter
-    for WHAT in "$@" ; do
+    for TAG in "$@" ; do
 
         # build-test the user space driver
-        if [ "x$WHAT" = "xrdma-core" ] ; then
+        if [ "x$TAG" = "xrdma-core" ] ; then
             test_rdmacore
             continue
         fi
 
         # build-test user supplied kernel version
-        KSRC="$WHAT"
+        KSRC="$TAG"
         if is_linux ; then
             test_linux
             test_krping
@@ -120,14 +113,15 @@ else
         fi
 
         # build-test user supplied ofed rdma stack
-        OFA_KSRC="$WHAT"
+        OFA_KSRC="$TAG"
         if is_ofa ; then
-            test_ofa
+            test_linux
+            test_krping
             continue
         fi
 
         # not found something to be tested
-        fail "$WHAT (not found)"
+        fail "$TAG (not found)"
     done
 fi
 

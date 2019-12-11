@@ -33,3 +33,4 @@ CFLAGS+= -DINET -DINET6 -DCONFIG_INFINIBAND_USER_MEM
 .include <bsd.kmod.mk>
 
 CFLAGS+= -Wno-pointer-arith
+CFLAGS+= -Werror
