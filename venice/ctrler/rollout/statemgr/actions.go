@@ -472,7 +472,7 @@ Loop:
 							break WaitLoop
 						}
 						if snRolloutState.Name == snicState.Name {
-							log.Debugf("Got status %#v to smartNIC request for %v", snRolloutState.status, snRolloutState.Name)
+							log.Debugf("Got status %+v to smartNIC request for %v", snRolloutState.status, snRolloutState.Name)
 							if !snRolloutState.anyPendingOp() {
 								break WaitLoop
 							} else {
