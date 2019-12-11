@@ -37,11 +37,13 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_APOLLO,
 } hal_feature_set_t;
 
-typedef enum hal_feature_profile_s {
-    HAL_FEATURE_PROFILE_NONE,
-    HAL_FEATURE_PROFILE_CLASSIC_DEFAULT,       // default classic mode profile with 2 host devices
-    HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE  // scaled up classic mode w.r.t devices
-} hal_feature_profile_t;
+#define FEATURE_PROFILES(ENTRY)                                                                     \
+    ENTRY(HAL_FEATURE_PROFILE_NONE,                  0, "HAL_FEATURE_PROFILE_NONE")                 \
+    ENTRY(HAL_FEATURE_PROFILE_CLASSIC_DEFAULT,       1, "HAL_FEATURE_PROFILE_CLASSIC_DEFAULT")      \
+    ENTRY(HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE, 2, "HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE")
+ DEFINE_ENUM(hal_feature_profile_t, FEATURE_PROFILES)
+ DEFINE_ENUM_TO_STR(hal_feature_profile_t, FEATURE_PROFILES)
+#undef FEATURE_PROFILE
 
 #define UPLINK_FLOOD_MODES(ENTRY)                                                                   \
      ENTRY(HAL_UPLINK_FLOOD_MODE_NONE,   0, "HAL_UPLINK_FLOOD_MODE_NONE")                           \
