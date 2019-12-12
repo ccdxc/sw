@@ -380,7 +380,6 @@ union lif_config {
  *
  * Ethernet:
  *     @version:          Ethernet identify structure version.
- *     @features:         Ethernet features supported on this lif type.
  *     @max_ucast_filters:  Number of perfect unicast addresses supported.
  *     @max_mcast_filters:  Number of perfect multicast addresses supported.
  *     @min_frame_size:   Minimum size of frames to be sent
@@ -479,7 +478,7 @@ struct lif_init_comp {
  * @opcode:     opcode
  * @lif_type:   lif type (enum lif_type)
  * @type:       logical queue type (enum logical_qtype)
- * @ver:        version of identify returned by device
+ * @ver:        highest queue type version that the driver supports
  */
 struct q_identify_cmd {
 	u8     opcode;
@@ -493,7 +492,7 @@ struct q_identify_cmd {
 /**
  * struct q_identify_comp - queue identify command completion
  * @status:  status of the command (enum status_code)
- * @ver:     version of identify returned by device
+ * @ver:     queue type version that can be used with FW
  */
 struct q_identify_comp {
 	u8     status;
@@ -505,7 +504,7 @@ struct q_identify_comp {
 
 /**
  * union q_identity - queue identity information
- *     @version:        queue identify structure version
+ *     @version:        queue type version that can be used with FW
  *     @supported:      bitfield of queue versions, first bit = ver 0
  *     @features:       queue features
  *     @desc_sz:        descriptor size
@@ -537,7 +536,7 @@ union q_identity {
  * struct q_init_cmd - Queue init command
  * @opcode:       opcode
  * @type:         Logical queue type
- * @ver:          queue revision
+ * @ver:          queue type version
  * @lif_index:    LIF index
  * @index:        (lif, qtype) relative admin queue index
  * @intr_index:   Interrupt control register index, or Event queue index

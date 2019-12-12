@@ -1438,10 +1438,10 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.tx.lg2_desc_sz = log2(sizeof(struct txq_desc));
     qstate.tx.lg2_cq_desc_sz = log2(sizeof(struct txq_comp));
-    if (cmd->ver == 1) {
-        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
-    } else {
+    if (cmd->ver == 0) {
         qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc));
+    } else {
+        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
     }
 
     if (spec->host_dev) {
