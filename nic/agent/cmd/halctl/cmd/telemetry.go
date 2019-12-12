@@ -17,26 +17,26 @@ import (
 )
 
 var (
-	collectorId uint64
-	mirrorId    uint64
-	ruleId      uint64
+	collectorID uint64
+	mirrorID    uint64
+	ruleID      uint64
 )
 
-var CollectorShowCmd = &cobra.Command{
+var collectorShowCmd = &cobra.Command{
 	Use:   "collector",
 	Short: "show collector information",
 	Long:  "show collector information",
 	Run:   collectorShowCmdHandler,
 }
 
-var MirrorShowCmd = &cobra.Command{
+var mirrorShowCmd = &cobra.Command{
 	Use:   "mirror",
 	Short: "show mirror information",
 	Long:  "show mirror information",
 	Run:   mirrorShowCmdHandler,
 }
 
-var FlowMonitorShowCmd = &cobra.Command{
+var flowMonitorShowCmd = &cobra.Command{
 	Use:   "flow-monitor",
 	Short: "show flow-monitor information",
 	Long:  "show flow-monitor information",
@@ -44,12 +44,12 @@ var FlowMonitorShowCmd = &cobra.Command{
 }
 
 func init() {
-	showCmd.AddCommand(CollectorShowCmd)
-	showCmd.AddCommand(MirrorShowCmd)
-	showCmd.AddCommand(FlowMonitorShowCmd)
-	CollectorShowCmd.Flags().Uint64Var(&collectorId, "collector-id", 1, "Specify collector id")
-	MirrorShowCmd.Flags().Uint64Var(&mirrorId, "mirror-session-id", 1, "Specify mirror session id")
-	FlowMonitorShowCmd.Flags().Uint64Var(&ruleId, "flow-monitor-rule-id", 1, "Specify flow-monitor rule id")
+	showCmd.AddCommand(collectorShowCmd)
+	showCmd.AddCommand(mirrorShowCmd)
+	showCmd.AddCommand(flowMonitorShowCmd)
+	collectorShowCmd.Flags().Uint64Var(&collectorID, "collector-id", 1, "Specify collector id")
+	mirrorShowCmd.Flags().Uint64Var(&mirrorID, "mirror-session-id", 1, "Specify mirror session id")
+	flowMonitorShowCmd.Flags().Uint64Var(&ruleID, "flow-monitor-rule-id", 1, "Specify flow-monitor rule id")
 }
 
 func flowMonitorShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -68,7 +68,7 @@ func flowMonitorShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.FlowMonitorRuleGetRequest{
 			KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
-					FlowmonitorruleId: ruleId,
+					FlowmonitorruleId: ruleID,
 				},
 			},
 		}
@@ -237,7 +237,7 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.MirrorSessionGetRequest{
 			KeyOrHandle: &halproto.MirrorSessionKeyHandle{
 				KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionId{
-					MirrorsessionId: mirrorId,
+					MirrorsessionId: mirrorID,
 				},
 			},
 		}
@@ -286,7 +286,7 @@ func collectorShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.CollectorGetRequest{
 			KeyOrHandle: &halproto.CollectorKeyHandle{
 				KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
-					CollectorId: collectorId,
+					CollectorId: collectorID,
 				},
 			},
 		}
