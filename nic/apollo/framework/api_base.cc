@@ -294,8 +294,88 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
 api_base *
 api_base::find_obj(obj_id_t obj_id, void *key) {
-    SDK_ASSERT(FALSE);
-    return NULL;
+    api_base *api_obj = NULL, *clone;
+
+    switch (obj_id) {
+    case OBJ_ID_DEVICE:
+        api_obj = device_db()->find();
+        break;
+
+    case OBJ_ID_IF:
+        api_obj = if_db()->find((pds_if_key_t *)key);
+        break;
+
+    case OBJ_ID_VPC:
+        api_obj = vpc_db()->find((pds_vpc_key_t *)key);
+        break;
+
+    case OBJ_ID_SUBNET:
+        api_obj = subnet_db()->find((pds_subnet_key_t *)key);
+        break;
+
+    case OBJ_ID_TEP:
+        api_obj = tep_db()->find((pds_tep_key_t *)key);
+        break;
+
+    case OBJ_ID_VNIC:
+        api_obj = vnic_db()->find((pds_vnic_key_t *)key);
+        break;
+
+    case OBJ_ID_MAPPING:
+        api_obj = mapping_db()->find((pds_mapping_key_t *)key);
+        break;
+
+    case OBJ_ID_ROUTE_TABLE:
+        api_obj = route_table_db()->find((pds_route_table_key_t *)key);
+        break;
+
+    case OBJ_ID_POLICY:
+        api_obj = policy_db()->find((pds_policy_key_t *)key);
+        break;
+
+    case OBJ_ID_MIRROR_SESSION:
+    case OBJ_ID_METER:
+        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        break;
+
+    case OBJ_ID_TAG:
+        api_obj = tag_db()->find((pds_tag_key_t *)key);
+        break;
+
+    case OBJ_ID_SVC_MAPPING:
+        api_obj = svc_mapping_db()->find((pds_svc_mapping_key_t *)key);
+        break;
+
+    case OBJ_ID_VPC_PEER:
+        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        break;
+
+    case OBJ_ID_NEXTHOP:
+        api_obj = nexthop_db()->find((pds_nexthop_key_t *)key);
+        break;
+
+    case OBJ_ID_NEXTHOP_GROUP:
+        api_obj = nexthop_group_db()->find((pds_nexthop_group_key_t *)key);
+        break;
+
+    case OBJ_ID_POLICER:
+        api_obj = policer_db()->find((pds_policer_key_t *)key);
+        break;
+
+    default:
+        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        break;
+    }
+
+    if (api_obj) {
+        // check if we have an object that framework is holding corresponding to
+        // this object and return that, if one exists
+        clone = api_obj_find_clone(api_obj);
+        if (clone) {
+            return clone;
+        }
+    }
+    return api_obj;
 }
 
 bool

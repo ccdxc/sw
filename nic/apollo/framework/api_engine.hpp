@@ -255,6 +255,20 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t batch_commit(batch_info_t *batch);
 
+    /// \brief    given an object, return its cloned object, if the object is
+    ///           found in the dirty object map and cloned
+    /// param[in] api_obj    API object found in the db
+    /// \return cloned object of the given object, if found, or else NULL
+    api_base *find_clone(api_base *api_obj) {
+        if (api_obj->in_dirty_list()) {
+            obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
+            if (octxt.cloned_obj) {
+                return octxt.cloned_obj;
+            }
+        }
+        return NULL;
+    }
+
 private:
 
     /// \brief De-dup given API operation

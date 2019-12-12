@@ -188,13 +188,13 @@ public:
     ///   - TODO: skip_dirty is on shaky ground, will try to get rid of it later
     static api_base *find_obj(api_ctxt_t *api_ctxt, bool skip_dirty=false);
 
-    /// \brief Find an object based on the object id & key information
+    /// \brief find an object based on the object id & key information
     /// \param[in] obj_id    object id
     /// \param[in] key       pointer to the key of the object
     /// \remark
-    ///   - This API will try to find the object from the dirty list and
+    ///   - this API will try to find the object from the dirty list and
     ///     dependency list and return that first (potentially a cloned obj),
-    ///     if its not in these lists the original object from db will be
+    ///     if its not in these lists, the original object from db will be
     ///     returned as-is
     static api_base *find_obj(obj_id_t obj_id, void *key);
 
@@ -254,6 +254,10 @@ protected:
     uint8_t in_deps_list_:1;     ///< true if object is in dependent object list
     uint8_t rsvd_rsc_:1;         ///< true if resources are reserved
 } __PACK__;
+
+/// \brief    find and return cloned version of the given object
+/// \return cloned version of the given object or NULL
+api_base *api_obj_find_clone(api_base *api_obj);
 
 }    // namespace api
 

@@ -96,6 +96,17 @@ get_current_epoch (void)
     return g_current_epoch_;
 }
 
+api_base *
+api_obj_find_clone (api_base *api_obj) {
+    api_base *clone;
+
+    clone = g_api_engine.find_clone(api_obj);
+    if (clone) {
+        return clone;
+    }
+    return api_obj;
+}
+
 sdk_ret_t
 //obj_ctxt_t::add_deps(api_base *obj, api_base *api_obj, api_op_t api_op) {
 obj_ctxt_t::add_deps(api_base *api_obj, api_op_t api_op) {
