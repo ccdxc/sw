@@ -12,6 +12,7 @@ import (
 	"github.com/calmh/ipfix"
 
 	vflow "github.com/pensando/sw/venice/utils/ipfix"
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/utils/ipfix/server"
 
@@ -147,6 +148,8 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -154,7 +157,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			By("Update flow export Policy")
 			for i := range testFwSpecList {
@@ -194,13 +197,15 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 					}
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			By("Delete flow export policy")
 			for i := range testFwSpecList {
@@ -237,13 +242,15 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != 0 {
 						By(fmt.Sprintf("received flow export policy from naples:%v,  %+v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected 0", naples, len(naplesPol))
 					}
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to verify flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to verify flow export policy")
 		})
 
 		It("Should create/delete multiple flow export policy with the same collector", func() {
@@ -327,6 +334,8 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -371,7 +380,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				expRules := tpm.MaxNumCollectorsPerPolicy - i - 1
@@ -408,6 +417,8 @@ var _ = Describe("flow export policy tests", func() {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
 							return err
 						}
+
+						log.Infof("naples-%v: policy  %+v", naples, naplesPol)
 
 						if len(naplesPol) != expRules {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -455,7 +466,7 @@ var _ = Describe("flow export policy tests", func() {
 						}
 					}
 					return nil
-				}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+				}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 			}
 
 		})
@@ -538,6 +549,8 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -584,7 +597,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				expRules := tpm.MaxNumCollectorsPerPolicy - 2*i
@@ -621,6 +634,8 @@ var _ = Describe("flow export policy tests", func() {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
 							return err
 						}
+
+						log.Infof("naples-%v: policy  %+v", naples, naplesPol)
 
 						if len(naplesPol) != len(testFwSpecList) {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -669,7 +684,7 @@ var _ = Describe("flow export policy tests", func() {
 
 					}
 					return nil
-				}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+				}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 			}
 
 		})
@@ -755,6 +770,8 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
+					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList)))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -762,7 +779,7 @@ var _ = Describe("flow export policy tests", func() {
 
 				}
 				return nil
-			}, 120, 2).Should(BeNil(), "failed to find flow export policy")
+			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				for _ = range ts.tu.NaplesNodes {

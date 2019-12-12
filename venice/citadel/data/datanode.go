@@ -506,6 +506,10 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		shard.syncLock.Lock()
 		defer shard.syncLock.Unlock()
 
+		if shard.store == nil {
+			return &resp, errors.New("Shard not found")
+		}
+
 		// close the databse
 		err := shard.store.Close()
 		if err != nil {
@@ -533,6 +537,10 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		// acquire sync lock to make sure there are no outstanding sync
 		shard.syncLock.Lock()
 		defer shard.syncLock.Unlock()
+
+		if shard.kstore == nil {
+			return &resp, errors.New("Shard not found")
+		}
 
 		// close the databse
 		err := shard.kstore.Close()
