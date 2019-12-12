@@ -1269,6 +1269,9 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     case PDS_TEP_TYPE_IGW:
         proto_spec->set_type(pds::TUNNEL_TYPE_IGW);
         break;
+    case PDS_TEP_TYPE_INTER_DC:
+        proto_spec->set_type(pds::TUNNEL_TYPE_INTER_DC);
+        break;
     case PDS_TEP_TYPE_SERVICE:
         proto_spec->set_type(pds::TUNNEL_TYPE_SERVICE);
         break;
@@ -1353,6 +1356,9 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
         break;
     case pds::TUNNEL_TYPE_WORKLOAD:
         api_spec->type = PDS_TEP_TYPE_WORKLOAD;
+        break;
+    case pds::TUNNEL_TYPE_INTER_DC:
+        api_spec->type = PDS_TEP_TYPE_INTER_DC;
         break;
     case pds::TUNNEL_TYPE_SERVICE:
         api_spec->type = PDS_TEP_TYPE_SERVICE;

@@ -21,9 +21,14 @@ service TunnelSvc {
 // TunnelType defines the role of the tunnel
 enum TunnelType {
   TUNNEL_TYPE_NONE     = 0;
-  TUNNEL_TYPE_IGW      = 1;    // Tunnel type for Internet Gateway
-  TUNNEL_TYPE_WORKLOAD = 2;    // Tunnel type for east-traffic workloads
-  TUNNEL_TYPE_SERVICE  = 3;    // Service tunnel
+  // Tunnel type for Internet Gateway
+  TUNNEL_TYPE_IGW      = 1;
+  // Tunnel type for east-traffic workloads with in a data center
+  TUNNEL_TYPE_WORKLOAD = 2;
+  // Tunnel type for inter data center traffic
+  TUNNEL_TYPE_INTER_DC = 3;
+  // Tunnel type for provider services
+  TUNNEL_TYPE_SERVICE  = 4;
 }
 
 // tunnel configuration

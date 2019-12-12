@@ -28,7 +28,8 @@ typedef enum pds_tep_type_e {
                                   ///< to internet
     PDS_TEP_TYPE_WORKLOAD = 2,    ///< TEP for east-west traffic between
                                   ///< workloads
-    PDS_TEP_TYPE_SERVICE  = 3,    ///< service tunnel
+    PDS_TEP_TYPE_INTER_DC = 3,    ///< TEP for inter-DC traffic
+    PDS_TEP_TYPE_SERVICE  = 4,    ///< service tunnel
 } pds_tep_type_t;
 
 /// \brief TEP specification

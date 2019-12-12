@@ -144,7 +144,6 @@ public:
 private:
     /// \brief constructor
     tep_impl() {
-        tep2_tbl_ = 0;
         hw_id_ = 0xFFFF;
     }
 
@@ -241,7 +240,6 @@ private:
 private:
     // P4 datapath specific state
     uint16_t   hw_id_;    ///< hardware id for this tep
-    uint8_t    tep2_tbl_; ///< true if hw_id_ is for TUNNEL2 table
 } __PACK__;
 
 /// \@}

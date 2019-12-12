@@ -79,15 +79,15 @@ tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                 return SDK_RET_INVALID_ARG;
             }
         }
-        if (spec->encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-            tep2_tbl_ = 1;
+        if (spec->type == PDS_TEP_TYPE_INTER_DC) {
             ret = tep_impl_db()->tunnel2_idxr()->alloc(&idx);
         } else {
             ret = tep_impl_db()->tunnel_idxr()->alloc(&idx);
         }
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in %s table for %s, err %u",
-                          tep2_tbl_ ? "TUNNEL2" : "TUNNEL",
+                          (spec->type == PDS_TEP_TYPE_INTER_DC) ?
+                              "TUNNEL2" : "TUNNEL",
                           api_obj->key2str().c_str(), ret);
             return ret;
         }
@@ -104,8 +104,11 @@ tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
+    tep_entry *tep;
+
+    tep = (tep_entry *)api_obj;
     if (hw_id_ != 0xFFFF) {
-        if (tep2_tbl_) {
+        if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
             tep_impl_db()->tunnel2_idxr()->free(hw_id_);
         } else {
             tep_impl_db()->tunnel_idxr()->free(hw_id_);
@@ -116,8 +119,11 @@ tep_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 tep_impl::nuke_resources(api_base *api_obj) {
+    tep_entry *tep;
+
+    tep = (tep_entry *)api_obj;
     if (hw_id_ != 0xFFFF) {
-        if (tep2_tbl_) {
+        if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
             tep_impl_db()->tunnel2_idxr()->free(hw_id_);
         } else {
             tep_impl_db()->tunnel_idxr()->free(hw_id_);
@@ -217,6 +223,11 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
                          spec->remote_ip.addr.v6_addr.addr8,
                          IP6_ADDR8_LEN);
     }
+    if (spec->encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        tep2_data.tunnel2_action.encap_type = TX_REWRITE_ENCAP_MPLSoUDP;
+    } else if (spec->encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        tep2_data.tunnel2_action.encap_type = TX_REWRITE_ENCAP_VXLAN;
+    }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL2, hw_id_,
                                        NULL, NULL, &tep2_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -238,7 +249,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
                 return sdk::SDK_RET_HW_READ_ERR;
             }
             nh_data.nexthop_info.tunnel2_id = hw_id_;
-            nh_data.nexthop_info.vlan = spec->encap.val.mpls_tag;
+            nh_data.nexthop_info.vlan = spec->encap.val.value;
             p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx,
                                                NULL, NULL, &nh_data);
             if (p4pd_ret != P4PD_SUCCESS) {
@@ -257,7 +268,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
             return sdk::SDK_RET_HW_READ_ERR;
         }
         nh_data.nexthop_info.tunnel2_id = hw_id_;
-        nh_data.nexthop_info.vlan = spec->encap.val.mpls_tag;
+        nh_data.nexthop_info.vlan = spec->encap.val.value;
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
                                            nh_impl->hw_id(),
                                            NULL, NULL, &nh_data);
@@ -280,7 +291,7 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
     sdk_ret_t ret;
 
     PDS_TRACE_DEBUG("Activating TEP %u create, hw id %u", spec->key.id, hw_id_);
-    if (tep2_tbl_) {
+    if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // program outer tunnel in double encap case
         ret = activate_create_tunnel2_(epoch, tep, spec);
     } else {
@@ -379,7 +390,7 @@ tep_impl::activate_delete_(pds_epoch_t epoch, tep_entry *tep) {
 
     PDS_TRACE_DEBUG("Activating TEP %u delete, hw id %u",
                     tep->key().id, hw_id_);
-    if (tep2_tbl_) {
+    if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // cleanup outer tunnel in double encap case
         ret = activate_delete_tunnel2_(epoch, tep);
     } else {
@@ -409,7 +420,7 @@ tep_impl::activate_update_(pds_epoch_t epoch, tep_entry *tep,
     spec = &obj_ctxt->api_params->tep_spec;
     PDS_TRACE_DEBUG("Activating TEP %u update, hw id %u",
                     tep->key().id, hw_id_);
-    if (tep2_tbl_) {
+    if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // update outer tunnel in double encap case
         ret = activate_update_tunnel2_(epoch, tep, spec);
     } else {
