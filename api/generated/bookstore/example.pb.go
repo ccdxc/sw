@@ -1407,7 +1407,9 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for BookstoreV1 service
 
 type BookstoreV1Client interface {
+	//
 	AddOutage(ctx context.Context, in *OutageRequest, opts ...grpc.CallOption) (*Store, error)
+	//
 	Applydiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
 	// Create Book object
 	AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
@@ -1482,7 +1484,9 @@ type BookstoreV1Client interface {
 	// Watch Store objects. Supports WebSockets or HTTP long poll
 	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error)
 	AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error)
+	//
 	Cleardiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
+	//
 	Restock(ctx context.Context, in *RestockRequest, opts ...grpc.CallOption) (*RestockResponse, error)
 }
 
@@ -2027,7 +2031,9 @@ func (c *bookstoreV1Client) Restock(ctx context.Context, in *RestockRequest, opt
 // Server API for BookstoreV1 service
 
 type BookstoreV1Server interface {
+	//
 	AddOutage(context.Context, *OutageRequest) (*Store, error)
+	//
 	Applydiscount(context.Context, *ApplyDiscountReq) (*Order, error)
 	// Create Book object
 	AutoAddBook(context.Context, *Book) (*Book, error)
@@ -2102,7 +2108,9 @@ type BookstoreV1Server interface {
 	// Watch Store objects. Supports WebSockets or HTTP long poll
 	AutoWatchStore(*api.ListWatchOptions, BookstoreV1_AutoWatchStoreServer) error
 	AutoWatchSvcBookstoreV1(*api.ListWatchOptions, BookstoreV1_AutoWatchSvcBookstoreV1Server) error
+	//
 	Cleardiscount(context.Context, *ApplyDiscountReq) (*Order, error)
+	//
 	Restock(context.Context, *RestockRequest) (*RestockResponse, error)
 }
 

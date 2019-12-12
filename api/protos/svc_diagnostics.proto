@@ -31,5 +31,6 @@ service DiagnosticsV1 {
         Action: "Debug"
         Request: "DiagnosticsRequest"
         Response: "DiagnosticsResponse"
+        Desc: "Request Diagnostics information for a module"
     };
 }

@@ -26,6 +26,7 @@ service RolloutV1 {
      Action: "CreateRollout"
      Request: "Rollout"
      Response: "Rollout"
+     Desc: "Start Rollout operation"
     };
 
     // Action to update rollout.
@@ -34,6 +35,7 @@ service RolloutV1 {
      Action: "UpdateRollout"
      Request: "Rollout"
      Response: "Rollout"
+     Desc: "Update Rollout configuration"
     };
 
     // Action to stop/suspend rollout.
@@ -42,6 +44,7 @@ service RolloutV1 {
      Action: "StopRollout"
      Request: "Rollout"
      Response: "Rollout"
+     Desc: "Stop a Rollout operation"
     };
 
     // Action to stop/suspend rollout.
@@ -50,5 +53,6 @@ service RolloutV1 {
      Action: "RemoveRollout"
      Request: "Rollout"
      Response: "Rollout"
+     Desc: "Remove a Rollout"
     };
 }

@@ -13,7 +13,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/interfaces"
@@ -290,6 +292,30 @@ func (r *snapshotWriter) Write(ctx context.Context, kvs kvstore.Interface) error
 		return err
 	}
 
+	updateObjMeta := func(old, new runtime.Object) runtime.Object {
+		ts, _ := types.TimestampProto(time.Now())
+		if old == nil {
+			// cleanup Object meta
+			ometa := new.(runtime.ObjectMetaAccessor).GetObjectMeta()
+			ometa.UUID = uuid.NewV4().String()
+			ometa.CreationTime.Timestamp = *ts
+			ometa.ModTime.Timestamp = *ts
+			ometa.GenerationID = "1"
+		} else {
+			nometa := new.(runtime.ObjectMetaAccessor).GetObjectMeta()
+			oometa := old.(runtime.ObjectMetaAccessor).GetObjectMeta()
+			nometa.UUID = oometa.UUID
+			nometa.CreationTime = oometa.CreationTime
+			nometa.ModTime.Timestamp = *ts
+			v, err := strconv.ParseUint(oometa.GenerationID, 10, 64)
+			if err == nil {
+				nometa.GenerationID = fmt.Sprintf("%d", v+1)
+			} else {
+				nometa.GenerationID = "2"
+			}
+		}
+		return new
+	}
 	for decoder.More() {
 		// consume outer bracket
 		t, err = decoder.Token()
@@ -344,6 +370,20 @@ func (r *snapshotWriter) Write(ctx context.Context, kvs kvstore.Interface) error
 			}
 			k := m.Call([]reflect.Value{reflect.ValueOf(header.Group)})
 			key := k[0].Interface().(string)
+			{ // If the object is an existing object then replace the status with the status in the cache.
+				sobj := reflect.New(sch.GetType()).Interface()
+				err = r.kvs.Get(ctx, key, sobj.(runtime.Object))
+				if err == nil {
+					updateObjMeta(sobj.(runtime.Object), pobj.(runtime.Object))
+					rval := reflect.Indirect(reflect.ValueOf(sobj)).FieldByName("Status")
+					if rval.IsValid() {
+						reflect.Indirect(reflect.ValueOf(pobj)).FieldByName("Status").Set(rval)
+						log.Debugf("New restore Object Status is [%v]", pobj)
+					}
+				} else {
+					updateObjMeta(nil, pobj.(runtime.Object))
+				}
+			}
 			err := kvs.Create(ctx, key, pobj.(runtime.Object))
 			if err != nil {
 				log.Errorf("failed to the write object [%s/%s](%s)", header.Group, header.Kind, err)

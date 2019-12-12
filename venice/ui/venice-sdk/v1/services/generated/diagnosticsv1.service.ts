@@ -70,6 +70,7 @@ export class Diagnosticsv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Request Diagnostics information for a module */
   public Debug(O_Name, body: IDiagnosticsDiagnosticsRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IDiagnosticsDiagnosticsResponse | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/diagnostics/v1/modules/{O.Name}/Debug';
     url = url.replace('{O.Name}', O_Name);

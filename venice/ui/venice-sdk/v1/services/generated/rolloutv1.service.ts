@@ -35,6 +35,7 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IRolloutRolloutList | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Start Rollout operation */
   public CreateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/CreateRollout';
     const opts = {
@@ -52,6 +53,7 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Remove a Rollout */
   public RemoveRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/RemoveRollout';
     const opts = {
@@ -69,6 +71,7 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Stop a Rollout operation */
   public StopRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/StopRollout';
     const opts = {
@@ -86,6 +89,7 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Update Rollout configuration */
   public UpdateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/UpdateRollout';
     const opts = {

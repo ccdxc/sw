@@ -53,6 +53,7 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Mark bootstrapping as complete for the cluster */
   public AuthBootstrapComplete(body: IClusterClusterAuthBootstrapRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster/AuthBootstrapComplete';
     const opts = {
@@ -70,6 +71,7 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Update TLS Configuration for cluster */
   public UpdateTLSConfig(body: IClusterUpdateTLSConfigRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster/UpdateTLSConfig';
     const opts = {
@@ -102,6 +104,7 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Restore Configuration */
   public Restore(body: IClusterSnapshotRestore, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterSnapshotRestore | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-restore/restore';
     const opts = {
@@ -185,6 +188,7 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Perform a Configuation Snapshot */
   public Save(body: IClusterConfigurationSnapshotRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IClusterConfigurationSnapshot | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/config-snapshot/save';
     const opts = {

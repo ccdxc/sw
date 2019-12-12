@@ -285,6 +285,7 @@
     },
     "/configs/cluster/v1/cluster/AuthBootstrapComplete": {
       "post": {
+        "summary": "Mark bootstrapping as complete for the cluster",
         "operationId": "AuthBootstrapComplete",
         "responses": {
           "200": {
@@ -347,6 +348,7 @@
     },
     "/configs/cluster/v1/cluster/UpdateTLSConfig": {
       "post": {
+        "summary": "Update TLS Configuration for cluster",
         "operationId": "UpdateTLSConfig",
         "responses": {
           "200": {
@@ -575,6 +577,7 @@
     },
     "/configs/cluster/v1/config-restore/restore": {
       "post": {
+        "summary": "Restore Configuration",
         "operationId": "Restore",
         "responses": {
           "200": {
@@ -962,6 +965,7 @@
     },
     "/configs/cluster/v1/config-snapshot/save": {
       "post": {
+        "summary": "Perform a Configuation Snapshot",
         "operationId": "Save",
         "responses": {
           "200": {

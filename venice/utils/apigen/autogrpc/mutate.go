@@ -814,6 +814,9 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 				defTenant = true
 			}
 			insertMethod(s, name, reqType, respType, "create", false, defTenant, targetObj, restopt)
+			sci.services[s.GetName()].methods[name] = codeInfo{
+				comments: r.Desc,
+			}
 		}
 	}
 }

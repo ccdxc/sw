@@ -185,6 +185,7 @@
     },
     "/configs/rollout/v1/rollout/CreateRollout": {
       "post": {
+        "summary": "Start Rollout operation",
         "operationId": "CreateRollout",
         "responses": {
           "200": {
@@ -247,6 +248,7 @@
     },
     "/configs/rollout/v1/rollout/RemoveRollout": {
       "post": {
+        "summary": "Remove a Rollout",
         "operationId": "RemoveRollout",
         "responses": {
           "200": {
@@ -309,6 +311,7 @@
     },
     "/configs/rollout/v1/rollout/StopRollout": {
       "post": {
+        "summary": "Stop a Rollout operation",
         "operationId": "StopRollout",
         "responses": {
           "200": {
@@ -371,6 +374,7 @@
     },
     "/configs/rollout/v1/rollout/UpdateRollout": {
       "post": {
+        "summary": "Update Rollout configuration",
         "operationId": "UpdateRollout",
         "responses": {
           "200": {

@@ -48,6 +48,7 @@ service ClusterV1 {
      Action: "AuthBootstrapComplete"
      Request: "ClusterAuthBootstrapRequest"
      Response: "Cluster"
+     Desc: "Mark bootstrapping as complete for the cluster"
     };
 
     // Action to update certs and key for API Gateway TLS.
@@ -56,6 +57,7 @@ service ClusterV1 {
      Action: "UpdateTLSConfig"
      Request: "UpdateTLSConfigRequest"
      Response: "Cluster"
+     Desc: "Update TLS Configuration for cluster"
     };
 
     option (venice.apiRestService) = {
@@ -93,6 +95,7 @@ service ClusterV1 {
      Action: "save"
      Request: "ConfigurationSnapshotRequest"
      Response: "ConfigurationSnapshot"
+     Desc: "Perform a Configuation Snapshot"
     };
 
     option (venice.apiAction) = {
@@ -100,5 +103,6 @@ service ClusterV1 {
      Action: "restore"
      Request: "SnapshotRestore"
      Response: "SnapshotRestore"
+     Desc: "Restore Configuration"
     };
 }

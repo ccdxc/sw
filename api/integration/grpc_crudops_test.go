@@ -3903,9 +3903,40 @@ func TestSaveRestoreOperation(t *testing.T) {
 	}
 	Assert(t, found, "paths dont match [%v][%v]", ret, snapPath2)
 
-	// Restore to old config
+	// Modify the status for existing and new objects
+	cust.Name = fmt.Sprintf("custOvOps-%d", 4000)
+	cust.Status.AccountStatus = "ModifiedAccountStatus"
+	_, err = apicl.BookstoreV1().Customer().Update(ctx, &cust)
+	AssertOk(t, err, "Could not update Customer object")
+
+	cust.Name = fmt.Sprintf("custOvOps-%d", 5000)
+	cust.Status.AccountStatus = "ModifiedAccountStatus2"
+	_, err = apicl.BookstoreV1().Customer().Create(ctx, &cust)
+	AssertOk(t, err, "Could not Create Customer object")
+
+	// Restore to same config back
+	resReq.Spec.SnapshotPath = snapPath2
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	cust.Name = fmt.Sprintf("custOvOps-%d", 4000)
+	c, err := restcl.BookstoreV1().Customer().Get(ctx, &cust.ObjectMeta)
+	AssertOk(t, err, "Could not get Customer object")
+	Assert(t, c.Status.AccountStatus == "ModifiedAccountStatus", "restore did not reset the status [%+v]", c)
+
+	cust.Name = fmt.Sprintf("custOvOps-%d", 5000)
+	c, err = restcl.BookstoreV1().Customer().Get(ctx, &cust.ObjectMeta)
+	Assert(t, err != nil, "Should not get Customer object")
+
+	// restore old snapshot
 	resReq.Spec.SnapshotPath = snapPath1
 	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
 	AssertOk(t, err, "restore should have succeeded")
 	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	// Should not be able to find customer
+	cust.Name = fmt.Sprintf("custOvOps-%d", 4000)
+	_, err = restcl.BookstoreV1().Customer().Get(ctx, &cust.ObjectMeta)
+	Assert(t, err != nil, "Should not get Customer object")
 }

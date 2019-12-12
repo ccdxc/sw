@@ -1372,6 +1372,11 @@ func TestPerformRestore(t *testing.T) {
 	}
 	var retrest *cluster.SnapshotRestore
 	var retErr error
+	verObj := cluster.Version{
+		Status: cluster.VersionStatus{
+			RolloutBuildVersion: "TestVersion1.0",
+		},
+	}
 	getfn := func(ctx context.Context, key string, into runtime.Object) error {
 		switch into.(type) {
 		case *cluster.SnapshotRestore:
@@ -1383,6 +1388,9 @@ func TestPerformRestore(t *testing.T) {
 		case *cluster.ConfigurationSnapshot:
 			sin := into.(*cluster.ConfigurationSnapshot)
 			*sin = scfg
+		case *cluster.Version:
+			sin := into.(*cluster.Version)
+			*sin = verObj
 		}
 		return retErr
 	}
@@ -1405,6 +1413,13 @@ func TestPerformRestore(t *testing.T) {
 			SnapshotPath: "testSnapshotFile",
 		},
 	}
+
+	// Perform restore while rollout is in progress
+	_, _, err := clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	Assert(t, err != nil, "Operation should fail")
+
+	// Reset rollout
+	verObj.Status.RolloutBuildVersion = ""
 
 	_, write, err := clusterHooks.performRestoreNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
 	Assert(t, !write, "expecting kvwrite to be false")

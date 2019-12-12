@@ -450,6 +450,7 @@
     },
     "/configs/staging/v1/buffers/{O.Name}/clear": {
       "post": {
+        "summary": "Clear operations from a configuration buffer",
         "operationId": "Clear_1",
         "responses": {
           "200": {
@@ -518,6 +519,7 @@
     },
     "/configs/staging/v1/buffers/{O.Name}/commit": {
       "post": {
+        "summary": "Commit a staged configuration buffer",
         "operationId": "Commit_1",
         "responses": {
           "200": {
@@ -1028,6 +1030,7 @@
     },
     "/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/clear": {
       "post": {
+        "summary": "Clear operations from a configuration buffer",
         "operationId": "Clear",
         "responses": {
           "200": {
@@ -1102,6 +1105,7 @@
     },
     "/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/commit": {
       "post": {
+        "summary": "Commit a staged configuration buffer",
         "operationId": "Commit",
         "responses": {
           "200": {

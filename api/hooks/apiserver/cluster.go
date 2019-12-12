@@ -639,6 +639,13 @@ func (cl *clusterHooks) writeSnapshot(ctx context.Context, name string, client o
 //   - failures at or before 2 doesnt need much handling since the kvstore has not been touched
 //   - failure at 3 : try to recover from the backup snapshot (in memory cache)
 func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	// Check if Rollout is in progress. Reject if so.
+	verObj := cluster.Version{}
+	vkey := verObj.MakeKey(string(apiclient.GroupCluster))
+	err := kvs.Get(ctx, vkey, &verObj)
+	if err == nil && verObj.Status.RolloutBuildVersion != "" {
+		return i, false, errors.New("rollout in progress, restore operation not allowed")
+	}
 	cl.restoreInProgressMu.Lock()
 	if cl.restoreInProgress {
 		cl.restoreInProgressMu.Unlock()
@@ -660,7 +667,6 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	flags := fl.InternalParams
 	var sleepOnRestore int
 	var failSetObj, failPrep, failWrite, failCommit bool
-	var err error
 	if v, ok := flags["sleep-on-restore"]; ok {
 		in, err := strconv.ParseInt(v, 10, 32)
 		if err == nil {

@@ -468,6 +468,7 @@
     },
     "/configs/diagnostics/v1/modules/{O.Name}/Debug": {
       "post": {
+        "summary": "Request Diagnostics information for a module",
         "operationId": "Debug",
         "responses": {
           "200": {

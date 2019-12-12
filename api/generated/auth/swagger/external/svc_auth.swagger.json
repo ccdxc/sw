@@ -321,6 +321,7 @@
     },
     "/configs/auth/v1/authn-policy/LdapBindCheck": {
       "post": {
+        "summary": "Test LDAP bind operation",
         "operationId": "LdapBindCheck",
         "responses": {
           "200": {
@@ -383,6 +384,7 @@
     },
     "/configs/auth/v1/authn-policy/LdapConnectionCheck": {
       "post": {
+        "summary": "Test LDAP connection",
         "operationId": "LdapConnectionCheck",
         "responses": {
           "200": {
@@ -445,6 +447,7 @@
     },
     "/configs/auth/v1/authn-policy/TokenSecretGenerate": {
       "post": {
+        "summary": "Generate secret for token signing",
         "operationId": "TokenSecretGenerate",
         "responses": {
           "200": {
@@ -3321,6 +3324,7 @@
     },
     "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized": {
       "post": {
+        "summary": "Review authorization for user",
         "operationId": "IsAuthorized",
         "responses": {
           "200": {
@@ -3395,6 +3399,7 @@
     },
     "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange": {
       "post": {
+        "summary": "Change user password",
         "operationId": "PasswordChange",
         "responses": {
           "200": {
@@ -3469,6 +3474,7 @@
     },
     "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordReset": {
       "post": {
+        "summary": "Reset user password",
         "operationId": "PasswordReset",
         "responses": {
           "200": {
@@ -4308,6 +4314,7 @@
     },
     "/configs/auth/v1/users/{O.Name}/IsAuthorized": {
       "post": {
+        "summary": "Review authorization for user",
         "operationId": "IsAuthorized_1",
         "responses": {
           "200": {
@@ -4376,6 +4383,7 @@
     },
     "/configs/auth/v1/users/{O.Name}/PasswordChange": {
       "post": {
+        "summary": "Change user password",
         "operationId": "PasswordChange_1",
         "responses": {
           "200": {
@@ -4444,6 +4452,7 @@
     },
     "/configs/auth/v1/users/{O.Name}/PasswordReset": {
       "post": {
+        "summary": "Reset user password",
         "operationId": "PasswordReset_1",
         "responses": {
           "200": {

@@ -85,6 +85,7 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Clear operations from a configuration buffer */
   public Clear_1(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/clear';
     url = url.replace('{O.Name}', O_Name);
@@ -103,6 +104,7 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Commit a staged configuration buffer */
   public Commit_1(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/commit';
     url = url.replace('{O.Name}', O_Name);
@@ -190,6 +192,7 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Clear operations from a configuration buffer */
   public Clear(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/clear';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -209,6 +212,7 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Commit a staged configuration buffer */
   public Commit(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/commit';
     url = url.replace('{O.Tenant}', this['O_Tenant']);

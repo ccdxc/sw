@@ -71,6 +71,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Test LDAP bind operation */
   public LdapBindCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapBindCheck';
     const opts = {
@@ -88,6 +89,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Test LDAP connection */
   public LdapConnectionCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapConnectionCheck';
     const opts = {
@@ -105,6 +107,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Generate secret for token signing */
   public TokenSecretGenerate(body: IAuthTokenSecretRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/TokenSecretGenerate';
     const opts = {
@@ -594,6 +597,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Review authorization for user */
   public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -613,6 +617,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Change user password */
   public PasswordChange(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -632,6 +637,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Reset user password */
   public PasswordReset(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordReset';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -770,6 +776,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Review authorization for user */
   public IsAuthorized_1(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/IsAuthorized';
     url = url.replace('{O.Name}', O_Name);
@@ -788,6 +795,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Change user password */
   public PasswordChange_1(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/PasswordChange';
     url = url.replace('{O.Name}', O_Name);
@@ -806,6 +814,7 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Reset user password */
   public PasswordReset_1(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/PasswordReset';
     url = url.replace('{O.Name}', O_Name);

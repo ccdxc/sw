@@ -28,11 +28,13 @@ service StagingV1 {
        Action: "commit"
        Request: "CommitAction"
        Response: "CommitAction"
+       Desc: "Commit a staged configuration buffer"
      };
      option (venice.apiAction) = {
       Object: "Buffer"
       Action: "clear"
       Request: "ClearAction"
       Response: "ClearAction"
+      Desc: "Clear operations from a configuration buffer"
     };
 }

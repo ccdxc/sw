@@ -49,6 +49,8 @@ message ActionEndpoint {
   string Request = 4;
   // Response is the response parameter message type. Should be defined in the same file
   string Response = 5;
+  // Description is a short description of the Action
+  string Desc = 6;
 }
 
 // ProxyEndpoint defines an endpoint which will be reverse proxied to a backend.
