@@ -114,6 +114,12 @@
 #define TX_REWRITE_VNI_FROM_TUNNEL              1
 #define TX_REWRITE_VNI_BITS                     9:9
 
+#define TX_REWRITE_TTL_START                    10
+#define TX_REWRITE_TTL_MASK                     1
+#define TX_REWRITE_TTL_NONE                     0
+#define TX_REWRITE_TTL_DEC                      1
+#define TX_REWRITE_TTL_BITS                     10:10
+
 #define RX_REWRITE_DMAC_START                   0
 #define RX_REWRITE_DMAC_MASK                    2
 #define RX_REWRITE_DMAC_NONE                    0
@@ -156,6 +162,12 @@
 #define RX_REWRITE_ENCAP_NONE                   0
 #define RX_REWRITE_ENCAP_VLAN                   1
 #define RX_REWRITE_ENCAP_BITS                   7:7
+
+#define RX_REWRITE_TTL_START                    8
+#define RX_REWRITE_TTL_MASK                     1
+#define RX_REWRITE_TTL_NONE                     0
+#define RX_REWRITE_TTL_DEC                      1
+#define RX_REWRITE_TTL_BITS                     8:8
 
 #define TX_REWRITE(a, attr, val) \
     ((((a) >> TX_REWRITE_ ## attr ## _START) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
