@@ -249,8 +249,10 @@ error DelphiClient::HandleNotify(vector<ObjectData *> objlist) {
             
             end = clock();
             cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-            LogError("Handler for event {} for object {} took way too long",
-                     (*oi)->op(), (*oi)->DebugString());
+            if (cpu_time_used > MAX_CALLBACK_DURATION) {
+                LogError("Handler of event {} for object {} took {} seconds",
+                         (*oi)->op(), (*oi)->DebugString(), cpu_time_used);
+            }
             //assert(cpu_time_used < MAX_CALLBACK_DURATION);
             
             if (err.IsNotOK()) {
