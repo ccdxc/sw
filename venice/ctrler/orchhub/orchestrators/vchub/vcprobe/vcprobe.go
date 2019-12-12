@@ -131,20 +131,30 @@ func (v *VCProbe) run() {
 	v.viewMgr = view.NewManager(v.client.Client)
 	v.newTagsProbe(v.ctx)
 
+	v.wg.Add(1)
+	go v.storeListen()
+
 	tryForever := func(fn func()) {
-		for v.ctx.Err() == nil {
-			fn()
-			time.Sleep(retryDelay)
-		}
+		v.wg.Add(1)
+		go func() {
+			defer v.wg.Done()
+			for v.ctx.Err() == nil {
+				fn()
+				time.Sleep(retryDelay)
+			}
+		}()
 	}
-	go tryForever(func() {
-		v.startWatch(defs.HostSystem, []string{"config"}, v.sendToStore)
+
+	tryForever(func() {
+		v.startWatch(defs.HostSystem, []string{"config"}, v.sendVCEvent)
 	})
-	go tryForever(func() {
+
+	tryForever(func() {
 		vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
-		v.startWatch(defs.VirtualMachine, vmProps, v.sendToStore)
+		v.startWatch(defs.VirtualMachine, vmProps, v.sendVCEvent)
 	})
-	go tryForever(func() {
+
+	tryForever(func() {
 		err = v.tp.tc.Login(v.tp.ctx, v.vcURL.User)
 		if err != nil {
 			return
@@ -215,12 +225,39 @@ func (v *VCProbe) checkConnectionBlock() {
 	}
 }
 
+func (v *VCProbe) storeListen() {
+	defer v.wg.Done()
+
+	for {
+		select {
+		case <-v.ctx.Done():
+			return
+
+		case m, active := <-v.inbox:
+			if !active {
+				return
+			}
+
+			v.Log.Debugf("Store listen received %s, %v", m.MsgType, m.Val)
+			switch m.MsgType {
+			case defs.Useg:
+				v.handleUseg(m.Val.(defs.UsegMsg))
+			default:
+				v.Log.Errorf("Unknown msg type %s", m.MsgType)
+				continue
+			}
+		}
+	}
+}
+
+func (v *VCProbe) handleUseg(msg defs.UsegMsg) {
+	// TODO: implement
+}
+
 func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(key string, obj defs.VCObject, pc []types.PropertyChange)) {
 	kind := string(vcKind)
 
 	var err error
-	v.wg.Add(1)
-	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
 	kinds := []string{}
 
@@ -262,12 +299,15 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 	}
 }
 
-func (v *VCProbe) sendToStore(key string, obj defs.VCObject, pc []types.PropertyChange) {
+func (v *VCProbe) sendVCEvent(key string, obj defs.VCObject, pc []types.PropertyChange) {
 	m := defs.Probe2StoreMsg{
-		VcObject:   obj,
-		Key:        key,
-		Changes:    pc,
-		Originator: v.VcID,
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   obj,
+			Key:        key,
+			Changes:    pc,
+			Originator: v.VcID,
+		},
 	}
 	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, obj, pc)
 	v.outbox <- m

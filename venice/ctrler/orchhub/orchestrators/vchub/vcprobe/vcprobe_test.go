@@ -24,26 +24,39 @@ func TestMessages(t *testing.T) {
 		// The changes property is not checked currently
 		defs.VirtualMachine: []defs.Probe2StoreMsg{
 			defs.Probe2StoreMsg{
-				VcObject:   defs.VirtualMachine,
-				Key:        "vm-19",
-				Originator: vcID,
+				MsgType: defs.VCEvent,
+				Val: defs.VCEventMsg{
+					VcObject:   defs.VirtualMachine,
+					Key:        "vm-19",
+					Originator: vcID,
+				},
 			},
 			defs.Probe2StoreMsg{
-				VcObject:   defs.VirtualMachine,
-				Key:        "vm-21",
-				Originator: vcID,
+				MsgType: defs.VCEvent,
+				Val: defs.VCEventMsg{
+					VcObject:   defs.VirtualMachine,
+					Key:        "vm-21",
+					Originator: vcID,
+				},
 			},
 		},
 		defs.HostSystem: []defs.Probe2StoreMsg{
 			defs.Probe2StoreMsg{
-				VcObject:   defs.HostSystem,
-				Key:        "host-14",
-				Originator: vcID,
+				MsgType: defs.VCEvent,
+				Val: defs.VCEventMsg{
+					VcObject:   defs.HostSystem,
+					Key:        "host-14",
+					Originator: vcID,
+				},
 			},
 		},
 	}
 	config := log.GetDefaultConfig("vcprobe_test")
 	config.LogToStdout = true
+	debugMode := false
+	if debugMode {
+		config.Filter = log.AllowAllFilter
+	}
 	logger := log.SetConfig(config)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: url})
@@ -67,7 +80,7 @@ func TestMessages(t *testing.T) {
 	vcp.Start()
 	defer vcp.Stop()
 
-	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
+	eventMap := make(map[defs.VCObject][]defs.VCEventMsg)
 	doneCh := make(chan bool)
 
 	go func() {
@@ -76,7 +89,8 @@ func TestMessages(t *testing.T) {
 			case <-doneCh:
 				return
 			case m := <-storeCh:
-				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+				item := m.Val.(defs.VCEventMsg)
+				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
 					len(eventMap[defs.VirtualMachine]) >= 2 {
@@ -101,8 +115,9 @@ func TestMessages(t *testing.T) {
 		for _, expE := range events {
 			foundMatch := false
 			for _, recvE := range recvEvents {
-				if expE.Key == recvE.Key &&
-					expE.Originator == recvE.Originator {
+				expItem := expE.Val.(defs.VCEventMsg)
+				if expItem.Key == recvE.Key &&
+					expItem.Originator == recvE.Originator {
 					foundMatch = true
 					break
 				}
@@ -139,7 +154,7 @@ func TestReconnect(t *testing.T) {
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()
 
-	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
+	eventMap := make(map[defs.VCObject][]defs.VCEventMsg)
 	doneCh := make(chan bool)
 
 	go func() {
@@ -148,7 +163,8 @@ func TestReconnect(t *testing.T) {
 			case <-doneCh:
 				return
 			case m := <-storeCh:
-				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+				item := m.Val.(defs.VCEventMsg)
+				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
 					len(eventMap[defs.VirtualMachine]) >= 1 {
@@ -168,7 +184,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	// Reset values and break connection
-	eventMap = make(map[defs.VCObject][]defs.Probe2StoreMsg)
+	eventMap = make(map[defs.VCObject][]defs.VCEventMsg)
 
 	go func() {
 		for {
@@ -176,7 +192,8 @@ func TestReconnect(t *testing.T) {
 			case <-doneCh:
 				return
 			case m := <-storeCh:
-				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+				item := m.Val.(defs.VCEventMsg)
+				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
 					len(eventMap[defs.VirtualMachine]) >= 1 {
@@ -241,7 +258,8 @@ func TestLoginRetry(t *testing.T) {
 			case <-doneCh:
 				return
 			case m := <-storeCh:
-				eventMap[m.VcObject] = append(eventMap[m.VcObject], m)
+				item := m.Val.(defs.VCEventMsg)
+				eventMap[item.VcObject] = append(eventMap[item.VcObject], m)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
 					len(eventMap[defs.VirtualMachine]) >= 1 {
@@ -324,6 +342,8 @@ func TestDVS(t *testing.T) {
 	var mapPGNamesWithIndex *map[string]int
 	var dvs *mo.DistributedVirtualSwitch
 
+	var events []defs.Store2ProbeMsg
+
 	for i := 0; i < testParams.testNumPG; i++ {
 		penPGArray[i], err = penDVS.AddPenPG(&pgConfigSpecArray[i])
 		if err != nil {
@@ -349,6 +369,34 @@ func TestDVS(t *testing.T) {
 			}
 		}
 	*/
+
+	events = []defs.Store2ProbeMsg{
+		defs.Store2ProbeMsg{
+			MsgType: defs.Useg,
+			Val: defs.UsegMsg{
+				WorkloadName: "test",
+				PG:           fmt.Sprint(testParams.testPGNameBase, 0),
+				Port:         "1",
+			},
+		},
+		defs.Store2ProbeMsg{
+			// Unknown event should no-op
+			MsgType: "RandomEvent",
+			Val: defs.UsegMsg{
+				WorkloadName: "test",
+				PG:           fmt.Sprint(testParams.testPGNameBase, 0),
+				Port:         "1",
+			},
+		},
+	}
+
+	for _, e := range events {
+		probeCh <- e
+	}
+	// Don't verify any results from pushing these events
+	// as updatePorts doesn't work with the simulator currently
+	// added for now to make sure probe fails gracefully / test coverage
+
 	// Verify the results
 	dvs, err = penDVS.getMoDVSRef()
 	if err != nil {

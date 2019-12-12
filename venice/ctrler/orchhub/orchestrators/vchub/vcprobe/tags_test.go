@@ -242,9 +242,10 @@ func (h *testHelper) verifyTags(expMap map[string][]string) {
 
 	AssertEquals(h.t, len(expMap), len(items), "%s : Expected msgs did not match, %+v", getCaller(), items)
 	for _, item := range items {
-		expTags, ok := expMap[item.Key]
-		Assert(h.t, ok, "received event for unexpected key %s", item.Key)
-		for _, change := range item.Changes {
+		m := item.Val.(defs.VCEventMsg)
+		expTags, ok := expMap[m.Key]
+		Assert(h.t, ok, "received event for unexpected key %s", m.Key)
+		for _, change := range m.Changes {
 			tagMsg := change.Val.(defs.TagMsg)
 			for _, tag := range tagMsg.Tags {
 				AssertOneOf(h.t, fmt.Sprintf(("%s:%s"), tag.Category, tag.Name), expTags)
@@ -267,7 +268,8 @@ func (h *testHelper) getTagMsgsFromStore() []defs.Probe2StoreMsg {
 	for hasItems {
 		select {
 		case item := <-h.storeCh:
-			for _, change := range item.Changes {
+			m := item.Val.(defs.VCEventMsg)
+			for _, change := range m.Changes {
 				if change.Name == string(defs.VMPropTag) {
 					items = append(items, item)
 				}

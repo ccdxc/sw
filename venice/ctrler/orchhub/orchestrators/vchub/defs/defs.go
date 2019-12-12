@@ -4,6 +4,32 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 )
 
+const (
+	// VCEvent indicates a vc event
+	VCEvent = Probe2StoreMsgType("VCEvent")
+)
+
+// Probe2StoreMsgType defines the probe to store message types
+type Probe2StoreMsgType string
+
+// Probe2StoreMsg specifies a store operation
+type Probe2StoreMsg struct {
+	MsgType Probe2StoreMsgType
+	// Based on ProbeMsg type, receiver should know
+	// what to cast val to.
+	Val interface{}
+}
+
+// VCObject defines the vSphere object types we are interested in
+type VCObject string
+
+const (
+	// VirtualMachine identifies the VCenter VM object type
+	VirtualMachine = VCObject("VirtualMachine")
+	// HostSystem identifies the VCenter Host object type
+	HostSystem = VCObject("HostSystem")
+)
+
 // VCOp defines the object operations
 type VCOp string
 
@@ -34,22 +60,19 @@ const (
 	VMPropOverallStatus = VCProp("overallStatus")
 )
 
-// VCObject defines the vSphere object types we are interested in
-type VCObject string
-
-const (
-	// VirtualMachine identifies the VCenter VM object type
-	VirtualMachine = VCObject("VirtualMachine")
-	// HostSystem identifies the VCenter Host object type
-	HostSystem = VCObject("HostSystem")
-)
-
-// Probe2StoreMsg specifies a store operation
-type Probe2StoreMsg struct {
+// VCEventMsg specifies a vc event
+type VCEventMsg struct {
 	VcObject   VCObject
 	Key        string // vSphere key for the object
 	Changes    []types.PropertyChange
 	Originator string // Identifier for the VC that originated the update
+}
+
+// WorkloadInfMsg specifies a vlan override that is complete
+type WorkloadInfMsg struct {
+	WorkloadName string
+	MACAddress   string
+	Useg         int
 }
 
 // Store2ProbeMsgType defines the store to probe message types
@@ -60,6 +83,8 @@ const (
 	CreatePG = Store2ProbeMsgType("createPG")
 	// DeletePG indicates a PG delete
 	DeletePG = Store2ProbeMsgType("deletePG")
+	// Useg indicates a useg override needs to be set
+	Useg = Store2ProbeMsgType("useg")
 	// ProbeMsgResync indicates the probe should resync it's inventory
 	ProbeMsgResync = Store2ProbeMsgType("resync")
 )
@@ -70,6 +95,16 @@ type Store2ProbeMsg struct {
 	// Based on ProbeMsg type, receiver should know
 	// what to cast val to.
 	Val interface{}
+}
+
+// UsegMsg is the message to request the probe to override the port vlan
+type UsegMsg struct {
+	// Name in venice
+	WorkloadName string
+	MACAddress   string
+	PG           string
+	Port         string
+	Useg         int
 }
 
 // TagEntry is an item of a TagMsg

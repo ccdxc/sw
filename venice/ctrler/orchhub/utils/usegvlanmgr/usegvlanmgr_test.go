@@ -2,6 +2,7 @@ package usegvlanmgr
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -19,9 +20,10 @@ type testCase struct {
 }
 
 func TestVlanManager(t *testing.T) {
-	vMgr := NewVlanManager()
-	tu.AssertEquals(t, 4096, vMgr.getFreeVlanCount(), "Remaining vlan count did not match")
+	vMgr := NewVlanManager(500, 3596)
+	tu.AssertEquals(t, 3096, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
+	// Dummy release shouldn't affect count
 	vMgr.ReleaseVlan(0)
 	doneCh := make(chan bool)
 	// Have 4 go threads assign and free vlans
@@ -29,7 +31,8 @@ func TestVlanManager(t *testing.T) {
 		ownerMap := make(map[string]int)
 		for index := start; index < start+count; index++ {
 			owner := fmt.Sprintf("owner-%d", index)
-			vlan, err := vMgr.AssignNextVlan(owner)
+			vlan, err := vMgr.AssignVlan(owner)
+
 			tu.AssertOk(t, err, "assigning next vlan failed for %s", owner)
 			ownerMap[owner] = vlan
 		}
@@ -50,11 +53,10 @@ func TestVlanManager(t *testing.T) {
 
 	go assignAndFree(0, 1000)
 	go assignAndFree(1000, 1000)
-	go assignAndFree(3000, 1000)
-	go assignAndFree(4000, 1000)
+	go assignAndFree(2000, 1000)
 
 	finishCount := 0
-	for finishCount < 4 {
+	for finishCount < 3 {
 		select {
 		case <-doneCh:
 			finishCount++
@@ -63,45 +65,45 @@ func TestVlanManager(t *testing.T) {
 		}
 	}
 
-	tu.AssertEquals(t, 4096, vMgr.getFreeVlanCount(), "Remaining vlan count did not match")
+	tu.AssertEquals(t, 3096, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
 	// Assign till exhaustion
 	// Specifically assign 1000-2000 first
 	for index := 1000; index < 2000; index++ {
 		owner := fmt.Sprintf("owner-%d", index)
-		err := vMgr.AssignVlan(owner, index)
+		err := vMgr.SetVlanOwner(owner, index)
 		tu.AssertOk(t, err, "assigning next vlan failed for %s", owner)
 	}
-	tu.AssertEquals(t, 3096, vMgr.getFreeVlanCount(), "Remaining vlan count did not match")
+	tu.AssertEquals(t, 2096, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
-	for index := 0; index < 3000; index++ {
+	for index := 0; index < 2000; index++ {
 		owner := fmt.Sprintf("owner1-%d", index)
-		_, err := vMgr.AssignNextVlan(owner)
+		_, err := vMgr.AssignVlan(owner)
 		tu.AssertOk(t, err, "assigning next vlan failed for %s", owner)
 	}
 
-	tu.AssertEquals(t, 96, vMgr.getFreeVlanCount(), "Remaining vlan count did not match")
+	tu.AssertEquals(t, 96, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
 	for index := 0; index < 96; index++ {
 		owner := fmt.Sprintf("owner2-%d", index)
-		_, err := vMgr.AssignNextVlan(owner)
+		_, err := vMgr.AssignVlan(owner)
 		tu.AssertOk(t, err, "assigning next vlan failed for %s", owner)
 	}
 
-	tu.AssertEquals(t, 0, vMgr.getFreeVlanCount(), "Remaining vlan count did not match")
+	tu.AssertEquals(t, 0, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
-	_, err := vMgr.AssignNextVlan("overflow")
+	_, err := vMgr.AssignVlan("overflow")
 	tu.AssertEquals(t, "no vlans available", err.Error(), "Allocating more than 4096 vlans should have failed.")
 
-	err = vMgr.ReleaseVlan(4095)
+	err = vMgr.ReleaseVlan(3095)
 	tu.AssertOk(t, err, "releasing vlan should have passed")
 
-	_, err = vMgr.AssignNextVlan("owner-4095")
+	_, err = vMgr.AssignVlan("owner-4095")
 	tu.AssertOk(t, err, "Failed to assign vlan")
 
 }
 
-func TestAssignVlan(t *testing.T) {
+func TestSetVlanOwner(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
 	testCases := []testCase{
@@ -140,7 +142,7 @@ func TestAssignVlan(t *testing.T) {
 			expVlans: map[int]string{
 				10: "vnic1",
 			},
-			errMsg: "vlan 10 is already taken by owner vnic1",
+			errMsg: "vlan 10 (index 10) is already taken by owner vnic1",
 		},
 		{
 			name: "owner already assigned",
@@ -179,14 +181,14 @@ func TestAssignVlan(t *testing.T) {
 	testFunction := func(vMgr *VlanMgr, tc testCase) error {
 		args := tc.input.([]interface{})
 
-		err := vMgr.AssignVlan(args[0].(string), args[1].(int))
+		err := vMgr.SetVlanOwner(args[0].(string), args[1].(int))
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
-func TestAssignNextVlan(t *testing.T) {
+func TestAssignVlan(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
 	testCases := []testCase{
@@ -194,12 +196,8 @@ func TestAssignNextVlan(t *testing.T) {
 			name:          "basic case empty array",
 			startingVlans: map[int]string{},
 			input:         "vnic1",
-			output:        0,
-			expVlans: map[int]string{
-				0: "vnic1",
-			},
 			expOwnerMap: map[string]int{
-				"vnic1": 0,
+				"vnic1": -1,
 			},
 		},
 		{
@@ -210,29 +208,23 @@ func TestAssignNextVlan(t *testing.T) {
 			},
 			input:  "vnic1",
 			output: 1,
-			expVlans: map[int]string{
-				0: "vnic0",
-				1: "vnic1",
-				2: "vnic2",
-			},
+			// Assignments will be random, so vlans here
+			// should be ignored
 			expOwnerMap: map[string]int{
-				"vnic0": 0,
-				"vnic1": 1,
-				"vnic2": 2,
+				"vnic0": -1,
+				"vnic1": -1,
+				"vnic2": -1,
 			},
 		},
 		// Exhausting vlans is tested in TestVlanManager
 	}
 
 	testFunction := func(vMgr *VlanMgr, tc testCase) error {
-		out, err := vMgr.AssignNextVlan(tc.input.(string))
-		if tc.output != nil {
-			tu.AssertEquals(t, tc.output.(int), out, "Output did not match for test %s", tc.name)
-		}
+		_, err := vMgr.AssignVlan(tc.input.(string))
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateAssignments, forceTestName)
 }
 
 func TestGetOwner(t *testing.T) {
@@ -279,7 +271,7 @@ func TestGetOwner(t *testing.T) {
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
 func TestGetVlan(t *testing.T) {
@@ -314,7 +306,7 @@ func TestGetVlan(t *testing.T) {
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
 func TestReleaseVlanOwner(t *testing.T) {
@@ -360,7 +352,7 @@ func TestReleaseVlanOwner(t *testing.T) {
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
 func TestReleaseVlan(t *testing.T) {
@@ -397,10 +389,48 @@ func TestReleaseVlan(t *testing.T) {
 		return err
 	}
 
-	testHelper(t, testCases, testFunction, forceTestName)
+	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
-func testHelper(t *testing.T, testCases []testCase, testFunction func(*VlanMgr, testCase) error, forceTestName string) {
+func validateVlans(t *testing.T, tc testCase, vMgr *VlanMgr) {
+	// Validate vlan array
+	for i, val := range vMgr.vlans {
+		expVal, ok := tc.expVlans[i]
+		if !ok && len(val) != 0 {
+			t.Errorf("Unexpected entry for vlan %d for test %s", i, tc.name)
+		}
+		if ok {
+			tu.Assert(t, expVal == val, "Expected %s but got %s for vlan %d for test %s", expVal, val, i, tc.name)
+		}
+	}
+	if tc.expOwnerMap != nil {
+		tu.AssertEquals(t, tc.expOwnerMap, vMgr.ownerMap, "vmgr ownerMap did not match expected")
+	}
+}
+
+func validateAssignments(t *testing.T, tc testCase, vMgr *VlanMgr) {
+	// Validate every owner maps to the correct vlan and vice versa
+	// Also validate that the list of owners is correct
+	expOwners := []string{}
+	for k := range tc.expOwnerMap {
+		expOwners = append(expOwners, k)
+	}
+
+	for i, owner := range vMgr.vlans {
+		if len(owner) != 0 {
+			vlan, ok := vMgr.ownerMap[owner]
+			tu.Assert(t, ok, "Owner map didn't have owner %s", owner)
+			tu.AssertEquals(t, vlan, i+vMgr.StartingVlan, "vlans were not equal")
+			tu.AssertOneOf(t, owner, expOwners)
+		}
+	}
+	for owner := range tc.expOwnerMap {
+		_, ok := vMgr.ownerMap[owner]
+		tu.Assert(t, ok, "Owner %s was not in owner map", owner)
+	}
+}
+
+func testHelper(t *testing.T, testCases []testCase, testFunction func(*VlanMgr, testCase) error, validateFn func(*testing.T, testCase, *VlanMgr), forceTestName string) {
 	for _, tc := range testCases {
 		if len(forceTestName) != 0 && tc.name != forceTestName {
 			continue
@@ -409,33 +439,26 @@ func testHelper(t *testing.T, testCases []testCase, testFunction func(*VlanMgr, 
 			tc.startingVlans = map[int]string{}
 		}
 		// Setup starting map data
-		arr := [4096]string{}
+		arr := make([]string, 4096)
 		ownerMap := make(map[string]int)
 		for i, val := range tc.startingVlans {
 			arr[i] = val
 			ownerMap[val] = i
 		}
+		var randSeed = time.Now().Unix()
+		var r = rand.New(rand.NewSource(randSeed))
 		vMgr := &VlanMgr{
-			vlans:    &arr,
-			ownerMap: ownerMap,
+			vlans:      arr,
+			ownerMap:   ownerMap,
+			EndingVlan: 4096,
+			randSource: r,
 		}
+		vMgr.genRandList()
 
 		err := testFunction(vMgr, tc)
 		checkError(t, tc, err)
 
-		// Validate vlan array
-		for i, val := range arr {
-			expVal, ok := tc.expVlans[i]
-			if !ok && len(val) != 0 {
-				t.Errorf("Unexpected entry for vlan %d for test %s", i, tc.name)
-			}
-			if ok {
-				tu.Assert(t, expVal == val, "Expected %s but got %s for vlan %d for test %s", expVal, val, i, tc.name)
-			}
-		}
-		if tc.expOwnerMap != nil {
-			tu.AssertEquals(t, tc.expOwnerMap, ownerMap, "vmgr ownerMap did not match expected")
-		}
+		validateFn(t, tc, vMgr)
 	}
 
 	tu.Assert(t, len(forceTestName) == 0, "focus test flag should not be checked in")

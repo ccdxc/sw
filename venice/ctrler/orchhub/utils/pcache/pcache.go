@@ -129,7 +129,7 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 
 	objMeta, err := runtime.GetObjectMeta(in)
 	if err != nil {
-		return fmt.Errorf(("Object is not an apiserver object"))
+		return fmt.Errorf("Failed to get object meta, %v", err)
 	}
 	key := objMeta.GetKey()
 	p.Log.Debugf("set for %s", key)
@@ -189,7 +189,7 @@ func (p *PCache) Delete(kind string, in interface{}) error {
 	// Deletes from cache and statemgr
 	obj, err := runtime.GetObjectMeta(in)
 	if err != nil {
-		p.Log.Errorf("Set called on a non apiserver object, kind %s", kind)
+		p.Log.Errorf("Delete called on a non apiserver object, kind %s", kind)
 		return fmt.Errorf(("Object is not an apiserver object"))
 	}
 	key := obj.GetKey()
@@ -205,7 +205,6 @@ func (p *PCache) Delete(kind string, in interface{}) error {
 		if _, ok := kindMap.entries[key]; ok {
 			delete(kindMap.entries, key)
 			p.Log.Debugf("%s %s deleted from cache", kind, key)
-			return nil
 		}
 	}
 
@@ -259,36 +258,38 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 // Run runs loop to periodically push pending objects to apiserver
 func (p *PCache) Run() {
 	p.waitGrp.Add(1)
-	defer p.waitGrp.Done()
-	ticker := time.NewTicker(PCacheRetryInterval * time.Second)
-	inProgress := false
+	go func() {
+		defer p.waitGrp.Done()
+		ticker := time.NewTicker(PCacheRetryInterval * time.Second)
+		inProgress := false
 
-	for {
-		select {
-		case <-p.ctx.Done():
-			return
-		case <-ticker.C:
-			if !inProgress {
-				inProgress = true
+		for {
+			select {
+			case <-p.ctx.Done():
+				return
+			case <-ticker.C:
+				if !inProgress {
+					inProgress = true
 
-				p.RLock()
-				for kind, m := range p.kinds {
-					validateFn := p.validators[kind]
-					m.Lock()
-					for _, in := range m.entries {
-						err := p.validateAndPush(m, in, validateFn)
-						if err != nil {
-							p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
+					p.RLock()
+					for kind, m := range p.kinds {
+						validateFn := p.validators[kind]
+						m.Lock()
+						for _, in := range m.entries {
+							err := p.validateAndPush(m, in, validateFn)
+							if err != nil {
+								p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
+							}
 						}
+						m.Unlock()
 					}
-					m.Unlock()
-				}
-				p.RUnlock()
+					p.RUnlock()
 
-				inProgress = false
+					inProgress = false
+				}
 			}
 		}
-	}
+	}()
 }
 
 // Stop stops pcache goroutines

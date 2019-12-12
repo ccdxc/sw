@@ -20,7 +20,7 @@ import (
 
 // Datacenter contains info of a simulator DC instance
 type Datacenter struct {
-	obj       *simulator.Datacenter
+	Obj       *simulator.Datacenter
 	client    *vim25.Client
 	dvsMap    map[string]*DVS
 	hostMap   map[string]*Host
@@ -48,7 +48,7 @@ type DVS struct {
 
 // Portgroup contains info of a simulator distributed virtual portgroup instance
 type Portgroup struct {
-	obj *simulator.DistributedVirtualPortgroup
+	Obj *simulator.DistributedVirtualPortgroup
 }
 
 // Config specifies configuration for a VcSim instance
@@ -134,7 +134,7 @@ func (v *VcSim) AddDC(name string) (*Datacenter, error) {
 	v.dirs = append(v.dirs, dir)
 
 	entry := &Datacenter{
-		obj:     dc,
+		Obj:     dc,
 		client:  v.client,
 		dvsMap:  make(map[string]*DVS),
 		hostMap: make(map[string]*Host),
@@ -158,7 +158,7 @@ func (v *Datacenter) GetDVS(name string) (*DVS, bool) {
 func (v *Datacenter) AddDVS(dvsCreateSpec *types.DVSCreateSpec) (*DVS, error) {
 	ctx := context.Background()
 
-	dc := object.NewDatacenter(v.client, v.obj.Reference())
+	dc := object.NewDatacenter(v.client, v.Obj.Reference())
 	folders, err := dc.Folders(ctx)
 	if err != nil {
 		return nil, err
@@ -220,7 +220,7 @@ func (v *DVS) AddPortgroup(pgConfigSpec []types.DVPortgroupConfigSpec) ([]Portgr
 	i := 0
 	for _, pg := range pgs {
 		if v.portgroupMap[pg.Entity().Name] == nil {
-			ret[i].obj = pg.(*simulator.DistributedVirtualPortgroup)
+			ret[i].Obj = pg.(*simulator.DistributedVirtualPortgroup)
 			v.portgroupMap[pg.Entity().Name] = &ret[i]
 			i++
 		}
@@ -234,7 +234,7 @@ func (v *Datacenter) AddHost(name string) (*Host, error) {
 	spec := types.HostConnectSpec{
 		HostName: name,
 	}
-	folder := simulator.Map.Get(v.obj.HostFolder.Reference()).(*simulator.Folder)
+	folder := simulator.Map.Get(v.Obj.HostFolder.Reference()).(*simulator.Folder)
 	host, _ := simulator.CreateStandaloneHost(folder, spec)
 
 	entry := &Host{
@@ -359,7 +359,7 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 		return nil, err
 	}
 
-	dc := object.NewDatacenter(v.client, v.obj.Reference())
+	dc := object.NewDatacenter(v.client, v.Obj.Reference())
 	folders, err := dc.Folders(ctx)
 	if err != nil {
 		return nil, err

@@ -36,7 +36,7 @@ func TestPcache(t *testing.T) {
 	stateMgr, err := newStateManager()
 	AssertOk(t, err, "failed to create statemgr")
 	pCache := NewPCache(stateMgr, logger)
-	go pCache.Run()
+	pCache.Run()
 	defer pCache.Stop()
 
 	expMeta := &api.ObjectMeta{

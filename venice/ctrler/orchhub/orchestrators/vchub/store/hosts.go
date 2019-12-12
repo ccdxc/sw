@@ -13,7 +13,7 @@ import (
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
-func (v *VCHStore) handleHost(m defs.Probe2StoreMsg) {
+func (v *VCHStore) handleHost(m defs.VCEventMsg) {
 	meta := &api.ObjectMeta{
 		Name: createGlobalKey(m.Originator, m.Key),
 	}

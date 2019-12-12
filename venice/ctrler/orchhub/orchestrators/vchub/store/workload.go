@@ -2,7 +2,6 @@ package store
 
 import (
 	"reflect"
-	"strconv"
 
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -32,12 +31,18 @@ func (v *VCHStore) validateWorkload(in interface{}) bool {
 		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
 		return false
 	}
-	// TODO: Add check that workload is no longer in pvlan mode
+	// check that workload is no longer in pvlan mode
+	for _, inf := range obj.Spec.Interfaces {
+		if inf.MicroSegVlan == 0 {
+			v.Log.Errorf("inf %s has no useg for workload %s", inf.MACAddress, obj.GetObjectMeta().Name)
+			return false
+		}
+	}
 	return true
 }
 
-func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
-	v.Log.Infof("Got handle workload event")
+func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
+	v.Log.Debugf("Got handle workload event")
 	meta := &api.ObjectMeta{
 		Name: createGlobalKey(m.Originator, m.Key),
 		// TODO: Don't use default tenant
@@ -100,11 +105,77 @@ func (v *VCHStore) handleWorkload(m defs.Probe2StoreMsg) {
 		}
 	}
 	if toDelete {
+		v.Log.Debugf("Deleting workload %s", workloadObj.Name)
+		// free vlans
+		for _, inf := range workloadObj.Spec.Interfaces {
+			// Check if workload has assignment
+			if inf.MicroSegVlan != 0 {
+				// TODO: send notification to probe to reset override
+				err := v.usegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
+				if err != nil {
+					v.Log.Errorf("Failed to release vlan %v", err)
+				}
+			} else {
+				// Clean up cache
+				v.pCache.deleteVNIC(inf.MACAddress)
+			}
+		}
 		v.pCache.Delete(workloadKind, workloadObj)
 		return
 	}
 
+	v.assignUsegs(m.Key, workloadObj)
+
 	v.pCache.Set(workloadKind, workloadObj)
+}
+
+// assignUsegs will set usegs for the workload, and send a message to
+// the probe to override the ports
+func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
+	if len(workload.Spec.HostName) == 0 {
+		return
+	}
+	host := workload.Spec.HostName
+	for i, inf := range workload.Spec.Interfaces {
+		// if we already have usegs in the workload object,
+		// usegs update msgs have been sent to the probe already
+		if inf.MicroSegVlan != 0 {
+			continue
+		}
+
+		entry := v.pCache.getVNIC(inf.MACAddress)
+		if entry == nil {
+			v.Log.Errorf("workload inf without useg was not in map, workload %s, mac %s", workload.Name, inf.MACAddress)
+			return
+		}
+
+		pg := entry.PG
+		port := entry.Port
+		vlan, err := v.usegMgr.AssignVlanForVnic(inf.MACAddress, host)
+		if err != nil {
+			// TODO: if vlans are full, raise event
+			v.Log.Errorf("Failed to assign vlan %v", err)
+			continue
+		}
+		// Set useg
+		workload.Spec.Interfaces[i].MicroSegVlan = uint32(vlan)
+
+		// Send request to check its dvport
+		v.Log.Debugf("sending useg msg to probe, mac %s, useg %d", inf.MACAddress, vlan)
+		v.outbox <- defs.Store2ProbeMsg{
+			MsgType: defs.Useg,
+			Val: defs.UsegMsg{
+				WorkloadName: workload.Name,
+				MACAddress:   inf.MACAddress,
+				PG:           pg,
+				Port:         port,
+				Useg:         vlan,
+			},
+		}
+		// Event sent so we can delete temp data
+		v.pCache.deleteVNIC(inf.MACAddress)
+	}
+
 }
 
 func (v *VCHStore) processTags(workload *workload.Workload, prop types.PropertyChange, vcID string) {
@@ -143,7 +214,7 @@ func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.Prope
 		v.Log.Errorf("Expected VirtualMachineConfigInfo, got %s", reflect.TypeOf(prop.Val).Name())
 		return
 	}
-	interfaces := v.extractInterfaces(vmConfig)
+	interfaces := v.extractInterfaces(workload.Name, vmConfig)
 	workload.Spec.Interfaces = interfaces
 	if len(vmConfig.Name) == 0 {
 		return
@@ -151,7 +222,7 @@ func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.Prope
 	addVMNameLabel(workload.Labels, vmConfig.Name)
 }
 
-func (v *VCHStore) extractInterfaces(vmConfig types.VirtualMachineConfigInfo) []workload.WorkloadIntfSpec {
+func (v *VCHStore) extractInterfaces(workloadName string, vmConfig types.VirtualMachineConfigInfo) []workload.WorkloadIntfSpec {
 	var res []workload.WorkloadIntfSpec
 	for _, d := range vmConfig.Hardware.Device {
 		vec := v.GetVeth(d)
@@ -166,9 +237,21 @@ func (v *VCHStore) extractInterfaces(vmConfig types.VirtualMachineConfigInfo) []
 				v.Log.Errorf("Failed to parse mac addres. Err : %v", err)
 				continue
 			}
+			pg := back.Port.PortgroupKey
+			port := back.Port.PortKey
+
+			entry := &vnicStruct{
+				ObjectMeta: *createVNICMeta(macStr),
+				PG:         pg,
+				Port:       port,
+				Workload:   workloadName,
+			}
+			v.pCache.setVNIC(entry)
+
 			vnic := workload.WorkloadIntfSpec{
-				MACAddress:   macStr,
-				MicroSegVlan: portKeyToVLAN(back.Port.PortKey),
+				MACAddress: macStr,
+				// TODO: fill once network info is available
+				// ExternalVlan: ,
 			}
 			res = append(res, vnic)
 		}
@@ -212,15 +295,4 @@ func getStoreOp(op types.PropertyChangeOp) defs.VCOp {
 	default:
 		return defs.VCOpSet
 	}
-}
-
-func portKeyToVLAN(portKey string) uint32 {
-	// TODO: the port might conflict with PVLAN settings or given port might
-	// be outside the range of valid vlan numbers. Can't always assign port number.
-	vlan, err := strconv.Atoi(portKey)
-	if err != nil || vlan < 0 || vlan > 4095 {
-		vlan = 0
-	}
-
-	return uint32(vlan)
 }

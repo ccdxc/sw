@@ -68,9 +68,6 @@ func (t *tagsProbe) Start() {
 
 // pollTags polls the cis rest server for tag information
 func (t *tagsProbe) pollTags() {
-	t.wg.Add(1)
-	defer t.wg.Done()
-
 	for {
 		select {
 		case <-t.ctx.Done():
@@ -247,10 +244,13 @@ func (t *tagsProbe) genUpdates(chSet *DeltaStrSet) {
 			},
 		}
 		m := defs.Probe2StoreMsg{
-			VcObject:   defs.VirtualMachine,
-			Key:        vm,
-			Changes:    pc,
-			Originator: t.VcID,
+			MsgType: defs.VCEvent,
+			Val: defs.VCEventMsg{
+				VcObject:   defs.VirtualMachine,
+				Key:        vm,
+				Changes:    pc,
+				Originator: t.VcID,
+			},
 		}
 		t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, pc)
 		t.outbox <- m
