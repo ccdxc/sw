@@ -479,8 +479,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    */
   onRolloutDSCRetryChange(checked) {
     if (checked) {
-      this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).enable();
+      // VS-974 comment this line for now -- this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).enable();
+
       // Per VS-898, we want to let user upgrade DSC with RETRY option without setting end time.
+
       /* comment out this block for now.
       this.rolloutDurationcheck = true;
       this.computeDefaultEndTime();

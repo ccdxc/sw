@@ -510,13 +510,18 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   onRolloutComplete() {
     // Per VS-932. We want to logout user if rollout succeeded.
     let isRolloutSucceeded: boolean = false;
-    let msg = 'Rollout completed'; // VS-849
+    let msg = ''; // VS-849
     if (this.currentRollout) {
       if (this.currentRollout.status.state === RolloutRolloutStatus_state.scheduled) {
         msg = 'Rollout suspended';
       }
       if (this.currentRollout.status.state === RolloutRolloutStatus_state.success) {
-        msg = 'Rollout succeeded';
+        // In a rollout, Venice upgrade may be done, but DSC upgrade may be still in progress.  QA wants different message.
+        if (!this.currentRollout.status['dscs-status'] || this.currentRollout.status['dscs-status'].length === 0 ) {
+            msg = 'Rollout completed';
+        } else {
+          msg = 'Venice rollout completed. DSC upgrade may be in progress';
+        }
         isRolloutSucceeded = true;
       }
     }

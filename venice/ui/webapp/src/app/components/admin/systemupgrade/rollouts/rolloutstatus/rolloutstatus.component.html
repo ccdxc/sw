@@ -61,10 +61,10 @@
       <!-- If rollout does not involve Distributed Services Cards, we don't want to display rollout NIC configures -->
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label"> Continuously retry failed DSCs:
+          <div class="rolloutstatus-summary-panel-content-label"> Retry for failed DSCs:
           </div>
           <div class="rolloutstatus-summary-panel-content-value">
-            {{selectedRollout?.spec.retry }}</div>
+            {{selectedRollout?.spec.retry ? selectedRollout?.spec.retry : false }}</div>
         </div>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row" *ngIf="!isVeniceOnly()">
