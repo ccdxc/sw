@@ -18,7 +18,10 @@ import "network.proto";
 
 // spec part of Endpoint object
 message EndpointSpec {
-    // empty
+    // The DSC Name or MAC where the endpoint should reside
+    string NodeUUID       = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
+    // IP of the DSC where this endpoint exists
+    string HomingHostAddr = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
 }
 
 // status part of Endpoint object
@@ -51,6 +54,8 @@ message EndpointStatus {
     uint32 MicroSegmentVlan = 13 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
     // VM or container attribute/labels
     map<string, string> WorkloadAttributes  = 14 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    // Used to store state if the endpoint is migrating
+    EndpointMigrationStatus Migration = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "migration,omitempty"];
 }
 
 // Endpoint represents a network endpoint
@@ -64,29 +69,24 @@ message Endpoint {
 
     // Status contains the current state of the Endpoint.
     EndpointStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-
-    // Status of migration of endpoint
-    EndpointMigrationStatus Migration = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "migration,omitempty"];
 }
+
 
 message EndpointMigrationStatus {
+    // MigrationState
+    enum MigrationState {
+        // ui-hint: None
+        NONE    = 0; // No Migration is in progress
+        // ui-hint: Start
+        START = 1; // Start migration
+        // ui-hint: Failed
+        FAILED = 2; // Abort Migration
+        // ui-hint : Aborted
+        ABORTED = 3; // Migration aborted
+    }
+
     // Status of migration
-    string Status                 = 1 [(venice.check) = "StrEnum(WorkloadMigrationStatus.State)",
-                                        (gogoproto.jsontag) = "status,omitempty"];
+    string Status                = 1 [(venice.check) = "StrEnum(EndpointMigrationStatus.MigrationState)",
+                                        (gogoproto.jsontag) = "status, omitempty"];
 
-    // Start time of the migration operation
-    api.Timestamp StartTime = 2 [(gogoproto.jsontag) = "start-time,omitempty"];
-
-    // End time of the migration operation
-    api.Timestamp EndTime = 3 [(gogoproto.jsontag) = "end-time,omitempty"];
-
-    // IP of source DSC
-    string SourceIP = 4 [(gogoproto.jsontag) = "source-ip,omitempty"];
-
-    // IP of destination DSC where the endpoint will be migrated to
-    string DestinationIP = 5 [(gogoproto.jsontag) = "destination-ip,omitempty"];
-
-    // Reason field is populated if some failures are encountered while migrating a workload
-    string Reason = 6 [(gogoproto.jsontag) = "reason,omitempty"];
 }
-

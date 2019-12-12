@@ -498,6 +498,29 @@
       },
       "title": "list of endpoints"
     },
+    "netprotoEndpointMigrationStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "start",
+            "failed"
+          ],
+          "default": "none",
+          "x-ui-hints": {
+            "failed": "Abort",
+            "none": "None",
+            "start": "Start"
+          },
+          "title": "Status of migration"
+        }
+      }
+    },
     "netprotoEndpointSpec": {
       "type": "object",
       "required": [
@@ -582,7 +605,7 @@
         },
         "node-uuid": {
           "type": "string",
-          "description": "Specifies the name of the node where the endpoint lives.\nOptional for LocalEPs and mandatory for RemoteEPs."
+          "description": "Specifies the name of the node where the endpoint lives."
         },
         "useg-vlan": {
           "type": "integer",
@@ -598,6 +621,14 @@
           "type": "string",
           "format": "uint64",
           "title": "Endpoint ID in datapath. Valid only for Local EPs"
+        },
+        "node-uuid": {
+          "type": "string",
+          "description": "NodeUUID is the nodeuuid where the endpoint currntly exists."
+        },
+        "migration": {
+          "$ref": "#/definitions/netprotoEndpointMigrationStatus",
+          "title": "Spec of Migration of the endpoint"
         }
       },
       "title": "endpoint status"

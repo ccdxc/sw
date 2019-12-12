@@ -7,6 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { WorkloadEndpointMigrationStatus, IWorkloadEndpointMigrationStatus } from './workload-endpoint-migration-status.model';
 
 export interface IWorkloadEndpointStatus {
     'workload-name'?: string;
@@ -23,6 +24,7 @@ export interface IWorkloadEndpointStatus {
     'SecurityGroups'?: Array<string>;
     'micro-segment-vlan'?: number;
     'workload-attributes'?: object;
+    'migration'?: IWorkloadEndpointMigrationStatus;
 }
 
 
@@ -55,6 +57,8 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'micro-segment-vlan': number = null;
     /** VM or container attribute/labels */
     'workload-attributes': object = null;
+    /** Used to store state if the endpoint is migrating */
+    'migration': WorkloadEndpointMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointStatus]: PropInfoItem } = {
         'workload-name': {
             description:  'VM or container name',
@@ -127,6 +131,11 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             required: false,
             type: 'object'
         },
+        'migration': {
+            description:  'Used to store state if the endpoint is migrating',
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -152,6 +161,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['SecurityGroups'] = new Array<string>();
+        this['migration'] = new WorkloadEndpointMigrationStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -259,6 +269,11 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
         } else {
             this['workload-attributes'] = null
         }
+        if (values) {
+            this['migration'].setValues(values['migration'], fillDefaults);
+        } else {
+            this['migration'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -280,6 +295,12 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
                 'SecurityGroups': CustomFormControl(new FormControl(this['SecurityGroups']), WorkloadEndpointStatus.propInfo['SecurityGroups']),
                 'micro-segment-vlan': CustomFormControl(new FormControl(this['micro-segment-vlan']), WorkloadEndpointStatus.propInfo['micro-segment-vlan']),
                 'workload-attributes': CustomFormControl(new FormControl(this['workload-attributes']), WorkloadEndpointStatus.propInfo['workload-attributes']),
+                'migration': CustomFormGroup(this['migration'].$formGroup, WorkloadEndpointStatus.propInfo['migration'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('migration') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('migration').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -305,6 +326,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             this._formGroup.controls['SecurityGroups'].setValue(this['SecurityGroups']);
             this._formGroup.controls['micro-segment-vlan'].setValue(this['micro-segment-vlan']);
             this._formGroup.controls['workload-attributes'].setValue(this['workload-attributes']);
+            this['migration'].setFormGroupValuesToBeModelValues();
         }
     }
 }

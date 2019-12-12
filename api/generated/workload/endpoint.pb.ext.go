@@ -28,6 +28,32 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+// EndpointMigrationStatus_MigrationState_normal is a map of normalized values for the enum
+var EndpointMigrationStatus_MigrationState_normal = map[string]string{
+	"aborted": "aborted",
+	"failed":  "failed",
+	"none":    "none",
+	"start":   "start",
+}
+
+var EndpointMigrationStatus_MigrationState_vname = map[int32]string{
+	0: "none",
+	1: "start",
+	2: "failed",
+	3: "aborted",
+}
+
+var EndpointMigrationStatus_MigrationState_vvalue = map[string]int32{
+	"none":    0,
+	"start":   1,
+	"failed":  2,
+	"aborted": 3,
+}
+
+func (x EndpointMigrationStatus_MigrationState) String() string {
+	return EndpointMigrationStatus_MigrationState_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapEndpoint = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -64,9 +90,6 @@ func (m *Endpoint) Defaults(ver string) bool {
 	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
-	}
-	if m.Migration != nil {
-		ret = m.Migration.Defaults(ver) || ret
 	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -139,6 +162,9 @@ func (m *EndpointStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *EndpointStatus) Defaults(ver string) bool {
 	var ret bool
+	if m.Migration != nil {
+		ret = m.Migration.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -189,19 +215,6 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 		ret = append(ret, errors.New("Only Namespace default is allowed for Endpoint"))
 	}
 
-	if m.Migration != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "Migration"
-			if errs := m.Migration.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
-		}
-	}
-
 	{
 		dlmtr := "."
 		if path == "" {
@@ -228,10 +241,6 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 }
 
 func (m *Endpoint) Normalize() {
-
-	if m.Migration != nil {
-		m.Migration.Normalize()
-	}
 
 	m.ObjectMeta.Normalize()
 
@@ -263,7 +272,7 @@ func (m *EndpointMigrationStatus) Validate(ver, path string, ignoreStatus bool, 
 
 func (m *EndpointMigrationStatus) Normalize() {
 
-	m.Status = WorkloadMigrationStatus_State_normal[strings.ToLower(m.Status)]
+	m.Status = EndpointMigrationStatus_MigrationState_normal[strings.ToLower(m.Status)]
 
 }
 
@@ -308,6 +317,19 @@ func (m *EndpointStatus) References(tenant string, path string, resp map[string]
 
 func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.Migration != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Migration"
+			if errs := m.Migration.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	if vs, ok := validatorMapEndpoint["EndpointStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -326,6 +348,10 @@ func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpe
 
 func (m *EndpointStatus) Normalize() {
 
+	if m.Migration != nil {
+		m.Migration.Normalize()
+	}
+
 }
 
 // Transformers
@@ -342,9 +368,9 @@ func init() {
 	validatorMapEndpoint["EndpointMigrationStatus"]["all"] = append(validatorMapEndpoint["EndpointMigrationStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*EndpointMigrationStatus)
 
-		if _, ok := WorkloadMigrationStatus_State_vvalue[m.Status]; !ok {
+		if _, ok := EndpointMigrationStatus_MigrationState_vvalue[m.Status]; !ok {
 			vals := []string{}
-			for k1, _ := range WorkloadMigrationStatus_State_vvalue {
+			for k1, _ := range EndpointMigrationStatus_MigrationState_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)

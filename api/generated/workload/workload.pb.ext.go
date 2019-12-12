@@ -9,7 +9,6 @@ package workload
 import (
 	"errors"
 	fmt "fmt"
-	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -27,38 +26,6 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
-
-// WorkloadMigrationStatus_State_normal is a map of normalized values for the enum
-var WorkloadMigrationStatus_State_normal = map[string]string{
-	"aborted":    "aborted",
-	"failed":     "failed",
-	"inprogress": "inprogress",
-	"none":       "none",
-	"started":    "started",
-	"success":    "success",
-}
-
-var WorkloadMigrationStatus_State_vname = map[int32]string{
-	0: "none",
-	1: "started",
-	2: "inprogress",
-	3: "success",
-	4: "failed",
-	5: "aborted",
-}
-
-var WorkloadMigrationStatus_State_vvalue = map[string]int32{
-	"none":       0,
-	"started":    1,
-	"inprogress": 2,
-	"success":    3,
-	"failed":     4,
-	"aborted":    5,
-}
-
-func (x WorkloadMigrationStatus_State) String() string {
-	return WorkloadMigrationStatus_State_vname[int32(x)]
-}
 
 var _ validators.DummyVar
 var validatorMapWorkload = make(map[string]map[string][]func(string, interface{}) error)
@@ -98,7 +65,6 @@ func (m *Workload) Defaults(ver string) bool {
 		m.Tenant, m.Namespace = "default", "default"
 	}
 	ret = m.Spec.Defaults(ver) || ret
-	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -146,33 +112,6 @@ func (m *WorkloadIntfStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *WorkloadMigrationStatus) Clone(into interface{}) (interface{}, error) {
-	var out *WorkloadMigrationStatus
-	var ok bool
-	if into == nil {
-		out = &WorkloadMigrationStatus{}
-	} else {
-		out, ok = into.(*WorkloadMigrationStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*WorkloadMigrationStatus))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *WorkloadMigrationStatus) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Status = "none"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *WorkloadSpec) Clone(into interface{}) (interface{}, error) {
 	var out *WorkloadSpec
 	var ok bool
@@ -216,11 +155,7 @@ func (m *WorkloadStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *WorkloadStatus) Defaults(ver string) bool {
-	var ret bool
-	if m.Migration != nil {
-		ret = m.Migration.Defaults(ver) || ret
-	}
-	return ret
+	return false
 }
 
 // Validators and Requirements
@@ -303,18 +238,6 @@ func (m *Workload) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 			ret = append(ret, errs...)
 		}
 	}
-
-	if !ignoreStatus {
-
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	return ret
 }
 
@@ -323,8 +246,6 @@ func (m *Workload) Normalize() {
 	m.ObjectMeta.Normalize()
 
 	m.Spec.Normalize()
-
-	m.Status.Normalize()
 
 }
 
@@ -364,34 +285,6 @@ func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool, ignor
 }
 
 func (m *WorkloadIntfStatus) Normalize() {
-
-}
-
-func (m *WorkloadMigrationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *WorkloadMigrationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	if vs, ok := validatorMapWorkload["WorkloadMigrationStatus"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapWorkload["WorkloadMigrationStatus"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *WorkloadMigrationStatus) Normalize() {
-
-	m.Status = WorkloadMigrationStatus_State_normal[strings.ToLower(m.Status)]
 
 }
 
@@ -465,27 +358,10 @@ func (m *WorkloadStatus) References(tenant string, path string, resp map[string]
 
 func (m *WorkloadStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-
-	if m.Migration != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "Migration"
-			if errs := m.Migration.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
-		}
-	}
 	return ret
 }
 
 func (m *WorkloadStatus) Normalize() {
-
-	if m.Migration != nil {
-		m.Migration.Normalize()
-	}
 
 }
 
@@ -528,20 +404,6 @@ func init() {
 
 		if err := validators.IntRange(m.MicroSegVlan, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"MicroSegVlan", err.Error())
-		}
-		return nil
-	})
-
-	validatorMapWorkload["WorkloadMigrationStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapWorkload["WorkloadMigrationStatus"]["all"] = append(validatorMapWorkload["WorkloadMigrationStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*WorkloadMigrationStatus)
-
-		if _, ok := WorkloadMigrationStatus_State_vvalue[m.Status]; !ok {
-			vals := []string{}
-			for k1, _ := range WorkloadMigrationStatus_State_vvalue {
-				vals = append(vals, k1)
-			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})

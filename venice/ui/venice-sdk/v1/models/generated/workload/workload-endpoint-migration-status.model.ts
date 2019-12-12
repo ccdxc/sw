@@ -11,58 +11,18 @@ import { WorkloadEndpointMigrationStatus_status,  WorkloadEndpointMigrationStatu
 
 export interface IWorkloadEndpointMigrationStatus {
     'status': WorkloadEndpointMigrationStatus_status;
-    'start-time'?: Date;
-    'end-time'?: Date;
-    'source-ip'?: string;
-    'destination-ip'?: string;
-    'reason'?: string;
 }
 
 
 export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkloadEndpointMigrationStatus {
     /** Status of migration */
     'status': WorkloadEndpointMigrationStatus_status = null;
-    /** Start time of the migration operation */
-    'start-time': Date = null;
-    /** End time of the migration operation */
-    'end-time': Date = null;
-    /** IP of source DSC */
-    'source-ip': string = null;
-    /** IP of destination DSC where the endpoint will be migrated to */
-    'destination-ip': string = null;
-    /** Reason field is populated if some failures are encountered while migrating a workload */
-    'reason': string = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointMigrationStatus]: PropInfoItem } = {
         'status': {
             enum: WorkloadEndpointMigrationStatus_status_uihint,
             default: 'none',
             description:  'Status of migration',
             required: true,
-            type: 'string'
-        },
-        'start-time': {
-            description:  'Start time of the migration operation',
-            required: false,
-            type: 'Date'
-        },
-        'end-time': {
-            description:  'End time of the migration operation',
-            required: false,
-            type: 'Date'
-        },
-        'source-ip': {
-            description:  'IP of source DSC',
-            required: false,
-            type: 'string'
-        },
-        'destination-ip': {
-            description:  'IP of destination DSC where the endpoint will be migrated to',
-            required: false,
-            type: 'string'
-        },
-        'reason': {
-            description:  'Reason field is populated if some failures are encountered while migrating a workload',
-            required: false,
             type: 'string'
         },
     }
@@ -105,41 +65,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
         } else {
             this['status'] = null
         }
-        if (values && values['start-time'] != null) {
-            this['start-time'] = values['start-time'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('start-time')) {
-            this['start-time'] = WorkloadEndpointMigrationStatus.propInfo['start-time'].default;
-        } else {
-            this['start-time'] = null
-        }
-        if (values && values['end-time'] != null) {
-            this['end-time'] = values['end-time'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('end-time')) {
-            this['end-time'] = WorkloadEndpointMigrationStatus.propInfo['end-time'].default;
-        } else {
-            this['end-time'] = null
-        }
-        if (values && values['source-ip'] != null) {
-            this['source-ip'] = values['source-ip'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('source-ip')) {
-            this['source-ip'] = WorkloadEndpointMigrationStatus.propInfo['source-ip'].default;
-        } else {
-            this['source-ip'] = null
-        }
-        if (values && values['destination-ip'] != null) {
-            this['destination-ip'] = values['destination-ip'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('destination-ip')) {
-            this['destination-ip'] = WorkloadEndpointMigrationStatus.propInfo['destination-ip'].default;
-        } else {
-            this['destination-ip'] = null
-        }
-        if (values && values['reason'] != null) {
-            this['reason'] = values['reason'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('reason')) {
-            this['reason'] = WorkloadEndpointMigrationStatus.propInfo['reason'].default;
-        } else {
-            this['reason'] = null
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -148,11 +73,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(WorkloadEndpointMigrationStatus_status), ]), WorkloadEndpointMigrationStatus.propInfo['status']),
-                'start-time': CustomFormControl(new FormControl(this['start-time']), WorkloadEndpointMigrationStatus.propInfo['start-time']),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), WorkloadEndpointMigrationStatus.propInfo['end-time']),
-                'source-ip': CustomFormControl(new FormControl(this['source-ip']), WorkloadEndpointMigrationStatus.propInfo['source-ip']),
-                'destination-ip': CustomFormControl(new FormControl(this['destination-ip']), WorkloadEndpointMigrationStatus.propInfo['destination-ip']),
-                'reason': CustomFormControl(new FormControl(this['reason']), WorkloadEndpointMigrationStatus.propInfo['reason']),
             });
         }
         return this._formGroup;
@@ -165,11 +85,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['status'].setValue(this['status']);
-            this._formGroup.controls['start-time'].setValue(this['start-time']);
-            this._formGroup.controls['end-time'].setValue(this['end-time']);
-            this._formGroup.controls['source-ip'].setValue(this['source-ip']);
-            this._formGroup.controls['destination-ip'].setValue(this['destination-ip']);
-            this._formGroup.controls['reason'].setValue(this['reason']);
         }
     }
 }

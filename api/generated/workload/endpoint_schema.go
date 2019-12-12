@@ -26,8 +26,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.EndpointStatus"},
 
-			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.EndpointMigrationStatus"},
-
 			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
@@ -57,7 +55,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"EndpointState":       api.CLIInfo{Path: "Status.EndpointState", Skip: false, Insert: "", Help: ""},
 			"SecurityGroups":      api.CLIInfo{Path: "Status.SecurityGroups", Skip: false, Insert: "", Help: ""},
 			"api-version":         api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"destination-ip":      api.CLIInfo{Path: "Migration.DestinationIP", Skip: false, Insert: "", Help: ""},
 			"generation-id":       api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"homing-host-addr":    api.CLIInfo{Path: "Status.HomingHostAddr", Skip: false, Insert: "", Help: ""},
 			"homing-host-name":    api.CLIInfo{Path: "Status.HomingHostName", Skip: false, Insert: "", Help: ""},
@@ -73,11 +70,9 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"network":             api.CLIInfo{Path: "Status.Network", Skip: false, Insert: "", Help: ""},
 			"node-uuid":           api.CLIInfo{Path: "Status.NodeUUID", Skip: false, Insert: "", Help: ""},
-			"reason":              api.CLIInfo{Path: "Migration.Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"source-ip":           api.CLIInfo{Path: "Migration.SourceIP", Skip: false, Insert: "", Help: ""},
-			"status":              api.CLIInfo{Path: "Migration.Status", Skip: false, Insert: "", Help: ""},
+			"status":              api.CLIInfo{Path: "Status.Migration.Status", Skip: false, Insert: "", Help: ""},
 			"tenant":              api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"workload-attributes": api.CLIInfo{Path: "Status.WorkloadAttributes", Skip: false, Insert: "", Help: ""},
@@ -88,21 +83,15 @@ var typesMapEndpoint = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointMigrationStatus{}) },
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{ID: "start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-
-			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-
-			"SourceIP": api.Field{Name: "SourceIP", CLITag: api.CLIInfo{ID: "source-ip", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-ip", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"DestinationIP": api.Field{Name: "DestinationIP", CLITag: api.CLIInfo{ID: "destination-ip", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination-ip", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.EndpointSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointSpec{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"NodeUUID": api.Field{Name: "NodeUUID", CLITag: api.CLIInfo{ID: "node-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-uuid", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"HomingHostAddr": api.Field{Name: "HomingHostAddr", CLITag: api.CLIInfo{ID: "homing-host-addr", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "homing-host-addr", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
 	},
 	"workload.EndpointStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointStatus{}) },
@@ -134,6 +123,8 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"MicroSegmentVlan": api.Field{Name: "MicroSegmentVlan", CLITag: api.CLIInfo{ID: "micro-segment-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "micro-segment-vlan", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"WorkloadAttributes": api.Field{Name: "WorkloadAttributes", CLITag: api.CLIInfo{ID: "workload-attributes", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-attributes", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.EndpointMigrationStatus"},
 		},
 	},
 	"workload.EndpointStatus.WorkloadAttributesEntry": &api.Struct{

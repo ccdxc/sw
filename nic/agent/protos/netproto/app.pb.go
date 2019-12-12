@@ -60,6 +60,7 @@
 		EndpointList
 		EndpointEvent
 		EndpointEventList
+		EndpointMigrationStatus
 		Interface
 		PauseSpec
 		InterfaceSpec

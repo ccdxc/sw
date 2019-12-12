@@ -49,6 +49,7 @@ message WorkloadSpec {
     // Spec of all interfaces in the Workload identified by Primary MAC
     repeated WorkloadIntfSpec Interfaces    = 2 [(gogoproto.nullable) = false,
                                                 (gogoproto.jsontag) = "interfaces,omitempty"];
+
 }
 
 // Status part of Workload object
@@ -59,10 +60,6 @@ message WorkloadStatus {
     // Status of all interfaces in the Workload identified by Primary MAC
     repeated WorkloadIntfStatus Interfaces  = 2 [(gogoproto.nullable) = false,
                                                 (gogoproto.jsontag) = "interfaces,omitempty"];
-
-    // Status of Migration of the workload
-    WorkloadMigrationStatus Migration = 3 [(gogoproto.nullable) = true, 
-                                          (gogoproto.jsontag) = "migration,omitempty"];
 }
 
 // Spec of a Workload interface
@@ -95,41 +92,3 @@ message WorkloadIntfStatus {
     // Endpoint associated with this Workload interface
     string Endpoint             = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
 }
-
-message WorkloadMigrationStatus {
-    // State
-    enum State {
-        // ui-hint: None
-        NONE    = 0; // No Migration is in progress
-        // ui-hint: Started
-        STARTED = 1; // Start migration
-        // ui-hint: In Progress
-        INPROGRESS = 2; // Migration in progress
-        // ui-hint: Success
-        SUCCESS = 3; // Migration is successful
-        // ui-hint: Failed
-        FAILED = 4; // Migration Failure
-        // ui-hint: Aborted
-        ABORTED = 5; // Migration aborted
-    }
-
-    // Status of migration
-    string Status                 = 1 [(venice.check) = "StrEnum(WorkloadMigrationStatus.State)",
-                                        (gogoproto.jsontag) = "status,omitempty"];
-
-    // Start time of the migration operation
-    api.Timestamp StartTime = 2 [(gogoproto.jsontag) = "start-time,omitempty"];
-
-    // End time of the migration operation
-    api.Timestamp EndTime = 3 [(gogoproto.jsontag) = "end-time,omitempty"];
-
-    // Source Hostname derived from the workload to host to DSC association
-    string SourceHost = 4 [(gogoproto.jsontag) = "source-host,omitempty"];
-
-    // Destination Hostname where the new workload will be migrated to
-    string DestinationHost = 5 [(gogoproto.jsontag) = "destination-host,omitempty"];
-   
-    // Reason field is populated if some failures are encountered while migrating a workload
-    string Reason = 6 [(gogoproto.jsontag) = "reason,omitempty"];
-}
-

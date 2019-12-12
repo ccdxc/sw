@@ -30,6 +30,5 @@ export * from './workload-workload.model';
 export * from './workload-workload-intf-spec.model';
 export * from './workload-workload-intf-status.model';
 export * from './workload-workload-list.model';
-export * from './workload-workload-migration-status.model';
 export * from './workload-workload-spec.model';
 export * from './workload-workload-status.model';

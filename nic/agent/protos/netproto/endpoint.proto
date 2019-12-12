@@ -81,7 +81,6 @@ message EndpointSpec {
     string HomingHostAddr                   = 15  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
     string HomingHostName                   = 16  [(gogoproto.jsontag) = "homing-host-name,omitempty"];
     // Specifies the name of the node where the endpoint lives.
-    // Optional for LocalEPs and mandatory for RemoteEPs.
     string NodeUUID                         = 17  [(gogoproto.jsontag) = "node-uuid,omitempty"];
     // Microsegment VLAN for the endpoint. Required only for Local EPs.
     uint32 UsegVlan                         = 18  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
@@ -91,8 +90,13 @@ message EndpointSpec {
 message EndpointStatus {
     // Endpoint ID in datapath. Valid only for Local EPs
     uint64 EnicID         = 10 [(gogoproto.jsontag) = "enic-id,omitempty"];
+    // NodeUUID is the nodeuuid where the endpoint currntly exists. 
+    string NodeUUID  = 11  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+    // Spec of Migration of the endpoint
+    EndpointMigrationStatus Migration = 12 [(gogoproto.nullable) = true,
+                                          (gogoproto.jsontag) = "migration,omitempty"];
+    
 }
-
 
 // list of endpoints
 message EndpointList {
@@ -109,4 +113,20 @@ message EndpointEvent {
 // endpoint watch events batched
 message EndpointEventList {
     repeated EndpointEvent EndpointEvents  = 1;
+}
+
+message EndpointMigrationStatus {
+    // State
+    enum MigrationState {
+        // ui-hint: None
+        NONE    = 0; // No Migration is in progress
+        // ui-hint: Start
+        START = 1; // Start migration
+        // ui-hint: Abort
+        FAILED = 2; // Abort Migration
+    }
+
+    // Status of migration
+    string Status                 = 1 [(venice.check) = "StrEnum(EndpointMigrationStatus.MigrationState)",
+                                        (gogoproto.jsontag) = "status, omitempty"];
 }

@@ -9,11 +9,27 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface IWorkloadEndpointSpec {
+    'node-uuid'?: string;
+    'homing-host-addr'?: string;
 }
 
 
 export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpointSpec {
+    /** The DSC Name or MAC where the endpoint should reside */
+    'node-uuid': string = null;
+    /** IP of the DSC where this endpoint exists */
+    'homing-host-addr': string = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointSpec]: PropInfoItem } = {
+        'node-uuid': {
+            description:  'The DSC Name or MAC where the endpoint should reside',
+            required: false,
+            type: 'string'
+        },
+        'homing-host-addr': {
+            description:  'IP of the DSC where this endpoint exists',
+            required: false,
+            type: 'string'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -47,6 +63,20 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['node-uuid'] != null) {
+            this['node-uuid'] = values['node-uuid'];
+        } else if (fillDefaults && WorkloadEndpointSpec.hasDefaultValue('node-uuid')) {
+            this['node-uuid'] = WorkloadEndpointSpec.propInfo['node-uuid'].default;
+        } else {
+            this['node-uuid'] = null
+        }
+        if (values && values['homing-host-addr'] != null) {
+            this['homing-host-addr'] = values['homing-host-addr'];
+        } else if (fillDefaults && WorkloadEndpointSpec.hasDefaultValue('homing-host-addr')) {
+            this['homing-host-addr'] = WorkloadEndpointSpec.propInfo['homing-host-addr'].default;
+        } else {
+            this['homing-host-addr'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -54,6 +84,8 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'node-uuid': CustomFormControl(new FormControl(this['node-uuid']), WorkloadEndpointSpec.propInfo['node-uuid']),
+                'homing-host-addr': CustomFormControl(new FormControl(this['homing-host-addr']), WorkloadEndpointSpec.propInfo['homing-host-addr']),
             });
         }
         return this._formGroup;
@@ -65,6 +97,8 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['node-uuid'].setValue(this['node-uuid']);
+            this._formGroup.controls['homing-host-addr'].setValue(this['homing-host-addr']);
         }
     }
 }

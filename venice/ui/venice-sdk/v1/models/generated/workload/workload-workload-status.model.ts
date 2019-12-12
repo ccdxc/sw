@@ -9,12 +9,10 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { SecurityPropagationStatus, ISecurityPropagationStatus } from './security-propagation-status.model';
 import { WorkloadWorkloadIntfStatus, IWorkloadWorkloadIntfStatus } from './workload-workload-intf-status.model';
-import { WorkloadWorkloadMigrationStatus, IWorkloadWorkloadMigrationStatus } from './workload-workload-migration-status.model';
 
 export interface IWorkloadWorkloadStatus {
     'propagation-status'?: ISecurityPropagationStatus;
     'interfaces'?: Array<IWorkloadWorkloadIntfStatus>;
-    'migration'?: IWorkloadWorkloadMigrationStatus;
 }
 
 
@@ -23,8 +21,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     'propagation-status': SecurityPropagationStatus = null;
     /** Status of all interfaces in the Workload identified by Primary MAC */
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
-    /** Status of Migration of the workload */
-    'migration': WorkloadWorkloadMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadStatus]: PropInfoItem } = {
         'propagation-status': {
             description:  'The status of the configuration propagation to the Naples',
@@ -33,11 +29,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         },
         'interfaces': {
             description:  'Status of all interfaces in the Workload identified by Primary MAC',
-            required: false,
-            type: 'object'
-        },
-        'migration': {
-            description:  'Status of Migration of the workload',
             required: false,
             type: 'object'
         },
@@ -67,7 +58,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         super();
         this['propagation-status'] = new SecurityPropagationStatus();
         this['interfaces'] = new Array<WorkloadWorkloadIntfStatus>();
-        this['migration'] = new WorkloadWorkloadMigrationStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -87,11 +77,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         } else {
             this['interfaces'] = [];
         }
-        if (values) {
-            this['migration'].setValues(values['migration'], fillDefaults);
-        } else {
-            this['migration'].setValues(null, fillDefaults);
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -101,7 +86,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
             this._formGroup = new FormGroup({
                 'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, WorkloadWorkloadStatus.propInfo['propagation-status'].required),
                 'interfaces': new FormArray([]),
-                'migration': CustomFormGroup(this['migration'].$formGroup, WorkloadWorkloadStatus.propInfo['migration'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadWorkloadIntfStatus>('interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
@@ -113,11 +97,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('interfaces') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('interfaces').get(field);
-                control.updateValueAndValidity();
-            });
-            // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('migration') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('migration').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -132,7 +111,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         if (this._formGroup) {
             this['propagation-status'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
-            this['migration'].setFormGroupValuesToBeModelValues();
         }
     }
 }

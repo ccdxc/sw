@@ -119,40 +119,6 @@ func DecodeGrpcRespWorkloadIntfStatus(ctx context.Context, response interface{})
 	return response, nil
 }
 
-func encodeHTTPWorkloadMigrationStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPWorkloadMigrationStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req WorkloadMigrationStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqWorkloadMigrationStatus encodes GRPC request
-func EncodeGrpcReqWorkloadMigrationStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*WorkloadMigrationStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqWorkloadMigrationStatus decodes GRPC request
-func DecodeGrpcReqWorkloadMigrationStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*WorkloadMigrationStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespWorkloadMigrationStatus encodes GRC response
-func EncodeGrpcRespWorkloadMigrationStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespWorkloadMigrationStatus decodes GRPC response
-func DecodeGrpcRespWorkloadMigrationStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPWorkloadSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
