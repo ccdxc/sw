@@ -77,6 +77,16 @@ class Tcp:
 
         return True
 
+    def applyFilter(self, **kwargs):
+        for k,v in kwargs.items():
+            if k == "sp" and v not in self.sp:
+                return False
+
+            if k == "dp" and v not in self.dp:
+                return False
+
+        return True
+
     def getRandom(self, seed=None):
         return {
             "sp":self.sp.getRandom(seed=seed),

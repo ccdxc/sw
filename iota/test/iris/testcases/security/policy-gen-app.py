@@ -33,6 +33,10 @@ sgpolicy_template = {
     "status"                : {}
     }
 
+def reset():
+    object_template['objects'] = []
+    sgpolicy_template['spec']['policy-rules'] = []
+
 def get_ip_addr(a, b, c, d):
     return str(a) + "." + str(b) + "." + str(c) + "." + str(d) + "/24"
 
@@ -112,14 +116,14 @@ def get_rule(dst_ip, src_ip, protocol, port, action):
 
 parser = argparse.ArgumentParser(description = "Policy Rules Generator.")
 parser.add_argument('-s', '--scale', help='delimited list of scale', type=str, required=True)
-#parser.add_argument('-t', '--topology', help='Path of topology directory', default="/sw/iota/test/iris/topologies/container/", type=str)
+parser.add_argument('-t', '--topology', help='Path of topology directory', default="/sw/iota/test/iris/topologies/container/", type=str)
 parser.add_argument('-e', '--endpoints', help='Relative path of endpoints.json', default="endpoints.json", type=str)
 parser.add_argument('-i', '--ips', help='Destination EPs for every rule in the policy', default=4, type=int)
 parser.add_argument('-x', '--expansion', help='Generate expansion policies', default=True, type=bool)
 args = parser.parse_args()
 
 
-topology_dir = "/sw/iota/test/iris/topologies/container/"
+topology_dir = args.topology
 endpoint_file = topology_dir + args.endpoints
 protocols = ["udp", "tcp", "icmp"]
 directories = ["udp", "tcp", "icmp", "mixed", "scale", "halcfg-expansion", "netagent-expansion"]
@@ -174,10 +178,11 @@ def Main():
     # One big policy
     for protocol in protocols:
         for action in actions:
+            reset()
             policy_objects = object_template
-            del policy_objects["objects"][:]
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['spec']['policy-rules']
+
             verif =[]
             for i in range(0, len(EP) - 1):
                 for j in range(i, len(EP)):
@@ -191,14 +196,14 @@ def Main():
             policy_rules.append(default_policy)
             policy_objects["objects"].append(sgpolicy)
 
-            json.dump(policy_objects, open(topology_dir + "/" +target_dir +"/{}/{}_{}_policy.json".format(protocol, protocol, action), "w"))
+            json.dump(policy_objects, open(topology_dir + "/" +target_dir +"/{}/{}_{}_policy.json".format(protocol, protocol, action), "w"), indent=4)
             json.dump(verif, open(topology_dir + "/" +target_dir +"/{}/{}_{}_verif.json".format(protocol, protocol, action), "w"))
 
     # Generic policy
     for protocol in protocols:
         for action in actions:
+            reset()
             policy_objects = object_template
-            del policy_objects["objects"][:]
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['spec']['policy-rules']
             verif =[]
@@ -218,9 +223,10 @@ def Main():
     # Specific Policy
     for protocol in protocols:
         for action in actions:
+            reset()
+            policy_objects = object_template
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['spec']['policy-rules']
-            del policy_rules[:]
             verif =[]
             for i in range(0, len(EP) - 4):
                 for j in range(i, len(EP) - 3):
@@ -241,11 +247,10 @@ def Main():
 
     scale_list = [int(item) for item in args.scale.split(',')]
     for count in scale_list:
+        reset()
         policy_objects = object_template
-        del policy_objects["objects"][:]
         sgpolicy = sgpolicy_template
         policy_rules = sgpolicy_template['spec']['policy-rules']
-        del policy_rules[:]
         verif =[]
 
         rule_count = 0
@@ -292,11 +297,10 @@ def Main():
         if rules_per_ep <= 0:
             rules_per_ep = 1
 
+        reset()
         policy_objects = object_template
-        del policy_objects["objects"][:]
         sgpolicy = sgpolicy_template
         policy_rules = sgpolicy_template['spec']['policy-rules']
-        del policy_rules[:]
         verif =[]
         rule_count = 0
         i = 0
@@ -339,11 +343,10 @@ def Main():
         # HAL expansion policy
         for n in pow_2:
             for m in pow_2:
+                reset()
                 policy_objects = object_template
-                del policy_objects["objects"][:]
                 sgpolicy = sgpolicy_template
                 policy_rules = sgpolicy_template['spec']['policy-rules']
-                del policy_rules[:]
                 verif =[]
 
                 src_ip = ip_list[0 : n]
@@ -362,11 +365,10 @@ def Main():
 
         # Netagent Expansion
         for port_len in pow_2:
+            reset()
             policy_objects = object_template
-            del policy_objects["objects"][:]
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['spec']['policy-rules']
-            del policy_rules[:]
             verif =[]
 
             src_ip = ip_list[0]

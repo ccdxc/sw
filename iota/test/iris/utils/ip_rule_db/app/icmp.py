@@ -12,5 +12,8 @@ class Icmp:
     def match(self, **kwargs):
         return True
 
+    def applyFilter(self, **kwargs):
+        return True
+
     def getRandom(self, seed=None):
         return {}

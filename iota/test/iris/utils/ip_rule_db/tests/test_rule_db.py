@@ -92,4 +92,44 @@ class TestRuleDB(unittest.TestCase):
                     self.assertEqual(rule.identifier, ruleId, "Should be same")
                     results[ruleId] = results.get(ruleId, 0) + 1
 
-            self.assertEqual(db.getRuleIdStats(), results, "rule stats results should be same")
+            self.assertEqual(db.getRuleIdStats(), results,
+                             "rule stats results should be same")
+
+    def test_ruleDB_getRules_applyFilter(self):
+        policyFile = os.path.join(os.path.dirname(__file__),
+                                "sgpolicy.json")
+        db = RuleDB(jsonFile=policyFile)
+
+        # without filter
+        rules= db.getRuleList()
+        self.assertEqual(len(rules), 7, "without filter rules Should be 7")
+
+        # DENY
+        filterDict = {"action":"DENY"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 4, "DENY rules should be 4")
+
+        # PERMIT
+        filterDict = {"action":"PERMIT"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 3, "PERMIT rules should be 3")
+
+        # PERMIT, UDP
+        filterDict = {"action":"PERMIT", "proto": "17"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 3, "PERMIT UDP rules should be 3")
+
+        # TCP
+        filterDict = {"proto": "6"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 2, "TCP should be 2")
+
+        # SIP
+        filterDict = {"sip": "192.168.100.101", "action": "PERMIT"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 2, "SIP rules should be 2")
+
+        # DIP
+        filterDict = {"dip": "192.168.100.101"}
+        rules= db.getRuleList(**filterDict)
+        self.assertEqual(len(rules), 5, "DIP rules Should be 5")

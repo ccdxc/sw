@@ -184,6 +184,26 @@ class RuleEntry:
 
         return True
 
+    def applyFilter(self, **kwarg):
+        for k,v in kwarg.items():
+
+            if k == "sip" and v not in self.sip:
+                return False
+
+            if k == "dip" and v not in self.dip:
+                return False
+
+            if k == "proto" and v not in self.proto:
+                return False
+
+            if k == "action" and v != self.action.name:
+                return False
+
+        if self._app and not self._app.applyFilter(**kwarg):
+            return False
+
+        return True
+
     def getRandom(self, seed=None):
         rand = {
             "sip"   : self.sip.getRandom(seed=seed),

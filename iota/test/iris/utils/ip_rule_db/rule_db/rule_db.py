@@ -191,5 +191,12 @@ class RuleDB:
             if not exactMatch or (exactMatch and r.identifier == ruleId):
                 print ("%s"%r)
 
-    def getRuleList(self):
-        return self._ruleList
+    def getRuleList(self, **kwarg):
+        if len(kwarg) == 0:
+            return self._ruleList
+
+        filterList = []
+        for r in self._ruleList:
+            if r.applyFilter(**kwarg):
+                filterList.append(r)
+        return filterList

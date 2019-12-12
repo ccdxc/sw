@@ -66,19 +66,6 @@ def ReadJson(filename):
     api.Logger.info("Reading JSON file {}".format(filename))
     return api.parser.JsonParse(filename)
 
-def GetHping3Cmd(pkt):
-    protocol = proto.Proto.getStrFromL3Proto(pkt["proto"])
-    if protocol == 'tcp':
-        cmd = "hping3 -p {} -c 1 {}".format(int(pkt["dp"]), pkt["dip"])
-    elif protocol == 'udp':
-        cmd = "hping3 --{} -s {} -p {} -c 1 --keep {}".\
-              format(protocol.lower(), int(pkt["sp"]), \
-                     int(pkt["dp"]), str(pkt["dip"]))
-    else:
-        cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), str(pkt["dip"]))
-
-    return cmd
-
 def GetDelphiRuleMetrics(node_name):
     cmd = "PATH=$PATH:/platform/bin/;\
     LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib/:/nic/lib/;\
@@ -106,7 +93,7 @@ def GetDelphiRuleMetrics(node_name):
         try:
             ruleMetrics.append(json.loads(ruleOut))
         except:
-            api.Logger.error("Failed to parse rule yaml => %s"%ruleOut)
+            api.Logger.error("Failed to parse rule yaml => '%s'"%ruleOut)
 
 
     return ruleMetrics
@@ -134,7 +121,7 @@ def compareStats(db, node, protocol=None):
 
     api.Logger.info("====================== Comparing rule stats from %s for protocol %s ======================"%(node, protocol))
     ruleStats = GetRuleHit(node)
-    db.printDB()
+    #db.printDB()
 
     if len(ruleStats) == 0:
         return api.types.status.FAILURE
@@ -174,48 +161,85 @@ def compareStats(db, node, protocol=None):
 
     return api.types.status.FAILURE if error else api.types.status.SUCCESS
 
-def RunCmd(workload, pkt):
+def getRandomPackets(db, ppp, seed, filterDict=None):
+    random.seed(seed)
+    if filterDict:
+        ruleList = random.choices(db.getRuleList(**filterDict), k=ppp)
+    else:
+        ruleList = random.choices(db.getRuleList(), k=ppp)
+
+    pktList = [r.getRandom(seed) for r in ruleList]
+    return pktList
+
+def RunTestRejectCmd(workload, pkt):
+    protocol = proto.Proto.getStrFromL3Proto(pkt["proto"])
+    if protocol in ['udp', 'tcp']:
+        cmd = "/usr/local/bin/test_reject.py --proto %s --src_ip %s --sp %s --dp %s %s"%(protocol, str(pkt["sip"]), int(pkt["sp"]), int(pkt["dp"]), str(pkt["dip"]))
+    else:
+        raise Exception("Test reject command doesnt support Protocol %s "%protocol)
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    cmd = GetHping3Cmd(pkt)
     api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
     resp = api.Trigger(req)
     for cmd in resp.commands:
         api.PrintCommandResults(cmd)
 
-def getRandomPackets(db, ppp, seed):
-    random.seed(seed)
-    ruleList = random.choices(db.getRuleList(), k=ppp)
-    pktList = [r.getRandom(seed) for r in ruleList]
-    return pktList
+    return cmd.exit_code
 
-def RunAll(ppp, src_w, dst_w, src_db, dst_db, filter_and_alter_func=None, seed=None):
+def RunHping3Cmd(workload, pkt):
+    protocol = proto.Proto.getStrFromL3Proto(pkt["proto"])
+    if protocol == 'tcp':
+        cmd = "hping3 -s {} -p {} -c 1 -S --faster --keep {}".\
+              format(int(pkt["sp"]), int(pkt["dp"]), pkt["dip"])
+    elif protocol == 'udp':
+        cmd = "hping3 --{} -s {} -p {} -c 1 --keep {}".\
+              format(protocol.lower(), int(pkt["sp"]), \
+                     int(pkt["dp"]), str(pkt["dip"]))
+    else:
+        cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), str(pkt["dip"]))
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+    return 0
+
+
+def RunCmd(workload, pkt, action = None):
+    return RunTestRejectCmd(workload, pkt) \
+        if action and action == 'REJECT' \
+           else RunHping3Cmd(workload, pkt)
+
+def RunAll(ppp, src_w, dst_w, src_db, dst_db, filter_and_alter_func=None, seed=None, filterDict=None):
     if src_db == None and dst_db == None:
         return api.types.status.SUCCESS
 
     elif src_db == None and dst_db:
         api.Logger.info("Found valid dst db.")
-        pktList = getRandomPackets(dst_db, ppp, seed)
+        pktList = getRandomPackets(dst_db, ppp, seed, filterDict)
         for pkt in pktList:
             if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
                 continue
             api.Logger.info("=> Matching pkt : %s"%pkt)
             r = dst_db.match(**pkt)
             api.Logger.info("DST_DB::Matched Rule : %s"%r)
-            RunCmd( src_w, pkt)
+            return RunCmd(src_w, pkt, r.action.name)
 
     elif src_db and dst_db == None:
         api.Logger.info("Found valid src db.")
-        pktList = getRandomPackets(src_db, ppp, seed)
+        pktList = getRandomPackets(src_db, ppp, seed, filterDict)
         for pkt in pktList:
             if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
                 continue
             api.Logger.info("=> Matching pkt : %s"%pkt)
             r = src_db.match(**pkt)
             api.Logger.info("SRC_DB::Matched Rule : %s"%r)
-            RunCmd( src_w, pkt)
+            return RunCmd(src_w, pkt, r.action.name)
     else:
         api.Logger.info("Found valid src and dst db.")
-        pktList = getRandomPackets(src_db, ppp, seed)
+        pktList = getRandomPackets(src_db, ppp, seed, filterDict)
         for pkt in pktList:
             if filter_and_alter_func and filter_and_alter_func(pkt, src_w, dst_w):
                 continue
@@ -226,7 +250,7 @@ def RunAll(ppp, src_w, dst_w, src_db, dst_db, filter_and_alter_func=None, seed=N
                 api.Logger.info("Found permit on rule..")
                 r = dst_db.match(**pkt)
                 api.Logger.info("DST_DB::Matched rule : %s"%r)
-            RunCmd( src_w, pkt)
+            return RunCmd(src_w, pkt, r.action.name)
 
     return api.types.status.SUCCESS
 

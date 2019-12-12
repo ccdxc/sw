@@ -9,8 +9,8 @@ testcases:
         testcase: testcases.security.policy_rules_auto
         iterators :
             type  : simple
-            proto : ["udp"]
-            scale : [500]
+            proto : ['tcp', 'udp']
+            scale : [100, 100]
 
     -   name    : PolicyScaleAddDelLoop
         testcase: testcases.security.policy_scale_add_del_loop
