@@ -1,5 +1,5 @@
 meta:
-    name        : storage
+    name        : storage_regr
     os          : [ linux, freebsd ]
     nics        : [ pensando, intel, mellanox, broadcom ]
     targetcount : 6000
@@ -530,5 +530,6 @@ testcases:
             mode        : *MODE_ITER_LIST
             inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
+            timeout     : 5400
             wait        : '0.5'
             test        : *CRYPTO_TEST_YML
