@@ -6,6 +6,8 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <hals_c_includes.hpp>
 #include <hals_nhpi_slave_join.hpp>
@@ -104,9 +106,11 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(void) {
 
 pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
     pds_batch_ctxt_guard_t bctxt_guard_;
+    sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(cookie_uptr_); // Cookie should have been alloc before
-
-    pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
+    // TODO: Change to async when ipc apis are ready
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
+                           (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
@@ -117,7 +121,9 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
 
     if (op_delete_) { // Delete
         auto nhgroup_key = make_pds_nhgroup_key_();
-        auto ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        if (!PDS_MOCK_MODE()) {
+            ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("Delete PDS Nexthop Group failed for MS ECMP ")
                         .append(std::to_string(ips_info_.pathset_id)));
@@ -126,13 +132,17 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
     } else { // Add or update
         auto nhgroup_spec = make_pds_nhgroup_spec_();
         if (op_create_) {
-            auto ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
+            }
             if (unlikely (ret != SDK_RET_OK)) {
                 throw Error(std::string("Create PDS Nexthop Group failed for MS ECMP ")
                             .append(std::to_string(ips_info_.pathset_id)));
             }
         } else {
-            auto ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
+            }
             if (unlikely (ret != SDK_RET_OK)) {
                 throw Error(std::string("Update PDS Nexthop Group failed for MS ECMP ")
                             .append(std::to_string(ips_info_.pathset_id)));
@@ -250,6 +260,10 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     add_upd_ecmp_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
                      ips_info_.pathset_id);
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        pdsa_stub::hal_callback(true, (uint64_t) cookie);
+    }
 }
 
 void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {

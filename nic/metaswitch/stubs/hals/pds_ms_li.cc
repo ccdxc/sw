@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
+#include "li_fte.hpp"
 
 namespace pds_ms {
 

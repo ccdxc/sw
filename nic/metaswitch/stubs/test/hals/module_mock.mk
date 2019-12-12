@@ -10,7 +10,7 @@ MODULE_INCS     = $(TOPDIR)/nic/metaswitch/stubs/hals \
                   $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))
 MODULE_FLAGS    = $(addprefix -D,$(MS_COMPILATION_SWITCH))
 MODULE_SOLIBS   = shmmgr pdsacommon pdsahals pdstestapiutils \
-                  pdsapimock ipsfeeder model_client
+                  pdsapimock pdsamgmt ipsfeeder model_client
 MODULE_DEFS     = -DPDS_MOCKAPI
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = rt dl $(MS_LD_LIBS)

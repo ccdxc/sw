@@ -7,6 +7,8 @@
 #include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
@@ -24,8 +26,12 @@ void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     ips_info_.if_name = port_add_upd_ips->id.if_name;
     ips_info_.admin_state = 
         (port_add_upd_ips->port_settings.port_enabled == ATG_YES);
-    ips_info_.admin_state_valid = 
+    ips_info_.admin_state_updated = 
         (port_add_upd_ips->port_settings.port_enabled_updated == ATG_YES);
+    ips_info_.switchport =
+        (port_add_upd_ips->port_settings.no_switch_port == ATG_NO);
+    ips_info_.switchport_updated =
+        (port_add_upd_ips->port_settings.no_switch_port_updated == ATG_YES);
 }
 
 void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
@@ -49,11 +55,21 @@ void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
 }
 
 bool li_intf_t::cache_new_obj_in_cookie_(void) {
+    void *fw;
     std::unique_ptr<if_obj_t> new_if_obj; 
     if (store_info_.phy_port_if_obj == nullptr) {
-        // This is the first time we are seeing this uplink interface 
+        // This is the first time we are seeing this uplink interface
+        // Create the FRI worker
+        if (TGD) {
+            ntl::Frl &frl = li::Fte::get().get_frl();
+            fw = frl.create_fri_worker(ips_info_.ifindex);
+            SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
+        }
+        // TODO: Set the initial interface state by doing a port get
+
         auto port_prop = if_obj_t::phy_port_properties_t {0};
         port_prop.ifindex = ips_info_.ifindex;
+        port_prop.fri_worker = fw;
         new_if_obj.reset(new if_obj_t(port_prop));
 
         // TODO: Move Linux Intf param fetch to the Mgmt Stub
@@ -73,13 +89,22 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
     if (op_create_) {
         phy_port_prop.hal_created = true;
         phy_port_prop.admin_state = ips_info_.admin_state;
+        phy_port_prop.switchport = ips_info_.switchport;
         SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d", 
                          ips_info_.ifindex, ips_info_.admin_state);
-    } else if (ips_info_.admin_state_valid) {
-        SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 
-                         ips_info_.ifindex, ips_info_.admin_state);
-        // Update the new admin state in the new If object
-        phy_port_prop.admin_state = ips_info_.admin_state;
+    } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
+        if (ips_info_.admin_state_updated) {
+            SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 
+                             ips_info_.ifindex, ips_info_.admin_state);
+            // Update the new admin state in the new If object
+            phy_port_prop.admin_state = ips_info_.admin_state;
+        }
+        if (ips_info_.switchport_updated) {
+            SDK_TRACE_DEBUG ("MS If 0x%lx: Switchport State change to %d",
+                             ips_info_.ifindex, ips_info_.switchport);
+            // Update the new admin state in the new If object
+            phy_port_prop.switchport = ips_info_.switchport;
+        }
     } else {
         // Update request but no change in the fields we are 
         // interested in
@@ -104,7 +129,12 @@ pds_if_key_t li_intf_t::make_pds_if_key_(void) {
 pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     pds_if_spec_t spec = {0};
     spec.key = make_pds_if_key_();
-    spec.type = PDS_IF_TYPE_L3;
+    if (ips_info_.switchport) {
+        // Create non L3 interface in HAL
+        spec.type = PDS_IF_TYPE_NONE;
+    } else {
+        spec.type = PDS_IF_TYPE_L3;
+    }
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state = 
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
@@ -119,9 +149,10 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
     SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
-    pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
+    // TODO: Change to async when ipc apis are ready
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
+                           (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
-
     if (unlikely (!bctxt)) {
         throw Error(std::string("PDS Batch Start failed for MS If ")
                     .append(std::to_string(ips_info_.ifindex)));
@@ -130,15 +161,20 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
 
     if (op_delete_) { // Delete
         auto if_key = make_pds_if_key_();
-        pds_if_delete(&if_key, bctxt);
-
+        if (!PDS_MOCK_MODE()) {
+            pds_if_delete(&if_key, bctxt);
+        }
     } else { // Add or update
         auto if_spec = make_pds_if_spec_();
-        sdk_ret_t ret;
+        sdk_ret_t ret = SDK_RET_OK;
         if (op_create_) {
-            ret = pds_if_create(&if_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_if_create(&if_spec, bctxt);
+            }
         } else {
-            ret = pds_if_update(&if_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_if_update(&if_spec, bctxt);
+            }
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS If Create or Update failed for MS If ")
@@ -153,17 +189,11 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     port_add_upd_ips->return_code = ATG_OK;
 
     parse_ips_info_(port_add_upd_ips);
-
+    
     if (ms_ifindex_to_pds_type (ips_info_.ifindex) != IF_TYPE_L3) {
         // Nothing to do for non-L3 interfaces
         return;
     }
-    if (port_add_upd_ips->port_settings.no_switch_port == ATG_NO) {
-        // Not an IP interface
-        // IP to non-IP transition is not supported
-        return;
-    }
-
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
 
@@ -237,6 +267,10 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful", 
                      ips_info_.ifindex);
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        pdsa_stub::hal_callback(true, (uint64_t) cookie);
+    }
 }
 
 void li_intf_t::handle_delete(NBB_ULONG ifindex) {

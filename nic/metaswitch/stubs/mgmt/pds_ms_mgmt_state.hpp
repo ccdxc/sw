@@ -14,6 +14,9 @@
 #include <mutex>
 #include <condition_variable>
 
+#define PDS_MOCK_MODE() \
+            (mgmt_state_t::thread_context().state()->pds_mock_mode())
+
 namespace pds_ms {
 
 // Singleton that holds all global state for the mgmt stub
@@ -74,6 +77,10 @@ public:
     sdk::lib::thread *nbase_thread(void) {
         return nbase_thread_;
     }
+    
+    bool pds_mock_mode(void) const { return pds_mock_mode_;  }
+    
+    void set_pds_mock_mode(bool val) { pds_mock_mode_ = val; }
 
 private:
     static mgmt_state_t* g_state_;
@@ -83,9 +90,10 @@ private:
     static std::mutex g_state_mtx_;
     static std::condition_variable g_cv_resp_;
     static types::ApiStatus g_ms_response_;
+    bool pds_mock_mode_;
 
 private:
-    mgmt_state_t(void) {}
+    mgmt_state_t(void) { pds_mock_mode_ = false; }
     static bool response_ready() {
         return g_response_ready_;
     }

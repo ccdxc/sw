@@ -20,6 +20,9 @@
 #include <mutex>
 #include <memory>
 
+#define PDS_BATCH_PARAMS_EPOCH  1
+#define PDS_BATCH_PARAMS_ASYNC  false
+
 namespace pdsa_stub {
 
 enum pdsa_tep_slab_id_e {

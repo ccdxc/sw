@@ -37,7 +37,9 @@ private:
     struct ips_info_t {
         ms_ifindex_t ifindex;
         bool         admin_state;
-        bool         admin_state_valid;
+        bool         admin_state_updated;
+        bool         switchport;
+        bool         switchport_updated;
         char*        if_name = nullptr;
     };
     struct store_info_t {

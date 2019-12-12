@@ -68,7 +68,7 @@ void host_lif_obj_t::update_store(state_t* state, bool op_delete) {
 void if_obj_t::print_debug_str(void) {
     switch(prop_.iftype_) {
     case ms_iftype_t::PHYSICAL_PORT:    
-        SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for L3 uplink", 
+        SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for PHY port", 
                          prop_.phy_port_.ifindex);
         break;    
     case ms_iftype_t::VXLAN_TUNNEL:

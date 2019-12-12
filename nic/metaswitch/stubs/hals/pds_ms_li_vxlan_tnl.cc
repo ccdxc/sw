@@ -5,6 +5,8 @@
 
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
@@ -128,9 +130,12 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
 
 pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     pds_batch_ctxt_guard_t bctxt_guard_;
+    sdk_ret_t ret = SDK_RET_OK;
 
     SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
-    pds_batch_params_t bp {0, true, (uint64_t) cookie_uptr_.get()};
+    // TODO: Change to async when ipc apis are ready
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
+                           (uint64_t) cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
@@ -141,10 +146,14 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
 
     if (op_delete_) { // Delete
         auto tep_key = make_pds_tep_key_();
-        pds_tep_delete(&tep_key, bctxt);
+        if (!PDS_MOCK_MODE()) {
+            pds_tep_delete(&tep_key, bctxt);
+        }
 
         auto nhgroup_key = make_pds_nhgroup_key_();
-        auto ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        if (!PDS_MOCK_MODE()) {
+            ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
+        }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS TEP Delete failed for TEP ")
                         .append(ipaddr2str(&store_info_.tep_obj->properties().tep_ip)));
@@ -152,11 +161,14 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
 
     } else { // Add or update
         auto tep_spec = make_pds_tep_spec_();
-        sdk_ret_t ret;
         if (op_create_) {
-            ret = pds_tep_create(&tep_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_tep_create(&tep_spec, bctxt);
+            }
         } else {
-            ret = pds_tep_update(&tep_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_tep_update(&tep_spec, bctxt);
+            }
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error("PDS TEP Create failed for TEP " 
@@ -165,9 +177,13 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
 
         auto nhgroup_spec = make_pds_nhgroup_spec_();
         if (op_create_) {
-            ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
+            }
         } else {
-            ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
+            }
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error("PDS ECMP Create failed for TEP "
@@ -260,6 +276,10 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
     vxlan_tnl_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
                      ips_info_.tep_ip_str.c_str());
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        pdsa_stub::hal_callback(true, (uint64_t) cookie);
+    }
 }
 
 void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {

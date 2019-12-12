@@ -39,8 +39,9 @@ public:
         bool         admin_state;
         mac_addr_t   mac_addr;
         uint32_t     lnx_ifindex;
-        bool         hal_created; // Has this intf already been created 
-                                  // in HAL
+        void         *fri_worker; // FRI worker context
+        bool         hal_created; // Intf created in HAL ?
+        bool         switchport;  // Switchport ?
     };
     struct vxlan_tunnel_properties_t {
         ms_ifindex_t ifindex;

@@ -24,6 +24,10 @@ mgmt_state_init (void)
         SDK_TRACE_ERR("Mgmt state Initialization failed - %s", e.what());
         return false;
     }
+    if (std::getenv("PDS_MOCK_MODE")) {
+        mgmt_state_t::thread_context().state()->set_pds_mock_mode(true);
+    }
+
     SDK_TRACE_INFO ("Mgmt State Initialization successful");
     return true;
 }

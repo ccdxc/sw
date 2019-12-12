@@ -23,6 +23,7 @@ extern "C"
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include <iostream>
 #include <fstream>
@@ -248,6 +249,7 @@ main (int argc, char **argv)
     // Initialize the State and HAL stubs
     pdsa_stub::state_init();
     pdsa_stub::hal_init();
+    pds_ms::mgmt_state_init();
 
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);
