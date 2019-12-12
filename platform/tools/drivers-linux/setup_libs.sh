@@ -33,7 +33,10 @@ if exists yum; then
     libnl3-devel \
     libudev-devel \
     make \
+    ninja-build \
+    pandoc \
     pkgconfig \
+    python-docutils \
     valgrind-devel \
     iperf3 \
     vim \
@@ -43,8 +46,12 @@ if exists yum; then
     tcpdump \
     psmisc \
     hping3
+  if [[ ! -e /usr/bin/ninja ]]; then
+      ln -s /usr/bin/ninja-build /usr/bin/ninja
+  fi
 
 else
+  apt-get update
   apt-get install -y \
     build-essential \
     libtool \
@@ -56,7 +63,9 @@ else
     libnl-3-dev \
     libnl-route-3-dev \
     ninja-build \
+    pandoc \
     pkg-config \
+    python-docutils \
     valgrind \
     psmisc \
     hping3

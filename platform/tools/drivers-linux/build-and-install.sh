@@ -4,21 +4,33 @@ DIR=$(dirname "$0")
 DIR=$(readlink -f "$DIR")
 
 #
-# prereqs for rdma-core
+# prereqs for rdma-core: ./setup_libs.sh
 #
-
-# Ubuntu/Debian
-#apt-get install build-essential libtool automake autoconf cmake gcc libudev-dev libnl-3-dev libnl-route-3-dev ninja-build pkg-config valgrind
-
-# RedHat/Fedora
-#yum install libtool automake autoconf cmake gcc libnl3-devel libudev-devel make pkgconfig valgrind-devel
 
 #
 # build ionic.ko and ionic_rdma.ko
 # (these are not installed, so a problem will not break rebooting the host)
 #
+UNAME=$(uname -r)
+case $UNAME in
+    *.el7uek.*)
+        # Oracle Unbreakable Enterprise Kernel requires special handling
+        echo "Adapting to $UNAME..."
+        if ! grep -q IB_PORT_IP_BASED_GIDS /usr/src/kernels/$UNAME/include/rdma/ib_verbs.h ; then
+            patch -f -p1 < "$DIR/patches/ionic_rdma-uek-ip-gids.patch"
+        fi
+    ;;
+    *)
+    ;;
+esac
 
-KCPPFLAGS=-DHAPS make -j12 -C drivers
+make -j -C drivers || exit
+
+#
+# build krping
+#
+
+make -j -C krping || exit
 
 #
 # build rdma-core
@@ -40,10 +52,11 @@ cd ../..
 
 cd perftest
 
-if [ ! -a ./configure ] ; then ./autogen.sh ; fi
+./autogen.sh || exit
 
+CFLAGS="-std=gnu99" \
 ./configure --prefix=/usr || exit
-make -j12 || exit
+make -j || exit
 make install
 
 cd -
@@ -55,17 +68,17 @@ cd -
 
 cd qperf
 
-if [ ! -a ./configure ] ; then ./autogen.sh ; fi
+./autogen.sh || exit
 
 ./configure --prefix=/usr || exit
-make -j12 || exit
+make -j || exit
 make install
 
+cd -
+
 #
-# Other sutff
+# Other stuff
 #
 
 cp show_gid /usr/bin
 cp collect.sh /usr/bin
-
-cd -

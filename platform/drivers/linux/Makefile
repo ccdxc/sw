@@ -15,7 +15,6 @@ IONIC_RDMA_SRC = $(CURDIR)/rdma/drv/ionic
 #KOPT += CHECK=sparse	# static analysis tool
 #KOPT += CHECK=scripts/coccicheck
 
-ETH_KOPT += KCPPFLAGS="-DHAPS"
 ETH_KOPT += CONFIG_INFINIBAND_IONIC_RDMA=_
 RDMA_KOPT += CONFIG_INFINIBAND_IONIC_RDMA=m
 
