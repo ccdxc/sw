@@ -80,6 +80,11 @@ private:
     slab    *tep_slab_;    ///< slab for allocating tep entry
 };
 
+static inline tep_entry *
+tep_find (void) {
+    return (tep_entry *)api_base::find_obj(OBJ_ID_TEP, NULL);
+}
+
 /// \@}
 
 }  // namespace api

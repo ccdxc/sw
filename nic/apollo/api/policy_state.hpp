@@ -86,6 +86,11 @@ private:
     slab    *policy_slab_;    /**< slab to allocate security policy instance */
 };
 
+static inline policy *
+policy_find (pds_policy_key_t *key) {
+    return (policy *)api_base::find_obj(OBJ_ID_POLICY, key);
+}
+
 /** @} */    // end of PDS_POLICY_STATE
 
 }    // namespace api

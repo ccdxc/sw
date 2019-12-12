@@ -87,6 +87,11 @@ private:
     slab *mapping_slab_;    /**< slab for allocating mapping entry */
 };
 
+static inline mapping_entry *
+mapping_find (void) {
+    return (mapping_entry *)api_base::find_obj(OBJ_ID_MAPPING, NULL);
+}
+
 /** @} */    // end of PDS_MAPPING_STATE
 
 }    // namespace api

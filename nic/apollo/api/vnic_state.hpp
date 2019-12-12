@@ -101,6 +101,11 @@ private:
     slab            *vnic_slab_;    /**< slab to allocate vnic entry */
 };
 
+static inline vnic_entry *
+vnic_find (void) {
+    return (vnic_entry *)api_base::find_obj(OBJ_ID_VNIC, NULL);
+}
+
 /** @} */    // end of PDS_VNIC_STATE
 
 }    // namespace api

@@ -95,6 +95,11 @@ private:
     slab *if_slab_;     ///< slab for allocating interface entry
 };
 
+static inline if_entry *
+if_find (void) {
+    return (if_entry *)api_base::find_obj(OBJ_ID_IF, NULL);
+}
+
 /// \@}
 
 }    // namespace api

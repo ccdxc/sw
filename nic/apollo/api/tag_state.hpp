@@ -78,6 +78,11 @@ private:
     slab    *tag_slab_;    // slab to allocate tag entry
 };
 
+static inline tag_entry *
+tag_find (void) {
+    return (tag_entry *)api_base::find_obj(OBJ_ID_TAG, NULL);
+}
+
 /// \@}    // end of PDS_TAG_STATE
 
 }    // namespace api

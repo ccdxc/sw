@@ -78,6 +78,11 @@ private:
     slab *policer_slab_;    ///< slab for allocating policer entry
 };
 
+static inline policer_entry *
+policer_find (void) {
+    return (policer_entry *)api_base::find_obj(OBJ_ID_POLICER, NULL);
+}
+
 /// \@}    // end of PDS_POLICER_ENTRY
 
 }    // namespace api

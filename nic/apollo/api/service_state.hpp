@@ -86,6 +86,11 @@ private:
     slab *svc_mapping_slab_;    /**< slab to allocate service mapping entry */
 };
 
+static inline svc_mapping *
+svc_mapping_find (void) {
+    return (svc_mapping *)api_base::find_obj(OBJ_ID_SVC_MAPPING, NULL);
+}
+
 /** @} */    // end of PDS_SVC_MAPPING_STATE
 
 }    // namespace api

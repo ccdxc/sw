@@ -94,7 +94,7 @@ vnic_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     }
     nh_idx_ = idx;
 
-    subnet = subnet_db()->find(&spec->subnet);
+    subnet = subnet_find(&spec->subnet);
     if (subnet == NULL) {
         PDS_TRACE_ERR("Unable to find subnet %u, vpc %u", spec->subnet.id,
                       spec->vpc.id);
@@ -210,7 +210,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 
     // lookup the vnic's subnet
     subnet_key = vnic->subnet();
-    subnet = subnet_db()->find(&subnet_key);
+    subnet = subnet_find(&subnet_key);
 
     if (local_mapping_hdl_.valid()) {
         // remove entry from LOCAL_MAPPING table
@@ -337,7 +337,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // Rx direction
     i = 1; // policy roots start at index 1
     policy_key = subnet->ing_v4_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 subnet ing policy root addr 0x%llx", addr);
@@ -346,7 +346,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate ingress IPv4 policy roots in the Rx direction entry now
     for (uint32_t j = 0; j < spec->num_ing_v4_policy; j++, i++) {
-        sec_policy = policy_db()->find(&spec->ing_v4_policy[j]);
+        sec_policy = policy_find(&spec->ing_v4_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -373,7 +373,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // Rx direction
     i = 1; // Policy roots start at index 1
     policy_key = subnet->ing_v6_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 subnet ing policy root addr 0x%llx", addr);
@@ -382,7 +382,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // populate ingress IPv6 policy roots in the Rx direction entry
     for (uint32_t j = 0; j < spec->num_ing_v6_policy; j++, i++) {
-        sec_policy = policy_db()->find(&spec->ing_v6_policy[j]);
+        sec_policy = policy_find(&spec->ing_v6_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -413,7 +413,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         route_table_key = vpc->v4_route_table();
     }
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
-        rtable = route_table_db()->find(&route_table_key);
+        rtable = route_table_find(&route_table_key);
         if (rtable) {
             addr =
                 ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
@@ -425,7 +425,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     i = 1; // policy roots start at index 1
     // populate egress IPv4 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v4_policy; j++, i++) {
-        sec_policy = policy_db()->find(&spec->egr_v4_policy[j]);
+        sec_policy = policy_find(&spec->egr_v4_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -433,7 +433,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // if subnet has egress IPv4 policy, append that policy tree root
     policy_key = subnet->egr_v4_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 subnet egr policy root addr 0x%llx", addr);
@@ -465,7 +465,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         route_table_key = vpc->v6_route_table();
     }
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
-        rtable = route_table_db()->find(&route_table_key);
+        rtable = route_table_find(&route_table_key);
         if (rtable) {
             addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
             PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
@@ -476,7 +476,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     i = 1; // Policy roots start at index 1
     // populate egress IPv6 policy roots in the Tx direction entry
     for (uint32_t j = 0; j < spec->num_egr_v6_policy; j++, i++) {
-        sec_policy = policy_db()->find(&spec->egr_v6_policy[j]);
+        sec_policy = policy_find(&spec->egr_v6_policy[j]);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -484,7 +484,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // if subnet has egress IPv6 policy, append that policy tree root
     policy_key = subnet->egr_v6_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_find(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 subnet egr policy root addr 0x%llx", addr);
@@ -522,7 +522,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     spec = &obj_ctxt->api_params->vnic_spec;
     // get the subnet of this vnic
-    subnet = subnet_db()->find(&spec->subnet);
+    subnet = subnet_find(&spec->subnet);
     if (subnet == NULL) {
         PDS_TRACE_ERR("Failed to find subnet %u", spec->subnet.id);
         return sdk::SDK_RET_INVALID_ARG;
@@ -530,7 +530,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // get the vpc of this subnet
     vpc_key = subnet->vpc();
-    vpc = vpc_db()->find(&vpc_key);
+    vpc = vpc_find(&vpc_key);
     if (unlikely(vpc == NULL)) {
         PDS_TRACE_ERR("Failed to find vpc %u", vpc_key.id);
         return sdk::SDK_RET_INVALID_ARG;
@@ -560,7 +560,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // program the nexthop table
     nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    device = device_db()->find();
+    device = device_find();
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
         nh_data.nexthop_info.port = 0;
         if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
@@ -718,12 +718,12 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     subnet_entry *subnet;
 
     // fetch the subnet of this vnic
-    subnet = subnet_db()->find(&spec->subnet);
+    subnet = subnet_find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
-    vpc = vpc_db()->find(&spec->vpc);
+    vpc = vpc_find(&spec->vpc);
     if (unlikely(vpc == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
@@ -777,7 +777,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     }
 
     subnet_key = vnic->subnet();
-    subnet = subnet_db()->find(&subnet_key);
+    subnet = subnet_find(&subnet_key);
 
     // invalidate LOCAL_MAPPING table entry of the MAC entry
     local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
@@ -894,7 +894,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
-    device = device_db()->find();
+    device = device_find();
     if (!device) {
         return SDK_RET_ERR;
     }

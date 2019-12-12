@@ -76,6 +76,11 @@ private:
     slab *subnet_slab_;           ///< slab for allocating subnet entry
 };
 
+static inline subnet_entry *
+subnet_find (pds_subnet_key_t *key) {
+    return (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, key);
+}
+
 /// \@}    // end of PDS_SUBNET_ENTRY
 
 }    // namespace api

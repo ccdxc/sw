@@ -80,6 +80,11 @@ private:
     slab    *route_table_slab_;    // slab to allocate route table instance
 };
 
+static inline route_table *
+route_table_find (pds_route_table_key_t *key) {
+    return (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE, key);
+}
+
 /// \@}    // end of PDS_ROUTE_TABLE_STATE
 
 }    // namespace api

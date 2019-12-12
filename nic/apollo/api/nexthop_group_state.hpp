@@ -74,6 +74,11 @@ private:
     slab *nexthop_group_slab_;  ///< slab for allocating nexthop group entry
 };
 
+static inline nexthop_group *
+nexthop_group_find (void) {
+    return (nexthop_group *)api_base::find_obj(OBJ_ID_NEXTHOP_GROUP, NULL);
+}
+
 /// \@}
 
 }    // namespace api

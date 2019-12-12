@@ -72,6 +72,11 @@ private:
     slab    *meter_slab_;    // slab to allocate meter entry
 };
 
+static inline meter_entry *
+meter_find (void) {
+    return (meter_entry *)api_base::find_obj(OBJ_ID_METER, NULL);
+}
+
 /// \@}    // end of PDS_METER_STATE
 
 }    // namespace api
