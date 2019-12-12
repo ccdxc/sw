@@ -16,7 +16,6 @@
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -26,12 +25,8 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_bgp_utils_gen.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <iostream>
-#include <thread>
+#include "nic/metaswitch/stubs/test/common/test_config.hpp"
 
-using boost::property_tree::ptree;
 
 namespace pdsa_test {
 test_params_t* test_params() {    
@@ -40,7 +35,7 @@ test_params_t* test_params() {
 }
 
 } // End namespace pdsa_test
-
+using namespace pds_ms_test;
 using namespace std;
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -51,26 +46,21 @@ static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
-uint32_t g_node_a_ip;
-static uint32_t g_node_a_ac_ip;
-static uint32_t g_node_b_ip;
-static uint32_t g_node_b_ac_ip;
-static uint32_t g_evpn_if_index;
+namespace pds_ms_test {
 
-namespace pdsa_stub {
-
+static test_config_t  g_test_conf;
 static NBB_VOID
 pdsa_sim_test_mac_ip()
 {
 
     ip_addr_t ip_addr;
-    auto host_ifindex = pds_ms::pds_to_ms_ifindex (7, IF_TYPE_LIF);
+    auto host_ifindex = pds_ms::pds_to_ms_ifindex (g_test_conf.lif_if_index, IF_TYPE_LIF);
 
     // Start CTM
     PDSA_START_TXN (PDSA_CTM_CORRELATOR);
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (g_node_a_ac_ip, &ip_addr);
-    pds_ms_test::pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
+    pdsa_convert_long_to_pdsa_ipv4_addr (g_test_conf.local_mai_ip, &ip_addr);
+    pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
 
     // End CTM transaction
     PDSA_END_TXN (PDSA_CTM_CORRELATOR);
@@ -87,24 +77,24 @@ pdsa_sim_test_bgp_update ()
 
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
-    bgp_global_spec.set_localasn (1);
+    bgp_global_spec.set_localasn (g_test_conf.local_asn);
     bgp_global_spec.set_vrfid (PDSA_BGP_RM_ENT_INDEX);
-    bgp_global_spec.set_routerid (g_node_a_ip);
+    bgp_global_spec.set_routerid (g_test_conf.local_ip_addr);
     pdsa_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDSA_CTM_CORRELATOR);
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
-    bgp_peer_spec.set_localasn (1);
-    bgp_peer_spec.set_remoteasn (1);
+    bgp_peer_spec.set_localasn (g_test_conf.local_asn);
+    bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
-    peeraddr->set_v4addr(htonl(g_node_b_ip));
+    peeraddr->set_v4addr(htonl(g_test_conf.remote_ip_addr));
     bgp_peer_spec.set_vrfid(1);
     bgp_peer_spec.set_adminen(pds::BGP_ADMIN_UP);
     bgp_peer_spec.set_peerport(0);
     auto localaddr = bgp_peer_spec.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
-    localaddr->set_v4addr(htonl(g_node_a_ip));
+    localaddr->set_v4addr(htonl(g_test_conf.local_ip_addr));
     bgp_peer_spec.set_localport(0);
     bgp_peer_spec.set_ifid(0);
     bgp_peer_spec.set_connectretry(10);
@@ -121,7 +111,7 @@ pdsa_sim_test_bgp_update ()
 }
 
 static NBB_VOID
-pdsa_sim_test_config (pdsa_config_t& conf)
+pdsa_sim_test_config ()
 {
     cout << "Config thread is waiting for Nbase....\n";
     while (!g_routing_thread->ready()) {
@@ -132,8 +122,8 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     // Create L3 interface
     pds_if_spec_t l3_if_spec = {0};
     l3_if_spec.l3_if_info.ip_prefix.len = 24;
-    l3_if_spec.key.id = g_evpn_if_index;
-    pdsa_convert_long_to_pdsa_ipv4_addr (g_node_a_ip, 
+    l3_if_spec.key.id = g_test_conf.eth_if_index;
+    pdsa_convert_long_to_pdsa_ipv4_addr (g_test_conf.local_ip_addr, 
                                          &l3_if_spec.l3_if_info.ip_prefix.addr);
     pds_ms::interface_create (&l3_if_spec, 0);
     cout << "Config thread: L3 Interface Config is done!\n";
@@ -147,8 +137,8 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     subnet_spec.key.id = 1;
     subnet_spec.vpc.id = 1;
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    subnet_spec.fabric_encap.val.vnid = 100;
-    subnet_spec.host_ifindex = 7;
+    subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
+    subnet_spec.host_ifindex = g_test_conf.lif_if_index;
     pds_ms::subnet_create (&subnet_spec, 0);
     cout << "Config thread: Subnet Proto is done!\n";
 
@@ -156,7 +146,7 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     pds_vpc_spec_t vpc_spec = {0};
     vpc_spec.key.id = 1;
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    vpc_spec.fabric_encap.val.vnid = 100;
+    vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
     pds_ms::vpc_create (&vpc_spec, 0);
     cout << "Config thread: VPC Proto is done!\n";
 
@@ -165,73 +155,7 @@ pdsa_sim_test_config (pdsa_config_t& conf)
     cout << "Config thread: pushed a mac-ip entry to l2fMacIpCfgTable\n";
 }
 
-static int
-parse_json_config (pdsa_config_t *conf) {
-    ptree       pt;
-    uint32_t    test_config = 0;
-    std::string file, cfg_path, value;
-
-    if (!std::getenv("CONFIG_PATH")) {
-        fprintf(stderr, "CONFIG_PATH env var is not set!\n");
-        return -1;
-    }
-    // form the full path to the config directory
-    cfg_path = std::string(std::getenv("CONFIG_PATH"));
-    if (cfg_path.empty()) {
-        cfg_path = std::string("./");
-    } else {
-        cfg_path += "/";
-    }
-
-    // make sure the cfg file exists
-    file = cfg_path + "/" + std::string("evpn.json");
-    if (access(file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
-                file.c_str());
-        return -1;
-    }
-    std::ifstream json_cfg (file.c_str());
-    if (!json_cfg)
-    {
-        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
-                file.c_str());
-        return -1;
-    }
-
-    // read config
-    read_json (json_cfg, pt);
-    try
-    {
-        // if there is test-config string, read it
-        test_config = pt.get <uint32_t>("test-config", 0);
-    }
-    catch (std::exception const&  ex)
-    {
-        // Otherwise, test config is not required
-        fprintf(stderr, "Config file %s doesn't have test-config enabled!\n",
-                file.c_str());
-    }
-
-    if (!test_config)
-    {
-        return -1;
-    }
-
-    value           = pt.get <std::string>("local.ip","");
-    g_node_a_ip     = inet_network (value.c_str());
-    value           = pt.get <std::string>("local.ac-ip","");
-    g_node_a_ac_ip  = inet_network (value.c_str());
-    value           = pt.get <std::string>("remote.ip","");
-    g_node_b_ip     = inet_network (value.c_str());
-    value           = pt.get <std::string>("remote.ac-ip","");
-    g_node_b_ac_ip  = inet_network (value.c_str());
-    value           = pt.get <std::string>("if-index","");
-    g_evpn_if_index = strtol (value.c_str(),NULL, 0);
-
-    return 0;
-}
-
-} // End of pdsa_stub namespace
+} // End of pds_ms_test  namespace
 
 static void
 svc_reg (void)
@@ -257,14 +181,11 @@ svc_reg (void)
 int
 main (int argc, char **argv)
 {
-    // Local variables
-    pdsa_stub::pdsa_config_t   conf = {0};
-
     // Call the mock pds init
     pds_init(nullptr);
 
     // parse json config file
-    if (parse_json_config(&conf) < 0) {
+    if (parse_json_config(&g_test_conf, 1) < 0) {
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
@@ -280,6 +201,6 @@ main (int argc, char **argv)
                             "Routing thread create failure");
     g_routing_thread->start(g_routing_thread);
     // Push the test config, this will wait for nbase init to complete
-    pdsa_stub::pdsa_sim_test_config(conf);
+    pds_ms_test::pdsa_sim_test_config();
     svc_reg();
 }
