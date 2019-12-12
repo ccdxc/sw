@@ -2,16 +2,19 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libstorage_tests.so
 MODULE_PIPELINE = iris
+MODULE_ARCH     = x86_64
 MODULE_FLAGS    = --std=c++14
 MODULE_SRCS     = ${MODULE_SRC_DIR}/tests.cc \
                   ${MODULE_SRC_DIR}/nvme_dp.cc \
                   ${MODULE_SRC_DIR}/nvme_dp_tests.cc \
-                  ${MODULE_SRC_DIR}/queues.cc \
                   ${MODULE_SRC_DIR}/dp_mem.cc \
                   ${MODULE_SRC_DIR}/logger.cc \
                   ${MODULE_SRC_DIR}/xts.cc \
                   ${MODULE_SRC_DIR}/xts_tests.cc \
                   ${MODULE_SRC_DIR}/e2e_perf_tests.cc
+ifeq ($(ARCH), x86_64)
+MODULE_SRCS     += ${MODULE_SRC_DIR}/queues.cc
+endif
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \

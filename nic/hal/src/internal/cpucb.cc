@@ -39,6 +39,7 @@ cpucb_handle_key_size ()
     return sizeof(hal_handle_t);
 }
 
+#ifdef __x86_64__
 //------------------------------------------------------------------------------
 // validate an incoming CPUCB create request
 // TODO:
@@ -60,6 +61,7 @@ validate_cpucb_create (CpuCbSpec& spec, CpuCbResponse *rsp)
     }
     return HAL_RET_OK;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // insert this CPU CB in all meta data structures
@@ -79,6 +81,8 @@ cpucb_set_default_params(cpucb_t& cpucb)
         cpucb.cfg_flags |= CPUCB_FLAG_ADD_QS_PKT_TRLR;
     }
 }
+
+#ifdef __x86_64__
 static inline void
 cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
 {
@@ -86,6 +90,7 @@ cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
     cpucb.debug_dol = spec.debug_dol();
     cpucb_set_default_params(cpucb);
 }
+#endif
 
 hal_ret_t
 cpucb_get_by_id(cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id)
@@ -94,7 +99,7 @@ cpucb_get_by_id(cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id)
 
     pd::pd_cpucb_get_args_t pd_cpucb_args;
     pd::pd_func_args_t      pd_func_args = {0};
-    
+
     cpucb_init(&cpucb);
     cpucb.cb_id = cpucb_id;
     pd::pd_cpucb_get_args_init(&pd_cpucb_args);
@@ -108,6 +113,8 @@ cpucb_get_by_id(cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id)
     }
     return HAL_RET_OK;
 }
+
+#ifdef __x86_64__
 //------------------------------------------------------------------------------
 // process a CPU CB create request
 // TODO: if CPU CB exists, treat this as modify (vrf id in the meta must
@@ -159,7 +166,54 @@ cleanup:
     cpucb_free(cpucb);
     return ret;
 }
+#endif
 
+//------------------------------------------------------------------------------
+// create a CPU CB with cpucb_id
+// TODO: if CPU CB exists, treat this as modify (vrf id in the meta must
+// match though)
+//------------------------------------------------------------------------------
+hal_ret_t
+cpucb_create (uint8_t cpucb_id)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    cpucb_t                     *cpucb;
+    pd::pd_cpucb_create_args_t  pd_cpucb_args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    cpucb = cpucb_alloc_init();
+    if (cpucb == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    cpucb->cb_id = cpucb_id;
+    cpucb->debug_dol = 0;
+    cpucb_set_default_params(*cpucb);
+    cpucb->hal_handle = hal_alloc_handle();
+
+    // allocate all PD resources and finish programming
+    pd::pd_cpucb_create_args_init(&pd_cpucb_args);
+    pd_cpucb_args.cpucb = cpucb;
+    pd_func_args.pd_cpucb_create = &pd_cpucb_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_CREATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD CPU CB create failure, err : {}", ret);
+        goto cleanup;
+    }
+
+    // add this L2 segment to our db
+    ret = add_cpucb_to_db(cpucb);
+    SDK_ASSERT(ret == HAL_RET_OK);
+
+    return HAL_RET_OK;
+
+cleanup:
+
+    cpucb_free(cpucb);
+    return ret;
+}
+
+#ifdef __x86_64__
 //------------------------------------------------------------------------------
 // process a CPU CB update request
 //------------------------------------------------------------------------------
@@ -221,7 +275,7 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
         HAL_TRACE_DEBUG("cpucb id: {} not found in pd", cpucb->cb_id);
         return HAL_RET_CPU_CB_NOT_FOUND;
     }
-    
+
     // fill config spec of this CPU CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_cpucb_id(rcpucb.cb_id);
 
@@ -291,6 +345,6 @@ cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
     }
     return ret;
 }
-
+#endif
 
 }    // namespace hal

@@ -3,7 +3,6 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
@@ -12,7 +11,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/internal/cpucb.hpp"
 
 namespace hal {
 
@@ -20,11 +18,8 @@ hal_ret_t
 service_create_cpucb(uint8_t cpucb_id)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    cpucb::CpuCbSpec        spec;
-    cpucb::CpuCbResponse    rsp;
 
-    spec.mutable_key_or_handle()->set_cpucb_id(cpucb_id);
-    ret = cpucb_create(spec, &rsp);
+    ret = cpucb_create(cpucb_id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create cpucb: {}", ret);
     }
@@ -47,6 +42,7 @@ service_create_cpucb(void)
     return ret;
 
 }
+
 hal_ret_t
 program_cpu_lif(void)
 {

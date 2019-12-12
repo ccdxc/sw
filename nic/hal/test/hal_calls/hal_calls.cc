@@ -3,14 +3,12 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
-#include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/l2segment.pb.h"
 #include "gen/proto/vrf.pb.h"
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/endpoint.pb.h"
 #include "gen/proto/session.pb.h"
-#include "gen/proto/l4lb.pb.h"
 #include "gen/proto/nw.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
@@ -42,8 +40,6 @@ using session::SessionSpec;
 using session::SessionResponse;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
-using l4lb::L4LbServiceSpec;
-using l4lb::L4LbServiceResponse;
 using multicast::MulticastEntrySpec;
 using multicast::MulticastEntryResponse;
 using multicast::MulticastEntryDeleteRequest;
@@ -51,7 +47,7 @@ using multicast::MulticastEntryDeleteResponse;
 
 
 hal_ret_t
-create_uplink(uint32_t if_id, uint32_t port, 
+create_uplink(uint32_t if_id, uint32_t port,
               uint32_t native_l2seg, bool is_oob)
 {
     hal_ret_t            ret;
@@ -72,7 +68,7 @@ create_uplink(uint32_t if_id, uint32_t port,
 }
 
 hal_ret_t
-update_uplink(uint32_t if_id, uint32_t port, 
+update_uplink(uint32_t if_id, uint32_t port,
               uint32_t native_l2seg, bool is_oob)
 {
     hal_ret_t            ret;
@@ -110,9 +106,9 @@ create_vrf(uint32_t vrf_id, types::VrfType type, uint32_t des_if_id)
 
 hal_ret_t
 update_l2seg(uint32_t vrf_id, uint32_t l2seg_id, uint32_t encap,
-             uint32_t up_ifid[], uint32_t ifid_count, 
+             uint32_t up_ifid[], uint32_t ifid_count,
              l2segment::MulticastFwdPolicy mcast_pol,
-             l2segment::BroadcastFwdPolicy bcast_pol, 
+             l2segment::BroadcastFwdPolicy bcast_pol,
              bool is_swm,
              bool create)
 {
@@ -157,8 +153,8 @@ delete_l2seg (uint32_t vrf_id, uint32_t l2seg_id)
 
 hal_ret_t
 create_lif(uint32_t lif_id, uint32_t if_id, types::LifType type, string name,
-           bool is_oob, bool is_int, bool recv_bc, 
-           bool recv_allmc, bool recv_prom, bool vlan_strip, 
+           bool is_oob, bool is_int, bool recv_bc,
+           bool recv_allmc, bool recv_prom, bool vlan_strip,
            bool vlan_ins)
 {
     hal_ret_t ret;

@@ -14,12 +14,14 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
-#include "nic/hal/plugins/cfg/rdma/rdma.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme.hpp"
+#include "nic/hal/plugins/cfg/rdma/rdma.hpp"
+#ifdef __x86_64__
+#include "nic/hal/src/internal/cpucb.hpp"
+#endif
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "nic/hal/src/internal/cpucb.hpp"
 
 using hal::pd::pd_if_create_args_t;
 using hal::pd::pd_if_lif_update_args_t;
@@ -67,7 +69,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
     rsp->mutable_status()->set_lif_status(lif->admin_status);
- 
+
     // Return LifQstate addresses
     intf::LifQState *entry;
     for (int i = 0; i < intf::LifQPurpose_MAX; i++) {
@@ -79,10 +81,12 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     }
 
     if (lif->lif_id == HAL_LIF_CPU) {
+#ifdef __x86_64__
         ret = cpucb_get_stats(lif->lif_id, rsp);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("cpucb pd stats get failed");
         }
+#endif
     } else {
 
         // Getting PD information
@@ -98,7 +102,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     proto_msg_dump(*rsp);
-}    
+}
 
 //-----------------------------------------------------------------------------
 // API to send LIF updates to Agent
@@ -751,7 +755,6 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-
 end:
     return ret;
 }
@@ -962,7 +965,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
     lif->is_management       = spec.is_management();
-    lif->rdma_sniff_en       = spec.rdma_sniff_en();
     lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle :
                                HAL_HANDLE_INVALID;
     lif->oob_uplink          = oob_uplink_if ? oob_uplink_if->hal_handle :
@@ -981,6 +983,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
            sizeof(lif->rss.indir));
 
     //lif->allmulti = spec.allmulti();
+    lif->rdma_sniff_en       = spec.rdma_sniff_en();
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
@@ -1107,6 +1110,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         entry->set_addr(lif_manager()->get_lif_qstate_addr(hw_lif_id, ent.type_num(), 0));
     }
 
+#ifdef __x86_64__
     // Return LIF RDMA data for RDMA enabled lifs
     if (lif->enable_rdma) {
         rsp->set_rdma_data_valid(true);
@@ -1116,10 +1120,11 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_at_base_addr(rdma_lif_at_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_barmap_base_addr(rdma_lif_barmap_base_addr(hw_lif_id));
     }
+#endif
 
     // Add to map of lif name and PI ID
     g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);
-   
+
     // Send updates to Agent
     hal_stream_lif_updates(lif);
     return ret;
@@ -1215,9 +1220,11 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->vlan_strip_en_changed) {
         lif_clone->vlan_strip_en = spec->vlan_strip_en();
     }
+#ifdef __x86_64__
     if (app_ctxt->rdma_sniff_en_changed) {
         lif_clone->rdma_sniff_en = spec->rdma_sniff_en();
     }
+#endif
     if (app_ctxt->vlan_insert_en_changed) {
         lif_clone->vlan_insert_en = app_ctxt->vlan_insert_en;
     }
@@ -1273,8 +1280,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.tx_policer_changed    = app_ctxt->tx_policer_changed;
     args.pkt_filter_prom_changed = app_ctxt->pkt_filter_prom_changed;
     args.receive_promiscous    = app_ctxt->receive_promiscous;
+#ifdef __x86_64__
     args.rdma_sniff_en_changed = app_ctxt->rdma_sniff_en_changed;
     args.rdma_sniff_en         = app_ctxt->rdma_sniff_en;
+#endif
 
     hw_lif_id = lif_hw_lif_id_get(lif);
 
@@ -1406,7 +1415,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     // TBD trigger a LIF GET here
     if (app_ctxt->status_changed) {
-        lif_clone->admin_status = lif->admin_status; 
+        lif_clone->admin_status = lif->admin_status;
     }
 
     // Free PD
@@ -1603,6 +1612,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->status_changed = true;
     }
 
+#ifdef __x86_64__
     if (lif->rdma_sniff_en != spec->rdma_sniff_en()) {
         HAL_TRACE_DEBUG("lif rdma_sniff_en change: {} => {}",
                         lif->rdma_sniff_en,
@@ -1610,6 +1620,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->rdma_sniff_en_changed = true;
         app_ctxt->rdma_sniff_en = spec->rdma_sniff_en();
     }
+#endif
 
     return ret;
 }

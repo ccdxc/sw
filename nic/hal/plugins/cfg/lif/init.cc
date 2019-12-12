@@ -6,6 +6,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "platform/capri/capri_common.hpp"
+#include "nic/hal/src/internal/cpulif.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 
 using grpc::Server;

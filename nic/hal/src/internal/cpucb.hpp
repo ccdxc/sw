@@ -9,17 +9,20 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
-#include "gen/proto/cpucb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#ifdef __x86_64__
+#include "gen/proto/cpucb.pb.h"
+#endif
 
 #define MAX_CPU_CBID 8
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
+#ifdef __x86_64__
 using cpucb::CpuCbSpec;
 using cpucb::CpuCbStatus;
 using cpucb::CpuCbResponse;
@@ -32,6 +35,8 @@ using cpucb::CpuCbGetRequest;
 using cpucb::CpuCbGetRequestMsg;
 using cpucb::CpuCbGetResponse;
 using cpucb::CpuCbGetResponseMsg;
+#endif
+
 namespace hal {
 
 typedef struct cpucb_s {
@@ -121,6 +126,8 @@ extern void *cpucb_get_handle_key_func(void *entry);
 extern uint32_t cpucb_handle_key_size(void);
 
 hal_ret_t cpucb_get_by_id (cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id = HAL_LIF_CPU);
+
+#ifdef __x86_64__
 hal_ret_t
 cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp);
 
@@ -135,9 +142,7 @@ hal_ret_t cpucb_delete(cpucb::CpuCbDeleteRequest& req,
 
 hal_ret_t cpucb_get(cpucb::CpuCbGetRequest& req,
                     cpucb::CpuCbGetResponseMsg *rsp);
-
-hal_ret_t program_cpu_lif(void);
-
+#endif
 
 }    // namespace hal
 

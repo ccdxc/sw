@@ -7,12 +7,16 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/common/defines.h"
 #include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
+#ifdef __x86_64__
 #include "gen/hal/svc/rdma_svc_gen.hpp"
+#endif
 
+#ifdef __x86_64__
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+#endif
 
 namespace hal {
 
@@ -24,6 +28,7 @@ rdma_manager()
     return g_rdma_manager;
 }
 
+#ifdef __x86_64__
 RdmaServiceImpl    g_rdma_svc;
 
 void
@@ -42,6 +47,7 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
     HAL_TRACE_DEBUG("gRPC rdma services registered ...");
     return;
 }
+#endif
 
 enum ionic_v1_stat_bits {
     IONIC_V1_STAT_TYPE_SHIFT    = 28,
@@ -143,8 +149,9 @@ rdma_stats_hdrs_init()
 extern "C" hal_ret_t
 rdma_init (hal::hal_cfg_t *hal_cfg)
 {
+#ifdef __x86_64__
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
-
+#endif
     HAL_TRACE_DEBUG("{}: Entered\n", __FUNCTION__);
     g_rdma_manager = new RDMAManager();
     rdma_stats_hdrs_init();

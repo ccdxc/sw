@@ -616,6 +616,7 @@ stage0_rdma_aq_tx_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+#ifdef __x86_64__
 hal_ret_t
 rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 {
@@ -751,6 +752,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 
     return (HAL_RET_OK);
 }
+#endif
 
 /*
  * TODO: Need to remove this hardcoded values. They will go away
@@ -769,6 +771,7 @@ intr_assert_addr(const int intr)
     return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
 }
 
+#ifdef __x86_64__
 hal_ret_t
 rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 {
@@ -888,5 +891,6 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
 
     return (HAL_RET_OK);
 }
+#endif
 
 }    // namespace hal

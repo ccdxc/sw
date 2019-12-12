@@ -39,11 +39,11 @@ export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
 export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \
                                 plugin_ep_learn \
-                                plugin_lb \
                                 plugin_telemetry \
                                 plugin_app_redir
 ifeq ($(ARCH),x86_64)
 export NIC_HAL_DLOPEN_SOLIBS := ${NIC_HAL_DLOPEN_SOLIBS} \
+                                plugin_lb \
                                 plugin_nat
 endif
 
@@ -57,7 +57,6 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_ipsec \
                                     cfg_plugin_mcast \
                                     cfg_plugin_telemetry \
-                                    cfg_plugin_l4lb \
                                     cfg_plugin_lif \
                                     cfg_plugin_accel \
                                     cfg_plugin_sfw \
@@ -65,7 +64,8 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
 
 ifeq ($(ARCH),x86_64)
 export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
-								    cfg_plugin_nat
+                                    cfg_plugin_l4lb                           \
+                                    cfg_plugin_nat
 endif
 
 ifeq ($(PIPELINE), gft)

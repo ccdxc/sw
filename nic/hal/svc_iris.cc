@@ -15,7 +15,6 @@
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
-#include "gen/hal/svc/rdma_svc_gen.hpp"
 #include "gen/hal/svc/nvme_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
@@ -26,10 +25,11 @@
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
+#ifdef __x86_64__
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
+#endif
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
-#include "gen/hal/svc/l4lb_svc_gen.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -56,13 +56,14 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     TelemetryServiceImpl     telemetry_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecServiceImpl         ipsec_svc;
+#ifdef __x86_64__
     CpuCbServiceImpl         cpucb_svc;
+#endif
     TcpProxyServiceImpl      tcp_proxy_svc;
     EventServiceImpl         event_svc;
     MulticastServiceImpl     multicast_svc;
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
-    L4LbServiceImpl          l4lb_svc;
     //DosServiceImpl           dos_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
@@ -73,7 +74,9 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     server_builder->RegisterService(&nic_svc);
     server_builder->RegisterService(&proxy_svc);
     //server_builder->RegisterService(&ipsec_svc);
+#ifdef __x86_64__
     server_builder->RegisterService(&cpucb_svc);
+#endif
     server_builder->RegisterService(&tcp_proxy_svc);
     server_builder->RegisterService(&event_svc);
     server_builder->RegisterService(&system_svc);

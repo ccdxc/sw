@@ -24,22 +24,24 @@
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
-#include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
-#include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
-#include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
-#include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
-#include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
+#ifdef __x86_64__
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
+#endif
+#include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/ipseccb.hpp"
-#include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
@@ -296,12 +298,14 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+#ifdef __x86_64__
     // initialize l4lb related data structures
     slab = register_slab(HAL_SLAB_L4LB,
                          slab_args={.name="l4lb",
                         .size=sizeof(hal::l4lb_service_entry_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
+#endif
 
     // initialize Qos-class related data structures
     slab = register_slab(HAL_SLAB_QOS_CLASS,
@@ -573,7 +577,6 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                         .size=sizeof(hal::nvme_cq_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
-
 
     // initialize WRing related data structures
     slab = register_slab(HAL_SLAB_WRING,
@@ -1008,6 +1011,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     SDK_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
 
+#ifdef __x86_64__
     // initialize l4lb related data structures
     HAL_HT_CREATE("L4 LB", l4lb_ht_,
                   HAL_MAX_L4LB_SERVICES >> 1,
@@ -1015,6 +1019,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::l4lb_key_size(),
                   true, mmgr);
     SDK_ASSERT_RETURN((l4lb_ht_ != NULL), false);
+#endif
 
     // initialize Qos-class related data structures
     HAL_HT_CREATE("QoS-Class", qos_class_ht_,
@@ -1185,7 +1190,6 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::nvme_cq_key_size());
     SDK_ASSERT_RETURN((nvme_cq_id_ht_ != NULL), false);
 
-
     telemetry_collectors_bmp_ = bitmap::factory(HAL_MAX_TELEMETRY_COLLECTORS, true);
     SDK_ASSERT_RETURN((telemetry_collectors_bmp_ != NULL), false);
 
@@ -1339,7 +1343,9 @@ hal_oper_db::hal_oper_db()
     session_hal_handle_ht_= NULL;
     session_hal_iflow_ht_ = NULL;
     session_hal_rflow_ht_ = NULL;
+#ifdef __x86_64__
     l4lb_ht_ = NULL;
+#endif
     nwsec_policy_ht_ = NULL;
 #ifdef SIM
     nat_policy_ht_ = NULL;
@@ -1411,7 +1417,6 @@ hal_oper_db::~hal_oper_db()
     session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
     session_hal_iflow_ht_ ? ht::destroy(session_hal_iflow_ht_) : HAL_NOP;
     session_hal_rflow_ht_ ? ht::destroy(session_hal_rflow_ht_) : HAL_NOP;
-    l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
     crypto_cert_store_id_ht_ ? ht::destroy(crypto_cert_store_id_ht_) : HAL_NOP;
     tlscb_id_ht_ ? ht::destroy(tlscb_id_ht_) : HAL_NOP;
     tcpcb_id_ht_ ? ht::destroy(tcpcb_id_ht_) : HAL_NOP;
@@ -1427,6 +1432,9 @@ hal_oper_db::~hal_oper_db()
     ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
     ipsec_sa_id_ht_ ? ht::destroy(ipsec_sa_id_ht_) : HAL_NOP;
     ipsec_sa_hal_hdl_ht_ ? ht::destroy(ipsec_sa_hal_hdl_ht_) : HAL_NOP;
+#ifdef __x86_64__
+    l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
+#endif
     cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
     rawrcb_id_ht_ ? ht::destroy(rawrcb_id_ht_) : HAL_NOP;
     rawccb_id_ht_ ? ht::destroy(rawccb_id_ht_) : HAL_NOP;

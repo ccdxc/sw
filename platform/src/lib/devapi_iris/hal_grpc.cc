@@ -82,7 +82,9 @@ hal_grpc::connect_hal(void)
     endpoint_stub_ = endpoint::Endpoint::NewStub(channel);
     l2segment_stub_ = l2segment::L2Segment::NewStub(channel);
     multicast_stub_ = multicast::Multicast::NewStub(channel);
+#ifdef __x86_64__
     rdma_stub_ = rdma::Rdma::NewStub(channel);
+#endif
     qos_stub_ = qos::QOS::NewStub(channel);
     port_stub_ = port::Port::NewStub(channel);
     crypto_stub_ = internal::Internal::NewStub(channel);

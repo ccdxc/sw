@@ -13,9 +13,11 @@
 #include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/qstate_if.hpp"
 #include "dol/iris/test/storage/nvme.hpp"
-#include "dol/iris/test/storage/queues.hpp"
 #include "dol/iris/test/storage/r2n.hpp"
+#ifdef __x86_64__
 #include "dol/iris/test/storage/rdma.hpp"
+#include "dol/iris/test/storage/queues.hpp"
+#endif
 #include "dol/iris/test/storage/xts.hpp"
 #include "dol/iris/test/storage/tests.hpp"
 #include "pal_compat.hpp"
@@ -224,8 +226,8 @@ test_generic_eos_ignore(void)
     }
 }
 
-void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
-                        uint8_t ring, uint16_t index, 
+void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
+                        uint8_t ring, uint16_t index,
                         bool suppress_log) {
   uint64_t db_data;
   uint64_t db_addr;
@@ -238,7 +240,7 @@ void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   WRITE_DB64(db_addr, db_data);
 }
 
-void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
                              uint8_t ring, uint16_t index) {
   uint64_t db_data;
   uint64_t db_addr;
@@ -298,7 +300,7 @@ int send_nvme_and_check(dp_mem_t *send_cmd, dp_mem_t *recv_cmd, uint32_t size,
 }
 
 int send_and_check_ignore_cid(dp_mem_t *send_cmd, dp_mem_t *recv_cmd,
-                              uint32_t size, uint16_t lif, uint8_t qtype, 
+                              uint32_t size, uint16_t lif, uint8_t qtype,
                               uint32_t qid, uint8_t ring, uint16_t index) {
   int rc;
 
@@ -341,8 +343,8 @@ int check_ignore_cid(dp_mem_t *send_cmd, dp_mem_t *recv_cmd, uint32_t size) {
   return rc;
 }
 
-int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q, 
-                                dp_mem_t **nvme_cmd, dp_mem_t **pvm_cmd, 
+int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q,
+                                dp_mem_t **nvme_cmd, dp_mem_t **pvm_cmd,
                                 uint16_t *nvme_index, uint16_t *pvm_index) {
 
   if (!nvme_cmd || !pvm_cmd || !nvme_index || !pvm_index) {
@@ -361,8 +363,8 @@ int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q,
   return 0;
 }
 
-int consume_nvme_pvm_cq_entries(uint16_t nvme_q, uint16_t pvm_q, 
-                                dp_mem_t **nvme_status, dp_mem_t **pvm_status, 
+int consume_nvme_pvm_cq_entries(uint16_t nvme_q, uint16_t pvm_q,
+                                dp_mem_t **nvme_status, dp_mem_t **pvm_status,
                                 uint16_t *nvme_index, uint16_t *pvm_index) {
 
   if (!nvme_status || !pvm_status || !nvme_index || !pvm_index) {
@@ -413,7 +415,7 @@ int consume_r2n_entry(uint16_t r2n_q, uint16_t ssd_handle, uint8_t io_priority,
 }
 
 int form_r2n_seq_wqe(uint16_t ssd_handle, uint8_t io_priority, uint8_t is_read,
-                     uint16_t r2n_q, dp_mem_t **r2n_buf,  dp_mem_t **r2n_wqe_buf, 
+                     uint16_t r2n_q, dp_mem_t **r2n_buf,  dp_mem_t **r2n_wqe_buf,
                      dp_mem_t **nvme_cmd) {
 
   if (!r2n_wqe_buf || !nvme_cmd) {
@@ -478,9 +480,9 @@ uint64_t get_next_slba() {
 
 void reset_seq_db_data() {
   seq_db_data->clear_thru();
-} 
+}
 
-int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
+int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                            uint64_t slba, uint16_t nlb)
 {
   read_buf->clear_thru();
@@ -489,8 +491,8 @@ int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // TODO: PRP list based on size
   read_cmd->prp.prp1 = read_buf->pa();
-  read_cmd->dw0.cid = cid; 
-  read_cmd->nsid = kDefaultNsid; 
+  read_cmd->dw0.cid = cid;
+  read_cmd->nsid = kDefaultNsid;
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = nlb;
   nvme_cmd->write_thru();
@@ -498,7 +500,7 @@ int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   return 0;
 }
 
-int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
+int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                             uint64_t slba, uint16_t nlb)
 {
   uint8_t byte_val = get_next_byte();
@@ -508,8 +510,8 @@ int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // TODO: PRP list based on size
   write_cmd->prp.prp1 = write_buf->pa();
-  write_cmd->dw0.cid = cid; 
-  write_cmd->nsid = kDefaultNsid; 
+  write_cmd->dw0.cid = cid;
+  write_cmd->nsid = kDefaultNsid;
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
   nvme_cmd->write_thru();
@@ -517,7 +519,7 @@ int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   return 0;
 }
 
-int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
+int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                                uint64_t slba, uint16_t nlb)
 {
   // Init the read buf as this will be the final destination despite staging
@@ -528,8 +530,8 @@ int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
   read_cmd->prp.prp1 = read_hbm_buf->pa();
-  read_cmd->dw0.cid = cid; 
-  read_cmd->nsid = kDefaultNsid; 
+  read_cmd->dw0.cid = cid;
+  read_cmd->nsid = kDefaultNsid;
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = nlb;
   nvme_cmd->write_thru();
@@ -537,7 +539,7 @@ int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   return 0;
 }
 
-int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
+int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                                 uint64_t slba, uint16_t nlb)
 {
   // Init the write buf as this will be the source despite staging
@@ -549,8 +551,8 @@ int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
   write_cmd->prp.prp1 = write_hbm_buf->pa();
-  write_cmd->dw0.cid = cid; 
-  write_cmd->nsid = kDefaultNsid; 
+  write_cmd->dw0.cid = cid;
+  write_cmd->nsid = kDefaultNsid;
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
   nvme_cmd->write_thru();
@@ -563,8 +565,8 @@ int form_read_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba)
   nvme_cmd->clear();
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd->read();
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
-  read_cmd->dw0.cid = get_next_cid(); 
-  read_cmd->nsid = kDefaultNsid; 
+  read_cmd->dw0.cid = get_next_cid();
+  read_cmd->nsid = kDefaultNsid;
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = kDefaultNlb;
   nvme_cmd->write_thru();
@@ -577,8 +579,8 @@ int form_write_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba)
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
-  write_cmd->dw0.cid = get_next_cid(); 
-  write_cmd->nsid = kDefaultNsid; 
+  write_cmd->dw0.cid = get_next_cid();
+  write_cmd->nsid = kDefaultNsid;
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = kDefaultNlb;
   nvme_cmd->write_thru();
@@ -615,7 +617,7 @@ int test_run_nvme_pvm_admin_cmd() {
   uint16_t nvme_q = queues::get_host_nvme_sq(0);
   uint16_t pvm_q = queues::get_pvm_nvme_sq(0);
 
-  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd, 
+  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
@@ -631,7 +633,7 @@ int test_run_nvme_pvm_admin_cmd() {
   printf("pvm_cmd %p \n", pvm_cmd->read());
 
   // Send the NVME admin command and check on PVM side
-  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd),
                            queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -648,19 +650,19 @@ int test_run_nvme_pvm_read_cmd() {
   uint16_t nvme_q = queues::get_host_nvme_sq(1);
   uint16_t pvm_q = queues::get_pvm_nvme_sq(1);
 
-  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd, 
+  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
 
   // Form the read command
-  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                              get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME admin command and check on PVM side
-  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd),
                            queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -677,20 +679,20 @@ int test_run_nvme_pvm_write_cmd() {
   uint16_t nvme_q = queues::get_host_nvme_sq(1);
   uint16_t pvm_q = queues::get_pvm_nvme_sq(1);
 
-  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd, 
+  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
 
   // Form the write command
-  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                               get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
 
   // Send the NVME admin command and check on PVM side
-  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd),
                            queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -707,19 +709,19 @@ int test_run_nvme_pvm_hashing1() {
   uint16_t nvme_q = queues::get_host_nvme_sq(2);
   uint16_t pvm_q = queues::get_pvm_nvme_sq(0);
 
-  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd, 
+  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
 
   // Form the write command
-  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                               get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME admin command and check on PVM side
-  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd),
                            queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -736,26 +738,26 @@ int test_run_nvme_pvm_hashing2() {
   uint16_t nvme_q = queues::get_host_nvme_sq(3);
   uint16_t pvm_q = queues::get_pvm_nvme_sq(1);
 
-  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd, 
+  if (consume_nvme_pvm_sq_entries(nvme_q, pvm_q, &nvme_cmd, &pvm_cmd,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
 
   // Form the read command
-  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                              get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME admin command and check on PVM side
-  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd),
                       queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
 }
 
-int pvm_status_trailer_update(dp_mem_t *pvm_status, uint16_t lif, 
+int pvm_status_trailer_update(dp_mem_t *pvm_status, uint16_t lif,
                               uint8_t qtype, uint32_t qid) {
   uint64_t dst_qaddr;
   dp_mem_t *pvm_trailer = pvm_status->fragment_find(offsetof(struct PvmStatus, pvm_trailer),
@@ -786,7 +788,7 @@ int test_run_pvm_nvme_admin_status() {
   uint16_t nvme_q = queues::get_host_nvme_cq(0);
   uint16_t pvm_q = queues::get_pvm_nvme_cq(0);
 
-  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status, 
+  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
@@ -794,13 +796,13 @@ int test_run_pvm_nvme_admin_status() {
   struct PvmStatus *admin_status = (struct PvmStatus *) pvm_status->read();
   admin_status->nvme_status.dw3.cid = get_next_cid();
   admin_status->nvme_status.dw3.status_phase = 0;
-  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(), 
+  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(),
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
   }
 
   // Send the PVM admin command status and check on NVME side
-  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus), 
+  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus),
                       queues::get_pvm_lif(), CQ_TYPE, pvm_q, 0, pvm_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -817,7 +819,7 @@ int test_run_pvm_nvme_read_status() {
   uint16_t nvme_q = queues::get_host_nvme_cq(1);
   uint16_t pvm_q = queues::get_pvm_nvme_cq(1);
 
-  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status, 
+  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
@@ -825,13 +827,13 @@ int test_run_pvm_nvme_read_status() {
   struct PvmStatus *read_status = (struct PvmStatus *) pvm_status->read();
   read_status->nvme_status.dw3.cid = get_next_cid();
   read_status->nvme_status.dw3.status_phase = 0;
-  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(), 
+  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(),
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
   }
 
   // Send the PVM admin command status and check on NVME side
-  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus), 
+  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus),
                       queues::get_pvm_lif(), CQ_TYPE, pvm_q, 0, pvm_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -848,7 +850,7 @@ int test_run_pvm_nvme_write_status() {
   uint16_t nvme_q = queues::get_host_nvme_cq(2);
   uint16_t pvm_q = queues::get_pvm_nvme_cq(0);
 
-  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status, 
+  if (consume_nvme_pvm_cq_entries(nvme_q, pvm_q, &nvme_status, &pvm_status,
                                   &nvme_index, &pvm_index) < 0) {
     return -1;
   }
@@ -856,13 +858,13 @@ int test_run_pvm_nvme_write_status() {
   struct PvmStatus *write_status = (struct PvmStatus *) pvm_status->read();
   write_status->nvme_status.dw3.cid = get_next_cid();
   write_status->nvme_status.dw3.status_phase = 0;
-  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(), 
+  if (pvm_status_trailer_update(pvm_status, queues::get_nvme_lif(),
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
   }
 
   // Send the PVM admin command status and check on NVME side
-  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus), 
+  rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus),
                       queues::get_pvm_lif(), CQ_TYPE, pvm_q, 0, pvm_index);
 
 
@@ -881,7 +883,7 @@ int test_run_r2n_read_cmd() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -889,14 +891,14 @@ int test_run_r2n_read_cmd() {
   }
 
   // Form the read command
-  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                              get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -913,7 +915,7 @@ int test_run_r2n_write_cmd() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -922,13 +924,13 @@ int test_run_r2n_write_cmd() {
 
 
   // Form the write command
-  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                               get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -945,7 +947,7 @@ int test_run_r2n_ssd_pri1() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -953,14 +955,14 @@ int test_run_r2n_ssd_pri1() {
   }
 
   // Form the read command
-  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                              get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -977,7 +979,7 @@ int test_run_r2n_ssd_pri2() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -985,13 +987,13 @@ int test_run_r2n_ssd_pri2() {
   }
 
   // Form the write command
-  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                               get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -1008,7 +1010,7 @@ int test_run_r2n_ssd_pri3() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -1016,14 +1018,14 @@ int test_run_r2n_ssd_pri3() {
   }
 
   // Form the read command
-  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                              get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -1040,7 +1042,7 @@ int test_run_r2n_ssd_pri4() {
   uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t ssd_q = queues::get_pvm_ssd_sq(ssd_handle);
 
-  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if ((consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, &nvme_cmd, &r2n_index) < 0) ||
       (consume_ssd_entry(ssd_q, &ssd_cmd, &ssd_index) < 0)) {
     printf("can't init and consume r2n/ssd entries \n");
@@ -1048,20 +1050,20 @@ int test_run_r2n_ssd_pri4() {
   }
 
   // Form the write command
-  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(), 
+  if (form_write_cmd_with_buf(nvme_cmd, kDefaultBufSize, get_next_cid(),
                               get_next_slba(), kDefaultNlb) < 0) {
     return -1;
   }
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd),
                                  queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
 }
 
-int send_r2n_pri_cmd(uint16_t ssd_handle, uint8_t io_priority, 
+int send_r2n_pri_cmd(uint16_t ssd_handle, uint8_t io_priority,
                      uint8_t is_read, dp_mem_t **nvme_cmd) {
   dp_mem_t *r2n_buf;
   dp_mem_t *r2n_wqe_buf;
@@ -1070,7 +1072,7 @@ int send_r2n_pri_cmd(uint16_t ssd_handle, uint8_t io_priority,
 
   if (!nvme_cmd) return -1;
 
-  if (consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf, 
+  if (consume_r2n_entry(r2n_q, ssd_handle, io_priority, is_read, &r2n_buf,
                          &r2n_wqe_buf, nvme_cmd, &r2n_index) < 0) {
     printf("can't init and consume r2n/ssd entries \n");
     return -1;
@@ -1078,12 +1080,12 @@ int send_r2n_pri_cmd(uint16_t ssd_handle, uint8_t io_priority,
 
   // Form the write command
   if (is_read) {
-    if (form_read_cmd_with_buf(*nvme_cmd, kDefaultBufSize, get_next_cid(), 
+    if (form_read_cmd_with_buf(*nvme_cmd, kDefaultBufSize, get_next_cid(),
                                get_next_slba(), kDefaultNlb) < 0) {
       return -1;
     }
   } else {
-    if (form_write_cmd_with_buf(*nvme_cmd, kDefaultBufSize, get_next_cid(), 
+    if (form_write_cmd_with_buf(*nvme_cmd, kDefaultBufSize, get_next_cid(),
                                 get_next_slba(), kDefaultNlb) < 0) {
       return -1;
     }
@@ -1104,7 +1106,7 @@ int run_nvme_be_wrr(uint16_t ssd_q, uint16_t nvme_be_q,
   dp_mem_t *nvme_cmd[3], *ssd_cmd;
 
   // Expect high priority command out with this distribution
-  if (qstate_if::update_pri_q_state(queues::get_pvm_lif(), SQ_TYPE, nvme_be_q, 
+  if (qstate_if::update_pri_q_state(queues::get_pvm_lif(), SQ_TYPE, nvme_be_q,
                                     hi_weight, med_weight, lo_weight,
                                     hi_running, med_running, lo_running,
                                     num_running, max_cmds) < 0) {
@@ -1131,7 +1133,7 @@ int run_nvme_be_wrr(uint16_t ssd_q, uint16_t nvme_be_q,
   rc = check_ignore_cid(nvme_cmd[io_priority], ssd_cmd, sizeof(struct NvmeCmd));
 
   // Clear state with this distribution to dequeue all commands
-  if (qstate_if::update_pri_q_state(queues::get_pvm_lif(), SQ_TYPE, nvme_be_q, 
+  if (qstate_if::update_pri_q_state(queues::get_pvm_lif(), SQ_TYPE, nvme_be_q,
                                     hi_weight, med_weight, lo_weight,
                                     0, 0, 0, // hi_running, med_running, lo_running
                                     0, max_cmds) < 0) { // num_running set to 0
@@ -1149,7 +1151,7 @@ int run_nvme_be_wrr(uint16_t ssd_q, uint16_t nvme_be_q,
 
   // Send the high priority command once again which will trigger dequeue of all
   // 3 queues and hence the 3 SSD queue entries consumed would be all written to
-  if (send_r2n_pri_cmd(ssd_handle, io_priority, is_read, 
+  if (send_r2n_pri_cmd(ssd_handle, io_priority, is_read,
                        &nvme_cmd[io_priority]) < 0) {
       printf("cant send pri cmd %d \n", io_priority);
       return -1;
@@ -1303,14 +1305,14 @@ int test_run_nvme_local_e2e(uint16_t io_priority) {
   if (rc < 0) {
     printf("e2e test write part failed \n");
     return rc;
-  } 
+  }
 
   // Then read back the data
   rc = test_run_nvme_e2e_io(io_priority, 1); // is_read
   if (rc < 0) {
     printf("e2e test write part failed \n");
     return rc;
-  } 
+  }
 
   rc = memcmp(read_buf->read_thru(), write_buf->read_thru(), kDefaultBufSize);
   printf("\nE2E: post memcmp %d \n", rc);
@@ -1331,14 +1333,14 @@ int test_run_nvme_local_e2e3() {
   return test_run_nvme_local_e2e(2);
 }
 
-int form_seq_r2n_wqe_cmd(uint16_t seq_r2n_q, uint16_t ssd_handle, uint8_t io_priority, 
-                         uint8_t is_read, dp_mem_t **cmd_buf, uint16_t r2n_q, 
+int form_seq_r2n_wqe_cmd(uint16_t seq_r2n_q, uint16_t ssd_handle, uint8_t io_priority,
+                         uint8_t is_read, dp_mem_t **cmd_buf, uint16_t r2n_q,
                          dp_mem_t **r2n_wqe_buf) {
   dp_mem_t *r2n_buf;
 
   if (!cmd_buf || !r2n_wqe_buf) return -1;
 
-  if (form_r2n_seq_wqe(ssd_handle, io_priority, is_read, r2n_q, &r2n_buf, r2n_wqe_buf, 
+  if (form_r2n_seq_wqe(ssd_handle, io_priority, is_read, r2n_q, &r2n_buf, r2n_wqe_buf,
                        cmd_buf) < 0) {
     printf("can't form seq r2n entries \n");
     return -1;
@@ -1346,12 +1348,12 @@ int form_seq_r2n_wqe_cmd(uint16_t seq_r2n_q, uint16_t ssd_handle, uint8_t io_pri
 
   // Form the write command
   if (is_read) {
-    if (form_read_cmd_with_hbm_buf(*cmd_buf, kDefaultBufSize, get_next_cid(), 
+    if (form_read_cmd_with_hbm_buf(*cmd_buf, kDefaultBufSize, get_next_cid(),
                                    get_next_slba(), kDefaultNlb) < 0) {
       return -1;
     }
   } else {
-    if (form_write_cmd_with_hbm_buf(*cmd_buf, kDefaultBufSize, get_next_cid(), 
+    if (form_write_cmd_with_hbm_buf(*cmd_buf, kDefaultBufSize, get_next_cid(),
                                     get_next_slba(), kDefaultNlb) < 0) {
       return -1;
     }
@@ -1360,7 +1362,7 @@ int form_seq_r2n_wqe_cmd(uint16_t seq_r2n_q, uint16_t ssd_handle, uint8_t io_pri
   return 0;
 }
 
-int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q, 
+int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
                        uint16_t ssd_handle, uint16_t io_priority) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
@@ -1404,7 +1406,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   seq_r2n_desc->clear();
 
   // Fill the PDMA descriptor
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_r2n_q, 0, 
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_r2n_q, 0,
                              seq_r2n_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -1429,9 +1431,9 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   seq_r2n_desc->write_bit_fields(134, 34, qaddr);
   seq_r2n_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
-  
+
   // Process the status
   dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
                                                     sizeof(struct NvmeStatus));
@@ -1446,11 +1448,11 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   return rc;
 }
 
-int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle, 
+int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0); 
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;
@@ -1480,7 +1482,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   }
 
   // From the NVME read command in the R2N buffer
-  if (form_read_cmd_with_hbm_buf(cmd_buf, kDefaultBufSize, get_next_cid(), 
+  if (form_read_cmd_with_hbm_buf(cmd_buf, kDefaultBufSize, get_next_cid(),
                                  get_next_slba(), kDefaultNlb) < 0) {
       return -1;
   }
@@ -1500,13 +1502,13 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->write_thru();
 
   // Update the R2N WQE with the doorbell to the PDMA descriptor
-  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_seq_lif(), SQ_TYPE, 
+  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_seq_lif(), SQ_TYPE,
                          seq_pdma_q, seq_pdma_index);
 
-  // Kickstart the R2N module with the read command (whose completion will 
-  // trigger the sequencer) 
+  // Kickstart the R2N module with the read command (whose completion will
+  // trigger the sequencer)
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
-  
+
   // Process the status
   dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
                                                     sizeof(struct NvmeStatus));
@@ -1534,12 +1536,12 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   return rc;
 }
 
-int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q, 
+int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
                      uint16_t ssd_handle, uint16_t io_priority) {
   int rc;
 
   // Send the write command and check status
-  rc = test_seq_write_r2n(seq_pdma_q, seq_r2n_q, ssd_handle, 
+  rc = test_seq_write_r2n(seq_pdma_q, seq_r2n_q, ssd_handle,
                           io_priority);
   if (rc < 0) return -1;
 
@@ -1729,7 +1731,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
                       uint16_t io_priority, XtsCtx& xts_ctx) {
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
-  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0); 
+  uint16_t r2n_q = queues::get_pvm_r2n_tgt_sq(0);
   uint16_t r2n_index;
   dp_mem_t *r2n_wqe_buf;
   dp_mem_t *r2n_buf;
@@ -1857,8 +1859,8 @@ int test_seq_e2e_xts_r2n1() {
                               2, 0);   // ssd_handle, io_priority
 }
 
-int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-                        uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
+                        uint32_t pvm_roce_sq, uint64_t pdma_src_addr,
                         uint64_t pdma_dst_addr, uint32_t pdma_data_size,
                         uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
 
@@ -1872,7 +1874,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   printf("pdma_q %u, roce_q %u, roce_sq %u, pdma_src_addr %lx, "
          "pdma_dst_addr %lx, pdma_data_size %u, "
          "roce_wqe_addr %lx, roce_wqe_size %u \n",
-         seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr, 
+         seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr,
          pdma_dst_addr, pdma_data_size, roce_wqe_addr, roce_wqe_size);
 
   // Sequencer #1: PDMA descriptor
@@ -1884,7 +1886,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   seq_roce_desc->clear();
 
   // Fill the PDMA descriptor
-  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0, 
+  queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0,
            seq_roce_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
@@ -1910,11 +1912,11 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   seq_roce_desc->write_bit_fields(168, 8, 1);
   seq_roce_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   if(rdma_ring_db) {
     test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   }
-  
+
   return 0;
 }
 
@@ -1926,7 +1928,7 @@ int test_seq_roce_op_pdma_prefilled(uint16_t seq_start_q,
 {
   uint64_t qaddr;
 
-  printf("seq_start_q %u, seq_start_index %u, pvm_roce_sq %u\n", 
+  printf("seq_start_q %u, seq_start_index %u, pvm_roce_sq %u\n",
          seq_start_q, seq_start_index, pvm_roce_sq);
 
   // Fill the Sequencer ROCE descriptor
@@ -1946,10 +1948,10 @@ int test_seq_roce_op_pdma_prefilled(uint16_t seq_start_q,
   seq_roce_desc->write_bit_fields(168, 8, 1);
   seq_roce_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_start_q,
                      0, seq_start_index);
-  
+
   return 0;
 }
 
@@ -1966,9 +1968,9 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
   reset_seq_db_data();
 
   printf("seq_pdma_q %u, seq_roce_q %u, pvm_roce_sq %u, "
-         "pdma_src_addr %lx, pdma_dst_addr %lx, " 
+         "pdma_src_addr %lx, pdma_dst_addr %lx, "
          "pdma_data_size %u, pdma_dst_lif_override %u, pdma_dst_lif %u\n",
-	     seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr, 
+	     seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr,
          pdma_dst_addr, pdma_data_size, pdma_dst_lif_override, pdma_dst_lif);
 
   // Sequencer #1: R2N descriptor
@@ -2003,11 +2005,11 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   if(rdma_ring_db) {
     test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
   }
-  
+
   return 0;
 }
 
@@ -2034,10 +2036,10 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                      seq_pdma_index, true);
-  
+
   return 0;
 }
 
@@ -2063,7 +2065,7 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  // Kickstart the sequencer 
+  // Kickstart the sequencer
   test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_pdma_q, 0,
                      seq_pdma_index, true);
 
@@ -2109,17 +2111,17 @@ int test_run_seq_pdma_multi_xfers() {
     // Set expected completion doorbell data value
     exp_db_data_value = 0xdbdbdbdb;
     exp_seq_db_data->fill_thru(0xdb);
-    
+
     for (i = 0; i < val_pdma_queues; i++) {
 
-        // Write from the same source host buffer, 
+        // Write from the same source host buffer,
         // but to different per-queue destination HBM buffers
         test_seq_pdma_write(queues::get_seq_pdma_sq(i), pdma_wr_buf,
-                            pdma_wr_hbm_buf, 
+                            pdma_wr_hbm_buf,
                             SEQ_DB_DATA_ENTRY_PA(wr_seq_db_data->pa(), i),
                             exp_db_data_value);
 
-        // Read into different per-queue destination host buffers, 
+        // Read into different per-queue destination host buffers,
         // from the different per-queue source HBM buffers above
         test_seq_pdma_read(queues::get_seq_pdma_sq(i), pdma_rd_buf,
                            pdma_wr_hbm_buf,
@@ -2214,10 +2216,10 @@ int test_run_rdma_e2e_write() {
 
   if (rc < 0)
     printf("Failure in retriving status \n");
-  else 
+  else
     printf("Successfully retrived status \n");
 
-  // Post the Initiator buffers back so that RDMA can reuse them. 
+  // Post the Initiator buffers back so that RDMA can reuse them.
   PostInitiatorRcvBuf1();
   IncrInitiatorRcvBufPtr();
 
@@ -2275,13 +2277,13 @@ int test_run_rdma_e2e_read() {
         //utils::dump(data_buf->read_thru());
         //printf("Dumping rolling NVME write data buffer\n");
         //utils::dump(rolling_write_data_buf->read_thru());
-        if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) { 
+        if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) {
           printf("Comparison of RDMA read and write buffer failed \n");
           rc = -1;
         } else {
           printf("Comparison of RDMA read and write buffer successful \n");
           rc = 0;
-        } 
+        }
       }
     } else {
       printf("Failure in retriving data \n");
@@ -2290,7 +2292,7 @@ int test_run_rdma_e2e_read() {
     printf("Failure in retriving status \n");
   }
 
-  // Post the Initiator buffers back so that RDMA can reuse them. 
+  // Post the Initiator buffers back so that RDMA can reuse them.
   PostInitiatorRcvBuf1();
   IncrInitiatorRcvBufPtr();
 
@@ -2349,13 +2351,13 @@ int test_run_rdma_lif_override() {
         //utils::dump(data_buf->read_thru());
         //printf("Dumping rolling NVME write data buffer\n");
         //utils::dump(rolling_write_data_buf->read_thru());
-        if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) { 
+        if (memcmp(data_buf->read_thru(), rolling_write_data_buf->read_thru(), kDefaultBufSize)) {
           printf("Comparison of RDMA read and write buffer failed \n");
           rc = -1;
         } else {
           printf("Comparison of RDMA read and write buffer successful \n");
           rc = 0;
-        } 
+        }
       }
     } else {
       printf("Failure in retriving data \n");
@@ -2364,7 +2366,7 @@ int test_run_rdma_lif_override() {
     printf("Failure in retriving status \n");
   }
 
-  // Post the Initiator buffers back so that RDMA can reuse them. 
+  // Post the Initiator buffers back so that RDMA can reuse them.
   PostInitiatorRcvBuf1();
   IncrInitiatorRcvBufPtr();
 
@@ -2419,7 +2421,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
 
   // encrypt data and store in r2n_hbm_buf payload area
-  dp_mem_t *r2n_pyld = r2n_hbm_buf->fragment_find(rdma_r2n_data_offset() - 
+  dp_mem_t *r2n_pyld = r2n_hbm_buf->fragment_find(rdma_r2n_data_offset() -
                                                   offsetof(r2n::r2n_buf_t, cmd_buf),
                                                   rdma_r2n_data_size());
   xts_ctx.op = xts::AES_ENCR_ONLY;
@@ -2434,9 +2436,9 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
 
   // Xfer sequence is: pdma (seq_pdma_desc) -> xts encrypt -> seq roce (seq_roce_desc) ->
   // RDMA roce initiator sq (sqwqe pointing to r2n_hbm_buf).
-  // 
+  //
   // See StartRoceWritePdmaPrefilled() and test_seq_write_roce_pdma_prefilled().
-  
+
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE, seq_roce_q, 0,
                              seq_roce_index, &xts_ctx.xts_db_addr,
                              &xts_ctx.exp_db_data);
@@ -2472,7 +2474,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
 
   if (rc < 0)
     printf("Failure in retrieving status \n");
-  else 
+  else
     printf("Successfully retrieved status \n");
 
   // Save the rolling write data buffer
@@ -2487,7 +2489,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
 #endif
 
-  // Post the Initiator buffers back so that RDMA can reuse them. 
+  // Post the Initiator buffers back so that RDMA can reuse them.
   PostInitiatorRcvBuf1();
   IncrInitiatorRcvBufPtr();
 
@@ -2523,9 +2525,9 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
 
   // Xfer sequence is: RDMA roce sq (write_wqe xfers from target_rcv_buf_va
   // to r2n_write_buf) -> xts decrypt to read_hbm_buf -> PDMA to read_buf
-  // 
+  //
   // See also StartRoceReadPdmaPrefilled()
-  
+
   // Sequencer: R2N descriptor
   seq_roce_desc = queues::seq_sq_consume_entry(seq_roce_q, &seq_roce_index);
   seq_roce_desc->clear();
@@ -2567,7 +2569,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  StartRoceReadWithNextLifQueue(seq_roce_q, seq_roce_index, seq_roce_desc, 
+  StartRoceReadWithNextLifQueue(seq_roce_q, seq_roce_index, seq_roce_desc,
                                 r2n_send_buf, r2n_write_buf,
                                 rdma_r2n_data_size(), queues::get_seq_lif(),
                                 SQ_TYPE, xts_ctx.seq_xts_q);
@@ -2604,7 +2606,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
         printf("No write data buffer for comparison \n");
       } else {
         if (memcmp(read_buf->read_thru(), rolling_write_data_buf->read_thru(),
-                   rdma_r2n_data_size())) { 
+                   rdma_r2n_data_size())) {
 #if 0
           printf("Dumping r2n_write_buf\n");
           utils::dump(r2n_write_buf->read_thru(), 128);
@@ -2618,7 +2620,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
         } else {
           printf("Comparison of RDMA read and write buffer successful \n");
           rc = 0;
-        } 
+        }
       }
     } else {
       printf("Failure in retrieving data \n");
@@ -2632,7 +2634,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
 #endif
 
-  // Post the Initiator buffers back so that RDMA can reuse them. 
+  // Post the Initiator buffers back so that RDMA can reuse them.
   PostInitiatorRcvBuf1();
   IncrInitiatorRcvBufPtr();
 

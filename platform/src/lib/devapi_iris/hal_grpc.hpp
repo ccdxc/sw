@@ -11,7 +11,9 @@
 #include "gen/proto/endpoint.grpc.pb.h"
 #include "gen/proto/l2segment.grpc.pb.h"
 #include "gen/proto/multicast.grpc.pb.h"
+#ifdef __x86_64__
 #include "gen/proto/rdma.grpc.pb.h"
+#endif
 #include "gen/proto/qos.grpc.pb.h"
 #include "gen/proto/port.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
@@ -163,7 +165,9 @@ private:
     std::unique_ptr<endpoint::Endpoint::Stub> endpoint_stub_;
     std::unique_ptr<l2segment::L2Segment::Stub> l2segment_stub_;
     std::unique_ptr<multicast::Multicast::Stub> multicast_stub_;
+#ifdef __x86_64__
     std::unique_ptr<rdma::Rdma::Stub> rdma_stub_;
+#endif
     std::unique_ptr<qos::QOS::Stub> qos_stub_;
     std::unique_ptr<port::Port::Stub> port_stub_;
     std::unique_ptr<internal::Internal::Stub> crypto_stub_;

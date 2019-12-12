@@ -9,10 +9,13 @@
 #include <memory>
 #include <map>
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#ifdef __x86_64__
 #include "gen/proto/rdma.pb.h"
+#endif
 #include "nic/include/hal.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
 
+#ifdef __x86_64__
 using rdma::RdmaServiceType;
 using rdma::RdmaAhRequestMsg;
 using rdma::RdmaAhResponseMsg;
@@ -30,6 +33,7 @@ using rdma::RdmaAqSpec;
 using rdma::RdmaAqRequestMsg;
 using rdma::RdmaAqResponseMsg;
 using rdma::RdmaAqResponse;
+#endif
 
 namespace hal {
 
@@ -41,12 +45,13 @@ extern uint64_t rdma_lif_dcqcn_profile_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_at_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_barmap_base_addr(uint32_t lif_id);
 
+#ifdef __x86_64__
 /* Services exposed by RDMA HAL */
 hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 hal_ret_t rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp);
 hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 hal_ret_t rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp);
-
+#endif
 
 class RDMAManager {
  public:
@@ -89,7 +94,7 @@ extern RDMAManager *rdma_manager();
 #define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
-    
+
 #define SQCB_SIZE_SHIFT    9
 #define RQCB_SIZE_SHIFT    9
 
@@ -352,7 +357,7 @@ typedef struct rome_receiver_cb_s{
     uint8_t linkDataRate:2;    // data transmission rate on wire in Kbps, set to the minimum of sender and receiver link rate, potentially only 2 bit to indicate 25G, 50G, 40G and 100G?
     uint32_t recoverRate:27;   // RxMDA: target transmission rate in Kbps
     uint32_t minRate:27;       //lowest transmission rate we can set on any flow in Kbps
-    
+
     uint8_t weight:4;          // weight determines the Additive Increase amount: MinRate*weight
     uint8_t rxDMA_tick:3;      // RxMDA: tick used to sync up RxDMA and TxDMA
     uint8_t wait:1;            // RxMDA: waiting for TxDMA to finish
@@ -453,7 +458,7 @@ typedef struct eqcb_s {
 
 #define MAX_AQ_RINGS 1
 #define MAX_AQ_HOST_RINGS 1
-    
+
 typedef struct aqcb0_s {
     uint8_t  pad[16];
 
@@ -461,12 +466,12 @@ typedef struct aqcb0_s {
 
     uint32_t error: 8;
     uint32_t cq_id: 24;
-    
+
     uint32_t aq_id: 24;
     uint32_t next_token_id: 8;
-    
+
     uint64_t phy_base_addr;
-    
+
     uint16_t rsvd2: 5;
     uint16_t ring_empty_sched_eval_done: 1;
     uint16_t log_num_wqes: 5;
@@ -474,11 +479,11 @@ typedef struct aqcb0_s {
 
     uint8_t  debug;
     uint8_t  rsvd1[3];
-    
+
     uint8_t  token_id;
     uint8_t  first_pass;
     uint32_t map_count_completed;
-    
+
     qpcb_ring_t           rings[MAX_AQ_RINGS];
     qpcb_intrinsic_base_t ring_header;
 } aqcb0_t;

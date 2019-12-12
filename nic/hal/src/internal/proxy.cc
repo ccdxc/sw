@@ -3,7 +3,6 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
@@ -13,7 +12,9 @@
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#ifdef __x86_64__
 #include "nic/hal/src/internal/cpucb.hpp"
+#endif
 #include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
@@ -336,6 +337,7 @@ proxy_program_lif(proxy_t* proxy)
     return HAL_RET_OK;
 }
 
+#ifdef __x86_64__
 //------------------------------------------------------------------------------
 // process a Proxy enable request
 // TODO: if Proxy exists, treat this as modify (vrf id in the meta must
@@ -371,7 +373,7 @@ proxy_create_cpucb(void)
 
     return ret;
 }
-
+#endif
 
 hal_ret_t
 proxy_init_default_params(proxy_t* proxy)

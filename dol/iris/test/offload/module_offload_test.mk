@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = offload_test.gtest
-MODULE_ARCH     = x86_64 aarch64
+MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/testvec_output.cc \
@@ -25,7 +25,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/testvec_parser.cc \
                   ${MODULE_SRC_DIR}/main.cc
 MODULE_LIBS     = -lssl -lcrypto
 MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
-                  storage_tests storage_rdma storage_acc_ring \
+                  storage_tests storage_acc_ring \
                   storage_utils storage_r2n storage_ssd_core \
                   storage_nvme_dp storage_qstate_if \
                   pal p4pd_pack_storage_seq \
@@ -44,7 +44,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} devapi_iris rdmamgr_iris
 ifeq ($(ARCH),x86_64)
-MODULE_SOLIBS   += model_client host_mem
+MODULE_SOLIBS   += model_client storage_rdma host_mem
 endif
 
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \

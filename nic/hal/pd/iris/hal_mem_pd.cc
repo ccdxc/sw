@@ -29,18 +29,20 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/pd/iris/internal/crypto_keys_pd.hpp"
+#include "nic/hal/pd/iris/internal/ipseccb_pd.hpp"
+#include "nic/hal/pd/iris/nw/rw_pd.hpp"
+#include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_sesscb_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_ns_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_sq_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_cq_pd.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_global_pd.hpp"
-#include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/pd/iris/internal/crypto_keys_pd.hpp"
-#include "nic/hal/pd/iris/internal/ipseccb_pd.hpp"
+#ifdef __x86_64__
 #include "nic/hal/pd/iris/l4lb/l4lb_pd.hpp"
-#include "nic/hal/pd/iris/nw/rw_pd.hpp"
-#include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
+#endif
 #include "nic/hal/pd/iris/internal/cpucb_pd.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/tcp_proxy/tcp_rings.hpp"
@@ -309,73 +311,6 @@ hal_state_pd::init(void)
                   hal::pd::tcpcb_pd_hw_key_size());
     SDK_ASSERT_RETURN((tcpcb_hwid_ht_ != NULL), false);
 
-    // initialize NVME_SESSCB related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] =
-        slab::factory("nvme_sesscb_pd", HAL_SLAB_NVME_SESSCB_PD,
-                      sizeof(hal::pd::pd_nvme_sesscb_t), 16,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] != NULL),
-                      false);
-
-    HAL_HT_CREATE("nvme_sesscb_hw_id", nvme_sesscb_hwid_ht_,
-                  HAL_MAX_HW_NVME_SESSCBS >> 1,
-                  hal::pd::nvme_sesscb_pd_get_hw_key_func,
-                  hal::pd::nvme_sesscb_pd_hw_key_size());
-    SDK_ASSERT_RETURN((nvme_sesscb_hwid_ht_ != NULL), false);
-
-    // initialize NVME_GLOBAL related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] =
-        slab::factory("nvme_global_pd", HAL_SLAB_NVME_GLOBAL_PD,
-                      sizeof(hal::pd::pd_nvme_global_t), 8,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] != NULL),
-                      false);
-
-    // initialize NVME_NS related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] =
-        slab::factory("nvme_ns_pd", HAL_SLAB_NVME_NS_PD,
-                      sizeof(hal::pd::pd_nvme_ns_t), 16,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] != NULL),
-                      false);
-
-    HAL_HT_CREATE("nvme_ns_hw_id", nvme_ns_hwid_ht_,
-                  HAL_MAX_HW_NVME_NS >> 1,
-                  hal::pd::nvme_ns_pd_get_hw_key_func,
-                  hal::pd::nvme_ns_pd_hw_key_size());
-    SDK_ASSERT_RETURN((nvme_ns_hwid_ht_ != NULL), false);
-
-
-    // initialize NVME_SQ related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] =
-        slab::factory("nvme_sq_pd", HAL_SLAB_NVME_SQ_PD,
-                      sizeof(hal::pd::pd_nvme_sq_t), 16,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] != NULL),
-                      false);
-
-    HAL_HT_CREATE("nvme_sq_hw_id", nvme_sq_hwid_ht_,
-                  HAL_MAX_HW_NVME_SQ >> 1,
-                  hal::pd::nvme_sq_pd_get_hw_key_func,
-                  hal::pd::nvme_sq_pd_hw_key_size());
-    SDK_ASSERT_RETURN((nvme_sq_hwid_ht_ != NULL), false);
-
-
-    // initialize NVME_CQ related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] =
-        slab::factory("nvme_cq_pd", HAL_SLAB_NVME_CQ_PD,
-                      sizeof(hal::pd::pd_nvme_cq_t), 16,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] != NULL),
-                      false);
-
-    HAL_HT_CREATE("nvme_cq_hw_id", nvme_cq_hwid_ht_,
-                  HAL_MAX_HW_NVME_CQ >> 1,
-                  hal::pd::nvme_cq_pd_get_hw_key_func,
-                  hal::pd::nvme_cq_pd_hw_key_size());
-    SDK_ASSERT_RETURN((nvme_cq_hwid_ht_ != NULL), false);
-
-
     // initialize Acl PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] =
         slab::factory("acl_pd", HAL_SLAB_ACL_PD,
@@ -439,14 +374,6 @@ hal_state_pd::init(void)
                   hal::pd::ipsec_pd_hw_key_size());
     SDK_ASSERT_RETURN((ipsec_sa_hwid_ht_ != NULL), false);
 
-    // initialize L4LB PD related data structures
-    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] =
-        slab::factory("l4lb_pd", HAL_SLAB_L4LB_PD,
-                      sizeof(hal::pd::pd_l4lb_t), 8,
-                      true, true, true);
-    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] != NULL),
-                      false);
-
     // initialize rw table management structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)] =
         slab::factory("rw_pd", HAL_SLAB_RW_PD,
@@ -480,6 +407,81 @@ hal_state_pd::init(void)
 
     tnnl_rw_tbl_idxr_ = sdk::lib::indexer::factory(HAL_TUNNEL_RW_TABLE_SIZE);
     SDK_ASSERT_RETURN((tnnl_rw_tbl_idxr_ != NULL), false);
+
+    // initialize NVME_SESSCB related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] =
+        slab::factory("nvme_sesscb_pd", HAL_SLAB_NVME_SESSCB_PD,
+                      sizeof(hal::pd::pd_nvme_sesscb_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SESSCB_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_sesscb_hw_id", nvme_sesscb_hwid_ht_,
+                  HAL_MAX_HW_NVME_SESSCBS >> 1,
+                  hal::pd::nvme_sesscb_pd_get_hw_key_func,
+                  hal::pd::nvme_sesscb_pd_hw_key_size());
+    SDK_ASSERT_RETURN((nvme_sesscb_hwid_ht_ != NULL), false);
+
+    // initialize NVME_GLOBAL related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] =
+        slab::factory("nvme_global_pd", HAL_SLAB_NVME_GLOBAL_PD,
+                      sizeof(hal::pd::pd_nvme_global_t), 8,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_GLOBAL_PD)] != NULL),
+                      false);
+
+    // initialize NVME_NS related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] =
+        slab::factory("nvme_ns_pd", HAL_SLAB_NVME_NS_PD,
+                      sizeof(hal::pd::pd_nvme_ns_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_NS_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_ns_hw_id", nvme_ns_hwid_ht_,
+                  HAL_MAX_HW_NVME_NS >> 1,
+                  hal::pd::nvme_ns_pd_get_hw_key_func,
+                  hal::pd::nvme_ns_pd_hw_key_size());
+    SDK_ASSERT_RETURN((nvme_ns_hwid_ht_ != NULL), false);
+
+
+    // initialize NVME_SQ related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] =
+        slab::factory("nvme_sq_pd", HAL_SLAB_NVME_SQ_PD,
+                      sizeof(hal::pd::pd_nvme_sq_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_SQ_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_sq_hw_id", nvme_sq_hwid_ht_,
+                  HAL_MAX_HW_NVME_SQ >> 1,
+                  hal::pd::nvme_sq_pd_get_hw_key_func,
+                  hal::pd::nvme_sq_pd_hw_key_size());
+    SDK_ASSERT_RETURN((nvme_sq_hwid_ht_ != NULL), false);
+
+    // initialize NVME_CQ related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] =
+        slab::factory("nvme_cq_pd", HAL_SLAB_NVME_CQ_PD,
+                      sizeof(hal::pd::pd_nvme_cq_t), 16,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_NVME_CQ_PD)] != NULL),
+                      false);
+
+    HAL_HT_CREATE("nvme_cq_hw_id", nvme_cq_hwid_ht_,
+                  HAL_MAX_HW_NVME_CQ >> 1,
+                  hal::pd::nvme_cq_pd_get_hw_key_func,
+                  hal::pd::nvme_cq_pd_hw_key_size());
+    SDK_ASSERT_RETURN((nvme_cq_hwid_ht_ != NULL), false);
+
+#ifdef __x86_64__
+    // initialize L4LB PD related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] =
+        slab::factory("l4lb_pd", HAL_SLAB_L4LB_PD,
+                      sizeof(hal::pd::pd_l4lb_t), 8,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] != NULL),
+                      false);
+#endif
 
     // initialize CPUCB related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)] =
@@ -638,16 +640,16 @@ hal_state_pd::hal_state_pd()
     flow_lkupid_ht_          = NULL;
     tlscb_hwid_ht_           = NULL;
     tcpcb_hwid_ht_           = NULL;
-    nvme_sesscb_hwid_ht_     = NULL;
-    nvme_ns_hwid_ht_         = NULL;
-    nvme_sq_hwid_ht_         = NULL;
-    nvme_cq_hwid_ht_         = NULL;
     wring_hwid_ht_           = NULL;
     ipseccb_hwid_ht_         = NULL;
     ipseccb_decrypt_hwid_ht_ = NULL;
     ipsec_sa_hwid_ht_        = NULL;
     rw_table_ht_             = NULL;
     cpucb_hwid_ht_           = NULL;
+    nvme_sesscb_hwid_ht_     = NULL;
+    nvme_ns_hwid_ht_         = NULL;
+    nvme_sq_hwid_ht_         = NULL;
+    nvme_cq_hwid_ht_         = NULL;
     rawrcb_hwid_ht_          = NULL;
     rawccb_hwid_ht_          = NULL;
     proxyrcb_hwid_ht_        = NULL;
@@ -681,15 +683,15 @@ hal_state_pd::~hal_state_pd()
     flow_lkupid_ht_ ? ht::destroy(flow_lkupid_ht_) : HAL_NOP;
     tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
-    nvme_sesscb_hwid_ht_ ? ht::destroy(nvme_sesscb_hwid_ht_) : HAL_NOP;
-    nvme_ns_hwid_ht_ ? ht::destroy(nvme_ns_hwid_ht_) : HAL_NOP;
-    nvme_sq_hwid_ht_ ? ht::destroy(nvme_sq_hwid_ht_) : HAL_NOP;
-    nvme_cq_hwid_ht_ ? ht::destroy(nvme_cq_hwid_ht_) : HAL_NOP;
     wring_hwid_ht_ ? ht::destroy(wring_hwid_ht_) : HAL_NOP;
     ipseccb_hwid_ht_ ? ht::destroy(ipseccb_hwid_ht_) : HAL_NOP;
     ipseccb_decrypt_hwid_ht_ ? ht::destroy(ipseccb_decrypt_hwid_ht_) : HAL_NOP;
     ipsec_sa_hwid_ht_ ? ht::destroy(ipsec_sa_hwid_ht_) : HAL_NOP;
     cpucb_hwid_ht_ ? ht::destroy(cpucb_hwid_ht_) : HAL_NOP;
+    nvme_sesscb_hwid_ht_ ? ht::destroy(nvme_sesscb_hwid_ht_) : HAL_NOP;
+    nvme_ns_hwid_ht_ ? ht::destroy(nvme_ns_hwid_ht_) : HAL_NOP;
+    nvme_sq_hwid_ht_ ? ht::destroy(nvme_sq_hwid_ht_) : HAL_NOP;
+    nvme_cq_hwid_ht_ ? ht::destroy(nvme_cq_hwid_ht_) : HAL_NOP;
     rw_table_ht_ ? ht::destroy(rw_table_ht_) : HAL_NOP;
     rawrcb_hwid_ht_ ? ht::destroy(rawrcb_hwid_ht_) : HAL_NOP;
     rawccb_hwid_ht_ ? ht::destroy(rawccb_hwid_ht_) : HAL_NOP;
@@ -1447,9 +1449,11 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->cpucb_slab()->free(elem);
         break;
 
+#ifdef __x86_64__
     case HAL_SLAB_L4LB_PD:
         g_hal_state_pd->l4lb_pd_slab()->free(elem);
         break;
+#endif
 
     case HAL_SLAB_RW_PD:
         g_hal_state_pd->rw_entry_slab()->free(elem);

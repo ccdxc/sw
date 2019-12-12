@@ -59,6 +59,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_ACL_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_ACL_GET_FAIL));
         break;
+#ifdef __x86_64__
     case sys::API_COUNTER_CPUCB_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_CPUCB_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_CPUCB_CREATE_SUCCESS));
@@ -79,6 +80,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_CPUCB_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_CPUCB_GET_FAIL));
         break;
+#endif
     case sys::API_COUNTER_CRYPTOAPI_INVOKE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_CRYPTOAPI_INVOKE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_CRYPTOAPI_INVOKE_SUCCESS));
@@ -201,11 +203,13 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_L2SEGMENT_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_L2SEGMENT_GET_FAIL));
         break;
+#ifdef __x86_64__
     case sys::API_COUNTER_L4LBSERVICE_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_L4LBSERVICE_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_L4LBSERVICE_CREATE_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_L4LBSERVICE_CREATE_FAIL));
         break;
+#endif
     case sys::API_COUNTER_MULTICASTENTRY_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_MULTICASTENTRY_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_MULTICASTENTRY_CREATE_SUCCESS));

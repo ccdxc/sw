@@ -23,8 +23,6 @@ std::string g_grpc_server_addr;
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
-#include "gen/hal/svc/rdma_svc_gen.hpp"
-#include "gen/hal/svc/nvme_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/session_svc_gen.hpp"
@@ -34,10 +32,8 @@ std::string g_grpc_server_addr;
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
-#include "gen/hal/svc/cpucb_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
-#include "gen/hal/svc/l4lb_svc_gen.hpp"
 
 static void inline
 hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)
