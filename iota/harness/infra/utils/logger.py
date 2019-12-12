@@ -3,6 +3,7 @@ import datetime
 import pdb
 import sys
 import inspect
+import string
 import threading
 
 import iota.harness.infra.types   as types
@@ -53,9 +54,16 @@ class LoggerSink:
             return None
 
         self.lock.acquire()
-        self.sink.write(text)
-        self.lock.release()
-        self.flush()
+        try:
+            self.sink.write(text)
+            self.sink.flush()
+        except UnicodeEncodeError:
+            try:
+                self.sink.write(string.join(text.encode('utf8')))
+            except:
+                pass
+        finally:
+            self.lock.release()
         return
 
     def flush(self):
