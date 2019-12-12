@@ -5,12 +5,18 @@ meta:
     targetcount : 33 
 
 testcases:
+    -   name    : CompileInsmodSonicPencake
+        testcase: testcases.storage.compile_install_drivers
+        args    :
+            package: storage/gen/storage-offload.tar.xz
+            maxcpus: 4
+
     -   name: ACCEL_METRICS
         testcase    : testcases.penctl.accel_metrics
         iterators   :
             type        : nested
-            #cpumask     : [ 1 ]
-            cpumask     :  [ 1 ]
+            #cpumask     :  [ 1 ]
+            cpus        :  [ 1 ]
             batch_depth :  [ 16 ]
         args    :
             blocksize   : 4096
