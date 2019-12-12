@@ -188,7 +188,7 @@ devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
     event.lif.state = state;
     memcpy(event.lif.name, lif->name(), sizeof(event.lif.name));
     memcpy(event.lif.mac, lif->mac(), ETH_ADDR_LEN);
-    sdk::event_thread::publish(EVENT_ID_LIF_STATUS, &event, sizeof(event));
+    sdk::ipc::broadcast(EVENT_ID_LIF_STATUS, &event, sizeof(event));
     return SDK_RET_OK;
 }
 

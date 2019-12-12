@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <string.h>
 #include <zmq.h>
 
 #include "include/sdk/base.hpp"
@@ -157,6 +158,7 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
     int rc;
     zmq_ipc_msg_preamble_t preamble;
 
+    memset(&preamble, 0, sizeof(preamble));
     preamble.type = type;
     preamble.sender = this->id_;
     preamble.recipient = recipient;
@@ -176,12 +178,12 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
                     preamble.msg_code, preamble.serial, preamble.cookie,
                     preamble.is_pointer, preamble.real_length, preamble.crc);
 
-    if (send_pointer) {
-        rc = zmq_send(this->zsocket_, &data, sizeof(data), 0);
-        assert(rc != -1);
-    } else {
-        rc = zmq_send(this->zsocket_, data, data_length, 0);
-    }
+     if (send_pointer) {
+         rc = zmq_send(this->zsocket_, &data, sizeof(data), 0);
+     } else {
+         rc = zmq_send(this->zsocket_, data, data_length, 0);
+     }
+     assert(rc != -1);
 }
 
 void
@@ -205,47 +207,11 @@ zmq_ipc_endpoint::recv_msg(zmq_ipc_user_msg_ptr msg) {
 }
 
 
-zmq_ipc_server::zmq_ipc_server() {
-}
-
 zmq_ipc_server::~zmq_ipc_server() {
     zmq_close(this->zsocket_);
 }
 
-zmq_ipc_server *
-zmq_ipc_server::factory(uint32_t id) {
-    int            rc;
-    void           *mem;
-    zmq_ipc_server *new_server;
-
-    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_IPC_SERVER, sizeof(*new_server));
-    if (!mem) {
-        return NULL;
-    }
-    new_server = new (mem) zmq_ipc_server();
-    rc = new_server->init(id);
-    if (rc < 0) {
-        new_server->~zmq_ipc_server();
-        SDK_FREE(SDK_MEM_ALLOC_LIB_IPC_SERVER, new_server);
-        return NULL;
-    }
-
-    for (int i = 0; i <= IPC_MAX_ID; i++) {
-        subscribers::instance()->clear(i, id);
-    }
-
-    return new_server;
-}
-
-void
-zmq_ipc_server::destroy(zmq_ipc_server *server) {
-    assert(server != NULL);
-    server->~zmq_ipc_server();
-    SDK_FREE(SDK_MEM_ALLOC_LIB_IPC_SERVER, server);
-}
-
-int
-zmq_ipc_server::init(uint32_t id) {
+zmq_ipc_server::zmq_ipc_server(uint32_t id) {
     int rc;
 
     assert(id <= IPC_MAX_ID);
@@ -263,7 +229,9 @@ zmq_ipc_server::init(uint32_t id) {
 
     g_internal_endpoints[id] = true;
 
-    return 0;
+    for (int i = 0; i <= IPC_MAX_ID; i++) {
+        subscribers::instance()->clear(i, id);
+    }
 }
 
 void zmq_ipc_server::subscribe(uint32_t msg_code) {
@@ -318,6 +286,8 @@ zmq_ipc_server::reply(ipc_msg_ptr msg, const void *data,
     zmq_ipc_user_msg_ptr zmsg =
         std::dynamic_pointer_cast<zmq_ipc_user_msg>(msg);
 
+    assert(zmsg->preamble()->recipient == this->id_);
+
     // See ZMQ Router to understand why we do this
     for (auto header: zmsg->headers()) {
         rc = zmq_send(this->zsocket_, header->data(), header->length(),
@@ -341,7 +311,7 @@ zmq_ipc_client::zmq_ipc_client() {
 }
 
 void
-zmq_ipc_client::connect(uint32_t recipient) {
+zmq_ipc_client::connect_(uint32_t recipient) {
     string path;
     int    rc;
 
@@ -361,46 +331,11 @@ zmq_ipc_client::connect(uint32_t recipient) {
     assert(rc != -1);
 }
 
-zmq_ipc_client_async::zmq_ipc_client_async() {
+zmq_ipc_client_async::zmq_ipc_client_async(uint32_t recipient) {
+    this->connect_(recipient);
 }
 
 zmq_ipc_client_async::~zmq_ipc_client_async() {
-}
-
-int
-zmq_ipc_client_async::init(uint32_t recipient) {
-    this->connect(recipient);
-    return 0;
-}
-
-zmq_ipc_client_async *
-zmq_ipc_client_async::factory(uint32_t recipient)
-{
-    int                  rc;
-    void                 *mem;
-    zmq_ipc_client_async *new_client;
-
-    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_IPC_CLIENT, sizeof(*new_client));
-    if (!mem) {
-        return NULL;
-    }
-    new_client = new (mem) zmq_ipc_client_async();
-    rc = new_client->init(recipient);
-    if (rc < 0) {
-        new_client->~zmq_ipc_client_async();
-        SDK_FREE(SDK_MEM_ALLOC_LIB_IPC_CLIENT, new_client);
-        return NULL;
-    }
-
-    return new_client;
-}
-
-void
-zmq_ipc_client_async::destroy(zmq_ipc_client_async *client)
-{
-    assert(client != NULL);
-    client->~zmq_ipc_client_async();
-    SDK_FREE(SDK_MEM_ALLOC_LIB_IPC_CLIENT, client);
 }
 
 void
@@ -468,6 +403,13 @@ zmq_ipc_client_async::recv(const void **cookie) {
 
     *cookie = msg->cookie();
     return msg;
+}
+
+zmq_ipc_client_sync::zmq_ipc_client_sync(uint32_t recipient) {
+    this->connect_(recipient);
+}
+
+zmq_ipc_client_sync::~zmq_ipc_client_sync() {
 }
 
 void

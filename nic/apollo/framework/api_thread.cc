@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/framework/api_thread.hpp"
@@ -22,8 +22,8 @@ void
 api_thread_init_fn (void *ctxt)
 {
     api_engine_init();
-    sdk::event_thread::rpc_reg_request_handler(API_MSG_ID_BATCH,
-                                               api_thread_ipc_batch_cb);
+    sdk::ipc::reg_request_handler(API_MSG_ID_BATCH, api_thread_ipc_batch_cb,
+                                  NULL);
 }
 
 void
@@ -37,7 +37,7 @@ api_thread_event_cb (void *msg, void *ctxt)
 }
 
 void
-api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, void *ctxt)
+api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     sdk_ret_t ret;
     api_msg_t *api_msg = *(api_msg_t **)msg->data();
@@ -47,7 +47,7 @@ api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, void *ctxt)
     assert(likely(api_msg != NULL));
     assert(likely(api_msg->msg_id == API_MSG_ID_BATCH));
     ret = api_engine_get()->batch_commit(&api_msg->batch);
-    sdk::event_thread::rpc_response(msg, &ret, sizeof(ret));
+    sdk::ipc::respond(msg, &ret, sizeof(ret));
 }
 
 bool

@@ -50,22 +50,22 @@ private:
     ~nicmgrapi() {}
 
     /// \brief    HAL UP event handler
-    /// \param[in]    event pointer to the event
-    /// \param[in]    event_len length of the event data
+    /// \param[in]    msg the message of the event
     /// \param[in]    ctxt callback context
-    static void hal_up_event_handler_(void *data, size_t data_len, void *ctxt);
+    static void hal_up_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                      const void *ctxt);
 
     /// \brief    port handler callback
-    /// \param[in]    event pointer to the event
-    /// \param[in]    event_len length of the event data
+    /// \param[in]    msg the message of the event
     /// \param[in]    ctxt callback context
-    static void port_event_handler_(void *event, size_t event_len, void *ctxt);
+    static void port_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                    const void *ctxt);
 
     /// \brief    transceiver event handler
-    /// \param[in]    event pointer to the event
-    /// \param[in]    event_len length of the event data
+    /// \param[in]    msg the message of the event
     /// \param[in]    ctxt callback context
-    static void xcvr_event_handler_(void *data, size_t data_len, void *ctxt);
+    static void xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                    const void *ctxt);
 };
 
 }    // namespace nicmgr

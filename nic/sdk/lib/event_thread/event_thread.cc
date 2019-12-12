@@ -58,17 +58,16 @@ private:
 };
 typedef std::shared_ptr<updown_mgr> updown_mgr_ptr;
 
-typedef struct cookie_wrapper_ {
-    const void *user_data;
-    const void *user_cookie;
-    msg_cleanup_cb cleanup_cb;
-} cookie_wrapper_t;
-
 static thread_local event_thread *t_event_thread_ = NULL;
 
 static event_thread *g_event_thread_table[MAX_THREAD_ID + 1];
 
 static updown_mgr g_updown;
+
+typedef struct ipc_watcher_ {
+    sdk::ipc::handler_cb callback;
+    const void *ctx;
+} ipc_watcher_t;
 
 // Converts ev values to event values.
 // e.g. EV_READ to EVENT_READ
@@ -229,11 +228,6 @@ event_thread::init(const char *name, uint32_t thread_id,
 
     g_event_thread_table[thread_id] = this;
 
-    for (int i = 0; i < IPC_MAX_ID + 1; i++) {
-        this->ipc_clients_[i] = NULL;
-    }
-    this->ipc_server_ = ipc::ipc_server::factory(this->thread_id());
-
     return 0;
 }
 
@@ -299,20 +293,50 @@ event_thread::process_lfq_(void) {
     }
 }
 
+static void
+ipc_io_callback (struct ev_loop *loop, ev_io *watcher, int revents)
+{
+    ipc_watcher_t *ipc_watcher = (ipc_watcher_t *)watcher->data;
+
+    ipc_watcher->callback(watcher->fd, ipc_watcher->ctx);
+}
+
+void
+event_thread::create_ipc_watcher_(int fd, sdk::ipc::handler_cb cb,
+                                  const void *ctx) {
+    // todo: fix me: we are leaking!
+    ipc_watcher_t *ipc_watcher = (ipc_watcher_t *)malloc(sizeof(*ipc_watcher));
+    ipc_watcher->callback = cb;
+    ipc_watcher->ctx = ctx;
+
+    // todo: fix me: we are leaking!
+    ev_io *watcher = (ev_io *)malloc(sizeof(*watcher));
+    watcher->data = ipc_watcher;
+
+    ev_io_init(watcher, ipc_io_callback, fd, EV_READ);
+    ev_io_start(this->loop_, watcher);
+}
+
+void
+event_thread::create_ipc_watcher (int fd, sdk::ipc::handler_cb cb,
+                                  const void *ctx,
+                                  const void *ipc_poll_fd_ctx)
+{
+    event_thread *thread = (event_thread *)ipc_poll_fd_ctx;
+
+    thread->create_ipc_watcher_(fd, cb, ctx);
+}
+
 void
 event_thread::run_(void) {
     t_event_thread_ = this;
+
+    sdk::ipc::ipc_init_async(this->thread_id(), create_ipc_watcher, this);
+    
     if (this->init_func_) {
         this->init_func_(this->user_ctx_);
     }
     this->set_ready(true);
-
-    // IPC
-    ev_io_init(&this->ipc_watcher_, &this->ipc_callback_,
-               this->ipc_server_->fd(), EV_READ);
-    this->ipc_watcher_.data = this;
-
-    ev_io_start(this->loop_, &this->ipc_watcher_);
 
     g_updown.up(this->thread_id());
 
@@ -324,7 +348,6 @@ event_thread::run_(void) {
 
     ev_loop_destroy(this->loop_);
     this->loop_ = NULL;
-    ipc::ipc_server::destroy(this->ipc_server_);
 }
 
 sdk_ret_t
@@ -449,152 +472,6 @@ event_thread::message_send(void *message) {
 }
 
 void
-event_thread::handle_ipc_(void) {
-    while (1) {
-        ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
-        if (msg == nullptr) {
-            return;
-        }
-        if (msg->type() == sdk::ipc::DIRECT) {
-            // We received an IPC message but don't have a handler
-            assert(this->rpc_req_cbs_.count(msg->code()) > 0);
-            this->rpc_req_cbs_[msg->code()](msg, this->user_ctx_);
-        } else if (msg->type() == sdk::ipc::BROADCAST) {
-            // We shouldn't be receiving this if we don't have a handler
-            assert(this->sub_cbs_.count(msg->code()) > 0);
-            this->sub_cbs_[msg->code()](msg->data(), msg->length(),
-                                        this->user_ctx_);
-        } else {
-            assert(0);
-        }
-    }
-}
-
-void
-event_thread::handle_ipc_client_(ev_io *watcher) {
-    // Todo: Fixme: Stavros: Inefficient
-    uint32_t sender;
-    for (sender = 0; sender < IPC_MAX_ID + 1; sender++) {
-        if (watcher == &this->ipc_client_watchers_[sender]) {
-            break;
-        }
-    }
-    assert(sender < IPC_MAX_ID + 1);
-    while (1) {
-        cookie_wrapper_t *wrap;
-        ipc::ipc_msg_ptr msg = this->ipc_clients_[sender]->recv(
-            (const void **)&wrap);
-        if (msg == nullptr) {
-            return;
-        }
-        // We received an IPC reply but don't have a handler
-        assert(this->rpc_rsp_cbs_.count(msg->code()) > 0);
-        this->rpc_rsp_cbs_[msg->code()](sender, msg, this->user_ctx_,
-                                        wrap->user_cookie);
-        if (wrap->cleanup_cb) {
-            wrap->cleanup_cb((void *)wrap->user_data);
-        }
-        // This gets allocated in rpc_request
-        free(wrap);
-    }
-}
-
-void
-event_thread::rpc_reg_request_handler(uint32_t msg_code,
-                                      rpc_request_cb callback) {
-    assert(t_event_thread_ == this);
-    assert(this->rpc_req_cbs_.find(msg_code) == this->rpc_req_cbs_.end());
-    this->rpc_req_cbs_[msg_code] = callback;
-}
-
-void
-event_thread::rpc_response(ipc::ipc_msg_ptr msg, const void *data,
-                           size_t data_length) {
-    assert(t_event_thread_ == this);
-    this->ipc_server_->reply(msg, data, data_length);
-}
-
-
-void
-event_thread::ipc_callback_(struct ev_loop *loop, ev_io *watcher, int revents) {
-    ((event_thread *)watcher->data)->handle_ipc_();
-}
-
-void
-event_thread::rpc_reg_response_handler(uint32_t msg_code,
-                                       rpc_response_cb callback) {
-    assert(t_event_thread_ == this);
-    assert(this->rpc_rsp_cbs_.find(msg_code) == this->rpc_rsp_cbs_.end());
-    this->rpc_rsp_cbs_[msg_code] = callback;
-}
-
-ipc::ipc_client *
-event_thread::get_client_(uint32_t recipient) {
-    ipc::ipc_client *client;
-    
-    client = this->ipc_clients_[recipient];
-    if (client == NULL) {
-        ev_io *watcher = &this->ipc_client_watchers_[recipient];
-
-        client = ipc::ipc_client::factory(recipient);
-        this->ipc_clients_[recipient] = client;
-        ev_io_init(watcher, &this->ipc_client_callback_, client->fd(), EV_READ);
-        watcher->data = this;
-        ev_io_start(this->loop_, watcher);
-
-        // If we don't do this we don't get any events coming from ZMQ
-        // It doesn't play ver well with libevent
-        client->recv(NULL);
-    }
-
-    return client;
-}
-
-void
-event_thread::rpc_request(uint32_t recipient, uint32_t msg_code,
-                          const void *data, size_t data_length,
-                          const void *cookie, const msg_cleanup_cb cleanup_cb) {
-    assert(t_event_thread_ == this);
-
-    // This gets freed in handle_ipc_client_
-    cookie_wrapper_t *wrap = (cookie_wrapper_t *)malloc(sizeof(*wrap));
-    wrap->user_data = data;
-    wrap->user_cookie = cookie;
-    wrap->cleanup_cb = cleanup_cb;
-    
-    this->get_client_(recipient)->send(msg_code, data, data_length, wrap);
-}
-
-void
-event_thread::subscribe(uint32_t msg_code, sub_cb callback) {
-    assert(t_event_thread_ == this);
-    assert(this->sub_cbs_.count(msg_code) == 0);
-    assert(callback != NULL);
-
-    this->sub_cbs_[msg_code] = callback;
-    this->ipc_server_->subscribe(msg_code);
-}
-
-void
-event_thread::publish(uint32_t msg_code, const void *data,
-                      size_t data_length) {
-    std::vector<uint32_t> recipients =
-        ipc::subscribers::instance()->get(msg_code);
-
-    assert(t_event_thread_ == this);
-
-    for(uint32_t rcpt : recipients) {
-        this->get_client_(rcpt)->send(msg_code, data, data_length, NULL);
-    }
-}
-
-void
-event_thread::ipc_client_callback_(struct ev_loop *loop, ev_io *watcher,
-                                   int revents) {
-    ((event_thread *)watcher->data)->handle_ipc_client_(watcher);
-}
-
-void
 updown_up_subscribe (uint32_t thread_id, updown_up_cb cb, void *ctx)
 {
     assert(t_event_thread_ != NULL);
@@ -699,57 +576,6 @@ message_send (uint32_t thread_id, void *message)
     msg->type = lfq_msg::USER_MSG;
     msg->payload = message;
     g_event_thread_table[thread_id]->message_send(msg);
-}
-
-void
-rpc_reg_request_handler (uint32_t msg_code, rpc_request_cb callback)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->rpc_reg_request_handler(msg_code, callback);
-}
-
-void
-rpc_response (ipc::ipc_msg_ptr msg, const void *data, size_t data_length)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->rpc_response(msg, data, data_length);
-}
-
-void
-rpc_reg_response_handler (uint32_t msg_code,
-                          rpc_response_cb callback)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->rpc_reg_response_handler(msg_code, callback);
-}
-
-void
-rpc_request (uint32_t recipient, uint32_t msg_code,
-             const void *data, size_t data_length, const void *cookie,
-             const msg_cleanup_cb cleanup_cb)
-{
-    assert(t_event_thread_ != NULL);
-    t_event_thread_->rpc_request(recipient, msg_code, data, data_length,
-                                 cookie, cleanup_cb);
-}
-
-void
-subscribe (uint32_t msg_code, sub_cb callback)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->subscribe(msg_code, callback);
-}
-
-void
-publish (uint32_t msg_code, const void *data, size_t data_length)
-{
-    assert(t_event_thread_ != NULL);
-
-    t_event_thread_->publish(msg_code, data, data_length);
 }
 
 } // namespace event_thread

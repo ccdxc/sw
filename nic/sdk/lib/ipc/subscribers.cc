@@ -8,6 +8,8 @@
 
 #include "subscribers.hpp"
 
+#include "include/sdk/base.hpp"
+
 const char *SUBS_SHM_FILE = "/ipc_subs";
 
 using namespace sdk::ipc;

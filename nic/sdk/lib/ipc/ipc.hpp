@@ -34,40 +34,52 @@ public:
 };
 typedef std::shared_ptr<struct ipc_msg> ipc_msg_ptr;
 
-/// \brief send a message to an ipc_server and wait for the reply
-/// \param[in] recipient is the id of the ipc_server to send the message to
-/// \param[in] data is a pointer to the data of the message to be send
-/// \param[in] data_length is the length of the data to send
-extern ipc_msg_ptr request(uint32_t recipient, uint32_t msg_code,
-                           const void *data, size_t data_length);
+///
+/// Init
+///
 
+typedef void (*handler_cb)(int fd, const void *ctx);
+typedef void (*fd_watch_cb)(int fd, handler_cb cb, const void *set_ctx,
+                            const void *ctx);
+
+extern void ipc_init_async(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                           const void *fd_watch_cb_ctx);
+
+extern void ipc_init_sync(uint32_t client_id);
+
+///
+/// Sending
+///
+
+extern void request(uint32_t recipient, uint32_t msg_code, const void *data,
+                    size_t length, const void *cookie);
 extern void broadcast(uint32_t msg_code, const void *data, size_t data_length);
 
-class ipc_server {
-public:
-    /// \brief create a new ipc server
-    /// \param[in] id is the id that will be used by clients to send this server
-    ///               requests
-    static ipc_server *factory(uint32_t id);
-    static void destroy(ipc_server *server);
-    virtual void subscribe(uint32_t msg_code) = 0;
-    virtual int fd(void) = 0;
-    virtual ipc_msg_ptr recv(void) = 0;
-    virtual void reply(ipc_msg_ptr msg, const void *data,
-                       size_t data_length) = 0;
-};
+extern void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
 
-class ipc_client {
-public:
-    static ipc_client *factory(uint32_t recipient);
-    static void destroy(ipc_client *client);
-    virtual int fd(void) = 0;
-    virtual void send(uint32_t msg_code, const void *data, size_t data_length,
-                      const void *cookie) = 0;
-    virtual void broadcast(uint32_t msg_code, const void *data,
-                           size_t data_length) = 0;
-    virtual ipc_msg_ptr recv(const void** cokie) = 0;
-};
+///
+/// Receiving
+///
+
+typedef void (*request_cb)(ipc_msg_ptr msg, const void *ctx);
+
+extern void reg_request_handler(uint32_t msg_code, request_cb callback,
+                                const void *ctx);
+
+typedef void (*response_cb)(ipc_msg_ptr msg, const void *request_cookie,
+                            const void *ctx);
+
+extern void reg_response_handler(uint32_t msg_code, response_cb callback,
+                                 const void *ctx);
+
+typedef void (*subscription_cb)(ipc_msg_ptr msg, const void *ctx);
+
+extern void subscribe(uint32_t msg_code, subscription_cb callback,
+                      const void *ctx);
+
+// This is to be used in sync cases when we want to receive requests or
+// subscription messages
+extern void receive(void);
 
 } // namespace ipc
 } // namespace sdk

@@ -12,6 +12,9 @@
 #include <stdint.h>
 #include <zmq.h>
 
+#include "ipc.hpp"
+#include "ipc_internal.hpp"
+
 namespace sdk {
 namespace ipc {
 
@@ -75,60 +78,56 @@ private:
     uint32_t next_serial_;
 };
 
-class zmq_ipc_server : public ipc_server,
-                       public zmq_ipc_endpoint {
+class zmq_ipc_server : public zmq_ipc_endpoint {
 public:
-    static zmq_ipc_server *factory(uint32_t id);
-    static void destroy(zmq_ipc_server *server);
-    virtual void subscribe(uint32_t msg_code) override;
-    virtual int fd(void) override;
-    virtual ipc_msg_ptr recv(void) override;
-    virtual void reply(ipc_msg_ptr msg, const void *data,
-                       size_t data_length) override;
-private:
-    int init(uint32_t id);
-    zmq_ipc_server();
+    zmq_ipc_server(uint32_t id);
     ~zmq_ipc_server();
+    void subscribe(uint32_t msg_code);
+    int fd(void);
+    ipc_msg_ptr recv(void);
+    void reply(ipc_msg_ptr msg, const void *data,
+               size_t data_length);
 };
+typedef std::shared_ptr<zmq_ipc_server> zmq_ipc_server_ptr;
 
 class zmq_ipc_client : public zmq_ipc_endpoint {
 public:
-    virtual void create_socket(void) = 0;
-    void connect(uint32_t recipient);
     zmq_ipc_client();
     ~zmq_ipc_client();
+    virtual void create_socket(void) = 0;
+    virtual void broadcast(uint32_t msg_code, const void *data,
+                           size_t data_length) = 0;
+protected:
+    void connect_(uint32_t recipient);
 protected:
     uint32_t recipient_;
     bool     is_recipient_internal_;
 };
 typedef std::shared_ptr<zmq_ipc_client> zmq_ipc_client_ptr;
 
-class zmq_ipc_client_async : public ipc_client,
-                             public zmq_ipc_client {
+class zmq_ipc_client_async : public zmq_ipc_client {
 public:
-    static zmq_ipc_client_async *factory(uint32_t recipient);
-    static void destroy(zmq_ipc_client_async *client);
-    int init(uint32_t recipient);
+    zmq_ipc_client_async(uint32_t recipient);
+    ~zmq_ipc_client_async();
     virtual void create_socket(void) override;
-    virtual int fd(void) override;
-    virtual void send(uint32_t msg_code, const void *data, size_t data_length,
-                      const void *cookie) override;
     virtual void broadcast(uint32_t msg_code, const void *data,
                            size_t data_length) override;
-    virtual ipc_msg_ptr recv(const void** cookie) override;
-private:
-    zmq_ipc_client_async();
-    ~zmq_ipc_client_async();
+    int fd(void);
+    void send(uint32_t msg_code, const void *data, size_t data_length,
+              const void *cookie);
+    ipc_msg_ptr recv(const void** cookie);
 };
 typedef std::shared_ptr<zmq_ipc_client_async> zmq_ipc_client_async_ptr;
 
 class zmq_ipc_client_sync : public zmq_ipc_client {
 public:
-    virtual void create_socket(void);
+    zmq_ipc_client_sync(uint32_t recipient);
+    ~zmq_ipc_client_sync();
+    virtual void create_socket(void) override;
+    virtual void broadcast(uint32_t msg_code, const void *data,
+                           size_t data_length) override;
     zmq_ipc_user_msg_ptr send_recv(uint32_t msg_code, const void *data,
                                    size_t data_length);
-    void send(uint32_t msg_code, const void *data, size_t data_length);
-    void broadcast(uint32_t msg_code, const void *data, size_t data_length);
 };
 typedef std::shared_ptr<zmq_ipc_client_sync> zmq_ipc_client_sync_ptr;
 

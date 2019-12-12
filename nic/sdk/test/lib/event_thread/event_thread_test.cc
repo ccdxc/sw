@@ -207,45 +207,38 @@ TEST_F (event_thread_test, basic_functionality) {
 }
 
 void
-ipc_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
+ipc_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 {
     printf("Server got: %s\n", (char *)msg->data());
-    event::rpc_response(msg, msg->data(), msg->length());
+    sdk::ipc::respond(msg, msg->data(), msg->length());
 
     printf("Also publishing: broadcast\n");
-    event::publish(1, (void *)"broadcast", 10);
-}
-
-void
-msg_cleanup (void *data)
-{
-    printf("Message cleanup called with: %s\n", (char *)data);
+    sdk::ipc::broadcast(1, (void *)"broadcast", 10);
 }
 
 void
 timer2_callback (event::timer_t *timer)
 {
     static const char message[] = "echo from event";
-    event::rpc_request(THREAD_T4, 0, (void *)message, sizeof(message),
-                       (const void *)0x1234, msg_cleanup);
+    sdk::ipc::request(THREAD_T4, 0, (void *)message, sizeof(message),
+                      (const void *)0x1234);
 }
 
 void
 init_ipc_server (void *ctx)
 {
-    event::rpc_reg_request_handler(0, ipc_cb);
+    sdk::ipc::reg_request_handler(0, ipc_cb, NULL);
 }
 
 void
-ipc_client_cb (uint32_t sender, sdk::ipc::ipc_msg_ptr msg, void *ctx,
-               const void *cookie)
+ipc_client_cb (sdk::ipc::ipc_msg_ptr msg, const void *cookie, const void *ctx)
 {
     printf("Client got: %s, cookie: %p\n", (char *)msg->data(),
            cookie);
 }
 
 void
-subscribe_cb (sdk::ipc::ipc_msg_ptr msg, void *ctx)
+subscribe_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 {
     printf("Subscriber got: %s\n", (char *)msg->data());
 }
@@ -258,10 +251,17 @@ init_ipc_client (void *ctx)
     event::timer_init(&test->timer2, timer2_callback, 1., 0.);
     event::timer_start(&test->timer2);
 
-    event::rpc_reg_request_handler(0, ipc_cb);
-    event::rpc_reg_response_handler(0, ipc_client_cb);
+    sdk::ipc::reg_request_handler(0, ipc_cb, NULL);
+    sdk::ipc::reg_response_handler(0, ipc_client_cb, NULL);
 
-    event::rpc_reg_request_handler(1, subscribe_cb);
+    sdk::ipc::subscribe(1, subscribe_cb, NULL);
+}
+
+void
+sync_resp_callback(sdk::ipc::ipc_msg_ptr msg, const void *cookie,
+                   const void *ctx)
+{
+    printf("Got sync response\n");
 }
 
 
@@ -290,15 +290,10 @@ TEST_F (event_thread_test, ipc_functionality) {
     //
     // sync client
     //
-    sdk::ipc::ipc_msg_ptr msg;
-    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
-    printf("%s\n", (char *)msg->data());
-    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
-    printf("%s\n", (char *)msg->data());
-    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
-    printf("%s\n", (char *)msg->data());
-    msg = sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9);
-    printf("%s\n", (char *)msg->data());
+    sdk::ipc::reg_response_handler(0, sync_resp_callback, NULL);
+    sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9, NULL);
+    sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9, NULL);
+    sdk::ipc::request(THREAD_T4, 0, "ipc ping", 9, NULL);
     sleep(2);
 }
 

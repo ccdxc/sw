@@ -35,7 +35,7 @@ void api_thread_event_cb(void *msg, void *ctx);
 ///           API thread
 /// \param[in] msg     IPC msg received
 /// \param[in] ctxt    opaque context
-void api_thread_ipc_batch_cb(sdk::ipc::ipc_msg_ptr msg, void *ctxt);
+void api_thread_ipc_batch_cb(sdk::ipc::ipc_msg_ptr msg, const void *ctxt);
 
 /// \brief    return true if API thread is ready to receive events
 /// \return true or false based on whether API thread is ready or not

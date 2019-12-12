@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/utils/port_utils.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -82,9 +83,9 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
         pciemgr->finalize();
     }
 
-    sdk::event_thread::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_);
-    sdk::event_thread::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_);
-    sdk::event_thread::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_);
+    sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
+    sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
+    sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
     sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
     sdk::event_thread::prepare_start(&g_ev_prepare);
 
@@ -108,16 +109,16 @@ nicmgrapi::nicmgr_event_handler(void *msg, void *ctxt) {
 }
 
 void
-nicmgrapi::hal_up_event_handler_(void *data, size_t data_len, void *ctxt) {
+nicmgrapi::hal_up_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     // create mnets
     PDS_TRACE_INFO("Creating mnets ...");
     g_devmgr->HalEventHandler(true);
 }
 
 void
-nicmgrapi::port_event_handler_(void *data, size_t data_len, void *ctxt) {
+nicmgrapi::port_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     port_status_t st = { 0 };
-    core::event_t *event = (core::event_t *)data;
+    core::event_t *event = (core::event_t *)msg->data();
 
     st.id = event->port.ifindex;
     st.status =
@@ -129,9 +130,9 @@ nicmgrapi::port_event_handler_(void *data, size_t data_len, void *ctxt) {
 }
 
 void
-nicmgrapi::xcvr_event_handler_(void *data, size_t data_len, void *ctxt) {
+nicmgrapi::xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     port_status_t st = { 0 };
-    core::event_t *event = (core::event_t *)data;
+    core::event_t *event = (core::event_t *)msg->data();
 
     st.id = event->port.ifindex;
     st.xcvr.state = event->xcvr.state;

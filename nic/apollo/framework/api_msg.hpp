@@ -26,6 +26,9 @@ typedef enum api_msg_id_e {
     API_MSG_ID_BATCH,
 } api_msg_id_t;
 
+///< Callback to be called once the batch has been processed
+typedef void (*process_result_cb)(sdk_ret_t ret, const void *ctx);
+
 ///< API batch message containing bunch of API calls in single batch
 typedef struct batch_info_s {
     ///< epoch is the config version to advance to
@@ -38,6 +41,12 @@ typedef struct batch_info_s {
     uint64_t            cookie;
     ///< list of api calls to process in this batch
     vector<api_ctxt_t *> apis;
+    ///< is it batched internally or not
+    bool                 batched_internally;
+    ///< the callback to call once this batch finishes processing
+    process_result_cb    result_cb;
+    ///< the context of the above callback
+    const void *         result_cb_ctx;
 } batch_info_t;
 
 /// \brief    IPC message sent to config thread for API processing
