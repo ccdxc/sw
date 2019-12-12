@@ -23,7 +23,7 @@ packets:
     - packet:
         id          : READ_REQ_BASE # Base packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         headers     :
             # Add all possible headers, the final headers will be selected
@@ -78,7 +78,7 @@ packets:
     - packet:
         id          : NAK_REM_ACC_ERR # Base packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -122,7 +122,7 @@ packets:
     - packet:
         id          : READ_RESP_ONLY_BASE # Base packet
         payloadsize : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         headers     :
             # Add all possible headers, the final headers will be selected

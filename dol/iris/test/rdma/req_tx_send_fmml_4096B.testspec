@@ -54,7 +54,7 @@ packets:
     - packet:
         id          : EXP_PKT1 # Base packet
         payloadsize : ref://testcase/packets/id=BASE_PKT1/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -87,7 +87,7 @@ packets:
     - packet:
         id          : EXP_PKT2 # Base packet
         payloadsize : ref://testcase/packets/id=BASE_PKT2/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -120,7 +120,7 @@ packets:
     - packet:
         id          : EXP_PKT3 # Base packet
         payloadsize : ref://testcase/packets/id=BASE_PKT3/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -153,7 +153,7 @@ packets:
     - packet:
         id          : EXP_PKT4 # Base packet
         payloadsize : ref://testcase/packets/id=BASE_PKT4/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG

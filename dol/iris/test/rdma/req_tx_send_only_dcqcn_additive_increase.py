@@ -16,6 +16,7 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
+    tc.pvtdata.congestion_mgmt_type_pre = rs.lqp.sq.qstate.data.congestion_mgmt_type
     rs.lqp.sq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
@@ -222,6 +223,6 @@ def TestCaseTeardown(tc):
     tc.pvtdata.dcqcn_profile.data = copy.deepcopy(tc.pvtdata.pre_dcqcn_profile)
     tc.pvtdata.dcqcn_profile.WriteWithDelay()
     rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.congestion_mgmt_type = 0;
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = tc.pvtdata.congestion_mgmt_type_pre;
     rs.lqp.sq.qstate.WriteWithDelay()
     return

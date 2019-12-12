@@ -7,7 +7,7 @@ feature:
     enable      : True
     ignore      : False
     selectors:
-        maxrdmasessions: 8
+        maxrdmasessions: 9
 
 modules:
     - module:
@@ -551,6 +551,36 @@ modules:
               rsvd_lkey : False
             - fence     : 1
               rsvd_lkey : True
+
+    - module:
+        name    : RDMA_TX_SQ_DRAIN_BKTRACK_DCQCN_FENCE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_drain_bktrack_dcqcn_fence
+        spec    : req_tx_sq_drain_bktrack_dcqcn_fence.testspec
+        ignore  : False
+        iterate :
+            - fence     : 1
+              rsvd_lkey : False
+            - fence     : 1
+              rsvd_lkey : True
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_SQ_DRAIN_BKTRACK_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_drain_bktrack_dcqcn
+        spec    : req_tx_sq_drain_bktrack_dcqcn.testspec
+        ignore  : False
+        iterate :
+            - fence     : 0
+              rsvd_lkey : False
+            - fence     : 0
+              rsvd_lkey : True
+        selectors:
+            maxrdmasessions: 1
 
     - module:
         name    : RDMA_REQ_RX_ATOMIC_CMPSWAP
@@ -1744,3 +1774,4 @@ modules:
         module  : req_rx_recirc_max_count_err2
         spec    : req_rx_recirc_max_count_err2.testspec
         ignore  : False
+

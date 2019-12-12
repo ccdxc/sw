@@ -50,6 +50,7 @@ req_tx_sqwqe_base_sge_opt_process:
     // clear to-stage fence bit for mid-last packets.
     seq            c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1 // BD-slot
     phvwr.c1       CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, fence), 0
+    phvwr.c1       CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, fence), 0
 
     seq            c2, d.base.wqe_format, SQWQE_FORMAT_DEFAULT //BD-slot
     bcf            [c2], decode_sge_default

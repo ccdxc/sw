@@ -62,7 +62,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -99,7 +99,7 @@ packets:
    - packet:
         id          : EXP_PKT    # Expected AtomicAck Packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG

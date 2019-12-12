@@ -22,7 +22,7 @@ packets:
     - packet:
         id          : READ_REQ_1 # Transmit packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -59,7 +59,7 @@ packets:
     - packet:
         id          : READ_REQ_1_REXMIT # Transmit packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -96,7 +96,7 @@ packets:
     - packet:
         id          : READ_REQ_2 # Transmit packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -181,7 +181,7 @@ packets:
     - packet:
          id          : READ_RESP_FIRST_1    # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_FIRST_1_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -218,7 +218,7 @@ packets:
     - packet:
          id          : READ_RESP_MID_1      # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_MID_1_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -251,7 +251,7 @@ packets:
     - packet:
          id          : READ_RESP_LAST_1     # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_LAST_1_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -287,7 +287,7 @@ packets:
     - packet:
          id          : READ_RESP_FIRST_2    # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_FIRST_2_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -324,7 +324,7 @@ packets:
     - packet:
          id          : READ_RESP_MID_2      # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_MID_2_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -357,7 +357,7 @@ packets:
     - packet:
          id          : READ_RESP_LAST_2     # Receive packet
          payloadsize : ref://testcase/packets/id=READ_RESP_LAST_2_PYLD/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG

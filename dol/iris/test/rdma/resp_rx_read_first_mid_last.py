@@ -13,6 +13,10 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
+    rs.lqp.ReadDcqcnCb()
+    tc.pvtdata.cur_avail_tokens = rs.lqp.dcqcn_data.cur_avail_tokens
+    tc.pvtdata.total_pkt_len = 16896
+
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
@@ -67,12 +71,13 @@ def TestCaseVerify(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask,  1):
         return False
 
-    # verify that curr_color is incremented by 1
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'curr_color', color_mask, 1):
-        return False
-
     # verify that curr_psn is 0
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'curr_read_rsp_psn', 0):
+        return False
+
+    ############ RESP_RX VALIDATIONS ################
+    # verify that curr_color is changed by design
+    if not ValidateRespRx(tc):
         return False
 
    ############     CQ VALIDATIONS #################

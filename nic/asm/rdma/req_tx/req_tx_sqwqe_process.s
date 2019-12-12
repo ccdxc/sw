@@ -66,6 +66,7 @@ skip_color_check:
     bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_fence_check
     add            r1, r0, d.base.op_type  //BD-slot
     phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, fence), d.base.fence
+    phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, fence), d.base.fence
 
 skip_fence_check:
     // Populate wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
@@ -516,6 +517,7 @@ skip_npg_wqe:
     CAPRI_RESET_TABLE_2_ARG()
     // Clear fence bit if SQ is in the retransmission mode
     phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, fence), 0
+    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, fence), 0
     phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, \
                CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
     phvwr      CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1

@@ -1,0 +1,24 @@
+meta:
+    id: ROCE_UD_IPV4_TOS
+
+headers:
+    - header:
+        id      : pad
+        template: ref://store/headers/id=ROCE_UD_IPV4_PAD
+        fields:
+            data0: 00000000
+            data1: 00000000
+            data2: 00000000
+            data3: 00000000
+            data4: 00000000
+
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4_TOS
+        fields:
+            proto: ipproto/17
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:

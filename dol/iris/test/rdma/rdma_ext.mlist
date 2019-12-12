@@ -7,7 +7,7 @@ feature:
     enable      : True
     ignore      : False
     selectors:
-        maxrdmasessions: 8
+        maxrdmasessions: 9
 
 modules:
     - module:

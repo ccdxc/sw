@@ -22,7 +22,7 @@ packets:
     - packet:
         id          : EXP_PKT # Base packet
         payloadsize : 0
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_ATOMICETH
+        template    : ref://factory/packets/id=ETH_IPV4_TOS_UDP_BTH_ATOMICETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG

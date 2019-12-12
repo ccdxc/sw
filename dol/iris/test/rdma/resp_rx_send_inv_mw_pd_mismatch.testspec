@@ -23,7 +23,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet
         payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1000,pkt_num=0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IETH,v6=ETH_IPV6_UDP_BTH_IETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_IETH,v6=ETH_IPV6_UDP_BTH_IETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -59,7 +59,7 @@ packets:
    - packet:
         id          : EXP_PKT    # Expected Nak packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG

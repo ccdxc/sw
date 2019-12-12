@@ -61,6 +61,7 @@ class QpObject(base.ConfigObjectBase):
         self.atomic_enabled = spec.atomic_enabled
         self.sq_in_nic = spec.sq_in_nic
         self.rq_in_nic = spec.rq_in_nic
+        self.congestion_mgmt_type = spec.congestion_mgmt_type
         self.modify_qp_oper = 0
         self.qstate = 0
         self.q_key = 0
@@ -364,12 +365,15 @@ class QpObject(base.ConfigObjectBase):
         if (GlobalOptions.dryrun): return
         # Congestion management will be enabled by the tests that need it
         self.sq.qstate.Read()
-        self.sq.qstate.data.congestion_mgmt_type = 0
+        self.sq.qstate.data.congestion_mgmt_type = self.congestion_mgmt_type
         self.sq.qstate.WriteWithDelay()
 
         self.rq.qstate.Read()
-        self.rq.qstate.data.congestion_mgmt_type = 0
+        self.rq.qstate.data.congestion_mgmt_type = self.congestion_mgmt_type
         self.rq.qstate.WriteWithDelay()
+
+        logger.info("QP: %s PD: %s congestion_status: %d sq_cogestion_status: %d" %\
+                        (self.GID(), self.pd.GID(), self.congestion_mgmt_type, self.sq.qstate.data.congestion_mgmt_type))
 
         if not self.svc == 3 and not self.remote:
             # Configure Dcqcn CB
@@ -553,7 +557,7 @@ class QpObject(base.ConfigObjectBase):
         else:
             IpHdr = scapy.IP(src=initiator.addr.get(),
                              dst=responder.addr.get(),
-                             tos=flow.txqos.dscp,
+                             tos=0, # keep tos = 0 to not trigger ecn mark
                              len = 0, chksum = 0)
         if forward:
             UdpHdr = scapy.UDP(sport=flow.sport,
@@ -775,6 +779,7 @@ class QpObjectHelper:
     def __init__(self):
         self.qps = []
         self.perf_qps = []
+        self.dcqcn_qps = []
         self.udqps = []
         self.useAdmin = False
 
@@ -835,6 +840,19 @@ class QpObjectHelper:
             self.perf_qps.append(qp)
             j += 1
 
+        #DCQCN RC QPs
+        rc_spec = spec.dcqcn
+        count = rc_spec.count
+        logger.info("Creating %d %s DCQCN Qps. for PD:%s" %\
+                       (count, rc_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            sges = 2 << i
+            logger.info("DCQCNRC: qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, rc_spec, sges)
+            self.dcqcn_qps.append(qp)
+            j += 1
+
         #UD QPs
         ud_spec = spec.ud
         count = ud_spec.count
@@ -854,13 +872,15 @@ class QpObjectHelper:
         if self.pd.remote:
             logger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
             return
-        logger.info("Configuring %d QPs %d Perf QPs." % (len(self.qps), len(self.perf_qps)))
+        logger.info("Configuring %d QPs %d Perf QPs %d Dcqcn QPs." % (len(self.qps), len(self.perf_qps), len(self.dcqcn_qps)))
 
         if (GlobalOptions.dryrun): return
 
         if self.useAdmin is True:
             adminapi.ConfigureQps(self.qps[0].lif, self.qps)
             adminapi.ConfigureQps(self.perf_qps[0].lif, self.perf_qps)
+            adminapi.ConfigureQps(self.dcqcn_qps[0].lif, self.dcqcn_qps)
         else:
             halapi.ConfigureQps(self.qps)
             halapi.ConfigureQps(self.perf_qps)
+            halapi.ConfigureQps(self.dcqcn_qps)

@@ -15,6 +15,7 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
+    tc.pvtdata.congestion_mgmt_type_pre = rs.lqp.sq.qstate.data.congestion_mgmt_type
     rs.lqp.sq.qstate.data.congestion_mgmt_type = 0;
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.q_key = 0x11111111  #TODO:Need to get from rqp->q_key
@@ -72,7 +73,10 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession 
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.congestion_mgmt_type = tc.pvtdata.congestion_mgmt_type_pre;
+    rs.lqp.sq.qstate.WriteWithDelay()
     #Disable Privileged operations on this QP 
     rs.lqp.sq.qstate.reset_priv() 
     return

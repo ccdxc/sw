@@ -56,10 +56,10 @@ req_tx_dcqcn_enforce_process:
     // Skip this stage if congestion_mgmt is disabled.
     seq           C_TEMP_1, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_type), 0 //delay slot
     bcf           [C_TEMP_1], load_write_back
-    nop // BD Slot
+    seq           C_NON_PKT_WQE, CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1
 
     bbne          K_SPEC_RESET, 1, spec_check
-    seq           C_NON_PKT_WQE, CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1   // BD Slot
+    nop // BD Slot
 
     tblwr         d.sq_cindex, K_GLOBAL_SPEC_CINDEX
     b             skip_spec_check
@@ -76,7 +76,9 @@ skip_msg_psn_check:
     // matches current cindex. 
     seq           C_TEMP_1, K_GLOBAL_SPEC_CINDEX, d.sq_cindex // BD Slot
     bcf           [!C_TEMP_1], spec_fail
+    nop // BD Slot
 skip_spec_check:
+    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence_set
     seq           C_LAST_PKT, CAPRI_KEY_FIELD(IN_P, last_pkt), 1  // BD Slot
 
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail 
@@ -116,9 +118,6 @@ token_replenish:
     add.!C_TEMP_2 r3, d.token_bucket_size, r0 
     tblwr         d.cur_avail_tokens, r3  
 
-    // If it's non packet wqe, skip rate enforce for both Rome and Dcqcn
-    bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
-
 rate_enforce:
     // Calculate num-tokens-required for current pkt and check with available tokens
     add           NUM_TOKENS_REQUIRED, r0, K_PKT_LEN, 3
@@ -155,12 +154,7 @@ skip_dcqcn_doorbell:
 load_write_back:
     // DCQCN rate-enforcement passed. Load stage 5 for write-back/add_headers.
     SQCB2_ADDR_GET(r2)  
-    bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
-    // Same k info as write_back is passed to add_headers as well
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
-
-skip_add_headers:
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC_CE(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, req_tx_add_headers_process, r2, C_NON_PKT_WQE)
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
@@ -169,7 +163,8 @@ bubble_to_next_stage:
 
     //invoke the same routine, but with valid header_template_addr as d[] vector
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te2_phv_table_addr)
+    add           r1, AH_ENTRY_T_SIZE_BYTES, CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd), HDR_TEMP_ADDR_SHIFT    
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:
     nop.e
@@ -178,9 +173,12 @@ exit:
 poll_fail:
 spec_fail:
 drop_phv:
+    // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
+fence_set:
 #if !(defined (HAPS) || defined (HW))
-    /* 
-     * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
+    /*
+     * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens.
      * Below code is for testing on model only since there are no timestamps on model.
      * Here clock is moved by 100000 ticks for the next iteration.
      */
@@ -188,8 +186,5 @@ drop_phv:
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
 #endif
-
-    // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
-    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
     SQCB2_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC_CE(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, req_tx_add_headers_process, r2, C_NON_PKT_WQE)

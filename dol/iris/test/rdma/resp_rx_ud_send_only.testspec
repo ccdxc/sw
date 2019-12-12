@@ -30,7 +30,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://testcase/packets/id=BASE_PYLD/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -67,7 +67,7 @@ packets:
    - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://testcase/packets/id=BASE_PYLD/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4_TOS,v6=ROCE_UD_IPV6
         headers     :
             pad:
                 data0   : 00000000

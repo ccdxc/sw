@@ -18,7 +18,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : 64
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
+        template    : ref://factory/packets/id=ETH_IPV4_TOS_UDP_BTH 
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

@@ -32,7 +32,7 @@ packets:
         id          : IN_PKT    # Input packet 
         #why 63 ?
         payloadsize : 63
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -79,7 +79,7 @@ packets:
    - packet:
         id          : EXP_PKT    # Expected Ack packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :

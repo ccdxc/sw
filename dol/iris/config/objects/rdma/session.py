@@ -117,7 +117,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
         else:
             IpHdr = scapy.IP(src=self.session.initiator.addr.get(),
                              dst=self.session.responder.addr.get(),
-                             tos=self.session.iflow.txqos.dscp,
+                             tos=0, # keep tos = 0 to not trigger ecn mark
                              len = 0, chksum = 0)
         UdpHdr = scapy.UDP(sport=self.session.iflow.sport,
                            dport=self.session.iflow.dport,
@@ -200,6 +200,15 @@ class RdmaSessionObjectHelper:
             pds = ep.pds.GetAll()
             for pd in pds:
                 qps = pd.perf_qps.GetAll()
+                return qps
+        else:
+            return []
+
+    def __get_dcqcn_qps_for_ep(self, ep):
+        if hasattr(ep, 'pds'):
+            pds = ep.pds.GetAll()
+            for pd in pds:
+                qps = pd.dcqcn_qps.GetAll()
                 return qps
         else:
             return []
@@ -293,6 +302,58 @@ class RdmaSessionObjectHelper:
                 break
         return
 
+    def DcqcnRCGenerate(self):
+        self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')
+        for nw_s in self.nw_sessions:
+
+            ep1 = nw_s.initiator.ep
+            ep2 = nw_s.responder.ep
+
+            # lqp should come from a local endpoint
+            if ep1.remote or not ep2.remote : continue
+
+            ep1_qps = self.__get_dcqcn_qps_for_ep(ep1)
+            ep2_qps = self.__get_dcqcn_qps_for_ep(ep2)
+
+            for lqp in ep1_qps:
+                if lqp in self.used_qps: continue
+                for rqp in ep2_qps:
+                    if rqp in self.used_qps: continue
+                    self.used_qps.append(lqp)
+                    self.used_qps.append(rqp)
+
+                    vxlan = ep2.segment.IsFabEncapVxlan()
+                    ipv6  = nw_s.IsIPV6()
+
+                    if not ipv6 and not vxlan:  # v4 non-vxlan
+                       self.v4_non_vxlan_count += 1
+                       if GlobalOptions.perf:
+                           if self.v4_non_vxlan_count > 0: continue
+                       else:
+                           if self.v4_non_vxlan_count > 31: continue
+                    elif ipv6 and not vxlan:    # v6 non-vxlan
+                       self.v6_non_vxlan_count +=1
+                       if GlobalOptions.perf:
+                           if self.v6_non_vxlan_count > 0: continue
+                       else:
+                           if self.v6_non_vxlan_count > 0: continue
+
+                    logger.info("RDMA DCQCN RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
+                                   "IPv6 %d VXLAN %d AHID %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
+                                   ep2.segment.IsFabEncapVxlan(), self.ahid))
+
+                    rdma_s = RdmaSessionObject()
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan, self.ahid, self.ahid + 1)
+                    self.rdma_sessions.append(rdma_s)
+
+                    if not rqp.remote:
+                        self.ahid += 1
+                    self.ahid += 1
+                    break
+                break
+        return
+
     def PerfRCGenerate(self):
         self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')
         for nw_s in self.nw_sessions:
@@ -317,6 +378,27 @@ class RdmaSessionObjectHelper:
                 if lqp in self.used_qps: continue
                 for rqp in ep2_qps:
                     if rqp in self.used_qps: continue
+                    vxlan = ep2.segment.IsFabEncapVxlan()
+                    ipv6  = nw_s.IsIPV6()
+
+                    if vxlan and not nw_s.iflow.IsL2():
+                       #logger.info('SKIP: VXLAN Routed Sessions for now')
+                       continue
+
+                    if not ipv6 and not vxlan:  # v4 non-vxlan
+                       self.v4_non_vxlan_count += 1
+                       if GlobalOptions.perf:
+                           if self.v4_non_vxlan_count > 8: continue
+                       else:
+                           if self.v4_non_vxlan_count > 21:
+                               continue
+                    elif ipv6 and not vxlan:    # v6 non-vxlan
+                       self.v6_non_vxlan_count +=1
+                       if GlobalOptions.perf:
+                           if self.v6_non_vxlan_count > 0: continue
+                       else:
+                           if self.v6_non_vxlan_count > 0: continue
+
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
 
@@ -379,7 +461,7 @@ class RdmaSessionObjectHelper:
 
     def Generate(self):
         # Local-Local tests are only run with perf RCs - mainly for performance
-        # so for l2l tests, dont create Regular RC and UD sessions
+        # so for l2l tests, dont create Regular RC, UD and DCQCN sessions
 
         if not GlobalOptions.l2l:
             self.RCGenerate()
@@ -387,8 +469,11 @@ class RdmaSessionObjectHelper:
         self.PerfRCGenerate()
 
         if not GlobalOptions.l2l:
+            self.DcqcnRCGenerate()
+
+        if not GlobalOptions.l2l:
             self.UDGenerate()
-        
+       
     def Configure(self):
         if GlobalOptions.agent:
             return

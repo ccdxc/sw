@@ -10,7 +10,7 @@ struct sqcb2_t d;
 
 #define TO_S6_SQCB_WB_ADD_HDR_P to_s6_sqcb_wb_add_hdr_info
 
-#define K_WQE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit48_ebit63)
+#define K_WQE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit56_ebit63)
 #define K_BKTRACK_FENCE_MARKER_PHV CAPRI_KEY_FIELD(IN_TO_S_P, bktrack_fence_marker_phv)
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
 

@@ -56,6 +56,7 @@ class PdObject(base.ConfigObjectBase):
         #QPs
         self.qps = objects.ObjectDatabase()
         self.perf_qps = objects.ObjectDatabase()
+        self.dcqcn_qps = objects.ObjectDatabase()
         self.udqps = objects.ObjectDatabase()
         self.obj_helper_qp = qp.QpObjectHelper()
         qp_spec = spec.qp.Get(Store)
@@ -64,6 +65,8 @@ class PdObject(base.ConfigObjectBase):
             self.qps.SetAll(self.obj_helper_qp.qps)
         if len(self.obj_helper_qp.perf_qps):
             self.perf_qps.SetAll(self.obj_helper_qp.perf_qps)
+        if len(self.obj_helper_qp.dcqcn_qps):
+            self.dcqcn_qps.SetAll(self.obj_helper_qp.dcqcn_qps)
         if len(self.obj_helper_qp.udqps):
             self.udqps.SetAll(self.obj_helper_qp.udqps)
         logger.info('PD: %s Total UdQps in the PD : %d ' % (self.GID(), len(self.udqps)))
@@ -119,6 +122,7 @@ class PdObject(base.ConfigObjectBase):
     def Show(self):
         logger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
         logger.info('Qps: %d Perf QPs: %d Mrs: %d Mws: %d Keys: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_qp.perf_qps), len(self.obj_helper_mr.mrs), len(self.obj_helper_mw.mws), len(self.obj_helper_key.keys)))
+        logger.info('Dcqcn Qps: %d ' % (len(self.obj_helper_qp.dcqcn_qps)))
         logger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
 
     def GetNewType1_2MW(self):

@@ -1,0 +1,18 @@
+meta:
+    id      : IPV4_TOS
+    scapy   : IP
+    size    : 20
+
+fields:
+    version : const/4
+    ihl     : None
+    tos     : const/0
+    len     : None      # Scapy will fill this
+    id      : const/1
+    flags   : const/0
+    frag    : const/0
+    ttl     : const/64
+    proto   : ipproto/255
+    chksum  : None      # Scapy will fill this
+    src     : ipaddr/10.0.0.1
+    dst     : ipaddr/10.0.0.2

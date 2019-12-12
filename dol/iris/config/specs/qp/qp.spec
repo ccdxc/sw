@@ -15,6 +15,7 @@ rc:
     num_rsq_wqes    : 256
     sq_in_nic       : 0
     rq_in_nic       : 0
+    congestion_mgmt_type: 0
 
 perf_rc:
     count           : 1
@@ -29,7 +30,8 @@ perf_rc:
     num_rsq_wqes    : 4
     sq_in_nic       : 1
     rq_in_nic       : 1
- 
+    congestion_mgmt_type: 0 
+
 perf_rc_sqnic:
     count           : 1
     svc_name        : "RC"
@@ -43,6 +45,7 @@ perf_rc_sqnic:
     num_rsq_wqes    : 128
     sq_in_nic       : 1
     rq_in_nic       : 0
+    congestion_mgmt_type: 0
  
 perf_rc_rqnic:
     count           : 1
@@ -57,7 +60,8 @@ perf_rc_rqnic:
     num_rsq_wqes    : 4
     sq_in_nic       : 0
     rq_in_nic       : 1
- 
+    congestion_mgmt_type: 0
+
 ud:
     count           : 2
     svc_name        : "UD"
@@ -71,4 +75,19 @@ ud:
     num_rsq_wqes    : 4
     sq_in_nic       : 0
     rq_in_nic       : 0
+    congestion_mgmt_type: 0
 
+dcqcn:
+    count           : 1
+    svc_name        : "RC"
+    service         : 0
+    hostmem_pg_size : 4096
+    pmtu            : 1024
+    atomic_enabled  : True
+    num_sq_wqes     : 8
+    num_rrq_wqes    : 4
+    num_rq_wqes     : 64
+    num_rsq_wqes    : 4
+    sq_in_nic       : 0
+    rq_in_nic       : 0
+    congestion_mgmt_type: 1

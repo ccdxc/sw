@@ -274,6 +274,20 @@ def ResetErrQState(tc):
 
     return
 
+############ RESP_RX VALIDATIONS ################
+def ValidateRespRx(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.rq.qstate.Read()
+    color_mask = 1
+    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
+    if tc.pvtdata.cur_avail_tokens < tc.pvtdata.total_pkt_len and rs.lqp.rq.qstate.data.congestion_mgmt_type == 1:
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'curr_color', color_mask, 0):
+            return False 
+    else:
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'curr_color', color_mask, 1):
+            return False
+    return True
+
 ############     CQ VALIDATIONS #################
 def ValidateCQCompletions(tc, num_sq_completions, num_rq_completions):
     rs = tc.config.rdmasession

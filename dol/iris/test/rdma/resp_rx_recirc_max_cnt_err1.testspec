@@ -30,7 +30,7 @@ packets:
    - packet:
         id          : IN_FIRST_PKT    # Input packet - first
         payloadsize : ref://testcase/packets/id=BASE_FIRST_PKT/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG

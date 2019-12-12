@@ -532,7 +532,8 @@ header_type req_tx_to_stage_dcqcn_bind_mw_info_t {
         packet_len                       : 14;
         congestion_mgmt_type             :  2; 
         host_addr_spec_enable            :  1;
-        pad                              : 14;
+        pad                              : 13;
+        fence                            :  1;
         spec_reset                       :  1;
         mr_l_key                         : 32; 
         mr_cookie_msg_psn                : 32; 
@@ -1897,6 +1898,8 @@ action req_tx_dcqcn_enforce_process_s4 () {
                  to_s4_dcqcn_bind_mw_info.header_template_addr_or_pd);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.pad,
                  to_s4_dcqcn_bind_mw_info.pad);
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.fence,
+                 to_s4_dcqcn_bind_mw_info.fence);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.spec_reset,
                  to_s4_dcqcn_bind_mw_info.spec_reset);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.packet_len,

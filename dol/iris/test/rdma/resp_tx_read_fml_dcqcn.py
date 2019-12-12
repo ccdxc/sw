@@ -16,7 +16,7 @@ def TestCaseSetup(tc):
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
 
     rs.lqp.rq.qstate.Read()
     rs.lqp.rq.qstate.data.congestion_mgmt_type = 1;

@@ -18,6 +18,7 @@ def TestCaseSetup(tc):
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
+    tc.pvtdata.congestion_mgmt_type_pre = rs.lqp.rq.qstate.data.congestion_mgmt_type
     rs.lqp.rq.qstate.data.congestion_mgmt_type = 1;
     rs.lqp.rq.qstate.WriteWithDelay()
 
@@ -257,6 +258,6 @@ def TestCaseTeardown(tc):
     #Disable congestion mgmt in qstate
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()                        
-    rs.lqp.rq.qstate.data.congestion_mgmt_type = 0;                                                 
+    rs.lqp.rq.qstate.data.congestion_mgmt_type = tc.pvtdata.congestion_mgmt_type_pre;
     rs.lqp.rq.qstate.WriteWithDelay()                       
     return

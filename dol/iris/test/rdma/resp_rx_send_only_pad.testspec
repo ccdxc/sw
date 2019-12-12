@@ -39,7 +39,7 @@ packets:
    - packet:
         id          : IN_PKT_BASE    # Base for Input packet 
         payloadsize : ref://testcase/packets/id=BASE_PKT_WITH_PAD/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         headers     :
             # Add all possible headers, the final headers will be selected
@@ -92,7 +92,7 @@ packets:
    - packet:
         id          : EXP_PKT_BASE    # Expected Ack packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         headers     :
             # Add all possible headers, the final headers will be selected

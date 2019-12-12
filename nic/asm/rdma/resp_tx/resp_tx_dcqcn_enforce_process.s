@@ -10,7 +10,11 @@ struct resp_tx_s4_t1_k k;
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
 
+#if defined (HAPS) || defined (HW)
+#define CUR_TIMESTAMP r4
+#else
 #define CUR_TIMESTAMP d.cur_timestamp
+#endif
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r6

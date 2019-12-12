@@ -1,0 +1,40 @@
+meta:
+    id: ETH_IPV4_TOS_UDP_BTH_IETH
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4_TOS
+        fields:
+            proto: ipproto/17
+
+    - header:
+        id      : udp
+        template: ref://store/headers/id=UDP_BTH
+        fields:
+
+    - header:
+        id      : bth
+        template: ref://store/headers/id=BTH
+        fields:
+
+    - header:
+        id      : ieth
+        template: ref://store/headers/id=IETH
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:
+
+    - header:
+        id      : icrc
+        template: ref://store/headers/id=ICRC
+        fields:

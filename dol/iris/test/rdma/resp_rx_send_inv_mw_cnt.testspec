@@ -30,7 +30,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://testcase/packets/id=BASE_PKT/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IETH,v6=ETH_IPV6_UDP_BTH_IETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_IETH,v6=ETH_IPV6_UDP_BTH_IETH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -66,7 +66,7 @@ packets:
    - packet:
         id          : EXP_PKT    # Expected Ack packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG

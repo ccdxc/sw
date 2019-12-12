@@ -22,7 +22,7 @@ packets:
     - packet:
         id          : ATOMIC_REQ_BASE # Transmit packet
         payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_ATOMICETH,v6=ETH_IPV6_UDP_BTH_ATOMICETH
         icrc        : True
         headers     :
             # Add all possible headers, the final headers will be selected
@@ -88,7 +88,7 @@ packets:
     - packet:
          id          : ATOMIC_RESP_BASE       # Receive packet
          payloadsize : 0
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
+         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH_ATOMIC_AETH_ACKETH,v6=ETH_IPV6_UDP_BTH_ATOMIC_AETH_ACKETH
          icrc        : True
          headers     :
              # Add all possible headers, the final headers will be selected

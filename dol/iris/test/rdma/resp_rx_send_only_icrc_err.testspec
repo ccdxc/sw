@@ -22,7 +22,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : 64
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_TOS_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         # Disable ICRC calculation, so input pkt will be dropped to test ICRC error condition
         #icrc        : True
         encaps      :   
