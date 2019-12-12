@@ -37,6 +37,8 @@ func (ag *TSMClient) handleTechSupportEvents(events *tsproto.TechSupportRequestE
 
 func (ag *TSMClient) runTechSupportWatcher() {
 	log.Info("Starting Techsupport Watcher")
+	defer ag.waitGrp.Done()
+
 	for {
 		tsGrpcClient, err := rpckit.NewRPCClient(ag.name, globals.Tsm, rpckit.WithBalancer(balancer.New(ag.resolverClient)))
 		if err != nil {
@@ -137,12 +139,17 @@ func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto
 		NodeKind: ag.kind,
 		Request:  update,
 	}
-	ag.tsAPIClient.UpdateTechSupportResult(ag.ctx, updParams)
+
+	if ag.tsAPIClient != nil {
+		ag.tsAPIClient.UpdateTechSupportResult(ag.ctx, updParams)
+	}
 }
 
 // StartWorking the work be the worker
 func (ag *TSMClient) StartWorking() {
 	log.Info("Worker is starting work.")
+	defer ag.waitGrp.Done()
+
 	for {
 		select {
 		case <-ag.ctx.Done():

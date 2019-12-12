@@ -114,6 +114,7 @@ func (ag *TSMClient) Start() {
 		go ag.restServer.Start()
 	}
 
+	ag.waitGrp.Add(1)
 	go ag.StartWorking()
 
 	if ag.resolverClient != nil {
@@ -133,8 +134,13 @@ func (ag *TSMClient) Start() {
 			time.Sleep(time.Second)
 		}
 
+		ag.waitGrp.Add(1)
 		go ag.runTechSupportWatcher()
+
+		ag.waitGrp.Add(1)
 		go ag.RunModuleWatcher()
+
+		ag.waitGrp.Add(1)
 		go ag.StartModuleWorker()
 	}
 }

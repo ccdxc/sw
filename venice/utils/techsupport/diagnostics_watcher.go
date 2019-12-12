@@ -18,7 +18,6 @@ func (ag *TSMClient) handleModuleEvent(event *diagnostics.Module) {
 
 // StartModuleWorker runs the module events enqueued
 func (ag *TSMClient) StartModuleWorker() {
-	ag.waitGrp.Add(1)
 	defer ag.waitGrp.Done()
 
 	for {
@@ -34,7 +33,6 @@ func (ag *TSMClient) StartModuleWorker() {
 
 // RunModuleWatcher establishes watch
 func (ag *TSMClient) RunModuleWatcher() {
-	ag.waitGrp.Add(1)
 	defer ag.waitGrp.Done()
 
 	ag.diagnosticsAPIClient = tsproto.NewDiagnosticsApiClient(ag.tsGrpcClient.ClientConn)
