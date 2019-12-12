@@ -77,6 +77,7 @@ nic/build/aarch64/iris/lib/libtrace.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
+nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libsdkp4loader.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libsdkcapri_asicrw_if.so                  /nic/lib/
