@@ -65,6 +65,16 @@ else
     echo "inb_mnic1 interface didn't show up!!!"
 fi
 
+if [ -d "/sys/class/net/inb_mnic0/bonding_slave/" ]; then
+    inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/bonding_slave/perm_hwaddr`
+else
+    inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/address`
+fi
+
+echo "setting inb_mnic0 mac address as bond0 mac address"
+ifconfig bond0 hw ether $inb_mnic0_mac_addr
+ifconfig bond0
+
 # Temporary dhclient
 ifconfig bond0 down
 kill -9 $(pidof dhclient)
