@@ -13,13 +13,6 @@ namespace FTL_MAKE_AFTYPE(internal) {
         ((_slot) != FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_INVALID)
 #define HINT_SLOT_SET_INVALID(_slot) \
         ((_slot) = FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_INVALID)
-#define HINT_SLOT_IS_MORE(_slot) \
-        ((_slot) == FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE)
-#define HINT_SLOT_SET_MORE(_slot) \
-        ((_slot) = FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE)
-#define HINT_SLOT_IS_MATCH(_ctx) \
-        (HINT_SLOT_IS_FREE((_ctx)->hint_slot) &&\
-         HINT_SLOT_IS_MORE((_ctx)->hint_slot))
 #define HINT_IS_VALID(_hint) \
         ((_hint) != FTL_MAKE_AFTYPE(apictx)::hint_index::HINT_INDEX_INVALID)
 #define HINT_SET_INVALID(_hint) \

@@ -61,7 +61,7 @@ key2str(void *key) {
 
 static char*
 appdata2str(void *entry) {
-    thread_local static char str[32] = { 0 };
+    thread_local static char str[256] = { 0 };
     ftlv6_entry_t     *swentry = static_cast<ftlv6_entry_t*>(entry);
     SDK_ASSERT(swentry);
 

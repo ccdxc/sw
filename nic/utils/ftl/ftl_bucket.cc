@@ -51,7 +51,7 @@ FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
     ctx->entry.entry_valid = valid_;
     if (ctx->hint) {
-        if (HINT_SLOT_IS_MORE(ctx->hint_slot)) {
+        if (ctx->hint_slot == ctx->entry.get_more_hint_slot()) {
             ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, 1);
         } else {
             ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
@@ -221,7 +221,7 @@ FTL_MAKE_AFTYPE(bucket)::find_first_free_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
                                  ctx->hint, ctx->more_hashs);
         if (ctx->more_hashs == 0) {
             FTL_TRACE_VERBOSE("more_hashs slot is free");
-            HINT_SLOT_SET_MORE(ctx->hint_slot);
+            ctx->hint_slot = ctx->entry.get_more_hint_slot();
         } else {
             FTL_TRACE_VERBOSE("all hint slots are full");
             ret = SDK_RET_NO_RESOURCE;
@@ -285,7 +285,7 @@ FTL_MAKE_AFTYPE(bucket)::find_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         // If more_hashs is set, then it is still a match at this level, if we
         // dont treat this as a match, then it will try to allocate a hint at
         // this level, which is not correct.
-        HINT_SLOT_SET_MORE(ctx->hint_slot);
+        ctx->hint_slot = ctx->entry.get_more_hint_slot();
         ctx->match = 1;
         return SDK_RET_OK;
     }
@@ -343,7 +343,8 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
     ret = find_(ctx);
     if (ret != SDK_RET_OK) {
-        FTL_TRACE_ERR("failed to find match. ret:%d", ret);
+        FTL_TRACE_ERR("%s: failed to find match. Ctx:[%s], ret:%d",
+                      ctx->idstr(), ctx->metastr(), ret);
         return ret;
     }
 

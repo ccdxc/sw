@@ -676,7 +676,11 @@ public:
 //::            if len(fields) == 1:
 //::                field_name = fields[0].name()
 //::            else:
-//::                field_name = ' && '.join(map(lambda field: field.name(), fields))
+//::                for field in fields:
+//::                    if field.is_hint_field():
+//::                        field_name = field.name()
+//::                    #endif
+//::                #endfor
 //::            #endif
         } else if (${field_name}) {
             return ${hash_field};

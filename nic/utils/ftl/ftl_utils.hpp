@@ -6,7 +6,7 @@
 #endif
 
 #ifdef FTL_TRACES_ENABLE
-#define FTL_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
+#define FTL_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
 #define FTL_TRACE_DEBUG(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #else
 #define FTL_TRACE_VERBOSE(_msg, _args...)

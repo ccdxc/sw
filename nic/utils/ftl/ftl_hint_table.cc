@@ -313,9 +313,11 @@ __label__ done;
     if (hctx->exmatch) {
         // This means there was an exact match in the hint table and
         // it was removed. Check and defragment the hints if required.
+        FTL_TRACE_VERBOSE("exact match in hint table. defragment.");
         ret = defragment_(hctx);
     } else {
         // We only found a matching hint, so remove the entry recursively
+        FTL_TRACE_VERBOSE("not an exact match in hint table. remove recursively.");
         ret = remove_(hctx);
     }
 

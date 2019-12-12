@@ -272,6 +272,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
   nic/utils:
     - reference: iota/test/standalone/sanity/linux
+  nic/utils/ftl:
+    - reference: iota/test/standalone/sanity/esx
   nic/vpp:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-linux

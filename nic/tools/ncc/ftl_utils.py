@@ -316,7 +316,7 @@ def ftl_field_print_str(field_obj):
         arr_len = get_bit_arr_length(field_width)
         for i in range(0, arr_len):
             args_list.append(field_name + '[' + str(i) + ']')
-        return (field_name + ': %02x' * arr_len, args_list)
+        return (field_name + ':%02x' * arr_len, args_list)
     else:
         return (field_name + ': %lu', [field_name])
 
