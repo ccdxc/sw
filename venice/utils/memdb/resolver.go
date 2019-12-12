@@ -52,8 +52,14 @@ func (r *addResolver) resolvedCheck(key string, obj Object) bool {
 		for _, ref := range refs {
 			refObj, ok := objDB.objects[getRefKey(ref)]
 			//Referred Object not present or still not resolved.
-			if !ok || !(refObj.isResolved()) {
+			if !ok {
 				refObjsResolved = false
+			} else {
+				refObj.Lock()
+				refObjsResolved = refObj.isResolved()
+				refObj.Unlock()
+			}
+			if !refObjsResolved {
 				break
 			}
 		}
