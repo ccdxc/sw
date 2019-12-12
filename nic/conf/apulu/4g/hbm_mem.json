@@ -252,9 +252,15 @@
             "_comment": "1M * 32B"
         },
         {
+            "name": "ip_mac_binding",
+            "size": "512K",
+            "cache": "p4ig",
+            "_comment": "32K * 16B"
+        },
+        {
             "name": "session",
             "size": "64M",
-            "cache": "p4ig",
+            "cache": "p4eg",
             "_comment": "2M * 32B"
         },
         {

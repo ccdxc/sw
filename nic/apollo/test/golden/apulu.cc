@@ -118,6 +118,7 @@ uint64_t g_vrmac1 = 0x00D1D2D3D4D5ULL;
 uint64_t g_dmaco1 = 0x001234567890ULL;
 uint32_t g_vni1 = 0xABCDEF;
 uint32_t g_dipo1 = 0x0C0C0101;
+uint16_t g_binding_id1 = 0xB1D;
 
 uint32_t g_dip3 = 0x0A0A0A0A;
 
@@ -589,7 +590,22 @@ local_mappings_init (void)
     memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip1, 4);
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id1;
+    local_info->binding_check_enabled = 1;
+    local_info->binding_id1 = g_binding_id1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
+}
+
+static void
+bindings_init (void)
+{
+    ip_mac_binding_actiondata_t data;
+    ip_mac_binding_binding_info_t *binding_info =
+        &data.action_u.ip_mac_binding_binding_info;
+    uint32_t tbl_id = P4TBL_ID_IP_MAC_BINDING;
+
+    memset(&data, 0, sizeof(data));
+    memcpy(binding_info->addr, &g_smac1, 6);
+    entry_write(tbl_id, g_binding_id1, NULL, NULL, &data, false, 0);
 }
 
 static void
@@ -1010,6 +1026,7 @@ TEST_F(apulu_test, test1)
     nacl_init();
     input_properties_init();
     local_mappings_init();
+    bindings_init();
     mappings_init();
     flows_init();
     sessions_init();

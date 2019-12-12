@@ -206,6 +206,7 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
         "drop_vni_invalid",
         "drop_nacl",
         "drop_vnic_policer_tx",
+        "drop_mac_ip_binding_fail",
     };
 
     SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));

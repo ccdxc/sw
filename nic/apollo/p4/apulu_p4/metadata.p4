@@ -35,6 +35,7 @@ header_type vnic_metadata_t {
         bd_id           : 16;
         egress_bd_id    : 16;
         vpc_id          : 16;
+        binding_id      : 16;
     }
 }
 
@@ -66,6 +67,7 @@ header_type control_metadata_t {
         apply_nat2              : 1;
         apply_tunnel2           : 1;
         lif_type                : 3;
+        binding_check_enabled   : 1;
     }
 }
 
@@ -127,6 +129,8 @@ header_type scratch_metadata_t {
         update_l4_chksum    : 1;
         cpu_flags           : 16;
         encap_type          : 2;
+        key_type            : 2;
+        binding_id          : 16;
 
         // policer
         policer_valid       : 1;

@@ -7,13 +7,18 @@ action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           hash7, hint7, hash8, hint8, hash9, hint9,
-                          hash10, hint10, more_hashes, more_hints, xlate_id) {
+                          more_hashes, more_hints, xlate_id,
+                          binding_check_enabled, binding_id1, binding_id2) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         if (vnic_id != 0) {
             modify_field(vnic_metadata.vnic_id, vnic_id);
         }
         modify_field(p4i_i2e.xlate_id, xlate_id);
+        modify_field(control_metadata.binding_check_enabled,
+                     binding_check_enabled);
+        modify_field(vnic_metadata.binding_id, binding_id1);
+        modify_field(scratch_metadata.binding_id, binding_id2);
         modify_field(ingress_recirc.local_mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
@@ -67,11 +72,6 @@ action local_mapping_info(entry_valid, vnic_id,
             modify_field(scratch_metadata.local_mapping_hint, hint9);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
-        if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.local_mapping_hash == hash10)) {
-            modify_field(scratch_metadata.local_mapping_hint, hint10);
-            modify_field(scratch_metadata.hint_valid, TRUE);
-        }
         modify_field(scratch_metadata.flag, more_hashes);
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flag == TRUE)) {
@@ -102,7 +102,6 @@ action local_mapping_info(entry_valid, vnic_id,
     modify_field(scratch_metadata.local_mapping_hash, hash7);
     modify_field(scratch_metadata.local_mapping_hash, hash8);
     modify_field(scratch_metadata.local_mapping_hash, hash9);
-    modify_field(scratch_metadata.local_mapping_hash, hash10);
 }
 
 @pragma stage 2
@@ -130,6 +129,35 @@ table local_mapping_ohash {
         local_mapping_info;
     }
     size : LOCAL_MAPPING_OHASH_TABLE_SIZE;
+}
+
+/******************************************************************************/
+/* IP MAC binding table                                                       */
+/******************************************************************************/
+action binding_info(addr) {
+    modify_field(scratch_metadata.ipv6_addr, addr);
+    if (key_metadata.local_mapping_lkp_type == KEY_TYPE_IPV4) {
+        if (ethernet_1.srcAddr != addr) {
+            ingress_drop(P4I_DROP_MAC_IP_BINDING_FAIL);
+        }
+    } else {
+        if ((ipv6_1.valid == TRUE) and (ipv6_1.srcAddr != addr)) {
+            ingress_drop(P4I_DROP_MAC_IP_BINDING_FAIL);
+        }
+    }
+}
+
+@pragma stage 4
+@pragma hbm_table
+@pragma index_table
+table ip_mac_binding {
+    reads {
+        vnic_metadata.binding_id    : exact;
+    }
+    actions {
+        binding_info;
+    }
+    size : IP_MAC_BINDING_TABLE_SIZE;
 }
 
 /******************************************************************************/
@@ -173,6 +201,10 @@ control local_mapping {
     }
     if (control_metadata.local_mapping_ohash_lkp == TRUE) {
         apply(local_mapping_ohash);
+    }
+    if ((control_metadata.rx_packet == FALSE) and
+        (control_metadata.binding_check_enabled == TRUE)){
+        apply(ip_mac_binding);
     }
 }
 

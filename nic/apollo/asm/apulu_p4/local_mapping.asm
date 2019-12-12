@@ -63,11 +63,6 @@ local_mapping_info:
     sne         c2, d.local_mapping_info_d.hint9, r0
     bcf         [c1&c2], local_mapping_hash_hit
     add         r2, r2, d.local_mapping_info_d.hint9
-    // Check hash10 and hint10
-    seq         c1, r1[HASH_MSB], d.local_mapping_info_d.hash10
-    sne         c2, d.local_mapping_info_d.hint10, r0
-    bcf         [c1&c2], local_mapping_hash_hit
-    add         r2, r2, d.local_mapping_info_d.hint10
     // Check for more hashes
     seq         c1, d.local_mapping_info_d.more_hashes, 1
     sne         c2, d.local_mapping_info_d.more_hints, r0
@@ -80,6 +75,9 @@ local_mapping_miss:
 local_mapping_hit:
     sne         c1, d.local_mapping_info_d.vnic_id, r0
     phvwr.c1    p.vnic_metadata_vnic_id, d.local_mapping_info_d.vnic_id
+    phvwr       p.control_metadata_binding_check_enabled, \
+                    d.local_mapping_info_d.binding_check_enabled
+    phvwr       p.vnic_metadata_binding_id, d.local_mapping_info_d.binding_id1
     phvwr.e     p.p4i_i2e_xlate_id, d.local_mapping_info_d.xlate_id
     phvwr.f     p.ingress_recirc_local_mapping_done, TRUE
 

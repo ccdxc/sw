@@ -11,6 +11,7 @@
 #define IPV4_FLOW_OHASH_TABLE_SIZE                          1048576     // 1M
 #define FLOW_TABLE_SIZE                                     2097152     // 2M
 #define FLOW_OHASH_TABLE_SIZE                               262144      // 256K
+#define IP_MAC_BINDING_TABLE_SIZE                           32768       // 32K
 #define NACL_TABLE_SIZE                                     512
 #define VNIC_TABLE_SIZE                                     1024
 #define DROP_STATS_TABLE_SIZE                               64
