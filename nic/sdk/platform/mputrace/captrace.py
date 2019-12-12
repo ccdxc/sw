@@ -48,7 +48,7 @@ args = parser.parse_args()
 
 if args.command == "gen_syms":
     if args.pipeline is not None:
-        if args.pipeline == "apollo" or args.pipeline == "iris" or args.pipeline == "gft" or args.pipeline == "artemis" or args.pipeline == "apulu":
+        if args.pipeline == "apollo" or args.pipeline == "iris" or args.pipeline == "gft" or args.pipeline == "artemis" or args.pipeline == "apulu" or args.pipeline == "poseidon":
             sym_dir = 'build/aarch64/%s/out/' % args.pipeline
             create_symbol_file(sym_dir, sym_file=args.sym_file)
         else:

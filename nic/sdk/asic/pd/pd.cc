@@ -12,7 +12,7 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_toeplitz.hpp"
-#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU)
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(POSEIDON)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #endif

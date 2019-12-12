@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = eth.p4bin
-MODULE_PIPELINE = iris gft apollo artemis apulu
+MODULE_PIPELINE = iris gft apollo artemis apulu poseidon
 MODULE_SRCS     = ${MODULE_SRC_DIR}/eth_rxdma_actions.p4 \
                   ${MODULE_SRC_DIR}/eth_txdma_actions.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \

@@ -7,6 +7,8 @@
 #include "nic/apollo/p4/artemis_txdma/common_txdma_dummy.p4"
 #elif defined(APULU)
 #include "nic/apollo/p4/apulu_txdma/common_txdma_dummy.p4"
+#elif defined(POSEIDON)
+#include "nic/apollo/p4/poseidon_txdma/common_txdma_dummy.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma_dummy.p4"
 #endif
@@ -21,6 +23,8 @@
 #include "nic/apollo/p4/artemis_txdma/common_txdma.p4"
 #elif defined(APULU)
 #include "nic/apollo/p4/apulu_txdma/common_txdma.p4"
+#elif defined(POSEIDON)
+#include "nic/apollo/p4/poseidon_txdma/common_txdma.p4"
 #else
 #include "nic/p4/common-p4+/common_txdma.p4"
 #endif

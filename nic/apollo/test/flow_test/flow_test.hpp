@@ -11,10 +11,12 @@
 
 #ifdef APOLLO
 #include "flow_test_apollo.hpp"
-#elif ARTEMIS
+#elif defined(ARTEMIS)
 #include "flow_test_artemis.hpp"
-#elif APULU
+#elif defined(APULU)
 #include "flow_test_apulu.hpp"
+#elif defined(POSEIDON)
+#include "flow_test_poseidon.hpp"
 #else
 #include "flow_test_iris.hpp"
 #endif

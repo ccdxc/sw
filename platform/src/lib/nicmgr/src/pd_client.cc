@@ -20,7 +20,7 @@ using namespace sdk::platform::utils;
 
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
-#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU)
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(POSEIDON)
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MIN
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MAX
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_TXDMA_TBL_ID_INDEX_MIN
@@ -70,7 +70,7 @@ PdClient::p4plus_rxdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
@@ -128,7 +128,7 @@ PdClient::p4plus_txdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
@@ -411,6 +411,8 @@ void PdClient::init(fwd_mode_t fwd_mode)
     std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
 #elif defined(APULU)
     std::string mpart_json = hal_cfg_path_ + "/apulu/8g/hbm_mem.json";
+#elif defined(POSEIDON)
+    std::string mpart_json = hal_cfg_path_ + "/poseidon/hbm_mem.json";
 #else
     std::string mpart_json = fwd_mode == sdk::platform::FWD_MODE_CLASSIC ?
             hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
@@ -435,7 +437,7 @@ void PdClient::init(fwd_mode_t fwd_mode)
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
@@ -624,7 +626,7 @@ PdClient::program_qstate(struct queue_info* queue_info,
 uint8_t
 PdClient::get_iq(uint8_t pcp_or_dscp)
 {
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
     typedef struct pd_qos_dscp_cos_map_s {
         bool        is_dscp : 1 ;
         uint8_t     no_drop : 1;
