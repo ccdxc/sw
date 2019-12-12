@@ -13,6 +13,10 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/telemetry/ipfix_pd.hpp"
+#include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+
+#define IPFIX_STATS_SHIFT 6
 
 namespace hal {
 namespace pd {
@@ -182,6 +186,25 @@ pd_mirror_session_delete(pd_func_args_t *pd_func_args)
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
+bool 
+mirror_session_walk (void *entry, void *ctxt) 
+{
+    pd_mirror_session_get_args_t *args = (pd_mirror_session_get_args_t *)ctxt;
+    pd_tnnl_rw_entry_t *rwentry = (pd_tnnl_rw_entry_t *)entry; 
+
+    HAL_TRACE_DEBUG("tnnl rw idx: {} mirror session rw idx: {}", rwentry->tnnl_rw_idx, args->session->mirror_destination_u.er_span_dest.tnnl_rw_idx);
+    if (rwentry->tnnl_rw_idx == args->session->\
+                   mirror_destination_u.er_span_dest.tnnl_rw_idx) {
+        HAL_TRACE_DEBUG("Setting the tnnl params");
+        args->session->mirror_destination_u.er_span_dest.ip_sa = rwentry->tnnl_rw_key.ip_sa;
+        args->session->mirror_destination_u.er_span_dest.ip_da = rwentry->tnnl_rw_key.ip_da;
+        args->session->mirror_destination_u.er_span_dest.ip_type = rwentry->tnnl_rw_key.ip_type;
+        return true;
+    }
+
+    return false;
+}
+
 hal_ret_t
 pd_mirror_session_get(pd_func_args_t *pd_func_args)
 {
@@ -197,22 +220,28 @@ pd_mirror_session_get(pd_func_args_t *pd_func_args)
     p4pd_error_t pdret;
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
     if (pdret == P4PD_SUCCESS) {
+        HAL_TRACE_DEBUG("Action: {}", action_data.action_id);
         switch (action_data.action_id) {
         case MIRROR_LOCAL_SPAN_ID:
             args->session->type = MIRROR_DEST_LOCAL;
             args->session->truncate_len = action_data.action_u.mirror_local_span.truncate_len;
             // args-> dst_if // TBD
+            break;
         case MIRROR_REMOTE_SPAN_ID:
             args->session->type = MIRROR_DEST_RSPAN;
             args->session->truncate_len = action_data.action_u.mirror_remote_span.truncate_len;
             args->session->mirror_destination_u.r_span_dest.vlan = action_data.action_u.mirror_remote_span.vlan;
+            break;
         case MIRROR_ERSPAN_MIRROR_ID:
             args->session->type = MIRROR_DEST_ERSPAN;
             args->session->truncate_len = action_data.action_u.mirror_erspan_mirror.truncate_len;
-            // Get tunnel if ID - TBD
-            //args->session->mirror_destination_u.r_span_dest.tunnel_if_id =
+            args->session->mirror_destination_u.er_span_dest.tnnl_rw_idx  = 
+                                   action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index;
+            walk_tnnl_rw_entry_ht(mirror_session_walk, (void *)args);
+            break;
         case MIRROR_NOP_ID:
             args->session->type = MIRROR_DEST_NONE;
+            break;
         default:
             return HAL_RET_INVALID_OP;
         }
@@ -445,7 +474,7 @@ hal_ret_t
 pd_collector_get(pd_func_args_t *pd_func_args)
 {
     pd_collector_get_args_t             *c_args;
-    collector_config_t                  *cfg;
+    collector_config_t                  *cfg = NULL;
     telemetry_export_dest_t             *d;
 
     c_args = pd_func_args->pd_collector_get;
@@ -469,6 +498,16 @@ pd_collector_get(pd_func_args_t *pd_func_args)
     telemetry_export_dest_get_ip(d, cfg, false);
     telemetry_export_dest_get_mac(d, cfg, true);
     telemetry_export_dest_get_mac(d, cfg, false);
+
+    sdk::types::mem_addr_t vaddr;
+    sdk::types::mem_addr_t stats_mem_addr = 
+                        get_mem_addr(CAPRI_HBM_REG_IPFIX_STATS);
+    SDK_ASSERT(stats_mem_addr != INVALID_MEM_ADDRESS);
+
+    stats_mem_addr += ((1 << IPFIX_STATS_SHIFT)*cfg->collector_id);
+    sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(stats_mem_addr, &vaddr);
+    SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+    c_args->stats = (collector_stats_t *)vaddr;
 
     return HAL_RET_OK;
 }

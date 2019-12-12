@@ -200,6 +200,10 @@ typedef struct mirror_session_s {
     union {
         struct er_span_dest_ {
             if_t *tunnel_if;
+            uint32_t tnnl_rw_idx;
+            ip_addr_t ip_sa;
+            ip_addr_t ip_da;
+            uint8_t   ip_type;
         } er_span_dest;
       struct r_span_dest_ {
             vlan_id_t vlan;
@@ -221,6 +225,17 @@ typedef struct collector_config_s {
     uint32_t            export_intvl;
     export_formats_en   format;
 } collector_config_t;
+
+typedef struct collector_stats_s {
+    uint64_t            num_export_bytes;
+    uint64_t            num_export_packets;
+    uint64_t            num_export_records_nonip;
+    uint64_t            num_export_records_ipv4;
+    uint64_t            num_export_records_ipv6;
+    uint64_t            pad1;
+    uint64_t            pad2;
+    uint64_t            pad3;
+} collector_stats_t;
 
 static inline flow_monitor_rule_t *
 flow_monitor_rule_alloc(void)

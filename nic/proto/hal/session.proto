@@ -181,10 +181,23 @@ message ConnTrackInfo {
   bool                 tcp_ts_option_sent         = 13;   // TCP ts option sent or not
 }
 
+message TelemetryInfo {
+  bool                 ingress_mirror_session_enable = 1;  // Is Ingress mirror enabled ?
+  bool                 egress_mirror_session_enable  = 2;  // Is Egress mirror enabled ?
+  uint32               ingress_mirror_session        = 3;  // Ingress mirror session id
+  uint32               egress_mirror_session         = 4;  // Egress mirror session id
+  uint32               flow_export_enable_bitmap     = 5;  // Flow Export enable bitmap
+  uint32               flow_export_id1               = 6;  // Flow Export id 1
+  uint32               flow_export_id2               = 7;  // Flow Export id 2
+  uint32               flow_export_id3               = 8;  // Flow Export id 3
+  uint32               flow_export_id4               = 9;  // Flow Export id 4
+}
+
 // FlowData captures all the flow information
 message FlowData {
   FlowInfo         flow_info = 1;          // flow forwarding, rewriting information
   ConnTrackInfo    conn_track_info = 2;    // connection state of the flow
+  TelemetryInfo    telemetry_info = 3;     // Telemetry state of the flow
 }
 
 // FlowSpec contains all information needed to install a uni-directional flow
@@ -225,10 +238,11 @@ message SessionRequestMsg {
 message FlowStatus {
   fixed64             flow_handle     = 1;    // id of the flow (returned by HAL)
   ConnTrackInfo       conn_track_info = 2;    // connection tracking info
-  bool                flow_coll       = 3;    // TODO: flow collision. Only till recirc works  
-  uint32              flow_hash       = 4;    // TODO: REMOVE flow hash. Only for DOL testing
-  types.FlowDirection flow_direction  = 5;    // flow direction
-  FlowInstance        flow_instance   = 6;    // flow instance (for proxy etc.)
+  TelemetryInfo       telemetry_info  = 3;    // telemetry info per session
+  bool                flow_coll       = 4;    // TODO: flow collision. Only till recirc works  
+  uint32              flow_hash       = 5;    // TODO: REMOVE flow hash. Only for DOL testing
+  types.FlowDirection flow_direction  = 6;    // flow direction
+  FlowInstance        flow_instance   = 7;    // flow instance (for proxy etc.)
 }
 
 // TFTPInfo captures the operational status of TFTP ALG session

@@ -360,7 +360,6 @@ mirror_session_process_get (MirrorSessionGetRequest &req,
 
     HAL_TRACE_DEBUG("Mirror Session ID {}",
             req.key_or_handle().mirrorsession_id());
-    memset(args->session, 0, sizeof(mirror_session_t));
     pd_func_args.pd_mirror_session_get = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -382,14 +381,23 @@ mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rs
     if (!req.has_key_or_handle()) {
         /* Iterate over all the sessions */
         for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+            memset(args.session, 0, sizeof(mirror_session_t));
             args.session->id = i;
             ret = mirror_session_process_get(req, &args);
-            if (ret == HAL_RET_OK) {
+            if (ret == HAL_RET_OK && args.session->type == hal::MIRROR_DEST_ERSPAN) {
                 exists = true;
                 auto response = rsp->add_response();
                 response->set_api_status(types::API_STATUS_OK);
                 response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(i);
                 response->mutable_spec()->set_snaplen(session.truncate_len);
+                response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
+                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
+                response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
+                        set_ip_af(types::IPAddressFamily::IP_AF_INET);
+                response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
+                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
+                response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
+                        set_ip_af(types::IPAddressFamily::IP_AF_INET);
             }
         }
         if (!exists) {
@@ -398,29 +406,22 @@ mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rs
         }
     } else {
         auto response = rsp->add_response();
+        memset(args.session, 0, sizeof(mirror_session_t));
         args.session->id = req.key_or_handle().mirrorsession_id();
         ret = mirror_session_process_get(req, &args);
         if (ret == HAL_RET_OK) {
             response->set_api_status(types::API_STATUS_OK);
             response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(args.session->id);
             response->mutable_spec()->set_snaplen(session.truncate_len);
+            response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
+                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
+            response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
+                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
         } else {
             response->set_api_status(types::API_STATUS_INVALID_ARG);
         }
     }
 
-    /* TODO: Find the interface ID depending on interface type.
-       verify against local cache of session.
-       switch (session->type) {
-       case hal::MIRROR_LOCAL_SPAN_ID:
-       break
-       case hal::MIRROR_DEST_RSPAN:
-       break
-       case hal::MIRROR_DEST_ERSPAN:
-       break
-       case hal::MIRROR_DEST_NONE:
-       break
-       } */
     return HAL_RET_OK;
 }
 
@@ -620,22 +621,12 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
 }
 
 static hal_ret_t
-collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
+collector_process_get (CollectorGetRequest &req, CollectorGetResponse *response,
                        pd::pd_collector_get_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_func_args_t pd_func_args = {0};
 
-    auto response = rsp->add_response();
-    int id = telemetry_collector_get_id(args->cfg->collector_id);
-    if (id < 0) {
-        HAL_TRACE_ERR("Collector not found for id {}", args->cfg->collector_id)
-        response->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
-    }
-    HAL_TRACE_DEBUG("Collector ID {}, {}", args->cfg->collector_id, id);
-
-    args->cfg->collector_id = id;
     pd_func_args.pd_collector_get = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_GET, &pd_func_args);
     if (ret == HAL_RET_OK) {
@@ -646,11 +637,17 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
         response->mutable_spec()->set_dest_port(args->cfg->dport);
         response->mutable_spec()->set_template_id(args->cfg->template_id);
         response->mutable_spec()->set_export_interval(args->cfg->export_intvl);
-        //response->mutable_spec()->mutable_vrf_key_or_handle()->set_vrf_id();
-        //response->mutable_spec()->set_format(args->cfg->format);
+        response->mutable_spec()->mutable_encap()->set_encap_type(types::encapType::ENCAP_TYPE_IPSEC);
+        response->mutable_spec()->mutable_encap()->set_encap_value(args->cfg->vlan);
+        response->mutable_stats()->set_num_exported_bytes(args->stats->num_export_bytes);
+        response->mutable_stats()->set_num_exported_packets(args->stats->num_export_packets);
+        response->mutable_stats()->set_num_exported_records_nonip(args->stats->num_export_records_nonip);
+        response->mutable_stats()->set_num_exported_records_ipv4(args->stats->num_export_records_ipv4);
+        response->mutable_stats()->set_num_exported_records_ipv6(args->stats->num_export_records_ipv6);
     } else {
         response->set_api_status(types::API_STATUS_INVALID_ARG);
     }
+    response->set_api_status(types::API_STATUS_OK);
     return ret;
 }
 
@@ -662,17 +659,22 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
     pd::pd_collector_get_args_t args;
 
     args.cfg = &cfg;
+    args.stats = NULL;
     if (!req.has_key_or_handle()) {
         /* Iterate over all collectors */
         for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
-            memset(&args.cfg, 0, sizeof(collector_config_t));
-            args.cfg->collector_id = i;
-            ret = collector_process_get(req, rsp, &args);
+            if (telemetry_collector_id_db[i] > 0) {
+                auto response = rsp->add_response();
+                memset(&cfg, 0, sizeof(collector_config_t));
+                args.cfg->collector_id = i;
+                ret = collector_process_get(req, response, &args);
+            }
         }
     } else {
-        memset(args.cfg, 0, sizeof(collector_config_t));
+        auto response = rsp->add_response();
+        memset(&cfg, 0, sizeof(collector_config_t));
         args.cfg->collector_id = req.key_or_handle().collector_id();
-        ret = collector_process_get(req, rsp, &args);
+        ret = collector_process_get(req, response, &args);
     }
     return ret;
 }
@@ -716,6 +718,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
         HAL_TRACE_ERR("Failed to retrieve rule_match");
         return ret;
     }
+    rule->action.num_mirror_dest = rule->action.num_collector = 0;
     if (spec.has_action()) {
         if ((spec.action().action(0) == telemetry::MIRROR) ||
             (spec.action().action(0) == telemetry::MIRROR_TO_CPU)) {
@@ -963,10 +966,71 @@ end:
     return ret;
 }
 
+static inline hal_ret_t
+flow_monitor_rule_spec_build (flow_monitor_rule_t *rule, FlowMonitorRuleGetResponse *resp) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = rule_match_spec_build(&rule->rule_match, resp->mutable_spec()->mutable_match());
+    if (ret != HAL_RET_OK) {
+        resp->set_api_status(types::API_STATUS_ERR);
+        return ret;
+    }
+
+    resp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(rule->vrf_id);
+
+    HAL_TRACE_DEBUG("Number of collectors: {}", rule->action.num_collector);
+    HAL_TRACE_DEBUG("Number of mirrors: {}", rule->action.num_mirror_dest);
+
+    for (uint8_t idx = 0; idx<rule->action.num_collector; idx++) {
+         if (!idx)
+             resp->mutable_spec()->mutable_action()->add_action(telemetry::COLLECT_FLOW_STATS);
+         resp->mutable_spec()->add_collector_key_handle()->set_collector_id(\
+              rule->action.collectors[idx]);
+    }
+
+    for (uint8_t idx = 0; idx<rule->action.num_mirror_dest; idx++) {
+         if (!idx) {
+             if (rule->action.mirror_to_cpu) 
+                 resp->mutable_spec()->mutable_action()->\
+                       add_action(telemetry::MIRROR_TO_CPU);
+             else
+                 resp->mutable_spec()->mutable_action()->\
+                       add_action(telemetry::MIRROR);
+         }
+         
+         resp->mutable_spec()->mutable_action()->add_ms_key_handle()->\
+             set_mirrorsession_id(rule->action.mirror_destinations[idx]); 
+    }  
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 flow_monitor_rule_get (FlowMonitorRuleGetRequest &req, FlowMonitorRuleGetResponseMsg *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    int       rule_id = 0;
+
+    if (req.has_key_or_handle()) {
+        rule_id = telemetry_flow_monitor_rule_get_id(
+                        req.key_or_handle().flowmonitorrule_id());
+        if (rule_id < 0) {
+            HAL_TRACE_ERR("Rule not found for id {}",
+                        req.key_or_handle().flowmonitorrule_id());
+            return HAL_RET_INVALID_ARG;
+        }
+
+        return flow_monitor_rule_spec_build(flow_mon_rules[rule_id], rsp->add_response());
+    }
+
+    for (int i = 0; i < MAX_FLOW_MONITOR_RULES; i++) {
+        rule_id = flow_monitor_rule_id_db[i];
+        if (rule_id > 0) {
+            flow_monitor_rule_spec_build(flow_mon_rules[i], rsp->add_response());
+        }
+    }
+    
     return ret;
 }
 

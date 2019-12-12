@@ -1191,6 +1191,7 @@ It has these top-level messages:
 	FlowInfo
 	ConnTrackExceptions
 	ConnTrackInfo
+	TelemetryInfo
 	FlowData
 	FlowSpec
 	SessionSpec
@@ -1328,9 +1329,9 @@ It has these top-level messages:
 	CollectorDeleteResponseMsg
 	CollectorGetRequest
 	CollectorGetRequestMsg
-	CollectorStats
 	CollectorGetResponse
 	CollectorGetResponseMsg
+	CollectorStats
 	MonitorAction
 	FlowMonitorRuleSpec
 	FlowMonitorRuleStatus

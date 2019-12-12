@@ -691,10 +691,7 @@ endpoint_create_process_sessions (ep_t *ep)
         return false;
     };
 
-    sdk_ret_t sdk_ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, 
-                                                                        &ep_ctxt);
-
-    HAL_TRACE_DEBUG("Juse before timer call");
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ep_ctxt);
     hal_print_handles_block_list(ep_ctxt.ep_upd_ctxt->sess_list);
     if (ep_ctxt.ep_upd_ctxt->sess_list->num_elems()) {
         ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
@@ -722,11 +719,11 @@ endpoint_create_process_sessions (ep_t *ep)
 void
 ep_create_session_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    hal_ret_t ret = HAL_RET_OK;
     ep_sess_upd_ctxt_t *ep_ctxt = (ep_sess_upd_ctxt_t *)ctxt;
     ep_create_sess_ctxt_t ep_cr_ctxt;
     uint32_t count = 0;
     hal_handle_t *sess_hdl;
+    hal_ret_t    ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("Ep create: Session update walk cb");
 
@@ -753,6 +750,9 @@ ep_create_session_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
             ret = fte::fte_softq_enqueue(ep_cr_ctxt.fte_id,
                                          fte_session_update_list,
                                          (void *)ep_cr_ctxt.sess_hdl_list);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to post update to FTE");
+            }
 
             count = 0;
             ep_cr_ctxt.sess_hdl_list = 
@@ -766,6 +766,9 @@ ep_create_session_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         ret = fte::fte_softq_enqueue(ep_cr_ctxt.fte_id,
                                      fte_session_update_list,
                                      (void *)ep_cr_ctxt.sess_hdl_list);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to post update to FTE");
+        }
     } else {
         HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_LIST, ep_cr_ctxt.sess_hdl_list);
     }

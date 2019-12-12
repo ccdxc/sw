@@ -552,6 +552,7 @@ static void
 flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
 {
     FlowInfo             *flow_info = flow_data->mutable_flow_info();
+    TelemetryInfo        *telemetry_info = flow_data->mutable_telemetry_info();
 
     flow_info->set_flow_action((session::FlowAction)(flow->config.action));
     flow_info->set_nat_type((session::NatType)(flow->config.nat_type));
@@ -559,6 +560,15 @@ flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
     ip_addr_to_spec(flow_info->mutable_nat_dip(), &flow->config.nat_dip);
     flow_info->set_nat_sport(flow->config.nat_sport);
     flow_info->set_nat_dport(flow->config.nat_dport);
+    telemetry_info->set_ingress_mirror_session_enable(flow->config.is_ing_proxy_mirror);
+    telemetry_info->set_egress_mirror_session_enable(flow->config.is_eg_proxy_mirror);
+    telemetry_info->set_ingress_mirror_session(flow->config.ing_mirror_session);
+    telemetry_info->set_egress_mirror_session(flow->config.eg_mirror_session);
+    telemetry_info->set_flow_export_enable_bitmap(flow->pgm_attrs.export_en);
+    telemetry_info->set_flow_export_id1(flow->pgm_attrs.export_id1);
+    telemetry_info->set_flow_export_id2(flow->pgm_attrs.export_id2);
+    telemetry_info->set_flow_export_id3(flow->pgm_attrs.export_id3);
+    telemetry_info->set_flow_export_id4(flow->pgm_attrs.export_id4);
 }
 
 static void

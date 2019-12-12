@@ -106,6 +106,13 @@ find_tnnl_rw_entry_by_key (pd_tnnl_rw_entry_key_t *key)
     return (pd_tnnl_rw_entry_t *)g_hal_state_pd->tnnl_rw_table_ht()->lookup(key);
 }
 
+// Walk tunnel rw hash table
+static inline sdk_ret_t
+walk_tnnl_rw_entry_ht (sdk::lib::ht::ht_walk_cb_t walk_cb, void *ctxt) 
+{
+    return (g_hal_state_pd->tnnl_rw_table_ht()->walk_safe(walk_cb, ctxt));
+}
+
 extern void *tnnl_rw_entry_pd_get_key_func(void *entry);
 extern uint32_t tnnl_rw_entry_pd_key_size(void);
 

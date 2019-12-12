@@ -31,6 +31,7 @@ service Telemetry {
   rpc MirrorSessionUpdate (MirrorSessionRequestMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionDelete (MirrorSessionDeleteRequestMsg) returns (MirrorSessionDeleteResponseMsg) {}
   rpc MirrorSessionGet (MirrorSessionGetRequestMsg) returns (MirrorSessionGetResponseMsg) {}
+
 }
 
 // ExportFormat is a enumeration of export formats supported
@@ -114,9 +115,6 @@ message CollectorGetRequestMsg {
   repeated CollectorGetRequest    request = 1;    // batched get request
 }
 
-message CollectorStats {
-}
-
 message CollectorGetResponse {
   types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
   CollectorSpec     spec       = 2;     // Collector configuration
@@ -126,6 +124,19 @@ message CollectorGetResponse {
 // CollectorGetResponseMsg is batched response to CollectorGetRequestMsg
 message CollectorGetResponseMsg {
   repeated CollectorGetResponse    response   = 1;    // batch get response
+}
+
+/*
+ * CollectorStats captures P4Plus statistics
+ * The offsets of fields here MUST match the offsets of fields defined in
+ * ipfix_defines.h
+ */
+message CollectorStats {
+  uint64         num_exported_bytes = 1;
+  uint64         num_exported_packets = 2;
+  uint64         num_exported_records_nonip = 3;
+  uint64         num_exported_records_ipv4 = 4;
+  uint64         num_exported_records_ipv6 = 5;
 }
 
 // AggregationScheme is an enumeration of aggregation schemes supported

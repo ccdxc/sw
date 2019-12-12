@@ -2058,6 +2058,7 @@ pd_collector_delete_args_init (pd_collector_delete_args_t *args)
 // collector get
 typedef struct pd_collector_get_args_s {
     collector_config_t *cfg;
+    collector_stats_t  *stats;
 } __PACK__ pd_collector_get_args_t;
 
 static inline void

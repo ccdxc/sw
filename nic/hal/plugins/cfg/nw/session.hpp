@@ -32,6 +32,7 @@ using session::FlowKeyV6;
 using session::FlowKey;
 using session::FlowData;
 using session::FlowInfo;
+using session::TelemetryInfo;
 using session::FlowSpec;
 using session::FlowStatus;
 using session::ConnTrackInfo;
