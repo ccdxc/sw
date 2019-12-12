@@ -1,22 +1,26 @@
 #!/bin/sh
 
 NOW=`date +"%Y%m%d%H%M%S"`
-TEMP_LOCATION=/data/debug-${NOW}-$1
-FINAL_LOCATION=/data/lastlog
+TOP=/obfl/sysmgr-dumps
+LOCATION=${TOP}/debug-${NOW}-$1
+MAX_DAYS="1"
+MAX_RECORDS="10"
 
-mkdir -p ${TEMP_LOCATION}
+mkdir -p ${LOCATION}
 
 # Check CPU load
-top -b -n 1 -d 1 > ${TEMP_LOCATION}/top_start.txt
+top -b -n 1 -d 1 > ${LOCATION}/top_start.txt
+top -b -n 1 -d 1 -m >> ${LOCATION}/top_start.txt
 
 # Copy everything under `/log`
-cp -a /var/log ${TEMP_LOCATION}/log
+cp -a /var/log ${LOCATION}/log
 
 # One final CPU load check
-top -b -n 1 -d 1 > ${TEMP_LOCATION}/top_end.txt
+top -b -n 1 -d 1 > ${LOCATION}/top_end.txt
+top -b -n 1 -d 1 -m >> ${LOCATION}/top_end.txt
 
-mv ${FINAL_LOCATION} ${FINAL_LOCATION}.old
-rm -rf ${FINAL_LOCATION}.old
-mv ${TEMP_LOCATION} ${FINAL_LOCATION}
-# in case `mv` fails
-rm -rf ${TEMP_LOCATION}
+# Delete old logs
+find ${TOP} -mtime +${MAX_DAYS} -type d -prune -exec rm -rf {} \;
+
+# Also don't keep any more than MAX_RECORDS
+for f in `ls -t ${TOP} | tail -n +${MAX_RECORDS}`; do echo rm -rf $f; done
