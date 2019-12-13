@@ -1227,13 +1227,13 @@ modules:
         spec    : resp_rx_read_only_rsvd_key.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_RX_READ_ONLY_QP_ACCESS
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : resp_rx_read_only_qp_access
-    #    spec    : resp_rx_read_only_qp_access.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_RX_READ_ONLY_QP_ACCESS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only_qp_access
+        spec    : resp_rx_read_only_qp_access.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_RESP_RX_READ_INV_USER_KEY
@@ -1323,13 +1323,13 @@ modules:
         spec    : resp_rx_write_only_imm_as_dbell.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_RX_WRITE_ONLY_QP_ACCESS
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : resp_rx_write_only_qp_access
-    #    spec    : resp_rx_write_only_qp_access.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_QP_ACCESS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_qp_access
+        spec    : resp_rx_write_only_qp_access.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_RX_WRITE_ONLY_INV_DMA_LEN
@@ -1404,13 +1404,13 @@ modules:
         spec    : resp_rx_atomic_cmpswap2.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_RX_ATOMIC_QP_ACCESS
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : resp_rx_atomic_qp_access
-    #    spec    : resp_rx_atomic_qp_access.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_RX_ATOMIC_QP_ACCESS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_qp_access
+        spec    : resp_rx_atomic_qp_access.testspec
+        ignore  : False
 
 
     # RQ Recirc testcases

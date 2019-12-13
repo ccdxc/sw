@@ -81,6 +81,7 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
+    if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
     ResetErrQState(tc)
     rs = tc.config.rdmasession

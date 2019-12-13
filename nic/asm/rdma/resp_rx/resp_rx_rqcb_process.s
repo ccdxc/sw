@@ -215,11 +215,9 @@ process_send_write_fml:
      
 /****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
-#if 0
     // check QP level access permissions
     and         r5, d.access_flags, QP_ACCESS_REMOTE_WRITE
     beqi        r5, 0, inv_req_nak_access_err
-#endif
 
     // check expected op type and pkt type for write packets 
     seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY // BD Slot
@@ -480,11 +478,9 @@ send_only_skip_immdt_as_dbell:
 
 /******  Logic for WRITE_ONLY packets ******/
 process_write_only:
-#if 0
     // check QP level access permissions
     and         r5, d.access_flags, QP_ACCESS_REMOTE_WRITE
     beqi        r5, 0, inv_req_nak_access_err
-#endif
 
     // is it zero length write request ?
     seq         c5, CAPRI_RXDMA_RETH_DMA_LEN, 0 // BD Slot
@@ -579,12 +575,10 @@ wr_only_zero_len_no_imm_data:
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
-#if 0
     // check QP level access permissions
     and.c3      r5, d.access_flags, QP_ACCESS_REMOTE_READ
     and.!c3     r5, d.access_flags, QP_ACCESS_REMOTE_ATOMIC
     beqi        r5, 0, inv_req_nak_access_err
-#endif
 
     // for read and atomic, start DMA commands from flit 9 instead of 8
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0) // BD Slot
