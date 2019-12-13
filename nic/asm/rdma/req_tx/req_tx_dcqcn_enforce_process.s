@@ -175,6 +175,7 @@ spec_fail:
 drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
     phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
+
 fence_set:
 #if !(defined (HAPS) || defined (HW))
     /*

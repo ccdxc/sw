@@ -1736,27 +1736,27 @@ modules:
             - fence     : 0
             - fence     : 1
 
-#    - module:
-#        name    : REQ_TX_FAST_REG_PMR_4KB
-#        enable  : True
-#        package : test.rdma
-#        module  : req_tx_fast_register_phy_mr_4KB
-#        spec    : req_tx_fast_register_phy_mr_4KB.testspec
-#        ignore  : False
-#        iterate :
-#            - fence     : 0
-#            - fence     : 1
-#
-#    - module:
-#        name    : REQ_TX_FRPMR_LI_FRPMR
-#        enable  : True
-#        package : test.rdma
-#        module  : req_tx_frpmr_li_frpmr
-#        spec    : req_tx_frpmr_li_frpmr.testspec
-#        ignore  : False
-#        iterate :
-#            - fence     : 0
-#            - fence     : 1
+    - module:
+        name    : REQ_TX_FAST_REG_PMR_4KB
+        enable  : True
+        package : test.rdma
+        module  : req_tx_fast_register_phy_mr_4KB
+        spec    : req_tx_fast_register_phy_mr_4KB.testspec
+        ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
+
+    - module:
+        name    : REQ_TX_FRPMR_LI_FRPMR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_frpmr_li_frpmr
+        spec    : req_tx_frpmr_li_frpmr.testspec
+        ignore  : False
+        iterate :
+            - fence     : 0
+            - fence     : 1
 
 # Max Recirc Tests
     - module:
