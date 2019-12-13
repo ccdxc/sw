@@ -15,6 +15,11 @@ enum service_spec_dep_kind {
     SERVICE_SPEC_DEP_FILE,
 };
 
+enum service_kind {
+    SERVICE_DAEMON,
+    SERVICE_ONESHOT,
+};
+
 class ServiceSpecDep {
 public:
     enum service_spec_dep_kind kind;
@@ -29,6 +34,7 @@ public:
     std::string                    name;
     std::string                    command;
     std::vector<ServiceSpecDepPtr> dependencies;
+    enum service_kind              kind;
     int                            flags;
     double                         timeout;
     unsigned long                  cpu_affinity;

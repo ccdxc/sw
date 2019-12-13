@@ -18,6 +18,23 @@
 
 namespace pt = boost::property_tree;
 
+
+static enum service_kind
+service_kind_from_obj(pt::ptree obj)
+{
+
+    if (obj.count("kind") == 0) {
+        return SERVICE_DAEMON;
+    } else if (obj.get<std::string>("kind") == "daemon") {
+        return SERVICE_DAEMON;
+    } else if (obj.get<std::string>("kind") == "oneshot") {
+        return SERVICE_ONESHOT;
+    } else {
+        throw std::runtime_error("Unknown kind: " + 
+                                 obj.get<std::string>("kind"));
+    }
+}
+
 static int flags_from_obj(pt::ptree obj)
 {
    int flags = DEFAULT_SPEC_FLAGS;
@@ -75,6 +92,7 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
     ServiceSpecPtr spec = ServiceSpec::create();
     spec->name = obj.get<std::string>("name");
     spec->command =  obj.get<std::string>("command");
+    spec->kind = service_kind_from_obj(obj);
     spec->flags = flags_from_obj(obj);
     spec->timeout = obj.get<double>("timeout");
     spec->dependencies = dependencies_from_obj(obj);

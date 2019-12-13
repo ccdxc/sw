@@ -162,6 +162,11 @@ void Service::fault(std::string reason)
 {
     reason = reason + " - " + this->spec->name;
 
+    if (this->spec->kind == SERVICE_ONESHOT) {
+        glog->info("Service {} is oneshot, not setting fault",
+                   this->spec->name);
+        return;
+    }
     if (this->config_state == SERVICE_CONFIG_STATE_OFF) {
         glog->info("Service {} shutdown on purpose, not setting fault",
             this->spec->name);

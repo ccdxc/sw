@@ -1,0 +1,8 @@
+[{
+    "name": "script",
+    "kind": "oneshot",
+    "command": "ls",
+    "dependencies": [],
+    "flags": [],
+    "timeout": 0.0
+}]

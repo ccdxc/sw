@@ -61,3 +61,4 @@ runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12"
 runtest 120s test-critical-watchdog.json "Service example2 timed out" \
         "System in fault mode" "Simulation Watchdog Expired"
 
+runtest 20s test-oneshot.json "Service script is oneshot, not setting fault"
