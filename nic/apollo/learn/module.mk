@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdslearn.so
-MODULE_PIPELINE = apollo artemis apulu poseidon
+MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_SOLIBS   = dpdk_device
 ifneq ($(PIPELINE), apulu)
 MODULE_INCS     = ${MODULE_DIR}/impl/stub

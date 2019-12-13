@@ -50,19 +50,19 @@ pipeline_get (void)
     return "artemis";
 #elif defined(APULU)
     return "apulu";
-#elif defined(POSEIDON)
-    return "poseidon";
+#elif defined(ATHENA)
+    return "athena";
 #else
     SDK_ASSERT(0);
     return NULL;
 #endif
 }
 
-// Returns true if pipeline is poseidon
+// Returns true if pipeline is athena
 static inline bool
-poseidon (void)
+athena (void)
 {
-    return (pipeline_get() == "poseidon");
+    return (pipeline_get() == "athena");
 }
 
 // Returns true if pipeline is apulu

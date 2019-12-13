@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = adminq.p4bin
-MODULE_PIPELINE = iris gft apollo artemis apulu poseidon
+MODULE_PIPELINE = iris gft apollo artemis apulu athena
 MODULE_SRCS     = ${MODULE_SRC_DIR}/adminq_txdma_actions.p4 \
                   ${MODULE_SRC_DIR}/nicmgr_txdma_actions.p4
 

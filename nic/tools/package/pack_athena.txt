@@ -1,0 +1,221 @@
+nic/conf/init_bins                                                /nic/conf/init_bins/
+nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
+nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
+nic/conf/$PIPELINE/8g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/8g/
+nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
+nic/conf/$PIPELINE/4g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/4g/
+nic/conf/$PIPELINE/device.json                                    /nic/conf/
+
+# HW catalog files
+nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
+nic/conf/catalog_hw_68-0004.json                                  /nic/conf/
+nic/conf/catalog_hw_68-0005.json                                  /nic/conf/
+nic/conf/catalog_hw_68-0006.json                                  /nic/conf/
+nic/conf/catalog_hw_68-0007.json                                  /nic/conf/
+
+# serdes config files
+nic/conf/serdes_68-0003.json                                      /nic/conf/
+nic/conf/serdes_68-0004.json                                      /nic/conf/
+nic/conf/serdes_68-0005.json                                      /nic/conf/
+nic/conf/serdes_68-0006.json                                      /nic/conf/
+nic/conf/serdes_68-0007.json                                      /nic/conf/
+
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libevent_thread.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpenipc.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3
+nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmmgr.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpal.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libht.so                            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libindexer.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/librte_indexer.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblogger.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libthread.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libutils.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libperiodic.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtwheel.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdirectmap.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libhash.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libhbmhash.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtcam.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libtimerfd.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcatalog.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmemhash*.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libftl*.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmtrack.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcapisa.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsknobs.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libev.so.4                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                   /nic/lib/
+nic/hal/third-party/judy/$ARCH/lib/libJudy.so.1                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi_impl.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdscore.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsframework.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdspciemgr.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libnicmgr_$PIPELINE.so              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsltcam.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libslhash.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsldirectmap.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi_capri_impl.so             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsfte.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdevice.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
+
+# p4/asm specific libs
+nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
+nic/build/$ARCH/$PIPELINE/bin/p4pasm/                             /nic/conf/$PIPELINE/p4plus_bin/
+nic/build/$ARCH/$PIPELINE/pgm_bin/                                /nic/conf/$PIPELINE/pgm_bin/
+nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_txdma/                /nic/conf/$PIPELINE/txdma_bin/
+nic/build/$ARCH/$PIPELINE/bin/p4pasm_txdma/                       /nic/conf/$PIPELINE/txdma_asm/
+nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_rxdma/                /nic/conf/$PIPELINE/rxdma_bin/
+nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIPELINE/rxdma_asm/
+nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_p4/                   /nic/conf/$PIPELINE/p4_bin/
+nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json         /nic/conf/$PIPELINE/capri_p4_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
+
+# link specific libs
+nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
+nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
+nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
+
+# python table debug cli specific
+nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
+
+# test binaries and libraries
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/memhash_test                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
+
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
+
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
+nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
+
+# system level tools and binaries
+nic/tools/sysupdate.sh                                            /nic/tools/
+nic/apollo/tools/sysinit.sh                                       /nic/tools/
+nic/apollo/tools/syskill.sh                                       /nic/tools/
+nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
+nic/tools/sysreset.sh                                             /nic/tools/
+nic/tools/fwupdate                                                /nic/tools/
+nic/tools/serial_console.sh                                       /nic/tools/
+
+# system level tools needed for cpld upgrade
+nic/tools/postinstall.sh                                          /nic/tools/
+platform/src/app/cpld/cpldapp.sh                                  /nic/tools/
+platform/src/app/cpld/reboot.sh                                   /nic/tools/
+platform/src/app/cpld/bin/*.bin                                   /nic/etc/cpld/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
+
+# platform modules
+nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_apollo                  /nic/bin/eth_dbgtool
+nic/build/$ARCH/$PIPELINE/bin/memtun                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/capmon                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/out/capviewdb_submake/capviewdb.bin     /nic/etc/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcieport.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libevutils.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/lib/libsensor.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmnet.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/librdmamgr_$PIPELINE.so             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrd.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdevice.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
+
+nic/build/$ARCH/$PIPELINE/bin/penctl                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
+
+# platform config files
+nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
+
+# captrace config json files
+nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
+nic/conf/captrace/rxdma-all.json                                  /nic/conf/captrace/
+nic/conf/captrace/dma-all.json                                    /nic/conf/captrace/
+nic/conf/captrace/p4ig-all.json                                   /nic/conf/captrace/
+nic/conf/captrace/p4eg-all.json                                   /nic/conf/captrace/
+nic/conf/captrace/p4-all.json                                     /nic/conf/captrace/
+nic/conf/captrace/pipeline-all.json                               /nic/conf/captrace/
+nic/conf/captrace/sample-conf.json                                /nic/conf/captrace/
+
+nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
+
+# agent specific files
+nic/apollo/tools/start-agent.sh                                   /nic/tools/
+nic/apollo/tools/start-nmd.sh                                     /nic/tools/
+nic/apollo/tools/store_agent_log.sh                               /nic/tools/
+nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/athena_app                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
+
+# Drivers
+platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
+platform/drivers/linux/mnet/mnet.ko                               /nic/bin/
+platform/drivers/linux/mnet_uio_pdrv_genirq/mnet_uio_pdrv_genirq.ko /nic/bin/
+
+# VPP
+nic/build/$ARCH/$PIPELINE/lib/libnuma.so.1                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libdpdk.so                          /nic/lib/
+
+# cronjobs
+nic/conf/$PIPELINE/crontabs/root                                  /nic/conf/$PIPELINE/crontabs/
+nic/apollo/tools/run_cron.sh                                      /nic/tools/
+
+# init config profiles
+nic/conf/profiles/qos_profile_default.json                        /nic/conf/profiles/

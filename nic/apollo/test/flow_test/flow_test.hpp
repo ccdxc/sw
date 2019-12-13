@@ -15,8 +15,8 @@
 #include "flow_test_artemis.hpp"
 #elif defined(APULU)
 #include "flow_test_apulu.hpp"
-#elif defined(POSEIDON)
-#include "flow_test_poseidon.hpp"
+#elif defined(ATHENA)
+#include "flow_test_athena.hpp"
 #else
 #include "flow_test_iris.hpp"
 #endif

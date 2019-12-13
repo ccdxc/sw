@@ -2,6 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdspciemgr.so
-MODULE_PIPELINE = apollo artemis apulu poseidon
+MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_INCS     := ${MODULE_SRC_DIR}
 include ${MKDEFS}/post.mk

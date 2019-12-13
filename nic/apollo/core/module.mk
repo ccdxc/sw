@@ -2,8 +2,8 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdscore.so
-MODULE_PIPELINE = apollo artemis apulu poseidon
-ifneq ($(PIPELINE),poseidon)
+MODULE_PIPELINE = apollo artemis apulu athena
+ifneq ($(PIPELINE),athena)
 MODULE_SOLIBS   = pdsnicmgr pdspciemgr pciemgrd pcieport event_thread pdslearn
 else
 MODULE_SOLIBS   = pdsnicmgr pdspciemgr pciemgrd pcieport event_thread

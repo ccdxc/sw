@@ -50,7 +50,7 @@ parser.add_argument('--dry-run', dest='dry_run',
 
 # pipeline
 parser.add_argument('--pipeline', dest='pipeline', default='iris',
-                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus', 'gft16', 'poseidon'],
+                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus', 'gft16', 'athena'],
                      help='Pipeline')
 
 # feature type
@@ -88,8 +88,8 @@ if args.target == 'sim':
         files.append('nic/tools/package/pack_gft.txt')
     elif args.pipeline == 'gft16':
         files.append('nic/tools/package/pack_gft16.txt')
-    elif args.pipeline == 'poseidon':
-        files.append('nic/tools/package/pack_poseidon.txt')
+    elif args.pipeline == 'athena':
+        files.append('nic/tools/package/pack_athena.txt')
     else:
         files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
@@ -154,8 +154,8 @@ else:
         files.append('nic/tools/package/pack_apulu.txt')
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
-    elif args.pipeline == 'poseidon':
-        files.append('nic/tools/package/pack_poseidon.txt')
+    elif args.pipeline == 'athena':
+        files.append('nic/tools/package/pack_athena.txt')
     else:
         if args.target == 'gold':
             files.append('nic/tools/package/pack_haps_gold.txt')
