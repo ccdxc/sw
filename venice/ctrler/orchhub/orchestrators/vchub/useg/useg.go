@@ -10,7 +10,7 @@ import (
 /**
  * useg allocator manages useg allocations for a single dvs
 
- we have one useg allocatorr per host
+ we have one useg allocator per host
  we randomly pick a useg for each workload
 
  one usegmanager keeps pvlan allocations

@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -21,7 +22,7 @@ type VCHStore struct {
 	stateMgr   *statemgr.Statemgr
 	inbox      <-chan defs.Probe2StoreMsg
 	outbox     chan<- defs.Store2ProbeMsg
-	pCache     *PCache
+	pCache     *pcache.PCache
 	usegMgr    useg.Inf
 	orchConfig *orchestration.Orchestrator
 }
@@ -29,7 +30,7 @@ type VCHStore struct {
 // NewVCHStore returns an instance of VCHStore
 func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, outbox chan<- defs.Store2ProbeMsg, l log.Logger, orchConfig *orchestration.Orchestrator) *VCHStore {
 	logger := l.WithContext("submodule", "VCStore")
-	pCache := NewPCache(stateMgr, logger)
+	pCache := pcache.NewPCache(stateMgr, logger)
 	useg, err := useg.NewUsegAllocator()
 	if err != nil {
 		logger.Errorf("Creating useg mgr failed, %v", err)
@@ -47,6 +48,7 @@ func NewVCHStore(stateMgr *statemgr.Statemgr, inbox <-chan defs.Probe2StoreMsg, 
 	}
 
 	pCache.SetValidator("Workload", vstore.validateWorkload)
+	pCache.SetValidator(vnicKind, validateVNIC)
 
 	return vstore
 }

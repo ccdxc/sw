@@ -54,17 +54,20 @@ func TestPcache(t *testing.T) {
 	err = pCache.Set("Workload", expWorkload)
 	AssertOk(t, err, "Failed to write workload")
 
-	// no validators so it should have written to cache
+	// no validators so it should have written to statemgr
 	_, err = stateMgr.Controller().Workload().Find(expMeta)
 	AssertOk(t, err, "Failed to find workload in statemgr")
 
 	// Set validator
-	pCache.SetValidator("Workload", func(in interface{}) bool {
+	pCache.SetValidator("Workload", func(in interface{}) (bool, bool) {
 		w := in.(*workload.Workload)
 		if w.Labels != nil && len(w.Labels["test"]) != 0 {
-			return true
+			return true, true
 		}
-		return false
+		if w.Labels != nil && len(w.Labels["valid_no_push"]) != 0 {
+			return true, false
+		}
+		return false, false
 	})
 
 	// Update should sit in cache
@@ -82,6 +85,15 @@ func TestPcache(t *testing.T) {
 	entryWorkload := pCache.GetWorkload(expMeta)
 	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
 	AssertEquals(t, "val1", entryWorkload.Labels["key1"], "Workload not in pcache")
+
+	// Test isValid
+	expWorkload.Labels["valid_no_push"] = "test"
+	err = pCache.Set("Workload", expWorkload)
+	AssertOk(t, err, "Failed to write workload")
+	// Should be in cache
+	entry = pCache.kinds["Workload"].entries[expMeta.GetKey()]
+	Assert(t, entry != nil, "Workload not in pcache")
+	Assert(t, pCache.IsValid("Workload", expMeta), "expected object to be valid")
 
 	// Update with correct value, pcache should call statemgr update
 	expWorkload.Labels["test"] = "test"

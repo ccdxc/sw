@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -932,23 +933,14 @@ func TestStoreRun(t *testing.T) {
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	sm, _, err := statemgr.NewMockStateManager()
-	if err != nil {
-		t.Fatalf("Failed to create state manager. Err : %v", err)
-		return
-	}
-
-	pCache := NewPCache(sm, logger)
-	store := &VCHStore{
-		ctx:      ctx,
-		Log:      logger,
-		stateMgr: sm,
-		pCache:   pCache,
-	}
-	pCache.SetValidator("Workload", store.validateWorkload)
-
 	for _, tc := range testCases {
-		pCache := NewPCache(sm, logger)
+		sm, _, err := statemgr.NewMockStateManager()
+		if err != nil {
+			t.Fatalf("Failed to create state manager. Err : %v", err)
+			return
+		}
+
+		pCache := pcache.NewPCache(sm, logger)
 		useg, err := useg.NewUsegAllocator()
 		AssertOk(t, err, "failed to create useg mgr")
 		store := &VCHStore{

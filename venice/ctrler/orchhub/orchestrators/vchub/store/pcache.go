@@ -2,10 +2,7 @@ package store
 
 import (
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
-	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 const vnicKind = "VNIC"
@@ -19,9 +16,9 @@ type vnicStruct struct {
 	Workload string
 }
 
-func validateVNIC(in interface{}) bool {
+func validateVNIC(in interface{}) (bool, bool) {
 	// This object should never go to statemgr
-	return false
+	return false, false
 }
 
 func createVNICMeta(macAddress string) *api.ObjectMeta {
@@ -34,23 +31,9 @@ func createVNICMeta(macAddress string) *api.ObjectMeta {
 	return meta
 }
 
-// PCache has the exact same internals as the OrchHub pcache, but defines custom kinds used in vchub
-type PCache struct {
-	*pcache.PCache
-}
-
-// NewPCache creates a new pcache for vchub
-func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
-	pCache := pcache.NewPCache(stateMgr, logger)
-
-	pCache.SetValidator(vnicKind, validateVNIC)
-	return &PCache{
-		PCache: pCache,
-	}
-}
-
 // GetVNIC retrieves a vnic
-func (p *PCache) getVNIC(macAddress string) *vnicStruct {
+func (v *VCHStore) getVNIC(macAddress string) *vnicStruct {
+	p := v.pCache
 	meta := createVNICMeta(macAddress)
 	obj := p.Get(vnicKind, meta)
 	if obj == nil {
@@ -65,13 +48,13 @@ func (p *PCache) getVNIC(macAddress string) *vnicStruct {
 	return nil
 }
 
-func (p *PCache) setVNIC(in *vnicStruct) {
+func (v *VCHStore) setVNIC(in *vnicStruct) {
 	// Since we are only setting locally
 	// we don't have to worry about errors
-	p.Set(vnicKind, in)
+	v.pCache.Set(vnicKind, in)
 }
 
-func (p *PCache) deleteVNIC(macAddress string) {
+func (v *VCHStore) deleteVNIC(macAddress string) {
 	meta := createVNICMeta(macAddress)
-	p.Delete(vnicKind, meta)
+	v.pCache.Delete(vnicKind, meta)
 }

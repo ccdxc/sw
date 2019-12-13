@@ -31,7 +31,7 @@ import (
 *  - tag events for a VM that isn't on a pensando host yet, but then moves to one.
 *
 * supported kinds - Workload
-* To add a kind, add to the switch case in the writeStatemgr, and deleteFromStateMgr methods
+* To add a kind, add to the switch case in the writeStatemgr, and deleteStatemgr methods
 */
 
 const (
@@ -44,13 +44,16 @@ type kindEntry struct {
 	entries map[string]interface{}
 }
 
+// ValidatorFn is the signature of object validation functions
+type ValidatorFn func(in interface{}) (isValid bool, commitIfValid bool)
+
 // PCache is the structure for pcache
 type PCache struct {
 	sync.RWMutex
 	Log        log.Logger
 	stateMgr   *statemgr.Statemgr
 	kinds      map[string]*kindEntry
-	validators map[string]func(interface{}) bool
+	validators map[string]ValidatorFn
 	waitGrp    sync.WaitGroup
 	ctx        context.Context
 	cancel     context.CancelFunc
@@ -64,14 +67,15 @@ func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
 		stateMgr:   stateMgr,
 		Log:        logger,
 		kinds:      make(map[string]*kindEntry),
-		validators: make(map[string]func(interface{}) bool),
+		validators: make(map[string]ValidatorFn),
 		ctx:        ctx,
 		cancel:     cancel,
 	}
 }
 
 // SetValidator sets the validator for the given kind. If an object fails the validator, it won't be written to stateMgr
-func (p *PCache) SetValidator(kind string, validator func(interface{}) bool) {
+// Validator returns
+func (p *PCache) SetValidator(kind string, validator ValidatorFn) {
 	p.Log.Infof("validator set for kind %s", kind)
 	p.Lock()
 	p.validators[kind] = validator
@@ -121,10 +125,11 @@ func (p *PCache) Get(kind string, meta *api.ObjectMeta) interface{} {
 
 // validateAndPush validates the object and pushes it to API server or adds it to kindmap as necessary.
 // This is not thread safe, and the calling function is expected to hold Write lock on kindMap
-func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn func(interface{}) bool) error {
+func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn ValidatorFn) error {
 	valid := true
+	shouldCommit := true
 	if validateFn != nil {
-		valid = validateFn(in)
+		valid, shouldCommit = validateFn(in)
 	}
 
 	objMeta, err := runtime.GetObjectMeta(in)
@@ -134,7 +139,7 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 	key := objMeta.GetKey()
 	p.Log.Debugf("set for %s", key)
 
-	if valid {
+	if valid && shouldCommit {
 		// Try to write to statemgr
 		p.Log.Debugf("%s object passed validation, writing to stateMgr", key)
 		err := p.writeStateMgr(in)
@@ -152,12 +157,28 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 			delete(kindMap.entries, key)
 		}
 	} else {
-		p.Log.Debugf("%s object failed validation, putting in cache", key)
+		if valid {
+			p.Log.Debugf("%s object passed validation but shouldCommit was false, putting in cache", key)
+		} else {
+			p.Log.Debugf("%s object failed validation, putting in cache", key)
+		}
 		// Update in map
 		kindMap.entries[key] = in
 	}
 
 	return nil
+}
+
+// IsValid returns true if the item exists and passes validation
+func (p *PCache) IsValid(kind string, meta *api.ObjectMeta) bool {
+	if obj := p.Get(kind, meta); obj != nil {
+		p.RLock()
+		validateFn := p.validators[kind]
+		p.RUnlock()
+		valid, _ := validateFn(obj)
+		return valid
+	}
+	return false
 }
 
 // Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
@@ -252,7 +273,7 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 	}
 	// Unsupported object, we only write it to cache
 	p.Log.Errorf("deleteStatemgr called on unsupported object %+v", in)
-	return fmt.Errorf("Unsupported object")
+	return nil
 }
 
 // Run runs loop to periodically push pending objects to apiserver

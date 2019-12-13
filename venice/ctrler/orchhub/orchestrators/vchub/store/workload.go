@@ -16,13 +16,13 @@ import (
 
 const workloadKind = "Workload"
 
-func (v *VCHStore) validateWorkload(in interface{}) bool {
+func (v *VCHStore) validateWorkload(in interface{}) (bool, bool) {
 	obj, ok := in.(*workload.Workload)
 	if !ok {
-		return false
+		return false, false
 	}
 	if len(obj.Spec.HostName) == 0 {
-		return false
+		return false, false
 	}
 	hostMeta := &api.ObjectMeta{
 		Name: obj.Spec.HostName,
@@ -30,16 +30,16 @@ func (v *VCHStore) validateWorkload(in interface{}) bool {
 	// check that host has been created already
 	if _, err := v.stateMgr.Controller().Host().Find(hostMeta); err != nil {
 		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
-		return false
+		return false, false
 	}
 	// check that workload is no longer in pvlan mode
 	for _, inf := range obj.Spec.Interfaces {
 		if inf.MicroSegVlan == 0 {
 			v.Log.Errorf("inf %s has no useg for workload %s", inf.MACAddress, obj.GetObjectMeta().Name)
-			return false
+			return false, false
 		}
 	}
-	return true
+	return true, true
 }
 
 func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
@@ -121,7 +121,7 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 				}
 			} else {
 				// Clean up cache
-				v.pCache.deleteVNIC(inf.MACAddress)
+				v.deleteVNIC(inf.MACAddress)
 			}
 		}
 		v.pCache.Delete(workloadKind, workloadObj)
@@ -147,7 +147,7 @@ func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
 			continue
 		}
 
-		entry := v.pCache.getVNIC(inf.MACAddress)
+		entry := v.getVNIC(inf.MACAddress)
 		if entry == nil {
 			v.Log.Errorf("workload inf without useg was not in map, workload %s, mac %s", workload.Name, inf.MACAddress)
 			return
@@ -177,7 +177,7 @@ func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
 			},
 		}
 		// Event sent so we can delete temp data
-		v.pCache.deleteVNIC(inf.MACAddress)
+		v.deleteVNIC(inf.MACAddress)
 	}
 
 }
@@ -250,7 +250,7 @@ func (v *VCHStore) extractInterfaces(workloadName string, vmConfig types.Virtual
 				Port:       port,
 				Workload:   workloadName,
 			}
-			v.pCache.setVNIC(entry)
+			v.setVNIC(entry)
 
 			vnic := workload.WorkloadIntfSpec{
 				MACAddress: macStr,
