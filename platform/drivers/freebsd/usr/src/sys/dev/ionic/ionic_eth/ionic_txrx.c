@@ -2463,8 +2463,6 @@ ionic_setup_fw_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 			&stat->tx_desc_data_error, "");
 
 	/* H/w stats for RoCE devices. */
-	if (lif->api_private == NULL)
-		return;
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
 			&stat->tx_rdma_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,

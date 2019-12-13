@@ -285,13 +285,16 @@ typedef int (*ionic_ctrl_handler)(void *context,
 static int ionic_sysctl_ctrl(SYSCTL_HANDLER_ARGS)
 {
 	ionic_ctrl_handler handle_ctrl;
+	char buf[256] = {0};
+	int rc;
 
-	if (!req->newptr)
-		return 0;
+	rc = sysctl_handle_string(oidp, buf, sizeof(buf), req);
+	if (rc || req->newptr == NULL)
+		return rc;
 
 	handle_ctrl = (void *)arg2;
 
-	return handle_ctrl(arg1, req->newptr, req->newlen);
+	return handle_ctrl(arg1, buf, strlen(buf));
 }
 
 static void ionic_ctrl(struct sysctl_ctx_list *ctx,
