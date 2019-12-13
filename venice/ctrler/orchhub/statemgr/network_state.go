@@ -31,7 +31,7 @@ func (sm *Statemgr) OnNetworkCreate(w *ctkit.Network) error {
 		return err
 	}
 
-	sm.SendProbeEvent(&w.Network, kvstore.Created)
+	err = sm.SendNetworkProbeEvent(&w.Network, kvstore.Created)
 
 	return nil
 }
@@ -44,6 +44,7 @@ func (sm *Statemgr) OnNetworkUpdate(w *ctkit.Network, nw *network.Network) error
 
 // OnNetworkDelete deletes a network
 func (sm *Statemgr) OnNetworkDelete(w *ctkit.Network) error {
+	sm.SendNetworkProbeEvent(&w.Network, kvstore.Deleted)
 	return nil
 }
 

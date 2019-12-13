@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	orchOpsChannelMax = 128
+	probeChannelMax = 128
 )
 
 // OrchestratorState is a wrapper for orchestration object
@@ -30,14 +30,14 @@ func (sm *Statemgr) GetOrchestratorWatchOptions() *api.ListWatchOptions {
 
 // OnOrchestratorCreate creates a orchestrator based on watch event
 func (sm *Statemgr) OnOrchestratorCreate(w *ctkit.Orchestrator) error {
-	_, ok := sm.orchCh[w.Orchestrator.GetKey()]
+	_, ok := sm.probeCh[w.Orchestrator.Name]
 	if ok {
 		return fmt.Errorf("vc probe channel already created")
 	}
 
-	orchOpsChannel := make(chan *kvstore.WatchEvent, orchOpsChannelMax)
+	probeChannel := make(chan *kvstore.WatchEvent, probeChannelMax)
 
-	err := sm.AddProbeChannel(w.Orchestrator.GetKey(), orchOpsChannel)
+	err := sm.AddProbeChannel(w.Orchestrator.GetKey(), probeChannel)
 	if err != nil {
 		return err
 	}
@@ -52,13 +52,14 @@ func (sm *Statemgr) OnOrchestratorUpdate(w *ctkit.Orchestrator, nw *orchestratio
 	// TODO : act on the state object recovered
 	sm.instanceManagerCh <- &kvstore.WatchEvent{Object: nw, Type: kvstore.Updated}
 	_, err := OrchestratorStateFromObj(w)
+
 	return err
 }
 
 // OnOrchestratorDelete deletes a orchestrator
 func (sm *Statemgr) OnOrchestratorDelete(w *ctkit.Orchestrator) error {
 	sm.instanceManagerCh <- &kvstore.WatchEvent{Object: &w.Orchestrator, Type: kvstore.Deleted}
-	return sm.RemoveProbeChannel(w.Orchestrator.GetKey())
+	return sm.RemoveProbeChannel(w.Orchestrator.Name)
 }
 
 // OrchestratorStateFromObj conerts from memdb object to orchestration state

@@ -11,12 +11,10 @@ import (
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/tags"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -37,27 +35,6 @@ func newStateManager() (*statemgr.Statemgr, error) {
 	}
 
 	return stateMgr, nil
-}
-
-func getOrchestratorConfig(name, user, pass string) *orchestration.Orchestrator {
-	return &orchestration.Orchestrator{
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: "default",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Orchestrator",
-		},
-		Spec: orchestration.OrchestratorSpec{
-			Type: "vcenter",
-			URI:  name,
-			Credentials: &monitoring.ExternalCred{
-				AuthType: "username-password",
-				UserName: user,
-				Password: pass,
-			},
-		},
-	}
 }
 
 func TestTags(t *testing.T) {
@@ -85,7 +62,7 @@ func TestTags(t *testing.T) {
 	sm, err := newStateManager()
 	AssertOk(t, err, "Failed to create state manager. ERR : %v", err)
 
-	orchConfig := getOrchestratorConfig(vcID, user, password)
+	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()

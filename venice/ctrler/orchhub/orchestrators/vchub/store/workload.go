@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
@@ -44,7 +45,7 @@ func (v *VCHStore) validateWorkload(in interface{}) bool {
 func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 	v.Log.Debugf("Got handle workload event")
 	meta := &api.ObjectMeta{
-		Name: createGlobalKey(m.Originator, m.Key),
+		Name: utils.CreateGlobalKey(m.Originator, m.Key),
 		// TODO: Don't use default tenant
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
@@ -77,7 +78,10 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 
 	if workloadObj.Labels == nil {
 		workloadObj.Labels = map[string]string{}
-		addOrchNameLabel(workloadObj.Labels, m.Originator)
+	}
+
+	if v.orchConfig != nil {
+		utils.AddOrchNameLabel(workloadObj.Labels, v.orchConfig.GetKey())
 	}
 
 	toDelete := false
@@ -189,7 +193,7 @@ func (v *VCHStore) processVMRuntime(workload *workload.Workload, prop types.Prop
 		return
 	}
 	rt := prop.Val.(types.VirtualMachineRuntimeInfo)
-	host := createGlobalKey(vcID, rt.Host.Value)
+	host := utils.CreateGlobalKey(vcID, rt.Host.Value)
 	workload.Spec.HostName = host
 }
 

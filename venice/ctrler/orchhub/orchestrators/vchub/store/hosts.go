@@ -9,13 +9,14 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 func (v *VCHStore) handleHost(m defs.VCEventMsg) {
 	meta := &api.ObjectMeta{
-		Name: createGlobalKey(m.Originator, m.Key),
+		Name: utils.CreateGlobalKey(m.Originator, m.Key),
 	}
 	var existingHost, hostObj *cluster.Host
 	ctkitHost, err := v.stateMgr.Controller().Host().Find(meta)
@@ -95,11 +96,13 @@ func (v *VCHStore) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
-	labels := make(map[string]string)
-	if v.orchConfig != nil {
-		labels[orchNameKey] = v.orchConfig.Name
+	if hostObj.Labels == nil {
+		hostObj.Labels = make(map[string]string)
 	}
-	hostObj.Labels = labels
+
+	if v.orchConfig != nil {
+		utils.AddOrchNameLabel(hostObj.Labels, v.orchConfig.Name)
+	}
 
 	if existingHost == nil {
 		v.stateMgr.Controller().Host().Create(hostObj)

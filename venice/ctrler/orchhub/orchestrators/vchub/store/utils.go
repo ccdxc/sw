@@ -4,17 +4,12 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
 var (
-	vmNameKey   = createLabelKey("vm-name")
-	orchNameKey = createLabelKey("orch-name")
+	vmNameKey = createLabelKey("vm-name")
 )
-
-func createGlobalKey(vcID, objName string) string {
-	// TODO: Add in datacenter name
-	return fmt.Sprintf("%s-%s", vcID, objName)
-}
 
 func createLabelKey(tag string) string {
 	return fmt.Sprintf("vcenter.%s", tag)
@@ -39,16 +34,12 @@ func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg
 		labels[vmNameKey] = v
 	}
 
-	if v, ok := existingLabels[orchNameKey]; ok {
-		labels[orchNameKey] = v
+	if v, ok := existingLabels[utils.OrchNameKey]; ok {
+		labels[utils.OrchNameKey] = v
 	}
 	return labels
 }
 
 func addVMNameLabel(labels map[string]string, name string) {
 	labels[vmNameKey] = name
-}
-
-func addOrchNameLabel(labels map[string]string, name string) {
-	labels[orchNameKey] = name
 }

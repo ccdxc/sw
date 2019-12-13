@@ -7,32 +7,12 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
-
-type MockInstanceManager struct {
-	watchCtx          context.Context
-	watchCancel       context.CancelFunc
-	instanceManagerCh chan *kvstore.WatchEvent
-}
-
-// NewMockInstanceManger Creates mock instance manager
-func NewMockInstanceManger(instanceManagerCh chan *kvstore.WatchEvent) *MockInstanceManager {
-	watchCtx, watchCancel := context.WithCancel(context.Background())
-
-	return &MockInstanceManager{
-		instanceManagerCh: instanceManagerCh,
-		watchCtx:          watchCtx,
-		watchCancel:       watchCancel,
-	}
-}
 
 func (w *MockInstanceManager) watchOrchestratorConfig() {
 	for {
@@ -48,46 +28,8 @@ func (w *MockInstanceManager) watchOrchestratorConfig() {
 	}
 }
 
-// createNetwork utility function to create a network
-func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid uint32, labels map[string]string) error {
-	// network params
-	np := network.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Name:      net,
-			Namespace: "default",
-			Tenant:    tenant,
-			Labels:    labels,
-		},
-		Spec: network.NetworkSpec{
-			Type:        network.NetworkType_Bridged.String(),
-			IPv4Subnet:  subnet,
-			IPv4Gateway: gw,
-			VlanID:      vlanid,
-		},
-		Status: network.NetworkStatus{},
-	}
-
-	// create a network
-	return stateMgr.ctrler.Network().Create(&np)
-}
-
-func newStateManager() (*Statemgr, *MockInstanceManager, error) {
-	instanceMgrCh := make(chan *kvstore.WatchEvent, 64)
-
-	stateMgr, err := NewStatemgr(globals.APIServer, nil, log.GetNewLogger(log.GetDefaultConfig("orhhub-test")), instanceMgrCh)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	stateMgr.SetAPIClient(nil)
-
-	im := NewMockInstanceManger(instanceMgrCh)
-	return stateMgr, im, nil
-}
-
 func TestNetworkCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return
@@ -101,14 +43,16 @@ func TestNetworkCreateList(t *testing.T) {
 	go im.watchOrchestratorConfig()
 	defer im.watchCancel()
 
-	err = createNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil)
+	orch := GetOrchestratorConfig("myorchestrator", "user", "pass")
+
+	_, err = CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil, orch)
 	Assert(t, (err == nil), "network could not be created")
 
-	err = createNetwork(sm, "default", "prod-bebe-vlan200", "10.2.1.0/24", "10.2.1.1", 200, nil)
+	_, err = CreateNetwork(sm, "default", "prod-bebe-vlan200", "10.2.1.0/24", "10.2.1.1", 200, nil, orch)
 	Assert(t, (err == nil), "network could not be created")
 
 	labels := map[string]string{"color": "green"}
-	err = createNetwork(sm, "default", "dev-caca-vlan300", "10.3.1.0/24", "10.3.1.1", 300, labels)
+	_, err = CreateNetwork(sm, "default", "dev-caca-vlan300", "10.3.1.0/24", "10.3.1.1", 300, labels, orch)
 	Assert(t, (err == nil), "network could not be created")
 
 	nw, err := sm.ctrler.Network().List(context.Background(), &api.ListWatchOptions{})
@@ -164,7 +108,7 @@ func createWorkload(stateMgr *Statemgr, tenant, name string, labels map[string]s
 }
 
 func TestWorkloadCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return
@@ -241,7 +185,7 @@ func createHost(stateMgr *Statemgr, tenant, name string, labels map[string]strin
 }
 
 func TestHostCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return
@@ -319,7 +263,7 @@ func createEndpoint(stateMgr *Statemgr, tenant, name string, labels map[string]s
 }
 
 func TestEndpointCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return
@@ -396,7 +340,7 @@ func createDistributedServiceCard(stateMgr *Statemgr, tenant, name string, label
 }
 
 func TestDistributedServiceCardCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return
@@ -462,7 +406,7 @@ func createOrchestrator(stateMgr *Statemgr, tenant, name string, labels map[stri
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
-			Tenant:    tenant,
+			Tenant:    "default",
 			Labels:    labels,
 		},
 		Spec:   orchestration.OrchestratorSpec{},
@@ -474,7 +418,7 @@ func createOrchestrator(stateMgr *Statemgr, tenant, name string, labels map[stri
 }
 
 func TestOrchestratorCreateList(t *testing.T) {
-	sm, im, err := newStateManager()
+	sm, im, err := NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed creating state manager. Err : %v", err)
 		return

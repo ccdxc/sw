@@ -86,9 +86,8 @@ func TestPcache(t *testing.T) {
 	// Update with correct value, pcache should call statemgr update
 	expWorkload.Labels["test"] = "test"
 
-	// Allow pcache retry goroutine enough time to push the completed object to StateManager
+	// Add delay to ensure the pcache goroutine has enough time to pick up the updated workload and send to statemgr
 	time.Sleep(3 * time.Second)
-
 	// Should no longer be in cache
 	entry = pCache.kinds["Workload"].entries[expMeta.GetKey()]
 	Assert(t, entry == nil, "Workload still in pcache")

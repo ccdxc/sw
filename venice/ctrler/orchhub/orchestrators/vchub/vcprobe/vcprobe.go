@@ -14,9 +14,13 @@ import (
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -88,12 +92,14 @@ func (v *VCProbe) Start() error {
 	}
 	v.ctx, v.cancel = context.WithCancel(context.Background())
 	// Connect and log in to vCenter
+	v.wg.Add(1)
 	go v.run()
 	return nil
 }
 
 // Stop stops the sessions
 func (v *VCProbe) Stop() {
+	v.Log.Info("Stopping vcprobe")
 	if v.cancel != nil {
 		v.cancel()
 		v.cancel = nil
@@ -103,6 +109,7 @@ func (v *VCProbe) Stop() {
 
 // Run runs the probe
 func (v *VCProbe) run() {
+	defer v.wg.Done()
 	// Connect and log in to vCenter
 	var c *govmomi.Client
 	var err error
@@ -113,7 +120,12 @@ func (v *VCProbe) run() {
 		v.Log.Infof("Starting VCProbe : %v", v.vcURL)
 		c, err = govmomi.NewClient(v.ctx, v.vcURL, true)
 		if err != nil {
-			v.orchConfig.Status.Status = orchestration.OrchestratorStatus_Failure.String()
+			o, err := v.stateMgr.Controller().Orchestrator().Find(&v.orchConfig.ObjectMeta)
+			if err == nil {
+				log.Infof("Updating orchestrator connection status to %v", orchestration.OrchestratorStatus_Failure.String())
+				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
+				o.Write()
+			}
 			v.Log.Errorf("Login failed: %v", err)
 			select {
 			case <-v.ctx.Done():
@@ -121,7 +133,12 @@ func (v *VCProbe) run() {
 			case <-time.After(5 * retryDelay):
 			}
 		} else {
-			v.orchConfig.Status.Status = orchestration.OrchestratorStatus_Success.String()
+			o, err := v.stateMgr.Controller().Orchestrator().Find(&v.orchConfig.ObjectMeta)
+			if err == nil {
+				log.Infof("Updating orchestrator connection status to %v", orchestration.OrchestratorStatus_Success.String())
+				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
+				o.Write()
+			}
 			break
 		}
 	}
@@ -133,6 +150,8 @@ func (v *VCProbe) run() {
 
 	v.wg.Add(1)
 	go v.storeListen()
+	// Perform a List and reconciliation of all the VCProbe objects synchronously before starting all the watches
+	v.Sync()
 
 	tryForever := func(fn func()) {
 		v.wg.Add(1)
@@ -144,6 +163,11 @@ func (v *VCProbe) run() {
 			}
 		}()
 	}
+
+	tryForever(func() {
+		v.wg.Add(1)
+		v.startStatemgrWatch()
+	})
 
 	tryForever(func() {
 		v.startWatch(defs.HostSystem, []string{"config"}, v.sendVCEvent)
@@ -299,6 +323,42 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 	}
 }
 
+func (v *VCProbe) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
+	v.Log.Infof("Handling network event. %v", nw)
+
+	switch evtType {
+	case kvstore.Created:
+		v.Log.Info("Create network event")
+	case kvstore.Updated:
+		v.Log.Info("Update network event")
+	case kvstore.Deleted:
+		v.Log.Info("Delete network event")
+	}
+}
+
+func (v *VCProbe) startStatemgrWatch() {
+	defer v.wg.Done()
+	v.Log.Infof("Starting network objects watch for %s", v.orchConfig.Name)
+	probeChannel, err := v.stateMgr.GetProbeChannel(v.orchConfig.GetKey())
+	if err != nil {
+		v.Log.Errorf("Could not get probe channel for %s. Err : %v", v.orchConfig.GetKey(), err)
+		return
+	}
+
+	for {
+		select {
+		case <-v.ctx.Done():
+			v.Log.Info("Network watch done")
+			return
+		case evt, ok := <-probeChannel:
+			if ok {
+				nw := evt.Object.(*network.Network)
+				v.handleNetworkEvent(evt.Type, nw)
+			}
+		}
+	}
+}
+
 func (v *VCProbe) sendVCEvent(key string, obj defs.VCObject, pc []types.PropertyChange) {
 	m := defs.Probe2StoreMsg{
 		MsgType: defs.VCEvent,
@@ -315,4 +375,31 @@ func (v *VCProbe) sendVCEvent(key string, obj defs.VCObject, pc []types.Property
 
 // Sync triggers the probe to sync its inventory
 func (v *VCProbe) Sync() {
+	v.Log.Infof("VCProbe %v synching.", v)
+	opts := api.ListWatchOptions{}
+	opts.LabelSelector = fmt.Sprintf("%s=%s", utils.OrchNameKey, v.orchConfig.GetKey())
+	// By the time this is called, the statemanager would have setup watches to the API server
+	// and synched the local cache with the API server
+	nw, err := v.stateMgr.Controller().Network().List(context.Background(), &opts)
+	if err != nil {
+		log.Errorf("Failed to get network list. Err : %v", err)
+	}
+
+	hosts, err := v.stateMgr.Controller().Host().List(context.Background(), &opts)
+	if err != nil {
+		log.Errorf("Failed to get host list. Err : %v", err)
+	}
+
+	workloads, err := v.stateMgr.Controller().Workload().List(context.Background(), &opts)
+	if err != nil {
+		log.Errorf("Failed to get workload list. Err : %v", err)
+	}
+
+	// TODO remove the prints below. Added to calm down go fmt
+	log.Infof("Got Networks : %v", nw)
+	log.Infof("Got Workloads : %v", workloads)
+	log.Infof("Got Hosts : %v", hosts)
+	// TODO get all the vcenter objects
+
+	log.Infof("Sync done for VCProbe. %v", v)
 }

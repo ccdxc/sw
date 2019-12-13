@@ -24,15 +24,6 @@ var (
 	logger    = log.SetConfig(logConfig)
 )
 
-func newStateManager() (*statemgr.Statemgr, error) {
-	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return stateMgr, nil
-}
-
 func TestStoreRun(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
@@ -451,8 +442,7 @@ func TestStoreRun(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{
 						Name: "127.0.0.1:8990-virtualmachine-40",
 						Labels: map[string]string{
-							"vcenter.vm-name":   "test-vm",
-							"vcenter.orch-name": "127.0.0.1:8990",
+							"vcenter.vm-name": "test-vm",
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -691,10 +681,9 @@ func TestStoreRun(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 					Labels: map[string]string{
-						"vcenter.cat1":      "tag1:tag2",
-						"vcenter.cat2":      "tag1",
-						"vcenter.vm-name":   "test-vm",
-						"vcenter.orch-name": "127.0.0.1:8990",
+						"vcenter.cat1":    "tag1:tag2",
+						"vcenter.cat2":    "tag1",
+						"vcenter.vm-name": "test-vm",
 					},
 				}
 				expWorkload := &workload.Workload{
@@ -943,13 +932,22 @@ func TestStoreRun(t *testing.T) {
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	for _, tc := range testCases {
-		sm, err := newStateManager()
-		if err != nil {
-			t.Fatalf("Failed creating state manager. Err : %v", err)
-			return
-		}
+	sm, _, err := statemgr.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
 
+	pCache := NewPCache(sm, logger)
+	store := &VCHStore{
+		ctx:      ctx,
+		Log:      logger,
+		stateMgr: sm,
+		pCache:   pCache,
+	}
+	pCache.SetValidator("Workload", store.validateWorkload)
+
+	for _, tc := range testCases {
 		pCache := NewPCache(sm, logger)
 		useg, err := useg.NewUsegAllocator()
 		AssertOk(t, err, "failed to create useg mgr")

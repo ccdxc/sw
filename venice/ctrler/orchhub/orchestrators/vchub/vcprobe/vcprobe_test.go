@@ -10,14 +10,61 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
+	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+func TestNetworkCreate(t *testing.T) {
+	vcID := "127.0.0.1:8990"
+	user := "user"
+	password := "pass"
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	url := fmt.Sprintf("%s:%s@%s/sdk", user, password, vcID)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: url})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	probeCh := make(chan defs.Store2ProbeMsg, 24)
+
+	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
+
+	fmt.Println("Creating orchestrator")
+	sm.Controller().Orchestrator().Create(orchConfig)
+	time.Sleep(1 * time.Second)
+
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
+	err = vcp.Start()
+	AssertOk(t, err, "Failed to start probe")
+	defer vcp.Stop()
+
+	labels := map[string]string{"orch-name": fmt.Sprintf("%v", orchConfig.GetKey())}
+	np, err := smmock.CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, labels, orchConfig)
+	Assert(t, err == nil, "network not created")
+
+	err = sm.SendNetworkProbeEvent(np, kvstore.Deleted)
+	Assert(t, err == nil, fmt.Sprintf("failed to delete network. Err : %v", err))
+}
 
 func TestMessages(t *testing.T) {
 	vcID := "127.0.0.1:8990"
 	user := "user"
 	password := "pass"
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
 
 	url := fmt.Sprintf("%s:%s@%s/sdk", user, password, vcID)
 	expectedMsgs := map[defs.VCObject][]defs.Probe2StoreMsg{
@@ -74,9 +121,9 @@ func TestMessages(t *testing.T) {
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
-	orchConfig := getOrchestratorConfig(vcID, user, password)
+	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
 
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()
 
@@ -148,8 +195,14 @@ func TestReconnect(t *testing.T) {
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
-	orchConfig := getOrchestratorConfig("127.0.0.1:8990", "user", "pass")
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()
@@ -230,9 +283,15 @@ func TestLoginRetry(t *testing.T) {
 	config.LogToStdout = true
 	logger := log.SetConfig(config)
 
-	orchConfig := getOrchestratorConfig("127.0.0.1:8990/sdk", "user", "pass")
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, "http")
-	err := vcp.Start()
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990/sdk", "user", "pass")
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
+	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()
 
@@ -318,8 +377,14 @@ func TestDVS(t *testing.T) {
 	_, err = s.AddDC(testParams.testDCName)
 	AssertOk(t, err, "failed dc create")
 
-	orchConfig := getOrchestratorConfig(testParams.testHostName, testParams.testUser, testParams.testPassword)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, nil, logger, u.Scheme)
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig(testParams.testHostName, testParams.testUser, testParams.testPassword)
+	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, u.Scheme)
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
 	defer vcp.Stop()

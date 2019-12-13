@@ -6,6 +6,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,8 +25,8 @@ type Statemgr struct {
 	logger            log.Logger
 	ctrler            ctkit.Controller
 	instanceManagerCh chan *kvstore.WatchEvent
-	orchChMutex       sync.RWMutex
-	orchCh            map[string]chan *kvstore.WatchEvent
+	probeChMutex      sync.RWMutex
+	probeCh           map[string]chan *kvstore.WatchEvent
 }
 
 // NewStatemgr creates a new state mgr
@@ -53,7 +54,7 @@ func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logge
 		logger:            logger,
 		ctrler:            ctrler,
 		instanceManagerCh: instanceManagerCh,
-		orchCh:            make(map[string]chan *kvstore.WatchEvent),
+		probeCh:           make(map[string]chan *kvstore.WatchEvent),
 	}
 
 	err = stateMgr.startWatchers()
@@ -77,41 +78,41 @@ func (s *Statemgr) SetAPIClient(cl apiclient.Services) {
 
 // RemoveProbeChannel removes the channel for communication with vcprobe
 func (s *Statemgr) RemoveProbeChannel(orchKey string) error {
-	s.orchChMutex.Lock()
-	defer s.orchChMutex.Unlock()
+	s.probeChMutex.Lock()
+	defer s.probeChMutex.Unlock()
 
-	_, ok := s.orchCh[orchKey]
+	_, ok := s.probeCh[orchKey]
 
 	if !ok {
 		return fmt.Errorf("vc probe channel [%s] not found", orchKey)
 	}
 
-	delete(s.orchCh, orchKey)
+	delete(s.probeCh, orchKey)
 	return nil
 }
 
 // AddProbeChannel sets the channel for communication with vcprobe
 func (s *Statemgr) AddProbeChannel(orchKey string, orchOpsChannel chan *kvstore.WatchEvent) error {
-	s.orchChMutex.Lock()
-	defer s.orchChMutex.Unlock()
+	s.probeChMutex.Lock()
+	defer s.probeChMutex.Unlock()
 
-	_, ok := s.orchCh[orchKey]
+	_, ok := s.probeCh[orchKey]
 
 	if ok {
 		return fmt.Errorf("vc probe channel [%s] already exists", orchKey)
 	}
 
-	s.orchCh[orchKey] = orchOpsChannel
+	s.probeCh[orchKey] = orchOpsChannel
 
 	return nil
 }
 
 // GetProbeChannel sets the channel for communication with vcprobe
 func (s *Statemgr) GetProbeChannel(orchKey string) (chan *kvstore.WatchEvent, error) {
-	s.orchChMutex.RLock()
-	defer s.orchChMutex.RUnlock()
+	s.probeChMutex.RLock()
+	defer s.probeChMutex.RUnlock()
 
-	ch, ok := s.orchCh[orchKey]
+	ch, ok := s.probeCh[orchKey]
 	if !ok {
 		return nil, fmt.Errorf("vc probe channel [%s] not found", orchKey)
 	}
@@ -119,19 +120,36 @@ func (s *Statemgr) GetProbeChannel(orchKey string) (chan *kvstore.WatchEvent, er
 	return ch, nil
 }
 
+// SendNetworkProbeEvent sends network  event to appropriate orchestrator
+func (s *Statemgr) SendNetworkProbeEvent(obj runtime.Object, evtType kvstore.WatchEventType) error {
+	nw := obj.(*network.Network)
+	if nw == nil {
+		return fmt.Errorf("object passed is not of network type. Object : %v", obj)
+	}
+
+	if len(nw.Spec.Orchestrators) == 0 {
+		return fmt.Errorf("network %v is not associated with any orchestrator", nw.ObjectMeta.Name)
+	}
+
+	for _, orch := range nw.Spec.Orchestrators {
+		orchKey := fmt.Sprintf("%s/%s/%s", nw.ObjectMeta.Tenant, orch.Namespace, orch.Name)
+		if len(orchKey) == 0 {
+			return fmt.Errorf("could not get orchestrator name")
+		}
+
+		err := s.SendProbeEvent(orchKey, obj, evtType)
+		if err != nil {
+			log.Errorf("Failed to send network probe event to %v. Err : %v", orchKey, err)
+		}
+	}
+
+	return nil
+}
+
 // SendProbeEvent send probe event to appropriate orchestrator
-func (s *Statemgr) SendProbeEvent(obj runtime.Object, evtType kvstore.WatchEventType) error {
-	meta, err := runtime.GetObjectMeta(obj)
-	if err != nil {
-		return fmt.Errorf("Failed to get object meta")
-	}
-
-	orchKey := meta.Labels["orchestrator-name"]
-	if len(orchKey) <= 0 {
-		return fmt.Errorf("could not get orchestrator name")
-	}
-
-	ch, ok := s.orchCh[orchKey]
+func (s *Statemgr) SendProbeEvent(orchKey string, obj runtime.Object, evtType kvstore.WatchEventType) error {
+	log.Infof("Sending probe event - %v Type - %v to Orchestrator - %v", obj, evtType, orchKey)
+	ch, ok := s.probeCh[orchKey]
 	if !ok {
 		return fmt.Errorf("failed to get orchestrator channel for %s", orchKey)
 	}
@@ -140,10 +158,32 @@ func (s *Statemgr) SendProbeEvent(obj runtime.Object, evtType kvstore.WatchEvent
 	return nil
 }
 
+// startWatchers starts ctkit watchers which reconciles all the objects in the local cache
+// and APIserver
 func (s *Statemgr) startWatchers() error {
-	err := s.ctrler.Orchestrator().Watch(s)
+	// All the Watch options ensure that the perform a diff of the objects present
+	// in local cache and API server and update the local cache accordingly in
+	// order to ensure the cache and the API server are in sync. This operation
+	// is performed synchronously when the Watch is first setup and before a
+	// goroutine servicing the Watch is created,
+	// The order of Watch setup is important to ensure that the object dependencies
+	// are present in the local cache when the Watch for that object is setup.
+	// We setup Watch for the orchestrator at the end so that the probes created by
+	// the orchestrator has all the objects for reconciliation.
+
+	err := s.ctrler.Network().Watch(s)
 	if err != nil {
-		return fmt.Errorf("Error establishing watch on orchestrator. Err: %v", err)
+		return fmt.Errorf("Error establishing watch on network. Err: %v", err)
+	}
+
+	err = s.ctrler.DistributedServiceCard().Watch(s)
+	if err != nil {
+		return fmt.Errorf("Error establishing watch on dsc. Err: %v", err)
+	}
+
+	err = s.ctrler.Host().Watch(s)
+	if err != nil {
+		return fmt.Errorf("Error establishing watch on host. Err: %v", err)
 	}
 
 	err = s.ctrler.Endpoint().Watch(s)
@@ -156,19 +196,9 @@ func (s *Statemgr) startWatchers() error {
 		return fmt.Errorf("Error establishing watch on workload. Err: %v", err)
 	}
 
-	err = s.ctrler.Network().Watch(s)
+	err = s.ctrler.Orchestrator().Watch(s)
 	if err != nil {
-		return fmt.Errorf("Error establishing watch on network. Err: %v", err)
-	}
-
-	err = s.ctrler.Host().Watch(s)
-	if err != nil {
-		return fmt.Errorf("Error establishing watch on host. Err: %v", err)
-	}
-
-	err = s.ctrler.DistributedServiceCard().Watch(s)
-	if err != nil {
-		return fmt.Errorf("Error establishing watch on dsc. Err: %v", err)
+		return fmt.Errorf("Error establishing watch on orchestrator. Err: %v", err)
 	}
 
 	return nil
