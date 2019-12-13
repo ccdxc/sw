@@ -134,6 +134,7 @@ type ClusterConfig struct {
 	DesiredReplicas     uint32             // desired number of replicas
 	NodeTTL             uint64             // TTL for the node keepalives
 	MaxSyncMsgSize      int                // Max sync message size
+	MaxSyncRetry        int                // Max sync retry attempts
 	DeadInterval        time.Duration      // duration after which we declare a node as dead
 	RebalanceInterval   time.Duration      // rebalance interval
 	RebalanceDelay      time.Duration      // delay before starting rebalance loop
@@ -165,6 +166,7 @@ const (
 	DefaultRetentionPolicyName = "default"
 	DefaultMetaStoreRetry      = 180
 	DefaultMaxSyncMsgSize      = 20 * 1024 * 1024 // 20MB
+	DefaultMaxSyncRetry        = 5
 )
 
 // DefaultClusterConfig returns default cluster config params
@@ -187,6 +189,7 @@ func DefaultClusterConfig() *ClusterConfig {
 		DesiredReplicas:     DefaultReplicaCount,
 		NodeTTL:             DefaultNodeTTL,
 		MaxSyncMsgSize:      DefaultMaxSyncMsgSize,
+		MaxSyncRetry:        DefaultMaxSyncRetry,
 		DeadInterval:        DefaultNodeDeadInterval,
 		RebalanceInterval:   time.Second,
 		RebalanceDelay:      time.Second * 5,

@@ -177,13 +177,22 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 	}
 
 	// copy data in background
-	go dn.syncShard(context.Background(), req, store, lock)
+	go func() {
+		for i := 0; i < dn.clusterCfg.MaxSyncRetry; i++ {
+			if err := dn.syncShard(context.Background(), req, store, lock); err == nil {
+				return
+			}
+			log.Errorf("failed[%d] to sync shard from %v", i+1, req)
+			time.Sleep(time.Second * 2)
+		}
+		log.Errorf("failed all attempts to sync shard from %v", req)
+	}()
 
 	return &resp, nil
 }
 
 // syncShard sync's contents of a shard from source replica to dest replica
-func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store StoreAPI, lock *sync.Mutex) {
+func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store StoreAPI, lock *sync.Mutex) error {
 	// lock the shard
 	// FIXME: we need to remove this lock and keep sync buffer
 	lock.Lock()
@@ -201,14 +210,14 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	err := store.GetShardInfo(&sinfo)
 	if err != nil {
 		dn.logger.Errorf("Error getting shard info from tstore. Err: %v", err)
-		return
+		return err
 	}
 
 	// dial a new connection for syncing data
 	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), req.DestNodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		dn.logger.Errorf("Error connecting to rpc server %s. err: %v", req.DestNodeURL, err)
-		return
+		return err
 	}
 	defer rclient.Close()
 
@@ -217,7 +226,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	_, err = dnclient.SyncShardInfo(ctx, &sinfo)
 	if err != nil {
 		dn.logger.Errorf("Error sending sync shard info message to %s. Err: %v", req.DestNodeURL, err)
-		return
+		return err
 	}
 
 	// walk thru all chunks and send them over the stream
@@ -226,7 +235,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 		stream, err := dnclient.SyncData(ctx)
 		if err != nil {
 			dn.logger.Errorf("Error syncing data to %s. Err: %v", req.DestNodeURL, err)
-			return
+			return err
 		}
 
 		// create the message
@@ -242,7 +251,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 		err = store.BackupChunk(chunkInfo.ChunkID, NewSyncWriter(&msg, stream, dn.clusterCfg.MaxSyncMsgSize))
 		if err != nil && err != io.EOF {
 			dn.logger.Errorf("Error backing up chunk %d. Err: %v", chunkInfo.ChunkID, err)
-			return
+			return err
 		}
 
 		dn.logger.Infof("Sync complete for replica %d", req.SrcReplicaID)
@@ -251,9 +260,11 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 		_, err = stream.CloseAndRecv()
 		if err != nil {
 			dn.logger.Errorf("Error closing sync channel. Err: %v", err)
-			return
+			return err
 		}
 	}
+
+	return nil
 
 }
 
