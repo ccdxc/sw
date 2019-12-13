@@ -15,6 +15,7 @@ import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.tag as tag
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
@@ -52,7 +53,7 @@ class L3MatchObject:
                  srcpfx=None, dstpfx=None,\
                  srciplow=None, srciphigh=None, dstiplow=None,\
                  dstiphigh=None, srctag=None, dsttag=None,\
-                 srctype=utils.L3MatchType.PFX, dsttype=utils.L3MatchType.PFX):
+                 srctype=topo.L3MatchType.PFX, dsttype=topo.L3MatchType.PFX):
         self.valid = valid
         self.Proto = proto
         self.SrcType = srctype
@@ -281,13 +282,13 @@ class PolicyObjectClient(base.ConfigClientBase):
             # apollo does not support both sip & dip match in rules
             return
 
-        def __is_default_l3_attr(matchtype=utils.L3MatchType.PFX, pfx=None,\
+        def __is_default_l3_attr(matchtype=topo.L3MatchType.PFX, pfx=None,\
                                  iplow=None, iphigh=None, tag=None):
-            if matchtype == utils.L3MatchType.PFX:
+            if matchtype == topo.L3MatchType.PFX:
                 return utils.isDefaultRoute(pfx)
-            elif matchtype == utils.L3MatchType.PFXRANGE:
+            elif matchtype == topo.L3MatchType.PFXRANGE:
                 return utils.isDefaultAddrRange(iplow, iphigh)
-            elif matchtype == utils.L3MatchType.TAG:
+            elif matchtype == topo.L3MatchType.TAG:
                 return utils.isTagWithDefaultRoute(tag)
             return False
 
@@ -296,12 +297,12 @@ class PolicyObjectClient(base.ConfigClientBase):
             startaddr = None
             endaddr = None
             tag = None
-            if l3matchtype == utils.L3MatchType.PFX:
+            if l3matchtype == topo.L3MatchType.PFX:
                 pfx = newpfx
-            elif l3matchtype == utils.L3MatchType.PFXRANGE:
+            elif l3matchtype == topo.L3MatchType.PFXRANGE:
                 startaddr = newpfx.network_address
                 endaddr = startaddr + newpfx.num_addresses - 1
-            elif l3matchtype == utils.L3MatchType.TAG:
+            elif l3matchtype == topo.L3MatchType.TAG:
                 tag = newtag
             return pfx, startaddr, endaddr, tag
 
@@ -442,13 +443,13 @@ class PolicyObjectClient(base.ConfigClientBase):
             return proto
 
         def __get_l3_match_type(rulespec, attr):
-            matchtype = utils.L3MatchType.PFX
+            matchtype = topo.L3MatchType.PFX
             if hasattr(rulespec, attr):
                 matchval = getattr(rulespec, attr)
                 if matchval == "pfxrange":
-                    matchtype = utils.L3MatchType.PFXRANGE
+                    matchtype = topo.L3MatchType.PFXRANGE
                 elif matchval == "tag":
-                    matchtype = utils.L3MatchType.TAG
+                    matchtype = topo.L3MatchType.TAG
             return matchtype
 
         def __get_l3_match_type_from_rule(rulespec):
@@ -491,25 +492,25 @@ class PolicyObjectClient(base.ConfigClientBase):
         def __get_l3_tag_from_rule(af, rulespec, srctype, dsttype):
             srctag = None
             dsttag = None
-            if srctype != utils.L3MatchType.TAG and dsttype != utils.L3MatchType.TAG:
+            if srctype != topo.L3MatchType.TAG and dsttype != topo.L3MatchType.TAG:
                 # no need to create tag if none of src,dst is of tag type
                 return srctag, dsttag
             #get pfx from rule and configure tag on the fly to tagtable of af in this vpc
             pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
             tagObj = tag.client.GetCreateTag(vpcid, af, pfx)
-            if srctype == utils.L3MatchType.TAG:
+            if srctype == topo.L3MatchType.TAG:
                 srctag = tagObj
-            if dsttype == utils.L3MatchType.TAG:
+            if dsttype == topo.L3MatchType.TAG:
                 dsttag = tagObj
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
             def __is_l3_matchtype_supported(matchtype):
-                if matchtype == utils.L3MatchType.TAG:
+                if matchtype == topo.L3MatchType.TAG:
                     return utils.IsTagSupported()
-                elif matchtype == utils.L3MatchType.PFXRANGE:
+                elif matchtype == topo.L3MatchType.PFXRANGE:
                     return utils.IsPfxRangeSupported()
-                elif matchtype == utils.L3MatchType.PFX:
+                elif matchtype == topo.L3MatchType.PFX:
                     return True
                 return False
 
@@ -521,7 +522,7 @@ class PolicyObjectClient(base.ConfigClientBase):
                 return True
 
             def __convert_tag2pfx(matchtype):
-                return utils.L3MatchType.PFX if matchtype is utils.L3MatchType.TAG else matchtype
+                return topo.L3MatchType.PFX if matchtype is topo.L3MatchType.TAG else matchtype
 
             proto = __get_l3_proto_from_rule(af, rulespec)
             if not __is_proto_supported(proto):
@@ -726,16 +727,16 @@ class PolicyObjectClient(base.ConfigClientBase):
                 __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
 
         if len(self.__v4ingressobjs[vpcid]) != 0:
-            self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])
+            self.__v4ipolicyiter[vpcid] = topo.rrobiniter(self.__v4ingressobjs[vpcid])
 
         if len(self.__v6ingressobjs[vpcid]) != 0:
-            self.__v6ipolicyiter[vpcid] = utils.rrobiniter(self.__v6ingressobjs[vpcid])
+            self.__v6ipolicyiter[vpcid] = topo.rrobiniter(self.__v6ingressobjs[vpcid])
 
         if len(self.__v4egressobjs[vpcid]) != 0:
-            self.__v4epolicyiter[vpcid] = utils.rrobiniter(self.__v4egressobjs[vpcid])
+            self.__v4epolicyiter[vpcid] = topo.rrobiniter(self.__v4egressobjs[vpcid])
 
         if len(self.__v6egressobjs[vpcid]) != 0:
-            self.__v6epolicyiter[vpcid] = utils.rrobiniter(self.__v6egressobjs[vpcid])
+            self.__v6epolicyiter[vpcid] = topo.rrobiniter(self.__v6egressobjs[vpcid])
 
         return
 

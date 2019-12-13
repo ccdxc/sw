@@ -13,6 +13,7 @@ import apollo.config.objects.mirror as mirror
 import apollo.config.objects.meter as meter
 from apollo.config.objects.policy import client as PolicyClient
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 import vnic_pb2 as vnic_pb2
 import types_pb2 as types_pb2
@@ -29,6 +30,9 @@ class VnicStatus(base.StatusObjectBase):
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC)
+        if (Store.IsDeviceLearningEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
+        parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)

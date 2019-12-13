@@ -8,6 +8,7 @@ from infra.common.logging import logger
 import infra.api.api as infra_api
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
@@ -136,11 +137,11 @@ def __get_usable_pfx_from_tag(tag, pfxpos):
     return pfx
 
 def __get_usable_pfx_from_rule_impl(matchtype, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=None, pfxpos=None):
-    if matchtype == utils.L3MatchType.PFX:
+    if matchtype == topo.L3MatchType.PFX:
         return ippfx
-    elif matchtype == utils.L3MatchType.PFXRANGE:
+    elif matchtype == topo.L3MatchType.PFXRANGE:
         return __get_usable_pfx_from_range(ipaddrLow, ipaddrHigh, pfxpos)
-    elif matchtype == utils.L3MatchType.TAG:
+    elif matchtype == topo.L3MatchType.TAG:
         return __get_usable_pfx_from_tag(tag, pfxpos)
     return None
 
@@ -249,15 +250,15 @@ def GetUsableICMPCodeFromPolicy(testcase, packet, args=None):
 
 def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=None, tag=None):
     ipaddr = ipaddress.ip_address(ipaddr)
-    if matchtype == utils.L3MatchType.PFX:
+    if matchtype == topo.L3MatchType.PFX:
         if ippfx is None:
             return True
         return ipaddr in ippfx
-    elif matchtype == utils.L3MatchType.PFXRANGE:
+    elif matchtype == topo.L3MatchType.PFXRANGE:
         if not all([ipaddrLow, ipaddrHigh]):
             return True
         return ((ipaddr >= ipaddrLow) and (ipaddr <= ipaddrHigh))
-    elif matchtype == utils.L3MatchType.TAG:
+    elif matchtype == topo.L3MatchType.TAG:
         tagpfxlist = tag.Prefixes if tag else None
         if tagpfxlist is None:
             return False
@@ -485,7 +486,7 @@ def __is_any_cfg_deleted(tc):
     vpc = tc.config.localmapping.VNIC.SUBNET.VPC
     subnet = tc.config.localmapping.VNIC.SUBNET
     objs = [vnic, tunnel, vpc, subnet]
-    values = list(map(lambda x: x.IsDeleted(), list(filter(None, objs))))
+    values = list(map(lambda x: not(x.IsHwHabitant()), list(filter(None, objs))))
     if any(values):
         return True
     return False

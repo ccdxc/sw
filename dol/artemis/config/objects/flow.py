@@ -8,6 +8,7 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as routetable
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import tunnel_pb2 as tunnel_pb2
 
 from infra.common.logging import logger
@@ -34,8 +35,8 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.remotemapping = self.__robj
         obj.devicecfg = self.__dev
         obj.route = self.__routeobj
-        obj.hostport = utils.PortTypes.HOST
-        obj.switchport = utils.PortTypes.SWITCH
+        obj.hostport = topo.PortTypes.HOST
+        obj.switchport = topo.PortTypes.SWITCH
         return
 
     def __repr__(self):

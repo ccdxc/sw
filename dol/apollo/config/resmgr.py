@@ -6,6 +6,7 @@ import re
 
 import infra.common.objects as objects
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 from apollo.config.store import Store
 
 # Start and End inclusive range
@@ -122,9 +123,9 @@ MAX_METER = 64
 MAX_UNDERLAY_NHS = 2
 MAX_OVERLAY_NHS = 8
 
-NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
-UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
-OverlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
+NumVnicPolicyAllocator = topo.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
+UnderlayNumNexthopsAllocator = topo.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
+OverlayNumNexthopsAllocator = topo.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
@@ -161,73 +162,73 @@ def CreateInternetTunnels():
     global RemoteInternetNatTunAllocator
     objs = Store.GetIgwNonNatTunnels()
     if len(objs) != 0:
-        RemoteInternetNonNatTunAllocator = utils.rrobiniter(objs)
+        RemoteInternetNonNatTunAllocator = topo.rrobiniter(objs)
     objs = Store.GetIgwNatTunnels()
     if len(objs) != 0:
-        RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
+        RemoteInternetNatTunAllocator = topo.rrobiniter(objs)
 
 def CollectSvcTunnels():
     if utils.IsPipelineArtemis():
         global SvcTunAllocator
         objs = Store.GetSvcTunnels()
         if len(objs) != 0:
-            SvcTunAllocator = utils.rrobiniter(objs)
+            SvcTunAllocator = topo.rrobiniter(objs)
         global RemoteSvcTunAllocator
         objs = Store.GetSvcTunnels(True)
         if len(objs) != 0:
-            RemoteSvcTunAllocator = utils.rrobiniter(objs)
+            RemoteSvcTunAllocator = topo.rrobiniter(objs)
 
 def CreateVnicTunnels():
     global RemoteMplsVnicTunAllocator
     objs = Store.GetWorkloadTunnels()
     if len(objs) != 0:
-        RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
+        RemoteMplsVnicTunAllocator = topo.rrobiniter(objs)
 
 def CreateUnderlayTunnels():
     global UnderlayTunAllocator
     objs = Store.GetUnderlayTunnels()
     if len(objs) != 0:
-        UnderlayTunAllocator = utils.rrobiniter(objs)
+        UnderlayTunAllocator = topo.rrobiniter(objs)
     global UnderlayECMPTunAllocator
     objs = Store.GetUnderlayTunnels(ecmp=True)
     if len(objs) != 0:
-        UnderlayECMPTunAllocator = utils.rrobiniter(objs)
+        UnderlayECMPTunAllocator = topo.rrobiniter(objs)
 
 def CreateUnderlayNHAllocator():
     global UnderlayNHAllocator
     objs = Store.GetUnderlayNexthops()
     if len(objs) != 0:
-        UnderlayNHAllocator = utils.rrobiniter(objs)
+        UnderlayNHAllocator = topo.rrobiniter(objs)
 
 def CreateOverlayNHAllocator():
     global OverlayNHAllocator
     objs = Store.GetOverlayNexthops()
     if len(objs) != 0:
-        OverlayNHAllocator = utils.rrobiniter(objs)
+        OverlayNHAllocator = topo.rrobiniter(objs)
 
 def CreateDualEcmpNhAllocator():
     global DualEcmpNhAllocator
     objs = Store.GetDualEcmpNexthops()
     if len(objs) != 0:
-        DualEcmpNhAllocator = utils.rrobiniter(objs)
+        DualEcmpNhAllocator = topo.rrobiniter(objs)
 
 def CreateUnderlayNhGroupAllocator():
     global UnderlayNhGroupAllocator
     objs = Store.GetUnderlayNhGroups()
     if len(objs) != 0:
-        UnderlayNhGroupAllocator = utils.rrobiniter(objs)
+        UnderlayNhGroupAllocator = topo.rrobiniter(objs)
 
 def CreateOverlayNhGroupAllocator():
     global OverlayNhGroupAllocator
     objs = Store.GetOverlayNhGroups()
     if len(objs) != 0:
-        OverlayNhGroupAllocator = utils.rrobiniter(objs)
+        OverlayNhGroupAllocator = topo.rrobiniter(objs)
 
 def CreateDualEcmpNhGroupAllocator():
     global DualEcmpNhGroupAllocator
     objs = Store.GetDualEcmpNhGroups()
     if len(objs) != 0:
-        DualEcmpNhGroupAllocator = utils.rrobiniter(objs)
+        DualEcmpNhGroupAllocator = topo.rrobiniter(objs)
 
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():

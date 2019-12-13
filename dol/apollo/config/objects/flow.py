@@ -8,6 +8,7 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as routetable
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 from infra.common.logging import logger
 from apollo.config.store import Store
@@ -19,7 +20,7 @@ def IsNatEnabled(routetblobj):
     return False
 
 def IsAlreadySelected(obj, objs):
-    if utils.CachedObjs.use_selected_objs is True and obj in objs:
+    if topo.CachedObjs.use_selected_objs is True and obj in objs:
         return True
     return False
 
@@ -146,10 +147,10 @@ class FlowMapObjectHelper:
                 fwdmode == 'POLICY' or fwdmode == 'L2L') == True
 
         selected_objs = []
-        if utils.CachedObjs.use_selected_objs == True and len(utils.CachedObjs.objs) != 0:
-            maxlimits = utils.CachedObjs.getMaxLimits()
-            selected_objs = utils.GetFilteredObjects(utils.CachedObjs.objs, maxlimits, random=False)
-            maxlimits = selectors.maxlimits - utils.CachedObjs.maxlimits
+        if topo.CachedObjs.use_selected_objs == True and len(topo.CachedObjs.objs) != 0:
+            maxlimits = topo.CachedObjs.getMaxLimits()
+            selected_objs = utils.GetFilteredObjects(topo.CachedObjs.objs, maxlimits, random=False)
+            maxlimits = selectors.maxlimits - topo.CachedObjs.maxlimits
             if maxlimits <= 0:
                 return utils.GetFilteredObjects(selected_objs, selectors.maxlimits)
         else:

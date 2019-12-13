@@ -7,6 +7,7 @@ from infra.common.logging import logger
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 
 import tags_pb2 as tags_pb2
@@ -215,10 +216,10 @@ class TagObjectClient(base.ConfigClientBase):
                 continue
 
         if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
+            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid].values())
 
         if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
+            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid].values())
         return
 
     """

@@ -3,7 +3,7 @@ feature:
     sub         : delete_vpc
     package     : test.networking
     module      : networking
-    enable      : True
+    enable      : False
     ignore      : True
 
 modules:

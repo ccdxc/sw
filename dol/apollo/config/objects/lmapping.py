@@ -9,6 +9,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 import service_pb2 as service_pb2
 import types_pb2 as types_pb2
@@ -16,6 +17,9 @@ import types_pb2 as types_pb2
 class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING)
+        parent.AddChild(self)
+        if (Store.IsDeviceLearningEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
 
         self.__is_public = getattr(spec, 'public', False)
         ################# PUBLIC ATTRIBUTES OF LOCAL MAPPING OBJECT ###########
@@ -76,8 +80,8 @@ class LocalMappingObject(base.ConfigObjectBase):
 
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
-        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
-        utils.GetRpcIPAddr(self.IPAddr, key.IPAddr)
+        key.IPKey.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
         return
 
     def PopulateSpec(self, grpcmsg):

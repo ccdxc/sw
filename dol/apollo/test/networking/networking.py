@@ -4,11 +4,12 @@ import pdb
 import apollo.test.callbacks.common.modcbs as modcbs
 import apollo.config.objects.dropstats as dropstats
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 def Setup(infra, module):
     if 'WORKFLOW_START' in module.name:
-        utils.CachedObjs.select_objs = True
-        utils.CachedObjs.setMaxLimits(module.testspec.selectors.maxlimits)
+        topo.CachedObjs.select_objs = True
+        topo.CachedObjs.setMaxLimits(module.testspec.selectors.maxlimits)
     modcbs.Setup(infra, module)
     return True
 
@@ -46,10 +47,10 @@ def TestCaseStepTeardown(tc, step):
 
 def TestCaseVerify(tc):
     if 'WORKFLOW_START' in tc.module.name:
-        utils.CachedObjs.select_objs = False
-        utils.CachedObjs.use_selected_objs = True
+        topo.CachedObjs.select_objs = False
+        topo.CachedObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
-        utils.CachedObjs.reset()
+        topo.CachedObjs.reset()
     if hasattr(tc.pvtdata, 'verify_drop_stats') and tc.pvtdata.verify_drop_stats\
        and hasattr(tc.pvtdata, 'dropstats') and tc.pvtdata.dropstats.Verify(tc) == False:
         return False

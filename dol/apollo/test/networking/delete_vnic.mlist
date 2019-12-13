@@ -3,8 +3,8 @@ feature:
     sub         : delete_vnic
     package     : test.networking
     module      : networking
-    enable      : True
-    ignore      : False
+    enable      : False
+    ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow

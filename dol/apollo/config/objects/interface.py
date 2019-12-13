@@ -9,6 +9,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.host.lif as lif
 from apollo.config.objects.port import client as PortClient
@@ -22,7 +23,7 @@ class InterfaceStatus(base.StatusObjectBase):
         return
 
     def Update(self, iftype, status):
-        if iftype == utils.InterfaceTypes.UPLINK:
+        if iftype == topo.InterfaceTypes.UPLINK:
             self.LifId = status.UplinkStatus.LifId
         return
 
@@ -32,11 +33,11 @@ class InterfaceSpec_:
 class InterfaceInfoObject(base.ConfigObjectBase):
     def __init__(self, iftype, spec):
         self.__type = iftype
-        if (iftype == utils.InterfaceTypes.UPLINK):
+        if (iftype == topo.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
-        elif (iftype == utils.InterfaceTypes.UPLINKPC):
+        elif (iftype == topo.InterfaceTypes.UPLINKPC):
             self.port_bmap = getattr(spec, 'portbmp', None)
-        elif (iftype == utils.InterfaceTypes.L3):
+        elif (iftype == topo.InterfaceTypes.L3):
             self.VPC = getattr(spec, 'vpc', 0)
             self.ip_prefix = getattr(spec, 'ippfx', None)
             self.port_num = getattr(spec, 'port', -1)
@@ -44,11 +45,11 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             self.macaddr = getattr(spec, 'MACAddr', None)
 
     def Show(self):
-        if (self.__type == utils.InterfaceTypes.UPLINK):
+        if (self.__type == topo.InterfaceTypes.UPLINK):
             res = str("port num : %d" % int(self.port_num))
-        elif (self.__type == utils.InterfaceTypes.UPLINKPC):
+        elif (self.__type == topo.InterfaceTypes.UPLINKPC):
             res = str("port_bmap: %s" % self.port_bmap)
-        elif (self.__type == utils.InterfaceTypes.L3):
+        elif (self.__type == topo.InterfaceTypes.L3):
             res = str("VPC:%d|ip:%s|port_num:%d|encap:%s|mac:%s"% \
                     (self.VPC, self.ip_prefix, self.port_num, self.encap, \
                     self.macaddr))
@@ -62,7 +63,7 @@ class InterfaceObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         self.InterfaceId = next(resmgr.InterfaceIdAllocator)
         self.Ifname = spec.id
-        self.Type = utils.MODE2INTF_TBL.get(spec.mode)
+        self.Type = topo.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
         info = None
         self.lifns = getattr(spec, 'lifns', None)
@@ -96,7 +97,7 @@ class InterfaceObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.InterfaceId
         spec.AdminStatus = interface_pb2.IF_STATUS_UP
-        if self.Type == utils.InterfaceTypes.L3:
+        if self.Type == topo.InterfaceTypes.L3:
             spec.Type = interface_pb2.IF_TYPE_L3
             spec.L3IfSpec.PortId = self.IfInfo.port_num
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
@@ -107,7 +108,7 @@ class InterfaceObject(base.ConfigObjectBase):
             return False
         if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
             return False
-        if self.Type == utils.InterfaceTypes.L3:
+        if self.Type == topo.InterfaceTypes.L3:
             if spec.Type != interface_pb2.IF_TYPE_L3:
                 return False
             if spec.L3IfSpec.PortId != self.IfInfo.port_num:
@@ -165,7 +166,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.__hostifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__hostifs:
-            self.__hostifs_iter = utils.rrobiniter(self.__hostifs.values())
+            self.__hostifs_iter = topo.rrobiniter(self.__hostifs.values())
         return
 
     def __generate_l3_uplink_interfaces(self):
@@ -184,7 +185,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.__uplinkl3ifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__uplinkl3ifs:
-            self.__uplinkl3ifs_iter = utils.rrobiniter(self.__uplinkl3ifs.values())
+            self.__uplinkl3ifs_iter = topo.rrobiniter(self.__uplinkl3ifs.values())
         return
 
     def GenerateObjects(self, topospec):

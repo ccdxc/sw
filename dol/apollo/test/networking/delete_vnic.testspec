@@ -1,6 +1,6 @@
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 1
+    maxlimits: 4
     # for vnic deletion, if maxlimits is > 1 the order of re-creation needs to
     # be from lowest to highest. Otherwise, vnics get a different hw_ids and
     # local mapping lookup fails

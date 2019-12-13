@@ -7,6 +7,7 @@ from infra.common.logging import logger
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.route as route
 
@@ -289,9 +290,9 @@ class MeterObjectClient(base.ConfigClientBase):
                     c += 1
 
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
         self.__num_v4_meter_per_vpc.append(v4_count)
         self.__num_v6_meter_per_vpc.append(v6_count)
         return

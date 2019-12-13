@@ -4,6 +4,7 @@ from scapy.layers.l2 import Dot1Q
 
 import apollo.config.objects.vpc as vpc
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 from infra.common.logging import logger
 import iris.test.callbacks.common.pktslicer as pktslicer
@@ -16,18 +17,18 @@ def __get_mirror_object(testcase, args):
 def GetSPANPortID(testcase, args):
     mirrorObj = __get_mirror_object(testcase, args)
     if not mirrorObj:
-        return utils.PortTypes.NONE
+        return topo.PortTypes.NONE
     if mirrorObj.SpanType == 'RSPAN':
         return utils.GetPortIDfromInterface(mirrorObj.Interface)
     elif mirrorObj.SpanType == 'ERSPAN':
         # underlay vpc, return switchport
         spanvpc = vpc.client.GetVpcObject(mirrorObj.VPCId)
         if spanvpc.IsUnderlayVPC():
-            return utils.PortTypes.SWITCH
+            return topo.PortTypes.SWITCH
         # TODO: tenant vpc support post impl & p4 support
         # tenant vpc and local mapping, return hostport
         # tenant vpc and remote mapping, return switchport
-    return utils.PortTypes.NONE
+    return topo.PortTypes.NONE
 
 def GetSPANVlanID(testcase, packet, args=None):
     mirrorObj = __get_mirror_object(testcase, args)

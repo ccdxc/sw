@@ -41,7 +41,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
         self.VirtualRouterIPAddr = {}
         self.VirtualRouterMacAddr = None
-        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
+        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId, self, "V4RTID:" + str(self.SubnetId))
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
         self.IngV4SecurityPolicyIds = [policy.client.GetIngV4SecurityPolicyId(parent.VPCId)]
         self.IngV6SecurityPolicyIds = [policy.client.GetIngV6SecurityPolicyId(parent.VPCId)]
@@ -200,6 +200,13 @@ class SubnetObject(base.ConfigObjectBase):
             else:
                 return self.EgV6SecurityPolicyIds[0]
         return None
+
+    def DeleteNotify(self, ident):
+        logger.info("Delete notify %s ident %s" %(__repr__()), ident)
+        if not self.IsDeleted():
+            logger.info("Applying object modification")
+            # Need to assign new route table/policy based on ident
+            # Send a modify message to agent
 
 class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):

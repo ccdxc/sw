@@ -9,6 +9,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nexthop as nexthop
@@ -213,9 +214,11 @@ class RouteObjectClient(base.ConfigClientBase):
             return None
         return v6tables.get(routetblid, None)
 
-    def GetRouteV4TableId(self, vpcid):
+    def GetRouteV4TableId(self, vpcid, robj, ident):
         if self.GetRouteV4Tables(vpcid):
-            return self.__v4iter[vpcid].rrnext().RouteTblId
+            obj = self.__v4iter[vpcid].rrnext()
+            obj.AddDependent(robj, ident)
+            return obj.RouteTblId
         return 0
 
     def GetRouteV6TableId(self, vpcid):
@@ -352,10 +355,10 @@ class RouteObjectClient(base.ConfigClientBase):
                         v6base = utils.GetNextSubnet(routes[-1])
 
         if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
+            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid].values())
 
         if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
+            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid].values())
 
 client = RouteObjectClient()
 

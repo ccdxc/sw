@@ -109,6 +109,9 @@ class DeviceObject(base.ConfigObjectBase):
             return True
         return False
 
+    def IsLearningEnabled(self):
+        return self.LearningEnabled
+
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
             return True

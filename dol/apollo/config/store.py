@@ -88,6 +88,9 @@ class ApolloConfigStore:
     def IsDeviceEncapTypeVXLAN(self):
         return self.device.IsEncapTypeVXLAN()
 
+    def IsDeviceLearningEnabled(self):
+        return self.device.IsLearningEnabled()
+
     def GetDeviceEncapType(self):
         return self.device.EncapType
 

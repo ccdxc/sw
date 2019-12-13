@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import sys
-import enum
 import ipaddress
 import socket
 from random import sample
@@ -12,6 +11,7 @@ import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
 from apollo.config.store import Store
+import apollo.config.topo as topo
 import apollo.config.agent.api as api
 from infra.common.glopts import GlobalOptions
 
@@ -46,88 +46,14 @@ IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
 IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
-class InterfaceTypes(enum.IntEnum):
-    NONE = 0
-    ETH = 1
-    ETH_PC = 2
-    TUNNEL = 3
-    MGMT = 4
-    UPLINK = 5
-    UPLINKPC = 6
-    L3 = 7
-    LIF = 8
-
-class PortTypes(enum.IntEnum):
-    NONE = 0
-    HOST = 1
-    SWITCH = 2
-
-"""
-    # Eth1/1 0x11010001 ==> 1 Hostport
-    # Eth2/1 0x11020001 ==> 2 Switchport
-"""
-INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH }
-MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH, 'switch': InterfaceTypes.UPLINK,
-        'uplink': InterfaceTypes.UPLINK, 'l3': InterfaceTypes.L3 }
-
-
 IF_TYPE_SHIFT = 28
 LIF_IF_LIF_ID_MASK = 0xFFFFFF
 
 def LifId2LifIfIndex(lifid):
-    return ((InterfaceTypes.LIF << IF_TYPE_SHIFT) | (lifid))
+    return ((topo.InterfaceTypes.LIF << IF_TYPE_SHIFT) | (lifid))
 
 def LifIfindex2LifId(lififindex):
     return (lififindex & LIF_IF_LIF_ID_MASK)
-
-class NhType(enum.IntEnum):
-    NONE = 0
-    OVERLAY = 2
-    UNDERLAY = 4
-    UNDERLAY_ECMP = 5
-    IP = 8
-
-class L3MatchType(enum.IntEnum):
-    PFX = 0
-    PFXRANGE = 1
-    TAG = 2
-
-class rrobiniter:
-    def __init__(self, objs):
-        assert len(objs) != 0
-        self.objs = objs
-        self.iterator = iter(objs)
-        self.size = len(objs)
-    def rrnext(self):
-        while True:
-            try:
-                return next(self.iterator)
-            except:
-                self.iterator = iter(self.objs)
-                continue
-    def size(self):
-        return self.size
-
-class CachedObjs:
-
-    def __init__(self):
-        self.select_objs = False
-        self.use_selected_objs = False
-        self.objs = []
-
-    def add(self, obj):
-        self.objs.extend(obj)
-
-    def reset(self):
-        self.__init__()
-
-    def setMaxLimits(self, maxlimits):
-        self.maxlimits = maxlimits
-
-    def getMaxLimits(self):
-        return self.maxlimits
-
-CachedObjs = CachedObjs()
 
 def GetFilteredObjects(objs, maxlimits, random=False):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
@@ -205,7 +131,7 @@ def ValidateCreate(obj, resps):
     if IsDryRun(): return
     for resp in resps:
         if ValidateGrpcResponse(resp):
-            obj.MarkDeleted(False)
+            obj.SetHwHabitant(True)
         else:
             logger.error("Creation/Restoration failed for %s" %(obj.__repr__()))
             obj.Show()
@@ -228,7 +154,7 @@ def ValidateDelete(obj, resps):
     for resp in resps:
         for status in resp.ApiStatus:
             if status == types_pb2.API_STATUS_OK:
-                obj.MarkDeleted()
+                obj.SetHwHabitant(False)
             else:
                 logger.error("Deletion failed for %s" %(obj.__repr__()))
                 obj.Show()
@@ -243,16 +169,22 @@ def GetBatchCookie():
     return obj.GetBatchCookie()
 
 def CreateObject(obj, objType):
-    if not obj.IsDeleted():
+    if obj.IsHwHabitant():
         logger.info("Already restored %s" %(obj.__repr__()))
         return
     batchClient = Store.GetBatchClient()
-    batchClient.Start()
-    cookie = GetBatchCookie()
-    msg = obj.GetGrpcCreateMessage(cookie)
-    resps = api.client.Create(objType, [msg])
-    ValidateCreate(obj, resps)
-    batchClient.Commit()
+    def RestoreObj(robj):
+        logger.info("Recreating object %s" %(robj.__repr__()))
+        batchClient.Start()
+        cookie = GetBatchCookie()
+        msg = robj.GetGrpcCreateMessage(cookie)
+        resps = api.client.Create(robj.ObjType, [msg])
+        ValidateCreate(robj, resps)
+        batchClient.Commit()
+    # create from top to bottom
+    RestoreObj(obj);
+    for objdep in obj.Children:
+        CreateObject(objdep, objdep.ObjType)
 
 def ReadObject(obj, objType, expRetCode):
     msg = obj.GetGrpcReadMessage()
@@ -260,16 +192,26 @@ def ReadObject(obj, objType, expRetCode):
     return ValidateRead(obj, resps, expRetCode)
 
 def DeleteObject(obj, objType):
-    if obj.IsDeleted():
+    if not obj.IsHwHabitant():
         logger.info("Already deleted %s" %(obj.__repr__()))
         return
     batchClient = Store.GetBatchClient()
-    batchClient.Start()
-    cookie = GetBatchCookie()
-    msg = obj.GetGrpcDeleteMessage(cookie)
-    resps = api.client.Delete(objType, [msg])
-    batchClient.Commit()
-    ValidateDelete(obj, resps)
+    def DelObj(dobj):
+        # inform dependend objects
+        for iobj, ident in dobj.Deps():
+            iobj.DeleteNotify(ident)
+        logger.info("Deleting object %s" %(dobj.__repr__()))
+        batchClient.Start()
+        cookie = GetBatchCookie()
+        msg = dobj.GetGrpcDeleteMessage(cookie)
+        resps = api.client.Delete(dobj.ObjType, [msg])
+        batchClient.Commit()
+        ValidateDelete(dobj, resps)
+    # Delete from bottom to top
+    for objdep in obj.Children:
+        DeleteObject(objdep, objdep.ObjType)
+    # Delete the final
+    DelObj(obj)
     return
 
 def GetIPProtoByName(protoname):
@@ -435,7 +377,7 @@ def GetRpcDirection(direction):
     return types_pb2.RULE_DIR_NONE
 
 def GetPortIDfromInterface(interfaceid):
-    return INTF2PORT_TBL.get(interfaceid, PortTypes.NONE)
+    return topo.INTF2PORT_TBL.get(interfaceid, topo.PortTypes.NONE)
 
 def IsPipelineArtemis():
     if GlobalOptions.pipeline == 'artemis':
@@ -549,8 +491,8 @@ def GetVlanHeaderSize(packet):
     return 0
 
 def MergeFilteredObjects(objs, selected_objs):
-    if CachedObjs.select_objs is True:
-        CachedObjs.add(objs)
-    elif CachedObjs.use_selected_objs is True:
+    if topo.CachedObjs.select_objs is True:
+        topo.CachedObjs.add(objs)
+    elif topo.CachedObjs.use_selected_objs is True:
         objs.extend(selected_objs)
 

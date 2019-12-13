@@ -13,7 +13,6 @@ import apollo.config.objects.base as base
 class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, tunobj, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING)
-
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         self.MappingId = next(resmgr.RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)

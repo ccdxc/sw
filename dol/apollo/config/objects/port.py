@@ -9,6 +9,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 
 class UplinkPorts(enum.IntEnum):
@@ -38,10 +39,10 @@ class PortObject(base.ConfigObjectBase):
         return
 
     def IsHostPort(self):
-        return self.Mode == utils.PortTypes.HOST
+        return self.Mode == topo.PortTypes.HOST
 
     def IsSwitchPort(self):
-        return self.Mode == utils.PortTypes.SWITCH
+        return self.Mode == topo.PortTypes.SWITCH
 
 class PortObjectClient:
     def __init__(self):
@@ -54,17 +55,17 @@ class PortObjectClient:
     def GenerateObjects(self, topospec):
         def __get_port_mode(port, mode='auto'):
             if mode == 'switch':
-                return utils.PortTypes.SWITCH
+                return topo.PortTypes.SWITCH
             elif mode == 'host':
-                return utils.PortTypes.HOST
+                return topo.PortTypes.HOST
             if Store.IsHostMode():
-                return utils.PortTypes.SWITCH
+                return topo.PortTypes.SWITCH
             elif Store.IsBitwMode():
                 if port == UplinkPorts.UplinkPort0:
-                    return utils.PortTypes.HOST
+                    return topo.PortTypes.HOST
                 elif port == UplinkPorts.UplinkPort1:
-                    return utils.PortTypes.SWITCH
-            return utils.PortTypes.NONE
+                    return topo.PortTypes.SWITCH
+            return topo.PortTypes.NONE
 
         portlist = getattr(topospec, 'uplink', None)
         if portlist is None:

@@ -8,6 +8,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 from apollo.config.objects.interface import client as InterfaceClient
 import apollo.config.objects.tunnel as tunnel
@@ -24,7 +25,7 @@ class NexthopObject(base.ConfigObjectBase):
         nh_type = getattr(spec, 'type', 'ip')
         self.DualEcmp = utils.IsDualEcmp(spec)
         if nh_type == 'ip':
-            self.__type = utils.NhType.IP
+            self.__type = topo.NhType.IP
             self.PfxSel = parent.PfxSel
             self.IPAddr = {}
             self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
@@ -32,28 +33,28 @@ class NexthopObject(base.ConfigObjectBase):
             self.VlanId = next(resmgr.NexthopVlanIdAllocator)
             self.MACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'underlay':
-            self.__type = utils.NhType.UNDERLAY
+            self.__type = topo.NhType.UNDERLAY
             self.L3Interface = InterfaceClient.GetL3UplinkInterface()
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
-            self.__type = utils.NhType.OVERLAY
+            self.__type = topo.NhType.OVERLAY
             if self.DualEcmp:
                 self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
             self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
         else:
-            self.__type = utils.NhType.NONE
+            self.__type = topo.NhType.NONE
         self.Show()
         return
 
     def __repr__(self):
-        if self.__type == utils.NhType.IP:
+        if self.__type == topo.NhType.IP:
             nh_str = "VPCId:%d|PfxSel:%d|IP:%s|Mac:%s|Vlan:%d" %\
                      (self.VPC.VPCId, self.PfxSel, self.IPAddr[self.PfxSel],
                      self.MACAddr, self.VlanId)
-        elif self.__type == utils.NhType.UNDERLAY:
+        elif self.__type == topo.NhType.UNDERLAY:
             nh_str = "L3IfID:%d|UnderlayMac:%s" %\
                      (self.L3Interface.InterfaceId, self.underlayMACAddr)
-        elif self.__type == utils.NhType.OVERLAY:
+        elif self.__type == topo.NhType.OVERLAY:
             nh_str = "TunnelId:%d" % (self.TunnelId)
         else:
             nh_str = ""
@@ -74,15 +75,15 @@ class NexthopObject(base.ConfigObjectBase):
 
     def FillSpec(self, spec):
         spec.Id = self.NexthopId
-        if self.__type == utils.NhType.IP:
+        if self.__type == topo.NhType.IP:
             spec.IPNhInfo.VPCId = self.VPC.VPCId
             spec.IPNhInfo.Mac = self.MACAddr.getnum()
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
-        elif self.__type == utils.NhType.UNDERLAY:
+        elif self.__type == topo.NhType.UNDERLAY:
             spec.UnderlayNhInfo.L3InterfaceId = self.L3Interface.InterfaceId
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
-        elif self.__type == utils.NhType.OVERLAY:
+        elif self.__type == topo.NhType.OVERLAY:
             spec.TunnelId = self.TunnelId
         return
 
@@ -94,7 +95,7 @@ class NexthopObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id != self.NexthopId:
             return False
-        if self.__type == utils.NhType.IP:
+        if self.__type == topo.NhType.IP:
             if spec.IPNhInfo.Mac != self.MACAddr.getnum():
                 return False
             if spec.IPNhInfo.Vlan != self.VlanId:
@@ -103,33 +104,33 @@ class NexthopObject(base.ConfigObjectBase):
                 return False
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
-        elif self.__type == utils.NhType.UNDERLAY:
+        elif self.__type == topo.NhType.UNDERLAY:
             if spec.UnderlayNhInfo.L3InterfaceId != self.L3Interface.InterfaceId:
                 return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
-        elif self.__type != utils.NhType.OVERLAY:
+        elif self.__type != topo.NhType.OVERLAY:
             if spec.TunnelId != self.TunnelId:
                 return False
         return True
 
     def IsUnderlay(self):
-        if self.__type == utils.NhType.UNDERLAY:
+        if self.__type == topo.NhType.UNDERLAY:
             return True
         return False
 
     def IsUnderlayEcmp(self):
-        if self.__type == utils.NhType.UNDERLAY_ECMP:
+        if self.__type == topo.NhType.UNDERLAY_ECMP:
             return True
         return False
 
     def IsOverlay(self):
-        if self.__type == utils.NhType.OVERLAY:
+        if self.__type == topo.NhType.OVERLAY:
             return True
         return False
 
     def IsOverlayEcmp(self):
-        if self.__type == utils.NhType.OVERLAY_ECMP:
+        if self.__type == topo.NhType.OVERLAY_ECMP:
             return True
         return False
 
@@ -215,9 +216,9 @@ class NexthopObjectClient:
                 if isV6Stack:
                     self.__v6objs[vpcid].append(obj)
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
         self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 

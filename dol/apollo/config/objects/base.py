@@ -5,6 +5,7 @@ import infra.config.base as base
 
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 
 import apollo.test.utils.pdsctl as pdsctl
 
@@ -23,8 +24,11 @@ class StatusObjectBase(base.StatusObjectBase):
 class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self, objtype):
         super().__init__()
-        self.deleted = False
+        self.Origin = topo.OriginTypes.FIXED
+        self.HwHabitant = True
         self.ObjType = objtype
+        self.Children = []
+        self.Deps = dict
         return
 
     def __get_GrpcMsg(self, op):
@@ -37,6 +41,24 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def __populate_BatchContext(self, grpcmsg, cookie):
         grpcmsg.BatchCtxt.BatchCookie = cookie
         return
+
+    def AddChild(self, child):
+        self.Children.append(child);
+
+    def AddDependent(self, dep, ident):
+        self.Deps.update({ident: dep})
+
+    def SetHwHabitant(self, value):
+        self.HwHabitant = value
+
+    def IsHwHabitant(self):
+        return self.HwHabitant
+
+    def SetOrigin(self, origintype):
+        self.Origin = origintype
+
+    def IsOriginFixed(self):
+        return True if (self.Origin == topo.OriginTypes.FIXED) else False
 
     def Create(self, spec=None):
         utils.CreateObject(self, self.ObjType)
@@ -76,13 +98,6 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def Equals(self, obj, spec):
         return True
-
-    def MarkDeleted(self, flag=True):
-        self.deleted = flag
-        return
-
-    def IsDeleted(self):
-        return self.deleted
 
     def SetBaseClassAttr(self):
         logger.error("Method not implemented by class: %s" % self.__class__)
@@ -138,6 +153,14 @@ class ConfigClientBase(base.ConfigClientBase):
     def Objects(self):
         return self.Objs.values()
 
+    def GetNumHwObjects(self):
+        count = len(self.Objects())
+        # TODO can be improved, if object has a reference to gen object
+        for obj in self.Objects():
+            if (obj.HwHabitant == False):
+                count = count - 1
+        return count
+
     def GetNumObjects(self):
         return len(self.Objects())
 
@@ -165,11 +188,13 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def ValidateGrpcRead(self, getResp):
         if utils.IsDryRun(): return True
+        numObjs = 0
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("GRPC get request failed for ", obj)
                 return False
             for resp in obj.Response:
+                numObjs += 1
                 key = self.GetKeyfromSpec(resp.Spec)
                 cfgObj = self.GetObjectByKey(key)
                 if not utils.ValidateObject(cfgObj, resp):
@@ -178,6 +203,8 @@ class ConfigClientBase(base.ConfigClientBase):
                     return False
                 if hasattr(cfgObj, 'Status'):
                     cfgObj.Status.Update(resp.Status)
+
+        assert(numObjs == self.GetNumHwObjects())
         return True
 
     def GrpcRead(self):
@@ -196,6 +223,7 @@ class ConfigClientBase(base.ConfigClientBase):
             return False
         # split output per object
         cmdop = stdout.split("---")
+        assert((len(cmdop) - 1) == self.GetNumHwObjects())
         for op in cmdop:
             yamlOp = utils.LoadYaml(op)
             if not yamlOp:
@@ -223,10 +251,23 @@ class ConfigClientBase(base.ConfigClientBase):
         return
 
     def CreateObjects(self):
+        fixed, discovered = [], []
+        for obj in self.Objects():
+            (fixed if obj.IsOriginFixed() else discovered).append(obj)
+
+        logger.info("%s objects: fixed: %d discovered %d" %(self.ObjType.name, len(fixed), len(discovered)))
+        # set HwHabitant to false for discovered objects
+        for obj in discovered:
+            obj.SetHwHabitant(False)
+
+        # return if there is no fixed object
+        if len(fixed) == 0:
+            return
+
         self.ShowObjects()
         logger.info("Creating %s Objects in agent" % (self.ObjType.name))
         cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
         api.client.Create(self.ObjType, msgs)
         #TODO: Add validation for create
         return

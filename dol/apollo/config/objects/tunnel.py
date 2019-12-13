@@ -7,6 +7,7 @@ from apollo.config.store import Store
 
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 
@@ -19,7 +20,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
 
-        self.__nhtype = utils.NhType.NONE
+        self.__nhtype = topo.NhType.NONE
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         self.LocalIPAddr = parent.IPAddr
         self.EncapValue = 0
@@ -57,10 +58,10 @@ class TunnelObject(base.ConfigObjectBase):
                     self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
                 if spec.type == 'underlay':
-                    self.__nhtype = utils.NhType.UNDERLAY
+                    self.__nhtype = topo.NhType.UNDERLAY
                     self.NEXTHOP = None
                 elif spec.type == 'underlay-ecmp':
-                    self.__nhtype = utils.NhType.UNDERLAY_ECMP
+                    self.__nhtype = topo.NhType.UNDERLAY_ECMP
                     self.NEXTHOPGROUP = None
         self.RemoteIP = str(self.RemoteIPAddr) # for testspec
         self.MACAddr = resmgr.TepMacAllocator.get()
@@ -163,12 +164,12 @@ class TunnelObject(base.ConfigObjectBase):
         return False
 
     def IsUnderlay(self):
-        if self.__nhtype == utils.NhType.UNDERLAY:
+        if self.__nhtype == topo.NhType.UNDERLAY:
             return True
         return False
 
     def IsUnderlayEcmp(self):
-        if self.__nhtype == utils.NhType.UNDERLAY_ECMP:
+        if self.__nhtype == topo.NhType.UNDERLAY_ECMP:
             return True
         return False
 

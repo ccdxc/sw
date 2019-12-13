@@ -1,0 +1,248 @@
+# VxLAN Topology Specification for Host mode
+meta:
+    id: TOPO_VxLAN_HOSTMODE
+
+uplink:
+    - entry:
+        id      : uplink0
+        port    : 1
+        mode    : switch
+        status  : UP
+
+    - entry:
+        id      : uplink1
+        port    : 2
+        mode    : switch
+        status  : UP
+
+interface:
+    host:
+        lif         : ref://store/specs/id=LIF_ETH
+
+device:
+    mode        : host # bitw (default), host
+    stack       : ipv4 # ipv4 (default), ipv6
+    bridging    : true # false (default), true
+    learning    : true # false (default), true
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    encap       : vxlan # vxlan or mplsodup
+    tunnel      :
+        - count : 16
+          type  : underlay
+        - count : 16
+          type  : underlay-ecmp
+
+vpc:
+    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+      subnet :
+         - count : 1
+           v4prefixlen : 24
+           v6prefixlen : 64
+      routetbl:
+         - type: specific # route table with only default routes
+           routetype: only_default
+           v4routes:
+              - '0.0.0.0\0'
+           v6routes:
+              - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+    # artemis - this vpc is only for artemis for nat46 functionality
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
+      type  : tenant
+      subnet:
+        - count     : 1
+          v4prefixlen : 24
+          v6prefixlen : 64
+          vnic:
+            - count   : 1             # VNICs per subnet
+              ipcount : 4             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
+              public  : true
+          rmap:                       # Remote IP mappings per subnet
+            - count : 4
+      nexthop:
+        - type : underlay
+          count : 2
+        - type : overlay
+          count : 2
+        - type : overlay
+          dual-ecmp : true
+          count : 2
+      nexthop-group:
+        - type : underlay
+          count : 2
+        - type : overlay
+          count : 2
+        - type : overlay
+          dual-ecmp : true
+          count : 2
+      routetbl:
+        - type: specific
+          routetype: only_default
+          teptype : underlay-ecmp
+          v4routes:
+             - '0.0.0.0\0'
+          v6routes:
+             - '0::\0'
+
+        - type: specific
+          routetype: only_default
+          teptype : overlay-ecmp
+          v4routes:
+             - '0.0.0.0\0'
+          v6routes:
+             - '0::\0'
+      meter:
+        - count: 1
+          auto_fill: False
+          rule:
+            - type: PDS_METER_TYPE_ACCOUNTING
+              priority: 1
+              num_prefixes: 0
+              v4base: '66.0.0.0\24'
+              v6base: '2002::\120'
+              v4prefixes:
+                - '0.0.0.0\0'
+              v6prefixes:
+                - '0::\0'
+      policy:
+        - type : specific
+          policytype : default
+          direction : bidir
+      nat46 : true
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 2
+      type  : tenant
+      subnet:
+        - count     : 2
+          v4prefixlen : 24
+          v6prefixlen : 64
+          vnic:
+            - count   : 1             # 1 untagged VNIC
+              ipcount : 4             # Local IP mapping per vnic
+              srcguard: false         # true or false (default false)
+              public  : false
+              tagged  : false         # true or false (default true)
+          rmap:                       # Remote IP mappings per subnet
+            - count : 4
+        - count     : 1
+          v4prefixlen : 28
+          v6prefixlen : 96
+          vnic:
+            - count   : 1             # 1 untagged VNIC
+              ipcount : 2
+              srcguard: false
+              public  : true
+              tagged  : false
+          rmap:
+            - count : 4
+      nexthop:
+        - type : underlay
+          count : 8
+        - type : overlay
+          count : 8
+        - type : overlay
+          dual-ecmp : true
+          count : 8
+      nexthop-group:
+        - type : underlay
+          count : 2
+        - type : overlay
+          count : 2
+        - type : overlay
+          dual-ecmp : True
+          count : 2
+      routetbl:
+             - type: base
+               routetype: adjacent
+               count : 8
+               nat : true # tunnel with nat flag set will be used as next-hop
+               v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
+               v4prefixlen : 28
+               nv4routes   : 10
+               v6base: '2000::\65' # TEMP Infra issue and will reverse this in test logic
+               v6prefixlen : 96
+               nv6routes   : 10
+               v4routes:
+               v6routes:
+               teptype : underlay
+
+             - type: base
+               routetype: adjacent
+               count : 1
+               v4base: '65.0.0.0\16'
+               v4prefixlen : 28
+               nv4routes   : 10
+               v6base: '2001::\65'
+               v6prefixlen : 96
+               nv6routes   : 10
+               v4routes:
+               v6routes:
+               teptype : underlay-ecmp
+
+             - type: base
+               routetype: overlap
+               count : 5
+               v4base: '66.0.0.0\16'
+               v4prefixlen: 24
+               nv4routes   : 10
+               v6base: '2002::\65'
+               v6prefixlen: 120
+               nv6routes   : 10
+               v4routes:
+               v6routes:
+               teptype : overlay-ecmp
+
+             - type: base
+               routetype: overlap
+               count : 5
+               v4base: '67.0.0.0\16'
+               v4prefixlen: 24
+               nv4routes   : 10
+               v6base: '2003::\65'
+               v6prefixlen: 120
+               nv6routes   : 10
+               v4routes:
+               v6routes:
+               teptype : overlay-ecmp
+               dual-ecmp : true
+
+      meter:
+        - auto_fill: True
+          base_priority: 1
+          rule_type: PDS_METER_TYPE_ACCOUNTING
+
+      policy:
+              - type : specific
+                policytype : default
+                direction : bidir
+
+# ECMP:
+# Object types and order of creation of objects for different kinds of ECMP.
+# In dol, DualEcmp flag is maintained in route, nexthop group and nexthop objs.
+# For route table with DualEcmp set to True, only a nexthopgroup with DualEcmp
+# set to True is selected.
+#
+# 1. no-ecmp
+#     route       -->     tep         -->     nexthop
+#     [OVERLAY]         [UNDERLAY]           [UNDERLAY]
+#
+# 2. underlay ecmp
+#     route       -->     tep         -->     nhgroup      -->     {nexthops}
+#   [OVERLAY]           [UNDERLAY-ECMP]      [UNDERLAY ECMP]       [UNDERLAY]
+#
+# 3. overlay ecmp
+#     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nexthops}
+#    [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY]        [UNDERLAY]
+#
+# 4. dual ecmp
+#     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nhgroup}    -->   {{nexthops}}
+#     [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY ECMP]  [UNDERLAY ECMP]       [UNDERLAY]

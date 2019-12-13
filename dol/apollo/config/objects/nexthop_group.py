@@ -7,6 +7,7 @@ from apollo.config.store import Store
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
+import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.nexthop as nexthop
 
@@ -155,9 +156,9 @@ class NexthopGroupObjectClient:
                 if isV6Stack:
                     self.__v6objs[vpcid].append(obj)
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
         self.__num_nhgs_per_vpc.append(nhg_spec_obj.count)
         return
 

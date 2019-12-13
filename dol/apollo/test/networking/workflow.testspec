@@ -1,6 +1,6 @@
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 1
+    maxlimits: 4
     flow: filter://any
     route: filter://any
 
