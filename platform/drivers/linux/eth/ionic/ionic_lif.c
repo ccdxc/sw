@@ -2192,6 +2192,37 @@ static int ionic_get_vf_config(struct net_device *netdev,
 	return 0;
 }
 
+static int ionic_get_vf_stats(struct net_device *netdev, int vf,
+			      struct ifla_vf_stats *vf_stats)
+{
+	struct ionic_lif *lif = netdev_priv(netdev);
+	struct ionic *ionic = lif->ionic;
+	struct lif_stats *vs;
+
+	if (vf >= ionic->num_vfs)
+		return -EINVAL;
+
+	memset(vf_stats, 0, sizeof(*vf_stats));
+	vs = &ionic->vf[vf]->stats;
+
+	vf_stats->rx_packets = le64_to_cpu(vs->rx_ucast_packets);
+	vf_stats->tx_packets = le64_to_cpu(vs->tx_ucast_packets);
+	vf_stats->rx_bytes   = le64_to_cpu(vs->rx_ucast_bytes);
+	vf_stats->tx_bytes   = le64_to_cpu(vs->tx_ucast_bytes);
+	vf_stats->broadcast  = le64_to_cpu(vs->rx_bcast_packets);
+	vf_stats->multicast  = le64_to_cpu(vs->rx_mcast_packets);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,16,0))
+	vf_stats->rx_dropped = le64_to_cpu(vs->rx_ucast_drop_packets) +
+			       le64_to_cpu(vs->rx_mcast_drop_packets) +
+			       le64_to_cpu(vs->rx_bcast_drop_packets);
+	vf_stats->tx_dropped = le64_to_cpu(vs->tx_ucast_drop_packets) +
+			       le64_to_cpu(vs->tx_mcast_drop_packets) +
+			       le64_to_cpu(vs->tx_bcast_drop_packets);
+#endif
+
+	return 0;
+}
+
 static int ionic_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
@@ -2302,33 +2333,6 @@ static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 		lif->ionic->vf[vf]->linkstate = set;
 
 	return ret;
-}
-
-static int ionic_get_vf_stats(struct net_device *netdev, int vf,
-			      struct ifla_vf_stats *vf_stats)
-{
-	struct ionic_lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
-
-	if (vf >= ionic->num_vfs)
-		return -EINVAL;
-
-	vf_stats->rx_packets = ionic->vf[vf]->stats.rx_ucast_packets;
-	vf_stats->tx_packets = ionic->vf[vf]->stats.tx_ucast_packets;
-	vf_stats->rx_bytes   = ionic->vf[vf]->stats.rx_ucast_bytes;
-	vf_stats->tx_bytes   = ionic->vf[vf]->stats.tx_ucast_bytes;
-	vf_stats->broadcast  = ionic->vf[vf]->stats.rx_bcast_packets;
-	vf_stats->multicast  = ionic->vf[vf]->stats.rx_mcast_packets;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,16,0))
-	vf_stats->rx_dropped = ionic->vf[vf]->stats.rx_ucast_drop_packets +
-			       ionic->vf[vf]->stats.rx_mcast_drop_packets +
-			       ionic->vf[vf]->stats.rx_bcast_drop_packets;
-	vf_stats->tx_dropped = ionic->vf[vf]->stats.tx_ucast_drop_packets +
-			       ionic->vf[vf]->stats.tx_mcast_drop_packets +
-			       ionic->vf[vf]->stats.tx_bcast_drop_packets;
-#endif
-
-	return 0;
 }
 
 static const struct net_device_ops ionic_netdev_ops = {
