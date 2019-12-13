@@ -273,3 +273,45 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
 def GetNaplesSysctl(intf):
     # iota passes interface name "ionic0". BSD sysctl wants "ionic.0".
     return intf[:-1] + '.' + intf[-1]
+
+def BsdLifReset(node, intf):
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.lif_resets | cut -d : -f 2" %
+                               (GetNaplesSysctl(intf)))
+    api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.reset=1" %
+                               (GetNaplesSysctl(intf)))
+    api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.lif_resets | cut -d : -f 2" %
+                               (GetNaplesSysctl(intf)))
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Lif reset sysctl failed");
+        return -1
+
+    # Get LIF reset count before the reset.
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error("Failed to get LIF reset count exit code: %d stderr: %s" %
+                         (cmd.exit_code, cmd.stderr))
+        api.PrintCommandResults(cmd)
+        return -1
+
+    before = int(cmd.stdout)
+    # Get LIF reset count after the reset.
+    cmd = resp.commands[2]
+    if cmd.exit_code != 0:
+        api.Logger.error("Failed to get LIF reset count exit code: %d stderr: %s" %
+                         (cmd.exit_code, cmd.stderr))
+        api.PrintCommandResults(cmd)
+        return -1
+
+    after = int(cmd.stdout)
+    api.Logger.info("LIF reset %s interface %s count before: %d after: %d" %
+                   (node, intf, before, after))
+    if before >= after:
+        api.Logger.error("LIF reset failed before: %d >= after: %d" %
+                        (before, after))
+        api.PrintCommandResults(cmd)
+        return -1
+
+    return 0

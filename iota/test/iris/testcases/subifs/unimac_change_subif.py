@@ -132,6 +132,21 @@ def __run_ping_test(req, tc):
                     "ping -i 0.2 -c 10 %s" % (w2.ip_address))
         tc.cmd_cookies.append(cmd_cookie)
 
+def do_bsd_lif_resets():
+    nodes = api.GetNaplesHostnames()
+    naples_node = nodes[0]
+
+    if api.GetNodeOs(naples_node) != utils.OS_TYPE_BSD:
+        return 0
+
+    for intf in api.GetNaplesHostInterfaces(naples_node):
+        api.Logger.info("LIF reset %s interface %s" %
+                        (naples_node, intf))
+        status = utils.BsdLifReset(naples_node, intf)
+        if status:
+            return status
+    return 0
+
 def Setup(tc):
     tc.skip = False
 
@@ -157,6 +172,7 @@ def Trigger(tc):
     if tc.skip:
         return api.types.status.SUCCESS
 
+    status = api.types.status.SUCCESS
     # clean up resources before run
     subif_utils.clearAll()
 
@@ -183,6 +199,14 @@ def Trigger(tc):
     time.sleep(5)
     api.Logger.debug("UC MAC filter : Trigger -> Change MAC addresses result ", result)
 
+    api.Logger.debug("UC MAC filter : LIF reset ")
+    # reset the LIFs if requested
+    lif_reset  = getattr(tc.args, 'lif_reset', False)
+    if lif_reset:
+        if do_bsd_lif_resets():
+            api.Logger.error("UC MAC filter : LIF reset failed")
+            status = api.types.status.FAILURE
+
     tc.wload_ep_set, tc.host_ep_set, tc.naples_ep_set, tc.hal_ep_set = ValidateMacRegistration(tc)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -191,7 +215,7 @@ def Trigger(tc):
     __run_ping_test(req, tc)
     tc.resp = api.Trigger(req)
 
-    return api.types.status.SUCCESS
+    return status
 
 def Verify(tc):
     subif_utils.clearAll()

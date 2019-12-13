@@ -36,6 +36,17 @@ testcases:
             type: remote_only
             timeout : 7200
 
+    -   name    : MacChange_Subifs_LifReset
+        testcase: testcases.subifs.unimac_change_subif
+        stress  : False
+        ignore  : True
+        iterators:
+            ipaf : [ ipv4 ]
+            type : simple
+        args    :
+            type: remote_only
+            lif_reset: True
+
     -   name    : Multiple_Subifs_Stress
         testcase: testcases.subifs.subif
         stress  : False
