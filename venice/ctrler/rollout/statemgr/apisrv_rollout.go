@@ -613,10 +613,10 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 			endTime := api.Timestamp{}
 			endTime.SetTime(time.Now())
 			ros.Status.DSCsStatus[index].EndTime = &endTime
-			numRetries := atomic.LoadUint32(&ros.numRetries)
-			if numRetries > 0 {
-				ros.Status.DSCsStatus[index].NumberOfRetries++
-			}
+		}
+		numRetries := atomic.LoadUint32(&ros.numRetries)
+		if numRetries > 0 {
+			ros.Status.DSCsStatus[index].NumberOfRetries++
 		}
 
 	case roproto.RolloutPhase_PRE_CHECK:
