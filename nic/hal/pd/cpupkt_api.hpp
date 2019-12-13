@@ -143,8 +143,10 @@ typedef struct cpupkt_global_info_s {
     uint32_t       gc_pindex;
     uint32_t       cpu_tx_page_pindex;
     uint32_t       cpu_tx_page_cindex;
+    uint32_t       cpu_tx_page_full_err;
     uint32_t       cpu_tx_descr_pindex;
     uint32_t       cpu_tx_descr_cindex;
+    uint32_t       cpu_tx_descr_full_err;  
     uint32_t       cpu_rx_dpr_cindex;
     uint32_t       cpu_rx_dpr_sem_cindex;
     uint32_t       cpu_rx_dpr_descr_free_err;

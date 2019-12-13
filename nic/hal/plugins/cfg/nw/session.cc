@@ -3784,8 +3784,10 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
         global_info->set_gc_pindex(txrx_stats.glinfo.gc_pindex);
         global_info->set_cpu_tx_page_pindex(txrx_stats.glinfo.cpu_tx_page_pindex);
         global_info->set_cpu_tx_page_cindex(txrx_stats.glinfo.cpu_tx_page_cindex);
+        global_info->set_cpu_tx_page_full_err(txrx_stats.glinfo.cpu_tx_page_full_err);
         global_info->set_cpu_tx_descr_pindex(txrx_stats.glinfo.cpu_tx_descr_pindex);
         global_info->set_cpu_tx_descr_cindex(txrx_stats.glinfo.cpu_tx_descr_cindex);
+        global_info->set_cpu_tx_descr_full_err(txrx_stats.glinfo.cpu_tx_descr_full_err);
         global_info->set_cpu_rx_dpr_cindex(txrx_stats.glinfo.cpu_rx_dpr_cindex);
         global_info->set_cpu_rx_dpr_sem_cindex(txrx_stats.glinfo.cpu_rx_dpr_sem_cindex);
         global_info->set_cpu_rx_dpr_descr_free_err(txrx_stats.glinfo.cpu_rx_dpr_descr_free_err);

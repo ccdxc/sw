@@ -1071,8 +1071,10 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     txrx_stats.glinfo.gc_pindex = args.gc_pindex;
     txrx_stats.glinfo.cpu_tx_page_pindex = args.cpu_tx_page_pindex;
     txrx_stats.glinfo.cpu_tx_page_cindex = args.cpu_tx_page_cindex;
+    txrx_stats.glinfo.cpu_tx_page_full_err = args.cpu_tx_page_full_err;
     txrx_stats.glinfo.cpu_tx_descr_pindex = args.cpu_tx_descr_pindex;
     txrx_stats.glinfo.cpu_tx_descr_cindex = args.cpu_tx_descr_cindex;
+    txrx_stats.glinfo.cpu_tx_descr_full_err = args.cpu_tx_descr_full_err;
     txrx_stats.glinfo.cpu_rx_dpr_cindex = args.cpu_rx_dpr_cindex;
     txrx_stats.glinfo.cpu_rx_dpr_sem_cindex = args.cpu_rx_dpr_sem_cindex;
     txrx_stats.glinfo.cpu_rx_dpr_descr_free_err = args.cpu_rx_dpr_descr_free_err;

@@ -21,8 +21,10 @@ namespace pd {
 thread_local uint32_t gc_pindex = 0;
 thread_local uint32_t cpu_tx_page_pindex = 0;
 thread_local uint32_t cpu_tx_page_cindex = 0;
+thread_local uint32_t cpu_tx_page_full_err = 0;
 thread_local uint32_t cpu_tx_descr_pindex = 0;
 thread_local uint32_t cpu_tx_descr_cindex = 0;
+thread_local uint32_t cpu_tx_descr_full_err = 0;  
 thread_local uint32_t cpu_rx_dpr_cindex = 0;
 thread_local uint32_t cpu_rx_dpr_sem_cindex = 0;
 thread_local uint32_t cpu_rx_dpr_sem_free_err = 0;
@@ -215,7 +217,7 @@ cpupkt_update_slot_addr (cpupkt_qinst_info_t* qinst_info)
 
 hal_ret_t
 pd_cpupkt_get_slot_addr (types::WRingType type, uint32_t wring_id,
-                         uint32_t index, cpupkt_hw_id_t *slot_addr, uint64_t **slot_virt_addr)
+                         uint32_t index, cpupkt_hw_id_t *slot_addr, uint64_t **slot_virt_addr, uint32_t *num_slots_p)
 {
     hal_ret_t      ret = HAL_RET_OK;
     cpupkt_hw_id_t base_addr = 0;
@@ -226,6 +228,8 @@ pd_cpupkt_get_slot_addr (types::WRingType type, uint32_t wring_id,
         HAL_TRACE_ERR2("Failed to get wring meta for type: {}", type);
         return HAL_RET_WRING_NOT_FOUND;
     }
+
+    if (num_slots_p) *num_slots_p = wring_meta->num_slots;
 
     ret = wring_pd_get_base_addr(type, wring_id, &base_addr);
     if(ret != HAL_RET_OK) {
@@ -371,7 +375,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
 
     // Free page
     ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_RX_DPR, 0,
-                                  cpu_rx_dpr_cindex, &slot_addr, &slot_virt_addr);
+                                  cpu_rx_dpr_cindex, &slot_addr, &slot_virt_addr, NULL);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("Failed to get to slot addr for cpu-rx-dpr ci: {}",
                       cpu_rx_dpr_cindex);
@@ -440,6 +444,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
     hal_ret_t         ret = HAL_RET_OK;
     cpupkt_hw_id_t    slot_addr = 0;
     uint64_t          value = 0, *slot_virt_addr = NULL;
+    uint32_t          num_slots;
 
     if(!descr) {
         HAL_TRACE_ERR2("invalid arg");
@@ -448,7 +453,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
 
     // Free page
     ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_PR, tg_cpu_id,
-                                  cpu_tx_page_cindex, &slot_addr, &slot_virt_addr);
+                                  cpu_tx_page_cindex, &slot_addr, &slot_virt_addr, &num_slots);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("Failed to get to slot addr for page ci: {}",
                       cpu_tx_page_cindex);
@@ -463,11 +468,11 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
         HAL_TRACE_ERR2("Failed to program page to slot");
         return HAL_RET_HW_FAIL;
     }
-    cpu_tx_page_cindex++;
+    cpu_tx_page_cindex = ((cpu_tx_page_cindex + 1) % num_slots);
 
     // Free descr
     ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_DR, tg_cpu_id,
-                                  cpu_tx_descr_cindex, &slot_addr, &slot_virt_addr);
+                                  cpu_tx_descr_cindex, &slot_addr, &slot_virt_addr, &num_slots);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("Failed to get to slot addr for descr ci: {}",
                       cpu_tx_descr_cindex);
@@ -489,7 +494,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
      */
     PAL_barrier();
 
-    cpu_tx_descr_cindex++;
+    cpu_tx_descr_cindex = ((cpu_tx_descr_cindex + 1) % num_slots);
 
     return HAL_RET_OK;
 }
@@ -506,6 +511,7 @@ pd_cpupkt_free_tx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
     uint64_t          value = 0, *slot_virt_addr = NULL;
     cpupkt_hw_id_t    descr_addr;
     pd_descr_aol_t    *descr;
+    uint32_t          num_slots;
 
     for (uint16_t npkt = 0; npkt < pkt_count; npkt++) {
 
@@ -514,7 +520,7 @@ pd_cpupkt_free_tx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 
         // Free page
         ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_PR, tg_cpu_id,
-				      cpu_tx_page_cindex, &slot_addr, &slot_virt_addr);
+				      cpu_tx_page_cindex, &slot_addr, &slot_virt_addr, &num_slots);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR2("Failed to get to slot addr for page ci: {}",
 			  cpu_tx_page_cindex);
@@ -529,11 +535,11 @@ pd_cpupkt_free_tx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	    HAL_TRACE_ERR2("Failed to program page to slot");
 	    return HAL_RET_HW_FAIL;
 	}
-	cpu_tx_page_cindex++;
+        cpu_tx_page_cindex = ((cpu_tx_page_cindex + 1) % num_slots);
 
         // Free descr
 	ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_DR, tg_cpu_id,
-				      cpu_tx_descr_cindex, &slot_addr, &slot_virt_addr);
+				      cpu_tx_descr_cindex, &slot_addr, &slot_virt_addr, &num_slots);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR2("Failed to get to slot addr for descr ci: {}",
 			  cpu_tx_descr_cindex);
@@ -548,7 +554,7 @@ pd_cpupkt_free_tx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	    HAL_TRACE_ERR2("Failed to program descr to slot");
 	    return HAL_RET_HW_FAIL;
 	}
-	cpu_tx_descr_cindex++;
+        cpu_tx_descr_cindex = ((cpu_tx_descr_cindex + 1) % num_slots);
     }
     return HAL_RET_OK;
 }
@@ -1469,20 +1475,34 @@ pd_cpupkt_descr_alloc (pd_func_args_t *pd_func_args)
     cpupkt_hw_id_t      slot_addr;
     cpupkt_hw_id_t      *descr_addr = args->descr_addr;
     uint64_t            *slot_virt_addr = NULL;
+    cpupkt_hw_id_t base_addr = 0;
+    pd_wring_meta_t *wring_meta = wring_pd_get_meta(types::WRING_TYPE_CPU_TX_DR);
 
     if(!descr_addr) {
         return HAL_RET_INVALID_ARG;
     }
 
+    if(!wring_meta) {
+      HAL_TRACE_ERR2("Failed to get wring meta for type: {}", types::WRING_TYPE_CPU_TX_DR);
+        return HAL_RET_WRING_NOT_FOUND;
+    }
+
+    ret = wring_pd_get_base_addr(types::WRING_TYPE_CPU_TX_DR, tg_cpu_id, &base_addr);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR2("failed to get base address for the wring: {}", types::WRING_TYPE_CPU_TX_DR);
+        return HAL_RET_ERR;
+    }
+    
     // PI/CI check
-    if((cpu_tx_descr_pindex + 1) == cpu_tx_descr_cindex) {
+    if(((cpu_tx_descr_pindex + 1) % wring_meta->num_slots) == cpu_tx_descr_cindex) {
         HAL_TRACE_ERR2("No free descr entries available: pi: {}, ci: {}",
                       cpu_tx_descr_pindex, cpu_tx_descr_cindex);
+	cpu_tx_descr_full_err++;
         return HAL_RET_NO_RESOURCE;
     }
 
-    ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_DR, tg_cpu_id,
-                                  cpu_tx_descr_pindex, &slot_addr, &slot_virt_addr);
+    ret = pd_cpupkt_get_slot_addr_for_ring(wring_meta, base_addr, tg_cpu_id,
+                                           cpu_tx_descr_pindex, &slot_addr, &slot_virt_addr);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("failed to get to slot addr for descr pi: {}",
                       cpu_tx_descr_pindex);
@@ -1511,20 +1531,34 @@ pd_cpupkt_page_alloc (pd_func_args_t *pd_func_args)
     cpupkt_hw_id_t      slot_addr;
     cpupkt_hw_id_t* page_addr = args->page_addr;
     uint64_t        *slot_virt_addr = NULL;
+    cpupkt_hw_id_t base_addr = 0;
+    pd_wring_meta_t *wring_meta = wring_pd_get_meta(types::WRING_TYPE_CPU_TX_PR);
 
     if(!page_addr) {
         return HAL_RET_INVALID_ARG;
     }
 
+    if(!wring_meta) {
+      HAL_TRACE_ERR2("Failed to get wring meta for type: {}", types::WRING_TYPE_CPU_TX_PR);
+        return HAL_RET_WRING_NOT_FOUND;
+    }
+
+    ret = wring_pd_get_base_addr(types::WRING_TYPE_CPU_TX_PR, tg_cpu_id, &base_addr);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR2("failed to get base address for the wring: {}", types::WRING_TYPE_CPU_TX_PR);
+        return HAL_RET_ERR;
+    }
+
     // PI/CI check
-    if((cpu_tx_page_pindex + 1) == cpu_tx_page_cindex) {
+    if(((cpu_tx_page_pindex + 1) % wring_meta->num_slots) == cpu_tx_page_cindex) {
         HAL_TRACE_ERR2("No free page entries available: pi: {}, ci: {}",
                       cpu_tx_page_pindex, cpu_tx_page_cindex);
+	cpu_tx_page_full_err++;
         return HAL_RET_NO_RESOURCE;
     }
 
-    ret = pd_cpupkt_get_slot_addr(types::WRING_TYPE_CPU_TX_PR, tg_cpu_id,
-                                  cpu_tx_page_pindex, &slot_addr, &slot_virt_addr);
+    ret = pd_cpupkt_get_slot_addr_for_ring(wring_meta, base_addr, tg_cpu_id,
+                                           cpu_tx_page_pindex, &slot_addr, &slot_virt_addr);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR2("failed to get to slot addr for page pi: {}",
                       cpu_tx_page_pindex);
@@ -1698,8 +1732,10 @@ pd_cpupkt_get_global (pd_func_args_t *pd_func_args)
     args->gc_pindex = gc_pindex;
     args->cpu_tx_page_pindex = cpu_tx_page_pindex;
     args->cpu_tx_page_cindex = cpu_tx_page_cindex;
+    args->cpu_tx_page_full_err = cpu_tx_page_full_err;
     args->cpu_tx_descr_pindex = cpu_tx_descr_pindex;
     args->cpu_tx_descr_cindex = cpu_tx_descr_cindex;
+    args->cpu_tx_descr_full_err = cpu_tx_descr_full_err;
     args->cpu_rx_dpr_cindex = cpu_rx_dpr_cindex;
     args->cpu_rx_dpr_sem_cindex = cpu_rx_dpr_sem_cindex;
     args->cpu_rx_dpr_sem_free_err = cpu_rx_dpr_sem_free_err;

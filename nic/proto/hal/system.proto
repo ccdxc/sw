@@ -379,6 +379,8 @@ message QGlobalInfo {
   uint32  cpu_rx_dpr_descr_free_err = 8;
   uint32  cpu_rx_dpr_sem_free_err = 9;
   uint32  cpu_rx_dpr_descr_invalid_free_err = 10;
+  uint32  cpu_tx_page_full_err = 11;
+  uint32  cpu_tx_descr_full_err = 12;
 }
 
 message QInfo {
