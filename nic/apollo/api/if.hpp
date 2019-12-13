@@ -159,10 +159,9 @@ public:
     virtual sdk_ret_t delay_delete(void) override;
 
     /// \brief          read config
-    /// \param[in]      key pointer to the key object
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_if_key_t *key, pds_if_info_t *info);
+    sdk_ret_t read(pds_if_info_t *info);
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
@@ -248,6 +247,11 @@ private:
 
     /// \brief destructor
     ~if_entry();
+
+    /// \brief      fill the interface sw spec
+    /// \param[out] spec specification
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_if_spec_t *spec);
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)

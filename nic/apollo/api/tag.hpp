@@ -144,6 +144,11 @@ public:
         return (void *)&(tag->key_);
     }
 
+    ///\brief      read config
+    ///\param[out] info pointer to the info object
+    ///\return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_tag_info_t *info);
+
     /// \brief          return the tag entry's key/id
     /// \return         key/id of the tag entry
     pds_tag_key_t key(void) const { return key_; }
@@ -162,6 +167,10 @@ private:
 
     /// \brief destructor
     ~tag_entry();
+
+    /// \brief      fill the tag sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_tag_spec_t *spec);
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)

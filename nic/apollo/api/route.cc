@@ -172,12 +172,11 @@ route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 void
 route_table::fill_spec_(pds_route_table_spec_t *spec) {
-    memcpy(&spec->key, &this->key_, sizeof(pds_route_table_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_route_table_key_t));
     spec->af = af_;
     spec->num_routes = 0;
     // routes are not stored anywhere
     spec->routes = NULL;
-    return;
 }
 
 sdk_ret_t

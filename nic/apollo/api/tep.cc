@@ -229,10 +229,16 @@ tep_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     return SDK_RET_OK;
 }
 
+void
+tep_entry::fill_spec_(pds_tep_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_tep_key_t));
+}
+
 sdk_ret_t
-tep_entry::read(pds_tep_key_t *key, pds_tep_info_t *info) {
+tep_entry::read(pds_tep_info_t *info) {
+    fill_spec_(&info->spec);
     if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                               (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;

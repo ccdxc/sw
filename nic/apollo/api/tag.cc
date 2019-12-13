@@ -141,6 +141,24 @@ tag_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
+void
+tag_entry::fill_spec_(pds_tag_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_tag_key_t));
+    spec->af = af_;
+    spec->num_rules = 0;
+    // rules are not stored anywhere
+    spec->rules = NULL;
+}
+
+sdk_ret_t
+tag_entry::read(pds_tag_info_t *info) {
+    fill_spec_(&info->spec);
+    return SDK_RET_OK;
+    // TODO: implement tag read status
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                          (impl::obj_info_t *)info);
+}
+
 sdk_ret_t
 tag_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;

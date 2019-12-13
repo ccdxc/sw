@@ -187,6 +187,10 @@ private:
     /// \brief destructor
     ~policer_entry();
 
+    /// \brief      fill the policer sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_policer_spec_t *spec);
+
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
     /// \return    SDK_RET_OK on success, failure status code on error

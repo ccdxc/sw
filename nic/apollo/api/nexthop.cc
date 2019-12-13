@@ -174,13 +174,16 @@ nexthop::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
+void
+nexthop::fill_spec_(pds_nexthop_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_nexthop_key_t));
+}
+
 sdk_ret_t
-nexthop::read(pds_nexthop_key_t *key, pds_nexthop_info_t *info) {
-    if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
-                              (impl::obj_info_t *)info);
-    }
-    return sdk::SDK_RET_INVALID_OP;
+nexthop::read(pds_nexthop_info_t *info) {
+    fill_spec_(&info->spec);
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                          (impl::obj_info_t *)info);
 }
 
 sdk_ret_t

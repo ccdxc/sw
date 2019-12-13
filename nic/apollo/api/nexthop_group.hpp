@@ -116,13 +116,6 @@ public:
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
                                         api_op_t api_op) override;
 
-    ///\brief read config from hardware
-    ///\param[in] key    pointer to the key object
-    ///\param[out] info  pointer to the info object
-    ///\return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_nexthop_group_key_t *key,
-                   pds_nexthop_group_info_t *info);
-
     /// \brief  add given nexthop group to the database
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
@@ -155,6 +148,11 @@ public:
         return (void *)&(nh_group->key_);
     }
 
+    ///\brief      read config
+    ///\param[out] info pointer to the info object
+    ///\return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_nexthop_group_info_t *info);
+
     /// \brief     return the key of the nexthop group
     /// \return    nexthop group key
     pds_nexthop_group_key_t key(void) const { return key_; }
@@ -180,7 +178,7 @@ private:
 
     /// \brief      fill the nexthop group sw spec
     /// \param[out] spec specification
-    void spec_fill_(pds_nexthop_group_spec_t *spec);
+    void fill_spec_(pds_nexthop_group_spec_t *spec);
 
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)

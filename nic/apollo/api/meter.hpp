@@ -156,10 +156,9 @@ public:
     impl_base *impl(void) { return impl_; }
 
     /// \brief      read meter entry from hardware
-    /// \param[in]  key key to meter structure
-    /// \param[out] info fill meter info with stats
+    /// \param[out] info pointer to the info object
     /// \return     #SDK_RET_OK on success, error code in case of failure
-    sdk_ret_t read(pds_meter_key_t *key, pds_meter_info_t *info);
+    sdk_ret_t read(pds_meter_info_t *info);
 
 private:
     /// \brief constructor
@@ -167,6 +166,10 @@ private:
 
     /// \brief destructor
     ~meter_entry();
+
+    /// \brief      fill the meter sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_meter_spec_t *spec);
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)

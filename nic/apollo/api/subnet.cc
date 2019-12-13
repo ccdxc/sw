@@ -186,6 +186,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         egr_v6_policy_[i].id = spec->egr_v6_policy[i].id;
     }
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
+    host_ifindex_ = spec->host_ifindex;
     return SDK_RET_OK;
 }
 
@@ -295,10 +296,40 @@ subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
+void
+subnet_entry::fill_spec_(pds_subnet_spec_t *spec) {
+    uint8_t i;
+
+    memcpy(&spec->key, &key_, sizeof(pds_subnet_key_t));
+    memcpy(&spec->vpc, &vpc_, sizeof(pds_vpc_key_t));
+    spec->v4_route_table = v4_route_table_;
+    spec->v6_route_table = v6_route_table_;
+    spec->num_ing_v4_policy = num_ing_v4_policy_;
+    for (i = 0; i < num_ing_v4_policy_; i++) {
+        spec->ing_v4_policy[i] = ing_v4_policy_[i];
+    }
+    spec->num_ing_v6_policy = num_ing_v6_policy_;
+    for (i = 0; i < num_ing_v6_policy_; i++) {
+        spec->ing_v6_policy[i] = ing_v6_policy_[i];
+    }
+    spec->num_egr_v4_policy = num_egr_v4_policy_;
+    for (i = 0; i < num_egr_v4_policy_; i++) {
+        spec->egr_v4_policy[i] = egr_v4_policy_[i];
+    }
+    spec->num_egr_v6_policy = num_egr_v6_policy_;
+    for (i = 0; i < num_egr_v6_policy_; i++) {
+        spec->egr_v6_policy[i] = egr_v6_policy_[i];
+    }
+    memcpy(&spec->vr_mac, vr_mac_, sizeof(mac_addr_t));
+    spec->fabric_encap = fabric_encap_;
+    spec->host_ifindex = host_ifindex_;
+}
+
 sdk_ret_t
-subnet_entry::read(pds_subnet_key_t *key, pds_subnet_info_t *info) {
+subnet_entry::read(pds_subnet_info_t *info) {
+    fill_spec_(&info->spec);
     if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                               (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;

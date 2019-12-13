@@ -14,8 +14,9 @@ interface_create (pds_if_spec_t *spec,
                   pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
+    pds_if_info_t info;
 
-    if (pds_if_read(&spec->key, NULL) != SDK_RET_ENTRY_NOT_FOUND) {
+    if (pds_if_read(&spec->key, &info) != SDK_RET_ENTRY_NOT_FOUND) {
         PDS_TRACE_ERR("Failed to create interface {}, interface exists already",
                       spec->key.id);
         return sdk::SDK_RET_ENTRY_EXISTS;
@@ -44,8 +45,9 @@ interface_update (pds_if_spec_t *spec,
                   pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
+    pds_if_info_t info;
 
-    if (pds_if_read(&spec->key, NULL) != SDK_RET_OK) {
+    if (pds_if_read(&spec->key, &info) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update interface {}, interface not found",
                       spec->key.id);
         return sdk::SDK_RET_ENTRY_EXISTS;

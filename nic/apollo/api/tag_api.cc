@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements Tag CRUD API
+/// This file implements Tag CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -40,25 +40,6 @@ pds_tag_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_tag_stats_fill (pds_tag_stats_t *stats, tag_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_tag_status_fill (pds_tag_status_t *status, tag_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_tag_spec_fill (pds_tag_spec_t *spec, tag_entry *entry)
-{
-    // nothing to fill for tag
-    return SDK_RET_OK;
-}
-
 static inline tag_entry *
 pds_tag_entry_find (pds_tag_key_t *key)
 {
@@ -76,10 +57,9 @@ pds_tag_create (_In_ pds_tag_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_tag_read (pds_tag_key_t *key, pds_tag_info_t *info)
+pds_tag_read (_In_ pds_tag_key_t *key, _Out_ pds_tag_info_t *info)
 {
-    sdk_ret_t rv;
-    tag_entry *entry = NULL;
+    tag_entry *entry;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -89,19 +69,7 @@ pds_tag_read (pds_tag_key_t *key, pds_tag_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_tag_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_tag_status_fill(&info->status, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_tag_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    return SDK_RET_OK;
+    return entry->read(info);
 }
 
 sdk_ret_t

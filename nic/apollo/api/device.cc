@@ -122,8 +122,15 @@ device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
+void
+device_entry::fill_spec_(pds_device_spec_t *spec) {
+    spec->gateway_ip_addr = gw_ip_addr_;
+    spec->dev_oper_mode = oper_mode_;
+}
+
 sdk_ret_t
 device_entry::read(pds_device_info_t *info) {
+    fill_spec_(&info->spec);
     return impl_->read_hw(this, NULL, (impl::obj_info_t *)info);
 }
 

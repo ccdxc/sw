@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements interface CRUD API
+/// This file implements interface CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -41,43 +41,6 @@ pds_if_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_if_stats_fill (pds_if_stats_t *stats, if_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_if_status_fill (pds_if_status_t *status, if_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_if_spec_fill (pds_if_spec_t *spec, if_entry *entry)
-{
-    spec->key.id = entry->key().id;
-    spec->type = entry->type();
-    spec->admin_state = entry->admin_state();
-    spec->type = entry->type();
-    switch (spec->type) {
-    case PDS_IF_TYPE_UPLINK:
-        spec->uplink_info.port_num = entry->port();
-        break;
-    case PDS_IF_TYPE_L3:
-        spec->l3_if_info.port_num = entry->port();
-        spec->l3_if_info.vpc = entry->l3_vpc();
-        spec->l3_if_info.ip_prefix = entry->l3_ip_prefix();
-        spec->l3_if_info.encap = entry->l3_encap();
-        memcpy(spec->l3_if_info.mac_addr, entry->l3_mac(),
-               ETH_ADDR_LEN);
-        break;
-    default:
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
 static inline if_entry *
 pds_if_entry_find (pds_if_key_t *key)
 {
@@ -95,12 +58,11 @@ pds_if_create (_In_ pds_if_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_if_read (pds_if_key_t *key, pds_if_info_t *info)
+pds_if_read (_In_ pds_if_key_t *key, _Out_ pds_if_info_t *info)
 {
-    sdk_ret_t rv;
-    if_entry *entry = NULL;
+    if_entry *entry;
 
-    if (key == NULL) {
+    if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
 
@@ -108,28 +70,7 @@ pds_if_read (pds_if_key_t *key, pds_if_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if (info == NULL) {
-        return SDK_RET_OK;
-    }
-
-    if ((rv = pds_if_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-    info->spec.key = *key;
-
-    if ((rv = entry->read(key, info)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_if_status_fill(&info->status, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_if_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    return SDK_RET_OK;
+    return entry->read(info);
 }
 
 typedef struct pds_if_read_args_s {
@@ -145,11 +86,7 @@ pds_if_info_from_entry (void *entry, void *ctxt)
     pds_if_read_args_t *args = (pds_if_read_args_t *)ctxt;
 
     if (intf->type() != PDS_IF_TYPE_NONE) {
-        pds_if_spec_fill(&info.spec, intf);
-        intf->read(&info.spec.key, &info);
-        pds_if_status_fill(&info.status, intf);
-        pds_if_stats_fill(&info.stats, intf);
-
+        intf->read(&info);
         args->cb(&info, args->ctxt);
     }
 

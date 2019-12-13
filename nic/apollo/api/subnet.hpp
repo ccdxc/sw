@@ -159,10 +159,9 @@ public:
     virtual sdk_ret_t delay_delete(void) override;
 
     /// \brief          read config
-    /// \param[in]      key pointer to the key object
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_subnet_key_t *key, pds_subnet_info_t *info);
+    sdk_ret_t read(pds_subnet_info_t *info);
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
@@ -271,6 +270,10 @@ private:
 
     /// \brief destructor
     ~subnet_entry();
+
+    /// \brief      fill the subnet sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_subnet_spec_t *spec);
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)

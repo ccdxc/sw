@@ -226,11 +226,29 @@ vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
+void
+vpc_entry::fill_status_(pds_vpc_status_t *status) {
+    status->hw_id = hw_id_;
+}
+
+void
+vpc_entry::fill_spec_(pds_vpc_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_vpc_key_t));
+    spec->type = type_;
+    spec->fabric_encap = fabric_encap_;
+    if (nat46_pfx_valid_) {
+        memcpy(&spec->nat46_prefix, &nat46_pfx_,
+               sizeof(ip_prefix_t));
+    }
+}
+
 sdk_ret_t
-vpc_entry::read(pds_vpc_key_t *key, pds_vpc_info_t *info) {
+vpc_entry::read(pds_vpc_info_t *info) {
+    fill_spec_(&info->spec);
+    fill_status_(&info->status);
     if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
-                          (impl::obj_info_t *)info);
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                              (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;
 }

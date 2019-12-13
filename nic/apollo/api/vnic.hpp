@@ -164,9 +164,9 @@ public:
         return (void *)&(vnic->key_);
     }
 
-    ///\brief read config
-    ///\param[out] info Pointer to the info object
-    ///\return   SDK_RET_OK on success, failure status code on error
+    ///\brief      read config
+    ///\param[out] info pointer to the info object
+    ///\return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_vnic_info_t *info);
 
     /// \brief     return the key/id of this vnic

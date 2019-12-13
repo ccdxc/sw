@@ -212,9 +212,38 @@ if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-if_entry::read(pds_if_key_t *key, pds_if_info_t *info) {
+if_entry::fill_spec_(pds_if_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_if_key_t));
+    spec->type = type_;
+    spec->admin_state = admin_state_;
+    switch (spec->type) {
+    case PDS_IF_TYPE_UPLINK:
+        spec->uplink_info.port_num = if_info_.uplink_.port_;
+        break;
+    case PDS_IF_TYPE_L3:
+        spec->l3_if_info.port_num = if_info_.l3_.port_;
+        spec->l3_if_info.vpc = if_info_.l3_.vpc_;
+        spec->l3_if_info.ip_prefix = if_info_.l3_.ip_pfx_;
+        spec->l3_if_info.encap = if_info_.l3_.encap_;
+        memcpy(spec->l3_if_info.mac_addr, if_info_.l3_.mac_,
+               ETH_ADDR_LEN);
+        break;
+    default:
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+if_entry::read(pds_if_info_t *info) {
+    sdk_ret_t ret;
+
+    ret = fill_spec_(&info->spec);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
     if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                               (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;

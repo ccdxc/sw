@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements VPC CRUD API
+/// This file implements VPC CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -41,31 +41,6 @@ pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_vpc_stats_fill (pds_vpc_stats_t *stats, vpc_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_vpc_status_fill (pds_vpc_status_t *status, vpc_entry *entry)
-{
-    status->hw_id = entry->hw_id();
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_vpc_spec_fill (pds_vpc_spec_t *spec, vpc_entry *entry)
-{
-    spec->type = entry->type();
-    spec->fabric_encap = entry->fabric_encap();
-    if (entry->nat46_prefix_valid()) {
-        memcpy(&spec->nat46_prefix, &entry->nat46_prefix(),
-               sizeof(ip_prefix_t));
-    }
-    return SDK_RET_OK;
-}
-
 static inline vpc_entry *
 pds_vpc_entry_find (pds_vpc_key_t *key)
 {
@@ -83,10 +58,9 @@ pds_vpc_create (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
+pds_vpc_read (_In_ pds_vpc_key_t *key, _Out_ pds_vpc_info_t *info)
 {
-    sdk_ret_t rv;
-    vpc_entry *entry = NULL;
+    vpc_entry *entry;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -96,25 +70,7 @@ pds_vpc_read (pds_vpc_key_t *key, pds_vpc_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_vpc_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    info->spec.key = *key;
-
-    if ((rv = pds_vpc_status_fill(&info->status, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_vpc_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    return SDK_RET_OK;
+    return entry->read(info);
 }
 
 sdk_ret_t
@@ -153,24 +109,6 @@ pds_vpc_peer_api_handle (pds_batch_ctxt_t bctxt,
     return SDK_RET_OOM;
 }
 
-static inline sdk_ret_t
-pds_vpc_peer_stats_fill (pds_vpc_peer_stats_t *stats, vpc_peer_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_vpc_peer_status_fill (pds_vpc_peer_status_t *status, vpc_peer_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-pds_vpc_peer_spec_fill (pds_vpc_peer_spec_t *spec, vpc_peer_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
 static inline vpc_peer_entry *
 pds_vpc_peer_entry_find (pds_vpc_peer_key_t *key)
 {
@@ -198,10 +136,10 @@ pds_vpc_peer_create (_In_ pds_vpc_peer_spec_t *spec,
 }
 
 sdk_ret_t
-pds_vpc_peer_read (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
+pds_vpc_peer_read (_In_ pds_vpc_peer_key_t *key,
+                   _Out_ pds_vpc_peer_info_t *info)
 {
-    sdk_ret_t rv;
-    vpc_peer_entry *entry = NULL;
+    vpc_peer_entry *entry;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -211,19 +149,7 @@ pds_vpc_peer_read (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_vpc_peer_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-    info->spec.key = *key;
-
-    if ((rv = pds_vpc_peer_status_fill(&info->status, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_vpc_peer_stats_fill(&info->stats, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-    return SDK_RET_OK;
+    return entry->read(info);
 }
 
 sdk_ret_t

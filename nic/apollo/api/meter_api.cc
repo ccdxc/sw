@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements Meter CRUD API
+/// This file implements Meter CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -57,10 +57,9 @@ pds_meter_create (_In_ pds_meter_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_meter_read (pds_meter_key_t *key, pds_meter_info_t *info)
+pds_meter_read (_In_ pds_meter_key_t *key, _Out_ pds_meter_info_t *info)
 {
-    sdk_ret_t rv;
-    meter_entry *entry = NULL;
+    meter_entry *entry;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -70,9 +69,7 @@ pds_meter_read (pds_meter_key_t *key, pds_meter_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    info->spec.key = *key;
-    rv = entry->read(key, info);
-    return rv;
+    return entry->read(info);
 }
 
 sdk_ret_t

@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements subnet CRUD API
+/// This file implements subnet CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -40,45 +40,6 @@ pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
-// TODO: these xxx_fill() need to move to subnet.cc and corresponding impl.cc
-//       please fix the read for subnet to support multiple policies
-static inline sdk::sdk_ret_t
-pds_subnet_stats_fill (pds_subnet_stats_t *stats, subnet_entry *entry)
-{
-    return SDK_RET_OK;
-}
-
-static inline sdk::sdk_ret_t
-pds_subnet_status_fill (pds_subnet_status_t *status, subnet_entry *entry)
-{
-    status->hw_id = entry->hw_id();
-    return SDK_RET_OK;
-}
-
-// TODO: fix this read API for multiple policies
-static inline sdk::sdk_ret_t
-pds_subnet_spec_fill (pds_subnet_spec_t *spec, subnet_entry *entry)
-{
-    pds_vpc_key_t vpc = {};
-
-    vpc = entry->vpc();
-    spec->vpc.id = vpc.id;
-    spec->v4_route_table = entry->v4_route_table();
-    spec->v6_route_table = entry->v6_route_table();
-    spec->num_ing_v4_policy = 1;
-    spec->ing_v4_policy[0] = entry->ing_v4_policy(0);
-    spec->num_ing_v6_policy = 1;
-    spec->ing_v6_policy[0] = entry->ing_v6_policy(0);
-    spec->num_egr_v4_policy = 1;
-    spec->egr_v4_policy[0] = entry->egr_v4_policy(0);
-    spec->num_egr_v6_policy = 1;
-    spec->egr_v6_policy[0] = entry->egr_v6_policy(0);
-    memcpy(&spec->vr_mac, entry->vr_mac(), sizeof(mac_addr_t));
-    spec->fabric_encap = entry->fabric_encap();
-
-    return SDK_RET_OK;
-}
-
 static inline subnet_entry *
 pds_subnet_entry_find (pds_subnet_key_t *key)
 {
@@ -96,10 +57,9 @@ pds_subnet_create (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk::sdk_ret_t
-pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
+pds_subnet_read (_In_ pds_subnet_key_t *key, _Out_ pds_subnet_info_t *info)
 {
-    sdk::sdk_ret_t rv;
-    subnet_entry *entry = NULL;
+    subnet_entry *entry;
 
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -109,26 +69,7 @@ pds_subnet_read (pds_subnet_key_t *key, pds_subnet_info_t *info)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_subnet_spec_fill(&info->spec, entry)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    info->spec.key = *key;
-
-    if ((rv = pds_subnet_status_fill(&info->status, entry)) !=
-            sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_subnet_stats_fill(&info->stats, entry)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = entry->read(key, info)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    return entry->read(info);
 }
 
 sdk::sdk_ret_t

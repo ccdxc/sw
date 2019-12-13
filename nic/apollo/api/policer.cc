@@ -139,12 +139,15 @@ policer_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
+void
+policer_entry::fill_spec_(pds_policer_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_policer_key_t));
+    spec->dir = dir_;
+}
+
 sdk_ret_t
 policer_entry::read(pds_policer_info_t *info) {
-    // fill key and direction
-    info->spec.key = this->key_;
-    info->spec.dir = this->dir_;
-
+    fill_spec_(&info->spec);
     return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                           (impl::obj_info_t *)info);
 }

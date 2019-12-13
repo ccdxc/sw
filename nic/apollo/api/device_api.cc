@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module implements Device API
+/// This file implements Device CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -33,46 +33,42 @@ pds_device_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
+static inline device_entry *
+pds_device_find (void)
+{
+    return (device_db()->find());
+}
+
 sdk_ret_t
-pds_device_create (pds_device_spec_t *device, pds_batch_ctxt_t bctxt)
+pds_device_create (_In_ pds_device_spec_t *device, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_device_api_handle(bctxt, API_OP_CREATE, device);
 }
 
 sdk_ret_t
-pds_device_update (pds_device_spec_t *device, pds_batch_ctxt_t bctxt)
+pds_device_read (_Out_ pds_device_info_t *info)
+{
+    device_entry *entry;
+
+    if (info == NULL) {
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if ((entry = pds_device_find()) == NULL) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    return entry->read(info);
+}
+
+sdk_ret_t
+pds_device_update (_In_ pds_device_spec_t *device, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_device_api_handle(bctxt, API_OP_UPDATE, device);
 }
 
 sdk_ret_t
-pds_device_delete (pds_batch_ctxt_t bctxt)
+pds_device_delete (_In_ pds_batch_ctxt_t bctxt)
 {
     return pds_device_api_handle(bctxt, API_OP_DELETE, NULL);
-}
-
-static inline void
-pds_device_spec_fill (pds_device_spec_t *spec, device_entry *entry)
-{
-    spec->gateway_ip_addr = entry->gw_ip_addr();
-    spec->dev_oper_mode = entry->oper_mode();
-}
-
-sdk_ret_t
-pds_device_read (pds_device_info_t *info)
-{
-    device_entry *entry;
-
-    if (info == NULL) {
-        return sdk::SDK_RET_INVALID_ARG;
-    }
-
-    entry = device_db()->find();
-    if (entry == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-
-    // fill from software state
-    pds_device_spec_fill(&info->spec, entry);
-    return entry->read(info);
 }

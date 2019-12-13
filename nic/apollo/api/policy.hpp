@@ -134,11 +134,6 @@ public:
                                       api_base *orig_obj,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    ///\brief read config
-    ///\param[out] info Pointer to the info object
-    ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policy_info_t *info);
-
     /**
      * @brief     add given security policy to the database
      * @return   SDK_RET_OK on success, failure status code on error
@@ -180,6 +175,11 @@ public:
         policy *table = (policy *)entry;
         return (void *)&(table->key_);
     }
+
+    ///\brief      read config
+    ///\param[out] info pointer to the info object
+    ///\return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_policy_info_t *info);
 
     /// \brief     return the policy key/id
     /// \return    key/id of the policy

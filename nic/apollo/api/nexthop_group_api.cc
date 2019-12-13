@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file implements nexthop CRUD APIs
+/// This file implements nexthop group CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -80,11 +80,10 @@ pds_nexthop_group_create (_In_ pds_nexthop_group_spec_t *spec,
 }
 
 sdk_ret_t
-pds_nexthop_group_read (pds_nexthop_group_key_t *key,
-                        pds_nexthop_group_info_t *info)
+pds_nexthop_group_read (_In_ pds_nexthop_group_key_t *key,
+                        _Out_ pds_nexthop_group_info_t *info)
 {
-    sdk_ret_t rv;
-    nexthop_group *entry = NULL;
+    nexthop_group *entry;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
@@ -94,22 +93,7 @@ pds_nexthop_group_read (pds_nexthop_group_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = pds_nexthop_group_spec_fill(&info->spec, entry)) != SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_nexthop_group_status_fill(&info->status, entry)) !=
-             SDK_RET_OK) {
-        return rv;
-    }
-
-    if ((rv = pds_nexthop_group_stats_fill(&info->stats, entry)) !=
-             SDK_RET_OK) {
-        return rv;
-    }
-
-    info->spec.key = *key;
-    return entry->read(key, info);
+    return entry->read(info);
 }
 
 sdk_ret_t

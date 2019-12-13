@@ -228,13 +228,12 @@ policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 void
 policy::fill_spec_(pds_policy_spec_t *spec) {
-    memcpy(&spec->key, &this->key_, sizeof(pds_policy_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_policy_key_t));
     spec->af = af_;
     spec->direction = dir_;
     spec->num_rules = 0;
     // rules are not stored anywhere
     spec->rules = NULL;
-    return;
 }
 
 sdk_ret_t

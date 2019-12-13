@@ -142,6 +142,11 @@ public:
         return "vpc-peer-" + std::to_string(key_.id);
     }
 
+    /// \brief          read config
+    /// \param[out]     info pointer to the info object
+    /// \return         SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_vpc_peer_info_t *info);
+
     /// \brief    return the key of this object
     /// \return    key contains ID of vpc peer
     pds_vpc_peer_key_t key(void) { return key_; }
@@ -152,6 +157,10 @@ private:
 
     /// \brief destructor
     ~vpc_peer_entry();
+
+    /// \brief      fill the VPC peer sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_vpc_peer_spec_t *spec);
 
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)

@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module implements VNIC API
+/// This file implements VNIC CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -49,35 +49,35 @@ pds_vnic_entry_find (pds_vnic_key_t *key)
 // VNIC API entry point implementation
 //----------------------------------------------------------------------------
 sdk_ret_t
-pds_vnic_create (pds_vnic_spec_t *spec, pds_batch_ctxt_t bctxt)
+pds_vnic_create (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vnic_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk::sdk_ret_t
-pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
+pds_vnic_read (_In_ pds_vnic_key_t *key, _Out_ pds_vnic_info_t *info)
 {
-    vnic_entry *entry = NULL;
+    vnic_entry *entry;
 
     if (key == NULL || info == NULL) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
     if ((entry = pds_vnic_entry_find(key)) == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     return entry->read(info);
 }
 
 sdk_ret_t
-pds_vnic_update (pds_vnic_spec_t *spec, pds_batch_ctxt_t bctxt)
+pds_vnic_update (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vnic_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
-pds_vnic_delete (pds_vnic_key_t *key, pds_batch_ctxt_t bctxt)
+pds_vnic_delete (_In_ pds_vnic_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vnic_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

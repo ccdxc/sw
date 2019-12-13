@@ -162,7 +162,7 @@ vnic_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
@@ -185,10 +185,10 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
 
     subnet = subnet_db()->find(&subnet_);
     if (subnet == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    memcpy(&spec->key, &this->key_, sizeof(pds_vnic_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_vnic_key_t));
     spec->subnet = subnet_;
     spec->vpc = subnet->vpc();
     memcpy(&spec->mac_addr, &mac_, ETH_ADDR_LEN);
@@ -198,8 +198,7 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     spec->v6_meter = v6_meter_;
     spec->switch_vnic = switch_vnic_;
     spec->host_ifindex = host_ifindex_;
-
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -207,7 +206,7 @@ vnic_entry::read(pds_vnic_info_t *info) {
     sdk_ret_t ret;
 
     ret = fill_spec_(&info->spec);
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
     return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
@@ -216,7 +215,7 @@ vnic_entry::read(pds_vnic_info_t *info) {
 
 sdk_ret_t
 vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

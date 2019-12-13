@@ -46,15 +46,26 @@ pds_lif_to_lif_info (pds_lif_info_t *info, api::impl::lif_impl *lif) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-pds_lif_read (pds_lif_key_t *key, pds_lif_info_t *info)
+static inline api::impl::lif_impl *
+pds_lif_find (pds_lif_key_t *key)
 {
-    api::impl::lif_impl *lif = (api::impl::lif_impl *)(lif_db()->find(key));
-    if (lif == NULL) {
+    return ((api::impl::lif_impl *)lif_db()->find(key));
+}
+
+sdk_ret_t
+pds_lif_read (_In_ pds_lif_key_t *key, _Out_ pds_lif_info_t *info)
+{
+    api::impl::lif_impl *lif;
+
+    if (key == NULL || info == NULL) {
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if ((lif = pds_lif_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    pds_lif_to_lif_info(info, lif);
-    return SDK_RET_OK;
+
+    return pds_lif_to_lif_info(info, lif);
 }
 
 typedef struct pds_lif_read_args_s {

@@ -160,4 +160,18 @@ vpc_peer_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_VPC_PEER, this);
 }
 
+void
+vpc_peer_entry::fill_spec_(pds_vpc_peer_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_vpc_peer_key_t));
+}
+
+sdk_ret_t
+vpc_peer_entry::read(pds_vpc_peer_info_t *info) {
+    fill_spec_(&info->spec);
+    return SDK_RET_OK;
+    // TODO: implement vpc peer read
+    return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                          (impl::obj_info_t *)info);
+}
+
 }    // namespace api

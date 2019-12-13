@@ -157,7 +157,6 @@ public:
     }
 
     /// \brief      read config
-    /// \param[in]  key Pointer to the key object
     /// \param[out] info Pointer to the info object
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_device_info_t *info);
@@ -194,6 +193,10 @@ private:
 
     /// \brief destructor
     ~device_entry() {}
+
+    /// \brief      fill the device sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_device_spec_t *spec);
 
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)

@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module implements TEP API
+/// This file implements TEP CRUD APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -33,14 +33,20 @@ pds_tep_api_handle (pds_batch_ctxt_t bctxt, api_op_t api_op, pds_tep_key_t *key,
     return SDK_RET_OOM;
 }
 
+static inline tep_entry *
+pds_tep_entry_find (pds_tep_key_t *key)
+{
+    return (tep_db()->find(key));
+}
+
 sdk_ret_t
-pds_tep_create (pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+pds_tep_create (_In_ pds_tep_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_tep_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
 sdk_ret_t
-pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
+pds_tep_read (_In_ pds_tep_key_t *key, _Out_ pds_tep_info_t *info)
 {
     tep_entry *entry;
 
@@ -48,22 +54,21 @@ pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    if ((entry = tep_db()->find(key)) == NULL) {
+    if ((entry = pds_tep_entry_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    info->spec.key = *key;
-    return entry->read(key, info);
+    return entry->read(info);
 }
 
 sdk_ret_t
-pds_tep_update (pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+pds_tep_update (_In_ pds_tep_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_tep_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
 sdk_ret_t
-pds_tep_delete (pds_tep_key_t *key, pds_batch_ctxt_t bctxt)
+pds_tep_delete (_In_ pds_tep_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_tep_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

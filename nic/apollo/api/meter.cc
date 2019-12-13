@@ -185,11 +185,17 @@ meter_entry::add_deps(obj_ctxt_t *obj_ctxt) {
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
 }
 
+void
+meter_entry::fill_spec_(pds_meter_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_meter_key_t));
+}
+
 sdk_ret_t
-meter_entry::read(pds_meter_key_t *key, pds_meter_info_t *info) {
+meter_entry::read(pds_meter_info_t *info) {
+    fill_spec_(&info->spec);
     if (impl_) {
-        return impl_->read_hw(this, (impl::obj_key_t *)key,
-                          (impl::obj_info_t *)info);
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                              (impl::obj_info_t *)info);
     }
     return SDK_RET_OK;
 }

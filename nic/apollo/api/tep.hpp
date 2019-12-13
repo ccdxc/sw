@@ -162,10 +162,9 @@ public:
     }
 
     ///\brief read config
-    ///\param[in]  key Pointer to the key object
-    ///\param[out] info Pointer to the info object
+    ///\param[out] info pointer to the info object
     ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_tep_key_t *key, pds_tep_info_t *info);
+    sdk_ret_t read(pds_tep_info_t *info);
 
     /// \brief     helper function to get key given TEP entry
     /// \param[in] entry pointer to TEP instance
@@ -221,6 +220,10 @@ private:
 
     /// \brief destructor
     ~tep_entry();
+
+    /// \brief      fill the TEP sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_tep_spec_t *spec);
 
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)

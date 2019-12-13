@@ -75,10 +75,9 @@ pds_policer_create (_In_ pds_policer_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk::sdk_ret_t
-pds_policer_read (pds_policer_key_t *key, pds_policer_info_t *info)
+pds_policer_read (_In_ pds_policer_key_t *key, _Out_ pds_policer_info_t *info)
 {
-    sdk::sdk_ret_t rv;
-    policer_entry *entry = NULL;
+    policer_entry *entry;
 
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -88,12 +87,7 @@ pds_policer_read (pds_policer_key_t *key, pds_policer_info_t *info)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    // call entry read
-    if ((rv = entry->read(info)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    return entry->read(info);
 }
 
 typedef struct pds_policer_read_args_s {
