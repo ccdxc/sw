@@ -216,11 +216,6 @@ ionic_adminq_check_err(struct lif *lif,
         const char *status_str;
 
         if (ctx &&
-            (ctx->comp.comp.status == IONIC_RC_SUCCESS)) {
-                return VMK_OK;
-        }
-
-        if (ctx &&
             (ctx->comp.comp.status || is_timeout)) {
                 /* For FW upgrade use */
                 if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
