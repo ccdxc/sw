@@ -24,7 +24,9 @@ header_type apulu_p4i_to_rxdma_header_t {
 
 header_type apulu_txdma_to_p4e_header_t {
     fields {
-        pad             : 5;
+        pad             : 1;
+        sacl_action     : 1;
+        sacl_root_num   : 3;
         nexthop_type    : 2;
         drop            : 1;
         nexthop_id      : 16;

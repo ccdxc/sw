@@ -318,6 +318,8 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         // Then overwrite the result in the PHV with the current one
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+        modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.recirc_count>>1);
     }
 
     // Initialize the correct table base and index based on the recirc count
@@ -675,6 +677,8 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
         // Then overwrite the result in the PHV with the current one
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+        modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.recirc_count>>1);
     }
 
     if (rx_to_tx_hdr.sacl_base_addr0 != 0) {

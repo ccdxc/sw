@@ -23,6 +23,8 @@ rfc_p3_1:
     /* If so, update PHV with new priority and action */
     phvwr.c1   p.txdma_control_rule_priority, r1
     phvwr.c1   p.txdma_to_p4e_drop, r2
+    phvwr.c1   p.txdma_to_p4e_sacl_action, r2
+    phvwr.c1   p.txdma_to_p4e_sacl_root_num, k.txdma_control_recirc_count[3:1]
 
     /* Are we done with SACLs to process... ? */
     seq        c1, k.rx_to_tx_hdr_sacl_base_addr0, r0
