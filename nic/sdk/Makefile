@@ -20,3 +20,4 @@ all: ${ALL_TARGETS}
 
 clean:
 	@rm -rf ${BLD_ARCH_DIR}
+	@rm -rf ${CLEAN_DIRS}

@@ -276,7 +276,7 @@ end:
 sdk_ret_t
 rte_indexer::alloc_block(uint32_t *index, uint32_t size, bool wrap_around) {
     uint32_t free, curr_size, index2, offset2, slab_size;
-    uint32_t start, nextpos;
+    uint32_t start, nextpos = 0;
     uint64_t slab2;
     sdk_ret_t rs = SDK_RET_OK;
     rte_bitmap *indxr = (rte_bitmap *)indexer_;
@@ -314,11 +314,17 @@ rte_indexer::alloc_block(uint32_t *index, uint32_t size, bool wrap_around) {
                 if (!rte_bitmap_slab_scan(slab2, start, &nextpos)) {
                     index2 += 1;
                     start = index2 << RTE_BITMAP_SLAB_BIT_SIZE_LOG2;
+                    slab2 = *(indxr->array2 + index2);
+                    rte_bsf64_safe(slab2, &nextpos);
+                    start += nextpos;
                 } else
                     start = nextpos;
             } else {
                 index2 += 1;
                 start = index2 << RTE_BITMAP_SLAB_BIT_SIZE_LOG2;
+                slab2 = *(indxr->array2 + index2);
+                rte_bsf64_safe(slab2, &nextpos);
+                start += nextpos;
             }
             curr_size = size;
         } else {
@@ -344,6 +350,65 @@ end:
         SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), SDK_RET_ERR);
     }
     return rs;
+}
+
+//---------------------------------------------------------------------------
+// check and allocate given size block, starting from index and return success
+// if block is not free, starting from <index> return error
+//---------------------------------------------------------------------------
+sdk_ret_t
+rte_indexer::alloc_block(uint32_t index, uint32_t size, bool wrap_around) {
+    uint32_t free, curr_size, index2, offset2, slab_size;
+    uint32_t start;
+    uint64_t slab2;
+    sdk_ret_t rs = SDK_RET_OK;
+    rte_bitmap *indxr = (rte_bitmap *)indexer_;
+
+    if (thread_safe_) {
+        SDK_ASSERT_RETURN((SDK_SPINLOCK_LOCK(&slock_) == 0), SDK_RET_ERR);
+    }
+
+    if (!indexer_ || !size_ || usage_ + size > size_) {
+        rs = SDK_RET_NO_RESOURCE;
+        goto end;
+    }
+
+    start = index;
+    curr_size = size;
+    while(curr_size) {
+        offset2 = start & RTE_BITMAP_SLAB_BIT_MASK;
+        index2 = start >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2;
+        slab2 = *(indxr->array2 + index2);
+        slab_size = RTE_BITMAP_SLAB_BIT_SIZE - offset2;
+        if (curr_size < slab_size)
+            slab_size = curr_size;
+        free = rte_bitmap_check_slab_set_(indxr, offset2, slab2, slab_size);
+        if (free) {
+            start += slab_size;
+            curr_size -= slab_size;
+        } else {
+            // expected <size> not available starting from <index>
+            break;
+        }
+    }
+
+    if (!curr_size) {
+        // alloc slabs here
+        start -= size;
+        rte_bitmap_clear_slabs(indxr, start, size);
+        if (rte_compare_indexes(this->curr_index_, start)) {
+            this->set_curr_slab_(this->curr_index_);
+        }
+        usage_ += size;
+    } else {
+        rs = SDK_RET_NO_RESOURCE;
+    }
+end:
+    if (thread_safe_) {
+        SDK_ASSERT_RETURN((SDK_SPINLOCK_UNLOCK(&slock_) == 0), SDK_RET_ERR);
+    }
+    return rs;
+
 }
 
 //---------------------------------------------------------------------------

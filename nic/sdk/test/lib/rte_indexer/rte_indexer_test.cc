@@ -840,6 +840,162 @@ TEST_F(rte_indexer_test, test18) {
     rte_indexer::destroy(ind);
 }
 
+//----------------------------------------------------------------------------
+// Test 20:
+//
+// Summary:
+// --------
+//  - Tests the block allocation starting from given index
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test19) {
+    uint32_t i, usage;
+    sdk_ret_t rs;
+
+    i = 0;
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(100);
+
+    // Allocate block
+    rs  = ind->alloc_block(i, 100);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    // Free block
+    rs = ind->free(i, 100);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    rte_indexer::destroy(ind);
+
+    ind = rte_indexer::factory(6400);
+
+    rs = ind->alloc_block(i, 1000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc(&i);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 1000);
+
+    i = i + 1;
+    rs = ind->alloc(i);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 1001);
+
+    rs = ind->alloc_block(&i, 5000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 1002);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 6002);
+    for (uint32_t j = 0; j < 6002; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == true);
+    }
+
+    for (uint32_t j = 6002; j < 6400; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == false);
+        rs = ind->alloc(j);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    rs = ind->free(0, 6400);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    ASSERT_TRUE(ind->usage() == 0);
+    rs = ind->alloc_block(&i, 5000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 0);
+
+    rs = ind->free(100, 500);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rs = ind->alloc_block(100, 600);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    for (uint32_t j = 0; j < 100; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == true);
+    }
+
+    for (uint32_t j = 100; j < 600; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == false);
+    }
+
+    for (uint32_t j = 600; j < 5000; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == true);
+    }
+
+    for (uint32_t j = 5000; j < 6400; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == false);
+    }
+
+    rs = ind->alloc_block(&i, 600);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    ASSERT_TRUE(i == 5000);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 5100);
+    rs = ind->alloc_block(&i, 900);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    i = 100;
+    rs = ind->alloc_block(i, 500);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    i = 5600;
+    rs = ind->alloc_block(i, 800);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    usage = ind->usage();
+    ASSERT_TRUE(usage == 6400);
+    rte_indexer::destroy(ind);
+}
+
+//----------------------------------------------------------------------------
+// Test 21:
+//
+// Summary:
+// --------
+//  - Tests the negative case of block allocation using alloc_block
+//----------------------------------------------------------------------------
+TEST_F(rte_indexer_test, test20) {
+    uint32_t i = 0;
+    sdk_ret_t rs;
+
+    // Instantiate the indexer
+    rte_indexer  *ind = rte_indexer::factory(20000);
+
+    // Allocate block
+    for (uint32_t j = 0; j < 5; j++) {
+        rs  = ind->alloc_block(&i, 2000);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+        i += 2000;
+        rs = ind->alloc_block(i, 2000);
+        ASSERT_TRUE(rs == SDK_RET_OK);
+    }
+
+    for (uint32_t j = 0; j < 20000; j++) {
+        ASSERT_TRUE(ind->is_index_allocated(j) == true);
+    }
+
+    // Free index
+    i = 0;
+    rs = ind->free(i, 5000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+    i = 16000;
+    rs = ind->free(i, 4000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    i = 15000;
+    rs = ind->alloc_block(i, 2000);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    i = 19000;
+    rs = ind->alloc_block(i, 2000);
+    ASSERT_TRUE(rs == SDK_RET_NO_RESOURCE);
+
+    i = 1300;
+    rs = ind->alloc_block(i, 2000);
+    ASSERT_TRUE(rs == SDK_RET_OK);
+
+    rte_indexer::destroy(ind);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
