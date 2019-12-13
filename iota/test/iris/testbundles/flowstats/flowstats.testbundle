@@ -10,7 +10,7 @@ testcases:
         iterators   :
             type    : nested
             peer    : [local]
-            naples  : [client, server]
+            naples  : [client]
             timeout : [0s]
         args        :
             type    : local_only
@@ -19,8 +19,8 @@ testcases:
         testcase    : testcases.flowstats.single_ipv4_udp_flow_drops
         iterators   :
             type    : nested
-            peer    : [local, remote]
-            naples  : [client, server]
+            peer    : [remote]
+            naples  : [server]
             timeout : [0s]
         args        :
             type    : local_only
@@ -29,8 +29,8 @@ testcases:
         testcase    : testcases.flowstats.single_ipv4_icmp_flow_drops
         iterators   :
             type    : nested
-            peer    : [local, remote]
-            naples  : [client, server]
+            peer    : [local]
+            naples  : [server]
             timeout : [0s]
         args        :
             type    : local_only
@@ -40,7 +40,7 @@ testcases:
         iterators   :
             type    : nested
             peer    : [local]
-            naples  : [client]
+            naples  : [server]
             timeout : [0s]
             sessions: [8]
 #           sessions: [8, 16, 32, 64]
@@ -51,8 +51,8 @@ testcases:
         testcase    : testcases.flowstats.multiple_ipv4_udp_flow_drops
         iterators   :
             type    : nested
-            peer    : [local]
-            naples  : [server]
+            peer    : [remote]
+            naples  : [client]
             timeout : [0s]
             sessions: [8]
 #           sessions: [8, 16, 32, 64, 128, 256, 512, 1024]
@@ -64,7 +64,7 @@ testcases:
         testcase    : testcases.flowstats.multiple_ipv4_icmp_flow_drops
         iterators   :
             type    : nested
-            peer    : [remote]
+            peer    : [local]
             naples  : [client]
             timeout : [0s]
             types   : [8]
@@ -77,7 +77,7 @@ testcases:
         iterators   :
             type    : nested
             peer    : [remote]
-            naples  : [server]
+            naples  : [client]
             timeout : [8s]
             sessions: [8]
 #           timeout : [8s, 16s]
@@ -105,7 +105,7 @@ testcases:
         iterators   :
             type    : nested
             peer    : [remote]
-            naples  : [client]
+            naples  : [server]
             timeout : [8s]
             types   : [8]
 #           timeout : [4s, 8s, 16s, 32s]

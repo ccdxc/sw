@@ -39,8 +39,8 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - flowstats/flowstats.testbundle
         - networking/connectivity.testbundle
+        - flowstats/flowstats.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle

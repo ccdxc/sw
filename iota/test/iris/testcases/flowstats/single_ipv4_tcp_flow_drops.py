@@ -131,9 +131,11 @@ def Trigger(tc):
 
     #
     # Start with a clean slate by clearing all sessions/flows
+    # 45 secs sleep is to ensure that residual FlowDrops induced by previous
+    # non-flowstats testbundle (in this case Connectivity) is flushed out
     #
     cmd_cookie = "clear session"
-    cmd = "/nic/bin/halctl clear session"
+    cmd = "/nic/bin/halctl clear session; sleep 45"
     add_naples_command(tc, req, cmd_cookie, cmd, tc.naples)
 
     #
