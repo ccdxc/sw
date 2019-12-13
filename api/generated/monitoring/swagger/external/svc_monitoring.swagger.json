@@ -14403,10 +14403,9 @@
       "properties": {
         "destination": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 2048,
-          "description": "length of string should be between 1 and 2048",
-          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "should be a valid v4 or v6 IP address",
+          "title": "IP address of the collector/entity to which the data is to be exported"
         }
       }
     },
