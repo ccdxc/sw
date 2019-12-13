@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/graph"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -39,7 +39,7 @@ const (
 	// DefaultKvPoolSize specifies the default size of KV store connection pool.
 	DefaultKvPoolSize = 100
 	// DefaultWatchBatchSize is the max batch size for watch events
-	DefaultWatchBatchSize = 100
+	DefaultWatchBatchSize = 500
 	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events
 	DefaultWatchHoldInterval = time.Millisecond * 10
 )
