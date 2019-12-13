@@ -98,7 +98,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   viewPendingNaples: boolean = false;
 
   cols: TableCol[] = [
-    { field: 'ruleNum', header: '', class: 'sgpolicy-rule-number', width: 4 },
+    { field: 'ruleNum', header: 'Number', class: 'sgpolicy-rule-number', width: 4 },
     { field: 'sourceIPs', header: 'Source IPs', class: 'sgpolicy-source-ip', width: 22 },
     { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 22 },
     { field: 'action', header: 'Action', class: 'sgpolicy-action', width: 24 },

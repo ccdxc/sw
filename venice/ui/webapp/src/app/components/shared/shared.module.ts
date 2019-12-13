@@ -35,12 +35,12 @@ import { UIChartComponent } from './primeng-chart/chart';
 import { OrderedlistComponent } from './orderedlist/orderedlist.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChipsComponent } from './chips/chips.component';
+import { FormChipsComponent } from './chips/formChips.component';
 import { DomHandler } from 'primeng/api';
 import { FeatureGuardDirective } from './directives/featureGuard.directive';
 import { AlertstableComponent } from './alertsevents/alertstable/alertstable.component';
 import { EventstableComponent } from './alertsevents/eventstable/eventstable.component';
 import { SyslogComponent } from './syslog/syslog.component';
-import { LabelDirective } from './directives/label.directive';
 
 @NgModule({
   imports: [
@@ -74,7 +74,6 @@ import { LabelDirective } from './directives/label.directive';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
-    LabelDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,
@@ -84,6 +83,7 @@ import { LabelDirective } from './directives/label.directive';
     UIChartComponent,
     OrderedlistComponent,
     ChipsComponent,
+    FormChipsComponent,
     AlertstableComponent,
     EventstableComponent,
     SyslogComponent
@@ -109,7 +109,6 @@ import { LabelDirective } from './directives/label.directive';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
-    LabelDirective,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,
@@ -119,6 +118,7 @@ import { LabelDirective } from './directives/label.directive';
     UIChartComponent,
     OrderedlistComponent,
     ChipsComponent,
+    FormChipsComponent,
     AlertstableComponent,
     EventstableComponent,
     SyslogComponent

@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from '../../../material.module';
 import { PrimengModule } from '../../../primeng.module';
+import { LabelDirective } from '../directives/label.directive';
 import { ValueType } from './index';
 import { RepeaterComponent } from './repeater.component';
 import {DebugElement} from '@angular/core';
@@ -27,7 +28,7 @@ describe('RepeaterComponent', () => {
   let fixture: ComponentFixture<RepeaterComponent>;
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [RepeaterComponent],
+      declarations: [RepeaterComponent, LabelDirective],
       imports: [FormsModule, ReactiveFormsModule, PrimengModule, MaterialModule, NoopAnimationsModule]
     })
       .compileComponents();

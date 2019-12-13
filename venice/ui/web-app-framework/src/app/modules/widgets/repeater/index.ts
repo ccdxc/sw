@@ -16,6 +16,9 @@ export interface RepeaterData {
   fieldType?: ValueType;
   // If fieldType is inputField
   valueHintText?: string;
+  // added here to supoort float label
+  keyLabel?: string;
+  valueLabel?: string;
 }
 
 export interface RepeaterItem {

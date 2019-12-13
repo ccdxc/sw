@@ -6,6 +6,7 @@ import { PrimengModule } from '../../primeng.module';
 import { MaterialModule } from '../../material.module';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { TestRepeaterComponent } from '@testapp/test-repeater/test-repeater.component';
+import { LabelDirective } from '@modules/widgets/directives/label.directive';
 
 describe('TestRepeaterComponent', () => {
   let component: TestRepeaterComponent;
@@ -13,7 +14,7 @@ describe('TestRepeaterComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [TestRepeaterComponent, RepeaterComponent],
+      declarations: [TestRepeaterComponent, RepeaterComponent, LabelDirective],
       imports: [ReactiveFormsModule, PrimengModule, MaterialModule, NoopAnimationsModule]
     })
       .compileComponents();

@@ -17,7 +17,7 @@ pensando_firmware 1.0.14
 buildroot ff0abd146e8cc4bf17ad371e6a8452bd11711527
 platform_drivers 1.0.2
 venice_base_iso  0.0.10
-venice_web_app_framework 0.0.6
+venice_web_app_framework 0.0.12
 ws_tools 0.0.1
 systemd_docker 0.3.0
 ova 0.0.2

@@ -4,6 +4,7 @@ import {
   AutoCompleteModule,
   BlockUIModule,
   BreadcrumbModule,
+  SpinnerModule,
   CalendarModule,
   ChartModule,
   CheckboxModule,
@@ -47,15 +48,15 @@ import {FileUploadModule} from 'primeng/fileupload';
  */
 @NgModule({
   imports: [
-    ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
-    BlockUIModule, DropdownModule, SliderModule,
+    ChartModule, SplitButtonModule, StepsModule, AccordionModule, SpinnerModule, CalendarModule, PanelModule, DataTableModule,
+    SharedModule, BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputTextModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
     SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule, TreeModule, TreeTableModule, PickListModule, ConfirmDialogModule, FileUploadModule, ChipsModule, DialogModule, ScrollPanelModule
   ],
   exports: [
-    ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
-    BlockUIModule, DropdownModule, SliderModule,
+    ChartModule, SplitButtonModule, StepsModule, AccordionModule, SpinnerModule, CalendarModule, PanelModule, DataTableModule,
+    SharedModule, BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputTextModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
     SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule, TreeModule, TreeTableModule, PickListModule, ConfirmDialogModule, FileUploadModule, ChipsModule, DialogModule, ScrollPanelModule

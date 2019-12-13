@@ -36,6 +36,16 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   @Input() existingObjects: MonitoringMirrorSession[] = [];
 
+  IPS_LABEL: string = 'IP Addresses';
+  IPS_ERRORMSG: string = 'Invalid IP addresses';
+  IPS_TOOLTIP: string = 'Type in ip address and hit enter or space key to add more.';
+  MACS_LABEL: string = 'MAC Addresses';
+  MACS_ERRORMSG: string = 'Invalid MAC addresses';
+  MACS_TOOLTIP: string = 'Type in mac address and hit enter or space key to add more.';
+  PROTS_ERRORMSG: string = 'Invalid Protocol/Port';
+  PROTS_TOOLTIP: string = 'Type in valid layer3 or layer 4 protocol and protocol/port, ' +
+                          'hit enter or space key to add more.';
+
   createButtonTooltip: string = '';
   minDate: Date = new Date();
 
@@ -106,7 +116,9 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         key: { label: 'text', value: '' },
         operators: [{ label: 'equals', value: 'in' }],
         fieldType: ValueType.inputField,
-        valueType: ValueType.inputField
+        valueType: ValueType.inputField,
+        keyLabel: 'Label Key',
+        valueLabel: 'Label Value'
       }
     ];
 
@@ -161,6 +173,11 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isMirrorsessionNameValid(this.existingObjects)]);
+
+    // set default packet size if packet size is null;
+    if (!this.newObject.$formGroup.get(['spec', 'packet-size']).value) {
+      this.newObject.$formGroup.get(['spec', 'packet-size']).setValue(1024);
+    }
 
     // due to currently backend does not support all drops, comment out next lines
     /*
@@ -287,16 +304,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return currValue;
   }
 
-  // to change the default placeholder string
-  buildKeyPlaceholder(): string {
-    return 'Enter Label Key';
-  }
-
-  // to change the default placeholder string
-  buildValuePlaceholder(): string {
-    return 'Enter Label Value';
-  }
-
   protected buildLabelFormControlList(searchExpressons: ILabelsRequirement[]): FormControl[] {
     const list = [];
     searchExpressons.forEach((item) => {
@@ -402,7 +409,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     this.rules.forEach( (r, i) => {
       if (i === index) {
         r.inEdit = true;
-        this.addValidatorsToRule(r.data.rule);
       } else {
         r.inEdit = false;
       }
@@ -446,61 +452,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       }
     }
     return true;
-  }
-
-  addValidatorsToRule(rule: MonitoringMatchRule) {
-    let field = rule.$formGroup.get(['source', 'ip-addresses']);
-    if (!field.validator) {
-      field.setValidators([this.isIpAddressesValid()]);
-    }
-    field = rule.$formGroup.get(['source', 'mac-addresses']);
-    if (!field.validator) {
-      field.setValidators([this.isMacAddressesValid()]);
-    }
-    field = rule.$formGroup.get(['destination', 'ip-addresses']);
-    if (!field.validator) {
-      field.setValidators([this.isIpAddressesValid()]);
-    }
-    field = rule.$formGroup.get(['destination', 'mac-addresses']);
-    if (!field.validator) {
-      field.setValidators([this.isMacAddressesValid()]);
-    }
-    field = rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']);
-    if (!field.validator) {
-      field.setValidators([this.isProtocolsValid()]);
-    }
-  }
-
-  isIpAddressesValid(): ValidatorFn {
-    return this.isRuleFieldValid(this.isValidIP);
-  }
-
-  isMacAddressesValid(): ValidatorFn {
-    return this.isRuleFieldValid(this.isValidMAC);
-  }
-
-  isProtocolsValid(): ValidatorFn {
-    return this.isRuleFieldValid(this.isValidProto);
-  }
-
-  isRuleFieldValid(itemValidator: (val: string) => boolean): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const arr: string[] = control.value;
-      if (!arr) {
-        return null;
-      }
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i] && !itemValidator(arr[i])) {
-          return {
-            field: {
-              required: false,
-              message: 'Invalid IP addresses'
-            }
-          };
-        }
-      }
-      return null;
-    };
   }
 
   getAppArray(data: any) {

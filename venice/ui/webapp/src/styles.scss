@@ -422,16 +422,4 @@
   .tableviewedit-actiontd button:focus {
     outline-style: none;
   }
-
-  // create required label class
-  div.requiredLabel {
-    color: red;
-
-    &:before {
-      content: '*';
-      position: relative;
-      top: 2px;
-      margin-right: 2px;
-    }
-  }
 }

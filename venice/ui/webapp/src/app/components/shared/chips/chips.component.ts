@@ -1,8 +1,12 @@
-import { Component, ViewEncapsulation, Input, forwardRef, ViewChild, TemplateRef, AfterViewInit, AfterContentInit } from '@angular/core';
+import { Component, ViewEncapsulation, Input, forwardRef, ViewChild, TemplateRef, OnInit, AfterViewInit, AfterContentInit } from '@angular/core';
 import { Chips, AutoComplete } from 'primeng/primeng';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
 import { ENTER, SPACE, BACKSPACE } from '@angular/cdk/keycodes';
+import { Subject } from 'rxjs';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/operators';
 
 export const CHIPS_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
@@ -30,7 +34,7 @@ export const CHIPS_VALUE_ACCESSOR: any = {
   encapsulation: ViewEncapsulation.None,
   providers: [CHIPS_VALUE_ACCESSOR]
 })
-export class ChipsComponent extends Chips implements AfterViewInit, AfterContentInit {
+export class ChipsComponent extends Chips implements OnInit, AfterViewInit, AfterContentInit {
   @ViewChild('autoCompleteWidget') autoComplete: AutoComplete;
 
 
@@ -40,6 +44,8 @@ export class ChipsComponent extends Chips implements AfterViewInit, AfterContent
   @Input() useAutoComplete: boolean = false;
   @Input() autoCompleteField: string = '';
   @Input() autoCompleteOptions: any[] = [];
+
+  mouseleavesTerms = new Subject<Event>();
 
   itemAutoCompleteTemplate: TemplateRef<any>;
 
@@ -53,6 +59,13 @@ export class ChipsComponent extends Chips implements AfterViewInit, AfterContent
         this.filteredOptions.push(option);
       }
     });
+  }
+
+  ngOnInit(): void {
+    this.mouseleavesTerms.debounceTime(500)
+      .subscribe(() => {
+        this.handleMouseLeaveEvent();
+      });
   }
 
   ngAfterContentInit() {
@@ -138,5 +151,17 @@ export class ChipsComponent extends Chips implements AfterViewInit, AfterContent
     } else {
       super.onKeydown(event);
     }
+  }
+
+  onInputMouseout(): void {
+    this.mouseleavesTerms.next();
+  }
+
+  handleMouseLeaveEvent() {
+    if (this.addOnBlur && this.inputViewChild.nativeElement.value) {
+      this.addItem(event, this.inputViewChild.nativeElement.value);
+      this.inputViewChild.nativeElement.value = '';
+    }
+    this.onModelTouched();
   }
 }

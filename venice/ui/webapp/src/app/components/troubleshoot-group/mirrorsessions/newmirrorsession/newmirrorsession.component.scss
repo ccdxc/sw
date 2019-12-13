@@ -21,6 +21,7 @@ $dary-grey: #a9a9a9;
   }
 
   .newmirrorsession-general-inputbox,
+  .newmirrorsession-calendar-inputbox,
   .newmirrorsession-collector-inputbox {
     height: 30px;
 
@@ -29,40 +30,43 @@ $dary-grey: #a9a9a9;
       font-size: 14px;
     }
 
+
+  }
+
+  .newmirrorsession-general-box,
+  .newmirrorsession-collector-box {
+    :first-child {
+      height: 30px;
+      font-size: 14px;
+      width: 100%;
+    }
+
     .ui-calendar-button {
       position: relative;
+
+      .pi-calendar:before {
+        position: relative;
+        left: -5px;
+      }
+    }
+
+    .ui-calendar-inputbox {
+      input {
+        width: calc(100% - 28px) !important;
+      }
+    }
+
+    .ui-multiselect-label-container {
+      height: 25px;
     }
   }
 
-  .newmirrorsession-general-inputbox {
-    width: 200px;
+  .newmirrorsession-general-box {
+    width: 250px;
   }
 
-  .newmirrorsession-collector-inputbox {
-    width: 170px;
-  }
-
-  .newmirrorsession-general-label,
-  .newmirrorsession-collector-label,
-  .newmirrorsession-collector-indexLabel {
-    height: 30px;
-    line-height: 30px;
-    font-size: 14px;
-  }
-
-  .newmirrorsession-general-label {
-    width: 100px;
-  }
-
-  .newmirrorsession-collector-label {
-    width: 90px;
-  }
-
-  .newmirrorsession-collector-indexLabel {
-    width: 30px;
-    color: $dary-grey;
-    margin-left: 10px;
-    ;
+  .newmirrorsession-collector-box {
+    width: 237px;
   }
 
   .newmirrorsession-add-collector,
@@ -77,13 +81,8 @@ $dary-grey: #a9a9a9;
     margin-top: 5px;
   }
 
-  .newmirrorsession-multiselect {
-    @include primary-font();
-    text-align: left !important;
-  }
-
   .newmirrorsession-collectors {
-    width: 640px;
+    width: 590px;
 
     legend {
       width: 170px;
@@ -91,7 +90,7 @@ $dary-grey: #a9a9a9;
   }
 
   .newmirrorsession-selectors {
-    width: 640px;
+    width: 590px;
 
     legend {
       width: 112px;
@@ -187,10 +186,6 @@ fieldset {
     @include primary-font(14px);
     padding-top: 2px;
   }
-}
-
-.newmirrorsession-multiselect {
-  height: 30px !important;
 }
 
 .newmirrorsession-rule-label {

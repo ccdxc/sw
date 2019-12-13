@@ -65,6 +65,7 @@ export class RolloutUtil {
   public static isRolloutPending(rollout: RolloutRollout) {
     if (rollout.status.state === RolloutRolloutStatus_state.progressing || rollout.status.state === RolloutRolloutStatus_state.scheduled
       || rollout.status.state === RolloutRolloutStatus_state['precheck-in-progress']
+      || rollout.status.state === RolloutRolloutStatus_state['scheduled-for-retry']
       || rollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']) {
       return true;
     }

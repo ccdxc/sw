@@ -253,6 +253,11 @@
     @include primary-font(16px);
   }
 
+  div.ui-float-label,
+  span.ui-float-label {
+    margin-top: 10px;
+  }
+
   .ui-datepicker .ui-datepicker-current-day>a,
   .ui-datepicker .ui-datepicker-current-day.ui-datepicker-today>a {
     color: #ffffff;
@@ -285,6 +290,46 @@
       .ui-multiselect-label {
         box-shadow: inset 5px 0 0 0 #e57553 !important;
       }
+    }
+  }
+
+  .ui-float-label {
+
+    .cdk-focused~label,
+    .ui-inputwrapper-focus~label {
+      color: $matchColor
+    }
+  }
+
+  // create required label class
+  div.requiredLabel {
+    color: red;
+
+    &:before {
+      content: '*';
+      position: relative;
+      top: 2px;
+      margin-right: 2px;
+    }
+  }
+
+  .requiredField {
+    color: #dd3b09;
+
+    &:before {
+      content: '*';
+      position: relative;
+      font-size: 16px;
+      top: 2px;
+      margin-right: 2px;
+    }
+
+    :first-child {
+      width: calc(100% - 10px) !important;
+    }
+
+    >label {
+      left: 1.25em;
     }
   }
 }

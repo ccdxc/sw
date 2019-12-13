@@ -13,7 +13,7 @@ import { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeate
 import { PenuitabComponent } from './penuitabs/penuitab/penuitab.component';
 import { PenuitabsComponent } from './penuitabs/penuitabs.component';
 import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component';
-
+import { LabelDirective } from './directives/label.directive'
 
 @NgModule({
   imports: [
@@ -33,7 +33,8 @@ import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component
     UniquerepeaterComponent,
     PenuitabComponent,
     PenuitabsComponent,
-    TabcontentComponent
+    TabcontentComponent,
+    LabelDirective
   ],
   exports: [
     BarchartComponent, // <-- add widgets to here
@@ -44,7 +45,8 @@ import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component
     UniquerepeaterComponent,
     PenuitabComponent,
     PenuitabsComponent,
-    TabcontentComponent
+    TabcontentComponent,
+    LabelDirective
   ]
 })
 export class WidgetsModule { }

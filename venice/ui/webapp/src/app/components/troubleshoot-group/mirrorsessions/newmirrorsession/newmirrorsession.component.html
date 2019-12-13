@@ -1,14 +1,17 @@
 <div fxFlex="auto" fxLayout="column" class="newMirrorSession-container">
   <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxFlex="5px"></div>
   <div fxFlex="auto" fxLayout="row wrap">
     <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
-         class="newmirrorsession-row"
-         fxLayoutGap="30px">
+         class="newmirrorsession-row">
       <ng-container *ngTemplateOutlet="meta"></ng-container>
+      <div fxFlex="30px"></div>
       <ng-container *ngTemplateOutlet="packet"></ng-container>
+      <div fxFlex="20px"></div>
       <ng-container *ngTemplateOutlet="collectors"></ng-container>
+      <div fxFlex="20px"></div>
       <ng-container *ngTemplateOutlet="interface_selector"></ng-container>
-      <div fxFlex="5px"></div>
+      <div fxFlex="20px"></div>
     </div>
     <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
          class="newmirrorsession-row">
@@ -35,42 +38,43 @@
 </ng-template>
 
 <ng-template #meta>
-  <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
-    <div [formGroup]="newObject.$formGroup.get(['meta'])">
-      <div fxFlex="nogrow"
-           [ngClass]="{
-          'newmirrorsession-general-label': true,
-          'requiredLabel': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
-        }">Name:</div>
-      <input formControlName="name" class="newmirrorsession-general-inputbox"
-             appErrorTooltip spellcheck="false" type="text" pInputText placeholder="Unique Name...">
-    </div>
-    <div [formGroup]="newObject.$formGroup.get(['spec', 'start-condition'])">
-      <div fxFlex="nogrow" class="newmirrorsession-general-label">Schedule:</div>
-      <p-calendar [showTime]="true" hourFormat="24" formControlName="schedule-time" appendTo="body"
-                  [showIcon]="true" [minDate]="minDate"
-                  styleClass="newmirrorsession-general-inputbox">
+  <div fxFlex="none" fxLayout="row">
+    <span [formGroup]="newObject.$formGroup.get(['meta'])"
+          [ngClass]="{
+          'newmirrorsession-general-box': true,
+          'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+        }">
+      <input formControlName="name" appFloatLabel="Unique Name"
+             appErrorTooltip spellcheck="false" type="text" pInputText>
+    </span>
+    <div fxFlex="89px"></div>
+    <span [formGroup]="newObject.$formGroup.get(['spec', 'start-condition'])"
+          class="newmirrorsession-general-box">
+      <p-calendar [showTime]="true" hourFormat="24" formControlName="schedule-time"
+                  appFloatLabel="Schedule" class="ui-calendar-inputbox"
+                  appendTo="body" [showIcon]="true" [minDate]="minDate">
       </p-calendar>
-    </div>
+    </span>
   </div>
 </ng-template>
 
 <ng-template #packet>
-  <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
-    <div [formGroup]="newObject.$formGroup.get(['spec'])">
-      <div fxFlex="nogrow" class="newmirrorsession-general-label">Packet Size:</div>
-      <input appErrorTooltip class="newmirrorsession-general-inputbox" formControlName="packet-size"
-             type="number" min="1" pInputText placeholder="1024">
-    </div>
-    <div [formGroup]="newObject.$formGroup.get(['spec'])">
-      <div fxFlex="nogrow" class="newmirrorsession-general-label">Packet Filters:</div>
-      <p-multiSelect class="newmirrorsession-general-inputbox newmirrorsession-multiselect"
-                     appendTo="body"
+  <div fxFlex="none" fxLayout="row">
+    <span [formGroup]="newObject.$formGroup.get(['spec'])"
+          class="newmirrorsession-general-box">
+      <p-spinner appErrorTooltip formControlName="packet-size"
+                 appFloatLabel="Packet Size" Scheduletype="number" min="1">
+      </p-spinner>
+    </span>
+    <div fxFlex="89px"></div>
+    <span [formGroup]="newObject.$formGroup.get(['spec'])"
+          class="newmirrorsession-general-box">
+      <p-multiSelect appFloatLabel="Packet Filters"
+                     appendTo="body" [showHeader]="false"
                      formControlName="packet-filters" [filter]="false" [showToggleAll]="false"
-                     [showHeader]="false"
                      defaultLabel="All" [options]="packetFilterOptions">
       </p-multiSelect>
-    </div>
+    </span>
   </div>
 </ng-template>
 
@@ -85,25 +89,21 @@
           <!-- temporarily hide next part because right now only one coolect is allowed
           <div fxFlex="none" class="newmirrorsession-collector-indexLabel">#{{index + 1}}</div>
           -->
-          <div fxFlex="5px"></div>
-          <div fxFlex="none" fxLayout="row">
-            <div fxFlex="none" class="newmirrorsession-collector-label">Type:</div>
-            <p-dropdown class="newmirrorsession-general-inputbox" appendTo="body"
-                        [options]="collectorTypeOptions" formControlName="type"></p-dropdown>
-          </div>
-          <div fxFlex="40px"></div>
-          <div fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])">
-            <div fxFlex="none"
-                 [ngClass]="{
-                  'newmirrorsession-general-label': true,
-                  'requiredLabel': isFieldEmpty(collector.get(['export-config', 'destination']))
-                }">Destination:
-            </div>
-            <input fxFlex="nogrow" appErrorTooltip formControlName="destination" spellcheck="false"
-                   type="text" class="newmirrorsession-collector-inputbox" pInputText
-                   placeholder="IP adress or host name">
-          </div>
-          <div fxFlex="15px"></div>
+          <div fxFlex="8px"></div>
+          <span fxFlex="none" fxLayout="row" class="newmirrorsession-collector-box">
+            <p-dropdown appFloatLabel="Type" appendTo="body"
+                        [options]="collectorTypeOptions" formControlName="type">
+            </p-dropdown>
+          </span>
+          <div fxFlex="89px"></div>
+          <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
+                [ngClass]="{
+                'newmirrorsession-collector-box': true,
+                'requiredField': isFieldEmpty(collector.get(['export-config', 'destination']))
+              }">
+            <input fxFlex="nogrow" appFloatLabel="IP adress or host name" appErrorTooltip
+                   formControlName="destination" spellcheck="false" type="text" pInputText>
+          </span>
           <mat-icon fxFlex="nogrow" class="global-trash-button"
                     *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).length > 1"
                     (click)="removeCollector(index)">delete</mat-icon>
@@ -122,9 +122,7 @@
     <legend>Interface Selectors</legend>
     <div fxFlex="auto"
          class="newmirrorsession-section-div newmirrorsession-section-workloadlabels-div">
-      <app-repeater #workloadlabelRepeater [data]="labelData" [formArray]="labelFormArray"
-                    [buildKeyPlaceholder]="buildKeyPlaceholder"
-                    [buildValuePlaceholder]="buildValuePlaceholder"
+      <app-repeater #interFaceSelectorRepeater [data]="labelData" [formArray]="labelFormArray"
                     (repeaterValues)="handleLabelRepeaterData($event)"></app-repeater>
     </div>
   </fieldset>
@@ -165,92 +163,48 @@
   <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px"
        fxLayoutAlign="center none" class="newmirrorsession-rule-template"
        [ngClass]="{'newmirrorsession-hide-primeng-panel': !rules[index].inEdit}">
-    <div fxFlex="none" [formGroup]="data.rule.$formGroup.get(['source'])">
+    <div fxFlex="none">
       <fieldset class="newmirrorsession-rule-source">
         <legend>Source</legend>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="2px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none" class="newmirrorsession-rule-label">IP Addresses:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
-            </div>
-            <app-chips fxFlex="none" formControlName="ip-addresses"
-                       styleClass="newmirrorsession-rule-boxes" [addOnBlur]="true" [addOnTab]="true"
-                       [matTooltip]="'Type in ip addresses and hit enter key.'">
-              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                     [ngClass]="{'error': !isValidIP(item)}">
-                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close</mat-icon>
-                </div>
-              </ng-template>
-            </app-chips>
+          <div fxFlex="none" fxLayout="column">
+            <div fxFlex="5px"></div>
+            <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
+                           boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+            </app-formchips>
           </div>
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="2px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none" class="newmirrorsession-rule-label">MAC Address:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
-            </div>
-            <app-chips fxFlex="none" formControlName="mac-addresses"
-                       styleClass="newmirrorsession-rule-boxes" [addOnBlur]="true" [addOnTab]="true"
-                       [matTooltip]="'Type in mac addresses and hit enter key.'">
-              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                     [ngClass]="{'error': !isValidMAC(item)}">
-                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close</mat-icon>
-                </div>
-              </ng-template>
-            </app-chips>
+          <div fxFlex="none" fxLayout="column">
+            <div fxFlex="5px"></div>
+            <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['source', 'mac-addresses'])"
+                           boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidMAC"
+                           [itemErrorMsg]="MACS_ERRORMSG" [toolTip]="MACS_TOOLTIP">
+            </app-formchips>
           </div>
         </div>
       </fieldset>
     </div>
-    <div fxFlex="none" [formGroup]="data.rule.$formGroup.get(['destination'])">
+    <div fxFlex="none">
       <fieldset class="newmirrorsession-rule-source">
         <legend>Target</legend>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="2px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none" class="newmirrorsession-rule-label">IP Addresses:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
-            </div>
-            <app-chips fxFlex="none" formControlName="ip-addresses"
-                       styleClass="newmirrorsession-rule-boxes" [addOnBlur]="true" [addOnTab]="true"
-                       [matTooltip]="'Type in ip addresses and hit enter key.'">
-              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                     [ngClass]="{'error': !isValidIP(item)}">
-                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close</mat-icon>
-                </div>
-              </ng-template>
-            </app-chips>
+          <div fxFlex="none" fxLayout="column">
+            <div fxFlex="5px"></div>
+            <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['destination', 'ip-addresses'])"
+                           boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+            </app-formchips>
           </div>
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="2px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none" class="newmirrorsession-rule-label">MAC Address:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
-            </div>
-            <app-chips fxFlex="none" formControlName="mac-addresses"
-                       styleClass="newmirrorsession-rule-boxes" [addOnBlur]="true" [addOnTab]="true"
-                       [matTooltip]="'Type in mac addresses and hit enter key.'">
-              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                     [ngClass]="{'error': !isValidMAC(item)}">
-                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close</mat-icon>
-                </div>
-              </ng-template>
-            </app-chips>
+          <div fxFlex="none" fxLayout="column">
+            <div fxFlex="5px"></div>
+            <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['destination', 'mac-addresses'])"
+                           boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidMAC"
+                           [itemErrorMsg]="MACS_ERRORMSG" [toolTip]="MACS_TOOLTIP">
+            </app-formchips>
           </div>
         </div>
       </fieldset>
@@ -269,19 +223,12 @@
           </mat-radio-button>
         </mat-radio-group>
         <div [@slideInOut] *ngIf="data.selectedProtoAppOption === PROTO_PORTS_OPTION">
-          <app-chips [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
-                     styleClass="newmirrorsession-proto-boxes" [addOnBlur]="true" [addOnTab]="true"
-                     [matTooltip]="'Type in valid layer3 or layer 4 protocol and protocol/port.'"
-                     placeholder="ex: tcp/1234, arp">
-            <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-              <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                   [ngClass]="{'error': !isValidProto(item)}">
-                <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                          (click)="cancelFunc($event)">close</mat-icon>
-              </div>
-            </ng-template>
-          </app-chips>
+          <app-formchips fxFlex="none"
+                         [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
+                         boxStyleClass="newmirrorsession-proto-boxes" [itemValidator]="isValidProto"
+                         [itemErrorMsg]="PROTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP"
+                         placeholder="ex: tcp/1234, arp">
+          </app-formchips>
         </div>
         <div [@slideInOut] *ngIf="data.selectedProtoAppOption === APPS_OPTION">
           <p-multiSelect class="newmirrorsession-multiselect" fxFlex="240px"

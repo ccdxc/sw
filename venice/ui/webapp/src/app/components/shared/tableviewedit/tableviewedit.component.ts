@@ -190,6 +190,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
     if (selectedColumns.length > 0) {
       this.orderSelectedColumns(selectedColumns);
       this.updateWidthPercentages();
+    } else {
+      this.selectedcolumns = selectedColumns;
     }
   }
 

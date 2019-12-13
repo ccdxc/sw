@@ -19,7 +19,7 @@
       <input *ngIf="!useAutoComplete" #inputtext type="text" [attr.id]="inputId"
              [attr.placeholder]="(value && value.length ? null : placeholder)"
              [attr.tabindex]="tabindex" (keydown)="onKeydown($event)"
-             [attr.maxlength]="maxChipLength"
+             [attr.maxlength]="maxChipLength" (mouseleave)="onInputMouseout()"
              (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" [disabled]="disabled"
              [ngStyle]="inputStyle" [class]="inputStyleClass">
 

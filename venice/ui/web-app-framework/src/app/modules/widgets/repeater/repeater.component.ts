@@ -193,6 +193,22 @@ export class RepeaterComponent implements OnInit, OnChanges {
     return null;
   }
 
+  isFloatLabelSupported(repeater: RepeaterItem): boolean {
+    const repeaterData = this.getRepeaterItemData(repeater);
+    return repeaterData.keyLabel !== null && repeaterData.keyLabel !== '' &&
+            repeaterData.valueLabel != null && repeaterData.valueLabel != '';
+  }
+
+  getKeyLabel(repeater: RepeaterItem): string {
+    const repeaterData = this.getRepeaterItemData(repeater);
+    return this.isFloatLabelSupported(repeater) ? repeaterData.keyLabel : '';
+  }
+
+  getValueLabel(repeater: RepeaterItem): string {
+    const repeaterData = this.getRepeaterItemData(repeater);
+    return this.isFloatLabelSupported(repeater) ? repeaterData.valueLabel : '';
+  }
+
   isToUseInputField(repeater: RepeaterItem): boolean {
     const repeaterData = this.getRepeaterItemData(repeater);
     if (repeaterData) {
@@ -426,6 +442,9 @@ export class RepeaterComponent implements OnInit, OnChanges {
   }
 
   placeholderForKey(repeater, keyFormName): string {
+    if (this.isFloatLabelSupported) {
+      return '';
+    }
     if (this.buildKeyPlaceholder) {
       return this.buildKeyPlaceholder(repeater, keyFormName);
     }
@@ -433,6 +452,9 @@ export class RepeaterComponent implements OnInit, OnChanges {
   }
 
   placeholderForValue(repeater, keyFormName): string {
+    if (this.isFloatLabelSupported) {
+      return '';
+    }
     if (this.buildValuePlaceholder) {
       if (this.valueLabelToValueMap) {
         const key = repeater.formGroup.value[keyFormName];

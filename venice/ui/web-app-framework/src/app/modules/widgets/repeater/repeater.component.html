@@ -9,7 +9,8 @@
                       [formControlName]="keyFormName" 
                       [options]="keyOptions"
                       [filter]="keyDropdownFilter"
-                      appendTo="body">
+                      appendTo="body"
+                      [appFloatLabel]="getKeyLabel(repeater)">
           </p-dropdown>
           <input class="repeater-input repeater-input-key" *ngIf="isToUseInputField(repeater)"
                                         (input)="emitValues()" 
@@ -19,7 +20,8 @@
                                         [placeholder]="placeholderForKey(repeater, keyFormName)"
                                         (blur)="keyOnBlur($event, repeater)"
                                         (keydown)="keyOnKeydown($event, repeater)"
-                                        [formControlName]="keytextFormName">
+                                        [formControlName]="keytextFormName"
+                                        [appFloatLabel]="getKeyLabel(repeater)">
       </div>
       <!-- Operator -->
       <div fxFlex="nogrow" class="repeater-selector repeater-operator">
@@ -28,7 +30,8 @@
                       (onChange)="emitValues()" 
                       [formControlName]="operatorFormName" 
                       [options]="keyToOperator[repeater.formGroup.value[keyFormName]]"
-                      appendTo="body">
+                      appendTo="body"
+                      appFloatLabel="Operator">
           </p-dropdown>
       </div>
       <!-- Value -->
@@ -39,7 +42,8 @@
                       (onChange)="emitValues()" 
                       [formControlName]="valueFormName" 
                       [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
-                      appendTo="body">
+                      appendTo="body"
+                      [appFloatLabel]="getValueLabel(repeater)">
           </p-dropdown>
           <p-multiSelect *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] =='multiSelect'"
                           [styleClass]="styleClass" 
@@ -50,7 +54,8 @@
                           [filter]="enableMultiSelectFilter" 
                           [formControlName]="valueFormName" 
                           [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
-                          appendTo="body">
+                          appendTo="body"
+                          [appFloatLabel]="getValueLabel(repeater)">
           </p-multiSelect>
           <input class="repeater-input repeater-input-value" *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'inputField'"
                                         (input)="emitValues()" 
@@ -60,7 +65,8 @@
                                         [placeholder]="placeholderForValue(repeater, keyFormName)" 
                                         [formControlName]="valueFormName"
                                         (blur)="valueOnBlur($event, repeater)"
-                                        (keydown)="valueOnKeydown($event, repeater)">
+                                        (keydown)="valueOnKeydown($event, repeater)"
+                                        [appFloatLabel]="getValueLabel(repeater)">
       </div>
       <!-- Add and delete buttons -->
       <!-- Only show and if its the last row -->
