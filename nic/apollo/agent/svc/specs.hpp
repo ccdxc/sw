@@ -1102,6 +1102,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->host_ifindex = proto_spec.hostifindex();
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
+    api_spec->flow_learn_en = proto_spec.flowlearnen();
     return SDK_RET_OK;
 }
 
@@ -1157,6 +1158,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     proto_spec->set_hostifindex(api_spec->host_ifindex);
     proto_spec->set_primary(api_spec->primary);
     proto_spec->set_maxsessions(api_spec->max_sessions);
+    proto_spec->set_flowlearnen(api_spec->flow_learn_en);
 }
 
 // populate proto buf status from vnic API status
@@ -2953,6 +2955,7 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
                                   &api_spec->gateway_ip_addr);
     proto_spec->set_bridgingen(api_spec->bridging_en);
     proto_spec->set_learningen(api_spec->learning_en);
+    proto_spec->set_learnagetimeout(api_spec->learn_age_timeout);
     proto_spec->set_overlayroutingen(api_spec->overlay_routing_en);
     switch (api_spec->dev_oper_mode) {
     case PDS_DEV_OPER_MODE_BITW:
@@ -3019,6 +3022,7 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     }
     api_spec->bridging_en = proto_spec.bridgingen();
     api_spec->learning_en = proto_spec.learningen();
+    api_spec->learn_age_timeout = proto_spec.learnagetimeout();
     api_spec->overlay_routing_en = proto_spec.overlayroutingen();
     switch (proto_spec.devopermode()) {
     case pds::DEVICE_OPER_MODE_BITW:

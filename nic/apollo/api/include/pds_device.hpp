@@ -37,6 +37,7 @@ typedef struct pds_device_s {
     ip_addr_t              gateway_ip_addr;    ///< gateway IP address
     bool                   bridging_en;        ///< enable or disable L2 functionality
     bool                   learning_en;        ///< enable or disable L2/IP learning
+    uint32_t               learn_age_timeout;  ///< MAC, IP aging timeout (in seconds)  for learnt entries
     bool                   overlay_routing_en; ///< enable or disable control plane stack
                                                ///  for overlay routing
     pds_device_oper_mode_t dev_oper_mode;      ///< device operational mode

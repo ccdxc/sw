@@ -69,6 +69,8 @@ typedef struct pds_vnic_spec_s {
     /// max_sessions is the maximum number of sessions from/to this vnic, if set
     /// session limit is not enforced, if this value is set to 0
     uint32_t max_sessions;
+    /// enable or disable flow learning on per vnic basis
+    bool     flow_learn_en;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

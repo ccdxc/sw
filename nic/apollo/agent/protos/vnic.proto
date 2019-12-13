@@ -77,6 +77,8 @@ message VnicSpec {
   //       won't be installed in h/w (packet will be dropped)
   //       1 session = forward flow + reverse flow
   uint32          MaxSessions           = 22;
+  // enable or disable flow learning on per vnic basis
+  bool            FlowLearnEn           = 23;
 }
 
 // operational status of Vnic, if any

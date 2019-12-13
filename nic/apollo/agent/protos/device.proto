@@ -40,26 +40,30 @@ message DeviceSpec {
   uint64          MACAddr          = 2;
   // IP address of the gateway in the underlay
   types.IPAddress GatewayIP        = 3;
-  // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
-  // NOTE: when a device profile is changed, it will take affect after next
-  // reboot of NAPLES/DSC
-  DeviceProfile   Profile          = 4 [(gogoproto.moretags) = "meta:mandatory"];
-  // if BridgingEn is true, L2 functionality based on MAC addresses kicks in
-  // NOTE: when operational mode is modified, it will take affect only after
-  //       next reboot of NAPLES/DSC
-  bool            BridgingEn       = 5 [(gogoproto.moretags) = "meta:mandatory"];
-  // if LearningEn is true, MAC and IP learning is enabled
-  // NOTE: when operational mode is modified, it will take affect only after
-  //       next reboot of NAPLES/DSC
-  bool            LearningEn       = 6 [(gogoproto.moretags) = "meta:mandatory"];
   // operational mode of the device
   // NOTE: when operational mode is modified, it will take affect only after
   //       next reboot of NAPLES/DSC
-  DeviceOperMode  DevOperMode      = 7 [(gogoproto.moretags) = "meta:mandatory"];
+  DeviceOperMode  DevOperMode      = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // Device Profile (only DEVICE_PROFILE_DEFAULT is supported)
+  // NOTE: when a device profile is changed, it will take affect after next
+  // reboot of NAPLES/DSC
+  DeviceProfile   Profile          = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // if BridgingEn is true, L2 functionality based on MAC addresses kicks in
+  // NOTE: when operational mode is modified, it will take affect only after
+  //       next reboot of NAPLES/DSC
+  bool            BridgingEn       = 6 [(gogoproto.moretags) = "meta:mandatory"];
+  // if LearningEn is true, MAC and IP learning is enabled
+  // NOTE: when operational mode is modified, it will take affect only after
+  //       next reboot of NAPLES/DSC
+  bool            LearningEn       = 7 [(gogoproto.moretags) = "meta:mandatory"];
+  // LearnAgeTimeout is the aging timeout (in seconds) for learnt MAC or IP
+  // addresses if LearningEn is set to true. If this is not set and learning is
+  // enabled, default value is assumed for aging
+  uint32          LearnAgeTimeout  = 8 [(gogoproto.moretags) = "meta:range:30-86400,meta:default=300"];
   // enable the control plane stack for overlay routing
   // NOTE: when operational mode is modified, it will take affect only after
   //       next reboot of NAPLES/DSC
-  bool            OverlayRoutingEn = 8 [(gogoproto.moretags) = "meta:mandatory"];
+  bool            OverlayRoutingEn = 9 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // device operational status
