@@ -4,7 +4,7 @@ NOW=`date +"%Y%m%d%H%M%S"`
 TOP=/obfl/sysmgr-dumps
 LOCATION=${TOP}/debug-${NOW}-$1
 MAX_DAYS="1"
-MAX_RECORDS="10"
+MAX_RECORDS="11"
 
 mkdir -p ${LOCATION}
 
@@ -23,4 +23,4 @@ top -b -n 1 -d 1 -m >> ${LOCATION}/top_end.txt
 find ${TOP} -mtime +${MAX_DAYS} -type d -prune -exec rm -rf {} \;
 
 # Also don't keep any more than MAX_RECORDS
-for f in `ls -t ${TOP} | tail -n +${MAX_RECORDS}`; do echo rm -rf $f; done
+for f in `ls -t ${TOP} | tail -n +${MAX_RECORDS}`; do rm -rf ${TOP}/$f; done

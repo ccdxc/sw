@@ -64,6 +64,7 @@ platform/src/app/cpld/bin/*.bin                                                 
 nic/tools/pcie_hostdn.sh                                                        /nic/tools/
 platform/src/app/cpld/cpldapp.sh                                                /nic/tools/
 platform/src/app/cpld/reboot.sh                                                 /nic/tools/
+platform/src/app/sysmond/sysmondebug.sh                                         /nic/tools/
 
 # Oprom
 nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/

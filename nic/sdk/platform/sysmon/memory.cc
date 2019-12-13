@@ -14,6 +14,7 @@
 
 #define AVAILABLE_MEMORY_THRESHOLD (16 * 1024)
 #define LOW_MEMORY_THRESHOLD (500 * 1024)
+#define CRITICAL_MEMORY_THRESHOLD (100 * 1024)
 #define PROCESS_CHANGE_THRESHOLD 1024
 #define MB_TO_KB 1024
 #define GB_TO_KB (1024 * 1024)
@@ -204,6 +205,7 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
     string meminfoline;
     size_t found;
     int64_t curr_memory;
+    static bool sysmondebug = true;
     static int64_t mem_diff;
     static int64_t avail_memory_lowest = INT64_MAX;
 
@@ -233,6 +235,26 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
                     SDK_OBFL_TRACE_INFO("Available memory is %f MB",
                     (double)curr_memory / 1024.0);
                 }
+
+                if (sysmondebug == false &&
+                    curr_memory > CRITICAL_MEMORY_THRESHOLD) {
+                    // Enable the sysmonddebug script again.
+                    SDK_OBFL_TRACE_INFO("Enable sysmonddebug script again");
+                    sysmondebug = true;
+                }
+
+                if (sysmondebug == true &&
+                    curr_memory < CRITICAL_MEMORY_THRESHOLD) {
+                    int status = system("/nic/tools/sysmondebug.sh");
+                    if (status) {
+                        SDK_OBFL_TRACE_INFO("Unable to run debug script",
+                            (double)curr_memory / 1024.0);
+                    } else {
+                        SDK_OBFL_TRACE_INFO("Available memory is %f MB, run debug script",
+                            (double)curr_memory / 1024.0);
+                        sysmondebug = false;
+                    }
+                }
                 *available_mem = curr_memory;
             }
             if ((found = meminfoline.find(FREE_MEMORY)) != string::npos) {
@@ -244,9 +266,10 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
 }
 
 /*
- * Monitor process on the system
+ * Monitor process on the system.
+ * Return false when PS command fails
 */
-static void
+static bool
 monitorprocess(void) {
     FILE *fptr = NULL;
     char psline[100];
@@ -263,7 +286,9 @@ monitorprocess(void) {
             }
         }
         pclose(fptr);
+        return true;
     }
+    return false;
 }
 
 void
@@ -278,15 +303,18 @@ checkmemory(void)
         return;
     }
     //monitor the processes in system
-    monitorprocess();
-    //remove the pids which are no longer used.
-    removeprocess();
+    if (monitorprocess()) {
+        //remove the pids which are no longer used.
+        removeprocess();
+        color = !color;
+    }
+
     //monitor the available curr_memory
     monitorfreememory(&total_mem, &available_mem, &free_mem);
     if (g_sysmon_cfg.memory_event_cb) {
         g_sysmon_cfg.memory_event_cb(total_mem, available_mem, free_mem);
     }
-    color = !color;
+
 }
 
 // MONFUNC(checkmemory);
