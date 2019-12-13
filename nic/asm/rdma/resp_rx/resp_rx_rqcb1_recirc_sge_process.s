@@ -41,8 +41,11 @@ resp_rx_rqcb1_recirc_sge_process:
 
     sub     NUM_VALID_SGES, NUM_VALID_SGES, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
 
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    seq     c6, IN_LOG_RQ_PAGE_SIZE, 0
+    bcf     [c6], page_boundary_check_done
     // set start_addr
-    sub     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    sub     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T // BD Slot
     srl     r4, ADDR_TO_LOAD, IN_LOG_RQ_PAGE_SIZE
     // set end_addr
     add     END_ADDR, ADDR_TO_LOAD, 4, LOG_SIZEOF_SGE_T
@@ -54,6 +57,7 @@ resp_rx_rqcb1_recirc_sge_process:
     sub.!c1 ADDR_TO_LOAD, ADDR_TO_LOAD, 1, LOG_SIZEOF_SGE_T
     CAPRI_SET_FIELD2_C(TO_S2_P, page_boundary, 1, !c1)
 
+page_boundary_check_done:
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2_IMM(RQCB_TO_WQE_P, recirc_path, in_progress, (1 << 1)|1)
     phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, remaining_payload_bytes), \

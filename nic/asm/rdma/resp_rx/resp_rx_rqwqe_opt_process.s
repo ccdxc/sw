@@ -180,8 +180,11 @@ decode_wqe_opt:
     // addr_to_load = wqe_ptr + wqe_offset
     add         ADDR_TO_LOAD, K_CURR_WQE_PTR, WQE_OFFSET // BD Slot
 
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    seq         c6, K_LOG_RQ_PAGE_SIZE, 0
+    bcf         [c6], page_boundary_check_done
     // set start_addr
-    sub         ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    sub         ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T // BD Slot
     srl         r7, ADDR_TO_LOAD, K_LOG_RQ_PAGE_SIZE
     // set end_addr
     add         r6, ADDR_TO_LOAD, CACHELINE_END_ADDR_OFFSET
@@ -198,6 +201,7 @@ decode_wqe_opt:
     sub.!c2     ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
     CAPRI_SET_FIELD2_C(INFO_SGE_T, page_boundary, 1, !c2)
 
+page_boundary_check_done:
     // wqe_to_sge_info_p->sge_offset = sge_offset
     CAPRI_SET_FIELD2(INFO_SGE_T, sge_offset, SGE_OFFSET)
 
