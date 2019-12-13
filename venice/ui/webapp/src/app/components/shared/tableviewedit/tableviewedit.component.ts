@@ -330,9 +330,15 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
 
   tableMenuItems: TableMenuItem[] = [
     {
-      text: 'Export',
+      text: 'Export To CSV',
       onClick: () => {
-        this.exportTableData();
+        this.exportTableDataCSV();
+      }
+    },
+    {
+      text: 'Export To JSON',
+      onClick: () => {
+        this.exportTableDataJSON();
       }
     }
   ];
@@ -445,11 +451,14 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
     }
   }
 
-  exportTableData() {
-    TableUtility.exportTable(this.cols, this.dataObjects, this.exportFilename, this.exportMap);
+  exportTableDataCSV() {
+    TableUtility.exportTableCSV(this.cols, this.dataObjects, this.exportFilename, this.exportMap);
     this.controllerService.invokeInfoToaster('File Exported', this.exportFilename + '.csv');
   }
-
+  exportTableDataJSON() {
+    TableUtility.exportTableJSON(this.cols, this.dataObjects, this.exportFilename, this.exportMap);
+    this.controllerService.invokeInfoToaster('FileExported', this.exportFilename + '.json');
+  }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => {
