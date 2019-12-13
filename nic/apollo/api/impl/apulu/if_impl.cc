@@ -116,12 +116,6 @@ if_impl::nuke_resources(api_base *api_obj) {
 
 #define lif_action         action_u.lif_lif_info
 #define p4i_device_info    action_u.p4i_device_info_p4i_device_info
-
-sdk_ret_t
-if_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    return SDK_RET_ERR;
-}
-
 sdk_ret_t
 if_impl::program_l3_if_(pds_if_spec_t *spec) {
     p4pd_error_t p4pd_ret;
@@ -286,12 +280,6 @@ if_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
         break;
     }
     return ret;
-}
-
-sdk_ret_t
-if_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                       api_op_t api_op) {
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t

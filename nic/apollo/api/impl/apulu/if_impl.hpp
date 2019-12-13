@@ -98,7 +98,10 @@ public:
     /// \return     #SDK_RET_OK on success, failure status code on error
     // NOTE: this method is called when an object is in the dependent/puppet
     //       object list
-    virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
+    virtual sdk_ret_t reprogram_hw(api_base *api_obj,
+                                   api_op_t api_op) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      update all h/w tables relevant to this object except stage 0
     ///             table(s), if any, by updating packed entries with latest
@@ -134,7 +137,9 @@ public:
     // NOTE: this method is called when an object is in the dependent/puppet
     //       object list
     virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                                    api_op_t api_op) override;
+                                    api_op_t api_op) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj  API object

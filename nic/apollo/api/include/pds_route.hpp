@@ -21,6 +21,8 @@
 /// \defgroup PDS_ROUTE Route API
 /// @{
 
+#define PDS_ROUTE_TABLE_ID_INVALID 0          ///< invalid route table id
+
 // TODO: should be same as PDS_MAX_SUBNET
 #define PDS_MAX_ROUTE_TABLE            1024   ///< maximum route tables
 #define PDS_MAX_ROUTE_PER_TABLE        1023   ///< maximum routes per table

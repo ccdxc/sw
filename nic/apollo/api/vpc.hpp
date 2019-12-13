@@ -21,6 +21,9 @@ namespace api {
 // forward declaration
 class vpc_state;
 
+// attribute update bits for vpc object
+#define PDS_VPC_UPD_ROUTE_TABLE         0x1
+
 /// \defgroup PDS_VPC_ENTRY - VPC entry functionality
 /// \ingroup PDS_VPC
 /// @{

@@ -152,12 +152,6 @@ vpc_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    return SDK_RET_ERR;
-
-}
-
-sdk_ret_t
 vpc_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };
@@ -318,12 +312,6 @@ vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
         break;
     }
     return ret;
-}
-
-sdk_ret_t
-vpc_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                        api_op_t api_op) {
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
