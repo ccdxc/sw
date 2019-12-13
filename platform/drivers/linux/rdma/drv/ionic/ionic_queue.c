@@ -37,9 +37,6 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 	q->size = BIT_ULL(q->depth_log2 + q->stride_log2);
 	q->mask = BIT(q->depth_log2) - 1;
 
-	/* Temporary pad for SGL/page boundary issues [PS-2116] */
-	q->size += 2 * PAGE_SIZE;
-
 	q->ptr = dma_alloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
 	if (!q->ptr)
 		return -ENOMEM;
@@ -50,11 +47,6 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 		return -ENOMEM;
 	}
 
-	/* Temporary pad for SGL/page boundary issues [PS-2116] */
-	q->ptr = (void *)((u64)q->ptr + PAGE_SIZE);
-	q->dma += PAGE_SIZE;
-	q->size -= 2 * PAGE_SIZE;
-
 	q->prod = 0;
 	q->cons = 0;
 	q->dbell = 0;
@@ -64,10 +56,5 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 
 void ionic_queue_destroy(struct ionic_queue *q, struct device *dma_dev)
 {
-	/* Temporary pad for SGL/page boundary issues [PS-2116] */
-	q->ptr = (void *)((u64)q->ptr - PAGE_SIZE);
-	q->dma -= PAGE_SIZE;
-	q->size += 2 * PAGE_SIZE;
-
 	dma_free_coherent(dma_dev, q->size, q->ptr, q->dma);
 }
