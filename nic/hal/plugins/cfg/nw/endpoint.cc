@@ -44,7 +44,7 @@ ep_get_l2_key_func (void *entry)
         return NULL;
     }
     ep = find_ep_by_handle(ht_entry->handle_id);
-    return (void *)&(ep->l2_key);
+    return ep ? (void *)&(ep->l2_key) : NULL;
 }
 
 //-----------------------------------------------------------------------------

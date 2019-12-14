@@ -147,10 +147,14 @@ ht::lookup_(ht_bucket_t *ht_bucket, void *key)
     ht_ctxt = ht_bucket->ht_ctxt;
     while (ht_ctxt) {
         entry_key = get_key_func_(ht_ctxt->entry);
-        if (key_string_) {
-            match = (strcmp((char *)key, (char *)entry_key) == 0);
+        if (entry_key) {
+            if (key_string_) {
+                match = (strcmp((char *)key, (char *)entry_key) == 0);
+            } else {
+                match = (std::memcmp(key, entry_key, key_size_) == 0);
+            }
         } else {
-            match = (std::memcmp(key, entry_key, key_size_) == 0);
+            match = false;
         }
         if (match == true) {
             // found what we are looking for
