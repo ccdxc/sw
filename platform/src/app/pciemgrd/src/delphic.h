@@ -37,6 +37,7 @@ public:
                               const enum pciemgr::PciePortOperStatus status,
                               const int gen = 0,
                               const int width = 0,
+                              const int reversed = 0,
                               const string faultstr = "");
 };
 

@@ -215,8 +215,10 @@ pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
 {
     pciemgr_params_t *params = pciehcfg_get_params();
 
-    pcfg->cap_gen = params->cap_gen ? params->cap_gen : 4;
-    pcfg->cap_width = params->cap_width ? params->cap_width : 16;
+    assert(params->cap_gen);
+    assert(params->cap_width);
+    pcfg->cap_gen = params->cap_gen;
+    pcfg->cap_width = params->cap_width;
     pcfg->flr = 1;
     pcfg->exttag = 1;
     pcfg->exttag_en = 1;

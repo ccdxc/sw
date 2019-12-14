@@ -67,6 +67,19 @@ gettimestamp(void)
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
+u_int32_t
+pcieport_get_sta_p_port_mac(const int port)
+{
+    return pal_reg_rd32(PXP_(STA_P_PORT_MAC, port));
+}
+
+int
+pcieport_get_mac_lanes_reversed(const int port)
+{
+    const u_int32_t sta_mac = pcieport_get_sta_p_port_mac(port);
+    return (sta_mac & STA_P_PORT_MACF_(LANES_REVERSED)) != 0;
+}
+
 static void
 linkpoll(int argc, char *argv[])
 {
@@ -77,6 +90,7 @@ linkpoll(int argc, char *argv[])
         unsigned int crs:1;
         unsigned int ltssm_en:1;
         unsigned int ltssm_st:5;
+        unsigned int reversed:1;
         unsigned int fifo_rd:8;
         unsigned int fifo_wr:8;
         int gen;
@@ -111,8 +125,9 @@ linkpoll(int argc, char *argv[])
     printf("              ||ltssm_en (link training ready)\n");
     printf("              |||portgate_open (traffic can flow)\n");
     printf("              ||||cfg_retry off (cfg transactions allowed)\n");
-    printf("              |||||  fifo\n");
-    printf(" +time (sec)  Pplgr  rd/wr  genGxW  ltssm\n");
+    printf("              |||||                 reversed lanes\n");
+    printf("              |||||  fifo           |\n");
+    printf(" +time (sec)  Pplgr  rd/wr  genGxW  r ltssm\n");
 
     memset(&ost, 0, sizeof(ost));
     memset(&nst, 0, sizeof(nst));
@@ -126,10 +141,11 @@ linkpoll(int argc, char *argv[])
 
         nst.perstn = (sta_rst & STA_RSTF_(PERSTN)) != 0;
         nst.phystatus = (sta_rst & STA_RSTF_(PHYSTATUS_OR)) != 0;
-        nst.portgate = (sta_mac & STA_MACF_(PORTGATE_OPEN)) != 0;
+        nst.portgate = (sta_mac & STA_C_PORT_MACF_(PORTGATE_OPEN)) != 0;
         nst.ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
         nst.crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
         nst.ltssm_st = (sta_mac & 0x1f);
+        nst.reversed = pcieport_get_mac_lanes_reversed(port);
 
         // protect against mac reset events
         // gen/width registers are inaccessible when mac is reset.
@@ -158,7 +174,7 @@ linkpoll(int argc, char *argv[])
             ntm = gettimestamp();
             if (otm == 0) otm = ntm;
 
-            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u gen%dx%-2d 0x%02x %s\n",
+            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u gen%dx%-2d %c 0x%02x %s\n",
                    (ntm - otm) / 1000000.0,
                    nst.perstn           ? 'P' : '-',
                    nst.phystatus == 0   ? 'p' :'-',
@@ -169,6 +185,7 @@ linkpoll(int argc, char *argv[])
                    nst.fifo_wr,
                    nst.gen,
                    nst.width,
+                   nst.reversed ? 'r' : ' ',
                    nst.ltssm_st,
                    ltssm_str(nst.ltssm_st));
 

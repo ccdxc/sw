@@ -13,9 +13,9 @@
 
 #include "events.h"
 
+pcieport_t *pcieport_get(const int port);
 int pcieport_onetime_init(pcieport_info_t *pi, pciemgr_initmode_t initmode);
 int pcieport_onetime_portinit(pcieport_t *p);
-void pcieport_intr_init(pcieport_t *p);
 int pcieport_config_powerup(pcieport_t *p);
 int pcieport_config_powerdown(pcieport_t *p);
 int pcieport_config_linkup(pcieport_t *p);
@@ -38,9 +38,15 @@ void pcieport_pcsd_control_sris(const int sris_en);
 u_int16_t pcieport_get_phystatus(pcieport_t *p);
 u_int32_t pcieport_get_sta_rst(pcieport_t *p);
 int pcieport_get_perstn(pcieport_t *p);
+u_int32_t pcieport_get_sta_p_port_mac(pcieport_t *p);
+u_int32_t pcieport_get_sta_c_port_mac(pcieport_t *p);
+int pcieport_get_mac_lanes_reversed(pcieport_t *p);
 int pcieport_get_ltssm_st_cnt(pcieport_t *p);
 void pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt);
 int pcieport_serdes_init(void);
+void pcieport_intr_inherit(pcieport_t *p);
+void pcieport_intr_enable(const int port);
+void pcieport_intr_disable(const int port);
 
 void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));

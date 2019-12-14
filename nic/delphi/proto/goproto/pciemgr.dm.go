@@ -15,6 +15,10 @@ type PciePortMetrics struct {
 
 	IntrTotal metrics.Counter
 
+	IntrPolled metrics.Counter
+
+	IntrPerstn metrics.Counter
+
 	IntrLtssmstEarly metrics.Counter
 
 	IntrLtssmst metrics.Counter
@@ -71,6 +75,10 @@ func (mtr *PciePortMetrics) Size() int {
 
 	sz += mtr.IntrTotal.Size()
 
+	sz += mtr.IntrPolled.Size()
+
+	sz += mtr.IntrPerstn.Size()
+
 	sz += mtr.IntrLtssmstEarly.Size()
 
 	sz += mtr.IntrLtssmst.Size()
@@ -124,6 +132,12 @@ func (mtr *PciePortMetrics) Unmarshal() error {
 
 	mtr.IntrTotal = mtr.metrics.GetCounter(offset)
 	offset += mtr.IntrTotal.Size()
+
+	mtr.IntrPolled = mtr.metrics.GetCounter(offset)
+	offset += mtr.IntrPolled.Size()
+
+	mtr.IntrPerstn = mtr.metrics.GetCounter(offset)
+	offset += mtr.IntrPerstn.Size()
 
 	mtr.IntrLtssmstEarly = mtr.metrics.GetCounter(offset)
 	offset += mtr.IntrLtssmstEarly.Size()
@@ -199,6 +213,16 @@ func (mtr *PciePortMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.IntrTotal.Size()
+
+	if fldName == "IntrPolled" {
+		return offset
+	}
+	offset += mtr.IntrPolled.Size()
+
+	if fldName == "IntrPerstn" {
+		return offset
+	}
+	offset += mtr.IntrPerstn.Size()
 
 	if fldName == "IntrLtssmstEarly" {
 		return offset
@@ -311,6 +335,18 @@ func (mtr *PciePortMetrics) getOffset(fldName string) int {
 // SetIntrTotal sets cunter in shared memory
 func (mtr *PciePortMetrics) SetIntrTotal(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IntrTotal"))
+	return nil
+}
+
+// SetIntrPolled sets cunter in shared memory
+func (mtr *PciePortMetrics) SetIntrPolled(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("IntrPolled"))
+	return nil
+}
+
+// SetIntrPerstn sets cunter in shared memory
+func (mtr *PciePortMetrics) SetIntrPerstn(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("IntrPerstn"))
 	return nil
 }
 

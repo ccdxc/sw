@@ -29,6 +29,7 @@ void update_pcie_port_status(
     const pciemgr_port_status_t status,
     const int gen,
     const int width,
+    const int reversed,
     const char *faultstr)
 {
     enum pciemgr::PciePortOperStatus dstatus;
@@ -42,7 +43,8 @@ void update_pcie_port_status(
     }
 
     if (delphic) {
-        delphic->UpdatePciePortStatus(port, dstatus, gen, width, faultstr);
+        delphic->UpdatePciePortStatus(port, dstatus,
+                                      gen, width, reversed, faultstr);
     }
 }
 
@@ -127,6 +129,7 @@ void PciemgrService::UpdatePciePortStatus(
     const enum pciemgr::PciePortOperStatus status,
     const int gen,
     const int width,
+    const int reversed,
     const string faultstr)
 {
     PciePortStatusPtr s = make_shared<PciePortStatus>();
@@ -135,6 +138,7 @@ void PciemgrService::UpdatePciePortStatus(
     s->set_status(status);
     s->set_gen(gen);
     s->set_width(width);
+    s->set_lanes_reversed(reversed);
     s->set_fault_reason(faultstr);
 
     this->delphi->QueueUpdate(s);

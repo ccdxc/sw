@@ -686,20 +686,15 @@ cmd_poll(int argc, char *argv[])
     pciemgrenv_t *pme = pciemgrenv_get();
     sighandler_t osigint, osigterm;
     useconds_t polltm_us = 10000;
-    int opt, poll_port, poll_cnt, npolls;
-    u_int64_t tm_start, tm_stop, tm_port;
+    int opt, poll_cnt, npolls;
 
     npolls = 0;
-    poll_port = 1;
     poll_cnt = 0;
     getopt_reset(1, 1);
-    while ((opt = getopt(argc, argv, "c:Pt:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:t:")) != -1) {
         switch (opt) {
         case 'c':
             poll_cnt = strtoul(optarg, NULL, 0);
-            break;
-        case 'P':
-            poll_port = 0;
             break;
         case 't':
             polltm_us = strtoull(optarg, NULL, 0);
@@ -708,8 +703,12 @@ cmd_poll(int argc, char *argv[])
     }
 
     /* Poll mode for these events. */
-    pciehw_notify_poll_init();
-    pciehw_indirect_poll_init();
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pciehw_notify_poll_init(port);
+            pciehw_indirect_poll_init(port);
+        }
+    }
 
     osigint  = signal(SIGINT,  polling_sighand);
     osigterm = signal(SIGTERM, polling_sighand);
@@ -718,23 +717,32 @@ cmd_poll(int argc, char *argv[])
            polltm_us, poll_cnt);
     poll_enabled = 1;
     while (poll_enabled && (poll_cnt == 0 || npolls < poll_cnt)) {
-        tm_start = timestamp();
-        if (poll_port) {
-            for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-                if (pme->enabled_ports & (1 << port)) {
-                    pcieport_poll(port);
+        for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+            if (pme->enabled_ports & (1 << port)) {
+                u_int64_t tm_start, tm_stop, tm_port;
+
+                tm_start = timestamp();
+
+                // poll for port events
+                pcieport_poll(port);
+
+                tm_port = timestamp();
+
+                // poll for device events
+                pciehw_indirect_poll(port);
+                pciehw_notify_poll(port);
+
+                tm_stop = timestamp();
+
+                if (tm_port - tm_start > 1000000) {
+                    printf("pcieport_poll: port %d took %ldus\n",
+                           port, tm_port - tm_start);
+                }
+                if (tm_stop - tm_port > 1000000) {
+                    printf("pciehw_indirect/notify_poll: port %d took %ldus\n",
+                           port, tm_stop - tm_port);
                 }
             }
-        }
-        tm_port = timestamp();
-        pciehdev_poll();
-        tm_stop = timestamp();
-
-        if (tm_port - tm_start > 1000000) {
-            printf("pcieport_poll: %ldus\n", tm_port - tm_start);
-        }
-        if (tm_stop - tm_port > 1000000) {
-            printf("pciehdev_poll: %ldus\n", tm_stop - tm_port);
         }
 
         if (polltm_us) usleep(polltm_us);
@@ -774,6 +782,7 @@ cmd_powerdown(int argc, char *argv[])
 static void
 cmd_run(int argc, char *argv[])
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
     int opt;
 
     getopt_reset(1, 1);
@@ -782,7 +791,7 @@ cmd_run(int argc, char *argv[])
         }
     }
 
-    intr_init();
+    intr_init(pme);
 
     printf("Running, ^C to exit...\n");
     evutil_run(EV_DEFAULT);

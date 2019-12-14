@@ -1,13 +1,13 @@
 {
-    "cpld_id" : "0x13",
+    "cpld_id" : "0x17",
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
-    "form_factor": "HHHL",
+    "form_factor": "OCP-3.0",
     "emmc_size": "4",
     "memory_size": "4",
     "num_asics" : "1",
-    "board_type" : "Naples25",
+    "board_type" : "Naples25 OCP",
     "voltages" :
     {
         "startup_arm" : "",
@@ -36,10 +36,10 @@
     ],
 
     "pcie" : {
-	"subdeviceid"   : "4002",
+	"subdeviceid"   : "4007",
 	"portspecs"	:
 	[
-	    { "host":"0", "port":"0", "gen":"3", "width":"8" }
+	    { "host":"0", "port":"4", "gen":"3", "width":"8" }
 	]
     },
 
@@ -363,7 +363,7 @@
                 [
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_FLOW_MISS" },
-                        "policer" : { "pps_policer" : { "packets_per_sec" : 32000, "burst_packets" : 3200 } }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400 } }
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_ARP" },

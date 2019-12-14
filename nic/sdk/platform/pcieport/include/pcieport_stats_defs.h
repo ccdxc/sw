@@ -7,6 +7,8 @@
 #endif
 
 PCIEPORT_STATS_DEF(intr_total)
+PCIEPORT_STATS_DEF(intr_polled)
+PCIEPORT_STATS_DEF(intr_perstn)
 PCIEPORT_STATS_DEF(intr_ltssmst_early)
 PCIEPORT_STATS_DEF(intr_ltssmst)
 PCIEPORT_STATS_DEF(intr_linkup2dn)

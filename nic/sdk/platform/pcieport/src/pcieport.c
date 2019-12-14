@@ -20,6 +20,7 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
+#include "portmap.h"
 #include "pcieport_impl.h"
 
 pcieport_info_t *pcieport_info;
@@ -86,19 +87,6 @@ pcieport_info_get_or_map(pciemgr_initmode_t initmode)
     return pcieport_info;
 }
 
-
-static pcieport_t *
-pcieport_get(const int port)
-{
-    pcieport_info_t *pi = pcieport_info_get();
-    pcieport_t *p = NULL;
-
-    if (pi != NULL && port >= 0 && port < PCIEPORT_NPORTS) {
-        p = &pi->pcieport[port];
-    }
-    return p;
-}
-
 int
 pcieport_open(const int port, pciemgr_initmode_t initmode)
 {
@@ -120,16 +108,17 @@ pcieport_open(const int port, pciemgr_initmode_t initmode)
     if (p->open) {
         if (initmode == INHERIT_ONLY) {
             /* pcieutil goes through this case */
+            p->open++;
             return 0;
         }
         if (initmode == INHERIT_OK) {
             pciesys_logdebug("pcieport_open port %d inherited open\n", port);
+            p->open++;
             return 0;
         }
         pciesys_logerror("pcieport_open port %d already open\n", port);
         return -EBUSY;
     }
-    p->port = port;
     p->host = 0;
     p->config = 0;
     p->open = 1;
@@ -142,8 +131,8 @@ pcieport_close(const int port)
 {
     pcieport_t *p = pcieport_get(port);
 
-    if (p && p->open) {
-        p->open = 0;
+    if (p && --p->open == 0) {
+        pcieport_intr_disable(port);
     }
     if (0) pcieport_info_unmap();
 }
@@ -209,67 +198,12 @@ pcieport_validate_hostconfig(pcieport_t *p)
     return -EINVAL;
 }
 
-static int
-pcieport_parse_cap(char *cap, int *gen, int *width)
-{
-    if (sscanf(cap, "gen%dx%d", gen, width) == 2) {
-        if (*gen >= 1 && *gen <= 4 &&
-            *width >= 1 && *width <= 16) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int
-pcieport_getenv_cap(int port, int *gen, int *width)
-{
-    char envar[40];
-    char *env;
-
-    snprintf(envar, sizeof(envar), "PCIEPORT%d_CAP", port);
-    env = getenv(envar);
-    if (env && pcieport_parse_cap(env, gen, width)) {
-        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
-                        envar, *gen, *width);
-        return 1;
-    }
-
-    snprintf(envar, sizeof(envar), "PCIEPORT_CAP");
-    env = getenv(envar);
-    if (env && pcieport_parse_cap(env, gen, width)) {
-        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
-                        envar, *gen, *width);
-        return 1;
-    }
-
-    snprintf(envar, sizeof(envar), "PCIE_CAP");
-    env = getenv(envar);
-    if (env && pcieport_parse_cap(env, gen, width)) {
-        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
-                        envar, *gen, *width);
-        return 1;
-    }
-
-    return 0;
-}
-
-static void
-pcieport_default_cap(pcieport_t *p, int *gen, int *width)
-{
-    /* check envar for override */
-    if (!pcieport_getenv_cap(p->port, gen, width)) {
-        /* no envar, provide defaults */
-        *gen = pal_is_asic() ? 4 : 1;
-        *width = pal_is_asic() ? 16 : 4;
-    }
-}
-
 int
 pcieport_hostconfig(const int port, const pciemgr_params_t *params)
 {
     pcieport_t *p = pcieport_get(port);
-    int r, default_gen, default_width;
+    pcieport_spec_t ps;
+    int r;
 
     if (p == NULL) {
         return -EBADF;
@@ -289,27 +223,24 @@ pcieport_hostconfig(const int port, const pciemgr_params_t *params)
         }
     }
 
-    pcieport_default_cap(p, &default_gen, &default_width);
-
-    if (params) {
-        p->cap_gen = params->cap_gen;
-        p->cap_width = params->cap_width;
-        p->subvendorid = params->subvendorid;
-        p->subdeviceid = params->subdeviceid;
-        p->compliance = params->compliance;
-        p->sris = params->sris;
-        p->crs = params->strict_crs;
+    if (portmap_getspec(port, &ps) < 0) {
+        pciesys_logerror("pcieport_hostconfig can't get portspec %d\n", port);
+        return -EINVAL;
     }
+
+    assert(params);
+
+    p->cap_gen = ps.gen;
+    p->cap_width = ps.width;
+    p->subvendorid = params->subvendorid;
+    p->subdeviceid = params->subdeviceid;
+    p->compliance = params->compliance;
+    p->sris = params->sris;
+    p->crs = params->strict_crs;
 
     /*
-     * Provide default params for any unspecified.
+     * Provide default params for these if unspecified.
      */
-    if (p->cap_gen == 0) {
-        p->cap_gen = default_gen;
-    }
-    if (p->cap_width == 0) {
-        p->cap_width = default_width;
-    }
     if (p->subvendorid == 0) {
         p->subvendorid = PCI_VENDOR_ID_PENSANDO;
     }
@@ -457,17 +388,19 @@ pcieport_showports(void)
 {
     int port;
 
-    pciesys_loginfo("%-4s %-7s %-4s %s\n",
-                    "port", "link", "bus", "state");
+    pciesys_loginfo("%-4s %-4s %-7s %s %-4s %s\n",
+                    "port", "host", "link", "r", "bus", "state");
 
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         pcieport_t *p = pcieport_get(port);
 
         if (p == NULL || !p->open) continue;
 
-        pciesys_loginfo("%-4d gen%dx%-2d 0x%02x %s\n",
+        pciesys_loginfo("%-4d %-4d gen%dx%-2d %c 0x%02x %s\n",
                         port,
+                        portmap_hostport(port),
                         p->cur_gen, p->cur_width,
+                        p->cur_reversed ? 'r' : ' ',
                         p->pribus,
                         pcieport_stname(p->state));
     }

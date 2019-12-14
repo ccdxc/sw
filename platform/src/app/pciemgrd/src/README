@@ -17,12 +17,13 @@ PCIE_COMPLIANCE         0           0|1
 PCIE_AER_COMMON         0           0|1
 PCIE_REQ_GEN            0           0|1|2|3|4
 PCIE_REQ_WIDTH          0           0|1|2|4|8|16
-PCIEPORT%d_CAP          gen4x16     gen<Gen>x<Width>
-PCIEPORT_CAP            gen4x16     gen<Gen>x<Width>
-PCIE_CAP                gen4x16     gen<Gen>x<Width>
+PCIE_POLL_DEV           0           0|1
+PCIE_POLL_PORT          0           0|1
+PCIE_POLL_TM            200000      <poll-time-usecs>
+PCIE_CAP                gen3x16     gen<Gen>x<Width>
 PCIE_REDUCE_RX_CRED     0           0|1
 PCIE_CPUMASK            0           <mask>
-PCIE_FIFOPRI            50	    SCHED_FIFO priority (0=disabled)
+PCIE_FIFOPRI            50          SCHED_FIFO priority (0=disabled)
 PCIE_MLOCKALL           1           0|1
 ----------------
 # script files in /sysconfig/config0/pcie-poweron
@@ -76,10 +77,10 @@ PCIE_SERDES_INIT_ALWAYS
 PCIE_SRIS
     If this is "1" then set
         PP_CFG_PP_PCSD_CONTROL.sris_en_grpX = 0x3
-	PP_PORT_C_CFG_C_MAC_K_GEN.sris_mode = 1
+        PP_PORT_C_CFG_C_MAC_K_GEN.sris_mode = 1
     else
         PP_CFG_PP_PCSD_CONTROL.sris_en_grpX = 0x0
-	PP_PORT_C_CFG_C_MAC_K_GEN.sris_mode = 0
+        PP_PORT_C_CFG_C_MAC_K_GEN.sris_mode = 0
     endif
 
 PCIE_STRICT_CRS
@@ -106,19 +107,20 @@ PCIE_REQ_GEN
 PCIE_REQ_WIDTH
     Required PCIe lane width.  Same as $PCIE_REQ_GEN but for lane width.
 
-PCIEPORT%d_CAP
-PCIEPORT_CAP
-PCIE_CAP
-    These are all ways to specify how the software will configure the pcie
-    link params for the physical port and virtual devices.  All have the
-    format "genGxW" to specify gen speed G (1,2,3,4) and width W (1,2,4,8,16).
+PCIE_POLL_DEV
+    Poll for device events like indirect and notify transactions.
+    Poll frequency is $PCIE_POLL_TM.
 
-    PCIEPORT%d_CAP sets the link params for a specific port (0-7),
-    PCIEPORT_CAP   sets the link params for all ports,
-    PCIE_CAP       sets the link params for all ports.
+PCIE_POLL_PORT
+    Poll for port events like link up/down, etc.
+    Poll frequency is $PCIE_POLL_TM.
 
-    Priority order for physical port config (highest to lowest):
-        PCIEPORT%d_CAP, PCIEPORT_CAP, PCIE_CAP
+PCIE_POLL_TM
+    Poll frequency in usecs for polled events.
+
+PCIEDEV_CAP
+    Sets the link params for virtual devices,
+    Default is to match the params of the first active port.
 
 PCIE_REDUCE_RX_CRED
     If set to 1, selects reduced rx credits
@@ -166,9 +168,6 @@ pcie-poweron-%d
     the link state machine.
 ----------------
 # uboot: setenv <var> <val>; saveenv
-pcie_port
-    The port (0-7) that is configured.
-
 pcie_cap_gen
     The physical port genX speed.
 
@@ -229,15 +228,16 @@ pcie_poweron_regio
 ================================================================
 pciemgrd options
 ----------------------------------------------------------------
-Usage: pciemgrd [-dFnv][-e <enabled_ports>[-b <first_bus_num>] \
-                [-P gen<G>x<W>][-R reboot][-V subvendorid][-D subdeviceid]
+Usage: pciemgrd [-dFi][-b <first_bus_num>] \
+		[-I <inherit-mode>][-p port-spec][-P gen<G>x<W>][-R <reboot>] \
+		[-V subvendorid][-D subdeviceid]
 
     -b <first_bus_num> set first bus used to <first_bus_num>
     -d                 daemon mode
-    -e <enabled_ports> mask of enabled pcie ports
     -F                 no fake bios scan
     -i                 interactive mode
     -I <inherit-mode>  inherit or re-initialize hw/shmem
+    -p <port-spec>     add portspec to ports, hostH=portP,genGxW
     -P gen<G>x<W>      spec devices as pcie gen <G>, lane width <W>
     -R <0|1>           reboot_on_hostdn=<0|1>
     -V subvendorid     default subsystem vendor id

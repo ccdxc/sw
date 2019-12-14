@@ -24,6 +24,7 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portmap.h"
 #include "lib/catalog/catalog.hpp"
 #include "platform/fru/fru.hpp"
 
@@ -51,8 +52,9 @@ port_evhandler(pcieport_event_t *ev, void *arg)
 
     switch (ev->type) {
     case PCIEPORT_EVENT_LINKUP: {
-        pciesys_loginfo("port%d: linkup gen%dx%d\n",
-                        ev->port, ev->linkup.gen, ev->linkup.width);
+        pciesys_loginfo("port%d: linkup gen%dx%d%s\n",
+                        ev->port, ev->linkup.gen, ev->linkup.width,
+                        ev->linkup.reversed ? "r" : "");
         break;
     }
     case PCIEPORT_EVENT_LINKDN: {
@@ -60,12 +62,14 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         break;
     }
     case PCIEPORT_EVENT_HOSTUP: {
-        pciesys_loginfo("port%d: hostup gen%dx%d\n",
-                        ev->port, ev->hostup.gen, ev->hostup.width);
+        pciesys_loginfo("port%d: hostup gen%dx%d%s\n",
+                        ev->port, ev->hostup.gen, ev->hostup.width,
+                        ev->linkup.reversed ? "r" : "");
         pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
 #ifdef IRIS
         update_pcie_port_status(ev->port, PCIEMGR_UP,
-                                ev->hostup.gen, ev->hostup.width);
+                                ev->hostup.gen, ev->hostup.width,
+                                ev->hostup.reversed);
 #endif
         break;
     }
@@ -90,7 +94,7 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
 #ifdef IRIS
         update_pcie_port_status(ev->port,
-                                PCIEMGR_FAULT, 0, 0, ev->fault.reason);
+                                PCIEMGR_FAULT, 0, 0, 0, ev->fault.reason);
 #endif
         break;
     }
@@ -105,7 +109,7 @@ int
 open_hostports(void)
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciemgr_params_t *p = &pme->params;
+    pciemgr_params_t *params = &pme->params;
     int r, port;
 
     /*
@@ -114,11 +118,11 @@ open_hostports(void)
     r = 0;
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            if ((r = pcieport_open(port, p->initmode)) < 0) {
+            if ((r = pcieport_open(port, params->initmode)) < 0) {
                 pciesys_logerror("pcieport_open %d failed: %d\n", port, r);
                 goto error_out;
             }
-            if ((r = pcieport_hostconfig(port, p)) < 0) {
+            if ((r = pcieport_hostconfig(port, params)) < 0) {
                 pciesys_logerror("pcieport_hostconfig %d failed\n", port);
                 goto close_error_out;
             }
@@ -130,7 +134,7 @@ open_hostports(void)
     }
 
     if ((r = pcieport_register_event_handler(port_evhandler, NULL)) < 0) {
-        goto close_error_out;
+        goto error_out;
     }
     return r;
 
@@ -157,83 +161,247 @@ close_hostports(void)
     }
 }
 
+//
+// The port interrupt is "global", that is, it doesn't indicate
+// which port needs service.  We'll just scan all ports to find
+// the one that needs attention.
+//
+// We could stop the search if we find the port that was signaling us.
+// pcieport_intr() returns 0 when it has processed the interrupts,
+// or -1 if the interrupt was not from this port.  We could consider
+// replacing the body with
+//
+//         if (pcieport_intr(port) == 0) break;
+//
+// But if we do that we should probably keep track of which port we
+// checked last and start at the next port on the next interrupt to
+// keep things fair across ports.  For now, these port interrupts
+// are infrequent, and our production mode has only 1 port active
+// so we'll save that optimization for another day.
+//
 static void
-intr_poll(void *arg)
+port_intr(void *arg)
 {
-    pciemgrenv_t *pme = pciemgrenv_get();
+    pciemgrenv_t *pme = (pciemgrenv_t *)arg;
 
-    // poll for port events
-    if (pme->poll_port) {
-        for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-            if (pme->enabled_ports & (1 << port)) {
-                pcieport_poll(port);
-            }
+    // process port events
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_intr(port);
         }
-    }
-
-    // poll for device events
-    if (pme->poll_dev) {
-        pciehdev_poll();
     }
 }
 
 static void
 notify_intr(void *arg)
 {
-    pciehw_notify_intr(0);
+    const int port = *(int *)arg;
+
+    pciehw_notify_intr(port);
 }
 
 static void
 indirect_intr(void *arg)
 {
-    pciehw_indirect_intr(0);
+    const int port = *(int *)arg;
+
+    pciehw_indirect_intr(port);
+}
+
+static void
+intr_poll(void *arg)
+{
+    pciemgrenv_t *pme = (pciemgrenv_t *)arg;
+
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+
+            // poll for port events
+            pcieport_poll(port);
+
+            // poll for device events
+            pciehw_indirect_poll(port);
+            pciehw_notify_poll(port);
+        }
+    }
+}
+
+/*****************************************************************
+ * port interrupt - Port interrupts for pcie mac events.
+ */
+
+/*
+ * Set up port for polling.
+ */
+static int
+intr_init_port_poll(pciemgrenv_t *pme)
+{
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if (pcieport_poll_init(port) < 0) return -1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Set up port for real interrupts.
+ * Register for pcie mac interrupt.
+ * Unmask pcie mac interrupt sources.
+ */
+static int
+intr_init_port_intr(pciemgrenv_t *pme)
+{
+    static struct pal_int pciemacint;
+
+    /* Register for the pcie mac intr. */
+    if (pal_int_open(&pciemacint, "pciemac") < 0) {
+        pciesys_logerror("intr_init pciemac open failed\n");
+        return -1;
+    }
+    evutil_add_pal_int(EV_DEFAULT_ &pciemacint, port_intr, pme);
+
+    /* Unmask the pcie mac intr sources. */
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if (pcieport_intr_init(port) < 0) return -1;
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************
+ * dev interrupt - Device interrupts for notify/indirect events.
+ */
+
+/*
+ * Set up pciehw dev for polling.
+ */
+static int
+intr_init_dev_poll(pciemgrenv_t *pme)
+{
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if (pciehw_notify_poll_init(port) < 0)   return -1;
+            if (pciehw_indirect_poll_init(port) < 0) return -1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Set up device for real interrupts.
+ * Allocate a msi interrupt for each active port.
+ * Unmask interrupt sources.
+ *
+ * Note:  Once we start allocating msi interrupts for a port
+ * we must allocate msi interrupts even for unused ports because
+ * the pcie block interrupt hardware expects contiguous interrupts
+ * for all ports.  Because we need contiguous interrupts, we allocate
+ * all notify vectors first, then all indirect vectors, rather than
+ * alternate them with a single loop through the ports.
+ */
+static int
+intr_init_dev_intr(pciemgrenv_t *pme)
+{
+#ifdef __aarch64__
+    static int portidx[PCIEPORT_NPORTS] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    static struct pal_int notifyint[PCIEPORT_NPORTS];
+    static struct pal_int indirectint[PCIEPORT_NPORTS];
+    uint64_t msgaddr;
+    uint32_t msgdata;
+    int r, nports, opened_one;
+
+    nports = 0;
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) nports++;
+    }
+
+    opened_one = 0;
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            r = pal_int_open_msi(&notifyint[port], &msgaddr, &msgdata);
+            if (r < 0) return r;
+            opened_one = 1;
+            evutil_add_pal_int(EV_DEFAULT_
+                               &notifyint[port], notify_intr, &portidx[port]);
+            pciesys_logdebug("intr_init port%d notify "
+                             "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                             port, msgaddr, msgdata);
+            r = pciehw_notify_intr_init(port, msgaddr, msgdata);
+            if (r < 0) return r;
+        } else if (opened_one && nports > 1) {
+            r = pal_int_open_msi(&notifyint[port], &msgaddr, &msgdata);
+            if (r < 0) return r;
+            pciesys_logdebug("intr_init unused port%d notify "
+                             "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                             port, msgaddr, msgdata);
+        }
+    }
+
+    opened_one = 0;
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            r = pal_int_open_msi(&indirectint[port], &msgaddr, &msgdata);
+            if (r < 0) return r;
+            opened_one = 1;
+            evutil_add_pal_int(EV_DEFAULT_
+                               &indirectint[port],
+                               indirect_intr,
+                               &portidx[port]);
+            pciesys_logdebug("intr_init port%d indirect "
+                             "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                             port, msgaddr, msgdata);
+            r = pciehw_indirect_intr_init(port, msgaddr, msgdata);
+            if (r < 0) return r;
+        } else if (opened_one && nports > 1) {
+            r = pal_int_open_msi(&indirectint[port], &msgaddr, &msgdata);
+            if (r < 0) return r;
+            pciesys_logdebug("intr_init unused port%d indirect "
+                             "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                             port, msgaddr, msgdata);
+        }
+    }
+#else
+    if (0) notify_intr(NULL);
+    if (0) indirect_intr(NULL);
+#endif
+    return 0;
 }
 
 int
-intr_init(void)
+intr_init(pciemgrenv_t *pme)
 {
-    pciemgrenv_t *pme = pciemgrenv_get();
-    int need_poll_timer = 0;
+    ev_tstamp polltm = pme->poll_tm / 1000000.0;
+    int r;
 
-    if (pme->poll_port) {
-        need_poll_timer = 1;
+    if (!pme->poll_port) {
+        r = intr_init_port_intr(pme);
     } else {
-        // XXX need to get port intr connected
-        need_poll_timer = 1;
+        r = intr_init_port_poll(pme);
+
+        // polling for port events more frequently
+        polltm = polltm ? MIN(0.01, polltm) : 0.01;
     }
-    if (pme->poll_dev) {
-        pciehw_notify_poll_init();
-        pciehw_indirect_poll_init();
-        need_poll_timer = 1;
+    if (r < 0) return r;
+
+    if (!pme->poll_dev) {
+        r = intr_init_dev_intr(pme);
     } else {
-#ifdef __aarch64__
-        uint64_t msgaddr;
-        uint32_t msgdata;
+        r = intr_init_dev_poll(pme);
 
-        static struct pal_int notifyint;
-        pal_int_open_msi(&notifyint, &msgaddr, &msgdata);
-        evutil_add_pal_int(EV_DEFAULT_ &notifyint, notify_intr, NULL);
-        pciesys_logdebug("intr_init notify "
-                         "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
-                         msgaddr, msgdata);
-        pciehw_notify_intr_init(0, msgaddr, msgdata);
-
-        static struct pal_int indirectint;
-        pal_int_open_msi(&indirectint, &msgaddr, &msgdata);
-        evutil_add_pal_int(EV_DEFAULT_ &indirectint, indirect_intr, NULL);
-        pciesys_logdebug("intr_init indirect "
-                         "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
-                         msgaddr, msgdata);
-        pciehw_indirect_intr_init(0, msgaddr, msgdata);
-#else
-        if (0) notify_intr(NULL);
-        if (0) indirect_intr(NULL);
-#endif
+        // polling for indirect more frequently for <10ms response.
+        polltm = polltm ? MIN(0.001, polltm) : 0.001;
     }
-    if (need_poll_timer) {
+    if (r < 0) return r;
+
+    // set poll timer, if needed
+    if (polltm) {
         static evutil_timer timer = {0};
-        evutil_timer_start(EV_DEFAULT_ &timer, intr_poll, NULL, 0.01, 0.01);
+        evutil_timer_start(EV_DEFAULT_ &timer, intr_poll, pme, polltm, polltm);
+        pciesys_logdebug("intr_init: poll timer %.2f secs\n", polltm);
     }
+
     return 0;
 }
 
@@ -254,6 +422,29 @@ static u_int64_t
 pciemgrd_param_ull(const char *name, const u_int64_t def)
 {
     return getenv_override_ull("pciemgrd", name, def);
+}
+
+
+static int
+parse_linkspec(const char *s, u_int8_t *genp, u_int8_t *widthp)
+{
+    int gen, width;
+
+    if (sscanf(s, "gen%dx%d", &gen, &width) != 2) {
+        return 0;
+    }
+    if (gen < 1 || gen > 4) {
+        return 0;
+    }
+    if (width < 1 || width > 32) {
+        return 0;
+    }
+    if (width & (width - 1)) {
+        return 0;
+    }
+    *genp = gen;
+    *widthp = width;
+    return 1;
 }
 
 #ifdef VPD_HAS_SYSINFO
@@ -408,7 +599,7 @@ pciemgrd_vpd_params(pciemgrenv_t *pme)
 
 /*
  * These overrides are separated here and called by the main loop
- * *after* the logger initialization any setting overrides can be
+ * *after* the logger initialization so any setting overrides can be
  * included in the log.
  */
 void
@@ -423,10 +614,21 @@ pciemgrd_params(pciemgrenv_t *pme)
     pme->cpumask = pciemgrd_param_ull("PCIE_CPUMASK", pme->cpumask);
     pme->fifopri = pciemgrd_param_ull("PCIE_FIFOPRI", pme->fifopri);
     pme->mlockall = pciemgrd_param_ull("PCIE_MLOCKALL", pme->mlockall);
+    pme->poll_tm = pciemgrd_param_ull("PCIE_POLL_TM", pme->poll_tm);
 
     pciemgr_params_t *params = &pme->params;
     params->single_pnd = pciemgrd_param_ull("PCIE_SINGLE_PND",
                                             params->single_pnd);
+
+    char *cap = getenv("PCIE_CAP");
+    if (cap) {
+        if (parse_linkspec(cap, &params->cap_gen, &params->cap_width)) {
+            pciesys_loginfo("pciemgrd: $PCIE_CAP override gen%dx%d\n",
+                            params->cap_gen, params->cap_width);
+        } else {
+            pciesys_logwarn("pciemgrd: $PCIE_CAP \"%s\" parse failed\n", cap);
+        }
+    }
 
     pciemgrd_vpd_params(pme);
 
@@ -446,29 +648,83 @@ pciemgrd_params(pciemgrenv_t *pme)
     }
 }
 
+static int
+portmap_init_from_catalog(pciemgrenv_t *pme)
+{
+    portmap_init();
+#ifdef __aarch64__
+    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
+    if (catalog == NULL) {
+        pciesys_logerror("no catalog!\n");
+        return -1;
+    }
+
+    int nportspecs = catalog->pcie_nportspecs();
+    for (int i = 0; i < nportspecs; i++) {
+        pcieport_spec_t ps = { 0 };
+        ps.host  = catalog->pcie_host(i);
+        ps.port  = catalog->pcie_port(i);
+        ps.gen   = catalog->pcie_gen(i);
+        ps.width = catalog->pcie_width(i);
+        if (portmap_addhost(&ps) < 0) {
+            pciesys_logerror("portmap_add i %d h%d p%d gen%dx%d failed\n",
+                             i, ps.host, ps.port, ps.gen, ps.width);
+            return -1;
+        }
+        /* virtual dev default cap matches first port */
+        if (pme->params.cap_gen == 0) {
+            pme->params.cap_gen = ps.gen;
+            pme->params.cap_width = ps.width;
+        }
+    }
+    sdk::lib::catalog::destroy(catalog);
+#else
+    pcieport_spec_t ps = { 0 };
+    ps.host  = 0;
+    ps.port  = 0;
+    ps.gen   = 3;
+    ps.width = 16;
+
+    if (portmap_addhost(&ps) < 0) {
+        pciesys_logerror("portmap_add h%d p%d gen%dx%d failed\n",
+                         ps.host, ps.port, ps.gen, ps.width);
+            return -1;
+    }
+
+    /* virtual dev default cap matches first port */
+    if (pme->params.cap_gen == 0) {
+        pme->params.cap_gen = ps.gen;
+        pme->params.cap_width = ps.width;
+    }
+#endif
+    pme->enabled_ports = portmap_portmask();
+    return 0;
+}
+
+void
+pciemgrd_logconfig(pciemgrenv_t *pme)
+{
+    pciesys_loginfo("---------------- config ----------------\n");
+    pciesys_loginfo("enabled_ports 0x%x\n", pme->enabled_ports);
+    pciesys_loginfo("device capabilities: gen%dx%d\n",
+                    pme->params.cap_gen, pme->params.cap_width);
+    pciesys_loginfo("vendorid: %04x\n", pme->params.vendorid);
+    pciesys_loginfo("subvendorid: %04x\n", pme->params.subvendorid);
+    pciesys_loginfo("subdeviceid: %04x\n", pme->params.subdeviceid);
+    pciesys_loginfo("initmode: %d\n", pme->params.initmode);
+    pciesys_loginfo("restart: %d\n", pme->params.restart);
+    pciesys_loginfo("---------------- config ----------------\n");
+}
+
 void
 pciemgrd_catalog_defaults(pciemgrenv_t *pme)
 {
-    /* on asic single port, on haps 2 ports enabled */
-    pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
-
     pciemgr_params_t *params = &pme->params;
     params->vendorid = PCI_VENDOR_ID_PENSANDO;
     params->subvendorid = params->vendorid;
     params->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
-#ifdef __aarch64__
-    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
-    if (catalog != NULL) {
-        pme->enabled_ports  = catalog->pcie_hostport_mask();
-        params->cap_gen     = catalog->pcie_gen();
-        params->cap_width   = catalog->pcie_width();
-        params->subdeviceid = catalog->pcie_subdeviceid();
-        sdk::lib::catalog::destroy(catalog);
-    } else {
-        pciesys_logerror("no catalog\n");
-    }
-#endif /* __aarch64__ */
+    portmap_init_from_catalog(pme);
 }
 
 /*
@@ -602,11 +858,10 @@ pciemgrd_start()
     pciemgr_params_t *params = &pme->params;
     int r;
 
-    pme->interactive = 1;
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
-    pme->poll_port = 1;
-    pme->poll_dev = 0;
     pme->fifopri = 50;
+    pme->poll_port = 1;
+    pme->poll_tm = 500000; // 0.5s slow poll for non-essential events
 
     params->strict_crs = 1;
 

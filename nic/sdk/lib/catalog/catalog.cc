@@ -510,19 +510,29 @@ catalog::parse_serdes_file(std::string& serdes_file)
 }
 
 sdk_ret_t
-catalog::populate_pcie(ptree &prop_tree)
+catalog::populate_pcie(ptree &pt)
 {
-    std::string s;
+    int nportspecs = 0;
 
-    catalog_db_.pcie_gen   = prop_tree.get<std::uint8_t>("pcie.gen", 0);
-    catalog_db_.pcie_width = prop_tree.get<std::uint8_t>("pcie.width", 0);
+    boost::optional<ptree&> pcieptopt = pt.get_child_optional("pcie");
+    if (pcieptopt) {
+        ptree &pciept = pt.get_child("pcie");
+        std::string s = pciept.get<std::string>("subdeviceid", "");
+        catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
 
-    s = prop_tree.get<std::string>("pcie.hostport_mask", "");
-    catalog_db_.pcie_hostport_mask = strtoul(s.c_str(), NULL, 16);
-
-    s = prop_tree.get<std::string>("pcie.subdeviceid", "");
-    catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
-
+        for (ptree::value_type &v : pciept.get_child("portspecs")) {
+            if (nportspecs < MAX_PCIE_PORTSPECS) {
+                catalog_pcie_portspec_t *hp;
+                hp = &catalog_db_.pcie_portspecs[nportspecs];
+                hp->host  = v.second.get<uint8_t>("host");
+                hp->port  = v.second.get<uint8_t>("port");
+                hp->gen   = v.second.get<uint8_t>("gen");
+                hp->width = v.second.get<uint8_t>("width");
+                nportspecs++;
+            }
+        }
+    }
+    catalog_db_.pcie_nportspecs = nportspecs;
     return SDK_RET_OK;
 }
 

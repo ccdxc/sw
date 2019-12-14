@@ -46,6 +46,8 @@ message PciePortMetrics {
         HelpStr: "Pcie Port Metrics information:\\n"
             "Value Description:\\n"
             "intr_total : total port intrs.\\n"
+            "intr_polled : total port intrs polled.\\n"
+            "intr_perstn : pcie out of reset.\\n"
             "intr_ltssmst_early : link train before linkup.\\n"
             "intr_ltssmst : link train after  linkup.\\n"
             "intr_linkup2dn : link down.\\n"
@@ -71,13 +73,15 @@ message PciePortMetrics {
     uint32 Key = 1;				// key is port number 0-7
 
     delphi.Counter intr_total = 2;		// total port intrs
-    delphi.Counter intr_ltssmst_early = 3;	// link train before linkup
-    delphi.Counter intr_ltssmst = 4;		// link train after  linkup
-    delphi.Counter intr_linkup2dn = 5;		// link down
-    delphi.Counter intr_linkdn2up = 6;		// link up
-    delphi.Counter intr_rstup2dn = 7;		// mac up
-    delphi.Counter intr_rstdn2up = 8;		// mac down
-    delphi.Counter intr_secbus = 9;		// secondary bus set
+    delphi.Counter intr_polled = 3;		// total port intrs polled
+    delphi.Counter intr_perstn = 4;		// pcie out of reset
+    delphi.Counter intr_ltssmst_early = 5;	// link train before linkup
+    delphi.Counter intr_ltssmst = 6;		// link train after  linkup
+    delphi.Counter intr_linkup2dn = 7;		// link down
+    delphi.Counter intr_linkdn2up = 8;		// link up
+    delphi.Counter intr_rstup2dn = 9;		// mac up
+    delphi.Counter intr_rstdn2up = 10;		// mac down
+    delphi.Counter intr_secbus = 11;		// secondary bus set
     //
     // skip some spares to next group
     //

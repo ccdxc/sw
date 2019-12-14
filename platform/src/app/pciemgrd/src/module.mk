@@ -24,8 +24,9 @@ MODULE_LDLIBS   += ${NIC_COMMON_LDLIBS} \
 		   ${NULL}
 endif
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \
-                   ${MODULE_SRC_DIR}/cli.cc \
-                   ${MODULE_SRC_DIR}/svchandler.cc \
-                   ${MODULE_SRC_DIR}/logger.cc \
-                   ${MODULE_SRC_DIR}/delphic.cc
+		   ${MODULE_SRC_DIR}/cli.cc \
+		   ${MODULE_SRC_DIR}/svchandler.cc \
+		   ${MODULE_SRC_DIR}/logger.cc \
+		   ${MODULE_SRC_DIR}/delphic.cc \
+		   ${NULL}
 include ${MKDEFS}/post.mk

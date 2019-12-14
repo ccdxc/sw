@@ -22,6 +22,7 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pcieport/include/portmap.h"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"
@@ -32,20 +33,43 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciemgrd [-dFinrv][-e <enabled_ports>[-b <first_bus_num>]\n"
+"Usage: pciemgrd [-dFinrv][-b <first_bus_num>]\n"
 "                [-I <inherit-mode>][-P gen<G>x<W>][-R 0|1]\n"
 "                [-V subvendorid][-D subdeviceid]\n"
 "    -b <first_bus_num> set first bus used to <first_bus_num>\n"
 "    -d                 daemon mode\n"
-"    -e <enabled_ports> mask of enabled pcie ports\n"
 "    -F                 no fake bios scan\n"
 "    -i                 interactive mode\n"
 "    -I <inherit-mode>  inherit or re-initialize hw/shmem\n"
+"    -p hostH=portP,genGxW   host port spec (multiple ok)\n"
+"    -p <portspec>      add portspec to ports, hostH=portP,genGxW\n"
 "    -P gen<G>x<W>      spec devices as pcie gen <G>, lane width <W>\n"
 "    -r                 restart after upgrade\n"
 "    -R <0|1>           reboot_on_hostdn=<0|1>\n"
 "    -V subvendorid     default subsystem vendor id\n"
 "    -D subdeviceid     default subsystem device id\n");
+}
+
+static int
+parse_portspec(const char *s, pcieport_spec_t *ps)
+{
+    int h, p, g, w;
+
+    if (sscanf(s, "host%d=port%d,gen%dx%d", &h, &p, &g, &w) != 4) {
+        return 0;
+    }
+    if (h < 0 || h >= PCIEPORT_NPORTS) return 0;
+    if (p < 0 || p >= PCIEPORT_NPORTS) return 0;
+    if (g < 1 || g > 4) return 0;
+    if (w < 1 || w > 32) return 0;
+    if (w & (w - 1)) return 0;
+
+    memset(ps, 0, sizeof(*ps));
+    ps->host = h;
+    ps->port = p;
+    ps->gen = g;
+    ps->width = w;
+    return 1;
 }
 
 static int
@@ -75,15 +99,16 @@ main(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
     pciemgr_params_t *params = &pme->params;
-    int r, opt;
+    int r, opt, portmap_inited;
 
     pme->interactive = 1;
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
-    pme->poll_port = 1;
-    pme->poll_dev = 0;
     pme->fifopri = 50;
+    pme->poll_port = 1;
+    pme->poll_tm = 500000; // 0.5s slow poll for non-essential events
 
     params->strict_crs = 1;
+    params->initmode = INITMODE_NONE;
 
     /*
      * For aarch64 we can inherit a system in which we get restarted on
@@ -97,10 +122,8 @@ main(int argc, char *argv[])
      * at 00:00.0 so our first virtual device is bus 1 at 01:00.0.
      */
 #ifdef __aarch64__
-    params->initmode = INHERIT_OK;
     params->first_bus = 0;
 #else
-    params->initmode = FORCE_INIT;
     params->first_bus = 1;
     params->fake_bios_scan = 1;         /* simulate bios scan to set bdf's */
 #endif
@@ -116,7 +139,8 @@ main(int argc, char *argv[])
      */
     pciemgrd_catalog_defaults(pme);
 
-    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:rR:")) != -1) {
+    portmap_inited = 0;
+    while ((opt = getopt(argc, argv, "b:CdFGiI:p:P:V:D:rR:")) != -1) {
         switch (opt) {
         case 'b':
             params->first_bus = strtoul(optarg, NULL, 0);
@@ -126,9 +150,6 @@ main(int argc, char *argv[])
             break;
         case 'd':
             pme->interactive = 0;
-            break;
-        case 'e':
-            pme->enabled_ports = strtoul(optarg, NULL, 0);
             break;
         case 'F':
             params->fake_bios_scan = 0;
@@ -148,6 +169,18 @@ main(int argc, char *argv[])
                 params->initmode = FORCE_INIT;
             } else {
                 printf("bad -I arg: inherit_only|inherit_ok|force_init\n");
+                exit(1);
+            }
+            break;
+        case 'p':
+            pcieport_spec_t ps;
+            if (!parse_portspec(optarg, &ps)) {
+                printf("bad port spec: want host%%d=port%%d,gen%%dx%%d\n");
+                exit(1);
+            }
+            if (portmap_inited++ == 0) portmap_init();
+            if (portmap_addhost(&ps) < 0) {
+                printf("portmap_addhost failed\n");
                 exit(1);
             }
             break;
@@ -177,13 +210,31 @@ main(int argc, char *argv[])
             exit(1);
         }
     }
+    if (portmap_inited) {
+        pme->enabled_ports = portmap_portmask();
+    }
 
 #ifdef PCIEMGRD_GOLD
     {
         int gold_loop(pciemgrenv_t *pme);
+
+        // gold mode always daemon mode, force init
+        pme->interactive = 0;
+        if (params->initmode == INITMODE_NONE) {
+            params->initmode = FORCE_INIT;
+        }
+
         r = gold_loop(pme);
     }
 #else
+    if (params->initmode == INITMODE_NONE) {
+        if (pme->interactive) {
+            params->initmode = FORCE_INIT;
+        } else {
+            params->initmode = INHERIT_OK;
+        }
+    }
+
     if (pme->interactive) {
         r = cli_loop(pme);
     } else {

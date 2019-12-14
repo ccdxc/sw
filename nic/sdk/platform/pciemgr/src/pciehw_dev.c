@@ -402,10 +402,3 @@ pciehdev_event(const pciehdev_eventdata_t *evd)
         pdevdata->evhandler(evd);
     }
 }
-
-int
-pciehdev_poll(void)
-{
-    pciehw_poll();
-    return 0;
-}

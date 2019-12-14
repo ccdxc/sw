@@ -416,6 +416,25 @@ pcieport_get_perstn(pcieport_t *p)
     return (sta_rst & STA_RSTF_(PERSTN)) != 0;
 }
 
+u_int32_t
+pcieport_get_sta_c_port_mac(pcieport_t *p)
+{
+    return pal_reg_rd32(PXC_(STA_C_PORT_MAC, p->port));
+}
+
+u_int32_t
+pcieport_get_sta_p_port_mac(pcieport_t *p)
+{
+    return pal_reg_rd32(PXP_(STA_P_PORT_MAC, p->port));
+}
+
+int
+pcieport_get_mac_lanes_reversed(pcieport_t *p)
+{
+    const u_int32_t sta_mac = pcieport_get_sta_p_port_mac(p);
+    return (sta_mac & STA_P_PORT_MACF_(LANES_REVERSED)) != 0;
+}
+
 int
 pcieport_get_ltssm_st_cnt(pcieport_t *p)
 {

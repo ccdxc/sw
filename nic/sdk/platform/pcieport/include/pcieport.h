@@ -52,11 +52,12 @@ union pcieport_u {
         u_int8_t pribus;
         u_int8_t secbus;
         u_int8_t subbus;
+        u_int8_t open;
         u_int16_t lanemask;
         u_int16_t subvendorid;
         u_int16_t subdeviceid;
         u_int32_t init:1;
-        u_int32_t open:1;
+        u_int32_t _spare:1;
         u_int32_t host:1;
         u_int32_t config:1;
         u_int32_t crs:1;
@@ -65,6 +66,7 @@ union pcieport_u {
         u_int32_t sris:1;
         u_int32_t vga_support:1;
         u_int32_t reduce_rx_cred:1;
+        u_int32_t cur_reversed:1;
         pcieportst_t state;
         pcieportev_t event;
         char fault_reason[80];
@@ -92,6 +94,18 @@ pcieport_info_get(void)
     return pcieport_info;
 }
 
+static inline pcieport_t *
+pcieport_get(const int port)
+{
+    pcieport_info_t *pi = pcieport_info_get();
+    pcieport_t *p = NULL;
+
+    if (pi != NULL && port >= 0 && port < PCIEPORT_NPORTS) {
+        p = &pi->pcieport[port];
+    }
+    return p;
+}
+
 int pcieport_open(const int port, pciemgr_initmode_t initmode);
 void pcieport_close(const int port);
 
@@ -103,9 +117,12 @@ int pcieport_crs_off(const int port);
 int pcieport_is_accessible(const int port);
 int pcieport_powerdown(const int port);
 
+int pcieport_intr_init(const int port);
+int pcieport_intr(const int port);
+int pcieport_poll_init(const int port);
 int pcieport_poll(const int port);
-void pcieport_dbg(int argc, char *argv[]);
 
+void pcieport_dbg(int argc, char *argv[]);
 void pcieport_showport(const int port);
 void pcieport_showports(void);
 
@@ -142,9 +159,13 @@ const char *pcieport_evname(const pcieportev_t ev);
 #define STA_RSTF_(REG) \
     (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
 
-/* sta_mac flags */
-#define STA_MACF_(REG) \
+/* sta_c_port_mac flags */
+#define STA_C_PORT_MACF_(REG) \
     (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
+
+/* sta_p_port_mac flags */
+#define STA_P_PORT_MACF_(REG) \
+    (CAP_PXP_CSR_STA_P_PORT_MAC_ ##REG## _FIELD_MASK)
 
 /* cfg_mac flags */
 #define CFG_MACF_(REG) \
@@ -154,10 +175,15 @@ const char *pcieport_evname(const pcieportev_t ev);
 #define MAC_INTREGF_(REG) \
     (CAP_PXC_CSR_INT_C_MAC_INTREG_ ##REG## _INTERRUPT_FIELD_MASK)
 
-#define INTREG_PERST0N \
+#define PP_INTREG_PERST0N \
     CAP_PP_CSR_INT_PP_INTREG_PERST0N_DN2UP_INTERRUPT_FIELD_MASK
-#define INTREG_PERSTN(port) \
-    (INTREG_PERST0N >> (port))
+#define PP_INTREG_PERSTN(port) \
+    (PP_INTREG_PERST0N >> (port))
+
+#define PP_INTREG_PORT0_C_INT_INTERRUPT \
+    CAP_PP_CSR_INT_PP_INTREG_PORT0_C_INT_INTERRUPT_FIELD_MASK
+#define PP_INTREG_PORT_C_INT_INTERRUPT(port) \
+    (PP_INTREG_PORT0_C_INT_INTERRUPT >> ((port) * 2))
 
 #ifdef __cplusplus
 }

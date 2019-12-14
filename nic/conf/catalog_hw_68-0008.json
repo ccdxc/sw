@@ -36,10 +36,11 @@
     ],
 
     "pcie" : {
-	"hostport_mask" : "0x1",
-	"gen"           : "4",
-	"width"         : "8",
-	"subdeviceid"   : "4005"
+	"subdeviceid"   : "4005",
+	"portspecs"	:
+	[
+	    { "host":"0", "port":"0", "gen":"3", "width":"8" }
+	]
     },
 
     "serdes" : {

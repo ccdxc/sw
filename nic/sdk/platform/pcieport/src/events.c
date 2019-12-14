@@ -56,6 +56,7 @@ pcieport_event_linkup(pcieport_t *p, const int genid)
     linkup = &ev.linkup;
     linkup->gen = p->cur_gen;
     linkup->width = p->cur_width;
+    linkup->reversed = p->cur_reversed;
     linkup->genid = genid;
     send_event(&ev);
 }
@@ -86,6 +87,7 @@ pcieport_event_hostup(pcieport_t *p, const int genid)
     hostup = &ev.hostup;
     hostup->gen = p->cur_gen;
     hostup->width = p->cur_width;
+    hostup->reversed = p->cur_reversed;
     hostup->genid = genid;
     send_event(&ev);
 }

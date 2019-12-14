@@ -543,7 +543,9 @@ pciehw_close(void)
     pciehw_t *phw = pciehw_get();
 
     if (phw->open) {
-        if (--phw->clients) {
+        if (--phw->clients == 0) {
+            pciehw_notify_disable_all_ports();
+            pciehw_indirect_disable_all_ports();
             pciehw_memclose();
             phw->open = 0;
         }
@@ -1289,13 +1291,6 @@ pciehw_read_vpd(const u_int8_t port, const u_int16_t bdf,
     }
     memcpy(buf, &vpddata[addr], len);
     return 1;
-}
-
-void
-pciehw_poll(void)
-{
-    pciehw_indirect_poll();
-    pciehw_notify_poll();
 }
 
 void *

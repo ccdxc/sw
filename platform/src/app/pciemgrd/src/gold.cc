@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -11,41 +11,25 @@
 #include <sys/types.h>
 
 #include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
-
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
-
-static int poll_enabled;
-
-static void
-poll_hostports(pciemgrenv_t *pme)
-{
-    int port;
-
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            pcieport_poll(port);
-        }
-    }
-}
 
 int
 gold_loop(pciemgrenv_t *pme)
 {
-    pciehdevice_resources_t presources, *pres = &presources;
-    pciehdev_t *pdev;
-    int r, port;
+    int r;
 
     logger_init();
     pciesys_loginfo("pciemgrd started in gold mode\n");
 
-    pme->poll_port = 1;
-    pme->poll_dev = 1;
     pciemgrd_params(pme);
+    pciemgrd_logconfig(pme);
     pciemgrd_sys_init(pme);
+
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }
@@ -53,7 +37,18 @@ gold_loop(pciemgrenv_t *pme)
         pciesys_logerror("pciehdev_open failed: %d\n", r);
         goto close_port_error_out;
     }
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+    intr_init(pme);
+
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        pciehdevice_resources_t presources, *pres = &presources;
+        pciehdev_t *pdev;
+
+        //
+        // Create a place-holder debug device on the bus for each
+        // active port.  This prevents the host from putting the
+        // port into low-power mode which effectively disables the
+        // memtun bar on the bridge.
+        //
         if (pme->enabled_ports & (1 << port)) {
             pciehdev_initialize(port);
             memset(pres, 0, sizeof(*pres));
@@ -67,19 +62,8 @@ gold_loop(pciemgrenv_t *pme)
         }
     }
 
-    /* Poll mode for these events. */
-    pciehw_notify_poll_init();
-    pciehw_indirect_poll_init();
-
     pciesys_loginfo("pciemgrd ready\n");
-    poll_enabled = 1;
-    while (poll_enabled) {
-
-        poll_hostports(pme);
-        pciehdev_poll();
-
-        usleep(10000);
-    }
+    evutil_run(EV_DEFAULT);
 
     pciehdev_close();
  close_port_error_out:

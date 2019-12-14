@@ -24,6 +24,7 @@ typedef enum pcieport_event_type_e {
 typedef struct pcieport_event_linkinfo_s {
     int gen;                    /* pcie speed genX */
     int width;                  /* pcie width xX lanes */
+    int reversed;               /* pcie lanes reversed */
     int genid;                  /* port event generation id */
 } pcieport_event_linkinfo_t;
 

@@ -343,16 +343,13 @@ pciehw_indirect_init(void)
 }
 
 int
-pciehw_indirect_poll(void)
+pciehw_indirect_poll(const int port)
 {
-    int port, pending;
+    int pending;
 
-    for (port = 0; port < PCIEHW_NPORTS; port++) {
-        read_ind_info(port, NULL, &pending);
-
-        if (pending) {
-            pciehw_indirect_intr(port);
-        }
+    read_ind_info(port, NULL, &pending);
+    if (pending) {
+        pciehw_indirect_intr(port);
     }
     return 0;
 }
@@ -362,15 +359,36 @@ pciehw_indirect_poll(void)
  * then we can poll memory locations to see if there is work to do.
  */
 int
-pciehw_indirect_poll_init(void)
+pciehw_indirect_poll_init(const int port)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    const int port = 0;
-    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->indirect_intr_dest[0]);
+    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->indirect_intr_dest[port]);
     const u_int32_t msgdata = 1;
 
     return req_int_init(indirect_int_addr(), "indirect_intr",
                         port, msgaddr, msgdata);
+}
+
+/*
+ * Disable any indirect handling.  The indirect requests are coming
+ * from the PMT/PRT table entries.  We could clean those so they
+ * don't generate an interrupt but for now we leave them in place
+ * so indirect will generate an entry in the ring and attempt to
+ * generate an interrupt.
+ */
+void
+pciehw_indirect_disable(const int port)
+{
+}
+
+void
+pciehw_indirect_disable_all_ports(void)
+{
+    int port;
+
+    for (port = 0; port < PCIEHW_NPORTS; port++) {
+        pciehw_indirect_disable(port);
+    }
 }
 
 /******************************************************************

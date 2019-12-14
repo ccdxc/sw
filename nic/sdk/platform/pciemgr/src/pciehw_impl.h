@@ -126,8 +126,6 @@ void pciehw_tgt_port_single_pnd(const int port, const int on);
 
 void pciehw_itr_port_init(void);
 
-void pciehw_poll(void);
-
 void *pciehw_memset(void *s, int c, size_t n);
 void *pciehw_memcpy(void *dst, const void *src, size_t n);
 

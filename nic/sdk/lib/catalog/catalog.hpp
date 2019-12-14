@@ -26,6 +26,7 @@ using boost::property_tree::ptree;
 // TODO only applicable for Capri
 #define MGMT_BASE_PORT     9
 #define MAX_CLOCK_FREQ     2
+#define MAX_PCIE_PORTSPECS 8
 
 typedef enum card_id_e {
     CARD_ID_NAPLES100,
@@ -120,6 +121,13 @@ typedef struct catalog_clock_info_s {
     uint32_t      clock_multiplier;     // Multiplier based on the clock frequency
 } catalog_clock_info_t;
 
+typedef struct catalog_pcie_portspec_s {
+    uint8_t     host;
+    uint8_t     port;
+    uint8_t     gen;
+    uint8_t     width;
+} catalog_pcie_portspec_t;
+
 typedef struct catalog_s {
     std::string                catalog_file;                          // catalog file name with absolute path
     card_id_t                  card_id;                               // card id for the board
@@ -145,10 +153,9 @@ typedef struct catalog_s {
     uint32_t                   halfclock_hbmtemp;                 // temp limit when system goes to half clock
 
     // pcie parameters
-    uint8_t                    pcie_hostport_mask;                    // host ports enabled
-    uint8_t                    pcie_gen;                              // pcie speed gen 1-4
-    uint8_t                    pcie_width;                            // pcie lane width 1-16
     uint16_t                   pcie_subdeviceid;                      // pcie subdevice id
+    uint32_t                   pcie_nportspecs;                       // pcie number of portspecs[]
+    catalog_pcie_portspec_t    pcie_portspecs[MAX_PCIE_PORTSPECS];    // pcie port info
 
     // serdes parameters
     aacs_info_t                aacs_info;                             // avago aacs info
@@ -269,10 +276,16 @@ public:
     uint32_t     ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch);
 
     // pcie configs
-    uint8_t      pcie_hostport_mask(void) { return catalog_db_.pcie_hostport_mask; }
-    uint8_t      pcie_gen(void) { return catalog_db_.pcie_gen; }
-    uint8_t      pcie_width(void) { return catalog_db_.pcie_width; }
-    uint16_t     pcie_subdeviceid(void) { return catalog_db_.pcie_subdeviceid; }
+    uint16_t     pcie_subdeviceid(void) { return catalog_db_.pcie_subdeviceid;}
+    uint32_t     pcie_nportspecs(void) { return catalog_db_.pcie_nportspecs; }
+    uint8_t      pcie_host(uint32_t idx)
+                        { return catalog_db_.pcie_portspecs[idx].host; }
+    uint8_t      pcie_port(uint32_t idx)
+                        { return catalog_db_.pcie_portspecs[idx].port; }
+    uint8_t      pcie_gen(uint32_t idx)
+                        { return catalog_db_.pcie_portspecs[idx].gen; }
+    uint8_t      pcie_width(uint32_t idx)
+                        { return catalog_db_.pcie_portspecs[idx].width; }
 
     // serdes configs
     uint32_t     jtag_id(void) { return catalog_db_.serdes_jtag_id;  }
@@ -295,8 +308,6 @@ public:
 
     uint32_t num_clock_info(void) const { return catalog_db_.num_clock_info; }
     uint32_t clock_get_multiplier(uint16_t freq);
-
-    
 
 private:
     catalog_t    catalog_db_;   // whole catalog database

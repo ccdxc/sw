@@ -54,20 +54,26 @@ show_value(const char *name, const uint64_t val)
 }
 
 static void
-show_counter(const uint64_t val, const char *grp, const char *ctr)
+show_counter(const int port,
+             const uint64_t val, const char *grp, const char *ctr)
 {
     char *lgrp = strlower(strdup(grp));
     char *lctr = strlower(strdup(ctr));
     char name[80];
 
-    snprintf(name, sizeof(name), "%s_%s", lgrp, lctr);
+    if (port == -1) {
+        snprintf(name, sizeof(name), "%s_%s", lgrp, lctr);
+    } else {
+        snprintf(name, sizeof(name), "port%d:%s_%s", port, lgrp, lctr);
+    }
     show_value(name, val);
     free(lgrp);
     free(lctr);
 }
 
 static void
-show_counterf(const uint64_t fullval,
+show_counterf(const int port,
+              const uint64_t fullval,
               const char *grp, const char *ctr, const char *fld,
               const uint8_t bits, const uint8_t bitc)
 {
@@ -76,7 +82,11 @@ show_counterf(const uint64_t fullval,
     char *lctr = strlower(strdup(ctr));
     char name[80];
 
-    snprintf(name, sizeof(name), "%s_%s.%s", lgrp, lctr, fld);
+    if (port == -1) {
+        snprintf(name, sizeof(name), "%s_%s.%s", lgrp, lctr, fld);
+    } else {
+        snprintf(name, sizeof(name), "port%d:%s_%s.%s", port, lgrp, lctr, fld);
+    }
     show_value(name, val);
     free(lgrp);
     free(lctr);
@@ -105,39 +115,43 @@ read_or_clear_64(const uint64_t addr)
 }
 
 static void
-show_counter_32(const uint64_t addr,
+show_counter_32(const int port,
+                const uint64_t addr,
                 const char *grp, const char *ctr, const char *fld,
                 const uint8_t bits, const uint8_t bitc)
 {
     const uint32_t v = read_or_clear_32(addr);
-    show_counter(v, grp, ctr);
+    show_counter(port, v, grp, ctr);
 }
 
 static void
-show_counter_64(const uint64_t addr,
+show_counter_64(const int port,
+                const uint64_t addr,
                 const char *grp, const char *ctr, const char *fld,
                 const uint8_t bits, const uint8_t bitc)
 {
     const uint64_t v = read_or_clear_64(addr);
-    show_counter(v, grp, ctr);
+    show_counter(port, v, grp, ctr);
 }
 
 static void
-show_counter_32f(const uint64_t addr,
+show_counter_32f(const int port,
+                 const uint64_t addr,
                  const char *grp, const char *ctr, const char *fld,
                  const uint8_t bits, const uint8_t bitc)
 {
     const uint32_t v = read_or_clear_32(addr);
-    show_counterf(v, grp, ctr, fld, bits, bitc);
+    show_counterf(port, v, grp, ctr, fld, bits, bitc);
 }
 
 static void
-show_counter_64f(const uint64_t addr,
+show_counter_64f(const int port,
+                 const uint64_t addr,
                  const char *grp, const char *ctr, const char *fld,
                  const uint8_t bits, const uint8_t bitc)
 {
     const uint64_t v = read_or_clear_64(addr);
-    show_counterf(v, grp, ctr, fld, bits, bitc);
+    show_counterf(port, v, grp, ctr, fld, bits, bitc);
 }
 
 typedef union {
@@ -196,13 +210,18 @@ clear_pxb_sat_tgt_ind_reason(void)
 }
 
 static void
-show_counter_by_name(const uint64_t addr,
+show_counter_by_name(const int port,
+                     const uint64_t addr,
                      const char *grp, const char *ctr, const char *fld,
                      const uint8_t bits, const uint8_t bitc)
 {
     char name[80];
 
-    snprintf(name, sizeof(name), "%s_%s", grp, ctr);
+    if (port == -1) {
+        snprintf(name, sizeof(name), "%s_%s", grp, ctr);
+    } else {
+        snprintf(name, sizeof(name), "port%d:%s_%s", port, grp, ctr);
+    }
     if (strcmp(name, "PXB_SAT_TGT_IND_REASON") == 0) {
         if (global_flags & F_CLEAR) {
             clear_pxb_sat_tgt_ind_reason();
@@ -221,7 +240,7 @@ show_pxb_sat_itr(void)
 #define ADDR(CTR)       PXB_(SAT_ITR_##CTR)
 
 #define PXB_SAT_ITR_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     PXB_SAT_ITR_GENERATOR(PXB_SAT_ITR_SHOW_GEN)
 
@@ -236,7 +255,7 @@ show_pxb_sat_tgt(void)
 #define ADDR(CTR)       PXB_(SAT_TGT_##CTR)
 
 #define PXB_SAT_TGT_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     PXB_SAT_TGT_GENERATOR(PXB_SAT_TGT_SHOW_GEN)
 
@@ -251,7 +270,7 @@ show_pxb_cnt_axi(void)
 #define ADDR(CTR)       PXB_(CNT_AXI_##CTR)
 
 #define PXB_CNT_AXI_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     PXB_CNT_AXI_GENERATOR(PXB_CNT_AXI_SHOW_GEN)
 
@@ -266,7 +285,7 @@ show_pxb_cnt_itr(void)
 #define ADDR(CTR)       PXB_(CNT_ITR_##CTR)
 
 #define PXB_CNT_ITR_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     PXB_CNT_ITR_GENERATOR(PXB_CNT_ITR_SHOW_GEN)
 
@@ -281,7 +300,7 @@ show_pxb_cnt_tgt(void)
 #define ADDR(CTR)       PXB_(CNT_TGT_##CTR)
 
 #define PXB_CNT_TGT_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     PXB_CNT_TGT_GENERATOR(PXB_CNT_TGT_SHOW_GEN)
 
@@ -296,7 +315,7 @@ show_pp_sat_pp_pipe(void)
 #define ADDR(CTR, LN)   PP_(SAT_PP_PIPE_## CTR ##_## LN)
 
 #define SHOW_COUNTER_PIPE(LN, ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR,LN), GROUP, #CTR "_" #LN,  #fld, bits, bitc)
+    show_counter_##ty(-1, ADDR(CTR,LN), GROUP, #CTR "_" #LN,  #fld, bits, bitc)
 
 #define PP_SAT_PP_PIPE_SHOW_GEN(ty, CTR, fld, bits, bitc) \
     SHOW_COUNTER_PIPE(0,  ty, CTR, fld, bits, bitc); \
@@ -329,7 +348,7 @@ show_pp_port_c_cnt_c(const int port)
 #define ADDR(CTR, port) PXC_(CNT_C_##CTR, port)
 
 #define PP_PORT_C_CNT_C_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(port, ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
 
     PP_PORT_C_CNT_C_GENERATOR(PP_PORT_C_CNT_C_SHOW_GEN)
 
@@ -344,7 +363,7 @@ show_pp_port_c_sat_c_port_cnt(const int port)
 #define ADDR(CTR, port) PXC_(SAT_C_PORT_CNT_##CTR, port)
 
 #define PP_PORT_C_SAT_C_PORT_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(port, ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
 
     PP_PORT_C_SAT_C_PORT_CNT_GENERATOR(PP_PORT_C_SAT_C_PORT_SHOW_GEN)
 
@@ -359,7 +378,7 @@ show_pp_port_p_sat_p_port_cnt(const int port)
 #define ADDR(CTR, port) PXP_(SAT_P_PORT_CNT_##CTR, port)
 
 #define PP_PORT_P_SAT_P_PORT_CNT_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(port, ADDR(CTR, port), GROUP, #CTR, #fld, bits, bitc);
 
     PP_PORT_P_SAT_P_PORT_CNT_GENERATOR(PP_PORT_P_SAT_P_PORT_CNT_SHOW_GEN)
 
@@ -375,7 +394,7 @@ show_db_wa_sat_wa(void)
                          CAP_WA_CSR_SAT_WA_ ##CTR## _BYTE_ADDRESS)
 
 #define DB_WA_SAT_WA_SHOW_GEN(ty, CTR, fld, bits, bitc) \
-    show_counter_##ty(ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
+    show_counter_##ty(-1, ADDR(CTR), GROUP, #CTR, #fld, bits, bitc);
 
     DB_WA_SAT_WA_GENERATOR(DB_WA_SAT_WA_SHOW_GEN)
 

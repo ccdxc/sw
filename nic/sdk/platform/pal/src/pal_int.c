@@ -41,7 +41,7 @@
 #define	ENABLE_MASK 		"/proc/device-tree/soc/%s/enable_mask"
 
 /*
- * Indicate that a write should be used to explicitly indicate end of interrupt 
+ * Indicate that a write should be used to explicitly indicate end of interrupt
  * processing.
  */
 #define EXPLICIT_WRITE_FOR_EOI
@@ -78,8 +78,6 @@ struct root_csr {
 	uint32_t	enable_rw_reg;
 	uint32_t	rw_reg;
 };
-
-static int page_size;
 
 #ifdef PRINT_OPEN_PATHNAME
 #define print_open_pathname(rc, name)	__print_open_pathname(rc, name, \
@@ -234,7 +232,7 @@ static int gen_device_name(unsigned long n, char *devname,
 	size_t devname_len)
 {
 	int len;
-       
+
 	len = snprintf(devname, devname_len, "%s%lu", DEV_TEMPLATE, n);
 	if (len == -1)
 		return -1;
@@ -439,7 +437,7 @@ static int try_open_int_msi(struct pal_int *pal_int, const char *d_name,
 
 /*
  * Common open code.
- * pal_int:	Pointer to the struct pal_int we are workign on
+ * pal_int:	Pointer to the struct pal_int we are working on
  * name:	Name of the thing to open
  * try_open:	Pointer to function to try to open a UIO device
  */
@@ -523,7 +521,6 @@ int pal_int_open(struct pal_int *pal_int, const char *name)
 {
 	int rc;
 
-	page_size = getpagesize();
 	if (pal_int_open_common(pal_int, name, try_open_int) == -1)
 		return -1;
 
@@ -534,7 +531,7 @@ int pal_int_open(struct pal_int *pal_int, const char *name)
 	pal_int->have_int_enable = true;
 
 	return pal_int->fd;
-		
+
 close_fd:
 	close(pal_int->fd);
 	return rc;
@@ -616,16 +613,18 @@ int pal_int_start(struct pal_int *pal_int)
 int pal_int_end(struct pal_int *pal_int)
 {
 #ifdef EXPLICIT_WRITE_FOR_EOI
-	ssize_t zrc;
-	uint32_t irq_on;
+	if (pal_int->have_int_enable) {
+		ssize_t zrc;
+		uint32_t irq_on;
 
-	irq_on = 1;
-	zrc = write(pal_int->fd, &irq_on, sizeof(irq_on));
-	if (zrc == -1)
-		return -1;
-	if ((size_t)zrc != sizeof(irq_on)) {
-		errno = EIO;
-		return -1;
+		irq_on = 1;
+		zrc = write(pal_int->fd, &irq_on, sizeof(irq_on));
+		if (zrc == -1)
+			return -1;
+		if ((size_t)zrc != sizeof(irq_on)) {
+			errno = EIO;
+			return -1;
+		}
 	}
 #endif
 

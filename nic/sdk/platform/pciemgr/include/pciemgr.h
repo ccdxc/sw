@@ -6,6 +6,7 @@
 #define __PCIEMGR_H__
 
 typedef enum pciemgr_initmode_e {
+    INITMODE_NONE = 0,          /* uninitialized init mode */
     INHERIT_ONLY,               /* passive clients: pcieutil, debug, etc */
     INHERIT_OK,                 /* pciemgrd restart */
     FORCE_INIT,                 /* pciemgrd must init */

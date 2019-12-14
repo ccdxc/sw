@@ -13,6 +13,7 @@
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pciehdevices/include/pciehdevices.h"
 #include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portmap.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/pciemgrutils/include/pciehdev.h"
 #include "platform/pciemgrutils/include/pciehdev_impl.h"
@@ -30,7 +31,7 @@ do_open(pmmsg_t *m)
 static void
 do_initialize(pmmsg_t *m)
 {
-    const int port = m->initialize.port;
+    const int port = portmap_pcieport(m->initialize.port);
     int r;
 
     pciesys_loginfo("initialize: port %d\n", port);
@@ -43,7 +44,7 @@ do_initialize(pmmsg_t *m)
 static void
 do_finalize(pmmsg_t *m)
 {
-    const int port = m->finalize.port;
+    const int port = portmap_pcieport(m->finalize.port);
     int r;
 
     pciesys_loginfo("finalize: port %d\n", port);
@@ -120,6 +121,13 @@ do_devres_add(pmmsg_t *m)
         goto out;
     }
 
+    /*
+     * Clients send port as "virtualized" host port,
+     * map to physical pcie port.
+     */
+    pres->pfres.port = portmap_pcieport(pres->pfres.port);
+    pres->vfres.port = portmap_pcieport(pres->vfres.port);
+
     pdev = pciehdevice_new(pres);
     if ((r = pciehdev_add(pdev)) < 0) {
         pciesys_logerror("devres_add: port %d %s lif %d: failed %d\n",
@@ -167,8 +175,13 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
 
     m->hdr.msgtype = PMMSG_EVENT;
 
-    char *mp = (char *)&m->event + sizeof(pmmsg_event_t);
-    memcpy(mp, evd, sizeof(pciehdev_eventdata_t));
+    pciehdev_eventdata_t *evdmp;
+    evdmp = (pciehdev_eventdata_t *)
+        ((char *)&m->event + sizeof(pmmsg_event_t));
+    memcpy(evdmp, evd, sizeof(pciehdev_eventdata_t));
+
+    /* map to host port from pcie port */
+    evdmp->port = portmap_hostport(evd->port);
 
     // msg complete - send it
     pciemgrs_msgsend(m);
@@ -207,26 +220,9 @@ server_loop(pciemgrenv_t *pme)
 #endif
 
     pciemgrd_params(pme);
-
-    pciesys_loginfo("---------------- config ----------------\n");
-    pciesys_loginfo("enabled_ports 0x%x\n", pme->enabled_ports);
-    pciesys_loginfo("port capabilities: gen%dx%d\n",
-                    pme->params.cap_gen, pme->params.cap_width);
-    pciesys_loginfo("vendorid: %04x\n", pme->params.vendorid);
-    pciesys_loginfo("subvendorid: %04x\n", pme->params.subvendorid);
-    pciesys_loginfo("subdeviceid: %04x\n", pme->params.subdeviceid);
-    pciesys_loginfo("initmode: %d\n", pme->params.initmode);
-    pciesys_loginfo("restart: %d\n", pme->params.restart);
-    pciesys_loginfo("cpumask: %d\n", pme->cpumask);
-    pciesys_loginfo("fifopri: %d\n", pme->fifopri);
-    pciesys_loginfo("mlockall: %d\n", pme->mlockall);
-
-    pciemgr_params_t *params = &pme->params;
-    pciesys_loginfo("single_pnd: %d\n", params->single_pnd);
-
-    pciesys_loginfo("---------------- config ----------------\n");
-
+    pciemgrd_logconfig(pme);
     pciemgrd_sys_init(pme);
+
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }
@@ -238,7 +234,10 @@ server_loop(pciemgrenv_t *pme)
         pciesys_logerror("pciehdev_register_event_handler failed %d\n", r);
         goto close_dev_error_out;
     }
-    intr_init();
+    if ((r = intr_init(pme)) < 0) {
+        pciesys_logerror("intr_init failed %d\n", r);
+        goto close_dev_error_out;
+    }
 
 #ifdef IRIS
 #ifdef __aarch64__
@@ -252,6 +251,7 @@ server_loop(pciemgrenv_t *pme)
     pciemgrs_open(NULL, pciemgr_msg_cb);
     pciesys_loginfo("pciemgrd ready\n");
     evutil_run(EV_DEFAULT);
+    /* NOTREACHED */
     pciemgrs_close();
 
  close_dev_error_out:

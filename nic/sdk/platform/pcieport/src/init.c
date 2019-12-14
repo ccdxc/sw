@@ -14,27 +14,158 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
+#include "portmap.h"
 #include "pcieport_impl.h"
 
+typedef struct pp_linkwidth_s {
+    int port;
+    int gen;
+    int width;
+    uint32_t usedlanes;
+    uint32_t pp_linkwidth;
+} pp_linkwidth_t;
+
+/*
+ * Distribute the 1024 pcie rx credits among the ports selected
+ * in "portmask". For now, assume all ports get equal credits.
+ * (We could give more rx credits to wider (x8 vs x4) or
+ * faster ports (gen4 vs gen3) but for now assume homogeneous links.)
+ */
 static void
-pcieport_rx_credit_init(const int nports)
+pcieport_rx_credit_init(const int portmask)
 {
-    int base, ncredits, i;
+    int port, portbit, nports, ncredits_per_port, base;
 
-    if (pal_is_asic()) {
-        assert(nports == 1); /* XXX tailored for 1 active port */
-        /* port 0 gets all credits for now */
-        pcieport_rx_credit_bfr(0, 0, 1023);
-    } else {
-        assert(nports == 4); /* XXX tailored for 4 active ports */
-        ncredits = 1024 / nports;
-        for (base = 0, i = 0; i < 8; i += 2, base += ncredits) {
-            const int limit = base + ncredits - 1;
-
-            pcieport_rx_credit_bfr(i, base, limit);
-            pcieport_rx_credit_bfr(i + 1, 0, 0);
+    /*
+     * Figure out how many ports are going to be configured in portmask
+     * and then divide the credits evenly among the ports.
+     */
+    nports = 0;
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        portbit = 1 << port;
+        if (portmask & portbit) {
+            nports++;
         }
     }
+    ncredits_per_port = 1024 / nports;
+
+    base = 0;
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        portbit = 1 << port;
+        if (portmask & portbit) {
+            const int limit = base + ncredits_per_port - 1;
+            pcieport_rx_credit_bfr(port, base, limit);
+            base += ncredits_per_port;
+        } else {
+            /* "No soup for you!" No credits for this unused port. */
+            pcieport_rx_credit_bfr(port, 0, 0);
+        }
+    }
+}
+
+static int
+pp_linkwidth(pp_linkwidth_t *pplw, const int maxwidth)
+{
+    uint32_t linkwidth, portlanes;
+
+    if (pplw->width > maxwidth) {
+        pciesys_logerror("pp_linkwidth port%d max width %d > %d\n",
+                         pplw->port, pplw->width, maxwidth);
+        return -1;
+    }
+
+    /*
+     * 1-2 lanes: set pp_linkwidth 3
+     * 4   lanes: set 2
+     * 8   lanes: set 1
+     * 16  lanes: set 0
+     */
+    switch (pplw->width) {
+    case  1:
+    case  2: linkwidth = 3; portlanes = 0x3    << (pplw->port * 2); break;
+    case  4: linkwidth = 2; portlanes = 0xf    << (pplw->port * 2); break;
+    case  8: linkwidth = 1; portlanes = 0xff   << (pplw->port * 2); break;
+    case 16: linkwidth = 0; portlanes = 0xffff << (pplw->port * 2); break;
+    default:
+        pciesys_logerror("pp_linkwidth port%d bad width %d\n",
+                         pplw->port, pplw->width);
+        return -1;
+    }
+
+    /* check if someone is already using these lanes */
+    if (pplw->usedlanes & portlanes) {
+        pciesys_logerror("pp_linkwidth port%d gen%dx%d lane overlap\n",
+                         pplw->port, pplw->gen, pplw->width);
+        return -1;
+    }
+
+    /* we are using these lanes */
+    pplw->usedlanes |= portlanes;
+    pplw->pp_linkwidth |= linkwidth << (pplw->port * 2);
+    return 0;
+}
+
+/*
+ * We have 16 pcie lanes to configure across 8 ports.
+ * Based on the pcie link port config for this platform
+ * configure the global PP_LINKWIDTH lane configuration
+ * to match the port mapping.
+ *
+ * Enforce these constraints on the maximum number of lanes
+ * for ports, and watch for overlapping lane commitments,
+ * e.g. if port0 is configured for 8 lanes then port3 cannot use 2.
+ *
+ *     Port0 can use 16, 8, 4, 2 lanes.
+ *     Port1 can use           2 lanes.
+ *     Port2 can use        4, 2 lanes.
+ *     Port3 can use           2 lanes.
+ *     Port4 can use     8, 4, 2 lanes.
+ *     Port5 can use           2 lanes.
+ *     Port6 can use        4, 2 lanes.
+ *     Port7 can use           2 lanes.
+ */
+static int
+pcieport_pp_linkwidth(void)
+{
+    const uint32_t portmask = portmap_portmask();
+    pp_linkwidth_t pplw;
+    int port, r;
+
+    memset(&pplw, 0, sizeof(pplw));
+
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        const int portbit = 1 << port;
+        if (portmask & portbit) {
+            pcieport_spec_t ps;
+
+            if (portmap_getspec(port, &ps) < 0) {
+                pciesys_logerror("portmap_getspec port %d failed\n", port);
+                return -1;
+            }
+            pplw.port = port;
+            pplw.gen = ps.gen;
+            pplw.width = ps.width;
+
+            switch (port) {
+            case 0: r = pp_linkwidth(&pplw, 16); break;
+            case 1: r = pp_linkwidth(&pplw,  2); break;
+            case 2: r = pp_linkwidth(&pplw,  4); break;
+            case 3: r = pp_linkwidth(&pplw,  2); break;
+            case 4: r = pp_linkwidth(&pplw,  8); break;
+            case 5: r = pp_linkwidth(&pplw,  2); break;
+            case 6: r = pp_linkwidth(&pplw,  4); break;
+            case 7: r = pp_linkwidth(&pplw,  2); break;
+            default:
+                pciesys_logerror("pp_linkwidth: unknown port %d\n", port);
+                return -1;
+            }
+            if (r < 0) {
+                return r;
+            }
+        }
+    }
+    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), pplw.pp_linkwidth);
+    return 0;
 }
 
 static void
@@ -59,44 +190,38 @@ pcieport_macfifo_thres(const int thres)
 }
 
 static void
-pcieport_link_init_asic(void)
-{
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x0); /* 1 port x16 linkwidth mode */
-    pcieport_rx_credit_init(1);
-    pcieport_macfifo_thres(5); /* match late-stage ECO */
-}
-
-static void
-pcieport_link_init_haps(void)
-{
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
-    pcieport_rx_credit_init(4);
-    pcieport_macfifo_thres(5); /* match late-stage ECO */
-}
-
-static void
 pcieport_link_init(void)
 {
-    if (pal_is_asic()) {
-        pcieport_link_init_asic();
-    } else {
-        pcieport_link_init_haps();
-    }
+    const uint32_t portmask = portmap_portmask();
+
+    pcieport_pp_linkwidth();
+    pcieport_rx_credit_init(portmask);
+    pcieport_macfifo_thres(5); /* match late-stage ECO */
 }
 
 static int
 pcieport_already_init(void)
 {
 #ifdef __aarch64__
-    pcieport_info_t *pi = pcieport_info_get();
-    pcieport_t *p = &pi->pcieport[0];
+    const uint32_t portmask = portmap_portmask();
+    int port;
 
-    /*
-     * Check port 0 for ltssm_en=1 indicating someone
-     * initialized the port already.
-     */
-    if (pcieport_get_ltssm_en(p)) {
-        return 1;
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        const int portbit = 1 << port;
+        /* check first enabled port */
+        if (portmask & portbit) {
+            pcieport_info_t *pi = pcieport_info_get();
+            pcieport_t *p = &pi->pcieport[port];
+
+            /*
+             * Check first port for ltssm_en=1 indicating someone
+             * initialized the port already.
+             */
+            if (pcieport_get_ltssm_en(p)) {
+                return 1;
+            }
+            break;
+        }
     }
 #endif
     return 0;
@@ -124,6 +249,14 @@ pcieport_param_ull(const char *name, const u_int64_t def)
 int
 pcieport_onetime_init(pcieport_info_t *pi, pciemgr_initmode_t initmode)
 {
+    int port;
+
+    /* init port field */
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        pcieport_t *p = &pi->pcieport[port];
+        p->port = port;
+    }
+
     /* first check that version matches what we expect */
     if (pi->version && pi->version != PCIEPORT_VERSION) {
         /* inherit-only, but we can't inherit this version */
@@ -187,7 +320,7 @@ pcieport_onetime_portinit(pcieport_t *p)
      * of this port to initialize the state machine.
      */
     if (pi->inherited_init) {
-        pcieport_intr_init(p);
+        pcieport_intr_inherit(p);
     }
     p->init = 1;
     return 0;

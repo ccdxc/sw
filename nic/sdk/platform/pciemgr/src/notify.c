@@ -144,7 +144,7 @@ notify_pici_delta(const int pi, const int ci, const u_int32_t ring_mask)
 }
 
 static void
-notify_enable(void)
+notify_set_enable(const u_int32_t mask)
 {
     union {
         struct {
@@ -167,8 +167,20 @@ notify_enable(void)
     } en;
 
     en.w = pal_reg_rd32(NOTIFY_EN);
-    en.w = 0x3fff; /* enable all sources */
+    en.w = mask;
     pal_reg_wr32(NOTIFY_EN, en.w);
+}
+
+static void
+notify_enable(void)
+{
+    notify_set_enable(0x3fff); /* enable all sources */
+}
+
+static void
+notify_disable(void)
+{
+    notify_set_enable(0); /* disable all sources */
 }
 
 static void
@@ -384,17 +396,15 @@ pciehw_notify_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata)
 }
 
 int
-pciehw_notify_poll(void)
+pciehw_notify_poll(const int port)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const u_int32_t ring_mask = pshmem->notify_ring_mask;
-    int port, pi, ci;
+    int pi, ci;
 
-    for (port = 0; port < PCIEHW_NPORTS; port++) {
-        notify_get_masked_pici(port, &pi, &ci, ring_mask);
-        if (ci != pi) {
-            pciehw_notify_intr(port);
-        }
+    notify_get_masked_pici(port, &pi, &ci, ring_mask);
+    if (ci != pi) {
+        pciehw_notify_intr(port);
     }
     return 0;
 }
@@ -404,16 +414,34 @@ pciehw_notify_poll(void)
  * then we can poll memory locations to see if there is work to do.
  */
 int
-pciehw_notify_poll_init(void)
+pciehw_notify_poll_init(const int port)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    const int port = 0;
-    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
+    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->notify_intr_dest[port]);
     const u_int32_t msgdata = 1;
 
     notify_enable();
     return req_int_init(notify_int_addr(), "notify_intr", port,
                         msgaddr, msgdata);
+}
+
+/*
+ * Disable any hw notifications.
+ */
+void
+pciehw_notify_disable(const int port)
+{
+    notify_disable();
+}
+
+void
+pciehw_notify_disable_all_ports(void)
+{
+    int port;
+
+    for (port = 0; port < PCIEHW_NPORTS; port++) {
+        pciehw_notify_disable(port);
+    }
 }
 
 /******************************************************************

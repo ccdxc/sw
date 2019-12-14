@@ -11,7 +11,8 @@ MODULE_LDLIBS   := ev
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include
 MODULE_FLAGS    := -DPCIEMGRD_GOLD
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \
-                   ${MODULE_SRC_DIR}/gold.cc \
-                   ${MODULE_SRC_DIR}/logger.cc \
-                   ${MODULE_SRC_DIR}/delphic_stubs.cc
+		   ${MODULE_SRC_DIR}/gold.cc \
+		   ${MODULE_SRC_DIR}/logger.cc \
+		   ${MODULE_SRC_DIR}/delphic_stubs.cc \
+		   ${NULL}
 include ${MKDEFS}/post.mk

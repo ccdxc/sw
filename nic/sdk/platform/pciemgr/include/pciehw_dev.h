@@ -96,7 +96,6 @@ u_int16_t pciehdev_get_bdf(pciehdev_t *pdev);
 
 int pciehdev_register_event_handler(pciehdev_evhandler_t evhandler);
 void pciehdev_event(const pciehdev_eventdata_t *evd);
-int pciehdev_poll(void);
 
 #ifdef __cplusplus
 }
