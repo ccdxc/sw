@@ -180,7 +180,7 @@ tep_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 static bool
-tep_upd_walk_cb_(void *api_obj, void *ctxt) {
+tep_upd_walk_cb_ (void *api_obj, void *ctxt) {
     pds_tep_key_t tep_key;
     tep_entry *tep = (tep_entry *)api_obj;
     tep_update_ctxt_t *upd_ctxt = (tep_update_ctxt_t *)ctxt;

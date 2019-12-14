@@ -25,7 +25,6 @@ namespace api {
 /// @{
 
 vnic_entry::vnic_entry() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     switch_vnic_ = false;
     host_ifindex_ = IFINDEX_INVALID;
     ht_ctxt_.reset();
@@ -35,7 +34,7 @@ vnic_entry *
 vnic_entry::factory(pds_vnic_spec_t *spec) {
     vnic_entry *vnic;
 
-    /**< create vnic entry with defaults, if any */
+    // create vnic entry with defaults, if any
     vnic = vnic_db()->alloc();
     if (vnic) {
         new (vnic) vnic_entry();
@@ -49,8 +48,6 @@ vnic_entry::factory(pds_vnic_spec_t *spec) {
 }
 
 vnic_entry::~vnic_entry() {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -95,6 +92,22 @@ vnic_entry::free(vnic_entry *vnic) {
     vnic_db()->free(vnic);
     return SDK_RET_OK;
 }
+
+sdk_ret_t
+vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return impl_->reserve_resources(this, obj_ctxt);
+}
+
+sdk_ret_t
+vnic_entry::release_resources(void) {
+    return impl_->release_resources(this);
+}
+
+sdk_ret_t
+vnic_entry::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
+}
+
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
@@ -106,16 +119,27 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     vnic_encap_ = spec->vnic_encap;
     fabric_encap_ = spec->fabric_encap;
     switch_vnic_ = spec->switch_vnic;
+    num_ing_v4_policy_ = spec->num_ing_v4_policy;
+    for (uint8_t i = 0; i < num_ing_v4_policy_; i++) {
+        ing_v4_policy_[i].id = spec->ing_v4_policy[i].id;
+    }
+    num_ing_v6_policy_ = spec->num_ing_v6_policy;
+    for (uint8_t i = 0; i < num_ing_v6_policy_; i++) {
+        ing_v6_policy_[i].id = spec->ing_v6_policy[i].id;
+    }
+    num_egr_v4_policy_ = spec->num_egr_v4_policy;
+    for (uint8_t i = 0; i < num_egr_v4_policy_; i++) {
+        egr_v4_policy_[i].id = spec->egr_v4_policy[i].id;
+    }
+    num_egr_v6_policy_ = spec->num_egr_v6_policy;
+    for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
+        egr_v6_policy_[i].id = spec->egr_v6_policy[i].id;
+    }
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
     host_ifindex_ = spec->host_ifindex;
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -138,25 +162,45 @@ vnic_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+vnic_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    return impl_->cleanup_hw(this, obj_ctxt);
+}
+
+sdk_ret_t
+vnic_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+    pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
+
+    if (subnet_.id != spec->subnet.id) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"subnet\" "
+                      "from %u to %u on vnic %s", subnet_.id,
+                      spec->subnet.id, key2str());
+    }
+    if ((num_ing_v4_policy_ != spec->num_ing_v4_policy)          ||
+        (num_ing_v6_policy_ != spec->num_ing_v6_policy)          ||
+        (num_egr_v4_policy_ != spec->num_egr_v4_policy)          ||
+        (num_egr_v6_policy_ != spec->num_egr_v6_policy)          ||
+        (memcmp(ing_v4_policy_, spec->ing_v4_policy,
+                num_ing_v4_policy_ * sizeof(ing_v4_policy_[0]))) ||
+        (memcmp(ing_v6_policy_, spec->ing_v6_policy,
+                num_ing_v6_policy_ * sizeof(ing_v6_policy_[0]))) ||
+        (memcmp(egr_v4_policy_, spec->egr_v4_policy,
+                num_egr_v4_policy_ * sizeof(egr_v4_policy_[0]))) ||
+        (memcmp(egr_v6_policy_, spec->egr_v6_policy,
+                   num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICY;
+    }
+    if (host_ifindex_ != spec->host_ifindex) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;
+    }
+    PDS_TRACE_DEBUG("subnet %u upd bmap 0x%lx", obj_ctxt->upd_bmap);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vnic_entry::reprogram_config(api_op_t api_op) {
     PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
                     key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
     return impl_->reprogram_hw(this, api_op);
-}
-
-sdk_ret_t
-vnic_entry::release_resources(void) {
-    return impl_->release_resources(this);
-}
-
-sdk_ret_t
-vnic_entry::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
-}
-
-sdk_ret_t
-vnic_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t

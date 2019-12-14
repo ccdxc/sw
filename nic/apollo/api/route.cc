@@ -19,10 +19,10 @@
 
 namespace api {
 
-typedef struct route_table_update_ctxt_s {
+typedef struct route_table_upd_ctxt_s {
     route_table *rtable;
     obj_ctxt_t *obj_ctxt;
-} __PACK__ route_table_update_ctxt_t;
+} __PACK__ route_table_upd_ctxt_t;
 
 route_table::route_table() {
     ht_ctxt_.reset();
@@ -137,9 +137,9 @@ route_table::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 static bool
-subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
+subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     subnet_entry *subnet = (subnet_entry *)api_obj;
-    route_table_update_ctxt_t *upd_ctxt = (route_table_update_ctxt_t *)ctxt;
+    route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
 
     if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
         (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
@@ -148,13 +148,27 @@ subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
     return false;
 }
 
+static bool
+vpc_upd_walk_cb_ (void *api_obj, void *ctxt) {
+    vpc_entry *vpc = (vpc_entry *)api_obj;
+    route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
+
+    if ((vpc->v4_route_table().id == upd_ctxt->rtable->key().id) ||
+        (vpc->v6_route_table().id == upd_ctxt->rtable->key().id)) {
+        upd_ctxt->obj_ctxt->add_deps(vpc, API_OP_UPDATE);
+    }
+    return false;
+}
+
 sdk_ret_t
 route_table::add_deps(obj_ctxt_t *obj_ctxt) {
-    route_table_update_ctxt_t upd_ctxt = { 0 };
+    route_table_upd_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.rtable = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
-    return subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+    vpc_db()->walk(vpc_upd_walk_cb_, &upd_ctxt);
+    subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

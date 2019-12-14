@@ -205,11 +205,24 @@ public:
         return NULL;
     }
 
+    // TODO: remove this !!
     /// \brief compute all the objects depending on this object and add to
     ///        framework's dependency list
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief compute all the objects depending on this object based on the
+    ///        given attribute update bitmap and add to framework's dependency
+    ///        list
+    /// \param[in] api_op      API operation triggering the object dependency
+    ///                        computation
+    /// \param[in] upd_bmap    bitmap indicating the attributes updated on the
+    ///                        object
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_op_t api_op, uint64_t upd_bmap) {
         return SDK_RET_INVALID_OP;
     }
 

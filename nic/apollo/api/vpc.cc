@@ -19,6 +19,11 @@
 
 namespace api {
 
+typedef struct vpc_upd_ctxt_s {
+    vpc_entry *vpc;
+    obj_ctxt_t *obj_ctxt;
+} __PACK__ vpc_upd_ctxt_t;
+
 vpc_entry::vpc_entry() {
     type_ = PDS_VPC_TYPE_NONE;
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
@@ -188,6 +193,7 @@ sdk_ret_t
 vpc_entry::compute_update(obj_ctxt_t *obj_ctxt) {
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
+    obj_ctxt->upd_bmap = 0;
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
                       "on vpc %s", type_, spec->type, key2str());
@@ -200,6 +206,11 @@ vpc_entry::compute_update(obj_ctxt_t *obj_ctxt) {
                       pds_encap2str(&spec->fabric_encap));
         return SDK_RET_INVALID_ARG;
     }
+    if ((v4_route_table_.id != spec->v4_route_table.id) ||
+        (v6_route_table_.id != spec->v6_route_table.id)) {
+        obj_ctxt->upd_bmap |= PDS_VPC_UPD_ROUTE_TABLE;
+    }
+    // most likely either tos or vrmac has changed
     return SDK_RET_OK;
 }
 
@@ -211,8 +222,30 @@ vpc_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
+static bool
+subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+    vpc_upd_ctxt_t *upd_ctxt = (vpc_upd_ctxt_t *)ctxt;
+
+    if (subnet->vpc().id == upd_ctxt->vpc->key().id) {
+        if ((subnet->v4_route_table().id == PDS_ROUTE_TABLE_ID_INVALID) ||
+            (subnet->v6_route_table().id == PDS_ROUTE_TABLE_ID_INVALID)) {
+            // this subnet inherited the vpc's routing table(s)
+            upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+        }
+    }
+    return false;
+}
+
 sdk_ret_t
 vpc_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+    vpc_upd_ctxt_t upd_ctxt = { 0 };
+
+    if (obj_ctxt->upd_bmap & PDS_VPC_UPD_ROUTE_TABLE) {
+        upd_ctxt.vpc = this;
+        upd_ctxt.obj_ctxt = obj_ctxt;
+        subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+    }
     return SDK_RET_OK;
 }
 

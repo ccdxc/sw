@@ -19,10 +19,10 @@
 
 namespace api {
 
-typedef struct subnet_update_ctxt_s {
+typedef struct subnet_upd_ctxt_s {
     subnet_entry *subnet;
     obj_ctxt_t *obj_ctxt;
-} __PACK__ subnet_update_ctxt_t;
+} __PACK__ subnet_upd_ctxt_t;
 
 subnet_entry::subnet_entry() {
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
@@ -251,9 +251,9 @@ subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 static bool
-vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
+vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
-    subnet_update_ctxt_t *upd_ctxt = (subnet_update_ctxt_t *)ctxt;
+    subnet_upd_ctxt_t *upd_ctxt = (subnet_upd_ctxt_t *)ctxt;
 
     if (vnic->subnet().id == upd_ctxt->subnet->key().id) {
         upd_ctxt->obj_ctxt->add_deps(vnic, API_OP_UPDATE);
@@ -263,7 +263,7 @@ vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
 
 sdk_ret_t
 subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
-    subnet_update_ctxt_t upd_ctxt = { 0 };
+    subnet_upd_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.subnet = this;
     upd_ctxt.obj_ctxt = obj_ctxt;

@@ -138,6 +138,11 @@ public:
         return SDK_RET_OK;
     }
 
+    /// \brief          read config
+    /// \param[out]     info pointer to the info object
+    /// \return         SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_subnet_info_t *info);
+
     /// \brief          add given subnet to the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
@@ -157,11 +162,6 @@ public:
     /// \brief          initiate delay deletion of this object
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t delay_delete(void) override;
-
-    /// \brief          read config
-    /// \param[out]     info pointer to the info object
-    /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_subnet_info_t *info);
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {

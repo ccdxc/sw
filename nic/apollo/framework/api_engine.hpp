@@ -88,6 +88,7 @@ struct obj_ctxt_s {
         }
         return false;
     }
+    // TODO: remove this !!
     /// \brief    add the given api object to dependency list, if it is not
     ///           already present in the list and recursively add the objects
     ///           that get effected if this object is updated
@@ -101,9 +102,9 @@ typedef unordered_map<api_base *, obj_ctxt_t> dirty_obj_map_t;
 typedef list<api_base *> dirty_obj_list_t;
 
 // objects affected (i.e. dirtied) by add/del/upd operations on other objects
-// (aka. master objects) are called puppet/dependent objects and are maintained
+// (aka. master objects) are called dependent objects and are maintained
 // separately; normally these objects need to be either reprogrammed or deleted
-typedef unordered_map<api_base *, api_op_t> dep_obj_map_t;
+typedef unordered_map<api_base *, obj_ctxt_t> dep_obj_map_t;
 typedef list<api_base *> dep_obj_list_t;
 
 /// \brief Batch context, which is a list of all API contexts
@@ -269,6 +270,42 @@ public:
         return NULL;
     }
 
+    /// \brief Add given api object to dependent object list if its not
+    //         in the dirty object list and dependent object list already
+    /// \param[in] obj_id    object id identifying the API object
+    /// \param[in] api_op    API operation due to which this call is triggered
+    /// \param[in] api_obj   API object being added to the dependent list
+    /// \param[in] upd_bmap  bitmap indicating which attributes of the API
+    ///                      object are being updated
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_to_deps_list(obj_id_t obj_id, api_op_t api_op,
+                               api_base *api_obj, uint64_t upd_bmap) {
+        obj_ctxt_t octxt;
+
+        if (api_obj->in_dirty_list()) {
+            // if the object is in dirty list already, push it to the end
+            batch_ctxt_.dirty_obj_list.remove(api_obj);
+            batch_ctxt_.dirty_obj_list.push_back(api_obj);
+            batch_ctxt_.dirty_obj_map[api_obj].upd_bmap |= upd_bmap;
+            return SDK_RET_ENTRY_EXISTS;
+        }
+        if (api_obj->in_deps_list()) {
+            // if the object is in deps list already, push it to the end
+            batch_ctxt_.dep_obj_list.remove(api_obj);
+            batch_ctxt_.dep_obj_list.push_back(api_obj);
+            batch_ctxt_.dep_obj_map[api_obj].upd_bmap |= upd_bmap;
+            return SDK_RET_ENTRY_EXISTS;
+        }
+        // add an entry to dependent object list/map
+        octxt.api_op = api_op;
+        octxt.obj_id = obj_id;
+        octxt.upd_bmap = upd_bmap;
+        api_obj->set_in_deps_list();
+        batch_ctxt_.dep_obj_map[api_obj] = octxt;
+        batch_ctxt_.dep_obj_list.push_back(api_obj);
+        return SDK_RET_OK;
+    }
+
 private:
 
     /// \brief De-dup given API operation
@@ -397,11 +434,14 @@ private:
         api_obj->clear_in_dirty_list();
     }
 
-    /// \brief Add given api object to dependent/puppet object list if its not
+    // TODO: remove
+    /// \brief Add given api object to dependent object list if its not
     //         in the dirty object list and dependent object list already
     /// \param[in] api_obj API object being processed
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_to_deps_list_(api_base *api_obj, api_op_t api_op) {
+        return SDK_RET_OK;
+#if 0
         if (api_obj->in_dirty_list()) {
             return SDK_RET_ENTRY_EXISTS;
         }
@@ -412,9 +452,10 @@ private:
         batch_ctxt_.dep_obj_map[api_obj] = api_op;
         batch_ctxt_.dep_obj_list.push_back(api_obj);
         return SDK_RET_OK;
+#endif
     }
 
-    /// \brief Delete given api object from dependent/puppet object list
+    /// \brief Delete given api object from dependent object list
     /// \param[in] it iterator position of api obj to be deleted
     /// \param[in] api_obj API object being processed
     void del_from_deps_list_(dirty_obj_list_t::iterator it,
@@ -450,6 +491,17 @@ sdk_ret_t api_engine_init(void);
 /// \brief    return the API engine instance
 /// \return    pointer to the (singleton) API engine instance
 api_engine *api_engine_get(void);
+
+/// \brief    given an api object, add it to the dependent object list and
+///           recursively add any other objects that may needed to be updated
+/// \param[in] obj_id    object id identifying the API object
+/// \param[in] api_op    API operation due to which this call is triggered
+/// \param[in] api_obj   API object being added to the dependent list
+/// \param[in] upd_bmap  bitmap indicating which attributes of the API object
+///                      are being updated
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t api_obj_add_to_deps(obj_id_t obj_id, api_op_t api_op,
+                              api_base *api_obj, uint64_t upd_bmap);
 
 /// \@}
 

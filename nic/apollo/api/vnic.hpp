@@ -21,6 +21,10 @@ namespace api {
 // forward declaration
 class vnic_state;
 
+// attribute update bits for vnic object
+#define PDS_VNIC_UPD_POLICY              0x1
+#define PDS_VNIC_UPD_HOST_IFINDEX        0x2
+
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
 /// @{
@@ -51,11 +55,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(vnic_entry *vnic);
 
-    /// \brief     initialize vnic entry with the given config
-    /// \param[in] api_ctxt API context carrying the configuration
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj    old version of the unmodified object
     /// \param[in] obj_ctxt    transient state associated with this API
@@ -63,11 +62,36 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     free h/w resources used by this object, if any
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
+    /// \brief     initialize vnic entry with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
     /// \brief    program all h/w tables relevant to this object except stage 0
     ///           table(s), if any
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    cleanup all h/w tables relevant to this object except stage 0
+    ///           table(s), if any, by updating packed entries with latest
+    ///           epoch#
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object and
     ///                 dependent on other objects except stage 0 table(s),
@@ -76,16 +100,18 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
-    /// \brief     free h/w resources used by this object, if any
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
-
-    /// \brief    cleanup all h/w tables relevant to this object except stage 0
-    ///           table(s), if any, by updating packed entries with latest
-    ///           epoch#
-    /// \param[in] obj_ctxt    transient state associated with this API
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    /// \brief        add all objects that may be affected if this object is
+    ///               updated to framework's object dependency list
+    /// \param[in]    obj_ctxt    transient state associated with this API
+    ///                           processing
+    /// \return       SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override {
+        // no other objects are effected if vnic is modified
+        // NOTE: assumption is that none of key or immutable fields (e.g., type
+        // of vnic, vlan of the vnic etc.) are modifiable and agent will catch
+        // such errors
+        return SDK_RET_OK;
+    }
 
     /// \brief    update all h/w tables relevant to this object except stage 0
     ///           table(s), if any, by updating packed entries with latest
@@ -118,6 +144,10 @@ public:
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
                                         api_op_t api_op) override;
 
+    ///\brief      read config
+    ///\param[out] info pointer to the info object
+    ///\return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_vnic_info_t *info);
 
     /// \brief    add given vnic to the database
     /// \return   SDK_RET_OK on success, failure status code on error
@@ -138,19 +168,6 @@ public:
     /// \brief    initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
 
-    /// \brief        add all objects that may be affected if this object is
-    ///               updated to framework's object dependency list
-    /// \param[in]    obj_ctxt    transient state associated with this API
-    ///                           processing
-    /// \return       SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override {
-        // no other objects are effected if vnic is modified
-        // NOTE: assumption is that none of key or immutable fields (e.g., type
-        // of vnic, vlan of the vnic etc.) are modifiable and agent will catch
-        // such errors
-        return SDK_RET_OK;
-    }
-
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
         return "vnic-"  + std::to_string(key_.id);
@@ -163,11 +180,6 @@ public:
         vnic_entry *vnic = (vnic_entry *)entry;
         return (void *)&(vnic->key_);
     }
-
-    ///\brief      read config
-    ///\param[out] info pointer to the info object
-    ///\return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vnic_info_t *info);
 
     /// \brief     return the key/id of this vnic
     /// \return    key/id of the vnic object
@@ -238,6 +250,22 @@ private:
     bool              switch_vnic_;      ///< TRUE if this is switch vnic
     mac_addr_t        mac_;              ///< MAC address of this vnic
     pds_ifindex_t     host_ifindex_;     ///< PF/VF this vnic is behind
+    ///< number of ingress IPv4 policies
+    uint8_t           num_ing_v4_policy_;
+    ///< ingress IPv4 policies
+    pds_policy_key_t  ing_v4_policy_[PDS_MAX_VNIC_POLICY];
+    ///< number of ingress IPv6 policies
+    uint8_t           num_ing_v6_policy_;
+    ///< ingress IPv6 policies
+    pds_policy_key_t  ing_v6_policy_[PDS_MAX_VNIC_POLICY];
+    ///< number of egress IPv4 policies
+    uint8_t           num_egr_v4_policy_;
+    ///< egress IPv4 policies
+    pds_policy_key_t  egr_v4_policy_[PDS_MAX_VNIC_POLICY];
+    ///< number of egress IPv6 policies
+    uint8_t           num_egr_v6_policy_;
+    ///< egress IPv6 policies
+    pds_policy_key_t  egr_v6_policy_[PDS_MAX_VNIC_POLICY];
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
 

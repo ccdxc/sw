@@ -26,10 +26,10 @@ namespace api {
  * @{
  */
 
-typedef struct policy_update_ctxt_s {
+typedef struct policy_upd_ctxt_s {
     policy *policy_obj;
     obj_ctxt_t *obj_ctxt;
-} __PACK__ policy_update_ctxt_t;
+} __PACK__ policy_upd_ctxt_t;
 
 policy::policy() {
     ht_ctxt_.reset();
@@ -150,9 +150,9 @@ policy::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 static bool
-subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
+subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     subnet_entry *subnet = (subnet_entry *)api_obj;
-    policy_update_ctxt_t *upd_ctxt = (policy_update_ctxt_t *)ctxt;
+    policy_upd_ctxt_t *upd_ctxt = (policy_upd_ctxt_t *)ctxt;
 
     if (upd_ctxt->policy_obj->dir() == RULE_DIR_INGRESS) {
         if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
@@ -198,14 +198,14 @@ subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
 // TODO: we may have to do this impl layer as we don't have h/w ids here
 //       to compare with and vnic object is not storing anything in s/w
 static bool
-vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
+vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     return false;
 }
 #endif
 
 sdk_ret_t
 policy::add_deps(obj_ctxt_t *obj_ctxt) {
-    policy_update_ctxt_t upd_ctxt = { 0 };
+    policy_upd_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.policy_obj = this;
     upd_ctxt.obj_ctxt = obj_ctxt;

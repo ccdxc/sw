@@ -107,8 +107,8 @@ api_obj_find_clone (api_base *api_obj) {
     return api_obj;
 }
 
+// TODO: remove this
 sdk_ret_t
-//obj_ctxt_t::add_deps(api_base *obj, api_base *api_obj, api_op_t api_op) {
 obj_ctxt_t::add_deps(api_base *api_obj, api_op_t api_op) {
     sdk_ret_t ret;
 
@@ -118,6 +118,20 @@ obj_ctxt_t::add_deps(api_base *api_obj, api_op_t api_op) {
     ret = g_api_engine.add_to_deps_list_(api_obj, api_op);
     if (ret == SDK_RET_OK) {
         api_obj->add_deps(this);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+api_obj_add_to_deps (obj_id_t obj_id, api_op_t api_op,
+                     api_base *api_obj, uint64_t upd_bmap) {
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Adding %s to dependent obj list, api op %u, "
+                    "upd bmap 0x%x", api_obj->key2str(), api_op, upd_bmap);
+    ret = g_api_engine.add_to_deps_list(obj_id, api_op, api_obj, upd_bmap);
+    if (ret == SDK_RET_OK) {
+        api_obj->add_deps(api_op, upd_bmap);
     }
     return SDK_RET_OK;
 }
@@ -795,7 +809,7 @@ api_engine::activate_config_stage_(void) {
     // walk over all the dependent objects and reprogram hw, if any
     for (auto it = batch_ctxt_.dep_obj_list.begin();
          it != batch_ctxt_.dep_obj_list.end(); ++it) {
-        ret = (*it)->reprogram_config(batch_ctxt_.dep_obj_map[*it]);
+        ret = (*it)->reprogram_config(batch_ctxt_.dep_obj_map[*it].api_op);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_REPGMCFG_UPDATE_COUNTER_INC(err, 1);
             goto error;
@@ -807,7 +821,7 @@ api_engine::activate_config_stage_(void) {
     for (auto it = batch_ctxt_.dep_obj_list.begin();
          it != batch_ctxt_.dep_obj_list.end(); ++it) {
         ret = (*it)->reactivate_config(batch_ctxt_.epoch,
-                                       batch_ctxt_.dep_obj_map[*it]);
+                                       batch_ctxt_.dep_obj_map[*it].api_op);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(err, 1);
             break;

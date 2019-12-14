@@ -165,7 +165,7 @@ meter_entry::delay_delete(void) {
 }
 
 static bool
-vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
+vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
     meter_update_ctxt_t *upd_ctxt = (meter_update_ctxt_t *)ctxt;
 
