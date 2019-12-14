@@ -94,7 +94,7 @@ class capri_p4pd:
                     if keyfield == cfield:
                         continue
                     if self.do_fields_overlap_in_phv_space(keyfield, cfield):
-                        assert(0), pdb.set_trace()
+                        ncc_assert(0)
 
                 p4fldname, p4fldwidth, mask = self.cfield_get_p4name_width_mask(cfield, ctype)
                 if CHECK_INVALID_C_VARIABLE.search(p4fldname):
@@ -325,7 +325,7 @@ class capri_p4pd:
                                 continue
                             containerstart, cf_startbit, width = \
                                 self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
-                            assert(width <= 8), pdb.set_trace()
+                            ncc_assert(width <= 8)
                             # When key comes from field union and more than
                             # one field from the same union is used as keys
                             # to table, then we need to collect for all keys
@@ -1421,7 +1421,7 @@ class capri_p4pd:
                         if split_p4fldname not in kidict.keys():
                             kidict[split_p4fldname] = 1
                         else:
-                            assert(0), pdb.set_trace()
+                            ncc_assert(0)
                             print ctable, split_p4fldname
                 else:
                     split_p4fldname, p4fldname, p4fldwidth, \
@@ -1429,7 +1429,7 @@ class capri_p4pd:
                     if split_p4fldname not in kidict.keys():
                         kidict[split_p4fldname] = 1
                     else:
-                        assert(0), pdb.set_trace()
+                        ncc_assert(0)
                         print ctable, split_p4fldname
 
         # Check every table key and input is in ASM KI
@@ -1463,6 +1463,7 @@ class capri_p4pd:
                             break
                 if not found:
                     if not ctable.is_wide_key:
+                        ncc_assert(0, "Missing key field %s for table %s" % (table_name, cfkname))
                         notfound_cfk.append((ctable.d, table_name, cfkname))
                 else:
                     verified_cfk.append(cfkname)
@@ -1491,12 +1492,13 @@ class capri_p4pd:
                             break
                 if not found:
                     if not ctable.is_wide_key:
+                        ncc_assert(0, "Missing I field %s for table %s" % (table_name, cfkname))
                         notfound_cfi.append((ctable.d, table_name, cfiname))
                 else:
                     verified_cfi.append(cfiname)
 
         if len(notfound_cfk) or len(notfound_cfi):
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
             pass
 
 def capri_p4pd_generate_info(capri_be):

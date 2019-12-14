@@ -2202,13 +2202,11 @@ class capri_table:
         # use this tables logical key-maker/profile to decide the km to use for key size
         # calculations
         fk_idx = max_kmB
-        if fk_byte in _km0.combined_profile.byte_sel and \
-                fk_byte in km0.combined_profile.byte_sel:
+        if fk_byte > 0 and fk_byte in km0.combined_profile.byte_sel:
             fk_idx = km0.combined_profile.byte_sel.index(fk_byte)
             self.start_key_off = (fk_idx * 8) + self.start_key_off_delta
 
-        if fk_bit in _km0.combined_profile.bit_sel and \
-                fk_bit in km0.combined_profile.bit_sel:
+        if fk_bit > 0 and fk_bit in km0.combined_profile.bit_sel:
             if km0.combined_profile.bit_loc < fk_idx:
                 bit_idx = km0.combined_profile.bit_sel.index(fk_bit)
                 self.start_key_off = (km0.combined_profile.bit_loc*8) + \
@@ -2219,10 +2217,10 @@ class capri_table:
         if self.start_key_off == -1:
             fk_idx = max_kmB
             ncc_assert(km1)
-            if fk_byte in km1.combined_profile.byte_sel:
+            if fk_byte > 0 and fk_byte in km1.combined_profile.byte_sel:
                 fk_idx = km1.combined_profile.byte_sel.index(fk_byte)
                 self.start_key_off = (fk_idx * 8) + self.start_key_off_delta + max_km_width
-            if km1 and fk_bit in km1.combined_profile.bit_sel:
+            if km1 and fk_bit > 0 and fk_bit in km1.combined_profile.bit_sel:
                 if km1.combined_profile.bit_loc < fk_idx:
                     bit_idx = km1.combined_profile.bit_sel.index(fk_bit)
                     self.start_key_off = (km1.combined_profile.bit_loc*8) + \
@@ -2236,8 +2234,7 @@ class capri_table:
         # check km1 first
         lk_end_byte = -1
         if km1:
-            if lk_bit in _km1.combined_profile.bit_sel and \
-                    lk_bit in km1.combined_profile.bit_sel:
+            if lk_bit > 0 and lk_bit in km1.combined_profile.bit_sel:
                 lk_bit_idx = km1.combined_profile.bit_sel.index(lk_bit)
                 if lk_bit_idx < 8:
                     self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
@@ -2246,8 +2243,7 @@ class capri_table:
                     self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx % 8) + 1 + max_km_width
                     lk_end_byte = km1.combined_profile.bit_loc1
 
-            if lk_byte in _km1.combined_profile.byte_sel and \
-                    lk_byte in km1.combined_profile.byte_sel:
+            if lk_byte > 0 and lk_byte in km1.combined_profile.byte_sel:
                 lk_idx = km1.combined_profile.byte_sel.index(lk_byte)
                 if lk_idx > lk_end_byte:
                     self.end_key_off = (lk_idx * 8) + 8 + max_km_width - self.end_key_off_delta
@@ -2256,7 +2252,7 @@ class capri_table:
 
         lk_end_byte = -1
         if self.end_key_off == -1:
-            if lk_bit in km0.combined_profile.bit_sel:
+            if lk_bit > 0 and lk_bit in km0.combined_profile.bit_sel:
                 lk_bit_idx = km0.combined_profile.bit_sel.index(lk_bit)
                 if lk_bit_idx < 8:
                     self.end_key_off = (km0.combined_profile.bit_loc*8) + lk_bit_idx + 1
@@ -2264,7 +2260,7 @@ class capri_table:
                 else:
                     self.end_key_off = (km0.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + 1
                     lk_end_byte = km0.combined_profile.bit_loc1
-            if lk_byte in km0.combined_profile.byte_sel:
+            if lk_byte > 0 and lk_byte in km0.combined_profile.byte_sel:
                 lk_idx = km0.combined_profile.byte_sel.index(lk_byte)
                 if lk_idx > lk_end_byte:
                     self.end_key_off = (lk_idx * 8) + 8 - self.end_key_off_delta
@@ -2381,7 +2377,7 @@ class capri_table:
 
     def remove_i_in_k(self):
         if len(self.i2k_pad_chunks) == 0:
-            return
+            return False
 
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
@@ -2410,14 +2406,26 @@ class capri_table:
                         else self.key_makers[1].combined_profile
 
         fix_km_prof = None
-        k_end = self.end_key_off / 8
+        k_end = (self.end_key_off+7) / 8
         is_shared_km = False
+        shared_keys = {}
+        shared_tables = []
         if k_start < max_kmB:
             fix_km_prof = km0_prof
             is_shared_km = self.key_makers[0].shared_km != None
+            if is_shared_km:
+                shared_tables = self.key_makers[0].shared_km.ctables
         else:
             fix_km_prof = km1_prof
             is_shared_km = self.key_makers[1].shared_km != None
+            if is_shared_km:
+                shared_tables = self.key_makers[1].shared_km.ctables
+
+        for sct in shared_tables:
+            if sct == self:
+                continue
+            for b in sct.combined_profile.k_byte_sel:
+                shared_keys[b] = True
 
         km_kstart = k_start % max_kmB
         km_kend = k_end % max_kmB
@@ -2431,6 +2439,8 @@ class capri_table:
                 ncc_assert(cstart % 8 == 0)
                 ibyte = cstart / 8
                 for b in range(clen/8):
+                    if b in shared_keys:
+                        continue
                     ibytes_in_k.append(ibyte+b)
 
             # if key spans two kms, any i-bytes removed from km0 should be added before the key
@@ -2453,8 +2463,8 @@ class capri_table:
                         fix_km_prof.k_byte_sel.remove(b)
                         fix_km_prof.i2_byte_sel.append(b)
                     rm_index = fix_km_prof.byte_sel.index(b)
-                    fix_km_prof.byte_sel.remove(b)
                     fix_km_prof.byte_sel.insert(km_kend, b)
+                    fix_km_prof.byte_sel.remove(b)
                     moved_bits += 8
                     k_end -= 1
                     km_kend -= 1
@@ -2480,13 +2490,16 @@ class capri_table:
                     # keep 1 byte in key so that start ofset stays on 2B alignment
                     use_byte = None
                     for cs, cl in self.i2k_pad_chunks:
+                        # ??? not sure what is done here cl == 1 does not make sense
                         if cl == 1 and (cs/8) in km0_i2k_bytes:
                             use_byte = cs / 8
                             break
                     if use_byte != None:
                         km0_i2k_bytes.remove(use_byte)
+                        ibytes_in_k.remove(use_byte)
                     else:
-                        km0_i2k_bytes.pop()
+                        b = km0_i2k_bytes.pop()
+                        ibytes_in_k.remove(b)
 
                 for b in km0_i2k_bytes:
                     rm_index = km0_prof.byte_sel.index(b)
@@ -2508,10 +2521,10 @@ class capri_table:
                 for b in km1_i2k_bytes.reverse():
                     ncc_assert(b in fix_km_prof.k_byte_sel)
                     rm_index = km1_prof.byte_sel.index(b)
-                    km1_prof.byte_sel.remove(b)
                     km1_prof.k_byte_sel.remove(b)
                     km1_prof.i2_byte_sel.append(b)
-                    fix_km_prof.byte_sel.insert(km_kend, b)
+                    km1.byte_sel.insert(km_kend, b)
+                    km1.byte_sel.remove(b)
                     moved_bits += 8
                     k_end -= 1
                     km_kend -= 1
@@ -2528,6 +2541,17 @@ class capri_table:
             self.final_key_size -= moved_bits
             self.i_size -= moved_bits
             self.i_phv_size -= moved_bits
+            # adjust combined profiles for all shared tables
+            if self not in shared_tables:
+                shared_tables.append(self)
+            for sct in shared_tables:
+                for b in ibytes_in_k:
+                    if b in sct.combined_profile.byte_sel:
+                        sct.combined_profile.byte_sel.remove(b)
+                    if b in sct.combined_profile.k_byte_sel:
+                        sct.combined_profile.k_byte_sel.remove(b)
+            return True
+        return False
 
     def _fix_tcam_table_key(self):
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
@@ -4360,7 +4384,18 @@ class capri_stage:
         for ct in ct_list:
             if not ct.is_tcam_table():
                 continue
-            ct.remove_i_in_k()
+            if ct.remove_i_in_k():
+                shared_tables = OrderedDict()
+                shared_tables[ct] = 1
+                # if ct shares key maker, need to adjust key-offsets of the shared tables.
+                for km in ct.key_makers:
+                    if km.shared_km:
+                        for sct in km.shared_km.ctables:
+                            shared_tables[sct] = 1
+                for sct in shared_tables:
+                    sct.ct_update_key_offsets()
+                    if sct.is_tcam_table():
+                        sct._fix_tcam_table_key()
 
         max_km_profiles = self.gtm.tm.be.hw_model['match_action']['num_km_profiles']
         km_prof_normal = []
