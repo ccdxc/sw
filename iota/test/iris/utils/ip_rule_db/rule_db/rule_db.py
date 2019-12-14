@@ -139,18 +139,19 @@ class RuleDB:
             raise Exception("Error while getting Rule Entries from policies")
 
         if len(ruleListWithId) != len(self._ruleList):
-            raise Exception("Can not populate rule ID as lengths are not matching")
+            raise Exception("Can not populate rule ID as lengths %s and %s are not matching"%
+                            (len(ruleListWithId), len(self._ruleList)))
 
         ruleListCopy = copy.deepcopy(self._ruleList)
 
         for x,y in zip(ruleListWithId, ruleListCopy):
             if x != y:
                 raise Exception("Mismatch found between rule entries "
-                                "while populating rule ID")
+                                "while populating rule ID found : %s, expected : %s"%(y, x))
             elif y.identifier != 0 and x.identifier != y.identifier:
                 raise Exception("Indentifier mismatch found between rule entries,"
                                 "found: %s, expected: %s"%
-                                (y.identifier, x.identifier))
+                                (y, x))
             y.identifier = x.identifier
 
         self._ruleList = ruleListCopy

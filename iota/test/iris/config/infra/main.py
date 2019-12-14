@@ -271,6 +271,13 @@ class CfgNode:
             filename = "/tmp/temp_config.json"
             with open(filename, 'w') as outfile:
                 json.dump(json_data, outfile)
+
+            req = api.Trigger_CreateAllParallelCommandsRequest()
+            cmd = ["rm","-rf","temp_config.json"]
+            cmd = " ".join(cmd)
+            api.Trigger_AddHostCommand(req, self.host_name, cmd, timeout=3600)
+            api.Trigger(req)
+
             resp = api.CopyToHost(self.host_name, [filename], "")
             if not api.IsApiResponseOk(resp):
                 assert(0)

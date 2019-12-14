@@ -120,68 +120,73 @@ def Setup(tc):
 def Trigger(tc):
     policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
-
     # Generate the random seed
     seed = random.randrange(sys.maxsize)
     api.Logger.info("Seed val: %s"%seed)
 
-    for policy_json in policies:
-        sg_json_obj = utils.ReadJson(policy_json)
-        newObjects = agent_api.AddOneConfig(policy_json)
+    try:
+        for policy_json in policies:
+            newObjects = agent_api.AddOneConfig(policy_json)
+            api.Logger.info("Created new object for %s"%policy_json)
+            tc.ret = agent_api.PushConfigObjects(newObjects)
+            rule_db_map = utils.SetupLocalRuleDbPerNaple(policy_json)
+            if tc.ret != api.types.status.SUCCESS:
+                return api.types.status.FAILURE
+
+            scale = 0
+            while scale < tc.scale :
+                for w1, dst_workload_list in tc.workload_dict.items():
+                    for w2 in dst_workload_list:
+                        seed += 1
+                        if scale >= tc.scale :
+                            break
+
+                        # If src and dst workload are behind same Naples,
+                        # then only one db sees the packet.
+                        if w1.node_name == w2.node_name:
+                            w1_db = rule_db_map.get(w1.node_name, None)
+                            w2_db = None
+                        else:
+                            w1_db = rule_db_map.get(w1.node_name, None)
+                            w2_db = rule_db_map.get(w2.node_name, None)
+
+                        api.Logger.info("(%s/%s) Running between w1: %s(%s) and w2: %s(%s)"%
+                                        (scale+1, tc.scale, w1.ip_address, w1.workload_name,
+                                         w2.ip_address,
+                                         w2.workload_name))
+                        tc.ret = utils.RunAll(1, w1, w2, w1_db, w2_db, FilterAndAlter, seed=seed)
+                        if tc.ret != api.types.status.SUCCESS:
+                            agent_api.DeleteConfigObjects(newObjects)
+                            agent_api.RemoveConfigObjects(newObjects)
+                            return tc.ret
+
+                        scale += 1
+                utils.clearNaplesSessions()
+
+            for node,db in rule_db_map.items():
+                result = utils.compareStats(db, node, tc.iterators.proto)
+                api.Logger.info("Comparison of rule stats for Node %s - %s"%
+                                (node, "SUCCESS" \
+                                 if result == api.types.status.SUCCESS \
+                                 else "FAIL"))
+                if result != api.types.status.SUCCESS:
+                    agent_api.DeleteConfigObjects(newObjects)
+                    agent_api.RemoveConfigObjects(newObjects)
+                    tc.ret = result
+                    return tc.ret
+
+            if agent_api.DeleteConfigObjects(newObjects):
+                api.Logger.error("Failed to delete config object for %s"%policy_json)
+
+            if agent_api.RemoveConfigObjects(newObjects):
+                api.Logger.error("Failed to remove config object for %s"%policy_json)
+
+    except Exception as e:
         agent_api.DeleteConfigObjects(newObjects)
-
-        tc.ret = agent_api.PushConfigObjects(newObjects)
-        rule_db_map = utils.SetupLocalRuleDbPerNaple(policy_json)
-        if tc.ret != api.types.status.SUCCESS:
-            return api.types.status.FAILURE
-
-        scale = 0
-        while scale < tc.scale :
-            for w1, dst_workload_list in tc.workload_dict.items():
-                for w2 in dst_workload_list:
-                    seed += 1
-                    if scale >= tc.scale :
-                        break
-
-                    # If src and dst workload are behind same Naples,
-                    # then only one db sees the packet.
-                    if w1.node_name == w2.node_name:
-                        w1_db = rule_db_map.get(w1.node_name, None)
-                        w2_db = None
-                    else:
-                        w1_db = rule_db_map.get(w1.node_name, None)
-                        w2_db = rule_db_map.get(w2.node_name, None)
-
-                    api.Logger.info("(%s/%s) Running between w1: %s(%s) and w2: %s(%s)"%
-                                    (scale+1, tc.scale, w1.ip_address, w1.workload_name,
-                                     w2.ip_address,
-                                     w2.workload_name))
-                    tc.ret = utils.RunAll(1, w1, w2, w1_db, w2_db, FilterAndAlter, seed=seed)
-                    if tc.ret != api.types.status.SUCCESS:
-                        agent_api.DeleteConfigObjects(newObjects)
-                        agent_api.RemoveConfigObjects(newObjects)
-                        return tc.ret
-
-                    scale += 1
-            utils.clearNaplesSessions()
-
-        for node,db in rule_db_map.items():
-            result = utils.compareStats(db, node, tc.iterators.proto)
-            api.Logger.info("Comparison of rule stats for Node %s - %s"%
-                            (node, "SUCCESS" \
-                             if result == api.types.status.SUCCESS \
-                             else "FAIL"))
-            if result != api.types.status.SUCCESS:
-                agent_api.DeleteConfigObjects(newObjects)
-                agent_api.RemoveConfigObjects(newObjects)
-                tc.ret = result
-                return tc.ret
-
-        if agent_api.DeleteConfigObjects(newObjects):
-            api.Logger.error("Failed to delete config object for %s"%policy_json)
-
-        if agent_api.RemoveConfigObjects(newObjects):
-            api.Logger.error("Failed to remove config object for %s"%policy_json)
+        agent_api.RemoveConfigObjects(newObjects)
+        api.Logger.error("%s"%e)
+        Teardown(tc)
+        return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
