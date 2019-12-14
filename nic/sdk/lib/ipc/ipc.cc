@@ -85,6 +85,7 @@ class ipc_service_async : public ipc_service {
 public:
     ipc_service_async(uint32_t client_id, fd_watch_cb fd_watch_cb,
                       const void *fd_watch_cb_ctx);
+    ipc_service_async(uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb);
     virtual void request(uint32_t recipient, uint32_t msg_code,
                          const void *data, size_t data_length,
                          response_oneshot_cb cb, const void *cookie) override;
@@ -92,6 +93,9 @@ public:
 protected:
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) override;
 private:
+    ipc_service_async(uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb,
+                      fd_watch_cb fd_watch_cb, const void *fd_watch_cb_ctx);
+    fd_watch_ms_cb fd_watch_ms_cb_;
     fd_watch_cb fd_watch_cb_;
     const void *fd_watch_cb_ctx_;
 };
@@ -107,7 +111,23 @@ server_receive (int fd, const void *ctx)
 }
 
 static void
+server_receive_ms (int fd, int, void *ctx)
+{
+    assert(t_ipc_service != nullptr);
+    t_ipc_service->server_receive();
+}
+
+static void
 client_receive (int fd, const void *ctx)
+{
+    assert(t_ipc_service != nullptr);
+    uint32_t recipient = (uint64_t)ctx;
+    std::dynamic_pointer_cast<ipc_service_async>(t_ipc_service)->client_receive(
+        recipient);
+}
+
+static void
+client_receive_ms (int fd, int, void *ctx)
 {
     assert(t_ipc_service != nullptr);
     uint32_t recipient = (uint64_t)ctx;
@@ -196,10 +216,12 @@ ipc_service_sync::new_client_(uint32_t recipient) {
 }
 
 ipc_service_async::ipc_service_async(uint32_t client_id,
+                                     fd_watch_ms_cb fd_watch_ms_cb,
                                      fd_watch_cb fd_watch_cb,
                                      const void *fd_watch_cb_ctx)
     : ipc_service(client_id) {
-    
+
+    this->fd_watch_ms_cb_ = fd_watch_ms_cb;
     this->fd_watch_cb_ = fd_watch_cb;
     this->fd_watch_cb_ctx_ = fd_watch_cb_ctx;
 
@@ -207,18 +229,37 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
         this->get_id_());
 
     this->set_server_(server);
-    this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive, NULL,
-                       this->fd_watch_cb_ctx_);
+    if (this->fd_watch_ms_cb_) {
+        this->fd_watch_ms_cb_(server->fd(), sdk::ipc::server_receive_ms, NULL);
+    } else {
+        this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive, NULL,
+                           this->fd_watch_cb_ctx_);
+    }
     
 }
+
+
+ipc_service_async::ipc_service_async(uint32_t client_id,
+                                     fd_watch_cb fd_watch_cb,
+                                     const void *fd_watch_cb_ctx)
+    : ipc_service_async(client_id, NULL, fd_watch_cb, fd_watch_cb_ctx) {}
+
+ipc_service_async::ipc_service_async(uint32_t client_id,
+                                     fd_watch_ms_cb fd_watch_ms_cb)
+    : ipc_service_async(client_id, fd_watch_ms_cb, NULL, NULL) {}
 
 zmq_ipc_client_ptr
 ipc_service_async::new_client_(uint32_t recipient) {
     zmq_ipc_client_async_ptr client =
         std::make_shared<zmq_ipc_client_async>(recipient);
 
-    this->fd_watch_cb_(client->fd(), sdk::ipc::client_receive,
-                       (void *)(uint64_t)recipient, this->fd_watch_cb_ctx_);
+    if (this->fd_watch_ms_cb_) {
+        this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
+                              (void *)(uint64_t)recipient);
+    } else {
+        this->fd_watch_cb_(client->fd(), sdk::ipc::client_receive,
+                           (void *)(uint64_t)recipient, this->fd_watch_cb_ctx_);
+    }
         
     // If we don't do this we don't get any events coming from ZMQ
     // It doesn't play very well with libevent
@@ -342,6 +383,14 @@ ipc_init_async (uint32_t client_id, fd_watch_cb fd_watch_cb,
     assert(t_ipc_service == nullptr);
     t_ipc_service = std::make_shared<ipc_service_async>(client_id, fd_watch_cb,
         fd_watch_cb_ctx);
+}
+
+void
+ipc_init_metaswitch (uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb)
+{
+    t_ipc_service = nullptr;
+    t_ipc_service = std::make_shared<ipc_service_async>(client_id,
+                                                        fd_watch_ms_cb);
 }
 
 void

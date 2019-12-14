@@ -3,6 +3,7 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
+#include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
@@ -263,7 +264,8 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                      ips_info_.pathset_id);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        pdsa_stub::hal_callback(SDK_RET_OK, cookie);
+        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
     }
 }
 

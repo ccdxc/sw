@@ -17,7 +17,7 @@ ifeq ($(ARCH),aarch64)
         -Wl,-rpath,$(TOPDIR)/nic/third-party/libicuuc/$(GMK_TARGETOS)/lib
 else
     GMK_TARGETOS = x86_64
-    MS_COMPILATION_SWITCH += LINUX_MT_NBASE
+    MS_COMPILATION_SWITCH += LINUX_NBASE
 endif
 
 ifeq ($(MODE),debug)

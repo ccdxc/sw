@@ -248,7 +248,6 @@ main (int argc, char **argv)
     pds_init(nullptr);
     // Initialize the State and HAL stubs
     pdsa_stub::state_init();
-    pdsa_stub::hal_init();
     pds_ms::mgmt_state_init();
 
 #ifdef PDS_MOCKAPI

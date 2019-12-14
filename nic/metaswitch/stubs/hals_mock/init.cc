@@ -10,4 +10,15 @@ int init()
 {
     return 1;
 };
+
+bool hal_init(void)
+{
+    return true;
+}
+
+void hal_deinit(void)
+{
+    return;
+}
+
 }

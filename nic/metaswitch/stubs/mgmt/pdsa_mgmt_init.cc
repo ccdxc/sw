@@ -182,7 +182,6 @@ nbase_init ()
 
     NBB_TRC_EXIT();
     NBS_EXIT_SHARED_CONTEXT();
-    cout << "N-Base Initialized\n";
 
     /***************************************************************************/
     /* Spin N-Base                                                             */
@@ -193,7 +192,7 @@ nbase_init ()
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
     pdsa_stub::pdsa_stubs_create();
-
+    
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
     /***************************************************************************/

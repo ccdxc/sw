@@ -59,6 +59,13 @@ typedef void (*fd_watch_cb)(int fd, handler_cb cb, const void *set_ctx,
 extern void ipc_init_async(uint32_t client_id, fd_watch_cb fd_watch_cb,
                            const void *fd_watch_cb_ctx);
 
+typedef void (*handler_ms_cb)(int fd, int, void *ctx);
+
+typedef void (*fd_watch_ms_cb)(int fd, handler_ms_cb cb, void *cb_ctx);
+
+extern void ipc_init_metaswitch(uint32_t client_id,
+                                fd_watch_ms_cb fw_watch_ms_cb);
+
 extern void ipc_init_sync(uint32_t client_id);
 
 ///

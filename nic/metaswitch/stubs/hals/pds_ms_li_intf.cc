@@ -3,6 +3,7 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
+#include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
@@ -90,8 +91,9 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         phy_port_prop.hal_created = true;
         phy_port_prop.admin_state = ips_info_.admin_state;
         phy_port_prop.switchport = ips_info_.switchport;
-        SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d", 
-                         ips_info_.ifindex, ips_info_.admin_state);
+        SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
+                         ips_info_.ifindex, ips_info_.admin_state,
+                         ips_info_.switchport);
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
             SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 
@@ -195,6 +197,11 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         // Nothing to do for non-L3 interfaces
         return;
     }
+    if (port_add_upd_ips->port_settings.no_switch_port == ATG_NO) {
+        // Only processing L3 port creates
+        return;
+    }
+
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
 
@@ -270,7 +277,8 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        pdsa_stub::hal_callback(SDK_RET_OK, cookie);
+        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
     }
 }
 

@@ -8,5 +8,5 @@ MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS 	= $(TOPDIR)/nic/metaswitch/stubs/hals \
 		  $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))
 MODULE_FLAGS	= $(addprefix -D,$(MS_COMPILATION_SWITCH))
-MODULE_SOLIBS   = slab logger shmmgr
+MODULE_SOLIBS   = slab logger shmmgr penipc
 include ${MKDEFS}/post.mk

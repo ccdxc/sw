@@ -6,6 +6,7 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 
 using namespace std;
@@ -149,11 +150,14 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
                                 "Nbase stubs init txn failed! Aborting!");
         // Stubs initialization transaction is successful
         // We can now signal that the nbase thread is ready
-        SDK_TRACE_INFO("Nbase thread ready");
+        SDK_TRACE_INFO("Nbase thread is ready");
+        cout << "N-Base thread is ready\n";
         auto ctx = pds_ms::mgmt_state_t::thread_context();
         ctx.state()->nbase_thread()->set_ready(true);
+        // Call the HAL init now since we register a FD and nbase needs to be
+        // spinning
+        pdsa_stub::hal_init();
     }
-
     
     NBB_TRC_EXIT();
     return;

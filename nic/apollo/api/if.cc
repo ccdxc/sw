@@ -147,6 +147,9 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
          memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
                 ETH_ADDR_LEN);
          break;
+     
+     case PDS_IF_TYPE_NONE:
+        break;
 
      default:
          return sdk::SDK_RET_INVALID_ARG;

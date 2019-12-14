@@ -17,9 +17,6 @@ int pdsa_init ()
     if (!pdsa_stub::state_init()) {
         return -1;
     }
-    if (!pdsa_stub::hal_init()) {
-        goto error;
-    }
     if (!pdsa_stub_mgmt_init()) {
         goto error;
     }
@@ -28,7 +25,6 @@ int pdsa_init ()
 
 error:
     pdsa_stub::state_destroy();
-    pdsa_stub::hal_deinit();
     return -1;
 }
 
