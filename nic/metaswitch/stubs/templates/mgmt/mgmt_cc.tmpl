@@ -91,57 +91,61 @@
         {{range $fields}}
           {{if hasExtension "venice.pdsaFields" .}}
           {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-            {{if (eq $fieldOpt.IsKey false) }}
+            {{if (eq $fieldOpt.IsReadOnly true)}}
+            // {{$fieldOpt.Name}} is read-only. So not setting it.
+            {{else}}
+              {{if (eq $fieldOpt.IsKey false) }}
         if (row_status != AMB_ROW_DESTROY) {
             NBB_TRC_FLOW ((NBB_FORMAT "Not destroying RM: fill in field {{$fieldOpt.Field}} in {{$struct}}"));
-            {{end}}
-            {{if not (eq $fieldOpt.Field "")}}
-            // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
-              {{if (eq $fieldOpt.SetFieldFn "")}}
-                {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType}}
-                {{if (eq $castFn "")}}
-                  {{if (eq .GetTypeName ".types.IPAddress")}}
-            pdsa_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
-                  {{else}}
-            v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
-                  {{end}}
-                {{else}}
-            {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
-                {{end}}
-            AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
-              {{else}}
-            {{$fieldOpt.SetFieldFn}}(req, mib_msg);
               {{end}}
-            {{else}}
-              {{if TypeIsMessage .}}
-                {{if (eq $fieldOpt.Field "")}}
-                  {{$myvar := (joinFields $pkgName "." ".")}}
-                  {{$parentFieldName := .GetName}}
-                  {{$parentFieldTypeName := (TrimPrefix .GetTypeName $myvar)}}
-                  {{$parentFieldName := $fieldOpt.Name}}
-                  {{range $msgs}}
-                    {{$myMsgName := .GetName}}
-                    {{if (eq $myMsgName $parentFieldTypeName)}}
-                      {{$fields := .Fields}}
-                      {{range $fields}}
-                        {{if hasExtension "venice.pdsaFields" .}}
-                          {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+              {{if not (eq $fieldOpt.Field "")}}
+            // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
+                {{if (eq $fieldOpt.SetFieldFn "")}}
+                  {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType}}
+                  {{if (eq $castFn "")}}
+                    {{if (eq .GetTypeName ".types.IPAddress")}}
+            pdsa_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
+                    {{else}}
+            v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                    {{end}}
+                  {{else}}
+            {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                  {{end}}
+            AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
+                {{else}}
+            {{$fieldOpt.SetFieldFn}}(req, mib_msg);
+                {{end}}
+              {{else}}
+                {{if TypeIsMessage .}}
+                  {{if (eq $fieldOpt.Field "")}}
+                    {{$myvar := (joinFields $pkgName "." ".")}}
+                    {{$parentFieldName := .GetName}}
+                    {{$parentFieldTypeName := (TrimPrefix .GetTypeName $myvar)}}
+                    {{$parentFieldName := $fieldOpt.Name}}
+                    {{range $msgs}}
+                      {{$myMsgName := .GetName}}
+                      {{if (eq $myMsgName $parentFieldTypeName)}}
+                        {{$fields := .Fields}}
+                        {{range $fields}}
+                          {{if hasExtension "venice.pdsaFields" .}}
+                            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
         // {{$fieldOpt.Name}}
-                          {{if (eq $fieldOpt.SetFieldFn "")}}
+                            {{if (eq $fieldOpt.SetFieldFn "")}}
         v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$parentFieldName}}().{{$fieldOpt.Name | ToLower}}();
-                          {{else}}
+                            {{else}}
         {{$fieldOpt.SetFieldFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$parentFieldName}}().{{$fieldOpt.Name | ToLower}}());
-                          {{end}}
+                            {{end}}
         AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
+                          {{end}}
                         {{end}}
                       {{end}}
                     {{end}}
                   {{end}}
                 {{end}}
               {{end}}
-            {{end}}
-            {{if (eq $fieldOpt.IsKey false) }}
+              {{if (eq $fieldOpt.IsKey false) }}
         }
+              {{end}}
             {{end}}
           {{end}}
         {{end}}

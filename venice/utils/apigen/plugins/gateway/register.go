@@ -620,6 +620,7 @@ type pdsaFieldOpt struct {
 	Field          string
 	Name           string
 	IsKey          bool
+	IsReadOnly     bool
 	SetFieldIdx    string
 	GetFieldIdx    string
 	SetFieldFn     string
@@ -680,6 +681,19 @@ func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
 	default:
 		return "unknown"
 	}
+}
+
+func getFieldIsReadOnlyFromCam(cam *CamInfo, table string, field string) bool {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.Access == "readOnly" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func getFieldIsKeyFromCam(cam *CamInfo, table string, field string) bool {
@@ -759,6 +773,7 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.SetKeyOidIndex = o.SetKeyOidIndex
 		ret.GetKeyOidIndex = o.GetKeyOidIndex
 		ret.IsKey = getFieldIsKeyFromCam(cam, table, o.Field)
+		ret.IsReadOnly = getFieldIsReadOnlyFromCam(cam, table, o.Field)
 		ret.SetFieldIdx = getFieldIdxFromCam(cam, table, o.Field)
 		ret.CppDataType = getFieldDataTypeFromCam(cam, table, o.Field)
 	}
