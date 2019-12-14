@@ -61,6 +61,15 @@ copyRemoteFile() {
 systemctl stop docker
 systemctl disable docker
 # this will delete everything from /dev/sda
+for volume in `lvdisplay | grep 'LV Path' | awk '{print $3}' | xargs`; do
+    lvremove $volume -f
+done
+for volume in `vgdisplay | grep 'VG Name' | awk '{print $3}' | xargs`; do
+    vgremove $volume -f
+done
+for volume in `pvdisplay | grep 'PV Name' | awk '{print $3}' | xargs`; do
+    pvremove $volume -f
+done
 /usr/sbin/wipefs -a $device
 LC_ALL=C /sbin/parted --script $device mklabel gpt
 partinfo=$(LC_ALL=C /sbin/parted --script -m $device "unit MB print" |grep ^$device:)
@@ -93,16 +102,36 @@ p3_end=${dev_size}
 /sbin/parted -s $device u MB mkpart '"Grub"'   fat32 $p1_start $p1_end set 1 bios_grub on
 /sbin/parted -s $device u MB mkpart '"Boot"'   ext4 $p2_start $p2_end
 /sbin/parted -s $device u MB mkpart '"Config"' ext4 $p3_start $p3_end
+
+# Make sure the partitions are created before doing pvcreate or it will fail. 
+# There are 3 partitions (sda1..sda3)
+for i in {1..10}; do
+    if (( `lsblk | grep part | wc -l` != 3 )); then
+        sleep 5   
+    fi
+done
+
 # Create LVM for the last two persistent partitions
 vg_name=venice_vg
 vg_dev=/dev/${vg_name}
 lv_name_prefix=${vg_dev}/lv
-pvcreate ${device}3
-vgcreate ${vg_name} ${device}3
-# Config volume is same as the original parition size 3
-lvcreate -L ${p3_size}m -n lv3 ${vg_name}
-# Data volume fills the rest of the VG
-lvcreate -l 100%FREE -n lv4 ${vg_name}
+
+# Below is to address the scenario for our PXE boot. When we switch between FCS and TOT
+# after LVM is introduced, it seems wipefs does not clean the LVM. So when the TOT is 
+# loaded, we still need to make sure there is no LVM before trying to create again or
+# otherwise it will fail
+if (( `pvdisplay | grep 'PV Name' | wc -l` != 1 )); then
+    pvcreate ${device}3
+fi
+if (( `vgdisplay | grep 'VG Name' | wc -l` != 1 )); then
+    vgcreate ${vg_name} ${device}3
+fi
+if (( `lvdisplay | grep 'LV Name' | wc -l` != 2 )); then
+    # Config volume is same as the original parition size 3
+    lvcreate -L ${p3_size}m -n lv3 ${vg_name}
+    # Data volume fills the rest of the VG
+    lvcreate -l 100%FREE -n lv4 ${vg_name}
+fi
 
 /sbin/udevadm settle
 sleep 5
@@ -143,18 +172,18 @@ then
     copyLocalFile ${pen_install_src}/LiveOS/naples_fw.tar $TGTDIR/naples_fw.tar
 else
     # http based
-    copyRemoteFile ${pen_install_src}/tools/docker-files/vinstall/PEN-VERSION /tmp/PEN-VERSION
+    copyRemoteFile ${pen_install_src}/venice-install/PEN-VERSION /tmp/PEN-VERSION
 
     VERSION=$(grep version: /tmp/PEN-VERSION  | awk '{print $2}')
     TGTDIR=$TGTMNT1/OS-${VERSION}
     mkdir -p $TGTDIR
 
-    copyRemoteFile ${pen_install_src}/tools/docker-files/vinstall/PEN-VERSION $TGTDIR/PEN-VERSION
-    copyRemoteFile ${pen_install_src}/bin/venice-install/initrd0.img $TGTDIR/initrd0.img
-    copyRemoteFile ${pen_install_src}/bin/venice-install/vmlinuz0 $TGTDIR/vmlinuz0
-    copyRemoteFile ${pen_install_src}/bin/venice-install/squashfs.img $TGTDIR/squashfs.img
-    copyRemoteFile ${pen_install_src}/bin/venice.tgz $TGTDIR/venice.tgz
-    copyRemoteFile ${pen_install_src}/nic/naples_fw.tar $TGTDIR/naples_fw.tar
+    copyRemoteFile ${pen_install_src}/venice-install/PEN-VERSION $TGTDIR/PEN-VERSION
+    copyRemoteFile ${pen_install_src}/venice-install/initrd0.img $TGTDIR/initrd0.img
+    copyRemoteFile ${pen_install_src}/pxe/tftpboot/vmlinuz0 $TGTDIR/vmlinuz0
+    copyRemoteFile ${pen_install_src}/venice-install/squashfs.img $TGTDIR/squashfs.img
+    copyRemoteFile ${pen_install_src}/venice.tgz $TGTDIR/venice.tgz
+    copyRemoteFile ${pen_install_src}/sw-iris/sw/nic/naples_fw.tar $TGTDIR/naples_fw.tar
 fi
 
 
@@ -190,7 +219,6 @@ umount ${TGTMNT3}
 
 fsck -pf ${device}2 || :
 fsck -pf ${device}3 || :
-fsck -pf ${device}4 || :
 
 echo Succesfully installed the image
 echo Eject the installation media or change the boot order and reboot the host
