@@ -99,6 +99,11 @@ zmq_ipc_user_msg::length(void) {
     }
 }
 
+response_oneshot_cb
+zmq_ipc_user_msg::response_cb() {
+    return this->preamble_.response_cb;
+}
+
 const void *
 zmq_ipc_user_msg::cookie(void) {
     return this->preamble_.cookie;
@@ -153,8 +158,8 @@ zmq_ipc_endpoint::is_event_pending(void) {
 void
 zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
                            uint32_t msg_code, const void *data,
-                           size_t data_length, const void *cookie,
-                           bool send_pointer) {
+                           size_t data_length, response_oneshot_cb cb,
+                           const void *cookie, bool send_pointer) {
     int rc;
     zmq_ipc_msg_preamble_t preamble;
 
@@ -164,6 +169,7 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
     preamble.recipient = recipient;
     preamble.msg_code = msg_code;
     preamble.serial = this->get_next_serial();
+    preamble.response_cb = cb;
     preamble.cookie = cookie;
     preamble.is_pointer = send_pointer;
     preamble.real_length = data_length;
@@ -251,7 +257,7 @@ zmq_ipc_server::fd(void) {
     return fd;
 }
 
-ipc_msg_ptr
+zmq_ipc_user_msg_ptr
 zmq_ipc_server::recv(void) {
     int rc;
 
@@ -296,7 +302,7 @@ zmq_ipc_server::reply(ipc_msg_ptr msg, const void *data,
     }
 
     this->send_msg(DIRECT, zmsg->sender(), zmsg->code(), data, data_length,
-                   zmsg->cookie(), false);
+                   zmsg->response_cb(), zmsg->cookie(), false);
 }
 
 zmq_ipc_client::~zmq_ipc_client() {
@@ -359,7 +365,8 @@ zmq_ipc_client_async::fd(void) {
 
 void
 zmq_ipc_client_async::send(uint32_t msg_code, const void *data,
-                           size_t data_length, const void *cookie) {
+                           size_t data_length, response_oneshot_cb cb,
+                           const void *cookie) {
     int rc;
 
     // We use a Dealer socket talking to Router socket. See ZMQ documentation
@@ -368,7 +375,7 @@ zmq_ipc_client_async::send(uint32_t msg_code, const void *data,
     assert(rc != -1);
 
     this->send_msg(DIRECT, this->recipient_, msg_code, data, data_length,
-                   cookie, this->is_recipient_internal_);
+                   cb, cookie, this->is_recipient_internal_);
 }
 
 void
@@ -382,11 +389,11 @@ zmq_ipc_client_async::broadcast(uint32_t msg_code, const void *data,
     assert(rc != -1);
 
     this->send_msg(BROADCAST, this->recipient_, msg_code, data, data_length,
-                   NULL, this->is_recipient_internal_);
+                   NULL, NULL, this->is_recipient_internal_);
 }
 
-ipc_msg_ptr
-zmq_ipc_client_async::recv(const void **cookie) {
+zmq_ipc_user_msg_ptr
+zmq_ipc_client_async::recv(void) {
     int rc;
     zmq_ipc_user_msg_ptr msg = std::make_shared<zmq_ipc_user_msg>();
 
@@ -401,7 +408,6 @@ zmq_ipc_client_async::recv(const void **cookie) {
 
     this->recv_msg(msg);
 
-    *cookie = msg->cookie();
     return msg;
 }
 
@@ -430,7 +436,7 @@ zmq_ipc_client_sync::send_recv(uint32_t msg_code, const void *data,
     assert(rc != -1);
     
     this->send_msg(DIRECT, this->recipient_, msg_code, data, data_length, NULL,
-                   this->is_recipient_internal_);
+                   NULL, this->is_recipient_internal_);
 
     // We use a Dealer socket talking to Router socket. See ZMQ documentation
     // why we need this
@@ -454,7 +460,7 @@ zmq_ipc_client_sync::broadcast(uint32_t msg_code, const void *data,
     assert(rc != -1);
     
     this->send_msg(BROADCAST, this->recipient_, msg_code, data, data_length,
-                   NULL, false);
+                   NULL, NULL, false);
 }
 
 } // namespace ipc

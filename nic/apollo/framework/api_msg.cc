@@ -17,11 +17,6 @@
 
 namespace api {
 
-static inline void process_api_internal_(pds_batch_ctxt_t bctxt,
-                                         api_ctxt_t *api_ctxt,
-                                         process_result_cb result_cb,
-                                         const void *result_cb_ctx);
-
 static pds_epoch_t    g_api_epoch_ = 0xDEADFEED;
 
 /// \brief    wrapper function to allocate an API msg
@@ -40,6 +35,24 @@ api_msg_free (api_msg_t *msg)
     api_msg_slab()->free(msg);
 }
 
+// callback that gets called when process_api is done with it's return code
+static void
+api_process_sync_result_ (sdk::ipc::ipc_msg_ptr msg, const void *ret)
+{
+    *(sdk_ret_t *)ret = *(sdk_ret_t *)msg->data();
+}
+
+static void
+api_process_async_result_ (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
+{
+    api_msg_t *api_msg = (api_msg_t *)ctx;
+    sdk_ret_t ret = *(sdk_ret_t *)msg->data();
+
+    api_msg->batch.response_cb(ret, api_msg->batch.cookie);
+
+    api_batch_destroy((pds_batch_ctxt_t)api_msg);
+}
+
 pds_batch_ctxt_t
 api_batch_start (pds_batch_params_t *batch_params)
 {
@@ -56,11 +69,9 @@ api_batch_start (pds_batch_params_t *batch_params)
         api_msg->msg_id = api::API_MSG_ID_BATCH;
         api_msg->batch.epoch = batch_params->epoch;
         api_msg->batch.async = batch_params->async;
+        api_msg->batch.response_cb = batch_params->response_cb;
         api_msg->batch.cookie = batch_params->cookie;
         api_msg->batch.apis.reserve(64);
-        api_msg->batch.batched_internally = false;
-        api_msg->batch.result_cb = NULL;
-        api_msg->batch.result_cb_ctx = NULL;
     }
     return (pds_batch_ctxt_t)api_msg;
 }
@@ -80,69 +91,17 @@ api_batch_destroy (pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
+// Called directly by client of this library. No async. No batch
 sdk_ret_t
-api_batch_commit (pds_batch_ctxt_t bctxt)
+process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    api_msg_t *api_msg = (api_msg_t *)bctxt;
-
-    // if this is a batch of 0, no need to bother API thread
-    if (likely(api_msg->batch.apis.size() > 0)) {
-        // process this batch of APIs synchronously
-        ret = api::process_api(bctxt, NULL);
-    }
-    api_batch_destroy(bctxt);
-    return ret;
-}
-
-// this callback is invoked after getting response from the API thread,
-// to free all the API msg related state allocated for the batch processing of
-// APIs by API thread
-static void
-api_msg_response_cb (sdk::ipc::ipc_msg_ptr msg, const void *cookie,
-                    const void *ctx)
-{
-    api_msg_t *api_msg = (api_msg_t *)cookie;
-
-    if (api_msg->batch.result_cb) {
-        api_msg->batch.result_cb(*(sdk_ret_t *)msg->data(),
-                                 api_msg->batch.result_cb_ctx);
-    }
-
-    if (api_msg->batch.batched_internally) {
-        api_batch_destroy((pds_batch_ctxt_t)api_msg);
-    }
-}
-
-// this is a callback that gets called when process_api is done with it's return
-// code
-static void
-process_result_ (sdk_ret_t ret, const void *ctx)
-{
-    *(sdk_ret_t *)ctx = ret;
-}
-
-static inline void
-process_api_internal_ (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt,
-                       process_result_cb result_cb, const void *result_cb_ctx)
-{
-    pds_batch_params_t batch_params = { 0 };
-    api_msg_t *api_msg = (api_msg_t *)bctxt;
-
-    sdk::ipc::reg_response_handler(API_MSG_ID_BATCH, api_msg_response_cb,
-                                   NULL);
-
-    if (api_msg) {
-        if (api_ctxt) {
-            // just accumulate this API in the current batch
-            api_msg->batch.apis.push_back(api_ctxt);
-            result_cb(SDK_RET_OK, result_cb_ctx);
-            return;
-        }
-    } else {
+    api_msg_t *api_msg;
+    
+    if (bctxt == 0) {
+        pds_batch_params_t batch_params = { 0 };
         if (!api_ctxt) {
-            result_cb(SDK_RET_INVALID_OP, result_cb_ctx);
-            return;
+            return SDK_RET_INVALID_OP;
         }
         // API call is not part of any batch, create a batch of one
         batch_params.epoch = g_api_epoch_;
@@ -150,22 +109,48 @@ process_api_internal_ (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt,
         if (likely(api_msg != NULL)) {
             api_msg->batch.apis.push_back(api_ctxt);
         }
-        api_msg->batch.batched_internally = true;
+    
+        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+                          sizeof(api_msg), api_process_sync_result_, &ret);
+        
+        api_batch_destroy((pds_batch_ctxt_t)api_msg);
+        return ret;
     }
-
-    api_msg->batch.result_cb = result_cb;
-    api_msg->batch.result_cb_ctx = result_cb_ctx;
-    sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
-                      sizeof(api_msg), (void *)api_msg);
+ 
+    api_msg = (api_msg_t *)bctxt;
+    if (api_ctxt) {
+        // batch commit is not happening yet, just accumulate this API in
+        // the current batch
+        api_msg->batch.apis.push_back(api_ctxt);
+        return SDK_RET_OK;
+    }
+    // batch commit happening, ship APIs to API thread
+    if (api_msg->batch.async) {
+        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+                          sizeof(api_msg), api_process_async_result_, api_msg);
+        return SDK_RET_OK;
+    } else {
+        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+                          sizeof(api_msg), api_process_sync_result_, &ret);
+        api_batch_destroy((pds_batch_ctxt_t)api_msg);
+        return ret;
+    }
 }
 
 sdk_ret_t
-process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
+api_batch_commit (pds_batch_ctxt_t bctxt)
 {
+    api_msg_t *api_msg = (api_msg_t *)bctxt;
     sdk_ret_t ret = SDK_RET_OK;
-    
-    process_api_internal_(bctxt, api_ctxt, process_result_, &ret);
 
+    // if this is a batch of 0, no need to bother API thread
+    if (likely(api_msg->batch.apis.size() > 0)) {
+        // process this batch of APIs
+        ret = api::process_api(bctxt, NULL);
+    } else {
+        api_batch_destroy(bctxt);
+    }
+    
     return ret;
 }
 

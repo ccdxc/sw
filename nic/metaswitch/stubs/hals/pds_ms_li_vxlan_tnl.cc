@@ -135,7 +135,8 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     // TODO: Change to async when ipc apis are ready
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
-                           (uint64_t) cookie_uptr_.get()};
+                           pdsa_stub::hal_callback,
+                           cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
@@ -278,7 +279,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                      ips_info_.tep_ip_str.c_str());
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        pdsa_stub::hal_callback(true, (uint64_t) cookie);
+        pdsa_stub::hal_callback(SDK_RET_OK, cookie);
     }
 }
 

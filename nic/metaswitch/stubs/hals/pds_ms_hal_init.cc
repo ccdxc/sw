@@ -15,11 +15,11 @@
 namespace pdsa_stub {
 
 void
-hal_callback (bool status, uint64_t cookie)
+hal_callback (sdk_ret_t status, const void *cookie)
 {
     std::unique_ptr<cookie_t> cookie_ptr ((cookie_t*) cookie);
 
-    if (!status) {
+    if (status != SDK_RET_OK) {
         SDK_TRACE_ERR("Async PDS Batch failure");
         cookie_ptr->print_debug_str(); 
         return;
@@ -36,7 +36,7 @@ hal_callback (bool status, uint64_t cookie)
         obj_uptr.release();
     }
 
-    cookie_ptr->send_ips_reply(status);
+    cookie_ptr->send_ips_reply(true);
 }
 
 static void

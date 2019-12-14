@@ -35,6 +35,20 @@ public:
 typedef std::shared_ptr<struct ipc_msg> ipc_msg_ptr;
 
 ///
+/// Callbacks
+///
+
+typedef void (*request_cb)(ipc_msg_ptr msg, const void *ctx);
+
+typedef void (*response_cb)(ipc_msg_ptr msg, const void *request_cookie,
+                            const void *ctx);
+
+typedef void (*response_oneshot_cb)(ipc_msg_ptr msg,
+                                    const void *request_cookie);
+
+typedef void (*subscription_cb)(ipc_msg_ptr msg, const void *ctx);
+
+///
 /// Init
 ///
 
@@ -53,6 +67,11 @@ extern void ipc_init_sync(uint32_t client_id);
 
 extern void request(uint32_t recipient, uint32_t msg_code, const void *data,
                     size_t length, const void *cookie);
+
+extern void request(uint32_t recipient, uint32_t msg_code, const void *data,
+                    size_t length, response_oneshot_cb response_cb,
+                    const void *cookie);
+
 extern void broadcast(uint32_t msg_code, const void *data, size_t data_length);
 
 extern void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
@@ -61,18 +80,12 @@ extern void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
 /// Receiving
 ///
 
-typedef void (*request_cb)(ipc_msg_ptr msg, const void *ctx);
-
 extern void reg_request_handler(uint32_t msg_code, request_cb callback,
                                 const void *ctx);
 
-typedef void (*response_cb)(ipc_msg_ptr msg, const void *request_cookie,
-                            const void *ctx);
 
 extern void reg_response_handler(uint32_t msg_code, response_cb callback,
                                  const void *ctx);
-
-typedef void (*subscription_cb)(ipc_msg_ptr msg, const void *ctx);
 
 extern void subscribe(uint32_t msg_code, subscription_cb callback,
                       const void *ctx);

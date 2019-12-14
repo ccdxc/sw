@@ -96,7 +96,13 @@ void vxlan_pds_mock_t::validate_()
     if (test_params()->test_input->ips_mock()) {
         cookie->send_ips_reply = [] (bool status) -> void {};
     }
-    pdsa_stub::hal_callback(!mock_pds_batch_async_fail_, (uint64_t)cookie);
+    sdk_ret_t ret;
+    if (mock_pds_batch_async_fail_) {
+        ret = SDK_RET_ERR;
+    } else {
+        ret = SDK_RET_OK;
+    }
+    pdsa_stub::hal_callback(ret, cookie);
 
     if (mock_pds_batch_async_fail_) {
         // Verify no change to slab - all temporary objects released

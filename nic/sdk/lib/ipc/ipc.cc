@@ -41,7 +41,7 @@ public:
     ipc_service(uint32_t client_id);
     virtual void request(uint32_t recipient, uint32_t msg_code,
                          const void *data, size_t data_length,
-                         const void *cookie) = 0;
+                         response_oneshot_cb cb, const void *cookie) = 0;
     void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
     void broadcast(uint32_t msg_code, const void *data, size_t data_length);
     void reg_request_handler(uint32_t msg_code, request_cb callback,
@@ -56,7 +56,8 @@ protected:
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) = 0;
     uint32_t get_id_(void);
     void set_server_(zmq_ipc_server_ptr ipc_server);
-    void handle_response_(ipc_msg_ptr msg, const void *cookie);
+    void handle_response_(ipc_msg_ptr msg, response_oneshot_cb cb,
+                          const void *cookie);
     zmq_ipc_client_ptr get_client_(uint32_t recipient);
 private:
     uint32_t id_;
@@ -74,7 +75,7 @@ public:
     ipc_service_sync(uint32_t client_id);
     virtual void request(uint32_t recipient, uint32_t msg_code,
                          const void *data, size_t data_length,
-                         const void *cookie) override;
+                         response_oneshot_cb cb, const void *cookie) override;
 protected:
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) override;
 };
@@ -86,7 +87,7 @@ public:
                       const void *fd_watch_cb_ctx);
     virtual void request(uint32_t recipient, uint32_t msg_code,
                          const void *data, size_t data_length,
-                         const void *cookie) override;
+                         response_oneshot_cb cb, const void *cookie) override;
     void client_receive(uint32_t recipient);
 protected:
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) override;
@@ -155,11 +156,16 @@ ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
 }
 
 void
-ipc_service::handle_response_(ipc_msg_ptr msg, const void *cookie) {
-    assert(this->rsp_cbs_.count(msg->code()) > 0);
-    rsp_callback_t rsp_cb = this->rsp_cbs_[msg->code()];
-    if (rsp_cb.cb != NULL) {
-        rsp_cb.cb(msg, cookie, rsp_cb.ctx);
+ipc_service::handle_response_(ipc_msg_ptr msg, response_oneshot_cb cb,
+                              const void *cookie) {
+    if (cb) {
+        cb(msg, cookie);
+    } else {
+        assert(this->rsp_cbs_.count(msg->code()) > 0);
+        rsp_callback_t rsp_cb = this->rsp_cbs_[msg->code()];
+        if (rsp_cb.cb != NULL) {
+            rsp_cb.cb(msg, cookie, rsp_cb.ctx);
+        }
     }
 }
 
@@ -173,7 +179,7 @@ ipc_service_sync::ipc_service_sync(uint32_t client_id)
 void
 ipc_service_sync::request(uint32_t recipient, uint32_t msg_code,
                           const void *data, size_t data_length,
-                          const void *cookie) {
+                          response_oneshot_cb cb, const void *cookie) {
 
     zmq_ipc_client_sync_ptr client =
         std::dynamic_pointer_cast<zmq_ipc_client_sync>(
@@ -181,7 +187,7 @@ ipc_service_sync::request(uint32_t recipient, uint32_t msg_code,
 
     ipc_msg_ptr msg = client->send_recv(msg_code, data, data_length);
 
-    this->handle_response_(msg, cookie);
+    this->handle_response_(msg, cb, cookie);
 }
 
 zmq_ipc_client_ptr
@@ -216,7 +222,7 @@ ipc_service_async::new_client_(uint32_t recipient) {
         
     // If we don't do this we don't get any events coming from ZMQ
     // It doesn't play very well with libevent
-    client->recv(NULL);
+    client->recv();
 
     return client;
 }
@@ -224,13 +230,13 @@ ipc_service_async::new_client_(uint32_t recipient) {
 void
 ipc_service_async::request(uint32_t recipient, uint32_t msg_code,
                            const void *data, size_t data_length,
-                           const void *cookie) {
+                           response_oneshot_cb cb, const void *cookie) {
 
     zmq_ipc_client_async_ptr client =
         std::dynamic_pointer_cast<zmq_ipc_client_async>(
             this->get_client_(recipient));
 
-    client->send(msg_code, data, data_length, cookie);
+    client->send(msg_code, data, data_length, cb, cookie);
 }
 
 void
@@ -241,13 +247,12 @@ ipc_service_async::client_receive(uint32_t sender) {
         std::dynamic_pointer_cast<zmq_ipc_client_async>(
             this->get_client_(sender));
 
-    const void *cookie;
-    ipc::ipc_msg_ptr msg = client->recv(&cookie);
+    zmq_ipc_user_msg_ptr msg = client->recv();
     if (msg == nullptr) {
         return;
     }
 
-    this->handle_response_(msg, cookie);
+    this->handle_response_(msg, msg->response_cb(), msg->cookie());
 }
 
 void
@@ -305,10 +310,7 @@ ipc_service::reg_request_handler(uint32_t msg_code, request_cb callback,
 void
 ipc_service::reg_response_handler(uint32_t msg_code, response_cb callback,
                                   const void *ctx) {
-    if (this->rsp_cbs_.count(msg_code) != 0) {
-        SDK_TRACE_INFO("Handler already registered for %u", msg_code);
-        return;
-    }
+    assert(this->rsp_cbs_.count(msg_code) == 0);
     this->rsp_cbs_[msg_code] = {.cb = callback, .ctx = ctx};
 }
 
@@ -353,7 +355,14 @@ void
 request (uint32_t recipient, uint32_t msg_code, const void *data,
          size_t data_length, const void *cookie)
 {
-    service()->request(recipient, msg_code, data, data_length, cookie);
+    service()->request(recipient, msg_code, data, data_length, NULL, cookie);
+}
+
+void
+request (uint32_t recipient, uint32_t msg_code, const void *data,
+         size_t data_length, response_oneshot_cb cb, const void *cookie)
+{
+    service()->request(recipient, msg_code, data, data_length, cb, cookie);
 }
 
 void

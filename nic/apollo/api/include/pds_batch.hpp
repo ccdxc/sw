@@ -17,15 +17,19 @@
 /// \defgroup PDS_BATCH Batch API
 /// @{
 
+///< async response callback type
+typedef void (*pds_async_rsp_cb_t)(sdk_ret_t ret, const void *cookie);
+
 /// \brief    api batch parameters
 typedef struct pds_batch_params_s {
-    pds_epoch_t    epoch;    ///< Epoch value for this batch
-                             ///< PDS_EPOCH_INVALID is reserved
-    bool           async;    ///< process this batch asynchronously
-                             ///< and return the batch cookie along with
-                             ///< the response
-    uint64_t       cookie;   ///< cookie to correlate batch request with
-                             ///< response in case of async processing
+    ///< epoch value for this batch (PDS_EPOCH_INVALID is reserved)
+    pds_epoch_t        epoch;
+    ///< if async is set to true, process this batch asynchronously
+    bool               async;
+    ///< callback to be invoked when response comes back
+    pds_async_rsp_cb_t response_cb;
+    ///< cookie to be passed back along in the response callback
+    void               *cookie;
 } __PACK__ pds_batch_params_t;
 
 /// \brief start the batch for commit

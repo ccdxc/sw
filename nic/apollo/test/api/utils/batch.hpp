@@ -21,7 +21,8 @@ batch_start (void)
     static pds_epoch_t epoch = 0;
     pds_batch_params_t batch_params = { .epoch = ++epoch,
                                         .async = false,
-                                        .cookie = 0
+                                        .response_cb = nullptr,
+                                        .cookie = nullptr
                                       };
 #ifdef AGENT_MODE
     if (!agent_mode()) {

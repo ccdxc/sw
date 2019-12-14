@@ -109,8 +109,9 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
     sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(cookie_uptr_); // Cookie should have been alloc before
     // TODO: Change to async when ipc apis are ready
-    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
-                           (uint64_t) cookie_uptr_.get()};
+    pds_batch_params_t bp { PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
+                            pdsa_stub::hal_callback,
+                            cookie_uptr_.get() };
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
@@ -262,7 +263,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                      ips_info_.pathset_id);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        pdsa_stub::hal_callback(true, (uint64_t) cookie);
+        pdsa_stub::hal_callback(SDK_RET_OK, cookie);
     }
 }
 

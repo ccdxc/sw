@@ -24,6 +24,7 @@ typedef struct zmq_ipc_msg_preamble {
     uint32_t recipient;
     uint32_t msg_code;
     uint32_t serial;
+    response_oneshot_cb response_cb;
     const void *cookie;
     bool     is_pointer;
     size_t   real_length;
@@ -55,6 +56,7 @@ public:
     void add_header(std::shared_ptr<zmq_ipc_msg> header);
     zmq_ipc_msg_preamble_t *preamble(void);
     const void *cookie(void);
+    response_oneshot_cb response_cb(void);
 private:
     std::vector<std::shared_ptr<zmq_ipc_msg> > headers_;
     zmq_ipc_msg_preamble_t preamble_;
@@ -68,8 +70,8 @@ public:
     bool is_event_pending(void);
     uint32_t get_next_serial(void);
     void send_msg(ipc_msg_type_t type, uint32_t recipient, uint32_t msg_code,
-                  const void *data, size_t data_length, const void *cookie,
-                  bool send_pointer);
+                  const void *data, size_t data_length, response_oneshot_cb cb,
+                  const void *cookie, bool send_pointer);
     void recv_msg(zmq_ipc_user_msg_ptr msg);
 protected:
     uint32_t id_;
@@ -84,7 +86,7 @@ public:
     ~zmq_ipc_server();
     void subscribe(uint32_t msg_code);
     int fd(void);
-    ipc_msg_ptr recv(void);
+    zmq_ipc_user_msg_ptr recv(void);
     void reply(ipc_msg_ptr msg, const void *data,
                size_t data_length);
 };
@@ -114,8 +116,8 @@ public:
                            size_t data_length) override;
     int fd(void);
     void send(uint32_t msg_code, const void *data, size_t data_length,
-              const void *cookie);
-    ipc_msg_ptr recv(const void** cookie);
+              response_oneshot_cb cb, const void *cookie);
+    zmq_ipc_user_msg_ptr recv(void);
 };
 typedef std::shared_ptr<zmq_ipc_client_async> zmq_ipc_client_async_ptr;
 

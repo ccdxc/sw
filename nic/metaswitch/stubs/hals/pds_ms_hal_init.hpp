@@ -7,12 +7,13 @@
 #define __PDSA_HAL_INIT_HPP__
 
 #include <cstdint>
+#include "nic/sdk/include/sdk/base.hpp"
 
 namespace pdsa_stub {
 
 bool hal_init (void);
 void hal_deinit (void);
-void hal_callback (bool status, uint64_t cookie);
+void hal_callback (sdk_ret_t status, const void *cookie);
 
 }
 #endif
