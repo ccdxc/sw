@@ -70,7 +70,7 @@ int record_event(events_recorder* recorder, eventtypes::EventTypes type, const c
 
 // records list of events as per requested rate and total events. message_substr will be added to
 // all the events generated. It will be easy to verify the events using this substr.
-int record_events(events_recorder* recorder, int rps, int total_events, int percent_crit_events, char* message_substr)
+int record_events(events_recorder* recorder, int rps, int total_events, float percent_crit_events, char* message_substr)
 {
     // number of events to be recorded
     int num_critical_events_to_be_recorded = (percent_crit_events / 100.0) * total_events;
@@ -173,7 +173,7 @@ int main(int argc, char** argv)
     logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
 
     int rate_per_second = 1;
-    int percent_crit_events = 1;
+    float percent_crit_events = 0.1;
     int total_events = 1;
     char* evt_message_substr = strdup("");
 
@@ -182,13 +182,12 @@ int main(int argc, char** argv)
         switch (opt) {
         case 'r':
             rate_per_second = atoi(optarg);
-            total_events = rate_per_second;
             break;
         case 't':
             total_events = atoi(optarg);
             break;
         case 'c':
-            percent_crit_events = atoi(optarg);
+            percent_crit_events = atof(optarg);
             break;
         case 's':
             evt_message_substr = optarg;
