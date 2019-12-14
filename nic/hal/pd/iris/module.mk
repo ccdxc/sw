@@ -16,7 +16,6 @@ MODULE_SRCS     := $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/mcast/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/nw/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/nvme/*.cc) \
-                   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/tcp_proxy/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/debug/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/firewall/*.cc) \
@@ -28,6 +27,7 @@ MODULE_SRCS     := $(wildcard ${MODULE_SRC_DIR}/*.cc) \
 ifeq ($(ARCH),x86_64)
 MODULE_SRCS     := ${MODULE_SRCS} \
                    $(wildcard ${MODULE_SRC_DIR}/l4lb/*.cc) \
+				   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/rdma/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/internal/*.cc)
 else
@@ -36,8 +36,6 @@ MODULE_SRCS     := ${MODULE_SRCS} \
                    ${MODULE_SRC_DIR}/internal/crypto_keys_pd.cc \
                    ${MODULE_SRC_DIR}/internal/cpucb_pd.cc \
                    ${MODULE_SRC_DIR}/internal/p4pt_pd.cc \
-                   ${MODULE_SRC_DIR}/internal/ipseccb_pd.cc \
-                   ${MODULE_SRC_DIR}/internal/ipseccb_decrypt_pd.cc \
                    ${MODULE_SRC_DIR}/internal/proxyrcb_pd.cc \
                    ${MODULE_SRC_DIR}/internal/proxyccb_pd.cc \
                    ${MODULE_SRC_DIR}/internal/swphv_pd.cc \

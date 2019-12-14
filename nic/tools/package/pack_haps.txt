@@ -178,7 +178,6 @@ nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
 #nic/build/aarch64/iris/bin/dsc_ssl_client                            /nic/bin/
 
 # linkmgr
-nic/build/aarch64/iris/bin/port_client                              /nic/bin
 nic/build/aarch64/iris/lib/libsdklinkmgrcsr.so                      /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgr_libsrc.so                     /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgr_src.so                        /nic/lib/

@@ -6,7 +6,9 @@
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
+#ifdef __x86_64__
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#endif
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/l2segment.pb.h"
 #include "gen/proto/vrf.pb.h"

@@ -168,7 +168,9 @@ public:
     slab *acl_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ACL]); }
     slab *wring_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_WRING]); }
     slab *ipseccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSECCB]); }
+#ifdef __x86_64__
     slab *ipsec_sa_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_SA]); }
+#endif
     slab *cpucb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CPUCB]); }
     slab *rawrcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWRCB]); }
     slab *rawccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWCCB]); }
@@ -276,8 +278,11 @@ public:
     ht *wring_id_ht(void) const { return wring_id_ht_; }
     ht *proxy_type_ht(void) const { return proxy_type_ht_; }
     ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
+#ifdef __x86_64__
     ht *ipsec_sa_id_ht(void) const { return ipsec_sa_id_ht_; }
     ht *ipsec_sa_hal_hdl_ht(void) const { return ipsec_sa_hal_hdl_ht_; }
+    ht *ipsec_policy_ht(void) const { return ipsec_policy_ht_; }
+#endif
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
     ht *rawccb_id_ht(void) const { return rawccb_id_ht_; }
@@ -290,7 +295,6 @@ public:
     ht *nat_mapping_ht(void) const { return nat_mapping_ht_; }
     ht *nexthop_id_ht(void) const { return nexthop_id_ht_; }
     ht *route_ht(void) const { return route_ht_; }
-    ht *ipsec_policy_ht(void) const { return ipsec_policy_ht_; }
     ht *tcp_proxy_policy_ht(void) const { return tcp_proxy_policy_ht_; }
     ht *filter_ht(void) const { return filter_ht_; }
 
@@ -411,8 +415,11 @@ private:
     ht    *proxy_type_ht_;
     ht    *acl_ht_;
     ht    *ipseccb_id_ht_;
+#ifdef __x86_64__
     ht    *ipsec_sa_id_ht_;
     ht    *ipsec_sa_hal_hdl_ht_;
+    ht    *ipsec_policy_ht_;
+#endif
     ht    *cpucb_id_ht_;
     ht    *rawrcb_id_ht_;
     ht    *rawccb_id_ht_;
@@ -426,7 +433,6 @@ private:
     ht    *nat_mapping_ht_;
     ht    *nexthop_id_ht_;
     ht    *route_ht_;
-    ht    *ipsec_policy_ht_;
     ht    *tcp_proxy_policy_ht_;
     ht    *filter_ht_;
     bitmap                  *telemetry_collectors_bmp_;
@@ -541,7 +547,6 @@ public:
     ht   *nwsec_policy_ht(void) const { return oper_db_->nwsec_policy_ht(); }
     ht   *nat_policy_ht(void) const { return oper_db_->nat_policy_ht(); }
     ht   *nwsec_group_ht(void) const { return oper_db_->nwsec_group_ht(); }
-    ht   *ipsec_policy_ht(void) const { return oper_db_->ipsec_policy_ht(); }
     ht   *tcp_proxy_policy_ht(void) const { return oper_db_->tcp_proxy_policy_ht(); }
 
     // get APIs for dos policy related state
@@ -659,9 +664,12 @@ public:
 
     // get APIs for IPSEC CB state
     slab *ipseccb_slab(void) const { return cfg_db_->ipseccb_slab(); }
-    slab *ipsec_sa_slab(void) const { return cfg_db_->ipsec_sa_slab(); }
     ht *ipseccb_id_ht(void) const { return oper_db_->ipseccb_id_ht(); }
+#ifdef __x86_64__
+    ht   *ipsec_policy_ht(void) const { return oper_db_->ipsec_policy_ht(); }
+    slab *ipsec_sa_slab(void) const { return cfg_db_->ipsec_sa_slab(); }
     ht *ipsec_sa_id_ht(void) const { return oper_db_->ipsec_sa_id_ht(); }
+#endif
 
     // get APIs for CPU CB state
     slab *cpucb_slab(void) const { return cfg_db_->cpucb_slab(); }

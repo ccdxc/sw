@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libplugin_proxy.so
 MODULE_PIPELINE = iris gft
-MODULE_SOLIBS = lkl_api
-MODULE_LDLIBS = lkl
+MODULE_ARCH     = x86_64
+MODULE_SOLIBS   = lkl_api
+MODULE_LDLIBS   = lkl
 include ${MKDEFS}/post.mk

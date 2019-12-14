@@ -20,8 +20,6 @@
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/src/internal/crypto_keys.hpp"
-#include "nic/hal/src/internal/ipseccb.hpp"
-#include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_sesscb.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_global.hpp"
@@ -29,6 +27,8 @@
 #include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
 #ifdef __x86_64__
+#include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#include "nic/hal/plugins/cfg/ipsec/ipseccb.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #endif
 #include "nic/hal/src/internal/cpucb.hpp"
@@ -1164,6 +1164,7 @@ pd_tcp_proxy_cb_get_args_init (pd_tcp_proxy_cb_get_args_t *args)
     return;
 }
 
+#ifdef __x86_64__
 // ipseccb
 typedef struct pd_ipseccb_create_args_s {
     ipseccb_t            *ipseccb;
@@ -1303,7 +1304,6 @@ pd_ipsec_encrypt_get_args_init (pd_ipsec_encrypt_get_args_t *args)
     return;
 }
 
-
 // ipsec_sa_decrypt
 typedef struct pd_ipsec_decrypt_create_args_s {
     ipsec_sa_t            *ipsec_sa;
@@ -1362,7 +1362,6 @@ pd_ipsec_global_stats_get_args_init(pd_ipsec_global_stats_get_args_t *args)
     return;
 }
 
-#ifdef __x86_64__
 // l4lb
 typedef struct pd_l4lb_create_args_s {
     l4lb_service_entry_t    *l4lb;
@@ -3739,6 +3738,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_delete);
         PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_get);
 
+#ifdef __x86_64__
         // ipseccb calls
         PD_UNION_ARGS_FIELD(pd_ipseccb_create);
         PD_UNION_ARGS_FIELD(pd_ipseccb_update);
@@ -3764,7 +3764,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_delete);
         PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_get);
 
-#ifdef __x86_64__
         // l4lb
         PD_UNION_ARGS_FIELD(pd_l4lb_create);
 #endif
@@ -4228,6 +4227,7 @@ PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_update);
 PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_delete);
 PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_get);
 
+#ifdef __x86_64__
 // ipseccb calls
 PD_FUNCP_TYPEDEF(pd_ipseccb_create);
 PD_FUNCP_TYPEDEF(pd_ipseccb_update);
@@ -4253,7 +4253,6 @@ PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_update);
 PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_delete);
 PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_get);
 
-#ifdef __x86_64__
 // l4lb
 PD_FUNCP_TYPEDEF(pd_l4lb_create);
 #endif

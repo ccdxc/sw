@@ -452,20 +452,6 @@ It has these top-level messages:
 	LogFlowResponse
 	EmptyRequest
 	EmptyResponse
-	IpsecCbKeyHandle
-	IpsecCbSpec
-	IpsecCbRequestMsg
-	IpsecCbStatus
-	IpsecCbResponse
-	IpsecCbResponseMsg
-	IpsecCbDeleteRequest
-	IpsecCbDeleteRequestMsg
-	IpsecCbDeleteResponseMsg
-	IpsecCbGetRequest
-	IpsecCbGetRequestMsg
-	IpsecCbStats
-	IpsecCbGetResponse
-	IpsecCbGetResponseMsg
 	TcpCbKeyHandle
 	TcpCbSpec
 	TcpCbRequestMsg
@@ -725,6 +711,20 @@ It has these top-level messages:
 	IpsecGlobalStatisticsGetRequestMsg
 	IpsecGlobalStatisticsGetResponse
 	IpsecGlobalStatisticsGetResponseMsg
+	IpsecCbKeyHandle
+	IpsecCbSpec
+	IpsecCbRequestMsg
+	IpsecCbStatus
+	IpsecCbResponse
+	IpsecCbResponseMsg
+	IpsecCbDeleteRequest
+	IpsecCbDeleteRequestMsg
+	IpsecCbDeleteResponseMsg
+	IpsecCbGetRequest
+	IpsecCbGetRequestMsg
+	IpsecCbStats
+	IpsecCbGetResponse
+	IpsecCbGetResponseMsg
 	SecurityProfileKeyHandle
 	CollectorKeyHandle
 	ExportControlKeyHandle

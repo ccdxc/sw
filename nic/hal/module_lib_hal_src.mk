@@ -25,7 +25,6 @@ MODULE_SRCS     := ${MODULE_SRCS} \
                    ${MODULE_SRC_DIR}/src/internal/crypto_keys.cc \
                    ${MODULE_SRC_DIR}/src/internal/crypto_apis.cc \
                    ${MODULE_SRC_DIR}/src/internal/proxy.cc \
-                   ${MODULE_SRC_DIR}/src/internal/ipseccb.cc \
                    ${MODULE_SRC_DIR}/src/internal/swphv.cc \
                    ${MODULE_SRC_DIR}/src/internal/quiesce.cc \
                    ${MODULE_SRC_DIR}/src/internal/wring.cc \

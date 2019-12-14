@@ -128,6 +128,64 @@ func (mr *MockisIpsecSAAction_SaHandleMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisIpsecSAAction_SaHandle)(nil).Size))
 }
 
+// MockisIpsecCbKeyHandle_KeyOrHandle is a mock of isIpsecCbKeyHandle_KeyOrHandle interface
+type MockisIpsecCbKeyHandle_KeyOrHandle struct {
+	ctrl     *gomock.Controller
+	recorder *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder
+}
+
+// MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisIpsecCbKeyHandle_KeyOrHandle
+type MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder struct {
+	mock *MockisIpsecCbKeyHandle_KeyOrHandle
+}
+
+// NewMockisIpsecCbKeyHandle_KeyOrHandle creates a new mock instance
+func NewMockisIpsecCbKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisIpsecCbKeyHandle_KeyOrHandle {
+	mock := &MockisIpsecCbKeyHandle_KeyOrHandle{ctrl: ctrl}
+	mock.recorder = &MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisIpsecCbKeyHandle_KeyOrHandle) EXPECT() *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder {
+	return m.recorder
+}
+
+// isIpsecCbKeyHandle_KeyOrHandle mocks base method
+func (m *MockisIpsecCbKeyHandle_KeyOrHandle) isIpsecCbKeyHandle_KeyOrHandle() {
+	m.ctrl.Call(m, "isIpsecCbKeyHandle_KeyOrHandle")
+}
+
+// isIpsecCbKeyHandle_KeyOrHandle indicates an expected call of isIpsecCbKeyHandle_KeyOrHandle
+func (mr *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder) isIpsecCbKeyHandle_KeyOrHandle() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isIpsecCbKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisIpsecCbKeyHandle_KeyOrHandle)(nil).isIpsecCbKeyHandle_KeyOrHandle))
+}
+
+// MarshalTo mocks base method
+func (m *MockisIpsecCbKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisIpsecCbKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisIpsecCbKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisIpsecCbKeyHandle_KeyOrHandle)(nil).Size))
+}
+
 // MockIpsecClient is a mock of IpsecClient interface
 type MockIpsecClient struct {
 	ctrl     *gomock.Controller
@@ -385,6 +443,78 @@ func (mr *MockIpsecClientMockRecorder) IpsecGlobalStatisticsGet(ctx, in interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecGlobalStatisticsGet", reflect.TypeOf((*MockIpsecClient)(nil).IpsecGlobalStatisticsGet), varargs...)
 }
 
+// IpsecCbCreate mocks base method
+func (m *MockIpsecClient) IpsecCbCreate(ctx context.Context, in *IpsecCbRequestMsg, opts ...grpc.CallOption) (*IpsecCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "IpsecCbCreate", varargs...)
+	ret0, _ := ret[0].(*IpsecCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbCreate indicates an expected call of IpsecCbCreate
+func (mr *MockIpsecClientMockRecorder) IpsecCbCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbCreate", reflect.TypeOf((*MockIpsecClient)(nil).IpsecCbCreate), varargs...)
+}
+
+// IpsecCbUpdate mocks base method
+func (m *MockIpsecClient) IpsecCbUpdate(ctx context.Context, in *IpsecCbRequestMsg, opts ...grpc.CallOption) (*IpsecCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "IpsecCbUpdate", varargs...)
+	ret0, _ := ret[0].(*IpsecCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbUpdate indicates an expected call of IpsecCbUpdate
+func (mr *MockIpsecClientMockRecorder) IpsecCbUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbUpdate", reflect.TypeOf((*MockIpsecClient)(nil).IpsecCbUpdate), varargs...)
+}
+
+// IpsecCbDelete mocks base method
+func (m *MockIpsecClient) IpsecCbDelete(ctx context.Context, in *IpsecCbDeleteRequestMsg, opts ...grpc.CallOption) (*IpsecCbDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "IpsecCbDelete", varargs...)
+	ret0, _ := ret[0].(*IpsecCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbDelete indicates an expected call of IpsecCbDelete
+func (mr *MockIpsecClientMockRecorder) IpsecCbDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbDelete", reflect.TypeOf((*MockIpsecClient)(nil).IpsecCbDelete), varargs...)
+}
+
+// IpsecCbGet mocks base method
+func (m *MockIpsecClient) IpsecCbGet(ctx context.Context, in *IpsecCbGetRequestMsg, opts ...grpc.CallOption) (*IpsecCbGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "IpsecCbGet", varargs...)
+	ret0, _ := ret[0].(*IpsecCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbGet indicates an expected call of IpsecCbGet
+func (mr *MockIpsecClientMockRecorder) IpsecCbGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbGet", reflect.TypeOf((*MockIpsecClient)(nil).IpsecCbGet), varargs...)
+}
+
 // MockIpsecServer is a mock of IpsecServer interface
 type MockIpsecServer struct {
 	ctrl     *gomock.Controller
@@ -575,4 +705,56 @@ func (m *MockIpsecServer) IpsecGlobalStatisticsGet(arg0 context.Context, arg1 *I
 // IpsecGlobalStatisticsGet indicates an expected call of IpsecGlobalStatisticsGet
 func (mr *MockIpsecServerMockRecorder) IpsecGlobalStatisticsGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecGlobalStatisticsGet", reflect.TypeOf((*MockIpsecServer)(nil).IpsecGlobalStatisticsGet), arg0, arg1)
+}
+
+// IpsecCbCreate mocks base method
+func (m *MockIpsecServer) IpsecCbCreate(arg0 context.Context, arg1 *IpsecCbRequestMsg) (*IpsecCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "IpsecCbCreate", arg0, arg1)
+	ret0, _ := ret[0].(*IpsecCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbCreate indicates an expected call of IpsecCbCreate
+func (mr *MockIpsecServerMockRecorder) IpsecCbCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbCreate", reflect.TypeOf((*MockIpsecServer)(nil).IpsecCbCreate), arg0, arg1)
+}
+
+// IpsecCbUpdate mocks base method
+func (m *MockIpsecServer) IpsecCbUpdate(arg0 context.Context, arg1 *IpsecCbRequestMsg) (*IpsecCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "IpsecCbUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*IpsecCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbUpdate indicates an expected call of IpsecCbUpdate
+func (mr *MockIpsecServerMockRecorder) IpsecCbUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbUpdate", reflect.TypeOf((*MockIpsecServer)(nil).IpsecCbUpdate), arg0, arg1)
+}
+
+// IpsecCbDelete mocks base method
+func (m *MockIpsecServer) IpsecCbDelete(arg0 context.Context, arg1 *IpsecCbDeleteRequestMsg) (*IpsecCbDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "IpsecCbDelete", arg0, arg1)
+	ret0, _ := ret[0].(*IpsecCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbDelete indicates an expected call of IpsecCbDelete
+func (mr *MockIpsecServerMockRecorder) IpsecCbDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbDelete", reflect.TypeOf((*MockIpsecServer)(nil).IpsecCbDelete), arg0, arg1)
+}
+
+// IpsecCbGet mocks base method
+func (m *MockIpsecServer) IpsecCbGet(arg0 context.Context, arg1 *IpsecCbGetRequestMsg) (*IpsecCbGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "IpsecCbGet", arg0, arg1)
+	ret0, _ := ret[0].(*IpsecCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecCbGet indicates an expected call of IpsecCbGet
+func (mr *MockIpsecServerMockRecorder) IpsecCbGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbGet", reflect.TypeOf((*MockIpsecServer)(nil).IpsecCbGet), arg0, arg1)
 }

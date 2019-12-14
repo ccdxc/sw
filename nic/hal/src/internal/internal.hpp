@@ -29,21 +29,10 @@ void configurelif_bdf(const internal::LifBdfReq &req,
 
 hal_ret_t software_phv_get (internal::SoftwarePhvGetRequest &req, internal::SoftwarePhvGetResponseMsg *rsp);
 hal_ret_t software_phv_inject (internal::SoftwarePhvInject &req, internal::SoftwarePhvResponse *rsp);
-hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp); 
+hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp);
 hal_ret_t quiesce_msg_snd(const types::Empty &request, types::Empty* rsp);
 hal_ret_t quiesce_start(const types::Empty &request, types::Empty* rsp);
 hal_ret_t quiesce_stop(const types::Empty &request, types::Empty* rsp);
-hal_ret_t ipseccb_create(internal::IpsecCbSpec& spec,
-                       internal::IpsecCbResponse *rsp);
-
-hal_ret_t ipseccb_update(internal::IpsecCbSpec& spec,
-                       internal::IpsecCbResponse *rsp);
-
-hal_ret_t ipseccb_delete(internal::IpsecCbDeleteRequest& req,
-                       internal::IpsecCbDeleteResponseMsg *rsp);
-
-hal_ret_t ipseccb_get(internal::IpsecCbGetRequest& req,
-                    internal::IpsecCbGetResponseMsg *rsp);
 
 hal_ret_t tcpcb_create(internal::TcpCbSpec& spec,
                        internal::TcpCbResponse *rsp);
@@ -141,10 +130,10 @@ hal_ret_t proxyrcb_create(internal::ProxyrCbSpec& spec,
 
 hal_ret_t proxyrcb_update(internal::ProxyrCbSpec& spec,
                           internal::ProxyrCbResponse *rsp);
-    
+
 hal_ret_t proxyrcb_delete(internal::ProxyrCbDeleteRequest& req,
                           internal::ProxyrCbDeleteResponseMsg *rsp);
-    
+
 hal_ret_t proxyrcb_get(internal::ProxyrCbGetRequest& req,
                        internal::ProxyrCbGetResponseMsg *rsp);
 
@@ -153,10 +142,10 @@ hal_ret_t rawrcb_create(internal::RawrCbSpec& spec,
 
 hal_ret_t rawrcb_update(internal::RawrCbSpec& spec,
                         internal::RawrCbResponse *rsp);
-    
+
 hal_ret_t rawrcb_delete(internal::RawrCbDeleteRequest& req,
                         internal::RawrCbDeleteResponseMsg *rsp);
-    
+
 hal_ret_t rawrcb_get(internal::RawrCbGetRequest& req,
                      internal::RawrCbGetResponseMsg *rsp);
 

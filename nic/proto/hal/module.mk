@@ -18,14 +18,12 @@ MODULE_SRCS         := ${MODULE_DIR}/acl.proto          \
                        ${MODULE_DIR}/hal.proto          \
                        ${MODULE_DIR}/l2segment.proto    \
                        ${MODULE_DIR}/kh.proto           \
-                       ${MODULE_DIR}/ipsec.proto        \
                        ${MODULE_DIR}/internal.proto     \
                        ${MODULE_DIR}/nw.proto           \
                        ${MODULE_DIR}/nic.proto          \
                        ${MODULE_DIR}/nvme.proto         \
                        ${MODULE_DIR}/multicast.proto    \
                        ${MODULE_DIR}/qos.proto          \
-                       ${MODULE_DIR}/proxy.proto        \
                        ${MODULE_DIR}/port.proto         \
                        ${MODULE_DIR}/nwsec.proto        \
                        ${MODULE_DIR}/table.proto        \
@@ -33,14 +31,16 @@ MODULE_SRCS         := ${MODULE_DIR}/acl.proto          \
                        ${MODULE_DIR}/session.proto      \
                        ${MODULE_DIR}/vrf.proto          \
                        ${MODULE_DIR}/vmotion.proto      \
+                       ${MODULE_DIR}/proxy.proto        \
                        ${MODULE_DIR}/types.proto        \
-                       ${MODULE_DIR}/telemetry.proto    \
-                       ${MODULE_DIR}/tcp_proxy.proto
+                       ${MODULE_DIR}/tcp_proxy.proto    \
+                       ${MODULE_DIR}/telemetry.proto
 ifeq ($(ARCH),x86_64)
 MODULE_SRCS         := ${MODULE_SRCS}                   \
                        ${MODULE_DIR}/cpucb.proto        \
                        ${MODULE_DIR}/rdma.proto         \
                        ${MODULE_DIR}/l4lb.proto         \
+                       ${MODULE_DIR}/ipsec.proto        \
                        ${MODULE_DIR}/nat.proto
 endif
 ifeq ($(PIPELINE),gft)

@@ -163,6 +163,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_CONFIGURELIF_BDF_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_CONFIGURELIF_BDF_FAIL));
         break;
+#ifdef __x86_64__
     case sys::API_COUNTER_IPSECCB_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_IPSECCB_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_IPSECCB_CREATE_SUCCESS));
@@ -183,6 +184,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_IPSECCB_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_IPSECCB_GET_FAIL));
         break;
+#endif
     case sys::API_COUNTER_L2SEGMENT_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_L2SEGMENT_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_L2SEGMENT_CREATE_SUCCESS));

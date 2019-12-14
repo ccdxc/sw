@@ -9,25 +9,25 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
-#include "gen/proto/internal.pb.h"
+#include "gen/proto/ipsec.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using internal::IpsecCbSpec;
-using internal::IpsecCbStatus;
-using internal::IpsecCbResponse;
-using internal::IpsecCbKeyHandle;
-using internal::IpsecCbRequestMsg;
-using internal::IpsecCbResponseMsg;
-using internal::IpsecCbDeleteRequestMsg;
-using internal::IpsecCbDeleteResponseMsg;
-using internal::IpsecCbGetRequest;
-using internal::IpsecCbGetRequestMsg;
-using internal::IpsecCbGetResponse;
-using internal::IpsecCbGetResponseMsg;
+using ipsec::IpsecCbSpec;
+using ipsec::IpsecCbStatus;
+using ipsec::IpsecCbResponse;
+using ipsec::IpsecCbKeyHandle;
+using ipsec::IpsecCbRequestMsg;
+using ipsec::IpsecCbResponseMsg;
+using ipsec::IpsecCbDeleteRequestMsg;
+using ipsec::IpsecCbDeleteResponseMsg;
+using ipsec::IpsecCbGetRequest;
+using ipsec::IpsecCbGetRequestMsg;
+using ipsec::IpsecCbGetResponse;
+using ipsec::IpsecCbGetResponseMsg;
 
 namespace hal {
 
@@ -72,14 +72,14 @@ typedef struct ipseccb_s {
     uint64_t              h2n_tx_pkts;
     uint64_t              h2n_tx_bytes;
     uint64_t              h2n_tx_drops;
-    
+
     uint64_t              n2h_rx_pkts;
     uint64_t              n2h_rx_bytes;
     uint64_t              n2h_rx_drops;
     uint64_t              n2h_tx_pkts;
     uint64_t              n2h_tx_bytes;
     uint64_t              n2h_tx_drops;
-    
+
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state

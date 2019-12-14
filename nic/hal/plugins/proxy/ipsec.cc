@@ -3,7 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/src/internal/proxy.hpp"
+#ifdef __x86_64__
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#endif
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"

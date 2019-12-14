@@ -1,4 +1,6 @@
+#ifdef __x86_64__
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#endif
 #include "nic/hal/hal.hpp"
 #include "lib/list/list.hpp"
 #include "gen/proto/vrf.pb.h"

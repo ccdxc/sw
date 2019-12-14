@@ -31,12 +31,6 @@ service Internal {
   rpc QuiesceStart (EmptyRequest) returns (EmptyResponse) {}
   rpc QuiesceStop (EmptyRequest) returns (EmptyResponse) {}
 
-  //IPsec
-  rpc IpsecCbCreate (IpsecCbRequestMsg) returns (IpsecCbResponseMsg) {}
-  rpc IpsecCbUpdate (IpsecCbRequestMsg) returns (IpsecCbResponseMsg) {}
-  rpc IpsecCbDelete (IpsecCbDeleteRequestMsg) returns (IpsecCbDeleteResponseMsg) {}
-  rpc IpsecCbGet (IpsecCbGetRequestMsg) returns (IpsecCbGetResponseMsg) {}
-
   //TcpCb
   rpc TcpCbCreate (TcpCbRequestMsg) returns (TcpCbResponseMsg) {}
   rpc TcpCbUpdate (TcpCbRequestMsg) returns (TcpCbResponseMsg) {}
@@ -76,7 +70,7 @@ service Internal {
   //CryptoApi
   rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
 
-  // DescrAol  
+  // DescrAol
   rpc DescrAolGet (DescrAolRequestMsg) returns (DescrAolResponseMsg) {}
 
   rpc ProxycCbCreate (ProxycCbRequestMsg) returns (ProxycCbResponseMsg) {}
@@ -101,10 +95,10 @@ service Internal {
 
   // Test send fin
   rpc TestSendFinReq (TestSendFinRequestMsg) returns (TestSendFinResponseMsg) {}
-  
+
   // Test clock sync
   rpc TestClockSyncReq (TestClockSyncRequestMsg) returns (TestClockSyncResponseMsg) {}
- 
+
   rpc FlowHashGet (FlowHashGetRequestMsg) returns (FlowHashGetResponseMsg) {}
 }
 
@@ -154,12 +148,12 @@ message AllocHbmAddressResponseMsg {
 }
 
 message LifBdfReq {
-  uint32 lif = 1;    
+  uint32 lif = 1;
   uint32 bdf = 2;
 }
 
 message LifBdfResp {
-  uint32 lif = 1;    
+  uint32 lif = 1;
   uint32 bdf = 2;
   int32  status = 3;
 }
@@ -192,7 +186,7 @@ message SoftwarePhvStatus {
   uint32                inject_cntr       = 5;    // injected PHV counter
 }
 
-// SoftwarePhvResponse is generic response 
+// SoftwarePhvResponse is generic response
 message SoftwarePhvResponse {
   types.ApiStatus       api_status        = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
@@ -256,117 +250,6 @@ message EmptyRequest{
 message EmptyResponse{
   repeated types.Empty response = 1;
 }
-
-// IpsecCbKeyHandle is used to operate on a ipsec_cb either by its key or handle
-message IpsecCbKeyHandle {
-  oneof key_or_handle {
-    uint32     ipseccb_id          = 1;    // unique ipsec_cb id allocated by app                                                                                                                                                                                  
-    fixed64    ipseccb_handle      = 2;    // ipsec_cb handle returned by HAL                                                                                                                                                                                      
-  }                                                                                                                                                                                                                                                                
-}                                                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                                                   
-// IpsecCbSpec captures all the ipsec_cb level configuration                                                                                                                                                                                                       
-message IpsecCbSpec {                                                                                                                                                                                                                                              
-  IpsecCbKeyHandle      key_or_handle              = 1;    // ipsec_cb being created/updated                                                                                                                                                                       
-  uint32                pi                    = 2;                                                                                                                                                                                                                 
-  uint32                ci                    = 3;                                                                                                                                                                                                                 
-  uint32                tunnel_sip4           = 4;                                                                                                                                                                                                                 
-  uint32                tunnel_dip4           = 5;                                                                                                                                                                                                                 
-  uint32                iv_size               = 6;                                                                                                                                                                                                                 
-  uint32                icv_size              = 7;                                                                                                                                                                                                                 
-  uint32                block_size            = 8;                                                                                                                                                                                                                 
-  uint32                key_index             = 9;                                                                                                                                                                                                                 
-  uint32                barco_enc_cmd         = 10;
-  fixed64               iv                    = 11;
-  uint32                iv_salt               = 12;
-  uint32                esn_hi                = 13;
-  uint32                esn_lo                = 14;
-  uint32                spi                   = 15;
-  uint32                expected_seq_no       = 16;
-  fixed64               seq_no_bmp            = 17;
-  types.IPAddress       sip6                  = 18;
-  types.IPAddress       dip6                  = 19;
-  uint32                is_v6                 = 20;
-  uint32                vrf_vlan              = 21;
-  uint32                last_replay_seq_no    = 22;
-  uint32                new_spi               = 23;
-  uint32                new_key_index         = 24;
-  uint32                is_nat_t              = 25;
-  uint32                flags                 = 26;
-  uint32                is_random             = 27;
-  uint32                extra_pad             = 28;
-  uint32                rx_pkts               = 29;
-  fixed64               rx_bytes              = 30;
-  fixed64               rx_drops              = 31;
-  fixed64               tx_pkts               = 32;
-  fixed64               tx_bytes              = 33;
-  fixed64               tx_drops              = 34;
-}
-
-// IpsecCbRequestMsg is batched add or modify ipseccb request
-message IpsecCbRequestMsg {
-  repeated IpsecCbSpec    request = 1;    // batched request
-}
-
-// IpsecCbStatus is the operational status of a given ipseccb
-message IpsecCbStatus {
-  fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
-}
-
-// IpsecCbResponse is response to IpsecCbSpec
-message IpsecCbResponse {
-  types.ApiStatus        api_status            = 1;    // API status code
-  IpsecCbStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
-}
-
-// IpsecCbResponseMsg is batched response to IpsecCbRequestMsg
-message IpsecCbResponseMsg {
-  repeated IpsecCbResponse    response = 1;    // batched response
-}
-
-// IpsecCbDeleteRequest is used to delete a ipseccb
-message IpsecCbDeleteRequest {
-  IpsecCbKeyHandle     key_or_handle = 1;    // IpsecCb key or handle
-}
-
-// IpsecCbDeleteRequestMsg is used to delete a batch of ipseccbs
-message IpsecCbDeleteRequestMsg {
-  repeated IpsecCbDeleteRequest    request = 1;    // batched delete request
-}
-
-// IpsecCbDeleteResponseMsg is batched response to IpsecCbDeleteRequestMsg
-message IpsecCbDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
-}
-
-// IpsecCbGetRequest is used to get information about a ipseccb
-message IpsecCbGetRequest {
-  IpsecCbKeyHandle            key_or_handle = 1;    // IpsecCb key or handle
-}
-
-// IpsecCbGetRequestMsg is batched GET requests for ipseccbs
-message IpsecCbGetRequestMsg {
-  repeated IpsecCbGetRequest    request = 1;    // batched get request
-}
-
-// IpsecCbStats is the statistics object for each ipseccb
-message IpsecCbStats {
-}
-
-// IpsecCbGetResponse captures all the information about a ipseccb
-// only if api_status indicates success, other fields are valid
-message IpsecCbGetResponse {
-  types.ApiStatus        api_status = 1;    // API status code
-  IpsecCbSpec         spec       = 2;    // ipseccb configuration
-  IpsecCbStatus       status     = 3;    // operational state of ipseccb
-  IpsecCbStats        stats      = 4;    // stats of the ipseccb
-}
-
-// IpsecCbGetResponseMsg is batched response to IpsecCbGetRequestMsg
-message IpsecCbGetResponseMsg {
-  repeated IpsecCbGetResponse    response = 1;    // batch get response
-}
-
 
 // TcpCbKeyHandle is used to operate on a tcp_cb either by its key or handle
 message TcpCbKeyHandle {
@@ -767,12 +650,12 @@ message WRingGetEntriesResponse {
   types.ApiStatus    api_status = 1;    // API status code
   WRingSpec         spec        = 2;    // wring configuration
   uint32            index       = 3;
-  WRingStatus       status      = 4;    // operational state 
-  WRingStats        stats       = 5;    // stats 
+  WRingStatus       status      = 4;    // operational state
+  WRingStats        stats       = 5;    // stats
   oneof WRingSlotInfo {
     fixed64                 value           = 6;
     WRingBarcoGCMDescMsg    barco_gcm_desc  = 7;
-    bytes                   raw             = 8; 
+    bytes                   raw             = 8;
   }
 }
 
@@ -1123,7 +1006,7 @@ message CryptoAsymApiECCDomainParamsFp {
 //  bytes         h                       = 7;
 }
 
-//  ECC Point Multiplication 
+//  ECC Point Multiplication
 
 message CryptoAsymApiReqECCPointMulFp {
   CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
@@ -1434,13 +1317,13 @@ message ProxycCbSpec {
   uint32                chain_txq_qid              = 14;
   uint32                chain_txq_ring             = 15;
   uint32                redir_span                 = 16;
-  
+
   /*
    * 64-bit statistic counters
    */
   uint64                stat_pkts_chain            = 17;
   uint64                stat_pkts_discard          = 18;
-  
+
   /*
    * 32-bit saturating statistic counters
    */
@@ -1540,7 +1423,7 @@ message ProxyrCbSpec {
   uint32                chain_rxq_entry_size_shift = 12;
   uint32                chain_rxq_ring_index_select= 13;
   uint32                redir_span                 = 14;
-  
+
   types.IPAddress       ip_sa                      = 15;
   types.IPAddress       ip_da                      = 16;
   uint32                sport                      = 17;
@@ -1557,7 +1440,7 @@ message ProxyrCbSpec {
    */
   uint64                stat_pkts_redir            = 25;
   uint64                stat_pkts_discard          = 26;
-  
+
   /*
    * 32-bit saturating statistic counters
    */
@@ -1665,7 +1548,7 @@ message RawrCbSpec {
   uint32                cpu_id                     = 17;
   uint64                ascq_base                  = 18;
   uint64                ascq_sem_inf_addr          = 19;
-  
+
   /*
    * 64-bit statistic counters
    */
@@ -1774,7 +1657,7 @@ message RawcCbSpec {
   uint32                cpu_id                     = 16;
   uint64                ascq_base                  = 17;
   uint64                ascq_sem_inf_addr          = 18;
-  
+
   /*
    * 64-bit statistic counters
    */

@@ -35,13 +35,16 @@
 #include "nic/hal/plugins/cfg/nvme/nvme_ns.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_sq.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme_cq.hpp"
+#include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #ifdef __x86_64__
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
+#include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#include "nic/hal/plugins/cfg/ipsec/ipseccb.hpp"
 #endif
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/wring.hpp"
-#include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
@@ -54,14 +57,9 @@
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
-#ifdef SIM
-#include "nic/hal/plugins/cfg/nat/nat.hpp"
-#endif
 #include "lib/periodic/periodic.hpp"
 #include "lib/twheel/twheel.hpp"
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"
-#include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
-#include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 
 // name of the HAL state store segment
 #define HAL_STATE_STORE                         "h2s"
@@ -370,7 +368,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
-#ifdef SIM
+#ifdef __x86_64__
     slab = register_slab(HAL_SLAB_NAT_POOL,
                          slab_args={.name="natpool",
                         .size=sizeof(hal::nat_pool_t), .num_elements=8,
@@ -421,6 +419,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+#ifdef __x86_64__
     slab = register_slab(HAL_SLAB_IPSEC_CFG_RULE,
                          slab_args={.name="ipsec_cfg_rule",
                         .size=sizeof(hal::ipsec_cfg_rule_t), .num_elements=64,
@@ -432,6 +431,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                         .size=sizeof(hal::ipsec_cfg_pol_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
+#endif
 
     slab = register_slab(HAL_SLAB_TCP_PROXY_CFG_RULE,
                          slab_args={.name="tcp_proxy_cfg_rule",
@@ -585,6 +585,7 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+#ifdef __x86_64__
     // initialize IPSEC CB related data structures
     slab = register_slab(HAL_SLAB_IPSECCB,
                          slab_args={.name="ipseccb",
@@ -597,6 +598,7 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                         .size=sizeof(hal::ipsec_sa_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
+#endif
 
     // initialize CPU CB related data structures
     slab = register_slab(HAL_SLAB_CPUCB,
@@ -1059,7 +1061,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
-#ifdef SIM
+#ifdef __x86_64__
     // initialize NAT related data structures
     HAL_HT_CREATE("natpool", nat_pool_ht_,
                   HAL_MAX_NAT_POOLS >> 1,
@@ -1216,6 +1218,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::proxy_key_size());
     SDK_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
 
+#ifdef __x86_64__
     // initialize IPSEC CB related data structures
     HAL_HT_CREATE("ipseccb", ipseccb_id_ht_,
                   HAL_MAX_IPSECCB/2,
@@ -1235,6 +1238,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::ipsec_sa_get_handle_key_func,
                   hal::ipsec_sa_handle_key_size());
     SDK_ASSERT_RETURN((ipsec_sa_hal_hdl_ht_ != NULL), false);
+#endif
 
     // initialize CPU CB related data structures
     HAL_HT_CREATE("cpucb", cpucb_id_ht_,
@@ -1277,19 +1281,19 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::nwsec_policy_key_size());
     SDK_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
 
-#ifdef SIM
+#ifdef __x86_64__
     HAL_HT_CREATE("nat policy", nat_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nat_cfg_pol_key_func_get,
                   hal::nat_cfg_pol_key_size());
     SDK_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
-#endif
 
     HAL_HT_CREATE("ipsec policy", ipsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::ipsec_cfg_pol_key_func_get,
                   hal::ipsec_cfg_pol_key_size());
     SDK_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
+#endif
 
     HAL_HT_CREATE("tcp_proxy policy", tcp_proxy_policy_ht_,
                   HAL_MAX_VRFS >> 1,
@@ -1343,13 +1347,7 @@ hal_oper_db::hal_oper_db()
     session_hal_handle_ht_= NULL;
     session_hal_iflow_ht_ = NULL;
     session_hal_rflow_ht_ = NULL;
-#ifdef __x86_64__
-    l4lb_ht_ = NULL;
-#endif
     nwsec_policy_ht_ = NULL;
-#ifdef SIM
-    nat_policy_ht_ = NULL;
-#endif
     nwsec_group_ht_ = NULL;
     rule_cfg_ht_ = NULL;
     qos_class_ht_ = NULL;
@@ -1364,9 +1362,6 @@ hal_oper_db::hal_oper_db()
     tcpcb_id_ht_ = NULL;
     wring_id_ht_ = NULL;
     proxy_type_ht_ = NULL;
-    ipseccb_id_ht_ = NULL;
-    ipsec_sa_id_ht_ = NULL;
-    ipsec_sa_hal_hdl_ht_ = NULL;
     cpucb_id_ht_ = NULL;
     rawrcb_id_ht_ = NULL;
     app_redir_if_id_ = HAL_IFINDEX_INVALID;
@@ -1379,9 +1374,14 @@ hal_oper_db::hal_oper_db()
     gft_hdr_transposition_profile_id_ht_ = NULL;
     gft_exact_match_flow_entry_id_ht_ = NULL;
 #endif
-#ifdef SIM
+#ifdef __x86_64__
+    l4lb_ht_ = NULL;
+    ipsec_sa_id_ht_ = NULL;
+    ipsec_sa_hal_hdl_ht_ = NULL;
+    ipseccb_id_ht_ = NULL;
     nat_pool_ht_ = NULL;
     nat_mapping_ht_ = NULL;
+    nat_policy_ht_ = NULL;
 #endif
     nexthop_id_ht_ = NULL;
     route_ht_ = NULL;
@@ -1429,10 +1429,10 @@ hal_oper_db::~hal_oper_db()
     acl_ht_ ? ht::destroy(acl_ht_, mmgr_) : HAL_NOP;
     wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
     proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
+#ifdef __x86_64__
     ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
     ipsec_sa_id_ht_ ? ht::destroy(ipsec_sa_id_ht_) : HAL_NOP;
     ipsec_sa_hal_hdl_ht_ ? ht::destroy(ipsec_sa_hal_hdl_ht_) : HAL_NOP;
-#ifdef __x86_64__
     l4lb_ht_ ? ht::destroy(l4lb_ht_, mmgr_) : HAL_NOP;
 #endif
     cpucb_id_ht_ ? ht::destroy(cpucb_id_ht_) : HAL_NOP;
@@ -1442,7 +1442,7 @@ hal_oper_db::~hal_oper_db()
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
     rule_cfg_ht_ ? ht::destroy(rule_cfg_ht_) : HAL_NOP;
-#ifdef SIM
+#ifdef __x86_64__
     nat_policy_ht_ ? ht::destroy(nat_policy_ht_) : HAL_NOP;
     nat_pool_ht_ ? ht::destroy(nat_pool_ht_) : HAL_NOP;
     nat_mapping_ht_ ? ht::destroy(nat_mapping_ht_) : HAL_NOP;
@@ -2025,6 +2025,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->proxy_flow_info_slab()->free(elem);
         break;
 
+#ifdef __x86_64__
     case HAL_SLAB_IPSECCB:
         g_hal_state->ipseccb_slab()->free(elem);
         break;
@@ -2032,6 +2033,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_IPSEC_SA:
         g_hal_state->ipsec_sa_slab()->free(elem);
         break;
+#endif
 
     case HAL_SLAB_CPUCB:
         g_hal_state->cpucb_slab()->free(elem);
@@ -2115,7 +2117,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->mac_addr_list_elem_slab()->free(elem);
         break;
 
-#ifdef SIM
+#ifdef __x86_64__
     case HAL_SLAB_NAT_CFG_RULE:
         g_hal_state->nat_cfg_rule_slab()->free(elem);
         break;

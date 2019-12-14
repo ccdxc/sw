@@ -31,7 +31,6 @@ std::string g_grpc_server_addr;
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
-#include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 

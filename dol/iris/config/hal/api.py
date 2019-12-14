@@ -34,6 +34,7 @@ import dos_pb2              as dos_pb2
 import nic_pb2              as nic_pb2
 import internal_pb2         as internal_pb2
 import nvme_pb2             as nvme_pb2
+import ipsec_pb2            as ipsec_pb2
 if GlobalOptions.gft:
     import gft_pb2              as gft_pb2
 
@@ -267,8 +268,8 @@ def ConfigureTcpCbs(objlist):
 
 def ConfigureIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = internal_pb2.InternalStub(HalChannel)
-    __config(objlist, internal_pb2.IpsecCbRequestMsg,
+    stub = ipsec_pb2.IpsecStub(HalChannel)
+    __config(objlist, ipsec_pb2.IpsecCbRequestMsg,
              stub.IpsecCbCreate)
     return
 
@@ -288,8 +289,8 @@ def UpdateTlsCbs(objlist):
 
 def UpdateIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = internal_pb2.InternalStub(HalChannel)
-    __config(objlist, internal_pb2.IpsecCbRequestMsg,
+    stub = ipsec_pb2.IpsecStub(HalChannel)
+    __config(objlist, ipsec_pb2.IpsecCbRequestMsg,
              stub.IpsecCbUpdate)
     return
 
@@ -407,8 +408,8 @@ def GetTcpCbs(objlist):
 
 def GetIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = internal_pb2.InternalStub(HalChannel)
-    __config(objlist, internal_pb2.IpsecCbGetRequestMsg,
+    stub = ipsec_pb2.IpsecStub(HalChannel)
+    __config(objlist, ipsec_pb2.IpsecCbGetRequestMsg,
              stub.IpsecCbGet)
     return
 

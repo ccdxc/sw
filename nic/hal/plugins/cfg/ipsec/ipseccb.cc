@@ -8,7 +8,7 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
-#include "nic/hal/src/internal/ipseccb.hpp"
+#include "nic/hal/plugins/cfg/ipsec/ipseccb.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
@@ -409,7 +409,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 // process a IPSEC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipseccb_delete (internal::IpsecCbDeleteRequest& req, internal::IpsecCbDeleteResponseMsg *rsp)
+ipseccb_delete (ipsec::IpsecCbDeleteRequest& req, ipsec::IpsecCbDeleteResponseMsg *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t*               ipseccb;

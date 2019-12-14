@@ -15,14 +15,12 @@ MODULE_DEPS     := ${NICDIR}/proto/hal/acl.proto          \
                    ${NICDIR}/proto/hal/hal.proto          \
                    ${NICDIR}/proto/hal/l2segment.proto    \
                    ${NICDIR}/proto/hal/kh.proto           \
-                   ${NICDIR}/proto/hal/ipsec.proto        \
                    ${NICDIR}/proto/hal/internal.proto     \
                    ${NICDIR}/proto/hal/nw.proto           \
                    ${NICDIR}/proto/hal/nic.proto          \
                    ${NICDIR}/proto/hal/nvme.proto         \
                    ${NICDIR}/proto/hal/multicast.proto    \
                    ${NICDIR}/proto/hal/qos.proto          \
-                   ${NICDIR}/proto/hal/proxy.proto        \
                    ${NICDIR}/proto/hal/port.proto         \
                    ${NICDIR}/proto/hal/nwsec.proto        \
                    ${NICDIR}/proto/hal/table.proto        \
@@ -30,14 +28,16 @@ MODULE_DEPS     := ${NICDIR}/proto/hal/acl.proto          \
                    ${NICDIR}/proto/hal/session.proto      \
                    ${NICDIR}/proto/hal/vrf.proto          \
                    ${NICDIR}/proto/hal/vmotion.proto      \
+                   ${NICDIR}/proto/hal/proxy.proto        \
+                   ${NICDIR}/proto/hal/tcp_proxy.proto    \
                    ${NICDIR}/proto/hal/types.proto        \
-                   ${NICDIR}/proto/hal/telemetry.proto    \
-                   ${NICDIR}/proto/hal/tcp_proxy.proto
+                   ${NICDIR}/proto/hal/telemetry.proto
 ifeq ($(ARCH),x86_64)
 MODULE_DEPS     := ${MODULE_DEPS}                         \
                    ${NICDIR}/proto/hal/l4lb.proto         \
                    ${NICDIR}/proto/hal/rdma.proto         \
                    ${NICDIR}/proto/hal/cpucb.proto        \
+                   ${NICDIR}/proto/hal/ipsec.proto        \
                    ${NICDIR}/proto/hal/nat.proto
 endif
 ifeq ($(PIPELINE),gft)

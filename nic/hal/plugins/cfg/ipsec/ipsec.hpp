@@ -21,6 +21,13 @@ using kh::IpsecSAEncryptKeyHandle;
 using kh::IpsecSADecryptKeyHandle;
 using kh::IpsecRuleKeyHandle;
 
+using ipsec::IpsecCbSpec;
+using ipsec::IpsecCbResponse;
+using ipsec::IpsecCbDeleteRequest;
+using ipsec::IpsecCbDeleteResponseMsg;
+using ipsec::IpsecCbGetRequest;
+using ipsec::IpsecCbGetResponseMsg;
+
 using ipsec::IpsecRuleRequestMsg;
 using ipsec::IpsecRuleStatus;
 using ipsec::IpsecRuleResponse;
@@ -68,12 +75,12 @@ namespace hal {
 
 #define MAX_IPSEC_KEY_SIZE  32
 #define IPSEC_CB_RING_SIZE 256
-#define IPSEC_BARCO_RING_SIZE 1024 
+#define IPSEC_BARCO_RING_SIZE 1024
 
 #define IPSEC_DEF_IV_SIZE                8
 #define IPSEC_AES_GCM_DEF_BLOCK_SIZE    16
 #define IPSEC_AES_GCM_DEF_ICV_SIZE      16
-#define IPSEC_AES_GCM_DEF_KEY_SIZE      32 
+#define IPSEC_AES_GCM_DEF_KEY_SIZE      32
 
 typedef uint64_t rule_id_t;
 typedef uint64_t pol_id_t;
@@ -95,7 +102,7 @@ typedef uint64_t pol_id_t;
 //                list of src-security-group range;
 //                list of dst-security-group range;
 //
-//                ESPInfo 
+//                ESPInfo
 //            }
 //
 //            // action for rule match
@@ -181,8 +188,8 @@ typedef struct ipsec_sa_s {
     uint64_t              seq_no_bmp;
     hal_handle_t          hal_handle;              // HAL allocated handle
     mac_addr_t            smac;
-    mac_addr_t            dmac; 
-    uint8_t               is_v6; 
+    mac_addr_t            dmac;
+    uint8_t               is_v6;
     uint8_t               is_nat_t;
     uint8_t               is_random;
     uint8_t               extra_pad;
@@ -298,10 +305,10 @@ typedef struct ipsec_global_stats_cb_s {
 } __PACK__ ipsec_global_stats_cb_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_IPSEC_SA                          4096 
+#define HAL_MAX_IPSEC_SA                          4096
 #define HAL_MAX_IPSEC_SUPP_SA                     32
-#define IPSEC_PER_CB_RING_SIZE                    256 
-#define IPSEC_PER_CB_BARCO_RING_SIZE              512 
+#define IPSEC_PER_CB_RING_SIZE                    256
+#define IPSEC_PER_CB_BARCO_RING_SIZE              512
 #define IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE         16
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
@@ -488,7 +495,7 @@ ipsec_sa_init (ipsec_sa_t *ipsec_sa)
         return NULL;
     }
     memset(ipsec_sa, 0, sizeof(ipsec_sa_t));
- 
+
     SDK_SPINLOCK_INIT(&ipsec_sa->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
@@ -802,7 +809,7 @@ ipsec_cfg_pol_acl_build (ipsec_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
     if ((acl_ctx = rule_lib_init(acl_name, &ipsec_ip_acl_config_glbl)) == NULL)
         return ret;
 
-    if ((ret = ipsec_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK) 
+    if ((ret = ipsec_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK)
         return ret;
 
     *out_acl_ctx = acl_ctx;
@@ -902,6 +909,17 @@ hal_ret_t ipsec_rule_get(ipsec::IpsecRuleGetRequest& req,
 hal_ret_t ipsec_global_statistics_get(ipsec::IpsecGlobalStatisticsGetRequest& req,
                                       ipsec::IpsecGlobalStatisticsGetResponseMsg *rsp);
 
+hal_ret_t ipseccb_create(ipsec::IpsecCbSpec& spec,
+                         ipsec::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_update(ipsec::IpsecCbSpec& spec,
+                         ipsec::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_delete(ipsec::IpsecCbDeleteRequest& req,
+                         ipsec::IpsecCbDeleteResponseMsg *rsp);
+
+hal_ret_t ipseccb_get(ipsec::IpsecCbGetRequest& req,
+                      ipsec::IpsecCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __IPSEC_HPP__
