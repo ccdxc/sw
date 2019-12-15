@@ -91,7 +91,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                          pds_epoch_t epoch, api_op_t api_op,
-                         obj_ctxt_t *obj_ctxt) {
+                         api_obj_ctxt_t *obj_ctxt) {
     device_entry *device;
     ip_addr_t ip_addr;
 

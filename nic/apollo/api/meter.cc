@@ -25,7 +25,8 @@ namespace api {
 
 typedef struct meter_update_ctxt_s {
     meter_entry *meter;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
 } __PACK__ meter_update_ctxt_t;
 
 meter_entry::meter_entry() {
@@ -109,12 +110,12 @@ meter_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-meter_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+meter_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-meter_entry::program_create(obj_ctxt_t *obj_ctxt) {
+meter_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming meter %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -130,18 +131,18 @@ meter_entry::release_resources(void) {
 }
 
 sdk_ret_t
-meter_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+meter_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 meter_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                             api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
-meter_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+meter_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -166,22 +167,25 @@ meter_entry::delay_delete(void) {
 
 static bool
 vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    vnic_entry *vnic = (vnic_entry *)api_obj;
+    vnic_entry *vnic;
     meter_update_ctxt_t *upd_ctxt = (meter_update_ctxt_t *)ctxt;
 
+    vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
     if ((vnic->meter(IP_AF_IPV4).id == upd_ctxt->meter->key().id) ||
         (vnic->meter(IP_AF_IPV4).id == upd_ctxt->meter->key().id)) {
-        upd_ctxt->obj_ctxt->add_deps(vnic, API_OP_UPDATE);
+        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
+                            (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
     return false;
 }
 
 sdk_ret_t
-meter_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+meter_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
     meter_update_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.meter = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
+    upd_ctxt.upd_bmap = PDS_VNIC_UPD_METER;
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
 }
 

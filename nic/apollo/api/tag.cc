@@ -25,7 +25,7 @@ namespace api {
 
 typedef struct tag_update_ctxt_s {
     tag_entry *tag;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
 } __PACK__ tag_entry_update_ctxt_t;
 
 tag_entry::tag_entry() {
@@ -109,12 +109,12 @@ tag_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-tag_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tag_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-tag_entry::program_create(obj_ctxt_t *obj_ctxt) {
+tag_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming tag tree %u", key_);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -130,13 +130,13 @@ tag_entry::release_resources(void) {
 }
 
 sdk_ret_t
-tag_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tag_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 tag_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                           api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating tag %u config", key_);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
@@ -160,7 +160,7 @@ tag_entry::read(pds_tag_info_t *info) {
 }
 
 sdk_ret_t
-tag_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tag_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -184,7 +184,7 @@ tag_entry::delay_delete(void) {
 }
 
 sdk_ret_t
-tag_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+tag_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 

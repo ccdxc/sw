@@ -199,7 +199,7 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
 }
 
 api_base *
-api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
+api_base::find_obj(api_ctxt_t *api_ctxt) {
     switch (api_ctxt->obj_id) {
     case OBJ_ID_DEVICE:
         return device_db()->find();
@@ -294,7 +294,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
 api_base *
 api_base::find_obj(obj_id_t obj_id, void *key) {
-    api_base *api_obj = NULL, *clone;
+    api_base *api_obj = NULL;
 
     switch (obj_id) {
     case OBJ_ID_DEVICE:
@@ -368,14 +368,9 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
     }
 
     if (api_obj) {
-        // check if we have an object that framework is holding corresponding to
-        // this object and return that, if one exists
-        clone = api_obj_find_clone(api_obj);
-        if (clone) {
-            return clone;
-        }
+        return api_framework_obj(api_obj);
     }
-    return api_obj;
+    return NULL;
 }
 
 bool

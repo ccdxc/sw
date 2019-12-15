@@ -50,7 +50,7 @@ tep_impl::destroy(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     sdk_table_api_params_t tparams;
@@ -113,7 +113,7 @@ tep_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t               ret;
     tep_entry               *tep;
     device_entry            *device;
@@ -202,7 +202,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     //TODO: need to update these entries or entries that are pointing to these
     // entries with new epoch and valid bit set to FALSE
     //if (hw_id_ != 0xFFFF) {
@@ -216,7 +216,7 @@ tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                    obj_ctxt_t *obj_ctxt) {
+                    api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

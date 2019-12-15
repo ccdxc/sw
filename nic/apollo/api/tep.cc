@@ -24,7 +24,8 @@ namespace api {
 
 typedef struct tep_update_ctxt_s {
     tep_entry *tep;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
 } __PACK__ tep_update_ctxt_t;
 
 tep_entry::tep_entry() {
@@ -94,7 +95,7 @@ tep_entry::free(tep_entry *tep) {
 }
 
 sdk_ret_t
-tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->reserve_resources(this, obj_ctxt);
     }
@@ -144,7 +145,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-tep_entry::program_create(obj_ctxt_t *obj_ctxt) {
+tep_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -152,7 +153,7 @@ tep_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+tep_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->cleanup_hw(this, obj_ctxt);
     }
@@ -160,9 +161,10 @@ tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tep_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+tep_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_tep_spec_t *spec = &obj_ctxt->api_params->tep_spec;
 
+    obj_ctxt->upd_bmap = 0;
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
                       "on tunnel %u", type_, spec->type, key_.id);
@@ -176,6 +178,10 @@ tep_entry::compute_update(obj_ctxt_t *obj_ctxt) {
                       pds_encap2str(&spec->encap), key_.id);
         return SDK_RET_INVALID_ARG;
     }
+
+    if ((nh_type_ == PDS_NH_TYPE_OVERLAY) && (tep_.id != spec->tep.id)) {
+        obj_ctxt->upd_bmap = PDS_TEP_UPD_OVERLAY_NH;
+    }
     return SDK_RET_OK;
 }
 
@@ -185,25 +191,33 @@ tep_upd_walk_cb_ (void *api_obj, void *ctxt) {
     tep_entry *tep = (tep_entry *)api_obj;
     tep_update_ctxt_t *upd_ctxt = (tep_update_ctxt_t *)ctxt;
 
+    tep = (tep_entry *)api_framework_obj((api_base *)api_obj);
     tep_key = upd_ctxt->tep->key();
     if ((tep->nh_type() == PDS_NH_TYPE_OVERLAY) &&
         (tep->tep().id == tep_key.id)) {
-        upd_ctxt->obj_ctxt->add_deps(tep, API_OP_UPDATE);
+        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
+                             (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
     return false;
 }
 
 sdk_ret_t
-tep_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+tep_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
     tep_update_ctxt_t upd_ctxt = { 0 };
 
-    upd_ctxt.tep = this;
-    upd_ctxt.obj_ctxt = obj_ctxt;
-    return tep_db()->walk(tep_upd_walk_cb_, &upd_ctxt);
+    if (obj_ctxt->upd_bmap & PDS_TEP_UPD_OVERLAY_NH) {
+        upd_ctxt.tep = this;
+        upd_ctxt.obj_ctxt = obj_ctxt;
+        upd_ctxt.upd_bmap = PDS_TEP_UPD_OVERLAY_NH;
+        return tep_db()->walk(tep_upd_walk_cb_, &upd_ctxt);
+    }
+    // in all other cases, it is sufficient to contain the update programming to
+    // this TEP object alone
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
-tep_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->update_hw(orig_obj, this, obj_ctxt);
     }
@@ -212,7 +226,7 @@ tep_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                           api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
@@ -258,7 +272,7 @@ tep_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (tep_db()->remove((tep_entry *)orig_obj)) {
         return tep_db()->insert(this);
     }

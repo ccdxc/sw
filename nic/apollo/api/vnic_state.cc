@@ -16,7 +16,6 @@ namespace api {
 /// \@{
 
 vnic_state::vnic_state() {
-    // TODO: need to tune multi-threading related params later
     vnic_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
                            vnic_entry::vnic_key_func_get,
                            sizeof(pds_vnic_key_t));

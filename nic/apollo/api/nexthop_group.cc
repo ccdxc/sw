@@ -105,12 +105,12 @@ nexthop_group::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-nexthop_group::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_group::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-nexthop_group::program_create(obj_ctxt_t *obj_ctxt) {
+nexthop_group::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -130,19 +130,19 @@ nexthop_group::nuke_resources_(void) {
 }
 
 sdk_ret_t
-nexthop_group::cleanup_config(obj_ctxt_t *obj_ctxt) {
+nexthop_group::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-nexthop_group::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_group::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 nexthop_group::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                               api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                               api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating nexthop group %u", key_);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
@@ -167,7 +167,7 @@ nexthop_group::read(pds_nexthop_group_info_t *info) {
 }
 
 sdk_ret_t
-nexthop_group::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_group::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

@@ -17,6 +17,7 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -43,15 +44,15 @@ typedef enum api_batch_stage_e {
     API_BATCH_STAGE_ABORT,                ///< Abort stage
 } api_batch_stage_t;
 
-/// \brief Per API object context
+/// \brief    per API object context
 /// transient information maintained while a batch of APIs are being processed
 ///
 /// \remark
 ///   api_params is not owned by this structure, so don't free it ... it
 ///   is owned by api_ctxt_t and hence when api_ctxt_t is being destroyed
 ///   we should return the api_params_t memory back to slab
-typedef struct obj_ctxt_s obj_ctxt_t;
-struct obj_ctxt_s {
+typedef struct api_obj_ctxt_s api_obj_ctxt_t;
+struct api_obj_ctxt_s {
     api_op_t        api_op;         ///< de-duped/compressed API opcode
     obj_id_t        obj_id;         ///< object identifier
     api_params_t    *api_params;    ///< API specific parameters
@@ -67,7 +68,7 @@ struct obj_ctxt_s {
     uint8_t hw_dirty:1;           ///< true if hw entries are updated,
                                   ///< but not yet activated
 
-    obj_ctxt_s() {
+    api_obj_ctxt_s() {
         api_op = API_OP_INVALID;
         obj_id = OBJ_ID_NONE;
         api_params = NULL;
@@ -78,7 +79,7 @@ struct obj_ctxt_s {
         hw_dirty = 0;
     }
 
-    bool operator==(const obj_ctxt_s& rhs) const {
+    bool operator==(const api_obj_ctxt_s& rhs) const {
         if ((this->api_op == rhs.api_op) &&
             (this->obj_id == rhs.obj_id) &&
             (this->api_params == rhs.api_params) &&
@@ -88,26 +89,21 @@ struct obj_ctxt_s {
         }
         return false;
     }
-    // TODO: remove this !!
-    /// \brief    add the given api object to dependency list, if it is not
-    ///           already present in the list and recursively add the objects
-    ///           that get effected if this object is updated
-    sdk_ret_t add_deps(api_base *obj, api_op_t api_op);
 };
 
 // objects on which add/del/upd API calls are issued are put in a dirty
 // list/map by API framework to de-dup potentially multiple API operations
-// issued by caller in same batch ... these are called master objects
-typedef unordered_map<api_base *, obj_ctxt_t> dirty_obj_map_t;
+// issued by caller in same batch
+typedef unordered_map<api_base *, api_obj_ctxt_t *> dirty_obj_map_t;
 typedef list<api_base *> dirty_obj_list_t;
 
 // objects affected (i.e. dirtied) by add/del/upd operations on other objects
-// (aka. master objects) are called dependent objects and are maintained
-// separately; normally these objects need to be either reprogrammed or deleted
-typedef unordered_map<api_base *, obj_ctxt_t> dep_obj_map_t;
+// are called affected/dependent objects and are maintained separately;
+// normally these objects need to be either reprogrammed or deleted
+typedef unordered_map<api_base *, api_obj_ctxt_t *> dep_obj_map_t;
 typedef list<api_base *> dep_obj_list_t;
 
-/// \brief Batch context, which is a list of all API contexts
+/// \brief    batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
     pds_epoch_t             epoch;           ///< epoch in progress, passed in
                                              ///< pds_batch_begin()
@@ -119,10 +115,10 @@ typedef struct api_batch_ctxt_s {
     // route changes can happen for same vnic in two different API calls but in
     // same batch and we need to activate them in one write (not one after
     // another)
-    dirty_obj_map_t         dirty_obj_map;   ///< dirty object map
-    dirty_obj_list_t        dirty_obj_list;  ///< dirty object list
-    dep_obj_map_t           dep_obj_map;     ///< dependent object map
-    dep_obj_list_t          dep_obj_list;    ///< dependent object list
+    dirty_obj_map_t         dom;    ///< dirty object map
+    dirty_obj_list_t        dol;    ///< dirty object list
+    dep_obj_map_t           aom;    ///< affected/dependent object map
+    dep_obj_list_t          aol;    ///< affected/dependent object list
 } api_batch_ctxt_t;
 
 /// \brief API counters maintained by API engine
@@ -239,10 +235,23 @@ typedef struct api_counters_s {
 class api_engine {
 public:
     /// \brief Constructor
-    api_engine() {}
+    api_engine() {
+        api_obj_ctxt_slab_ = NULL;
+    }
 
     /// \brief Destructor
     ~api_engine() {}
+
+    // API engine initialization function
+    sdk_ret_t init(void) {
+        api_obj_ctxt_slab_ =
+            slab::factory("api-obj-ctxt", PDS_SLAB_ID_API_OBJ_CTXT,
+                          sizeof(api_obj_ctxt_t), 512, true, true, true, NULL);
+        if (api_obj_ctxt_slab_) {
+            return SDK_RET_OK;
+        }
+        return SDK_RET_OOM;
+    }
 
     /// \brief Handle batch begin by setting up per API batch context
     ///
@@ -260,14 +269,31 @@ public:
     ///           found in the dirty object map and cloned
     /// param[in] api_obj    API object found in the db
     /// \return cloned object of the given object, if found, or else NULL
-    api_base *find_clone(api_base *api_obj) {
+    api_base *cloned_obj(api_base *api_obj) {
         if (api_obj->in_dirty_list()) {
-            obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-            if (octxt.cloned_obj) {
-                return octxt.cloned_obj;
+            api_obj_ctxt_t *octxt = batch_ctxt_.dom.find(api_obj)->second;
+            if (octxt->cloned_obj) {
+                return octxt->cloned_obj;
             }
         }
         return NULL;
+    }
+
+    /// \brief    given an object, return its cloned object, if the object is
+    ///           found in the dirty object map and cloned or else return the
+    ///           same object - essentially return the object that framework is
+    ///           operating on in the current batch
+    /// NOTE: this object may not be in the dirty list at all, in which case
+    ///       its not part of current batch of API objects being processed
+    ///       (i.e., it is a committed object)
+    /// param[in] api_obj    API object found in the db
+    /// \return framework object of the given object (i.e., either same or
+    ///         cloned object)
+    api_base *framework_obj(api_base *api_obj) {
+        api_base *clone;
+
+        clone = cloned_obj(api_obj);
+        return clone ? clone : api_obj;
     }
 
     /// \brief Add given api object to dependent object list if its not
@@ -277,36 +303,81 @@ public:
     /// \param[in] api_obj   API object being added to the dependent list
     /// \param[in] upd_bmap  bitmap indicating which attributes of the API
     ///                      object are being updated
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_to_deps_list(obj_id_t obj_id, api_op_t api_op,
-                               api_base *api_obj, uint64_t upd_bmap) {
-        obj_ctxt_t octxt;
+    /// \return pointer to the API object context containing cumulative update
+    ///         bitmap if there is any new update or else NULL
+    api_obj_ctxt_t *add_to_deps_list(obj_id_t obj_id, api_op_t api_op,
+                                 api_base *api_obj, uint64_t upd_bmap) {
+        api_obj_ctxt_t *octxt;
 
         if (api_obj->in_dirty_list()) {
-            // if the object is in dirty list already, push it to the end
-            batch_ctxt_.dirty_obj_list.remove(api_obj);
-            batch_ctxt_.dirty_obj_list.push_back(api_obj);
-            batch_ctxt_.dirty_obj_map[api_obj].upd_bmap |= upd_bmap;
-            return SDK_RET_ENTRY_EXISTS;
+            // update the update bitmap to indicate that more udpates are seen
+            // on an object thats being updated in this batch
+            if (batch_ctxt_.dom[api_obj]->cloned_obj) {
+                if ((batch_ctxt_.dom[api_obj]->upd_bmap & upd_bmap) !=
+                        upd_bmap) {
+                    batch_ctxt_.dom[api_obj]->upd_bmap |= upd_bmap;
+                    return batch_ctxt_.dom[api_obj];
+                }
+                // entry exists and the update was already noted
+                return NULL;
+            }
+#if 0
+            // NOTE: re-ordering objects here will break functionality
+            // if the object is in dirty list already, move it to the end
+            // as this update can trigger other updates
+            batch_ctxt_.dol.remove(api_obj);
+            batch_ctxt_.dol.push_back(api_obj);
+#endif
+            // fall thru
         }
         if (api_obj->in_deps_list()) {
+            // update the update bitmap
+            if ((batch_ctxt_.aom[api_obj]->upd_bmap & upd_bmap) != upd_bmap) {
+                batch_ctxt_.aom[api_obj]->upd_bmap |= upd_bmap;
+                return batch_ctxt_.aom[api_obj];
+            }
             // if the object is in deps list already, push it to the end
-            batch_ctxt_.dep_obj_list.remove(api_obj);
-            batch_ctxt_.dep_obj_list.push_back(api_obj);
-            batch_ctxt_.dep_obj_map[api_obj].upd_bmap |= upd_bmap;
-            return SDK_RET_ENTRY_EXISTS;
+            // NOTE: this reshuffling doesn't help as the whole dependent
+            //       list is processed after the dirty object list with updated
+            //       specs anyway
+            batch_ctxt_.aol.remove(api_obj);
+            batch_ctxt_.aol.push_back(api_obj);
+            // entry exists and the update was already noted
+            return NULL;
         }
         // add an entry to dependent object list/map
-        octxt.api_op = api_op;
-        octxt.obj_id = obj_id;
-        octxt.upd_bmap = upd_bmap;
+        octxt = api_obj_ctxt_alloc_();
+        octxt->api_op = api_op;
+        octxt->obj_id = obj_id;
+        octxt->upd_bmap = upd_bmap;
         api_obj->set_in_deps_list();
-        batch_ctxt_.dep_obj_map[api_obj] = octxt;
-        batch_ctxt_.dep_obj_list.push_back(api_obj);
-        return SDK_RET_OK;
+        batch_ctxt_.aom[api_obj] = octxt;
+        batch_ctxt_.aol.push_back(api_obj);
+        return octxt;
     }
 
 private:
+
+    /// \brief    allocate and return an api object context entry
+    /// \return    allocated API object context entry or NULL
+    api_obj_ctxt_t *api_obj_ctxt_alloc_(void) {
+        api_obj_ctxt_t *octxt;
+
+        octxt = (api_obj_ctxt_t *)api_obj_ctxt_slab_->alloc();
+        if (octxt) {
+            new (octxt) api_obj_ctxt_t();
+        }
+        return octxt;
+    }
+
+    /// \brief    free given object context entry back to its slab
+    /// \param[in]    API object context pointer to be freed
+    void api_obj_ctxt_free_(api_obj_ctxt_t *octxt) {
+        if (octxt) {
+            octxt->~api_obj_ctxt_t();
+            api_obj_ctxt_slab_->free(octxt);
+        }
+    }
 
     /// \brief De-dup given API operation
     /// This is based on the currently computed operation and new API operation
@@ -346,7 +417,7 @@ private:
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t reserve_resources_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief Process given object from the dirty list
     /// This is done by doing add/update of corresponding h/w entries, based
@@ -355,14 +426,14 @@ private:
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t program_config_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief Add objects that are dependent on given object to dependent
     ///        object list
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief Activate configuration by switching to new epoch
     /// If object has effected any stage 0 datapath table(s), switch to new
@@ -373,7 +444,7 @@ private:
     /// \param[in] obj_ctxt    transient information maintained to process API
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_config_(dirty_obj_list_t::iterator it,
-                               api_base *api_obj, obj_ctxt_t *obj_ctxt);
+                               api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief Abort all changes made to an object, rollback to its prev state
     /// NOTE: this is not expected to fail and also epoch is not activated if
@@ -384,7 +455,7 @@ private:
     /// \param[in] obj_ctxt    transient information maintained to process API
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t rollback_config_(dirty_obj_list_t::iterator it,
-                               api_base *api_obj, obj_ctxt_t *obj_ctxt);
+                               api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief Pre-process all API calls in a given batch
     /// Form a dirty list of effected obejcts as a result
@@ -418,10 +489,10 @@ private:
     /// \brief Add given api object to dirty list of the API batch
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
-    void add_to_dirty_list_(api_base *api_obj, obj_ctxt_t obj_ctxt) {
+    void add_to_dirty_list_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         api_obj->set_in_dirty_list();
-        batch_ctxt_.dirty_obj_map[api_obj] = obj_ctxt;
-        batch_ctxt_.dirty_obj_list.push_back(api_obj);
+        batch_ctxt_.dom[api_obj] = obj_ctxt;
+        batch_ctxt_.dol.push_back(api_obj);
     }
 
     /// \brief Delete given api object from dirty list of the API batch
@@ -429,30 +500,9 @@ private:
     /// \param[in] api_obj API object being processed
     void del_from_dirty_list_(dirty_obj_list_t::iterator it,
                               api_base *api_obj) {
-        batch_ctxt_.dirty_obj_list.erase(it);
-        batch_ctxt_.dirty_obj_map.erase(api_obj);
+        batch_ctxt_.dol.erase(it);
+        batch_ctxt_.dom.erase(api_obj);
         api_obj->clear_in_dirty_list();
-    }
-
-    // TODO: remove
-    /// \brief Add given api object to dependent object list if its not
-    //         in the dirty object list and dependent object list already
-    /// \param[in] api_obj API object being processed
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_to_deps_list_(api_base *api_obj, api_op_t api_op) {
-        return SDK_RET_OK;
-#if 0
-        if (api_obj->in_dirty_list()) {
-            return SDK_RET_ENTRY_EXISTS;
-        }
-        if (api_obj->in_deps_list()) {
-            return SDK_RET_ENTRY_EXISTS;
-        }
-        api_obj->set_in_deps_list();
-        batch_ctxt_.dep_obj_map[api_obj] = api_op;
-        batch_ctxt_.dep_obj_list.push_back(api_obj);
-        return SDK_RET_OK;
-#endif
     }
 
     /// \brief Delete given api object from dependent object list
@@ -460,13 +510,13 @@ private:
     /// \param[in] api_obj API object being processed
     void del_from_deps_list_(dirty_obj_list_t::iterator it,
                              api_base *api_obj) {
-        batch_ctxt_.dep_obj_list.erase(it);
-        batch_ctxt_.dep_obj_map.erase(api_obj);
+        batch_ctxt_.aol.erase(it);
+        batch_ctxt_.aom.erase(api_obj);
         api_obj->clear_in_deps_list();
     }
 
 private:
-    friend obj_ctxt_t;
+    friend api_obj_ctxt_t;
 
     /// \brief API operation de-dup matrix
     api_op_t dedup_api_op_[API_OP_INVALID][API_OP_INVALID] = {
@@ -480,8 +530,8 @@ private:
         {API_OP_INVALID, API_OP_INVALID, API_OP_DELETE, API_OP_UPDATE },
     };
     api_batch_ctxt_t    batch_ctxt_;
-    slab                *api_params_slab_;
     api_counters_t      counters_;
+    slab                *api_obj_ctxt_slab_;
 };
 
 /// \brief    initialize the API engine
@@ -507,6 +557,6 @@ sdk_ret_t api_obj_add_to_deps(obj_id_t obj_id, api_op_t api_op,
 
 }    // namespace api
 
-using api::obj_ctxt_t;
+using api::api_obj_ctxt_t;
 
 #endif    // __FRAMEWORK_API_ENGINE_HPP__

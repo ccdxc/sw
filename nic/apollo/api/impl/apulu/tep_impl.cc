@@ -59,7 +59,7 @@ tep_impl::free(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     tep_entry *tep;
@@ -413,7 +413,7 @@ tep_impl::activate_update_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
 
 sdk_ret_t
 tep_impl::activate_update_(pds_epoch_t epoch, tep_entry *tep,
-                           tep_entry *orig_tep, obj_ctxt_t *obj_ctxt) {
+                           tep_entry *orig_tep, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;
 
@@ -431,7 +431,7 @@ tep_impl::activate_update_(pds_epoch_t epoch, tep_entry *tep,
 
 sdk_ret_t
 tep_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
-                      api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                      api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;
 

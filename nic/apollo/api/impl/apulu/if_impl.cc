@@ -63,7 +63,7 @@ if_impl::free(if_impl *impl) {
 }
 
 sdk_ret_t
-if_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+if_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
@@ -239,7 +239,7 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
 
 sdk_ret_t
 if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
@@ -256,7 +256,7 @@ if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
 
 sdk_ret_t
 if_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
-                     api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                     api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_if_spec_t *spec;
 

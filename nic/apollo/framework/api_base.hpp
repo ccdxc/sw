@@ -19,8 +19,6 @@
 
 using std::string;
 
-//typedef struct obj_ctxt_s obj_ctxt_t;
-
 namespace api {
 
 /// \brief  Basse class for all api related objects
@@ -28,8 +26,8 @@ class api_base : public obj_base {
 public:
      /// \brief Constructor
     api_base() {
-        in_dirty_list_ = 0;
-        in_deps_list_ = 0;
+        in_dol_ = 0;
+        in_dol_ = 0;
         rsvd_rsc_ = 0;
     };
 
@@ -75,7 +73,7 @@ public:
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) {
+                                        api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -84,7 +82,7 @@ public:
     /// table(s), if any and also set the valid bit
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -113,7 +111,7 @@ public:
     /// and setting invalid bit (if any) in the hardware entries
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -124,7 +122,7 @@ public:
     ///            bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -134,7 +132,7 @@ public:
     /// \param[in] orig_obj old/original version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -146,7 +144,7 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
-                                      obj_ctxt_t *obj_ctxt) {
+                                      api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -169,7 +167,7 @@ public:
     /// \param[in] old Old version of the object being swapped out
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_db(api_base *old_obj, obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t update_db(api_base *old_obj, api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -185,8 +183,7 @@ public:
     /// \brief Find an object based on the object id & key information
     /// \param[in] api_ctxt API context carrying object related information
     /// \remark
-    ///   - TODO: skip_dirty is on shaky ground, will try to get rid of it later
-    static api_base *find_obj(api_ctxt_t *api_ctxt, bool skip_dirty=false);
+    static api_base *find_obj(api_ctxt_t *api_ctxt);
 
     /// \brief find an object based on the object id & key information
     /// \param[in] obj_id    object id
@@ -205,15 +202,15 @@ public:
         return NULL;
     }
 
-    // TODO: remove this !!
     /// \brief compute all the objects depending on this object and add to
     ///        framework's dependency list
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
+#if 0
     /// \brief compute all the objects depending on this object based on the
     ///        given attribute update bitmap and add to framework's dependency
     ///        list
@@ -225,24 +222,25 @@ public:
     virtual sdk_ret_t add_deps(api_op_t api_op, uint64_t upd_bmap) {
         return SDK_RET_INVALID_OP;
     }
+#endif
 
     /// \brief Mark the object as dirty
-    void set_in_dirty_list(void) { in_dirty_list_ = 1; }
+    void set_in_dirty_list(void) { in_dol_ = 1; }
 
     /// \brief returns true if the object is in dirty list
-    bool in_dirty_list(void) const { return in_dirty_list_ ? true : false; }
+    bool in_dirty_list(void) const { return in_dol_ ? true : false; }
 
     /// \brief Clear the dirty bit on this object
-    void clear_in_dirty_list(void) { in_dirty_list_ = 0; }
+    void clear_in_dirty_list(void) { in_dol_ = 0; }
 
     /// \brief Mark the object as dependent object
-    void set_in_deps_list(void) { in_deps_list_ = 1; }
+    void set_in_deps_list(void) { in_dol_ = 1; }
 
     /// \brief returns true if the object is in dependent list
-    bool in_deps_list(void) const { return in_deps_list_ ? true : false; }
+    bool in_deps_list(void) const { return in_dol_ ? true : false; }
 
     /// \brief Clear the dependent object bit on this object
-    void clear_in_deps_list(void) { in_deps_list_ = 0; }
+    void clear_in_deps_list(void) { in_dol_ = 0; }
 
     /// \brief return true if object is 'stateless' given an object id
     static bool stateless(obj_id_t obj_id);
@@ -263,14 +261,19 @@ public:
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    uint8_t in_dirty_list_:1;    ///< true if object is in the dirty list
-    uint8_t in_deps_list_:1;     ///< true if object is in dependent object list
-    uint8_t rsvd_rsc_:1;         ///< true if resources are reserved
+    uint8_t in_dol_:1;      ///< true if object is in the dirty list
+    uint8_t in_aol_:1;      ///< true if object is in affected object list
+    uint8_t rsvd_rsc_:1;    ///< true if resources are reserved
 } __PACK__;
 
 /// \brief    find and return cloned version of the given object
 /// \return cloned version of the given object or NULL
 api_base *api_obj_find_clone(api_base *api_obj);
+
+/// \brief    find and return the framework object corresponding to the
+///           given object
+/// \return cloned version of the given object or same object
+api_base *api_framework_obj(api_base *api_obj);
 
 }    // namespace api
 

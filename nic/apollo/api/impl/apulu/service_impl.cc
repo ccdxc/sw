@@ -128,7 +128,7 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
 }
 
 sdk_ret_t
-svc_mapping_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     pds_svc_mapping_spec_t *spec;
@@ -217,7 +217,7 @@ svc_mapping_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
     nat_actiondata_t nat_data = { 0 };
@@ -241,7 +241,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-svc_mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
     nat_actiondata_t nat_data = { 0 };
@@ -262,13 +262,13 @@ svc_mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 svc_mapping_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                            obj_ctxt_t *obj_ctxt) {
+                            api_obj_ctxt_t *obj_ctxt) {
     return program_hw(curr_obj, obj_ctxt);
 }
 
 sdk_ret_t
 svc_mapping_impl::activate_create_(pds_epoch_t epoch, svc_mapping *mapping,
-                                   obj_ctxt_t *obj_ctxt,
+                                   api_obj_ctxt_t *obj_ctxt,
                                    pds_svc_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
@@ -339,7 +339,7 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
 sdk_ret_t
 svc_mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                               pds_epoch_t epoch, api_op_t api_op,
-                              obj_ctxt_t *obj_ctxt) {
+                              api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_svc_mapping_key_t *key;
     pds_svc_mapping_spec_t *spec;

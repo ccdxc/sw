@@ -78,7 +78,7 @@ vpc_peer_impl::build(pds_vpc_peer_key_t *key, vpc_peer_entry *vpc_peer) {
 }
 
 sdk_ret_t
-vpc_peer_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc1, *vpc2;
     pds_vpc_peer_spec_t *spec;
     //vpc_peer_swkey_t vpc_peer_key;
@@ -157,20 +157,20 @@ vpc_peer_impl::release_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-vpc_peer_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 vpc_peer_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        obj_ctxt_t *obj_ctxt) {
+                        api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 vpc_peer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                            pds_epoch_t epoch, api_op_t api_op,
-                           obj_ctxt_t *obj_ctxt) {
+                           api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc1, *vpc2;
     pds_vpc_peer_spec_t *vpc_peer_spec;

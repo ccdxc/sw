@@ -21,7 +21,8 @@ namespace api {
 
 typedef struct route_table_upd_ctxt_s {
     route_table *rtable;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
 } __PACK__ route_table_upd_ctxt_t;
 
 route_table::route_table() {
@@ -92,7 +93,7 @@ route_table::free(route_table *rtable) {
 }
 
 sdk_ret_t
-route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+route_table::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
@@ -117,13 +118,13 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-route_table::program_create(obj_ctxt_t *obj_ctxt) {
+route_table::program_create(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-route_table::compute_update(obj_ctxt_t *obj_ctxt) {
+route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_route_table_spec_t *spec = &obj_ctxt->api_params->route_table_spec;
 
     // we can enable/disable priority based routing and/or change individual
@@ -138,48 +139,58 @@ route_table::compute_update(obj_ctxt_t *obj_ctxt) {
 
 static bool
 subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    subnet_entry *subnet = (subnet_entry *)api_obj;
+    subnet_entry *subnet;
     route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
 
+    subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
     if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
         (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
-        upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+        api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
+                            (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
     return false;
 }
 
 static bool
 vpc_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    vpc_entry *vpc = (vpc_entry *)api_obj;
+    vpc_entry *vpc;
     route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
 
+    vpc = (vpc_entry *)api_framework_obj((api_base *)api_obj);
     if ((vpc->v4_route_table().id == upd_ctxt->rtable->key().id) ||
         (vpc->v6_route_table().id == upd_ctxt->rtable->key().id)) {
-        upd_ctxt->obj_ctxt->add_deps(vpc, API_OP_UPDATE);
+        api_obj_add_to_deps(OBJ_ID_VPC, upd_ctxt->obj_ctxt->api_op,
+                            (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
     return false;
 }
 
 sdk_ret_t
-route_table::add_deps(obj_ctxt_t *obj_ctxt) {
+route_table::add_deps(api_obj_ctxt_t *obj_ctxt) {
     route_table_upd_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.rtable = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
+
+    // walk the vpcs and add affected vpcs to dependency list
+    upd_ctxt.upd_bmap = PDS_VPC_UPD_ROUTE_TABLE;
     vpc_db()->walk(vpc_upd_walk_cb_, &upd_ctxt);
+
+    // walk the subnets and add affected subnets to dependency list
+    upd_ctxt.upd_bmap = PDS_SUBNET_UPD_ROUTE_TABLE;
     subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-route_table::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+route_table::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // update is same as programming route table in different region
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                             api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating route table %u config", key_.id);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
@@ -215,7 +226,7 @@ route_table::del_from_db(void) {
 }
 
 sdk_ret_t
-route_table::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+route_table::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (route_table_db()->remove((route_table *)orig_obj)) {
         return route_table_db()->insert(this);
     }

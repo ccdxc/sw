@@ -15,13 +15,15 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 
 typedef struct subnet_upd_ctxt_s {
     subnet_entry *subnet;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
 } __PACK__ subnet_upd_ctxt_t;
 
 subnet_entry::subnet_entry() {
@@ -100,7 +102,7 @@ subnet_entry::free(subnet_entry *subnet) {
 }
 
 sdk_ret_t
-subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret = sdk::SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
@@ -191,7 +193,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::program_create(obj_ctxt_t *obj_ctxt) {
+subnet_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -199,7 +201,7 @@ subnet_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+subnet_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->cleanup_hw(this, obj_ctxt);
     }
@@ -207,7 +209,7 @@ subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     obj_ctxt->upd_bmap = 0;
@@ -252,22 +254,35 @@ subnet_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 
 static bool
 vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    vnic_entry *vnic = (vnic_entry *)api_obj;
+    vnic_entry *vnic;
     subnet_upd_ctxt_t *upd_ctxt = (subnet_upd_ctxt_t *)ctxt;
 
+    vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
     if (vnic->subnet().id == upd_ctxt->subnet->key().id) {
-        upd_ctxt->obj_ctxt->add_deps(vnic, API_OP_UPDATE);
+        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
+                            (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
     return false;
 }
 
 sdk_ret_t
-subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+subnet_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
     subnet_upd_ctxt_t upd_ctxt = { 0 };
 
-    upd_ctxt.subnet = this;
-    upd_ctxt.obj_ctxt = obj_ctxt;
-    return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+    // if either policy or route table is updated, we need to fix
+    // vnic programming in the datapath
+    if ((obj_ctxt->upd_bmap & PDS_SUBNET_UPD_POLICY) ||
+        (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_ROUTE_TABLE)) {
+        upd_ctxt.subnet = this;
+        upd_ctxt.obj_ctxt = obj_ctxt;
+        upd_ctxt.upd_bmap =
+            obj_ctxt->upd_bmap & (PDS_VNIC_UPD_POLICY |
+                                  PDS_VNIC_UPD_ROUTE_TABLE);
+        return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+    }
+    // in all other cases, it is sufficient to contain the update
+    // programming to this subnet object alone
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -279,7 +294,7 @@ subnet_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-subnet_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->update_hw(orig_obj, this, obj_ctxt);
     }
@@ -288,7 +303,7 @@ subnet_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                              api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
@@ -349,7 +364,7 @@ subnet_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (subnet_db()->remove((subnet_entry *)orig_obj)) {
         return subnet_db()->insert(this);
     }

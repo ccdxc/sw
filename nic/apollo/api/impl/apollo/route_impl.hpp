@@ -44,7 +44,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *api_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     free h/w resources used by this object, if any
     /// \param[in] api_obj API object holding the resources
@@ -64,7 +64,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -73,7 +73,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override {
+                                 api_obj_ctxt_t *obj_ctxt) override {
         return SDK_RET_OK;
     }
 
@@ -87,7 +87,7 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obhj,
                                   pds_epoch_t epoch, api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) override;
+                                  api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj  API object

@@ -46,7 +46,7 @@ tag_impl::destroy(tag_impl *impl) {
 //       API_OP_UPDATE as update doesn't reuse any of the existing resources
 //       for this object
 sdk_ret_t
-tag_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tag_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
     pds_tag_spec_t *spec = &obj_ctxt->api_params->tag_spec;
 
@@ -85,7 +85,7 @@ tag_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-tag_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tag_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t         ret;
     pds_tag_spec_t    *spec;
     pds_vpc_key_t     vpc_key;
@@ -144,7 +144,7 @@ tag_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tag_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
-                      api_op_t api_op, obj_ctxt_t *obj_ctxt)
+                      api_op_t api_op, api_obj_ctxt_t *obj_ctxt)
 {
     return SDK_RET_OK;
 }

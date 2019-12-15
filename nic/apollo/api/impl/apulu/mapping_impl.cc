@@ -316,7 +316,7 @@ mapping_impl::reserve_remote_mapping_resources_(api_base *api_obj,
 }
 
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     pds_mapping_spec_t *spec;
 
@@ -503,7 +503,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
 }
 
 sdk_ret_t
-mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t *spec;
 
     spec = &obj_ctxt->api_params->mapping_spec;
@@ -514,13 +514,13 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        obj_ctxt_t *obj_ctxt) {
+                        api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -655,7 +655,7 @@ error:
 
 sdk_ret_t
 mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
-                               obj_ctxt_t *obj_ctxt, pds_mapping_spec_t *spec) {
+                               api_obj_ctxt_t *obj_ctxt, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
@@ -756,7 +756,7 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
 sdk_ret_t
 mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_mapping_key_t *key;
     pds_mapping_spec_t *spec;

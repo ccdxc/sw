@@ -20,6 +20,10 @@
 // TODO: fix this when fte plugin is available
 #define PDS_REMOTE_TEP_MAC            0x0E0D0A0B0200
 
+// attribute update bits for TEP object
+#define PDS_TEP_UPD_OVERLAY_NH    0x1    // overlay nexthop related info update
+                                         // in TEP -> TEP case
+
 namespace api {
 
 /// \defgroup PDS_TEP_ENTRY - TEP entry functionality
@@ -57,7 +61,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  free h/w resources used by this object, if any
     /// \return SDK_RET_OK on success, failure status code on error
@@ -72,14 +76,14 @@ public:
     ///            stage 0 table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
     ///            with latest epoch#
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the
@@ -88,14 +92,14 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add all objects that may be affected if this object is
     ///                 updated to framework's object dependency list
     /// \param[in]      obj_ctxt    transient state associated with this API
     ///                             processing
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
@@ -112,7 +116,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
@@ -123,7 +127,7 @@ public:
     /// return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing
@@ -150,7 +154,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *orig_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;

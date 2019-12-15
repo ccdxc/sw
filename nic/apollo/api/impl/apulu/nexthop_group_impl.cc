@@ -67,7 +67,7 @@ nexthop_group_impl::free(nexthop_group_impl *impl) {
 
 sdk_ret_t
 nexthop_group_impl::reserve_resources(api_base *api_obj,
-                                      obj_ctxt_t *obj_ctxt) {
+                                      api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_nexthop_group_spec_t *spec;
@@ -245,7 +245,7 @@ nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
 sdk_ret_t
 nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                                 pds_epoch_t epoch, api_op_t api_op,
-                                obj_ctxt_t *obj_ctxt) {
+                                api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_nexthop_group_spec_t *spec;
 
@@ -274,13 +274,13 @@ nexthop_group_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 }
 
 sdk_ret_t
-nexthop_group_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_group_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 nexthop_group_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                              obj_ctxt_t *obj_ctxt) {
+                              api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

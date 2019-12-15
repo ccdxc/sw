@@ -62,7 +62,7 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief     free h/w resources used by this object, if any
@@ -83,7 +83,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -91,7 +91,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override {
         // there is no need cleanup in either the rollback case or
         // route table delete case, we simply have to free the resources in
         // either case
@@ -104,7 +104,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the
@@ -113,7 +113,7 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -123,7 +123,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0
@@ -136,7 +136,7 @@ public:
      */
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      api_obj_ctxt_t *obj_ctxt) override;
 
     ///\brief read config
     ///\param[out] info Pointer to the info object
@@ -163,7 +163,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t update_db(api_base *orig_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override;
 
     /**< @brief    initiate delay deletion of this object */
     virtual sdk_ret_t delay_delete(void) override;

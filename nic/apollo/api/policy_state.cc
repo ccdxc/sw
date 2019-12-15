@@ -18,7 +18,6 @@ namespace api {
  */
 
 policy_state::policy_state() {
-    // TODO: need to tune multi-threading related params later
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                              policy::policy_key_func_get,
                              sizeof(pds_policy_key_t));

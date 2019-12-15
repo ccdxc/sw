@@ -48,7 +48,7 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  free h/w resources used by this object, if any
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -65,7 +65,7 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) {
+                                 api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_OK;
     }
 
@@ -85,7 +85,7 @@ public:
     ///             latest epoch#
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_OK;
     }
 
@@ -96,7 +96,7 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
@@ -108,7 +108,7 @@ public:
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
                                   pds_epoch_t epoch, api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) override;
+                                  api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief      re-activate config in the hardware stage 0 tables relevant
     ///             to this object, if any, this reactivation must be based on

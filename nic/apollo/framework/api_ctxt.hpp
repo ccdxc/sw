@@ -26,7 +26,8 @@ typedef struct api_ctxt_s {
 
 // TODO: need to find better place for these (api.hpp ?)
 slab *api_params_slab(void);
-void api_params_free(api_params_t *api_params, obj_id_t obj_id, api_op_t api_op);
+void api_params_free(api_params_t *api_params,
+                     obj_id_t obj_id, api_op_t api_op);
 
 // TODO: we can get rid of this and use api_msg_slab directly
 slab *api_ctxt_slab(void);

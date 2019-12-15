@@ -53,7 +53,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override {
+                                        api_obj_ctxt_t *obj_ctxt) override {
         // this object results in register programming only, hence no resources
         // need to be reserved for this object
         return SDK_RET_OK;
@@ -78,7 +78,7 @@ public:
     ///            table(s), if any
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override {
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override {
         // all configuration is programmed only during activate stage
         // for this object, hence this is a no-op
         return SDK_RET_OK;
@@ -89,7 +89,7 @@ public:
     ///             epoch# and setting invalid bit (if any) in the h/w entries
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override {
         // as program_create() is no-op, cleanup_config() is no-op as well
         return SDK_RET_OK;
     }
@@ -101,7 +101,7 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     update all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
@@ -110,7 +110,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
@@ -121,14 +121,14 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add all objects that may be affected if this object is
     ///                 updated to framework's object dependency list
     /// \param[in]      obj_ctxt    transient state associated with this API
     ///                             processing
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt)  {
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt)  {
         return SDK_RET_OK;
     }
 
@@ -138,7 +138,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *orig_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  add device object to the database
     /// \return SDK_RET_OK on success, failure status code on error

@@ -43,7 +43,7 @@ meter_impl::destroy(meter_impl *impl) {
 // reserve_resources() logic is same for both API_OP_CREATE and API_OP_UPDATE
 // as update doesn't reuse any of the existing resources for this object
 sdk_ret_t
-meter_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+meter_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
     pds_meter_spec_t *spec = &obj_ctxt->api_params->meter_spec;
 
@@ -122,7 +122,7 @@ meter_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+meter_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t           ret;
     pds_meter_spec_t    *spec;
     pds_vpc_key_t       vpc_key;
@@ -188,7 +188,7 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 meter_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                         pds_epoch_t epoch, api_op_t api_op,
-                        obj_ctxt_t *obj_ctxt)
+                        api_obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
     case API_OP_CREATE:

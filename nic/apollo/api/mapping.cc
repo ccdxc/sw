@@ -133,12 +133,12 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-mapping_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mapping_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-mapping_entry::program_create(obj_ctxt_t *obj_ctxt) {
+mapping_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -156,19 +156,19 @@ mapping_entry::release_resources(void) {
 }
 
 sdk_ret_t
-mapping_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+mapping_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-mapping_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mapping_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // update operation is not supported on mapping
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mapping_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                               api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                               api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -195,7 +195,7 @@ mapping_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mapping_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (mapping_db()->remove((mapping_entry *)orig_obj)) {
         return mapping_db()->insert(this);
     }

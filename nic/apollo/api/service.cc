@@ -117,7 +117,7 @@ svc_mapping::soft_delete(svc_mapping *mapping) {
 }
 
  sdk_ret_t
-svc_mapping::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
@@ -143,17 +143,17 @@ svc_mapping::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-svc_mapping::program_create(obj_ctxt_t *obj_ctxt) {
+svc_mapping::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-svc_mapping::cleanup_config(obj_ctxt_t *obj_ctxt) {
+svc_mapping::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-svc_mapping::compute_update(obj_ctxt_t *obj_ctxt) {
+svc_mapping::compute_update(api_obj_ctxt_t *obj_ctxt) {
     // we can compare the (VIP, svc port) and optimize for no update case in
     // future but ideally we shouldn't hit that case as agent/controller
     // shouldn't come down to HAL in such cases
@@ -161,13 +161,13 @@ svc_mapping::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-svc_mapping::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
 svc_mapping::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                             api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -194,7 +194,7 @@ svc_mapping::del_from_db(void) {
 }
 
 sdk_ret_t
-svc_mapping::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (svc_mapping_db()->remove((svc_mapping *)orig_obj)) {
         return svc_mapping_db()->insert(this);
     }

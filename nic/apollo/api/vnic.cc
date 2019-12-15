@@ -94,7 +94,7 @@ vnic_entry::free(vnic_entry *vnic) {
 }
 
 sdk_ret_t
-vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vnic_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
@@ -143,7 +143,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-vnic_entry::program_create(obj_ctxt_t *obj_ctxt) {
+vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, v4 meter id %u, "
@@ -162,12 +162,12 @@ vnic_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vnic_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+vnic_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-vnic_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     if (subnet_.id != spec->subnet.id) {
@@ -204,14 +204,14 @@ vnic_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-vnic_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vnic_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                            api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating vnic %u config", key_.id);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
@@ -258,7 +258,7 @@ vnic_entry::read(pds_vnic_info_t *info) {
 }
 
 sdk_ret_t
-vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vnic_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 

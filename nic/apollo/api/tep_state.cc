@@ -22,7 +22,6 @@ namespace api {
 /// \@{
 
 tep_state::tep_state() {
-    // TODO: need to tune multi-threading related params later
     tep_ht_ = ht::factory(PDS_MAX_TEP >> 2,
                           tep_entry::tep_key_func_get,
                           sizeof(pds_tep_key_t));

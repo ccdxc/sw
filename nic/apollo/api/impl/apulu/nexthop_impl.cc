@@ -59,7 +59,7 @@ nexthop_impl::free(nexthop_impl *impl) {
 }
 
 sdk_ret_t
-nexthop_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+nexthop_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
@@ -174,7 +174,7 @@ nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
 sdk_ret_t
 nexthop_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
 

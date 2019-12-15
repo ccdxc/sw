@@ -92,7 +92,7 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
 }
 
 sdk_ret_t
-svc_mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     pds_svc_mapping_spec_t *spec;
@@ -170,7 +170,7 @@ svc_mapping_impl::release_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *dip_vpc;
     pds_svc_mapping_spec_t *spec;
@@ -263,20 +263,20 @@ svc_mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-svc_mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 svc_mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                            obj_ctxt_t *obj_ctxt) {
+                            api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 svc_mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                               pds_epoch_t epoch, api_op_t api_op,
-                              obj_ctxt_t *obj_ctxt) {
+                              api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

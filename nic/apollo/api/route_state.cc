@@ -18,7 +18,6 @@ namespace api {
 /// \@{
 
 route_table_state::route_table_state() {
-    // TODO: need to tune multi-threading related params later
     route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
                                   route_table::route_table_key_func_get,
                                   sizeof(pds_route_table_key_t));

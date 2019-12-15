@@ -101,7 +101,7 @@ if_entry::free(if_entry *intf) {
 }
 
 sdk_ret_t
-if_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+if_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->reserve_resources(this, obj_ctxt);
     }
@@ -159,7 +159,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-if_entry::program_create(obj_ctxt_t *obj_ctxt) {
+if_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -167,7 +167,7 @@ if_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-if_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+if_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->cleanup_hw(this, obj_ctxt);
     }
@@ -175,7 +175,7 @@ if_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-if_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+if_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
     obj_ctxt->upd_bmap = 0;
@@ -198,7 +198,7 @@ if_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-if_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+if_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->update_hw(orig_obj, this, obj_ctxt);
     }
@@ -207,7 +207,7 @@ if_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                          api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                          api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
@@ -266,7 +266,7 @@ if_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-if_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+if_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (if_db()->remove((if_entry *)orig_obj)) {
         return if_db()->insert(this);
     }

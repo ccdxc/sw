@@ -128,12 +128,12 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-mirror_session::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mirror_session::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-mirror_session::program_create(obj_ctxt_t *obj_ctxt) {
+mirror_session::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -148,7 +148,7 @@ mirror_session::release_resources(void) {
 }
 
 sdk_ret_t
-mirror_session::cleanup_config(obj_ctxt_t *obj_ctxt) {
+mirror_session::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
@@ -160,14 +160,14 @@ mirror_session::read(pds_mirror_session_key_t *key,
 }
 
 sdk_ret_t
-mirror_session::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mirror_session::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // impl->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mirror_session::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                                api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 h/w programming for mapping , so nothing to activate
     return sdk::SDK_RET_OK;
 }
@@ -185,7 +185,7 @@ mirror_session::del_from_db(void) {
 }
 
 sdk_ret_t
-mirror_session::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mirror_session::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

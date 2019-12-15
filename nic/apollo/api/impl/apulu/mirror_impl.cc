@@ -91,7 +91,7 @@ mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
 }
 
 sdk_ret_t
-mirror_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mirror_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_mirror_session_spec_t *spec;
 
     // allocate hw id for this session
@@ -118,7 +118,7 @@ mirror_impl::release_resources(api_base *api_obj) {
 #define rspan_action     action_u.mirror_rspan
 #define erspan_action    action_u.mirror_erspan
 sdk_ret_t
-mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     tep_entry *tep;
     mac_addr_t mac;
@@ -208,20 +208,20 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-mirror_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mirror_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 mirror_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                       obj_ctxt_t *obj_ctxt) {
+                       api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mirror_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                          pds_epoch_t epoch, api_op_t api_op,
-                         obj_ctxt_t *obj_ctxt) {
+                         api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

@@ -44,7 +44,7 @@ security_policy_impl::destroy(security_policy_impl *impl) {
 
 sdk_ret_t
 security_policy_impl::reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) {
+                                        api_obj_ctxt_t *obj_ctxt) {
     uint32_t             policy_block_id;
     pds_policy_spec_t    *spec;
 
@@ -89,7 +89,7 @@ security_policy_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t            ret;
     pds_policy_spec_t    *spec;
     rfc::policy_t        policy;
@@ -117,14 +117,14 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                                obj_ctxt_t *obj_ctxt) {
+                                api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 security_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                                   pds_epoch_t epoch, api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt)
+                                  api_obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
     case API_OP_CREATE:

@@ -65,6 +65,23 @@ enum {
  * @{
  */
 
+//--------------------------------------------------------------------------
+// TODO:
+// to speed up framework processing and avoid recursive walks during update
+// processing we can maintain map of lists for the following:
+// 1. policy key -> list of subnets
+// 2. policy key -> list of vnics
+// 3. route-table key -> list of vpcs
+// 4. route-table key -> list of subnets
+// 5. vpc key -> list of subnets
+// 6. subnet key -> list of vnics
+// with these auxiliary databases, we can avoid walks in add_deps()
+//
+// NOTE: while adding objs, add_to_db() needs to add to all relevant datbases
+//       while deleteing objs, del_from_db() needs to delete from all relevant
+//       databases
+//       while updating db (with cloned obj), we need to both of the above
+//--------------------------------------------------------------------------
 class pds_state {
 public:
     pds_state();

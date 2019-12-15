@@ -21,7 +21,8 @@ namespace api {
 
 typedef struct vpc_upd_ctxt_s {
     vpc_entry *vpc;
-    obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
 } __PACK__ vpc_upd_ctxt_t;
 
 vpc_entry::vpc_entry() {
@@ -115,7 +116,7 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
 
     switch (obj_ctxt->api_op) {
@@ -166,7 +167,7 @@ vpc_entry::nuke_resources_(void) {
 }
 
 sdk_ret_t
-vpc_entry::program_create(obj_ctxt_t *obj_ctxt) {
+vpc_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);
     }
@@ -174,7 +175,7 @@ vpc_entry::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+vpc_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->cleanup_hw(this, obj_ctxt);
     }
@@ -190,7 +191,7 @@ vpc_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-vpc_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+vpc_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
     obj_ctxt->upd_bmap = 0;
@@ -210,12 +211,12 @@ vpc_entry::compute_update(obj_ctxt_t *obj_ctxt) {
         (v6_route_table_.id != spec->v6_route_table.id)) {
         obj_ctxt->upd_bmap |= PDS_VPC_UPD_ROUTE_TABLE;
     }
-    // most likely either tos or vrmac has changed
+    // may be either tos or vrmac has changed
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-vpc_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->update_hw(orig_obj, this, obj_ctxt);
     }
@@ -224,26 +225,29 @@ vpc_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 static bool
 subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    subnet_entry *subnet = (subnet_entry *)api_obj;
+    subnet_entry *subnet;
     vpc_upd_ctxt_t *upd_ctxt = (vpc_upd_ctxt_t *)ctxt;
 
+    subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
     if (subnet->vpc().id == upd_ctxt->vpc->key().id) {
         if ((subnet->v4_route_table().id == PDS_ROUTE_TABLE_ID_INVALID) ||
             (subnet->v6_route_table().id == PDS_ROUTE_TABLE_ID_INVALID)) {
             // this subnet inherited the vpc's routing table(s)
-            upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+            api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
+                                (api_base *)api_obj, upd_ctxt->upd_bmap);
         }
     }
     return false;
 }
 
 sdk_ret_t
-vpc_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+vpc_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
     vpc_upd_ctxt_t upd_ctxt = { 0 };
 
     if (obj_ctxt->upd_bmap & PDS_VPC_UPD_ROUTE_TABLE) {
         upd_ctxt.vpc = this;
         upd_ctxt.obj_ctxt = obj_ctxt;
+        upd_ctxt.upd_bmap = PDS_SUBNET_UPD_ROUTE_TABLE;
         subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
     }
     return SDK_RET_OK;
@@ -251,7 +255,7 @@ vpc_entry::add_deps(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                           api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
@@ -300,7 +304,7 @@ vpc_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-vpc_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (vpc_db()->remove((vpc_entry *)orig_obj)) {
         return vpc_db()->insert(this);
     }

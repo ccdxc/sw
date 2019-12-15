@@ -67,7 +67,7 @@ subnet_impl::free(subnet_impl *impl) {
 }
 
 sdk_ret_t
-subnet_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+subnet_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
@@ -147,7 +147,7 @@ subnet_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-subnet_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+subnet_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     bd_actiondata_t bd_data { 0 };
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
@@ -174,7 +174,7 @@ subnet_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 }
 
 sdk_ret_t
-subnet_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+subnet_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     bd_actiondata_t bd_data = { 0 };
 
@@ -191,7 +191,7 @@ subnet_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                       obj_ctxt_t *obj_ctxt) {
+                       api_obj_ctxt_t *obj_ctxt) {
     return program_hw(curr_obj, obj_ctxt);
 }
 
@@ -294,7 +294,7 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
 
 sdk_ret_t
 subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
-                              subnet_entry *orig_subnet, obj_ctxt_t *obj_ctxt) {
+                              subnet_entry *orig_subnet, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     lif_impl *lif;
     vpc_entry *vpc;
@@ -364,7 +364,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
 sdk_ret_t
 subnet_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                          pds_epoch_t epoch, api_op_t api_op,
-                         obj_ctxt_t *obj_ctxt) {
+                         api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_subnet_spec_t *spec;
 

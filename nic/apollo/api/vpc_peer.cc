@@ -20,7 +20,6 @@
 namespace api {
 
 vpc_peer_entry::vpc_peer_entry() {
-    // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
 }
 
 vpc_peer_entry *
@@ -41,7 +40,6 @@ vpc_peer_entry::factory(pds_vpc_peer_spec_t *spec) {
 }
 
 vpc_peer_entry::~vpc_peer_entry() {
-    // SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -112,12 +110,12 @@ vpc_peer_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-vpc_peer_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
 sdk_ret_t
-vpc_peer_entry::program_create(obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -132,18 +130,18 @@ vpc_peer_entry::release_resources(void) {
 }
 
 sdk_ret_t
-vpc_peer_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-vpc_peer_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 vpc_peer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                                api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_vpc_peer_spec_t *spec = &obj_ctxt->api_params->vpc_peer_spec;
     PDS_TRACE_DEBUG("Activating vpc peering (%u, %u) config",
                     spec->vpc1.id, spec->vpc2.id);
@@ -151,7 +149,7 @@ vpc_peer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-vpc_peer_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vpc_peer_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

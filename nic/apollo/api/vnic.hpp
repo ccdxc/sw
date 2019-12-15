@@ -24,6 +24,11 @@ class vnic_state;
 // attribute update bits for vnic object
 #define PDS_VNIC_UPD_POLICY              0x1
 #define PDS_VNIC_UPD_HOST_IFINDEX        0x2
+#define PDS_VNIC_UPD_METER               0x4
+// route table is not an attr inside the vnic object, however
+// a route table change on subnet can affect vnic's programming
+// TODO: revisit and see if there is a better way to handle this
+#define PDS_VNIC_UPD_ROUTE_TABLE         0x8
 
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
@@ -60,7 +65,7 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     free h/w resources used by this object, if any
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -75,14 +80,14 @@ public:
     ///           table(s), if any
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_create(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    cleanup all h/w tables relevant to this object except stage 0
     ///           table(s), if any, by updating packed entries with latest
     ///           epoch#
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    compute the object diff during update operation compare the
     ///           attributes of the object on which this API is invoked and the
@@ -91,7 +96,7 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          reprogram all h/w tables relevant to this object and
     ///                 dependent on other objects except stage 0 table(s),
@@ -105,7 +110,7 @@ public:
     /// \param[in]    obj_ctxt    transient state associated with this API
     ///                           processing
     /// \return       SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override {
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override {
         // no other objects are effected if vnic is modified
         // NOTE: assumption is that none of key or immutable fields (e.g., type
         // of vnic, vlan of the vnic etc.) are modifiable and agent will catch
@@ -120,7 +125,7 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    activate the epoch in the dataplane by programming stage 0
     ///           tables, if any
@@ -131,7 +136,7 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing
@@ -163,7 +168,7 @@ public:
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *orig_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
@@ -222,6 +227,58 @@ public:
     /// \brief     return the associated host lif's ifindex
     /// \return    ifindex of the host lif corresponding to this vnic
     pds_ifindex_t host_ifindex(void) const { return host_ifindex_; }
+
+    /// \brief     return number of IPv4 ingress policies on the vnic
+    /// \return    number of IPv4 ingress policies on the vnic
+    uint8_t num_ing_v4_policy(void) const {
+        return num_ing_v4_policy_;
+    }
+
+    /// \brief          return ingress IPv4 security policy of the vnic
+    /// \param[in] n    policy number being queried
+    /// \return         ingress IPv4 security policy of the vnic
+    pds_policy_key_t ing_v4_policy(uint32_t n) const {
+        return ing_v4_policy_[n];
+    }
+
+    /// \brief     return number of IPv6 ingress policies on the vnic
+    /// \return    number of IPv6 ingress policies on the vnic
+    uint8_t num_ing_v6_policy(void) const {
+        return num_ing_v6_policy_;
+    }
+
+    /// \brief          return ingress IPv6 security policy of the vnic
+    /// \param[in] n    policy number being queried
+    /// \return         ingress IPv6 security policy of the vnic
+    pds_policy_key_t ing_v6_policy(uint32_t n) const {
+        return ing_v6_policy_[n];
+    }
+
+    /// \brief     return number of IPv4 egress policies on the vnic
+    /// \return    number of IPv4 egress policies on the vnic
+    uint8_t num_egr_v4_policy(void) const {
+        return num_egr_v4_policy_;
+    }
+
+    /// \brief          return egress IPv4 security policy of the vnic
+    /// \param[in] n    policy number being queried
+    /// \return         egress IPv4 security policy of the vnic
+    pds_policy_key_t egr_v4_policy(uint32_t n) const {
+        return egr_v4_policy_[n];
+    }
+
+    /// \brief     return number of IPv6 egress policies on the vnic
+    /// \return    number of IPv6 egress policies on the vnic
+    uint8_t num_egr_v6_policy(void) const {
+        return num_egr_v6_policy_;
+    }
+
+    /// \brief          return egress IPv6 security policy of the vnic
+    /// \param[in] n    policy number being queried
+    /// \return         egress IPv6 security policy of the vnic
+    pds_policy_key_t egr_v6_policy(uint32_t n) const {
+        return egr_v6_policy_[n];
+    }
 
 private:
     /// \brief    constructor

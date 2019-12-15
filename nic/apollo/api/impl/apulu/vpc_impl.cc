@@ -70,7 +70,7 @@ vpc_impl::free(vpc_impl *impl) {
 }
 
 sdk_ret_t
-vpc_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
     vni_swkey_t vni_key =  { 0 };
@@ -131,7 +131,7 @@ vpc_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-vpc_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vpc_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };
     vpc_entry *vpc = (vpc_entry *)api_obj;
@@ -152,7 +152,7 @@ vpc_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vpc_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };
     vpc_entry *vpc = (vpc_entry *)api_obj;
@@ -170,7 +170,7 @@ vpc_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                    obj_ctxt_t *obj_ctxt) {
+                    api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data;
@@ -231,7 +231,7 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
 
 sdk_ret_t
 vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
-                           obj_ctxt_t *obj_ctxt) {
+                           api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
     vni_swkey_t vni_key = { 0 };
@@ -288,7 +288,7 @@ vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
 
 sdk_ret_t
 vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
-                      api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                      api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
 

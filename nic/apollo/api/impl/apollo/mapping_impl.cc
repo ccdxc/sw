@@ -443,7 +443,7 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t    *spec;
     vpc_entry             *vpc;
 
@@ -836,7 +836,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vpc_entry *vpc,
 // TODO: as we are not able to reserve() ahead of time currently, entries are
 //       programmed here, ideally we just use pre-allocated indices
 sdk_ret_t
-mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t             ret;
     pds_mapping_spec_t    *spec;
     vpc_entry             *vpc;
@@ -884,20 +884,20 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        obj_ctxt_t *obj_ctxt) {
+                        api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
 mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 

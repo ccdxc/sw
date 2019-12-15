@@ -77,7 +77,7 @@ policer_impl::free(policer_impl *impl) {
 }
 
 sdk_ret_t
-policer_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+policer_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_policer_spec_t *spec;
@@ -231,7 +231,7 @@ policer_impl::activate_delete_(pds_epoch_t epoch, policer_entry *policer) {
 sdk_ret_t
 policer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+                          api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_policer_spec_t *spec;
 

@@ -74,7 +74,7 @@ vnic_impl::free(vnic_impl *impl) {
 }
 
 sdk_ret_t
-vnic_impl::reserve_resources(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     lif_impl *lif;
@@ -508,7 +508,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 }
 
 sdk_ret_t
-vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     device_entry *device;
@@ -590,13 +590,13 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 }
 
 sdk_ret_t
-vnic_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+vnic_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                     obj_ctxt_t *obj_ctxt) {
+                     api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -817,7 +817,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
 
 sdk_ret_t
 vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
-                       api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+                       api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_vnic_spec_t *spec;
 

@@ -92,7 +92,7 @@ nexthop::free(nexthop *nh) {
 }
 
 sdk_ret_t
-nexthop::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
@@ -116,7 +116,7 @@ nexthop::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-nexthop::program_create(obj_ctxt_t *obj_ctxt) {
+nexthop::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
     PDS_TRACE_VERBOSE("Programming nexthop %u, type %u", key_, type_);
@@ -129,12 +129,12 @@ nexthop::program_create(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-nexthop::cleanup_config(obj_ctxt_t *obj_ctxt) {
+nexthop::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
-nexthop::add_deps(obj_ctxt_t *obj_ctxt) {
+nexthop::add_deps(api_obj_ctxt_t *obj_ctxt) {
     // objects pointing to the nexthop need not be update because of nexthop
     // update as the h/w id is not changing
     return SDK_RET_OK;
@@ -146,7 +146,7 @@ nexthop::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-nexthop::compute_update(obj_ctxt_t *obj_ctxt) {
+nexthop::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
     if (type_ != spec->type) {
@@ -158,13 +158,13 @@ nexthop::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-nexthop::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
 nexthop::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                         api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                         api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_VERBOSE("Activating nexthop %u config", key_);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
@@ -201,7 +201,7 @@ nexthop::del_from_db(void) {
 }
 
 sdk_ret_t
-nexthop::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+nexthop::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (nexthop_db()->remove((nexthop *)orig_obj)) {
         return nexthop_db()->insert(this);
     }

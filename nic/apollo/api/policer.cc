@@ -88,7 +88,7 @@ policer_entry::free(policer_entry *policer) {
 }
 
 sdk_ret_t
-policer_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
 }
 
@@ -117,7 +117,7 @@ policer_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-policer_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+policer_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_policer_spec_t *spec = &obj_ctxt->api_params->policer_spec;
 
     if (dir_ != spec->dir) {
@@ -130,7 +130,7 @@ policer_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                               api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                               api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -166,7 +166,7 @@ policer_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-policer_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policer_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

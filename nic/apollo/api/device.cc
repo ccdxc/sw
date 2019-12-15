@@ -99,7 +99,7 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-device_entry::compute_update(obj_ctxt_t *obj_ctxt) {
+device_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_device_spec_t *spec = &obj_ctxt->api_params->device_spec;
 
     if ((oper_mode_ != spec->dev_oper_mode) ||
@@ -112,13 +112,13 @@ device_entry::compute_update(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-device_entry::program_update(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
 device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                              api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+                              api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -148,7 +148,7 @@ device_entry::del_from_db(void) {
 }
 
 sdk_ret_t
-device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (device_db()->remove()) {
         return device_db()->insert(this);
     }

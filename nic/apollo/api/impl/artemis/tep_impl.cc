@@ -56,7 +56,7 @@ tep_impl::destroy(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     pds_tep_spec_t *spec;
@@ -180,7 +180,7 @@ tep_impl::nuke_resources(api_base *api_obj) {
 #define remote_46_info    action_u.remote_46_mapping_remote_46_info
 #define nexthop_info      action_u.nexthop_nexthop_info
 sdk_ret_t
-tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     tep_entry *tep;
     pds_tep_spec_t *spec;
@@ -339,13 +339,13 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+tep_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                    obj_ctxt_t *obj_ctxt) {
+                    api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
