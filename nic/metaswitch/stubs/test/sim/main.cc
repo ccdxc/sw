@@ -57,13 +57,13 @@ pdsa_sim_test_mac_ip()
     auto host_ifindex = pds_ms::pds_to_ms_ifindex (g_test_conf.lif_if_index, IF_TYPE_LIF);
 
     // Start CTM
-    PDSA_START_TXN (PDSA_CTM_CORRELATOR);
+    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
 
     pdsa_convert_long_to_pdsa_ipv4_addr (g_test_conf.local_mai_ip, &ip_addr);
     pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
 
     // End CTM transaction
-    PDSA_END_TXN (PDSA_CTM_CORRELATOR);
+    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
 
     // Wait for MS response
     pds_ms::mgmt_state_t::ms_response_wait();
@@ -73,14 +73,14 @@ pdsa_sim_test_bgp_update ()
 {
 
     // Start CTM 
-    PDSA_START_TXN (PDSA_CTM_CORRELATOR);
+    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
 
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
     bgp_global_spec.set_vrfid (PDSA_BGP_RM_ENT_INDEX);
     bgp_global_spec.set_routerid (g_test_conf.local_ip_addr);
-    pdsa_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDSA_CTM_CORRELATOR);
+    pdsa_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR);
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
@@ -100,11 +100,10 @@ pdsa_sim_test_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
-    pdsa_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDSA_CTM_CORRELATOR); 
-
+    pdsa_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR); 
 
     // End CTM transaction
-    PDSA_END_TXN (PDSA_CTM_CORRELATOR);
+    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
 
     // Wait for MS response
     pds_ms::mgmt_state_t::ms_response_wait();

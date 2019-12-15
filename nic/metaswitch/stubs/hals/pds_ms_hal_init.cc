@@ -8,6 +8,7 @@
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -52,6 +53,15 @@ handle_port_event (core::port_event_info_t &portev)
 
     if (!TGD) {
         return;
+    }
+    {
+        auto ctx = pds_ms::mgmt_state_t::thread_context();
+        if (!(ctx.state()->nbase_thread()->ready())) {
+            // If event comes before nbase thread is ready then
+            // ignore that event. This can happen since the event
+            // subscribe is called before nbase is ready
+            return;
+        }
     }
 
     NBB_CREATE_THREAD_CONTEXT
@@ -122,7 +132,7 @@ ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 }
 
 bool
-hal_init(void)
+hal_init (void)
 {
     sdk::ipc::ipc_init_metaswitch(32, &ipc_init_cb);
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, &hal_event_callback, NULL);
@@ -130,7 +140,7 @@ hal_init(void)
 }
 
 void
-hal_deinit(void)
+hal_deinit (void)
 {
     return;
 }

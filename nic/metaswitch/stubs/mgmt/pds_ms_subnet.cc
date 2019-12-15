@@ -107,14 +107,11 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
                        NBB_LONG            row_status)
 {
     uint32_t lif_ifindex;
-    PDSA_GET_SHARED_START();
-    NBB_TRC_ENTRY ("process_subnet_update");
+    
+    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // Validate LIF
-    NBB_ASSERT_NUM_NE (subnet_spec->host_ifindex, IFINDEX_INVALID);
-
-    // Start CTM transaction
-    pdsa_ctm_send_transaction_start (PDSA_CTM_GRPC_CORRELATOR);
+    SDK_ASSERT((subnet_spec->host_ifindex != IFINDEX_INVALID));
 
     // EVPN EVI Row Update
     pds::EvpnEviSpec evpn_evi_spec;
@@ -159,11 +156,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     // TODO: Configure IRB IP Address??
     // TODO AMB_EVPN_EVI_RT for manual RT
 
-    //End CTM transaction
-    pdsa_ctm_send_transaction_end (PDSA_CTM_GRPC_CORRELATOR);
-
-    NBB_TRC_EXIT();
-    PDSA_GET_SHARED_END();
+    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     pds_ms::mgmt_state_t::ms_response_wait();

@@ -171,7 +171,7 @@ pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr, NBB_ULONG host_ifindex)
                                                   sizeof (AMB_STUBS_L2F_MAC_IP_CFG),
                                                   AMB_L2F_MAC_IP_CFG_OID_LEN,
                                                   AMB_ROW_ACTIVE,
-                                                  PDSA_CTM_CORRELATOR);
+                                                  PDSA_CTM_GRPC_CORRELATOR);
     NBB_ASSERT_PTR_NE (row_update, NULL);
     NBB_ASSERT_PTR_NE (mib_msg, NULL);
 

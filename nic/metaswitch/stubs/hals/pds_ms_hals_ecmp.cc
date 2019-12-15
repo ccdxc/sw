@@ -109,7 +109,6 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
     pds_batch_ctxt_guard_t bctxt_guard_;
     sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(cookie_uptr_); // Cookie should have been alloc before
-    // TODO: Change to async when ipc apis are ready
     pds_batch_params_t bp { PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
                             pdsa_stub::hal_callback,
                             cookie_uptr_.get() };

@@ -30,7 +30,6 @@ extern "C" {
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
 
-#define PDSA_CTM_CORRELATOR     0x100
 #define PDSA_CTM_GRPC_CORRELATOR 0x101
 #define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
 #define PDSA_BGP_RM_ENT_INDEX   1

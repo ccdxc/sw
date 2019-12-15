@@ -21,7 +21,7 @@
 #include <memory>
 
 #define PDS_BATCH_PARAMS_EPOCH  1
-#define PDS_BATCH_PARAMS_ASYNC  false
+#define PDS_BATCH_PARAMS_ASYNC  true
 
 namespace pdsa_stub {
 

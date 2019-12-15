@@ -49,11 +49,7 @@ process_interface_update (pds_if_spec_t *if_spec,
 {
     uint32_t ms_ifindex = 0;
 
-    PDSA_GET_SHARED_START();
-    NBB_TRC_ENTRY ("process_interface_update");
-
-    // Start CTM transaction
-    pdsa_ctm_send_transaction_start (PDSA_CTM_GRPC_CORRELATOR);
+    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // Get PDS to MS IfIndex
     ms_ifindex = pds_to_ms_ifindex(if_spec->key.id, IF_TYPE_ETH);
@@ -69,11 +65,7 @@ process_interface_update (pds_if_spec_t *if_spec,
     populate_lim_addr_spec (if_spec, lim_addr_spec, ms_ifindex);
     pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
-    // End CTM transaction
-    pdsa_ctm_send_transaction_end (PDSA_CTM_GRPC_CORRELATOR);
-
-    NBB_TRC_EXIT();
-    PDSA_GET_SHARED_END();
+    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     pds_ms::mgmt_state_t::ms_response_wait();

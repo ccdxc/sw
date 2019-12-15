@@ -56,12 +56,8 @@ static void
 process_vpc_update (pds_vpc_spec_t *vpc_spec, 
                     NBB_LONG       row_status)
 {
-    PDSA_GET_SHARED_START ();
-    NBB_TRC_ENTRY ("process_vpc_update");
-
-    // Start CTM transaction
-    pdsa_ctm_send_transaction_start (PDSA_CTM_GRPC_CORRELATOR);
-
+    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    
     // LIM VRF Row Update
     pds::LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vpc_spec, lim_vrf_spec);
@@ -74,11 +70,7 @@ process_vpc_update (pds_vpc_spec_t *vpc_spec,
 
     // TODO: AMB_EVPN_IP_VRF_RT to configure manual RT
 
-    //End CTM transaction
-    pdsa_ctm_send_transaction_end (PDSA_CTM_GRPC_CORRELATOR);
-   
-    NBB_TRC_EXIT();
-    PDSA_GET_SHARED_END();
+    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     pds_ms::mgmt_state_t::ms_response_wait();

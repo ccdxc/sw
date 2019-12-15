@@ -5,6 +5,7 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -187,6 +188,11 @@ nbase_init ()
     /* Spin N-Base                                                             */
     /***************************************************************************/
     NBS_SPIN_START();
+
+    NBS_ENTER_SHARED_CONTEXT(NBS_ROOT_PROCESS);
+    pdsa_stub::hal_init();
+    NBS_EXIT_SHARED_CONTEXT();
+
 
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */

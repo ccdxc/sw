@@ -19,8 +19,6 @@ pdsa_ctm_send_transaction_start (NBB_ULONG correlator)
     // Local variables
     ATG_CPI_TRANSACTION_START   *trans_start = NULL;
 
-    NBB_TRC_ENTRY ("pdsa_ctm_send_transaction_start");
-
     trans_start = (ATG_CPI_TRANSACTION_START *) NBB_GET_BUFFER ( NBB_NULL_HANDLE,
                                                 sizeof(ATG_CPI_TRANSACTION_START),
                                                 0,
@@ -35,8 +33,6 @@ pdsa_ctm_send_transaction_start (NBB_ULONG correlator)
     // Send the IPS
     NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction Start"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_start);
-
-    NBB_TRC_EXIT();
 }
 
 NBB_VOID 
@@ -44,8 +40,6 @@ pdsa_ctm_send_transaction_abort (NBB_ULONG correlator)
 {
     // Local variables
     ATG_CPI_TRANSACTION_ABORT   *trans_abort = NULL;
-
-    NBB_TRC_ENTRY ("pdsa_ctm_send_transaction_abort");
 
     trans_abort = (ATG_CPI_TRANSACTION_ABORT *) NBB_GET_BUFFER ( NBB_NULL_HANDLE,
                                                 sizeof(ATG_CPI_TRANSACTION_ABORT),
@@ -59,8 +53,6 @@ pdsa_ctm_send_transaction_abort (NBB_ULONG correlator)
     // Send the IPS
     NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction Abort"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_abort);
-
-    NBB_TRC_EXIT();
 }
 
 NBB_VOID 
@@ -68,8 +60,6 @@ pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
 {
     // Local variables
     ATG_CPI_TRANSACTION_END   *trans_end = NULL;
-
-    NBB_TRC_ENTRY ("pdsa_ctm_send_transaction_end");
 
     trans_end = (ATG_CPI_TRANSACTION_END *) NBB_GET_BUFFER ( NBB_NULL_HANDLE,
                                             sizeof(ATG_CPI_TRANSACTION_END),
@@ -84,15 +74,11 @@ pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
     // Send the IPS
     NBB_TRC_DETAIL ((NBB_FORMAT "Send Transaction End"));
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, trans_end);
-
-
-    NBB_TRC_EXIT();
 }
 
 static NBB_VOID
 pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 {
-    NBB_TRC_ENTRY ("pdsa_ctm_rcv_transaction_done");
     NBB_ASSERT_PTR_NE (trans_done, NULL);
     types::ApiStatus status;
     switch (trans_done->return_code)
@@ -140,8 +126,7 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             break;
     }
 
-    if ((trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) ||
-       (trans_done->trans_correlator.correlator1 == PDSA_CTM_CORRELATOR)) {
+    if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
         // Unblock the GRPC thread which is waiting for the response
         pds_ms::mgmt_state_t::ms_response_ready(status);
     } else if (trans_done->trans_correlator.correlator1 ==
@@ -154,12 +139,8 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
         cout << "N-Base thread is ready\n";
         auto ctx = pds_ms::mgmt_state_t::thread_context();
         ctx.state()->nbase_thread()->set_ready(true);
-        // Call the HAL init now since we register a FD and nbase needs to be
-        // spinning
-        pdsa_stub::hal_init();
     }
     
-    NBB_TRC_EXIT();
     return;
 }
 
@@ -210,8 +191,6 @@ pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
     NBB_BUF_SIZE cpi_offset_array[OFL_ATG_CPI_ROW_UPDATE + 1];
     AMB_GEN_IPS *mib_msg = NULL;
     ATG_CPI_ROW_UPDATE  *row_update = NULL;
-
-    NBB_TRC_ENTRY ("pdsa_ctm_bld_row_update_common");
 
     // Set up the size info and fill in the buffer
     oid_offset      = sizeof (AMB_GEN_IPS);
@@ -280,9 +259,7 @@ pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
     mib_msg->correlator.handle = correlator;
 
 EXIT_LABEL:
-
     *mib = mib_msg;
-    NBB_TRC_EXIT();
     return row_update; 
 }
 
@@ -292,8 +269,6 @@ pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
 {
     ATG_CPI_ROW_UPDATE  *row_update = NULL; 
     AMB_GEN_IPS         *mib_msg = NULL;
-
-    NBB_TRC_ENTRY ("pdsa_ctm_send_row_update_common");
 
     NBB_ASSERT_PTR_NE (conf, NULL);
 
@@ -310,21 +285,16 @@ pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
 
     // Send the Row Update request to CSS
     NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
-
-    NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
 pdsa_ctm_rcv_ips (NBB_IPS *ips NBB_CCXT NBB_CXT)
 {
-    NBB_TRC_ENTRY ("pdsa_ctm_rcv_ips");
-
     NBB_ASSERT_NUM_EQ (ips->ips_type, IPS_ATG_CPI_TRANSACTION_DONE);
 
     NBB_TRC_FLOW ((NBB_FORMAT "Received IPS_ATG_CPI_TRANSACTION_DONE"));
     pdsa_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
-
-    NBB_TRC_EXIT();
+    
     return;
 }
