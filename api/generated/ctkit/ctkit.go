@@ -61,7 +61,6 @@ func (ks *kindStore) GetObject(key string) (apiintf.CtkitObject, error) {
 
 	obj, ok := ks.objects[key]
 	if !ok {
-		fmt.Printf("Object not found object %v\n", key)
 		return nil, fmt.Errorf("Object %s not found", key)
 	}
 
@@ -109,7 +108,6 @@ func (ks *kindStore) DeleteObject(key string) error {
 
 	obj, ok := ks.objects[key]
 	if !ok {
-		fmt.Printf("Object not found object %v\n", key)
 		return fmt.Errorf("Object %s not found", key)
 	}
 
@@ -371,7 +369,6 @@ func (ct *ctrlerCtx) findObject(kind, key string) (runtime.Object, error) {
 		return nil, fmt.Errorf("Object %s/%s in unresolved", kind, key)
 	}
 
-	fmt.Printf("Found object %v\n", key)
 	return obj.RuntimeObject(), nil
 }
 

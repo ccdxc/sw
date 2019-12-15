@@ -66,8 +66,12 @@ func TestStoreRun(t *testing.T) {
 					ObjectMeta: *expMeta,
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item != nil, nil
+				}, "Workload not in pcache/statemgr")
+
 				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item != nil, "Workload not in pcache")
 				workloadAPI := v.stateMgr.Controller().Workload()
 				_, err := workloadAPI.Find(expMeta)
 				Assert(t, err != nil, "Workload unexpectedly in stateMgr. Err: %v", err)
@@ -137,6 +141,12 @@ func TestStoreRun(t *testing.T) {
 						HostName: "hostsystem-21",
 					},
 				}
+
+				AssertEventually(t, func() (bool, interface{}) {
+					workloadAPI := v.stateMgr.Controller().Workload()
+					_, err := workloadAPI.Find(expMeta)
+					return err == nil, err
+				}, "Failed to get workload")
 
 				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
@@ -225,8 +235,13 @@ func TestStoreRun(t *testing.T) {
 						},
 					},
 				}
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item != nil, nil
+				}, "Workload not in pcache/statemgr")
+
 				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item != nil, "Workload not in pcache")
+				Assert(t, item != nil, "Workload not in pcache/statemgr")
 				Assert(t, item.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 				for i, inf := range item.Spec.Interfaces {
 					Assert(t, inf.MicroSegVlan != 0, "Useg was not set for inf %s", inf.MACAddress)
@@ -369,10 +384,12 @@ func TestStoreRun(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-
-				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item == nil, "Workload should be deleted, got %v", item)
-
+				// Sleep to let initial create get processed
+				time.Sleep(50 * time.Millisecond)
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item == nil, item
+				}, "Workload should be deleted")
 			},
 		},
 		{
@@ -451,8 +468,12 @@ func TestStoreRun(t *testing.T) {
 					Spec: workload.WorkloadSpec{},
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item != nil, nil
+				}, "Workload not in pcache/statemgr")
+
 				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item != nil, "Workload should be in pcache")
 				Assert(t, item.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 				AssertEquals(t, expWorkload.ObjectMeta.Labels, item.ObjectMeta.Labels, "workload labels are not same")
 			},
@@ -482,6 +503,14 @@ func TestStoreRun(t *testing.T) {
 								},
 							},
 						},
+					},
+				},
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.VirtualMachine,
+						Key:        "virtualmachine-41",
+						Originator: "127.0.0.1:8990",
 					},
 				},
 				{
@@ -526,15 +555,24 @@ func TestStoreRun(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 					Spec: workload.WorkloadSpec{
-						HostName: "hostsystem-21",
+						HostName: "127.0.0.1:8990-hostsystem-21",
 					},
 				}
+
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					workloadAPI := v.stateMgr.Controller().Workload()
+					_, err := workloadAPI.Find(expMeta)
+					return err == nil, err
+				}, "Workload not in statemgr")
 
 				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				AssertOk(t, err, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 				Assert(t, w.ObjectMeta.Name == existingWorkload.ObjectMeta.Name, "workloads are not same")
+				AssertEquals(t, expWorkload.Spec, w.Spec, "Spec for objects was not equal")
 			},
 		},
 		{
@@ -601,6 +639,12 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					workloadAPI := v.stateMgr.Controller().Workload()
+					_, err := workloadAPI.Find(expMeta)
+					return err == nil, err
+				}, "Workload not in statemgr")
+
 				workloadAPI := v.stateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				AssertOk(t, err, "Failed to get workload")
@@ -610,6 +654,14 @@ func TestStoreRun(t *testing.T) {
 		{
 			name: "Workload delete",
 			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.VirtualMachine,
+						Key:        "virtualmachine-41",
+						Originator: "127.0.0.1:8990",
+					},
+				},
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
@@ -631,8 +683,12 @@ func TestStoreRun(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
-				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item == nil, "Workload should not be in pcache or stateMgr")
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item == nil, nil
+				}, "Workload should not be in pcache/statemgr")
 			},
 		},
 		{
@@ -695,8 +751,13 @@ func TestStoreRun(t *testing.T) {
 					ObjectMeta: *expMeta,
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					item := v.pCache.GetWorkload(expMeta)
+					return item != nil, nil
+				}, "Workload not in pcache/statemgr")
+
 				item := v.pCache.GetWorkload(expMeta)
-				Assert(t, item != nil, "Workload not in pcache")
+				Assert(t, item != nil, "Workload not in pcache/statemgr")
 				AssertEquals(t, expWorkload.ObjectMeta, item.ObjectMeta, "workloads are not same")
 			},
 		},
@@ -746,6 +807,12 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.stateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err == nil, err
+				}, "Host not in statemgr")
+
 				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host: err %v", err)
@@ -755,6 +822,29 @@ func TestStoreRun(t *testing.T) {
 		{
 			name: "host update",
 			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						Key:        "hostsystem-41",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: "aa:bb:cc:dd:ee:ff",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
@@ -812,6 +902,14 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.stateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err == nil, err
+				}, "Host not in statemgr")
+
 				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
@@ -865,6 +963,12 @@ func TestStoreRun(t *testing.T) {
 					},
 				}
 
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.stateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err == nil, err
+				}, "Host not in statemgr")
+
 				hostAPI := v.stateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
@@ -874,6 +978,29 @@ func TestStoreRun(t *testing.T) {
 		{
 			name: "Host delete",
 			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						Key:        "hostsystem-41",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: "aa:bb:cc:dd:ee:ff",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
@@ -894,9 +1021,13 @@ func TestStoreRun(t *testing.T) {
 					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 
-				hostAPI := v.stateMgr.Controller().Host()
-				_, err := hostAPI.Find(expMeta)
-				Assert(t, err != nil, "Failed to get host")
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.stateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err != nil, nil
+				}, "Host should not be in statemgr")
 			},
 		},
 		{
@@ -922,9 +1053,13 @@ func TestStoreRun(t *testing.T) {
 					Name: "127.0.0.1:8990-hostsystem-41",
 				}
 
-				hostAPI := v.stateMgr.Controller().Host()
-				_, err := hostAPI.Find(expMeta)
-				Assert(t, err != nil, "Failed to get host")
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.stateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err != nil, nil
+				}, "Host should not be in statemgr")
 			},
 		},
 	}
@@ -934,6 +1069,10 @@ func TestStoreRun(t *testing.T) {
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	for _, tc := range testCases {
+		if len(forceTestName) != 0 && tc.name != forceTestName {
+			continue
+		}
+		t.Logf("running %s", tc.name)
 		sm, _, err := statemgr.NewMockStateManager()
 		if err != nil {
 			t.Fatalf("Failed to create state manager. Err : %v", err)
@@ -951,11 +1090,8 @@ func TestStoreRun(t *testing.T) {
 			usegMgr:  useg,
 		}
 		pCache.SetValidator("Workload", store.validateWorkload)
+		pCache.SetValidator(vnicKind, validateVNIC)
 
-		if len(forceTestName) != 0 && tc.name != forceTestName {
-			continue
-		}
-		t.Logf("running %s", tc.name)
 		store.stateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
 		outbox := make(chan defs.Store2ProbeMsg, 100)
@@ -967,7 +1103,6 @@ func TestStoreRun(t *testing.T) {
 			inbox <- e
 		}
 		// Time for events to process
-		time.Sleep(50 * time.Millisecond)
 		tc.verify(store, outbox)
 
 		// Terminating store instance

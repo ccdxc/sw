@@ -62,14 +62,7 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 			},
 			ObjectMeta: *meta,
 			// TODO : Remove the hardcoded values
-			Spec: workload.WorkloadSpec{
-				Interfaces: []workload.WorkloadIntfSpec{
-					workload.WorkloadIntfSpec{
-						MACAddress:   "aabb.ccdd.eedd",
-						MicroSegVlan: 10,
-					},
-				},
-			},
+			Spec: workload.WorkloadSpec{},
 		}
 	} else {
 		temp := ref.DeepCopy(*existingWorkload).(workload.Workload)
