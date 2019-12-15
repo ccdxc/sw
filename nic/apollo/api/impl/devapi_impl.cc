@@ -58,7 +58,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     pds_lif_spec_t spec = { 0 };
 
     // program tx scheduler
-    lif_program_tx_scheduler_(info);
+    lif_program_tx_scheduler(info);
 
     spec.key = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
@@ -382,7 +382,7 @@ devapi_impl::swm_upd_rx_pmode(bool promiscuous)
 }
 
 sdk_ret_t
-devapi_impl::lif_program_tx_scheduler_(lif_info_t *info) {
+devapi_impl::lif_program_tx_scheduler(lif_info_t *info) {
     asicpd_scheduler_lif_params_t   apd_lif;
     sdk_ret_t                       ret = SDK_RET_OK;
 

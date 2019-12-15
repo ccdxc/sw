@@ -7,6 +7,7 @@
  */
 
 #include <cmath>
+#include <cstdio>
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/platform/utils/lif_manager_base.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
@@ -18,6 +19,8 @@
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/apollo/api/impl/devapi_impl.hpp"
 
 using sdk::platform::capri::LIFManager;
 using sdk::platform::utils::program_info;
@@ -111,6 +114,20 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     txdma_qstate.total_rings = 1;
     sdk::platform::capri::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
                  (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
+
+    //Program the TxDMA scheduler for this LIF.
+    sdk::platform::lif_info_t lif_info;
+
+    memset(&lif_info, 0, sizeof(lif_info));
+    strncpy(lif_info.name, "Apollo Service LIF", sizeof(lif_info.name));
+    lif_info.lif_id = lif_id;
+    lif_info.type = sdk::platform::LIF_TYPE_SERVICE;
+    lif_info.tx_sched_table_offset = INVALID_INDEXER_INDEX;
+    lif_info.tx_sched_num_table_entries = 0;
+    lif_info.queue_info[0].type_num = 0;
+    lif_info.queue_info[0].size = 1; // 64B
+    lif_info.queue_info[0].entries = 1; // 2 Queues
+    api::impl::devapi_impl::lif_program_tx_scheduler(&lif_info);
 
     return SDK_RET_OK;
 }
