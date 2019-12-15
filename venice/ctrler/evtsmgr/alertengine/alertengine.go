@@ -337,12 +337,12 @@ func (a *alertEngineImpl) runPolicy(reqID string, apCl apiclient.Services, ap *m
 		}
 
 		if created {
-			a.logger.Infof("{req: %s} alert created from event {%s: %s, %s, %v} for the policy {%s/%s}", reqID,
-				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
+			a.logger.Infof("{req: %s} alert created from event {%s: %v, %s, %s, %v} for the policy {%s/%s}", reqID,
+				evt.GetName(), evt.GetCount(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
 			a.updateAlertPolicyStatusCounters(ap.GetObjectMeta(), 1, 1)
 		} else {
-			a.logger.Infof("{req: %s} existing open alert found for event {%s: %s, %s, %v}  for the policy {%s/%s}", reqID,
-				evt.GetName(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
+			a.logger.Infof("{req: %s} existing open alert found for event {%s: %v, %s, %s, %v}  for the policy {%s/%s}",
+				reqID, evt.GetName(), evt.GetCount(), evt.GetMessage(), evt.GetSelfLink(), evt.GetObjectRef(), ap.GetName(), ap.GetUUID())
 			a.updateAlertPolicyStatusCounters(ap.GetObjectMeta(), 1, 0)
 		}
 	}

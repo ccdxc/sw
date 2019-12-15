@@ -933,6 +933,8 @@ func TestEventsAlertEngine(t *testing.T) {
 		objRef    interface{}
 		repeat    int // number of times to repeat the event
 	}{
+		// any of these events can generate an alert based on when it is getting dispatched from evtsproxy
+		// to evtsmgr. e.g. ap2-*, count >=5 and count < 7
 		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
 		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
 		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
