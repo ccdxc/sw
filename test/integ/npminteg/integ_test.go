@@ -264,12 +264,54 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	}
 }
 
+func (it *integTestSuite) DeleteAllEndpoints(c *C) error {
+	log.Infof("----- Delete ALL Endpoints in all agents")
+
+	// create a wait channel
+	waitCh := make(chan error, it.numAgents*2)
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			for _, ep := range ag.nagent.NetworkAgent.ListEndpoint() {
+				// make the call
+				it.DeleteEndpoint("default", "default", ep.Name)
+				ag.nagent.NetworkAgent.DeleteEndpoint("default", "default", ep.Name)
+			}
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all endpoint deletes to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete failed")
+	}
+
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			if !CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+			}, "10ms", it.pollTimeout()) {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete error")
+	}
+	return nil
+}
+
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
 	// if not present create the default tenant
 	it.CreateTenant("default")
-	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
+	err := it.DeleteAllEndpoints(c)
+	c.Assert(err, IsNil)
+	err = it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
@@ -351,7 +393,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			// make the call
 			cerr := it.DeleteEndpoint("default", "default", epname)
 			if cerr != nil && cerr != state.ErrEndpointNotFound {
-				waitCh <- fmt.Errorf("Endpoint delete failed: %v", err)
+				waitCh <- fmt.Errorf("Endpoint delete failed: %v", cerr)
 				return
 			}
 
