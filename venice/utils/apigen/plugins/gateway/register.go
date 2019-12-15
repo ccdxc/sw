@@ -687,8 +687,10 @@ func getFieldIsReadOnlyFromCam(cam *CamInfo, table string, field string) bool {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
 			for _, fieldInfo := range mibInfo.FieldInfo {
-				if fieldInfo.Access == "readOnly" {
-					return true
+				if fieldInfo.CodeName == field {
+					if fieldInfo.Access == "readOnly" {
+						return true
+					}
 				}
 			}
 		}
