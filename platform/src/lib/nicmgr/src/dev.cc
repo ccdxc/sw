@@ -172,6 +172,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     }
     this->fwd_mode = fwd_mode;
     this->config_file = config_file;
+    this->dev_api = NULL;
     pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
     this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
