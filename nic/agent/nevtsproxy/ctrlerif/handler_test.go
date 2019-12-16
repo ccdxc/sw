@@ -409,10 +409,9 @@ func TestEventPolicy(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String()),
-			EvtsProxyURL:                eps.RPCServer.GetListenURL(),
-			BackupDir:                   eventsDir,
-			SkipCategoryBasedEventTypes: true}, logger)
+			Component:    fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String()),
+			EvtsProxyURL: eps.RPCServer.GetListenURL(),
+			BackupDir:    eventsDir}, logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return

@@ -170,10 +170,9 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 		var evtsRecorder events.Recorder
 
 		evtsRecorder, err = NewRecorder(&Config{
-			Component:                   t.Name(),
-			EvtsProxyURL:                proxyRPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, logger)
+			Component:    t.Name(),
+			EvtsProxyURL: proxyRPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -250,9 +249,8 @@ func TestRecorderFileBackup(t *testing.T) {
 	defer os.RemoveAll(recorderEventsDir)
 
 	evtsRecorder, err := NewRecorder(&Config{
-		Component:                   t.Name(),
-		BackupDir:                   recorderEventsDir,
-		SkipCategoryBasedEventTypes: true}, logger)
+		Component: t.Name(),
+		BackupDir: recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create recorder")
 	defer evtsRecorder.Close()
 
@@ -323,10 +321,9 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	wg.Add(2)
 
 	evtsRecorder, err := NewRecorder(&Config{
-		Component:                   t.Name(),
-		EvtsProxyURL:                proxyRPCServer.GetListenURL(),
-		BackupDir:                   recorderEventsDir,
-		SkipCategoryBasedEventTypes: true}, logger)
+		Component:    t.Name(),
+		EvtsProxyURL: proxyRPCServer.GetListenURL(),
+		BackupDir:    recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create recorder")
 	defer evtsRecorder.Close()
 

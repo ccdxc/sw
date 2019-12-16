@@ -101,11 +101,10 @@ type failedEventsForwarder struct {
 
 // Config represents the recorder configuration
 type Config struct {
-	Component                   string // name of the component recording events
-	EvtsProxyURL                string // proxy URL to connect to
-	BackupDir                   string // store events in a file, if proxy connection becomes unavailable
-	SkipEvtsProxy               bool   // use local store for events; skip connecting to proxy
-	SkipCategoryBasedEventTypes bool   // use the given event types instead of using category based events
+	Component     string // name of the component recording events
+	EvtsProxyURL  string // proxy URL to connect to
+	BackupDir     string // store events in a file, if proxy connection becomes unavailable
+	SkipEvtsProxy bool   // use local store for events; skip connecting to proxy
 }
 
 // NewRecorder creates and returns a recorder instance and instantiates the singleton object.

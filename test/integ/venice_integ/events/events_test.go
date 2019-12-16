@@ -83,10 +83,9 @@ func TestEvents(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component:                   componentID,
-		EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-		BackupDir:                   recorderEventsDir,
-		SkipCategoryBasedEventTypes: true}, ti.logger)
+		Component:    componentID,
+		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+		BackupDir:    recorderEventsDir}, ti.logger)
 	AssertOk(t, err, "failed to create events recorder")
 	defer evtsRecorder.Close()
 
@@ -175,10 +174,9 @@ func TestEventsProxyRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:                   fmt.Sprintf("%v-%v", componentID, i),
-				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:                   recorderEventsDir,
-				SkipCategoryBasedEventTypes: true}, ti.logger)
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -286,10 +284,9 @@ func TestEventsMgrRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:                   fmt.Sprintf("%v-%v", componentID, i),
-				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:                   recorderEventsDir,
-				SkipCategoryBasedEventTypes: true}, ti.logger)
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -441,10 +438,9 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   uuid.NewV4().String(),
-			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, ti.logger)
+			Component:    uuid.NewV4().String(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder")
 			return
@@ -963,10 +959,9 @@ func TestEventsAlertEngine(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   uuid.NewV4().String(),
-			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, ti.logger)
+			Component:    uuid.NewV4().String(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -1285,10 +1280,9 @@ func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component:                   uuid.NewV4().String(),
-		EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-		BackupDir:                   recorderEventsDir,
-		SkipCategoryBasedEventTypes: true}, ti.logger)
+		Component:    uuid.NewV4().String(),
+		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+		BackupDir:    recorderEventsDir}, ti.logger)
 	AssertOk(t, err, "failed to create recorder")
 	ti.recorders.Lock()
 	ti.recorders.list = append(ti.recorders.list, evtsRecorder)
@@ -2302,10 +2296,9 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 		defer os.RemoveAll(recorderEventsDir)
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   uuid.NewV4().String(),
-			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, ti.logger)
+			Component:    uuid.NewV4().String(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -2411,10 +2404,9 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 		defer os.RemoveAll(recorderEventsDir)
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   uuid.NewV4().String(),
-			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, ti.logger)
+			Component:    uuid.NewV4().String(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -2519,10 +2511,9 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:                   fmt.Sprintf("%v-%v", componentID, i),
-				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:                   recorderEventsDir,
-				SkipCategoryBasedEventTypes: true}, ti.logger)
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -2648,10 +2639,9 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, dummyObjRef *cluster.Node
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:                   uuid.NewV4().String(),
-			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:                   recorderEventsDir,
-			SkipCategoryBasedEventTypes: true}, ti.logger)
+			Component:    uuid.NewV4().String(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
