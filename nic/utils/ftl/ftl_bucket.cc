@@ -500,6 +500,8 @@ FTL_MAKE_AFTYPE(bucket)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx, FTL_MAKE_AFT
 sdk_ret_t
 FTL_MAKE_AFTYPE(bucket)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     bool force_hwread = ctx->params->force_hwread;
+
+    ctx->entry.entry_valid = false;
     if (valid_ || force_hwread) {
         sdk_table_api_params_t params = { 0 };
         read_(ctx, force_hwread);

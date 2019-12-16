@@ -114,7 +114,8 @@ int capri_hbm_table_entry_read(uint32_t tableid,
                                uint32_t index,
                                uint8_t *hwentry,
                                uint16_t *entry_size,
-                                p4_table_mem_layout_t &tbl_info);
+                               p4_table_mem_layout_t &tbl_info,
+                               bool read_thru);
 
 int capri_table_constant_write(uint64_t val, uint32_t stage,
                                uint32_t stage_tableid, bool ingress);

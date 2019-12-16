@@ -585,7 +585,8 @@ asicpd_hbm_table_entry_read (uint32_t tableid,
     sdk::asic::pd::asicpd_copy_capri_table_info(&cap_tbl_info,
                                                 &tbl_ctx.hbm_layout, &tbl_ctx);
     ret = capri_hbm_table_entry_read(tableid, index, hwentry,
-                                     entry_size, cap_tbl_info);
+                                     entry_size, cap_tbl_info,
+                                     tbl_ctx.read_thru_mode);
     time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ);
     return ret;
 }

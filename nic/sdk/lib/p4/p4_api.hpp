@@ -104,6 +104,21 @@ typedef struct p4pd_table_mem_layout_ {
 } p4pd_table_mem_layout_t;
 
 
+//------------------------------------------------------------------------------
+// different modes of writing to ASIC
+// 1. non-blocking - adds write operation to asicrw thread's work queue &
+//                   returns
+// 2. blocking     - adds write operation to asicrw thread's work queue & blocks
+//                   until the operation is done by asicrw thread
+// 3. write-thru   - non-blocking version that bypasses asicrw thread completely
+//                   and writes in the caller thread's context
+//------------------------------------------------------------------------------
+typedef enum p4pd_table_write_mode_ {
+    P4_TBL_WRITE_MODE_NON_BLOCKING = 0,
+    P4_TBL_WRITE_MODE_BLOCKING     = 1,
+    P4_TBL_WRITE_MODE_WRITE_THRU   = 2
+} p4pd_table_write_mode_t;
+
 typedef struct p4pd_table_properties_ {
     uint8_t                 tableid; /* ID used by table APIs */
     uint8_t                 stage_tableid; /* ID used for programming table config in P4 pipe */
@@ -131,6 +146,8 @@ typedef struct p4pd_table_properties_ {
     mem_addr_t              base_mem_va; /* virtual  address in memory */
     p4pd_table_cache_t      cache; /* Cache region info. Valid only for memory based tables */
     p4pd_pipeline_t         pipe; /* Pipeline this table belongs to */
+    p4pd_table_write_mode_t wr_mode; /* Pipeline table write mode */
+    bool                    read_thru_mode; /* Pipeline table read thru mode */
     uint8_t                 table_thread_count; /* Number of table execution threads. Min 1 */
     uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
 } p4pd_table_properties_t;
@@ -191,6 +208,50 @@ void p4pd_cleanup();
 p4pd_error_t p4pd_table_properties_get(uint32_t                 tableid,
                                        p4pd_table_properties_t *tbl_ctx);
 
+
+
+/* P4PD API that uses tableID to set the table write mode that ASIC
+ * layer use when writing to P4 tables.
+ *
+ * Arguments:
+ *
+ *  IN  : uint32_t          tableid    : Table Id that identifies
+ *                                       P4 table. This id is obtained
+ *                                       from p4pd_table_id_enum.
+ *
+ *  IN  : p4pd_table_write_mode_t wr_mode  : Table write mode.
+ *
+ * Return Value:
+ *  P4PD_SUCCESS                       : Table write mode is set successfully
+ *                                       in p4tbls context that was initialized earlier.
+ *
+ *  P4PD_FAIL                          : If tableid is not valid
+
+ */
+p4pd_error_t p4pd_table_properties_set_write_mode(uint32_t tableid,
+                                                  p4pd_table_write_mode_t wr_mode);
+
+
+/* P4PD API that uses tableID to set the table read thru mode property that ASIC
+ * layer can uses when reading P4 tables.
+ *
+ * Arguments:
+ *
+ *  IN  : uint32_t tableid             : Table Id that identifies
+ *                                       P4 table. This id is obtained
+ *                                       from p4pd_table_id_enum.
+ *
+ *  IN  : bool     read_thru_mode      : Table reade mode.
+ *
+ * Return Value:
+ *  P4PD_SUCCESS                       : Table read thru mode is set successfully
+ *                                       in p4tbls context that was initialized earlier.
+ *
+ *  P4PD_FAIL                          : If tableid is not valid
+ *
+ */
+p4pd_error_t p4pd_table_properties_set_read_thru_mode(uint32_t tableid,
+                                                      bool read_thru_mode);
 
 
 /* P4PD wrapper API that uses tableID to perform p4table operatons on

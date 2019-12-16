@@ -384,6 +384,11 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
         } else {
             tbl->pipe = P4_PIPELINE_EGRESS;
         }
+        //default table write mode is blocking.
+        tbl->wr_mode = P4_TBL_WRITE_MODE_BLOCKING;
+
+        //default table read thru mode is false.
+        tbl->read_thru_mode = false;
 
         // memory units used by the table
         boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
@@ -501,6 +506,72 @@ p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
     memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
     return P4PD_SUCCESS;
 }
+
+
+//-----------------------------------------------------------------------------
+// P4PD API that uses tableID to set the table write mode that ASIC
+// layer use when writing to P4 tables.
+//
+// Arguments:
+//
+//  IN  : uint32_t          tableid    : Table Id that identifies
+//                                       P4 table. This id is obtained
+//                                       from p4pd_table_id_enum.
+//
+//  IN  : p4pd_table_write_mode_t wr_mode  : Table write mode.
+//
+// Return Value:
+//  P4PD_SUCCESS                       : Table write mode is set successfully
+//                                       in p4tbls context that was initialized earlier.
+//
+//  P4PD_FAIL                          : If tableid is not valid
+//-----------------------------------------------------------------------------
+p4pd_error_t p4pd_table_properties_set_write_mode(uint32_t tableid,
+                                                  p4pd_table_write_mode_t wr_mode)
+{
+    p4pd_table_properties_t *tbl_ctx;
+    if (tableid >= p4pd_tableid_max_get() || !_p4tbls) {
+        return P4PD_FAIL;
+    }
+
+    tbl_ctx = _p4tbls + tableid;
+
+    tbl_ctx->wr_mode = wr_mode;
+    return P4PD_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------
+// P4PD API that uses tableID to set the table read thru mode property that ASIC
+// layer can uses when reading P4 tables.
+//
+// Arguments:
+//
+//  IN  : uint32_t tableid            : Table Id that identifies
+//                                      P4 table. This id is obtained
+//                                      from p4pd_table_id_enum.
+//
+//  IN  : bool     read_thru_mode     : Table reade thru mode.
+//
+// Return Value:
+//  P4PD_SUCCESS                      : Table read thru mode is set successfully
+//                                      in p4tbls context that was initialized earlier.
+//
+//  P4PD_FAIL                         : If tableid is not valid
+//-----------------------------------------------------------------------------
+p4pd_error_t p4pd_table_properties_set_read_thru_mode(uint32_t tableid,
+                                                      bool read_thru_mode)
+{
+    p4pd_table_properties_t *tbl_ctx;
+    if (tableid >= p4pd_tableid_max_get() || !_p4tbls) {
+        return P4PD_FAIL;
+    }
+
+    tbl_ctx = _p4tbls + tableid;
+
+    tbl_ctx->read_thru_mode = read_thru_mode;
+    return P4PD_SUCCESS;
+}
+
 
 uint32_t
 p4pd_global_actiondata_appdata_size_get (uint32_t tableid, uint8_t actionid)

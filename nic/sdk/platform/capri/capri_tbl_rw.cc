@@ -1638,7 +1638,8 @@ capri_hbm_table_entry_write (uint32_t tableid,
 
     if (tbl_info->base_mem_va) {
         addr = tbl_info->base_mem_va + entry_start_addr;
-        sdk::asic::asic_vmem_write(addr, hwentry, (entry_size >> 3));
+        sdk::asic::asic_vmem_write(addr, hwentry, (entry_size >> 3),
+                                   (sdk::asic::asic_write_mode_t) tbl_info->wr_mode);
     } else if (tbl_info->base_mem_pa) {
         addr  = tbl_info->base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
@@ -1703,7 +1704,8 @@ capri_hbm_table_entry_read (uint32_t tableid,
                             uint32_t index,
                             uint8_t *hwentry,
                             uint16_t *entry_size,
-                            p4_table_mem_layout_t &tbl_info)
+                            p4_table_mem_layout_t &tbl_info,
+                            bool read_thru)
 {
     mem_addr_t entry_start_addr, addr;
 
@@ -1712,7 +1714,7 @@ capri_hbm_table_entry_read (uint32_t tableid,
 
     if (tbl_info.base_mem_va) {
         addr = tbl_info.base_mem_va + entry_start_addr;
-        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width);
+        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width, read_thru);
     } else if (tbl_info.base_mem_pa) {
         addr  = tbl_info.base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);

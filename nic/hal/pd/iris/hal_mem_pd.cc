@@ -894,6 +894,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
 {
     uint32_t                   tid;
     hal_ret_t                  ret = HAL_RET_OK;
+    p4pd_error_t               p4pd_ret;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_table_map.json",
@@ -945,6 +946,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
 
     for (tid = P4TBL_ID_TBLMIN; tid < P4TBL_ID_TBLMAX; tid++) {
         p4pd_table_properties_get(tid, &tinfo);
+
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_HASHTCAM:
             if (tinfo.has_oflow_table) {
@@ -1024,6 +1026,20 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
             break;
 
         case P4_TBL_TYPE_HASH:
+            if (tid == P4TBL_ID_FLOW_HASH) {
+                p4pd_ret = p4pd_table_properties_set_write_mode(tid, P4_TBL_WRITE_MODE_WRITE_THRU);
+
+                if (p4pd_ret != P4PD_SUCCESS) {
+                    HAL_TRACE_ERR("Failed to set table write thru mode {} for tid {}", P4_TBL_WRITE_MODE_WRITE_THRU, tid);
+                }
+
+                p4pd_ret = p4pd_table_properties_set_read_thru_mode (tid, true);
+
+                if (p4pd_ret != P4PD_SUCCESS) {
+                    HAL_TRACE_ERR("Failed to set table read thru mode to true for tid {}", tid);
+                }
+            }
+
             if (tid == P4TBL_ID_FLOW_HASH_OVERFLOW) {
                 break;
             }
