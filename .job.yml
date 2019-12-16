@@ -133,13 +133,13 @@ jobs:
   iota/test/venice/sim:
     labels: ["precommit", "hourly"]
   nic:
-    labels: ["precommit", "hourly"]
+    labels: ["precommit", "hourly", "2xhourly"]
   nic/agent:
     labels: ["precommit", "hourly"]
   nic/apollo:
     labels: ["precommit", "hourly"]
   nic/sdk:
-    labels: ["precommit", "hourly"]
+    labels: ["precommit", "hourly", "2xhourly"]
   nic/utils/ftlite:
     labels: ["precommit", "hourly"]
   penctl:
