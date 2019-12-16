@@ -78,7 +78,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 	case apiintf.DeleteOper:
 		// Prevent deletion of DistributedServiceCard object if MgmtMode = NETWORK && Phase = ADMITTED
 		if nwManaged && admitted {
-			errStr := fmt.Sprintf("Cannot delete DistributedServiceCard Object because it is in %s phase. Please de-admit or decommission before deleting.", cluster.DistributedServiceCardStatus_ADMITTED.String())
+			errStr := fmt.Sprintf("Cannot delete DistributedServiceCard Object because it is in %s phase. Please decommission before deleting.", cluster.DistributedServiceCardStatus_ADMITTED.String())
 			cl.logger.Errorf(errStr)
 			return i, true, fmt.Errorf(errStr)
 		}

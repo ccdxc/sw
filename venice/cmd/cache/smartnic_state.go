@@ -83,7 +83,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.DistributedServiceCard, writeback
 		esn.Lock()
 		defer esn.Unlock()
 		log.Infof("Objects exists, updating smartNIC OldState: {%+v}. New state: {%+v}", esn, sn)
-		return esn, sm.UpdateSmartNIC(sn, writeback)
+		return esn, sm.UpdateSmartNIC(sn, writeback, true)
 	}
 
 	if sn.Spec.ID == "" {
@@ -143,7 +143,7 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.DistributedServiceCard, writeback
 
 // UpdateSmartNIC updates a smartNIC object
 // Caller is responsible for acquiring the lock before invocation and releasing it afterwards
-func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, writeback bool) error {
+func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, writeback, forceSpec bool) error {
 	obj, err := sm.FindObject("DistributedServiceCard", "", updObj.ObjectMeta.Name)
 	if err != nil {
 		log.Errorf("Can not find the smartnic %s err: %v", updObj.ObjectMeta.Name, err)
@@ -189,31 +189,28 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 	}
 
 	if writeback || cachedState.dirty {
-		nicObj := updObj
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			_, err = sm.APIClient().DistributedServiceCard().Update(ctx, nicObj)
+			if forceSpec {
+				updObj.ResourceVersion = ""
+				_, err = sm.APIClient().DistributedServiceCard().Update(ctx, updObj)
+			} else {
+				_, err = sm.APIClient().DistributedServiceCard().UpdateStatus(ctx, updObj)
+			}
 			if err == nil {
 				ok = true
 				cachedState.dirty = false
 				cancel()
-				log.Infof("Updated SmartNIC object in ApiServer: %+v", nicObj)
+				log.Infof("Updated SmartNIC object in ApiServer: %+v", updObj)
 				break
 			}
-			log.Errorf("Error updating SmartNIC object %+v: %v", nicObj.ObjectMeta, err)
-			// Write error -- fetch updated Spec + Meta and retry
-			updObj, err := sm.APIClient().DistributedServiceCard().Get(ctx, &nicObj.ObjectMeta)
-			if err == nil {
-				updObj.Status = nicObj.Status
-				nicObj = updObj
-				// retain Status as that's what we are trying to update
-			}
+			log.Errorf("Error updating SmartNIC object %+v: %v", updObj.ObjectMeta, err)
 			cancel()
 		}
 		if !ok {
 			cachedState.dirty = true
-			log.Errorf("Error updating SmartNIC object %+v in ApiServer, retries exhausted", nicObj.ObjectMeta)
+			log.Errorf("Error updating SmartNIC object %+v in ApiServer, retries exhausted", updObj.ObjectMeta)
 		}
 	}
 

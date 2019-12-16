@@ -715,7 +715,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		case kvstore.Created:
 			_, err = env.StateMgr.CreateSmartNIC(evtNIC, false)
 		case kvstore.Updated:
-			err = env.StateMgr.UpdateSmartNIC(evtNIC, false)
+			err = env.StateMgr.UpdateSmartNIC(evtNIC, false, false)
 		case kvstore.Deleted:
 			err = env.StateMgr.DeleteSmartNIC(evtNIC)
 		}
@@ -773,7 +773,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 			evtNIC.Status.Conditions = nil
 
 			// Override local state and Propagate changes back to API Server
-			err = env.StateMgr.UpdateSmartNIC(evtNIC, true)
+			err = env.StateMgr.UpdateSmartNIC(evtNIC, true, false)
 			if err != nil {
 				log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", evtNIC, err)
 			}
@@ -790,11 +790,15 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 		// and trigger the mode change on NAPLES
 		if nicState.Spec.MgmtMode == cmd.DistributedServiceCardSpec_NETWORK.String() && evtNIC.Spec.MgmtMode == cmd.DistributedServiceCardSpec_HOST.String() {
 			log.Infof("Decommissioning NIC: %s", evtNIC.Name)
-			// Override local state and Propagate changes back to API Server
-			err = env.StateMgr.UpdateSmartNIC(evtNIC, true)
+
+			evtNIC.Status.Conditions = nil
+			// Make sure to update local state but no need to propagate back to ApiServer
+			// because status update will happen when the NIC acks the mode change back
+			err = env.StateMgr.UpdateSmartNIC(evtNIC, true, false)
 			if err != nil {
 				log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", evtNIC, err)
 			}
+
 			// A decommissioned NIC is equivalent to a deleted NIC from Host pairing point of view
 			err := env.StateMgr.UpdateHostPairingStatus(kvstore.Deleted, evtNIC, nil)
 			if err != nil {
@@ -831,7 +835,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 			}
 		}
 
-		err = env.StateMgr.UpdateSmartNIC(nic, false)
+		err = env.StateMgr.UpdateSmartNIC(nic, false, false)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", evtNIC, err)
 		}

@@ -129,7 +129,7 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			_, err = sm.APIClient().Host().Update(ctx, hostObj)
+			_, err = sm.APIClient().Host().UpdateStatus(ctx, hostObj)
 			if err == nil {
 				ok = true
 				hostState.dirty = false
@@ -138,13 +138,6 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 				break
 			}
 			log.Errorf("Error updating Host object %+v: %v", hostObj.ObjectMeta, err)
-			// Write error -- fetch updated Spec + Meta and retry
-			updObj, err := sm.APIClient().Host().Get(ctx, &hostObj.ObjectMeta)
-			if err == nil {
-				// retain Status as that's what we are trying to update
-				updObj.Status = hostObj.Status
-				hostObj = updObj
-			}
 			cancel()
 		}
 		if !ok {
