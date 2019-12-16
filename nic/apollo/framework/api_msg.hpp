@@ -29,15 +29,15 @@ typedef enum api_msg_id_e {
 ///< API batch message containing bunch of API calls in single batch
 typedef struct batch_info_s {
     ///< epoch is the config version to advance to
-    pds_epoch_t         epoch;
+    pds_epoch_t           epoch;
     ///< process this batch synchronously or asynchronously
-    bool                async;
+    bool                  async;
     ///< batch cookie is something that client uses to correlate
     ///< API batch request and response in case batch is requested
     ///< to be processed asynchronously
-    void                *cookie;
+    void                  *cookie;
     ///< the callback to call once this batch finishes processing
-    pds_async_rsp_cb_t   response_cb;
+    pds_async_rsp_cb_t    response_cb;
     ///< list of api calls to process in this batch
     vector<api_ctxt_t *> apis;
 } batch_info_t;

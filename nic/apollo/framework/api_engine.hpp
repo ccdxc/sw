@@ -508,7 +508,7 @@ private:
     /// \brief Delete given api object from dependent object list
     /// \param[in] it iterator position of api obj to be deleted
     /// \param[in] api_obj API object being processed
-    void del_from_deps_list_(dirty_obj_list_t::iterator it,
+    void del_from_deps_list_(dep_obj_list_t::iterator it,
                              api_base *api_obj) {
         batch_ctxt_.aol.erase(it);
         batch_ctxt_.aom.erase(api_obj);

@@ -704,6 +704,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
+        api_obj_ctxt_free_(obj_ctxt);
         api_base::free(obj_ctxt->obj_id, api_obj);
         break;
 
@@ -721,6 +722,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                               api_obj->key2str().c_str());
             api_base::soft_delete(obj_ctxt->obj_id, api_obj);
         }
+        api_obj_ctxt_free_(obj_ctxt);
         PDS_API_ACTCFG_CREATE_COUNTER_INC(ok, 1);
         break;
 
@@ -745,6 +747,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         if (obj_ctxt->cloned_obj) {
             api_base::free(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         }
+        api_obj_ctxt_free_(obj_ctxt);
         PDS_API_ACTCFG_DELETE_COUNTER_INC(ok, 1);
         break;
 
@@ -774,27 +777,28 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         }
         // just free the original/built object (if object type is stateless)
         api_base::free(obj_ctxt->obj_id, api_obj);
+        api_obj_ctxt_free_(obj_ctxt);
         PDS_API_ACTCFG_UPDATE_COUNTER_INC(ok, 1);
         break;
 
     default:
         return sdk::SDK_RET_INVALID_OP;
     }
-    obj_ctxt->hw_dirty = 0;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 api_engine::activate_config_stage_(void) {
     sdk_ret_t                     ret;
-    api_obj_ctxt_t                    *octxt;
-    dirty_obj_list_t::iterator    next_it;
+    api_obj_ctxt_t                *octxt;
+    dirty_obj_list_t::iterator    dol_next_it;
+    dep_obj_list_t::iterator      aol_next_it;
 
     // walk over all the dirty objects and activate their config in hw, if any
     batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
-    for (auto it = batch_ctxt_.dol.begin(), next_it = it;
-             it != batch_ctxt_.dol.end(); it = next_it) {
-        next_it++;
+    for (auto it = batch_ctxt_.dol.begin(), dol_next_it = it;
+         it != batch_ctxt_.dol.end(); it = dol_next_it) {
+        dol_next_it++;
         octxt = batch_ctxt_.dom[*it];
         ret = activate_config_(it, *it, octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
@@ -812,10 +816,14 @@ api_engine::activate_config_stage_(void) {
     }
 
     // walk over all the dependent objects & re-activate their config hw, if any
-    for (auto it = batch_ctxt_.aol.begin();
-         it != batch_ctxt_.aol.end(); ++it) {
+    for (auto it = batch_ctxt_.aol.begin(), aol_next_it = it;
+         it != batch_ctxt_.aol.end(); it = aol_next_it) {
+        aol_next_it++;
+        octxt = batch_ctxt_.aom[*it];
         ret = (*it)->reactivate_config(batch_ctxt_.epoch,
                                        batch_ctxt_.aom[*it]->api_op);
+        del_from_deps_list_(it, *it);
+        api_obj_ctxt_free_(octxt);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(err, 1);
             break;
@@ -1075,9 +1083,13 @@ api_engine::batch_commit(batch_info_t *batch) {
                    batch_ctxt_.dol.size(), batch_ctxt_.dom.size());
     SDK_ASSERT(batch_ctxt_.dol.size() == 0);
     SDK_ASSERT(batch_ctxt_.dom.size() == 0);
+    SDK_ASSERT(batch_ctxt_.aol.size() == 0);
+    SDK_ASSERT(batch_ctxt_.aom.size() == 0);
     batch_ctxt_.dom.clear();
     batch_ctxt_.dol.clear();
-    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
+    batch_ctxt_.aom.clear();
+    batch_ctxt_.aol.clear();
+    PDS_TRACE_VERBOSE("Finished clearing dirty object map/list ...");
 
     // update the epoch to current epoch
     PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",

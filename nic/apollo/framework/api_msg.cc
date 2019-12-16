@@ -71,7 +71,7 @@ api_batch_start (pds_batch_params_t *batch_params)
         api_msg->batch.async = batch_params->async;
         api_msg->batch.response_cb = batch_params->response_cb;
         api_msg->batch.cookie = batch_params->cookie;
-        api_msg->batch.apis.reserve(64);
+        api_msg->batch.apis.reserve(1024);
     }
     return (pds_batch_ctxt_t)api_msg;
 }
@@ -86,6 +86,8 @@ api_batch_destroy (pds_batch_ctxt_t bctxt)
          it != api_msg->batch.apis.end(); ++it) {
         api::api_ctxt_free(*it);
     }
+    // clear the contents of the API vector
+    api_msg->batch.apis.clear();
     // free the batch context
     api::api_msg_free(api_msg);
     return SDK_RET_OK;
@@ -97,7 +99,7 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
 {
     sdk_ret_t ret = SDK_RET_OK;
     api_msg_t *api_msg;
-    
+
     if (bctxt == 0) {
         pds_batch_params_t batch_params = { 0 };
         if (!api_ctxt) {
@@ -109,14 +111,14 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         if (likely(api_msg != NULL)) {
             api_msg->batch.apis.push_back(api_ctxt);
         }
-    
+
         sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
                           sizeof(api_msg), api_process_sync_result_, &ret);
-        
+
         api_batch_destroy((pds_batch_ctxt_t)api_msg);
         return ret;
     }
- 
+
     api_msg = (api_msg_t *)bctxt;
     if (api_ctxt) {
         // batch commit is not happening yet, just accumulate this API in
@@ -150,7 +152,7 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
     } else {
         api_batch_destroy(bctxt);
     }
-    
+
     return ret;
 }
 

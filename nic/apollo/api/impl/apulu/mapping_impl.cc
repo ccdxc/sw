@@ -655,7 +655,8 @@ error:
 
 sdk_ret_t
 mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
-                               api_obj_ctxt_t *obj_ctxt, pds_mapping_spec_t *spec) {
+                               api_obj_ctxt_t *obj_ctxt,
+                               pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
@@ -665,7 +666,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
     PDS_TRACE_DEBUG("Activating %s, subnet %u, tep %u, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",
-                    mapping->key2str(), spec->subnet.id, spec->tep.id,
+                    mapping->key2str().c_str(), spec->subnet.id, spec->tep.id,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.id);
     if (spec->is_local) {
