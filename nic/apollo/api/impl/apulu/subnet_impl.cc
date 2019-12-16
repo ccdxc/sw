@@ -169,11 +169,6 @@ subnet_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
 subnet_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     bd_actiondata_t bd_data = { 0 };
@@ -208,7 +203,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
 
     PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, create host if 0x%x",
                     spec->key.id, hw_id_, spec->host_ifindex);
-    vpc = vpc_db()->find(&spec->vpc);
+    vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
         PDS_TRACE_ERR("No vpc %u found to program subnet %u",
                       spec->vpc.id, spec->key.id);
@@ -294,7 +289,8 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
 
 sdk_ret_t
 subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
-                              subnet_entry *orig_subnet, api_obj_ctxt_t *obj_ctxt) {
+                              subnet_entry *orig_subnet,
+                              api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     lif_impl *lif;
     vpc_entry *vpc;
@@ -307,7 +303,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, update host if 0x%x",
                     spec->key.id, hw_id_, spec->host_ifindex);
     spec = &obj_ctxt->api_params->subnet_spec;
-    vpc = vpc_db()->find(&spec->vpc);
+    vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
         PDS_TRACE_ERR("No vpc %u found to program subnet %u",
                       spec->vpc.id, spec->key.id);
@@ -389,12 +385,6 @@ subnet_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
     }
     return ret;
-}
-
-sdk_ret_t
-subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                           api_op_t api_op) {
-    return SDK_RET_ERR;
 }
 
 void

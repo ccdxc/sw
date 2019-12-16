@@ -22,13 +22,15 @@ namespace api {
 class vnic_state;
 
 // attribute update bits for vnic object
-#define PDS_VNIC_UPD_POLICY              0x1
-#define PDS_VNIC_UPD_HOST_IFINDEX        0x2
-#define PDS_VNIC_UPD_METER               0x4
+#define PDS_VNIC_UPD_VNIC_ENCAP          0x1
+#define PDS_VNIC_UPD_SWITCH_VNIC         0x2
+#define PDS_VNIC_UPD_POLICY              0x4
+#define PDS_VNIC_UPD_HOST_IFINDEX        0x8
+#define PDS_VNIC_UPD_METER               0x10
 // route table is not an attr inside the vnic object, however
 // a route table change on subnet can affect vnic's programming
 // TODO: revisit and see if there is a better way to handle this
-#define PDS_VNIC_UPD_ROUTE_TABLE         0x8
+#define PDS_VNIC_UPD_ROUTE_TABLE         0x20
 
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
@@ -98,13 +100,6 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          reprogram all h/w tables relevant to this object and
-    ///                 dependent on other objects except stage 0 table(s),
-    ///                 if any
-    /// \param[in] api_op    API operation
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
-
     /// \brief        add all objects that may be affected if this object is
     ///               updated to framework's object dependency list
     /// \param[in]    obj_ctxt    transient state associated with this API
@@ -137,6 +132,13 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
                                       api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing

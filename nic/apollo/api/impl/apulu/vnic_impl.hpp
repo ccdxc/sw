@@ -86,18 +86,6 @@ public:
     virtual sdk_ret_t program_hw(api_base *api_obj,
                                  api_obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief     re-program config in the hardware
-    ///            re-program all hardware tables relevant to this object
-    ///            except stage 0 table(s), if any and this reprogramming must
-    ///            be based on existing state and any of the state present in
-    ///            the dirty object list (like clone objects etc.)
-    /// \param[in] api_obj API object being activated
-    /// \param[in] api_op  API operation
-    /// \return    #SDK_RET_OK on success, failure status code on error
-    /// \NOTE      this method is called when an object is in the
-    ///            dependent/puppet object list
-    virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
-
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
     ///            epoch#
@@ -128,6 +116,18 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
                                   pds_epoch_t epoch, api_op_t api_op,
                                   api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief     re-program config in the hardware
+    ///            re-program all hardware tables relevant to this object
+    ///            except stage 0 table(s), if any and this reprogramming must
+    ///            be based on existing state and any of the state present in
+    ///            the dirty object list (like clone objects etc.)
+    /// \param[in] api_obj API object being activated
+    /// \param[in] api_op  API operation
+    /// \return    #SDK_RET_OK on success, failure status code on error
+    /// \NOTE      this method is called when an object is in the
+    ///            dependent/puppet object list
+    virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
 
     /// \brief     re-activate config in the hardware stage 0 tables relevant to
     ///            this object, if any, this reactivation must be based on
@@ -182,12 +182,12 @@ private:
                   uint32_t idx, mem_addr_t addr);
 
     /// \brief      program vnic info tables in rxdma and txdma
+    /// \param[in]  vnic      vnic being created/updated
     /// \param[in]  vpc       vpc of the vnic
     /// \param[in]  subnet    subnet of the vnic
-    /// \param[in]  spec      vnic configuration
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
-                                 pds_vnic_spec_t *spec);
+    sdk_ret_t program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
+                                 subnet_entry *subnet);
 
     /// \brief     add an entry to LOCAL_MAPPING table
     /// \param[in] epoch epoch being activated

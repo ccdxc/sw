@@ -89,7 +89,7 @@ public:
     /// \brief    re-program config in the hardware
     /// re-program all hardware tables relevant to this object except stage 0
     /// table(s), if any and this reprogramming must be based on existing state
-    /// and any of the state present in the dirty object list (like clone
+    /// and any of the state present in the dirty object list (like cloned
     /// objects etc.)
     /// \param[in] api_op API operation
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -132,7 +132,8 @@ public:
     /// \param[in] orig_obj old/original version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t program_update(api_base *orig_obj,
+                                     api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -151,7 +152,7 @@ public:
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing
     ///        state and any of the state present in the dirty object list
-    ///        (like clone objects etc.) only and not directly on db objects
+    ///        (like cloned objects etc.) only and not directly on db objects
     /// \param[in] epoch epoch/version of new config
     /// \param[in] api_op API operation
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -209,20 +210,6 @@ public:
     virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
-
-#if 0
-    /// \brief compute all the objects depending on this object based on the
-    ///        given attribute update bitmap and add to framework's dependency
-    ///        list
-    /// \param[in] api_op      API operation triggering the object dependency
-    ///                        computation
-    /// \param[in] upd_bmap    bitmap indicating the attributes updated on the
-    ///                        object
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(api_op_t api_op, uint64_t upd_bmap) {
-        return SDK_RET_INVALID_OP;
-    }
-#endif
 
     /// \brief Mark the object as dirty
     void set_in_dirty_list(void) { in_dol_ = 1; }

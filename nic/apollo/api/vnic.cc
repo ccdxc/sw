@@ -173,7 +173,21 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (subnet_.id != spec->subnet.id) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"subnet\" "
                       "from %u to %u on vnic %s", subnet_.id,
-                      spec->subnet.id, key2str());
+                      spec->subnet.id, key2str().c_str());
+        return SDK_RET_INVALID_ARG;
+    }
+    if (memcmp(mac_, spec->mac_addr, ETH_ADDR_LEN)) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"mac address\" "
+                      "from %s to %s on vnic %s", macaddr2str(mac_),
+                      macaddr2str(spec->mac_addr), key2str().c_str());
+        return SDK_RET_INVALID_ARG;
+    }
+    if ((vnic_encap_.type != spec->vnic_encap.type) ||
+        (vnic_encap_.val.value != spec->vnic_encap.val.value)) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_VNIC_ENCAP;
+    }
+    if (switch_vnic_ != spec->switch_vnic) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_SWITCH_VNIC;
     }
     if ((num_ing_v4_policy_ != spec->num_ing_v4_policy)          ||
         (num_ing_v6_policy_ != spec->num_ing_v6_policy)          ||
@@ -197,16 +211,9 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vnic_entry::reprogram_config(api_op_t api_op) {
-    PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
-                    key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
-    return impl_->reprogram_hw(this, api_op);
-}
-
-sdk_ret_t
 vnic_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return SDK_RET_INVALID_OP;
+    PDS_TRACE_DEBUG("Updating vnic %u", key_.id);
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -214,6 +221,13 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating vnic %u config", key_.id);
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+}
+
+sdk_ret_t
+vnic_entry::reprogram_config(api_op_t api_op) {
+    PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
+                    key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
+    return impl_->reprogram_hw(this, api_op);
 }
 
 sdk_ret_t

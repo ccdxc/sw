@@ -216,7 +216,7 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (vpc_.id != spec->vpc.id) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"vpc\" "
                       "from %u to %u on subnet %s",
-                      vpc_.id, spec->vpc.id, key2str());
+                      vpc_.id, spec->vpc.id, key2str().c_str());
             return SDK_RET_INVALID_ARG;
     }
     if ((fabric_encap_.type != spec->fabric_encap.type) ||
@@ -286,14 +286,6 @@ subnet_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::reprogram_config(api_op_t api_op) {
-    if (impl_) {
-        return impl_->reprogram_hw(this, api_op);
-    }
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
 subnet_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->update_hw(orig_obj, this, obj_ctxt);
@@ -307,6 +299,22 @@ subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     if (impl_) {
         PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::reprogram_config(api_op_t api_op) {
+    if (impl_) {
+        return impl_->reprogram_hw(this, api_op);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+    if (impl_) {
+        return impl_->reactivate_hw(this, epoch, api_op);
     }
     return SDK_RET_OK;
 }

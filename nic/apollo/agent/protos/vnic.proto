@@ -31,7 +31,7 @@ message VnicSpec {
   // vnic encap information to be used while sending packets to this vnic
   types.Encap     VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // overlay MAC of this VNIC
-  uint64          MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64          MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
   bool            SourceGuardEnable     = 6;

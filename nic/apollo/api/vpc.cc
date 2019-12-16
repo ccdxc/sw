@@ -183,21 +183,13 @@ vpc_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::reprogram_config(api_op_t api_op) {
-    if (impl_) {
-        return impl_->reprogram_hw(this, api_op);
-    }
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
 vpc_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
     obj_ctxt->upd_bmap = 0;
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
-                      "on vpc %s", type_, spec->type, key2str());
+                      "on vpc %s", type_, spec->type, key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
     if ((fabric_encap_.type != spec->fabric_encap.type) ||
@@ -259,6 +251,22 @@ vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     if (impl_) {
         PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::reprogram_config(api_op_t api_op) {
+    if (impl_) {
+        return impl_->reprogram_hw(this, api_op);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+    if (impl_) {
+        return impl_->reactivate_hw(this, epoch, api_op);
     }
     return SDK_RET_OK;
 }

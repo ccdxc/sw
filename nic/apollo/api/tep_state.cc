@@ -44,13 +44,13 @@ tep_state::alloc(void) {
 
 sdk_ret_t
 tep_state::insert(tep_entry *tep) {
-    PDS_TRACE_VERBOSE("Adding TEP %s to db", tep->key2str());
+    PDS_TRACE_VERBOSE("Adding TEP %s to db", tep->key2str().c_str());
     return tep_ht_->insert_with_key(&tep->key_, tep, &tep->ht_ctxt_);
 }
 
 tep_entry *
 tep_state::remove(tep_entry *tep) {
-    PDS_TRACE_VERBOSE("Deleting TEP %s from db", tep->key2str());
+    PDS_TRACE_VERBOSE("Deleting TEP %s from db", tep->key2str().c_str());
     return (tep_entry *)(tep_ht_->remove(&tep->key_));
 }
 

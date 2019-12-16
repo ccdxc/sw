@@ -316,8 +316,8 @@ vnic_impl::populate_rxdma_vnic_info_policy_root_(
 // four entries are consumed for each vnic
 //------------------------------------------------------------------------------
 sdk_ret_t
-vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
-                              pds_vnic_spec_t *spec) {
+vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
+                              subnet_entry *subnet) {
     uint32_t i;
     sdk_ret_t ret;
     mem_addr_t addr;
@@ -345,8 +345,9 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // populate ingress IPv4 policy roots in the Rx direction entry now
-    for (uint32_t j = 0; j < spec->num_ing_v4_policy; j++, i++) {
-        sec_policy = policy_find(&spec->ing_v4_policy[j]);
+    for (uint32_t j = 0; j < vnic->num_ing_v4_policy(); j++, i++) {
+        policy_key = vnic->ing_v4_policy(j);
+        sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -372,7 +373,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // if subnet has ingress IPv6 policy, that should be evaluated first in the
     // Rx direction
-    i = 1; // Policy roots start at index 1
+    i = 1; // policy roots start at index 1
     policy_key = subnet->ing_v6_policy(0);
     sec_policy = policy_find(&policy_key);
     if (sec_policy) {
@@ -382,8 +383,9 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // populate ingress IPv6 policy roots in the Rx direction entry
-    for (uint32_t j = 0; j < spec->num_ing_v6_policy; j++, i++) {
-        sec_policy = policy_find(&spec->ing_v6_policy[j]);
+    for (uint32_t j = 0; j < vnic->num_ing_v6_policy(); j++, i++) {
+        policy_key = vnic->ing_v6_policy(j);
+        sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -426,8 +428,9 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     i = 1; // policy roots start at index 1
     // populate egress IPv4 policy roots in the Tx direction entry
-    for (uint32_t j = 0; j < spec->num_egr_v4_policy; j++, i++) {
-        sec_policy = policy_find(&spec->egr_v4_policy[j]);
+    for (uint32_t j = 0; j < vnic->num_egr_v4_policy(); j++, i++) {
+        policy_key = vnic->egr_v4_policy(j);
+        sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -460,7 +463,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv6 route table root address in Tx direction entry
-    i = 0; // Route root is at index 0
+    i = 0; // route root is at index 0
     route_table_key = subnet->v6_route_table();
     if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
@@ -475,10 +478,11 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
         }
     }
 
-    i = 1; // Policy roots start at index 1
+    i = 1; // policy roots start at index 1
     // populate egress IPv6 policy roots in the Tx direction entry
-    for (uint32_t j = 0; j < spec->num_egr_v6_policy; j++, i++) {
-        sec_policy = policy_find(&spec->egr_v6_policy[j]);
+    for (uint32_t j = 0; j < vnic->num_egr_v6_policy(); j++, i++) {
+        policy_key =  vnic->egr_v6_policy(j);
+        sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 vnic egr policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
@@ -565,14 +569,13 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     device = device_find();
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
         nh_data.nexthop_info.port = 0;
-        if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-            nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
-        }
     } else {
         nh_data.nexthop_info.lif = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         nh_data.nexthop_info.port = TM_PORT_DMA;
     }
-
+    if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+        nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
+    }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -582,13 +585,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
 
     // program vnic info tables (in rxdma and txdma pipes)
-    ret = program_vnic_info_(vpc, subnet, spec);
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
+    ret = program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
+    return ret;
 }
 
 sdk_ret_t
@@ -599,7 +597,55 @@ vnic_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                      api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    p4pd_error_t p4pd_ret;
+    device_entry *device;
+    subnet_entry *subnet;
+    pds_vpc_key_t vpc_key;
+    pds_vnic_spec_t *spec;
+    nexthop_actiondata_t nh_data = { 0 };
+    vnic_entry *vnic = (vnic_entry *)curr_obj;
+
+    spec = &obj_ctxt->api_params->vnic_spec;
+    // we don't need to reset the VNIC_TX_STATS and VNIC_RX_STATS
+    // table entries because of udpate
+    // update the nexthop table entry, if needed
+    if ((obj_ctxt->upd_bmap & PDS_VNIC_UPD_HOST_IFINDEX) ||
+        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_VNIC_ENCAP)) {
+        device = device_find();
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx_,
+                                           NULL, NULL, &nh_data);
+        if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
+            nh_data.nexthop_info.port = 0;
+        } else {
+            nh_data.nexthop_info.lif =
+                LIF_IFINDEX_TO_LIF_ID(vnic->host_ifindex());
+            nh_data.nexthop_info.port = TM_PORT_DMA;
+        }
+        if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+            nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
+        }
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
+                                           NULL, NULL, &nh_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to update NEXTHOP table for vnic %u at idx %u",
+                          spec->key.id, nh_idx_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+    }
+
+    // if there is a change to route tables and/or policy tables this vnic is
+    // pointing and/or if the vnic itself is modified to point to different
+    // route/policy tables, update the vnic info programming
+    if ((obj_ctxt->upd_bmap & PDS_VNIC_UPD_POLICY) ||
+        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_ROUTE_TABLE)) {
+        subnet = subnet_find(&spec->subnet);
+        vpc_key = subnet->vpc();
+        vpc = vpc_find(&vpc_key);
+        return program_vnic_info_((vnic_entry *)curr_obj, vpc, subnet);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -843,9 +889,37 @@ vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
+vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+    vpc_entry *vpc;
+    vnic_entry *vnic;
+    subnet_entry *subnet;
+    pds_vpc_key_t vpc_key;
+    pds_subnet_key_t subnet_key;
+
+    // the only programming that we need to do when vnic is in the dependent
+    // list is to update the vnic info table in rxdma
+#if 0
+    if ((octxt->upd_bmap & PDS_VNIC_UPD_POLICY) ||
+        (octxt->upd_bmap & PDS_VNIC_UPD_ROUTE_TABLE)) {
+#endif
+        vnic = (vnic_entry *)api_obj;
+        subnet_key = vnic->subnet();
+        subnet = subnet_find(&subnet_key);
+        vpc_key = subnet->vpc();
+        vpc = vpc_find(&vpc_key);
+        return program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
+#if 0
+    }
+#endif
+    //return SDK_RET_OK;
+}
+
+sdk_ret_t
 vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
+    // no tables programmed in activation stage will be affected because of
+    // updates to other objects like route table or policy tables
+    return SDK_RET_OK;
 }
 
 void
