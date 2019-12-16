@@ -2260,30 +2260,45 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	AssertOk(t, err, "failed to create tenant")
 	defer ti.apiClient.ClusterV1().Tenant().Delete(context.Background(), defTenant.GetObjectMeta())
 
-	// add event policy - 1
-	port := getAvailablePort(45000, 45100)
-	if port == 0 {
-		t.Skip("could not find a open port from 45000 to 45100 to run TCP server")
-	}
-	ti.logger.Infof("available port to run TCP server: %d", port)
-	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-6",
-		monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-		[]*monitoring.ExportConfig{
-			{ // receivedMsgsAtTCPServer1
-				Destination: "127.0.0.1",
-				Transport:   fmt.Sprintf("tcp/%d", port),
-			},
-		}, nil)
-	eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
-	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	var eventPolicy1 *monitoring.EventPolicy
+	var receiveMsgsAtTCPServer chan string
+	var ln1 net.Listener
+	// ensure the syslog server receives
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			// add event policy - 1
+			port := getAvailablePort(45000, 45100)
+			if port == 0 {
+				t.Skip("could not find a open port from 45000 to 45100 to run TCP server")
+			}
+			ti.logger.Infof("available port to run TCP server: %d", port)
+			eventPolicy1 = policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-6",
+				monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+				[]*monitoring.ExportConfig{
+					{ // receivedMsgsAtTCPServer1
+						Destination: "127.0.0.1",
+						Transport:   fmt.Sprintf("tcp/%d", port),
+					},
+				}, nil)
+			eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+			AssertOk(t, err, "failed to create event policy, err: %v", err)
+
+			// syslog will try reconnecting during this time
+			time.Sleep(1 * time.Second)
+
+			// delete the policy and retry if the port is not available
+			if !isPortAvailable(port) {
+				ti.logger.Infof("port not available to open the connection, so will delete the policy and retry")
+				ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta()) // delete the policy
+				return false, fmt.Sprintf("port not available to open the connection")
+			}
+			// start TCP server - 1 to receive syslog messages
+			ln1, receiveMsgsAtTCPServer, err = serviceutils.StartTCPServer(fmt.Sprintf("127.0.0.1:%d", port), 100, 0)
+			AssertOk(t, err, "failed to start TCP server, err: %v", err)
+			return true, nil
+		}, "could not start syslog server", "1s", "10s")
+
 	defer ti.apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
-
-	// syslog will try reconnecting during this time
-	time.Sleep(1 * time.Second)
-
-	// start TCP server - 1 to receive syslog messages
-	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer(fmt.Sprintf("127.0.0.1:%d", port), 100, 0)
-	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln1.Close()
 
 	// record events
@@ -2724,16 +2739,24 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, dummyObjRef *cluster.Node
 // getAvailablePort returns the port available between [from, to]
 func getAvailablePort(from, to int) int {
 	for port := from; port <= to; port++ {
-		ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil { // port not available
-			continue
+		if isPortAvailable(port) {
+			return port
 		}
-
-		if err := ln.Close(); err != nil {
-			continue
-		}
-		return port
 	}
 
 	return 0
+}
+
+// isPortAvailable returns true if the given port is available, otherwise false
+func isPortAvailable(port int) bool {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil { // port not available
+		return false
+	}
+
+	if err := ln.Close(); err != nil {
+		return false
+	}
+
+	return true
 }
