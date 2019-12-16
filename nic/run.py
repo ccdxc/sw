@@ -280,6 +280,8 @@ def run_model(args):
 
 def wait_for_hal_and_fte():
     # Wait until gRPC is listening on port
+    print "Waiting for hal and FTE to be UP..."
+    sys.stdout.flush()
     log2 = open(hal_log, "r")
     loop = 1
     hal_up = False
@@ -297,6 +299,8 @@ def wait_for_hal_and_fte():
 
 def wait_for_hal():
     # Wait until gRPC is listening on port
+    print "Waiting for hal to be UP..."
+    sys.stdout.flush()
     log2 = open(hal_log, "r")
     loop = 1
     while loop == 1:
@@ -1177,6 +1181,10 @@ def print_naples_container_cores():
         print("Printing container cores failed.")
 
 def run_dol_test(args):
+    if args.gft:
+        wait_for_hal()
+    else:
+        wait_for_hal_and_fte()
     status = run_dol(args)
     if status == 0:
         if (args.e2etls):
