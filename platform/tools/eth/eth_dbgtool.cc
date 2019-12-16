@@ -34,7 +34,7 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
 
-#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(POSEIDON)
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd_table.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
@@ -2004,8 +2004,8 @@ mpart_cfg_path()
     std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
 #elif defined(APULU)
     std::string mpart_json = hal_cfg_path_ + "/apulu/hbm_mem.json";
-#elif defined(POSEIDON)
-    std::string mpart_json = hal_cfg_path_ + "/poseidon/hbm_mem.json";
+#elif defined(ATHENA)
+    std::string mpart_json = hal_cfg_path_ + "/athena/hbm_mem.json";
 #else
     std::string mpart_json = fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ?
             hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
@@ -2216,7 +2216,7 @@ lif_status(uint64_t addr)
     free(buf);
 }
 
-#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(POSEIDON)
+#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MIN
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MAX
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_TXDMA_TBL_ID_INDEX_MIN
@@ -2272,10 +2272,10 @@ p4plus_rxdma_init_tables()
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
     };
-#elif defined(POSEIDON)
+#elif defined(ATHENA)
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "poseidon/capri_rxdma_table_map.json",
-            .p4pd_pgm_name       = "apollo", /* FIXME - change to poseidon when ready */
+            .table_map_cfg_file  = "athena/capri_rxdma_table_map.json",
+            .p4pd_pgm_name       = "apollo", /* FIXME - change to athena when ready */
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
@@ -2365,10 +2365,10 @@ p4plus_txdma_init_tables()
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
     };
-#elif defined(POSEIDON)
+#elif defined(ATHENA)
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "poseidon/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "apollo", /* FIXME - change to poseidon when ready */
+        .table_map_cfg_file  = "athena/capri_txdma_table_map.json",
+        .p4pd_pgm_name       = "apollo", /* FIXME - change to athena when ready */
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
@@ -2436,7 +2436,7 @@ pd_init()
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
 
-#if !defined(APOLLO) || !defined(ARTEMIS) || !defined(APULU) || !defined(POSEIDON)
+#if !defined(APOLLO) || !defined(ARTEMIS) || !defined(APULU) || !defined(ATHENA)
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
 #endif

@@ -25,7 +25,7 @@ namespace psp {
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #endif
@@ -224,7 +224,7 @@ EthLif::EthLif(Eth *dev,
     NIC_LOG_INFO("{}: lif_stats_addr: {:#x}",
         hal_lif_info_.name, lif_stats_addr);
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
     auto lif_stats =
         delphi::objects::LifMetrics::NewLifMetrics(hal_lif_info_.lif_id, lif_stats_addr);
     if (lif_stats == NULL) {

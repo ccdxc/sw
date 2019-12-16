@@ -13,7 +13,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
 #include "gen/proto/device.pb.h"
 #include "accel_dev.hpp"
 #endif
@@ -160,7 +160,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                 sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(POSEIDON)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                 sdk::lib::PAL_RET_OK);
 #endif
