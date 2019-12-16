@@ -109,7 +109,7 @@ class _Testbed:
             msg = 'failed to process testbed file {0}. no instances found'.format(GlobalOptions.testbed_json)
             print(msg)
             Logger.debug(msg)
-            sys.exit(types.status.TESTBED_FAILURE)
+            sys.exit(types.status.OFFLINE_TESTBED)
         try:
             for instance in self.__tbspec.Instances:
                 if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
@@ -121,7 +121,7 @@ class _Testbed:
             print('failed parsing testbed json')
             Logger.debug("failed parsing testbed json. error was: {0}".format(traceback.format_exc()))
             Logger.debug("failed on node instance: {0}".format(instance.__dict__)) 
-            sys.exit(types.status.TESTBED_FAILURE)
+            sys.exit(types.status.OFFLINE_TESTBED)
 
     def __get_full_path(self, path):
         if path[0] == '/':
@@ -385,11 +385,11 @@ class _Testbed:
             resp = api.GetTestbed(msg)
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
-            raise TestbedFailureException
+            raise OfflineTestbedException
             #return types.status.FAILURE
         if not api.IsApiResponseOk(resp):
             Logger.error("Failed to initialize testbed: ")
-            raise TestbedFailureException
+            raise OfflineTestbedException
             #return types.status.FAILURE
         for instance,node in zip(self.__tbspec.Instances, resp.nodes):
             if getattr(instance, 'NodeOs', None) == "esx":

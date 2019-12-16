@@ -1,4 +1,4 @@
-class TestbedFailureException(Exception):
+class OfflineTestbedException(Exception):
     pass
 
 class TestcaseTimeoutException(Exception):

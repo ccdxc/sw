@@ -76,7 +76,7 @@ def Verify(tc):
             #elif tc.args.type == 'local_only':
             #    return api.types.status.CRITICAL
             #else:
-            #    raise TestbedFailureException
+            #    raise OfflineTestbedException
         cookie_idx += 1
     return result
 

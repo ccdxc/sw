@@ -528,7 +528,8 @@ class Testcase:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     Logger.error("Error: STOPPING ON FIRST FAILURE.")
                     iter_data.SetStatus(result)
-                    return types.status.FAILURE
+                    raise OfflineTestbedException
+                    #return types.status.FAILURE
 
                 if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
@@ -536,11 +537,11 @@ class Testcase:
                     iter_data.SetStatus(result)
                     return types.status.CRITICAL
 
-                if result == types.status.TESTBED_FAILURE:
+                if result == types.status.OFFLINE_TESTBED:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
-                    Logger.error("Error: STOPPING ON TESTBED FAILURE.")
+                    Logger.error("Error: STOPPING ON OFFLINE TESTBED REQUEST.")
                     iter_data.SetStatus(result)
-                    raise TestbedFailureException
+                    raise OfflineTestbedException
 
                 iter_data.SetStatus(result)
                 Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
@@ -612,7 +613,7 @@ class Testcase:
             self.__timer.Start()
             try:
                 self.status = self.__execute()
-            except TestbedFailureException:
+            except OfflineTestbedException:
                 utils.LogException(Logger)
                 Logger.error("EXCEPTION: Aborting Testcase Execution. Reason: testbed failure")
                 raise

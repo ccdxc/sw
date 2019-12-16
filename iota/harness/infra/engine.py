@@ -69,14 +69,14 @@ def Main():
             continue
         try:
             ret = ts.Main()
-        except TestbedFailureException:
-            result = types.status.TESTBED_FAILURE
+        except OfflineTestbedException:
+            result = types.status.OFFLINE_TESTBED
             break
         if ret != types.status.SUCCESS:
             result = ret
             if GlobalOptions.no_keep_going:
                 break
-            if result == types.status.TESTBED_FAILURE:
+            if result == types.status.OFFLINE_TESTBED:
                 break
         #Help in skip setup option
         if ts.SetupComplete():

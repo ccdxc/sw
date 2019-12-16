@@ -12,9 +12,10 @@ __status = [
     'ERROR',
     'DISABLED',
     'CRITICAL',
-    'TESTBED_FAILURE',
+    'OFFLINE_TESTBED',
 ]
 status = utils.List2Enum(__status)
+
 
 __level = {
     0: 'NONE',
