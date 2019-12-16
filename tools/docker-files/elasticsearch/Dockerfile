@@ -30,7 +30,7 @@ ENV NODE_MASTER=true
 ENV NODE_DATA=true
 ENV HTTP_ENABLE=true
 RUN bin/elasticsearch-plugin install https://artifacts.elastic.co/downloads/elasticsearch-plugins/discovery-file/discovery-file-6.3.2.zip
-RUN bin/elasticsearch-plugin install -b com.floragunn:search-guard-6:6.3.2-23.1
+RUN bin/elasticsearch-plugin install -b com.floragunn:search-guard-6:6.3.2-25.5
 COPY sg_config.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles_mapping.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig

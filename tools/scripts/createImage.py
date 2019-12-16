@@ -71,7 +71,7 @@ static_images = {
     'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.15',
     'pen-filebeat' : 'registry.test.pensando.io:5000/pen-filebeat:v0.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.6',
-    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.12',
+    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.13',
     'pen-pause' : 'k8s.gcr.io/pause:3.1',
 }
 

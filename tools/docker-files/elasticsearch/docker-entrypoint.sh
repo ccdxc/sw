@@ -8,6 +8,7 @@ chown -R 1000:1000 /usr/share/elasticsearch/config/auth-https
 chown -R 1000:1000 /var/log/pensando/elastic
 
 # calculate heap size
+echo "Setting heap size based on the available memory..."
 mem_avail=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
 mem_avail_in_gb=$(( mem_avail / (1024 * 1024) ))
 heap_opts="-Xms1g -Xmx1g"
