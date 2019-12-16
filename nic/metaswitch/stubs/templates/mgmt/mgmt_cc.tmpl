@@ -309,7 +309,7 @@
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
                         {{end}}
                       {{else}}
-                {{$fieldOpt.GetFieldFn}}(ent->{{$fieldOpt.Name | ToLower}}(), v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
                       {{end}}
                     {{end}}
                   {{end}}
