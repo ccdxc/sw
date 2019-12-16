@@ -510,30 +510,40 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   onRolloutComplete() {
     // Per VS-932. We want to logout user if rollout succeeded.
     let isRolloutSucceeded: boolean = false;
-    let msg = ''; // VS-849
+    let msg = 'Rollout completed'; // VS-849
     if (this.currentRollout) {
-      if (this.currentRollout.status.state === RolloutRolloutStatus_state.scheduled) {
-        msg = 'Rollout suspended';
-      }
-      if (this.currentRollout.status.state === RolloutRolloutStatus_state.success) {
+      if (this.currentRollout.status.state === RolloutRolloutStatus_state.suspended) {
+        msg = 'Rollout is suspended';
+      } else if (this.currentRollout.status.state === RolloutRolloutStatus_state.success) {
         // In a rollout, Venice upgrade may be done, but DSC upgrade may be still in progress.  QA wants different message.
-        if (!this.currentRollout.status['dscs-status'] || this.currentRollout.status['dscs-status'].length === 0 ) {
-            msg = 'Rollout completed';
+        if (!this.currentRollout.status['dscs-status'] || this.currentRollout.status['dscs-status'].length === 0) {
+          msg = 'Rollout is completed';
         } else {
-          msg = 'Venice rollout completed. DSC upgrade may be in progress';
+          msg = 'Venice rollout is completed. DSC upgrades are still in progress.';
         }
         isRolloutSucceeded = true;
+      } else if (this.currentRollout.status.state === RolloutRolloutStatus_state.failure) {
+        msg = 'Rollout failed';
+      } else {
+        msg = 'Rollout status ' + this.currentRollout.status.state;
       }
-    }
-    this.currentRollout = null;
-    Utility.getInstance().setCurrentRollout(null);
-    if (isRolloutSucceeded) {
-      this._controllerService.invokeInfoToaster('Rollout', msg + '. You will be logged out in 5 seconds. Please refresh browser.');
-      setTimeout(() => {
-        this._controllerService.publish(Eventtypes.LOGOUT, {'reason': 'Rollout succeeded'});
-      }, 5000);
+      this.currentRollout = null;
+      Utility.getInstance().setCurrentRollout(null);
+      if (isRolloutSucceeded === true) {
+        this._controllerService.invokeInfoToaster('Rollout', msg + ' You will be logged out in 5 seconds. Please refresh browser.');
+        setTimeout(() => {
+          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Venice Rollout succeeded' });
+        }, 5000);
+      } else {
+        this._controllerService.invokeInfoToaster('Rollout', msg + ' Page will reload in 5 seconds.');
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      }
     } else {
-      this._controllerService.invokeInfoToaster('Rollout', msg + '. Page will reload in 5 seconds.');
+      // Code should not got into this block.
+      console.error( this.getClassName() + '.onRolloutComplete() this.currentRollout ', this.currentRollout );
+      this._controllerService.invokeInfoToaster('Rollout', msg + ' Page will reload in 5 seconds.');
       setTimeout(() => {
         window.location.reload();
       }, 5000);
