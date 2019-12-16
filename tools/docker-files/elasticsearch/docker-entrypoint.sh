@@ -18,7 +18,20 @@ then
         heap_opts=$(echo "-Xms${heap_size}g -Xmx${heap_size}g")
     fi
 else
-    heap_opts="-Xms10g -Xmx10g"
+    #
+    # The standard recommendation is to give 50% of the available memory to Elasticsearch heap,
+    # while leaving the other 50% free. It won’t go unused; Lucene will happily gobble up whatever is left over.
+    # Since there are other processes running on the venice nodes(citadel, etcd, etc), we are using this formula to
+    # arrive at a reasonable heap size.
+    # e.g. 32G -> 12G (es heap), 40G -> 15G, 64G -> 24G
+    #
+    heap_size=$((3/8) * mem_avail_in_gb)
+    if (( heap_size > 32 )); then
+        # try to avoid crossing the 32 GB heap boundary. It wastes memory, reduces CPU performance,
+        # and makes the GC struggle with large heaps.
+       heap_size=32
+    fi
+    heap_opts=$(echo "-Xms${heap_size}g -Xmx${heap_size}g")
 fi
 
 # set heap size options
