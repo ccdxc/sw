@@ -307,6 +307,116 @@ func (sm *SysModel) CleanupAllConfig() error {
 	return nil
 }
 
+//GetWorkloadsForScale get all workloads with allowa
+func (sm *SysModel) GetWorkloadsForScale(hosts []*Host, policyCollection *NetworkSecurityPolicyCollection, proto string) (*WorkloadCollection, error) {
+	newCollection := WorkloadCollection{}
+
+	type ipPair struct {
+		sip   string
+		dip   string
+		proto string
+		ports string
+	}
+	actionCache := make(map[string][]ipPair)
+
+	ipPairPresent := func(pair ipPair) bool {
+		for _, pairs := range actionCache {
+			for _, ippair := range pairs {
+				if ippair.dip == pair.dip && ippair.sip == pair.sip && ippair.proto == pair.proto {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	for _, pol := range policyCollection.policies {
+		for _, rule := range pol.venicePolicy.Spec.Rules {
+			for _, sip := range rule.FromIPAddresses {
+				for _, dip := range rule.ToIPAddresses {
+					for _, proto := range rule.ProtoPorts {
+						pair := ipPair{sip: sip, dip: dip, proto: proto.Protocol, ports: proto.Ports}
+						if _, ok := actionCache[rule.Action]; !ok {
+							actionCache[rule.Action] = []ipPair{}
+						}
+						//if this IP pair was already added, then don't pick it as precedence is based on order
+						if !ipPairPresent(pair) {
+							//Copy ports
+							actionCache[rule.Action] = append(actionCache[rule.Action], pair)
+						}
+					}
+				}
+			}
+		}
+	}
+	workloadHostMap := make(map[string][]*workload.Workload)
+	hostMap := make(map[string]*Host)
+	workloadIPMap := make(map[string]*workload.Workload)
+
+	for _, host := range hosts {
+		wloads, err := sm.ListWorkloadsOnHost(host.veniceHost)
+		if err != nil {
+			log.Error("Error finding real workloads on hosts.")
+			return nil, err
+		}
+		for _, w := range wloads {
+			workloadIPMap[w.Spec.Interfaces[0].GetIpAddresses()[0]] = w
+		}
+		hostMap[host.veniceHost.Name] = host
+	}
+
+	addWorkload := func(newW *workload.Workload) {
+		hWloads, ok := workloadHostMap[newW.Spec.HostName]
+		if !ok {
+			workloadHostMap[newW.Spec.HostName] = []*workload.Workload{newW}
+		} else {
+			if len(hWloads) >= defaultWorkloadPerHost {
+				//Not adding as number of workloads per host execeeds
+				return
+			}
+			added := false
+			for _, w := range hWloads {
+				if w.Name == newW.Name {
+					added = true
+					break
+				}
+			}
+			if !added {
+				workloadHostMap[newW.Spec.HostName] = append(workloadHostMap[newW.Spec.HostName], newW)
+			}
+		}
+	}
+	addActionWorkloads := func(action string) {
+		cache, ok := actionCache[action]
+		if ok {
+			for _, ippair := range cache {
+				w1, ok1 := workloadIPMap[ippair.sip]
+				w2, ok2 := workloadIPMap[ippair.dip]
+				if ok1 && ok2 && w1.Spec.Interfaces[0].ExternalVlan == w2.Spec.Interfaces[0].ExternalVlan && ippair.proto == proto {
+					//Try to add workloads
+					addWorkload(w1)
+					addWorkload(w2)
+				}
+			}
+		}
+	}
+	addActionWorkloads("PERMIT")
+	addActionWorkloads("DENY")
+
+	for hostName, wloads := range workloadHostMap {
+		host, _ := hostMap[hostName]
+		for _, w := range wloads {
+			wrk, err := sm.createWorkload(w, sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, host)
+			if err != nil {
+				log.Errorf("Error creating workload %v. Err: %v", w.GetName(), err)
+				return nil, err
+			}
+			newCollection.workloads = append(newCollection.workloads, wrk)
+		}
+	}
+	return &newCollection, nil
+}
+
 //SetupWorkloadsOnHost sets up workload on host
 func (sm *SysModel) SetupWorkloadsOnHost(h *Host) (*WorkloadCollection, error) {
 
@@ -410,15 +520,23 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 
 	}
 
-	for _, h := range hosts {
-
-		hwc, err := sm.SetupWorkloadsOnHost(h)
-
+	if scale {
+		wloads, err := sm.GetWorkloadsForScale(hosts, sm.DefaultNetworkSecurityPolicy(), "tcp")
 		if err != nil {
+			log.Errorf("Error finding scale workloads Err: %v", err)
 			return err
 		}
+		wc.workloads = append(wc.workloads, wloads.workloads...)
+	} else {
+		for _, h := range hosts {
+			hwc, err := sm.SetupWorkloadsOnHost(h)
 
-		wc.workloads = append(wc.workloads, hwc.workloads...)
+			if err != nil {
+				return err
+			}
+
+			wc.workloads = append(wc.workloads, hwc.workloads...)
+		}
 	}
 
 	// if we are skipping setup we dont need to bringup the workload
@@ -663,6 +781,79 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		return nil
 	}
 
+	updateScaleConfig := func() error {
+
+		genWorkloadPairs := func(wloads []*workload.Workload, count int) *WorkloadPairCollection {
+			var pairs WorkloadPairCollection
+			for i := 0; i < len(wloads); i++ {
+				for j := i + 1; j <= len(wloads)-1; j++ {
+					//pairs = append(pairs, []string{content[i], content[j]})
+					if wloads[i].Spec.Interfaces[0].ExternalVlan == wloads[j].Spec.Interfaces[0].ExternalVlan {
+						pairs.pairs = append(pairs.pairs, &WorkloadPair{first: &Workload{veniceWorkload: wloads[i]},
+							second: &Workload{veniceWorkload: wloads[j]}})
+						if count > 0 && len(pairs.pairs) == count {
+							return &pairs
+						}
+					}
+				}
+			}
+			return &pairs
+		}
+
+		//Get all real workloads first
+		wloads := []*workload.Workload{}
+		for _, o := range cfg.ConfigItems.Hosts {
+			for _, realNaples := range sm.naples {
+				//Get Real host first
+				if o.Spec.GetDSCs()[0].MACAddress == realNaples.smartNic.Status.PrimaryMAC {
+					for _, wload := range cfg.ConfigItems.Workloads {
+						if wload.Spec.HostName == o.Name {
+							wloads = append(wloads, wload)
+						}
+					}
+				}
+			}
+		}
+		pairs := genWorkloadPairs(wloads, 0)
+		localPairs := WorkloadPairCollection{}
+		remotePairs := WorkloadPairCollection{}
+
+		rand.Shuffle(len(localPairs.pairs), func(i, j int) {
+			localPairs.pairs[i], localPairs.pairs[j] = localPairs.pairs[j], localPairs.pairs[i]
+		})
+		rand.Shuffle(len(remotePairs.pairs), func(i, j int) {
+			remotePairs.pairs[i], remotePairs.pairs[j] = remotePairs.pairs[j], remotePairs.pairs[i]
+		})
+
+		for _, pair := range pairs.pairs {
+			if pair.first.veniceWorkload.Spec.HostName == pair.second.veniceWorkload.Spec.HostName {
+				localPairs.pairs = append(localPairs.pairs, pair)
+			} else {
+				remotePairs.pairs = append(remotePairs.pairs, pair)
+			}
+		}
+
+		localIndex := 0
+		remoteIndex := 0
+		for _, pol := range cfg.ConfigItems.SGPolicies {
+			for _, rule := range pol.Spec.Rules {
+				for index := range rule.FromIPAddresses {
+					if index%2 == 0 && localIndex < len(localPairs.pairs) {
+						rule.FromIPAddresses[index] = localPairs.pairs[localIndex].first.veniceWorkload.Spec.Interfaces[0].IpAddresses[0]
+						rule.ToIPAddresses[index] = localPairs.pairs[localIndex].second.veniceWorkload.Spec.Interfaces[0].IpAddresses[0]
+						localIndex++
+					} else if remoteIndex < len(remotePairs.pairs) {
+						rule.FromIPAddresses[index] = remotePairs.pairs[remoteIndex].first.veniceWorkload.Spec.Interfaces[0].IpAddresses[0]
+						rule.ToIPAddresses[index] = remotePairs.pairs[remoteIndex].second.veniceWorkload.Spec.Interfaces[0].IpAddresses[0]
+						remoteIndex++
+					}
+				}
+			}
+
+		}
+		return nil
+	}
+
 	configFile := "/tmp/scale-cfg.json"
 
 	writeConfig := func() {
@@ -693,6 +884,14 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		//Generate fresh config if not skip setup
 		generateConfig()
 		// verify and keep the data in some file
+
+		if scale {
+			err := updateScaleConfig()
+			if err != nil {
+				log.Errorf("Error updating scaling config %v", err)
+				return err
+			}
+		}
 		writeConfig()
 	} else {
 		readConfig()

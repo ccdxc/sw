@@ -156,7 +156,7 @@ func (act *ActionCtx) PingPairs(wpc *WorkloadPairCollection) error {
 	cmds := []*iota.Command{}
 	var pairNames []string
 	for _, pair := range wpc.pairs {
-		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
+		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.first.iotaWorkload.WorkloadName, pair.second.iotaWorkload.WorkloadName))
 		ipAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
 		cmd := iota.Command{
 			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
@@ -165,6 +165,15 @@ func (act *ActionCtx) PingPairs(wpc *WorkloadPairCollection) error {
 			NodeName:   pair.first.iotaWorkload.NodeName,
 		}
 		cmds = append(cmds, &cmd)
+		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.first.iotaWorkload.WorkloadName, pair.second.iotaWorkload.WorkloadName))
+		ipAddr = strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
+		otherCmd := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("ping -c 5 -i 1 %v", ipAddr),
+			EntityName: pair.second.iotaWorkload.WorkloadName,
+			NodeName:   pair.second.iotaWorkload.NodeName,
+		}
+		cmds = append(cmds, &otherCmd)
 	}
 
 	log.Infof("Testing ping between workloads %v ", pairNames)
