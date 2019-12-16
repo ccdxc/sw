@@ -1,6 +1,6 @@
 import fileinput
 import os
-filepath = './minio/VERSIONS'
+filepath = './minio/VERSIONS-VENICE'
 cnt = 0
 new_version = ""
 
