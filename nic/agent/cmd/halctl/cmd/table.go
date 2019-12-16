@@ -82,7 +82,6 @@ func init() {
 
 	tableDumpShowCmd.Flags().Uint32Var(&tableEntryID, "entry-id", 0, "Specify entry-id(default all)")
 	tableDumpShowCmd.Flags().Uint32Var(&tableID, "table-id", 1, "Specify table-id")
-	tableDumpShowCmd.MarkFlagRequired("table-id")
 }
 
 func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -138,38 +137,25 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	tableEntryIDSpecified = false
+
 	var spec *halproto.TableSpec
-	spec = &halproto.TableSpec{
-		Key: &halproto.TableIdName{
-			IdOrName: &halproto.TableIdName_TableId{
-				TableId: tableID,
-			},
-		},
-	}
-
-	// Doesnt need as we added required flags.
-	/*
-		// Have to specify table id
-		var spec *halproto.TableSpec
-		if cmd.Flags().Changed("table-id") {
-			spec = &halproto.TableSpec{
-				Key: &halproto.TableIdName{
-					IdOrName: &halproto.TableIdName_TableId{
-						TableId: tableID,
-					},
+	if cmd != nil && cmd.Flags().Changed("table-id") {
+		// Get specific tables
+		spec = &halproto.TableSpec{
+			Key: &halproto.TableIdName{
+				IdOrName: &halproto.TableIdName_TableId{
+					TableId: tableID,
 				},
-			}
-		} else {
-			fmt.Println("Please specify table-id with --id option")
-			return
+			},
 		}
-	*/
-
-	// Check if specific entry-ID
-	if cmd.Flags().Changed("entry-id") {
-		tableEntryIDSpecified = true
+		// Check if specific entry-ID
+		if cmd.Flags().Changed("entry-id") {
+			tableEntryIDSpecified = true
+		}
 	} else {
-		tableEntryIDSpecified = false
+		// Get all tables
+		spec = &halproto.TableSpec{}
 	}
 
 	tableReqMsg := &halproto.TableRequestMsg{

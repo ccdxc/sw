@@ -2162,7 +2162,7 @@ typedef struct pd_table_metadata_get_args_s {
 
 typedef struct pd_table_get_args_s {
     TableSpec *spec;
-    TableResponse *rsp;
+    TableResponseMsg *rsp;
 } pd_table_get_args_t;
 
 // table properties

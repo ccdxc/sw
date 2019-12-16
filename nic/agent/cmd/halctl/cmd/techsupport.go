@@ -80,6 +80,11 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	qosQueuesCmdHandler(nil, nil)
 	fmt.Printf("System Statistics Qos Class Thresholds\n\n")
 	qosThresholdsCmdHandler(nil, nil)
+	fmt.Printf("Table Information\n\n")
+	tableInfoShowCmdHandler(nil, nil)
+	fmt.Printf("\nTable Dump logs\n\n")
+	tableDumpShowCmdHandler(nil, nil)
+
 	fmt.Printf("Flush HAL logs\n\n")
 	flushLogsDebugCmdHandler(nil, nil)
 }

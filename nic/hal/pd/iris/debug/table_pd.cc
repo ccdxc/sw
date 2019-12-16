@@ -262,7 +262,7 @@ void pd_table_sldirectmap_entry(sdk::table::sdk_table_api_params_t *params)
 }
 
 hal_ret_t
-pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
+pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
 {
     hal_ret_t   ret = HAL_RET_OK;
     TableIndexMsg *msg = rsp->mutable_index_table();
@@ -276,16 +276,26 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
         sdk::table::sdk_table_api_params_t params = {0};
 
         sldm_cb.sldm  = (sldirectmap *) g_hal_state_pd->dm_table(table_id);
+
+        if ((sldm_cb.sldm == NULL) && (get_all)) {
+            //for get all table case, return success if a table is not initialized.
+            return ret;
+        }
+        TABLE_TEST_TRACE_RSP_RETURN((sldm_cb.sldm != NULL), rsp,
+                                    HAL_RET_ENTRY_NOT_FOUND,
+                                    "Failed to find the table id: {}",
+                                    table_id);
+
         sldm_cb.msg   = msg;
 
         params.cbdata = &sldm_cb;
         params.itercb = pd_table_sldirectmap_entry;
 
-	sldm_cb.sldm->iterate(&params);
+        sldm_cb.sldm->iterate(&params);
 
-	HAL_TRACE_DEBUG("Exit: {}", table_id);
+        HAL_TRACE_DEBUG("Exit: {}", table_id);
 
-	return ret;
+        return ret;
     }
 
     directmap_entry_cb_t cb = {0};
@@ -300,6 +310,10 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
         cb.dm = g_hal_state_pd->p4plus_txdma_dm_table(table_id);
     }
 
+    if ((cb.dm == NULL) && (get_all)) {
+        //for get all table case, return success if a table is not initialized.
+        return ret;
+    }
     TABLE_TEST_TRACE_RSP_RETURN((cb.dm != NULL), rsp,
                                 HAL_RET_ENTRY_NOT_FOUND,
                                 "Failed to find the table id: {}",
@@ -333,13 +347,18 @@ bool pd_table_tcam_entry(void *key, void *key_mask,
 }
 
 hal_ret_t
-pd_table_tcam_get_entries (uint32_t table_id, TableResponse *rsp)
+pd_table_tcam_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
 {
     hal_ret_t   ret = HAL_RET_OK;
     tcam_entry_cb_t cb = {0};
     TableTcamMsg *msg = rsp->mutable_tcam_table();
 
     cb.tcam_table = g_hal_state_pd->tcam_table(table_id);
+
+    if ((cb.tcam_table == NULL) && (get_all)) {
+        //for get all table case, return success if a table is not initialized.
+        return ret;
+    }
     TABLE_TEST_TRACE_RSP_RETURN((cb.tcam_table != NULL), rsp,
                                 HAL_RET_ENTRY_NOT_FOUND,
                                 "Failed to find the tcam table id: {}",
@@ -372,13 +391,18 @@ bool pd_table_hash_entry(void *key, void *key_mask,
 }
 
 hal_ret_t
-pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp)
+pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
 {
     hal_ret_t   ret = HAL_RET_OK;
     pd_hash_entry_cb_t cb = {0};
     TableHashMsg *msg = rsp->mutable_hash_table();
 
     cb.hash_table = g_hal_state_pd->hash_tcam_table(table_id);
+
+    if ((cb.hash_table == NULL) && (get_all)) {
+        //for get all table case, return success if a table is not initialized.
+        return ret;
+    }
     TABLE_TEST_TRACE_RSP_RETURN((cb.hash_table != NULL), rsp,
                               HAL_RET_ENTRY_NOT_FOUND,
                               "Failed to find the hash table id: {}",
@@ -414,7 +438,7 @@ pd_table_met_entry(uint32_t repl_list_idx,
 
 
 hal_ret_t
-pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp)
+pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
 {
     hal_ret_t   ret = HAL_RET_OK;
     pd_met_entry_cb_t cb = {0};
@@ -422,6 +446,11 @@ pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp)
     Met *met = NULL;
 
     met = g_hal_state_pd->met_table();
+
+    //for get all, skip the table if it is not initialized
+    if ((met == NULL) && (get_all))
+        return ret;
+
     SDK_ASSERT_RETURN((met != NULL), HAL_RET_ERR);
     cb.msg = msg;
 
@@ -431,65 +460,119 @@ pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp)
 }
 
 hal_ret_t
-pd_table_get (pd_func_args_t *pd_func_args)
+pd_table_get_entries(uint32_t table_id, TableResponse *rsp, bool get_all)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd_table_get_args_t *args = pd_func_args->pd_table_get;
-    TableSpec *spec = args->spec;
-    TableResponse *rsp = args->rsp;
     TableKind kind = table::TABLE_NONE;
 
-    auto key = spec->key();
-    if (key.id_or_name_case() == table::TableIdName::kTableId) {
-        ret = pd_table_kind_get_from_id(key.table_id(), &kind);
-        TABLE_TEST_TRACE_RSP_RETURN((ret == HAL_RET_OK), rsp,
-                                    ret, "Failed to find table with id: {}",
-                                    key.table_id());
+    ret = pd_table_kind_get_from_id(table_id, &kind);
+    TABLE_TEST_TRACE_RSP_RETURN((ret == HAL_RET_OK), rsp,
+            ret, "Failed to find table with id: {}",
+            table_id);
 
-        switch (kind) {
+    HAL_TRACE_VERBOSE("Retrieving Table entries for table id {}", table_id);
+
+    switch (kind) {
         case table::TABLE_INDEX:
-            ret = pd_table_index_get_entries(key.table_id(), rsp);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get entries of table id: {}",
-                              key.table_id());
-            }
+            ret = pd_table_index_get_entries(table_id, rsp, get_all);
             break;
         case table::TABLE_TCAM:
-            ret = pd_table_tcam_get_entries(key.table_id(), rsp);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get entries of table id: {}",
-                              key.table_id());
-            }
+            ret = pd_table_tcam_get_entries(table_id, rsp, get_all);
             break;
         case table::TABLE_HASH:
-            ret = pd_table_hash_get_entries(key.table_id(), rsp);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get entries of table id: {}",
-                              key.table_id());
-            }
+            ret = pd_table_hash_get_entries(table_id, rsp, get_all);
             break;
         case table::TABLE_FLOW:
             ret = g_hal_state_pd->flow_table_pd_get()->dump(rsp);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get entries of table id: {}",
-                              key.table_id());
-            }
             break;
         case table::TABLE_MET:
-            ret = pd_table_met_get_entries(key.table_id(), rsp);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to get entries of table id: {}",
-                              key.table_id());
-            }
+            ret = pd_table_met_get_entries(table_id, rsp, get_all);
             break;
         default:
             // do nothing
             HAL_TRACE_ERR("Invalid table type: {}", kind);
-        }
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get entries of table id: {}", table_id);
     } else {
-        // TODO: Get table kind from name
+        // Set the api status to OK. If failure is seen in the guts,
+        // then respective function would have set the correct api status.
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+    return ret;
+}
+
+hal_ret_t
+pd_table_get (pd_func_args_t *pd_func_args)
+{
+    uint32_t  table_id;
+    hal_ret_t ret = HAL_RET_OK;
+    pd_table_get_args_t *args = pd_func_args->pd_table_get;
+    TableSpec *spec = args->spec;
+    TableResponseMsg *rsp = args->rsp;
+    TableResponse    *response;
+
+    auto key = spec->key();
+
+    if (!spec->has_key()) {
+        HAL_TRACE_VERBOSE("Retrieving Table entries for ALL tables");
+
+        for (table_id = P4TBL_ID_INDEX_MIN;
+             table_id <= P4TBL_ID_INDEX_MAX; table_id++) {
+            response = rsp->add_response();
+            ret = pd_table_get_entries(table_id, response, true);
+
+            if (ret != HAL_RET_OK) goto end;
+        }
+
+        for (table_id = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+             table_id <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; table_id++) {
+            response = rsp->add_response();
+            ret = pd_table_get_entries(table_id, response, true);
+
+            if (ret != HAL_RET_OK) goto end;
+        }
+
+        for (table_id = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+             table_id <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; table_id++) {
+            response = rsp->add_response();
+            ret = pd_table_get_entries(table_id, response, true);
+
+            if (ret != HAL_RET_OK) goto end;
+        }
+
+        for (table_id = P4TBL_ID_TCAM_MIN;
+             table_id <= P4TBL_ID_TCAM_MAX; table_id++) {
+            response = rsp->add_response();
+            ret = pd_table_get_entries(table_id, response, true);
+
+            if (ret != HAL_RET_OK) goto end;
+        }
+
+        for (table_id = P4TBL_ID_HASH_OTCAM_MIN;
+             table_id <= P4TBL_ID_HASH_OTCAM_MAX; table_id++) {
+            response = rsp->add_response();
+            ret = pd_table_get_entries(table_id, response, true);
+
+            if (ret != HAL_RET_OK) goto end;
+        }
+        response = rsp->add_response();
+        ret = pd_table_get_entries(P4TBL_ID_FLOW_HASH, response, true);
+        if (ret != HAL_RET_OK) goto end;
+
+        response = rsp->add_response();
+        ret = pd_table_get_entries(P4_REPL_TABLE_ID, response, true);
+        if (ret != HAL_RET_OK) goto end;
+
+    } else if (key.id_or_name_case() == table::TableIdName::kTableId) {
+
+        HAL_TRACE_VERBOSE("Retrieving Table entries for specific table");
+        response = rsp->add_response();
+
+        ret = pd_table_get_entries(key.table_id(), response, false);
     }
 
+end:
     return ret;
 }
 

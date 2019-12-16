@@ -35,7 +35,7 @@ using table::TableMetEntry;
 namespace hal {
 
 hal_ret_t table_metadata_get(table::TableMetadataResponseMsg *rsp);
-hal_ret_t table_get (TableSpec& spec, TableResponse *rsp);
+hal_ret_t table_get (TableSpec& spec, TableResponseMsg *rsp);
 
 }    // namespace hal
 

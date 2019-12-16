@@ -25,17 +25,14 @@ TableServiceImpl::TableGet(ServerContext *context,
                            TableResponseMsg *rsp)
 {
     uint32_t         i, nreqs = req->spec_size();
-    TableResponse    *response;
 
     HAL_TRACE_DEBUG("Received table get");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto spec = req->spec(i);
-        hal::table_get(spec, response);
+        hal::table_get(spec, rsp);
     }
     return Status::OK;
-    HAL_TRACE_DEBUG("Received table get");
 }
