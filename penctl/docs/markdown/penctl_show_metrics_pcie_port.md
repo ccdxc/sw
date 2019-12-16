@@ -10,6 +10,8 @@ Pcie Port Metrics information
  Pcie Port Metrics information:
 Value Description:
 intr_total : total port intrs.
+intr_polled : total port intrs polled.
+intr_perstn : pcie out of reset.
 intr_ltssmst_early : link train before linkup.
 intr_ltssmst : link train after  linkup.
 intr_linkup2dn : link down.
