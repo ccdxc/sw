@@ -39,7 +39,7 @@ class TestUdp(unittest.TestCase):
             self.assertEqual(udp, same_udp, "Should be same %s"%udp)
             self.assertEqual(str(udp), "sp=%s, dp=%s"%(sp,dp), "Should be same %s"%udp)
 
-        inp_list2 = ["124", "124-124", "0", "65535"]
+        inp_list2 = ["124", "124-124", "65535"]
 
         for i in range(len(inp_list2), len(inp_list)):
             sp1, sp2 = random.choice(inp_list), random.choice(inp_list2)
