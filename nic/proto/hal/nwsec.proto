@@ -119,6 +119,16 @@ enum NormalizationAction {
 //         tcp_nonsyn_noack_drop           = true
 //         tcp_normalize_mss               = 0 (no tcp_mss normalization)
 //     }
+//
+//
+// Flood protection knobs.
+// Default is 0 and max is 128K sessions cumulative across all types.
+//
+//     tcp_half_open_session_limit         = 0 (no limits applied)
+//     udp_active_session_limit            = 0 (no limits applied)
+//     icmp_active_session_limit           = 0 (no limits applied)
+//     other_active_session_limit          = 0 (no limits applied)
+//
 // }
 //------------------------------------------------------------------------------
 message SecurityProfileSpec {
@@ -227,6 +237,13 @@ message SecurityProfileSpec {
   // Can we have zero as default but when configured the range is between 576 - 9216 ?
   uint32                       tcp_normalize_mss                  = 96 [(gogoproto.moretags) = "range:0-9216, venice:default=0"];
   bool                         multicast_src_drop                 = 101 [(gogoproto.moretags) = "venice:default=true"];
+
+
+  // Flood protection knobs
+  uint32                       tcp_half_open_session_limit        = 111 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       udp_active_session_limit           = 112 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       icmp_active_session_limit          = 113 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       other_active_session_limit         = 114 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
@@ -313,6 +330,14 @@ message SecurityProfileGetRequestMsg {
 
 // SecurityProfileStats is the statistics object for each SecurityProfile profile
 message SecurityProfileStats {
+  uint32     tcp_half_open_session_count      = 1; // Number of active TCP half open sessions
+  uint32     udp_active_session_count         = 2; // Number of active UDP sessions
+  uint32     icmp_active_session_count        = 3; // Number of active ICMP sessions
+  uint32     other_active_session_count       = 4; // Number of active session other than TCP/UDP/ICMP
+  uint32     tcp_session_drop_count           = 5; // Number of dropped TCP sessions that exceeded the limit
+  uint32     udp_session_drop_count           = 6; // Number of dropped UDP sessions that exceeded the limit
+  uint32     icmp_session_drop_count          = 7; // Number of dropped ICMP sessions that exceeded the limit
+  uint32     other_session_drop_count         = 8; // Number of other dropped sessions that exceeded the limit
 }
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile

@@ -139,6 +139,11 @@ typedef struct nwsec_profile_s {
 
     uint32_t              multicast_src_drop:1;
 
+    uint32_t              tcp_half_open_session_limit;
+    uint32_t              udp_active_session_limit;
+    uint32_t              icmp_active_session_limit;
+    uint32_t              other_active_session_limit;
+
     hal_handle_t          hal_handle;             // HAL allocated handle
 
     // operational state of nwsec profile

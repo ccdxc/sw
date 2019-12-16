@@ -121,6 +121,10 @@ sfw_init_security_profile (hal_cfg_t *hal_cfg)
     prof.set_tcp_urg_flag_ptr_clear(false);
     prof.set_tcp_normalize_mss(0);
     prof.set_multicast_src_drop(true); 
+    prof.set_tcp_half_open_session_limit(0);
+    prof.set_udp_active_session_limit(0);
+    prof.set_icmp_active_session_limit(0);
+    prof.set_other_active_session_limit(0);
 
     ret = securityprofile_create(prof, &rsp);
     if (ret != HAL_RET_OK) {

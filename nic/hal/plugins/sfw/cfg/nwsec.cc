@@ -344,7 +344,11 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(tcp_conn_track_bypass_window_err) ||
         NWSEC_SPEC_CHECK(tcp_urg_flag_ptr_clear) ||
         NWSEC_SPEC_CHECK(tcp_normalize_mss) ||
-        NWSEC_SPEC_CHECK(multicast_src_drop)) {
+        NWSEC_SPEC_CHECK(multicast_src_drop) ||
+        NWSEC_SPEC_CHECK(tcp_half_open_session_limit) ||
+        NWSEC_SPEC_CHECK(udp_active_session_limit) ||
+        NWSEC_SPEC_CHECK(icmp_active_session_limit) ||
+        NWSEC_SPEC_CHECK(other_active_session_limit)) {
                 app_ctxt->nwsec_changed = true;
     }
 
@@ -467,7 +471,10 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
 
     NWSEC_SPEC_ASSIGN(multicast_src_drop);
 
-
+    NWSEC_SPEC_ASSIGN(tcp_half_open_session_limit);
+    NWSEC_SPEC_ASSIGN(udp_active_session_limit);
+    NWSEC_SPEC_ASSIGN(icmp_active_session_limit);
+    NWSEC_SPEC_ASSIGN(other_active_session_limit);
     return;
 }
 
@@ -769,6 +776,10 @@ security_profile_spec_dump (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_ptr_clear);
     NWSEC_SPEC_FIELD_PRINT(tcp_normalize_mss);
     NWSEC_SPEC_FIELD_PRINT(multicast_src_drop);
+    NWSEC_SPEC_FIELD_PRINT(tcp_half_open_session_limit);
+    NWSEC_SPEC_FIELD_PRINT(udp_active_session_limit);
+    NWSEC_SPEC_FIELD_PRINT(icmp_active_session_limit);
+    NWSEC_SPEC_FIELD_PRINT(other_active_session_limit);
     buf.write("\n");
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
@@ -1366,6 +1377,7 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
 {
     hal_ret_t                         ret = HAL_RET_OK;
     nwsec::SecurityProfileSpec        *spec;
+    nwsec::SecurityProfileStats       *stats;
     pd::pd_nwsec_profile_get_args_t   args   = {0};
     pd::pd_func_args_t                pd_func_args = {0};
 
@@ -1440,8 +1452,24 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
     spec->set_tcp_nonsyn_noack_drop(sec_prof->tcp_nonsyn_noack_drop);
     spec->set_tcp_normalize_mss(sec_prof->tcp_normalize_mss);
 
+    spec->set_tcp_half_open_session_limit(sec_prof->tcp_half_open_session_limit);
+    spec->set_udp_active_session_limit(sec_prof->udp_active_session_limit);
+    spec->set_icmp_active_session_limit(sec_prof->icmp_active_session_limit);
+    spec->set_other_active_session_limit(sec_prof->other_active_session_limit);
+
     // fill operational state of this profile
     rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);
+
+    // fill in the stats of this profile
+    stats = rsp->mutable_stats();
+    stats->set_tcp_half_open_session_count(0);
+    stats->set_udp_active_session_count(0);
+    stats->set_icmp_active_session_count(0);
+    stats->set_other_active_session_count(0);
+    stats->set_tcp_session_drop_count(0);
+    stats->set_udp_session_drop_count(0);
+    stats->set_icmp_session_drop_count(0);
+    stats->set_other_session_drop_count(0);
 
     HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_SUCCESS);
 
