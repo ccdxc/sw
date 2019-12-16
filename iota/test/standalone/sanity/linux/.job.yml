@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
   # baremetal + baremetal Esx test cases
  e2e-linux-bm:
-   commands: ["sh", "-c", "make linux"]
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite classic --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,mode_change,post_diag_check,asic_tools,obfl_check,cpldupgrade,hpe_ilo"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:

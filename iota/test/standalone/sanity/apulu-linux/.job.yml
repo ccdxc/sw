@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
   # baremetal + baremetal Esx test cases
  e2e-linux-bm:
-   commands: ["sh", "-c", "make apulu-linux"]
+   commands: ["sh", "-c", "make apulu-linux && ./run_iota.sh --pipeline apulu --testsuite apulu --testbundle mnicclassic"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
