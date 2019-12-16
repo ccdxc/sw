@@ -464,7 +464,7 @@
         oid[{{$fieldOpt.GetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                   {{end}}
                 {{else}}
-        {{$fieldOpt.GetKeyOidFn}}(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
+        {{$fieldOpt.GetKeyOidFn}}(req, oid);
                 {{end}}
               {{end}}
             {{end}}
