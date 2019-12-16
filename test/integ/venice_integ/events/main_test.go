@@ -137,7 +137,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	}
 
 	// start events manager
-	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient)
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient, nil)
 	if err != nil {
 		t.logger.Errorf("failed to start events manager, err: %v", err)
 		return err

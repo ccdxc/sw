@@ -258,7 +258,8 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 }
 
 // StartEvtsMgr helper function to start events manager
-func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, esClient elastic.ESClient) (*evtsmgr.EventsManager, string, error) {
+func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, esClient elastic.ESClient,
+	gcConfig *evtsmgr.AlertsGCConfig) (*evtsmgr.EventsManager, string, error) {
 	log.Infof("starting events manager")
 
 	var err error
@@ -268,7 +269,8 @@ func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, e
 			return nil, "", fmt.Errorf("failed to create Elastic client for events manager, err: %v", err)
 		}
 	}
-	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, serverAddr, mr, logger, evtsmgr.WithElasticClient(esClient))
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, serverAddr, mr, logger,
+		evtsmgr.WithElasticClient(esClient), evtsmgr.WithAlertsGCConfig(gcConfig))
 	if err != nil {
 		return nil, "", fmt.Errorf("failed start events manager, err: %v", err)
 	}

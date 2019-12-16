@@ -189,7 +189,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.idr = idr.(indexer.Interface)
 
 	// start evtsmgr
-	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l, tInfo.esClient)
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l, tInfo.esClient, nil)
 	if err != nil {
 		log.Errorf("failed to start events manager, err: %v", err)
 		return err

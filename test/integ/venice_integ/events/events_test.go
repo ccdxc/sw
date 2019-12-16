@@ -18,7 +18,7 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -32,6 +32,7 @@ import (
 	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
@@ -328,7 +329,7 @@ func TestEventsMgrRestart(t *testing.T) {
 			time.Sleep(1 * time.Second)
 
 			// exporters should be able to release all the holding events from the buffer
-			evtsMgr, _, err := testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
+			evtsMgr, _, err := testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient, nil)
 			AssertOk(t, err, "failed to start events manager, err: %v", err)
 			ti.evtsMgr = evtsMgr
 		}
@@ -1295,7 +1296,7 @@ func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
 	evtsMgrURL := ti.evtsMgr.RPCServer.GetListenURL()
 	ti.evtsMgr.Stop()
 
-	ti.evtsMgr, evtsMgrURL, err = testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
+	ti.evtsMgr, evtsMgrURL, err = testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient, nil)
 	AssertOk(t, err, "failed to start events manager, err: %v", err)
 	time.Sleep(2 * time.Second) // wait for the API client creations to fail
 
@@ -2609,6 +2610,173 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "120s")
 	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "120s")
 	Assert(t, ti.esClient.GetResetCount() > 0, "client should have restarted")
+}
+
+// TestGarbageCollectAlerts tests garbage collection of alerts
+func TestGarbageCollectAlerts(t *testing.T) {
+	ti := tInfo{dedupInterval: 300 * time.Second, batchInterval: 100 * time.Millisecond}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	// stop and start evtsmgr with GC config
+	evtsMgrURL := ti.evtsMgr.RPCServer.GetListenURL()
+	ti.evtsMgr.Stop()
+	evtsMgr, _, err := testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient,
+		&evtsmgr.AlertsGCConfig{
+			Interval:                      5 * time.Second,
+			ResolvedAlertsRetentionPeriod: 1 * time.Second,
+		})
+	AssertOk(t, err, "failed to start events manager, err: %v", err)
+	ti.evtsMgr = evtsMgr
+
+	// API gateway needs spyglass
+	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
+	AssertOk(t, err, "failed to start spyglass finder")
+	fdr := fdrTemp.(finder.Interface)
+	defer fdr.Stop()
+	ti.updateResolver(globals.Spyglass, fdrAddr)
+
+	// API gateway
+	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{},
+		ti.mockResolver, ti.logger)
+	AssertOk(t, err, "failed to start API gateway, err: %v", err)
+	defer apiGw.Stop()
+
+	// setup authn and get authz token
+	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
+	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	AssertOk(t, err, "failed to setup authN service, err: %v", err)
+	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
+	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
+	AssertOk(t, err, "failed to get authZ header, err: %v", err)
+
+	// object reference for events
+	dummyObjRef := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Name:      t.Name(),
+		},
+	}
+
+	// start creating events -> alerts
+	// define list of events to be recorded
+	recordEvents := []*struct {
+		eventType eventtypes.EventType
+		message   string
+		objRef    interface{}
+	}{
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef},
+
+		// critical events -> alerts
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef},
+		{eventtypes.QUORUM_MEMBER_UNHEALTHY, fmt.Sprintf("(tenant:%s) quorum member unhealthy", dummyObjRef.Tenant), *dummyObjRef},
+		{eventtypes.UNSUPPORTED_QUORUM_SIZE, fmt.Sprintf("(tenant:%s) unsupported quorum size", dummyObjRef.Tenant), *dummyObjRef},
+		{eventtypes.QUORUM_UNHEALTHY, fmt.Sprintf("(tenant:%s) quorum unhealthy", dummyObjRef.Tenant), *dummyObjRef},
+		{eventtypes.CONFIG_RESTORE_FAILED, fmt.Sprintf("(tenant:%s) config restore failed", dummyObjRef.Tenant), *dummyObjRef},
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	// start recorder
+	recorderEventsDir, err := ioutil.TempDir("", t.Name())
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+	go func() {
+		defer wg.Done()
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Component:    t.Name(),
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
+		if err != nil {
+			log.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
+
+		// record events
+		for i := range recordEvents {
+			if objRef, ok := recordEvents[i].objRef.(cluster.Node); ok {
+				objRef.ObjectMeta.Name = CreateAlphabetString(5)
+				recordEvents[i].objRef = &objRef
+			}
+			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
+		}
+	}()
+
+	// list alerts
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancelFunc()
+
+			selector := fmt.Sprintf("status.source.component=%s", t.Name())
+
+			alerts, err := ti.apiClient.MonitoringV1().Alert().List(ctx,
+				&api.ListWatchOptions{
+					ObjectMeta:    api.ObjectMeta{Tenant: globals.DefaultTenant},
+					FieldSelector: selector})
+			if err != nil {
+				return false, fmt.Sprintf("list alerts with selector: %v failed, err: %v", selector, err)
+			}
+
+			if len(alerts) == 5 {
+				httpClient := netutils.NewHTTPClient()
+				httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+				httpClient.SetHeader("Authorization", authzHeader)
+				httpClient.DisableKeepAlives()
+				defer httpClient.CloseIdleConnections()
+
+				resp := &monitoring.Alert{}
+
+				for _, alert := range alerts { // resolve alerts
+					aURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alerts/%s", apiGwAddr, alert.GetName())
+					alert.Spec.State = monitoring.AlertState_RESOLVED.String()
+
+					statusCode, err := httpClient.Req("PUT", aURL, alert, &resp)
+					if statusCode != http.StatusOK || err != nil {
+						return false, fmt.Sprintf("failed to resolve alert, err: %v", err)
+					}
+				}
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected alerts: 5, got: %v", len(alerts))
+		}, "could not get expected alerts", "50ms", "5s")
+
+	wg.Wait()
+
+	// check if GC kicks in and deletes the alert
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancelFunc()
+
+			selector := fmt.Sprintf("status.source.component=%s", t.Name())
+
+			alerts, err := ti.apiClient.MonitoringV1().Alert().List(ctx,
+				&api.ListWatchOptions{
+					ObjectMeta:    api.ObjectMeta{Tenant: globals.DefaultTenant},
+					FieldSelector: selector})
+			if err != nil {
+				return false, fmt.Sprintf("list alerts with selector: %v failed, err: %v", selector, err)
+			}
+
+			if len(alerts) == 0 { // all the alerts should be deleted once resolved
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected alerts: 0, got: %v", len(alerts))
+		}, "could not get expected alerts", "5s", "60s")
 }
 
 // ensures the delivery of expected syslog messages

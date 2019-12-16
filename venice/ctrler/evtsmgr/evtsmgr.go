@@ -5,15 +5,19 @@ package evtsmgr
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
+	emmemdb "github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -22,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/utils/elastic"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -42,6 +47,10 @@ var (
 			Source:    &evtsapi.EventSource{},
 		},
 	}
+
+	// default garbage collection configs
+	defaultGCInterval                    = 30 * time.Minute
+	defaultResolvedAlertsRetentionPeriod = 24 * time.Hour
 )
 
 // Option fills the optional params for EventsMgr
@@ -50,15 +59,25 @@ type Option func(*EventsManager)
 // EventsManager instance of events manager; responsible for all aspects of events
 // including management of elastic connections.
 type EventsManager struct {
-	RPCServer     *rpcserver.RPCServer     // RPCServer that exposes the server implementation of event manager APIs
-	configWatcher *apiclient.ConfigWatcher // api client
-	memDb         *memdb.MemDb             // memDb to store the alert policies and alerts
-	logger        log.Logger               // logger
-	esClient      elastic.ESClient         // elastic client
-	alertEngine   alertengine.Interface    // alert engine
-	ctxCancelFunc context.CancelFunc       // cancel func
-	diagSvc       diagnostics.Service
-	moduleWatcher module.Watcher
+	RPCServer      *rpcserver.RPCServer     // RPCServer that exposes the server implementation of event manager APIs
+	configWatcher  *apiclient.ConfigWatcher // api client
+	memDb          *emmemdb.MemDb           // memDb to store the alert policies and alerts
+	logger         log.Logger               // logger
+	esClient       elastic.ESClient         // elastic client
+	alertEngine    alertengine.Interface    // alert engine
+	ctx            context.Context          // context
+	cancelFunc     context.CancelFunc       // cancel func
+	diagSvc        diagnostics.Service
+	moduleWatcher  module.Watcher
+	AlertsGCConfig *AlertsGCConfig
+	wg             sync.WaitGroup // for GC routine
+}
+
+// AlertsGCConfig contains GC related config
+// Note: this needs to be moved to a common place once we start supporting object-based & threshold-based alerts
+type AlertsGCConfig struct {
+	Interval                      time.Duration // garbage collect every x seconds
+	ResolvedAlertsRetentionPeriod time.Duration // delete resolved alerts after this retention period
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -82,6 +101,15 @@ func WithModuleWatcher(moduleWatcher module.Watcher) Option {
 	}
 }
 
+// WithAlertsGCConfig passes a GC config
+func WithAlertsGCConfig(config *AlertsGCConfig) Option {
+	return func(em *EventsManager) {
+		if config != nil {
+			em.AlertsGCConfig = config
+		}
+	}
+}
+
 // NewEventsManager returns a events manager/controller instance
 func NewEventsManager(serverName, serverURL string, resolverClient resolver.Interface,
 	logger log.Logger, opts ...Option) (*EventsManager, error) {
@@ -92,14 +120,27 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	ctx, cancel := context.WithCancel(context.Background())
 
 	em := &EventsManager{
-		logger:        logger,
-		memDb:         memdb.NewMemDb(),
-		ctxCancelFunc: cancel,
+		logger:     logger,
+		memDb:      emmemdb.NewMemDb(),
+		ctx:        ctx,
+		cancelFunc: cancel,
+		AlertsGCConfig: &AlertsGCConfig{
+			Interval:                      defaultGCInterval,
+			ResolvedAlertsRetentionPeriod: defaultResolvedAlertsRetentionPeriod,
+		},
 	}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(em)
 		}
+	}
+
+	// update GC config if required
+	if em.AlertsGCConfig.Interval == 0 {
+		em.AlertsGCConfig.Interval = defaultGCInterval
+	}
+	if em.AlertsGCConfig.ResolvedAlertsRetentionPeriod == 0 {
+		em.AlertsGCConfig.ResolvedAlertsRetentionPeriod = defaultResolvedAlertsRetentionPeriod
 	}
 
 	// create elastic client
@@ -144,12 +185,15 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 
 	em.configWatcher.StartWatcher()
 
+	em.wg.Add(1)
+	go em.gcAlerts()
+
 	return em, nil
 }
 
 // Stop stops events manager
 func (em *EventsManager) Stop() {
-	defer em.ctxCancelFunc()
+	em.cancelFunc()
 
 	if em.moduleWatcher != nil {
 		em.moduleWatcher.Stop()
@@ -177,6 +221,90 @@ func (em *EventsManager) Stop() {
 	if em.RPCServer != nil {
 		em.RPCServer.Stop()
 		em.RPCServer = nil
+	}
+
+	em.wg.Wait()
+}
+
+// gcAlerts garbage collects alerts that are in resolved state for over 24 hrs (default)
+func (em *EventsManager) gcAlerts() {
+	defer em.wg.Done()
+
+	ticker := time.NewTicker(em.AlertsGCConfig.Interval)
+	defer ticker.Stop()
+
+	em.logger.Infof("{GC alerts}: starting GC routine to delete resolved alerts")
+
+	for {
+		select {
+		case <-em.ctx.Done():
+			em.logger.Infof("{GC alerts}: context cancelled, returning")
+			return
+		case <-ticker.C:
+			em.GCAlerts(em.AlertsGCConfig.ResolvedAlertsRetentionPeriod)
+		}
+	}
+}
+
+// GCAlerts garbage collects alerts that are in resolved state for a given duration `retentionPeriod`
+func (em *EventsManager) GCAlerts(retentionPeriod time.Duration) {
+	if retentionPeriod == 0 {
+		em.logger.Errorf("{GC alerts}: invalid retention period")
+		return
+	}
+
+	// get API client
+	apiCl := em.configWatcher.APIClient()
+	retries := 0
+	for apiCl == nil {
+		if em.ctx.Err() != nil {
+			em.logger.Infof("{GC alerts}: context cancelled, returning")
+			return
+		}
+
+		if retries == maxRetries {
+			em.logger.Infof("{GC alerts}: API client not available, exhausted retries")
+			return
+		}
+		time.Sleep(1 * time.Second)
+		apiCl = em.configWatcher.APIClient()
+		retries++
+	}
+
+	// fetch all the resolved alerts
+	resolvedAlerts := em.memDb.ListObjects("Alert", func(obj memdb.Object) bool {
+		alert := obj.(*monitoring.Alert)
+		if alert.Spec.State == monitoring.AlertState_RESOLVED.String() && alert.Status.Resolved != nil {
+			tm, err := alert.Status.Resolved.Time.Time()
+			if err != nil {
+				return false
+			}
+			if time.Since(tm) > retentionPeriod {
+				return true
+			}
+		}
+		return false
+	})
+
+	for _, alert := range resolvedAlerts {
+		if em.ctx.Err() != nil {
+			em.logger.Infof("{GC alerts}: context cancelled, returning")
+			return
+		}
+
+		em.logger.Infof("{GC alerts}: deleting alert {%+v}", alert)
+		_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			if _, err := apiCl.MonitoringV1().Alert().Delete(ctx, alert.GetObjectMeta()); err != nil {
+				if errStatus, _ := status.FromError(err); errStatus.Code() == codes.Unavailable || errStatus.Code() == codes.NotFound {
+					return nil, nil
+				}
+				return nil, err
+			}
+			return nil, nil
+		}, 2*time.Second, maxRetries)
+		if err != nil {
+			em.logger.Errorf("{GC alerts}: failed to delete alert {%+v}, err: %v", alert, err)
+		}
 	}
 }
 

@@ -9,9 +9,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
@@ -20,9 +23,7 @@ import (
 )
 
 var _ = Describe("alert test", func() {
-	var (
-		err error
-	)
+	var err error
 	It("ServiceStopped events to INFO alerts", func() {
 
 		// create alert policy to convert `ServiceStopped` events to INFO alerts
@@ -45,6 +46,7 @@ var _ = Describe("alert test", func() {
 		ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", podName))
 
 		// ensure the respective alert got generated
+		var alertObjMeta api.ObjectMeta
 		Eventually(func() bool {
 			alerts, err := ts.tu.APIClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			if err != nil {
@@ -54,6 +56,7 @@ var _ = Describe("alert test", func() {
 			for _, alert := range alerts {
 				if alert.Status.Reason.GetPolicyID() == fmt.Sprintf("%s/%s", alertPolicy1.GetName(), alertPolicy1.GetUUID()) &&
 					strings.Contains(alert.Status.GetMessage(), fmt.Sprintf("pen-citadel stopped on %s", serviceStoppedOn)) {
+					alertObjMeta = alert.ObjectMeta
 					return true
 				}
 			}
@@ -75,6 +78,35 @@ var _ = Describe("alert test", func() {
 			}
 			return nil
 		}, 90, 1).Should(BeNil(), "could not find the expected alert policy status")
+
+		// resolve the alert
+		Eventually(func() error {
+			alert, err := ts.tu.APIClient.MonitoringV1().Alert().Get(context.Background(), &alertObjMeta)
+			if err != nil {
+				return err
+			}
+
+			// use REST client to resolve an alert
+			alert.Spec.State = monitoring.AlertState_RESOLVED.String()
+			if _, err = ts.restSvc.MonitoringV1().Alert().Update(ts.loggedInCtx, alert); err != nil {
+				return err
+			}
+
+			return nil
+		}, 90, 1).Should(BeNil(), "could not resolve the alert")
+
+		// invoke GC on demand and ensure the alert gets deleted
+		Eventually(func() bool {
+			out := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], fmt.Sprintf("curl -sS http://127.0.0.1:%s/gcalerts", globals.EvtsMgrRESTPort))
+			Expect(strings.TrimSpace(out) == "{}").Should(BeTrue())
+
+			if _, err := ts.tu.APIClient.MonitoringV1().Alert().Get(context.Background(), &alertObjMeta); err != nil {
+				if errStatus, _ := status.FromError(err); errStatus.Code() == codes.NotFound {
+					return true
+				}
+			}
+			return false
+		}, 90, 1).Should(BeTrue(), "alert did not get deleted")
 	})
 })
 

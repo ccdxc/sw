@@ -660,7 +660,7 @@ func (it *veniceIntegSuite) startEventsAndSearch() {
 	}
 
 	// start events manager
-	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr("localhost:0", it.resolverClient, it.logger, it.esClient)
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr("localhost:0", it.resolverClient, it.logger, it.esClient, nil)
 	if err != nil {
 		log.Fatalf("Error starting events mgr. Err: %v", err)
 	}

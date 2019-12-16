@@ -8,7 +8,12 @@ import (
 	"testing"
 	"time"
 
+	gogoproto "github.com/gogo/protobuf/types"
+	"github.com/satori/go.uuid"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -19,7 +24,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/policygen"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
+
+	_ "github.com/pensando/sw/api/generated/events/grpc/server"
+	_ "github.com/pensando/sw/api/generated/monitoring/grpc/server"
 )
 
 var (
@@ -78,7 +87,7 @@ func TestEventsManager(t *testing.T) {
 	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
 	AssertOk(t, err, "failed to create elastic client")
 	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, tLogger, WithElasticClient(ec),
-		WithDiagnosticsService(nil), WithModuleWatcher(nil))
+		WithDiagnosticsService(nil), WithModuleWatcher(nil), WithAlertsGCConfig(&AlertsGCConfig{}))
 	AssertOk(t, err, "failed to create events manager")
 	time.Sleep(time.Second)
 
@@ -159,4 +168,44 @@ func TestEventsElasticTemplate(t *testing.T) {
 
 	err = evtsMgr.createEventsElasticTemplate(esClient)
 	Assert(t, err != nil, "expected failure but events template creation succeeded")
+}
+
+// TestGCAlerts tests GCAlerts()
+func TestGCAlerts(t *testing.T) {
+	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	AssertOk(t, err, "failed to setup test, err: %v", err)
+	defer mockElasticsearchServer.Stop()
+	defer apiServer.Stop()
+
+	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
+	AssertOk(t, err, "failed to create elastic client")
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, tLogger, WithElasticClient(ec),
+		WithDiagnosticsService(nil), WithModuleWatcher(nil),
+		WithAlertsGCConfig(
+			&AlertsGCConfig{
+				Interval:                      1 * time.Second,
+				ResolvedAlertsRetentionPeriod: 100 * time.Millisecond}))
+	AssertOk(t, err, "failed to create events manager")
+	defer evtsMgr.Stop()
+
+	a1 := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace,
+		CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil,
+		&events.Event{ObjectMeta: api.ObjectMeta{SelfLink: fmt.Sprintf("/events/v1/events/%s", uuid.NewV4().String())}}, nil)
+	evtsMgr.memDb.AddObject(a1)
+
+	a2 := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace,
+		CreateAlphabetString(5), monitoring.AlertState_ACKNOWLEDGED, "test-alert2", nil,
+		&events.Event{ObjectMeta: api.ObjectMeta{SelfLink: fmt.Sprintf("/events/v1/events/%s", uuid.NewV4().String())}}, nil)
+	evtsMgr.memDb.AddObject(a2)
+
+	ti, _ := gogoproto.TimestampProto(time.Now())
+	a3 := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace,
+		CreateAlphabetString(5), monitoring.AlertState_RESOLVED, "test-alert3", nil,
+		&events.Event{ObjectMeta: api.ObjectMeta{SelfLink: fmt.Sprintf("/events/v1/events/%s", uuid.NewV4().String())}}, nil)
+	a3.Status.Resolved = &monitoring.AuditInfo{Time: &api.Timestamp{Timestamp: *ti}}
+	evtsMgr.memDb.AddObject(a3)
+
+	time.Sleep(2 * time.Second) // alert deletion will fail with `NotFound` error
+
+	evtsMgr.GCAlerts(0) // this should fail
 }

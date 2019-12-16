@@ -11,11 +11,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -26,6 +28,12 @@ import (
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+)
+
+var (
+	emgr   = &evtsmgr.EventsManager{}
+	err    error
+	logger log.Logger
 )
 
 // main (command source) for events manager
@@ -82,7 +90,7 @@ func main() {
 		},
 	}
 
-	logger := log.SetConfig(config)
+	logger = log.SetConfig(config)
 	defer logger.Close()
 
 	// create events recorder
@@ -109,7 +117,7 @@ func main() {
 	diagOption := evtsmgr.WithDiagnosticsService(diagsvc.GetDiagnosticsServiceWithDefaults(globals.EvtsMgr, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, resolverClient, logger))
 
 	// create the controller
-	emgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, *listenURL,
+	emgr, err = evtsmgr.NewEventsManager(globals.EvtsMgr, *listenURL,
 		resolverClient, logger, watcherOption, diagOption)
 	if err != nil {
 		log.Fatalf("error creating events manager instance: %v", err)
@@ -130,7 +138,10 @@ func main() {
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
-	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.EvtsProxyRESTPort), router)
+	// garbage collect event-based alerts
+	router.Methods("GET").Subrouter().HandleFunc("/gcalerts", httputils.MakeHTTPHandler(GCAlerts))
+
+	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.EvtsMgrRESTPort), router)
 
 	logger.Infof("%s is running {%+v}", globals.EvtsMgr, emgr)
 	recorder.Event(eventtypes.SERVICE_RUNNING,
@@ -140,4 +151,15 @@ func main() {
 	<-emgr.RPCServer.Done()
 	logger.Debug("server stopped serving, exiting")
 	os.Exit(0)
+}
+
+// GCAlerts garbage collect alerts
+func GCAlerts(r *http.Request) (interface{}, error) {
+	if emgr != nil {
+		emgr.GCAlerts(100 * time.Millisecond)
+		return struct{}{}, nil
+	}
+
+	logger.Errorf("cannot GC alerts")
+	return nil, nil
 }
