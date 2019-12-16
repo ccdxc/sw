@@ -1056,11 +1056,6 @@ parser start {
 control ingress {
     common_tx_p4plus_stage0();
     if (app_header.table3_valid == 1) {
-        read_qstate();
-        if (app_header.table0_valid == 1) {
-            route_lookup();
-        }
-        dma();
     } else {
         if (app_header.table0_valid == 1) {
             apply(tx_table_s1_t0);

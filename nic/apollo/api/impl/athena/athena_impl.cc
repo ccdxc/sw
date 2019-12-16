@@ -26,7 +26,7 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
-#include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/athena/include/p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
@@ -178,6 +178,7 @@ athena_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
     asic_cfg->asm_cfg[2].base_addr = std::string(MEM_REGION_TXDMA_PROGRAM_NAME);
     asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
+
 }
 
 void
@@ -340,38 +341,7 @@ athena_impl::key_tunneled_init_(void) {
     return ret;
 }
 
-sdk_ret_t
-athena_impl::ingress_to_rxdma_init_(void) {
-    p4pd_error_t p4pd_ret;
-    ingress_to_rxdma_actiondata_t data = { 0 };
-
-    data.action_id = INGRESS_TO_RXDMA_CLASSIC_NIC_APP_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CLASSIC_NIC,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
-    data.action_id = INGRESS_TO_RXDMA_REDIRECT_TO_ARM_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_CPU,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
-    data.action_id = INGRESS_TO_RXDMA_P4PLUS_APP_TCP_PROXY_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
-                                       P4PLUS_APPTYPE_TCPTLS,
-                                       NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
-
-    return SDK_RET_OK;
-}
-
+#if 0
 sdk_ret_t
 athena_impl::egress_drop_stats_init_(void) {
     sdk_ret_t                    ret;
@@ -419,18 +389,20 @@ athena_impl::ingress_drop_stats_init_(void) {
     }
     return ret;
 }
+#endif
 
 sdk_ret_t
 athena_impl::stats_init_(void) {
+#if 0
     ingress_drop_stats_init_();
     egress_drop_stats_init_();
+#endif
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 athena_impl::table_init_(void) {
     sdk_ret_t     ret;
-    mem_addr_t    addr;
 
     ret = key_native_init_();
     if (ret != SDK_RET_OK) {
@@ -440,19 +412,6 @@ athena_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = ingress_to_rxdma_init_();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // program session stats table base address as table constant
-    // of session table
-    addr = api::g_pds_state.mempartition()->start_addr(
-                                        MEM_REGION_SESSION_STATS_NAME);
-    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
-    // reset bit 31 (saves one asm instruction)
-    addr &= ~((uint64_t)1 << 31);
-    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
 
     return SDK_RET_OK;
 }
@@ -685,29 +644,7 @@ athena_impl::flow(debug::flow_get_cb_t cb, void *ctxt) {
     uint32_t idx = 0;
     p4pd_error_t p4pd_ret;
     p4pd_table_properties_t prop;
-    ipv4_entry_t ipv4_entry;
     ipv6_entry_t ipv6_entry;
-
-    // Read IPv4 sessions
-    p4pd_global_table_properties_get(P4TBL_ID_IPV4_FLOW, &prop);
-    for (idx = 0; idx < prop.tabledepth; idx ++) {
-        memcpy(&ipv4_entry, ((ipv4_entry_t *)(prop.base_mem_va)) + idx,
-               sizeof(ipv4_entry_t));
-        ipv4_entry.swizzle();
-        if (ipv4_entry.entry_valid) {
-            cb(&ipv4_entry, NULL, ctxt);
-        }
-    }
-    p4pd_global_table_properties_get(P4TBL_ID_IPV4_FLOW_OHASH, &prop);
-    for (idx = 0; idx < prop.tabledepth; idx ++) {
-        memcpy(&ipv4_entry, ((ipv4_entry_t *)(prop.base_mem_va)) + idx,
-               sizeof(ipv4_entry_t));
-        ipv4_entry.swizzle();
-        if (ipv4_entry.entry_valid) {
-            cb(&ipv4_entry, NULL, ctxt);
-        }
-    }
-    cb(NULL, NULL, ctxt);
 
     // Read IPv6 sessions
     p4pd_global_table_properties_get(P4TBL_ID_FLOW, &prop);

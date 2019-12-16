@@ -9,5 +9,5 @@ else ifeq ($(ARCH),aarch64)
 else
     MODULE_FLAGS  = -O3 -DFTL_ADDRESS_PREFIX=ftlv6
 endif
-MODULE_PIPELINE = apollo artemis apulu iris athena
+MODULE_PIPELINE = apollo artemis apulu iris
 include ${MKDEFS}/post.mk

@@ -1,0 +1,5 @@
+{
+  "pipeline"           : "athena",
+  "control_cores_mask" : "0x1",
+  "data_cores_mask"    : "0x0"
+}

@@ -99,7 +99,7 @@ def get_parser():
                         help='Avoid relocating table k-i fields to earlier flits',
                         default=False, required=False)
     parser.add_argument('--pipeline', dest='pipeline', action='store',
-                        help='Pipeline', choices=['iris', 'gft', 'apollo', 'artemis', 'apulu'],
+                        help='Pipeline', choices=['iris', 'gft', 'apollo', 'artemis', 'apulu', 'athena'],
                         default='iris', required=False)
     parser.add_argument('--pdb-on-assert', dest='pdb_on_assert', action='store_true',
                         help='Enter pdb on assert',

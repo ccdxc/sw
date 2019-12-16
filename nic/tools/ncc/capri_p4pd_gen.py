@@ -251,7 +251,7 @@ def capri_p4pd_create_swig_makefile(be):
 def capri_p4pd_create_swig_custom_hdr(be):
 
     name = be.prog_name
-    if name in ['apollo', 'artemis', 'apulu']:
+    if name in ['apollo', 'artemis', 'apulu', 'athena']:
         name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
@@ -336,7 +336,7 @@ void
 def capri_p4pd_create_swig_interface(be):
 
     name = be.prog_name
-    if name in ['apollo', 'artemis', 'apulu']:
+    if name in ['apollo', 'artemis', 'apulu', 'athena']:
         name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
@@ -624,7 +624,7 @@ class capri_p4pd_generator:
         changing the prog name from apollo to p4. generate code under
         build/$ARCH/$PIPIPELINE/gen/p4gen/$PROG_NAME
         '''
-        if self.be.prog_name in ['apollo', 'artemis', 'apulu']:
+        if self.be.prog_name in ['apollo', 'artemis', 'apulu', 'athena']:
             h_outputdir = gen_dir + '/p4/include'
             c_outputdir = gen_dir + '/p4/src/'
             py_outputdir = gen_dir + '/p4/cli/'
@@ -748,7 +748,7 @@ def get_parser():
                         help='Directory for all Compiler generated code',
                         default='.', required=False)
     parser.add_argument('--pipeline', dest='pipeline', action='store',
-                        help='Pipeline', choices=['iris', 'gft', 'apollo', 'artemis', 'apulu'],
+                        help='Pipeline', choices=['iris', 'gft', 'apollo', 'artemis', 'apulu', 'athena'],
                         default=None, required=False)
     parser.add_argument('--p4-plus', dest='p4_plus', action='store_true',
                         help='Compile P4+ program',

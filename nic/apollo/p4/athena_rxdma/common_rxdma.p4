@@ -1197,8 +1197,6 @@ parser start {
 
 control ingress {
     if (app_header.table3_valid == 1) {
-        sacl();
-        pkt_enqueue();
     } else {
         common_p4plus_stage0();
         if (app_header.table0_valid == 1) {

@@ -15,7 +15,7 @@
 #include "nic/apollo/api/impl/athena/athena_impl.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
-#include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/athena/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -122,7 +122,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
+    //data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -148,8 +148,6 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     key.ctag_1_valid = 0;
     mask.ctag_1_valid_mask = 0xF;
-    key.control_metadata_tunneled_packet = 0;
-    mask.control_metadata_tunneled_packet_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
@@ -174,13 +172,11 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     key.ctag_1_valid = 0;
     mask.ctag_1_valid_mask = 0xF;
-    key.control_metadata_tunneled_packet = 0;
-    mask.control_metadata_tunneled_packet_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
-    data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
+    //data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -202,15 +198,15 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     uint32_t               idx;
 
     // Flow Miss -> CPU
-    key.predicate_header_redirect_to_arm = 1;
-    mask.predicate_header_redirect_to_arm_mask = 1;
+    //key.predicate_header_redirect_to_arm = 1;
+    //mask.predicate_header_redirect_to_arm_mask = 1;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CPU;
     data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
     data.action_u.nacl_nacl_redirect.lif = key_;
     data.action_u.nacl_nacl_redirect.qtype = 0;
     data.action_u.nacl_nacl_redirect.qid = 0;
-    data.action_u.nacl_nacl_redirect.vlan_strip = 0;
+    //data.action_u.nacl_nacl_redirect.vlan_strip = 0;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
