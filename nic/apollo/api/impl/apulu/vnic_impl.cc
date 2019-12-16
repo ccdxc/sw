@@ -356,14 +356,15 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
     // populating them
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       (hw_id_*2), NULL, NULL, &vnic_info_data);
+                                       (hw_id_ * 2), NULL, NULL,
+                                       &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program v4 entry in VNIC_INFO_RXDMA table "
-                      "at %u", (hw_id_*2));
+                      "at %u", (hw_id_ * 2));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
         PDS_TRACE_DEBUG("Programmed v4 Rx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (hw_id_*2));
+                        "at %u", (hw_id_ * 2));
     }
 
     // program IPv6 ingress entry
@@ -392,21 +393,22 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
     // populating them
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       (hw_id_*2) + 1, NULL, NULL, &vnic_info_data);
+                                       (hw_id_ * 2) + 1, NULL, NULL,
+                                       &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program v6 entry in VNIC_INFO_RXDMA table "
-                      "at %u", (hw_id_*2) + 1);
+                      "at %u", (hw_id_ * 2) + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
         PDS_TRACE_DEBUG("Programmed v6 Rx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (hw_id_*2) + 1);
+                        "at %u", (hw_id_ * 2) + 1);
     }
 
     // program IPv4 egress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv4 route table root address in Tx direction entry
-    i = 0; // Route root is at index 0
+    i = 0; // route root is always at index 0
     route_table_key = subnet->v4_route_table();
     if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
@@ -443,15 +445,15 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // program v4 VNIC_INFO_RXDMA entry for Tx direction in 2nd half of the
     // table at (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) index
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2),
-                                       NULL, NULL, &vnic_info_data);
+                   (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2),
+                   NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
-                      (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2));
+                      (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
         PDS_TRACE_DEBUG("Programmed v4 Tx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2));
+                        "at %u", (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2));
     }
 
     // program IPv6 egress entry
@@ -494,15 +496,15 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     // program v6 TXDMA_VNIC_INFO entry for Tx direction in 2nd half of the
     // table at (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1 index
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
-                                       (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1,
-                                       NULL, NULL, &vnic_info_data);
+                   (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2) + 1,
+                   NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u",
                       (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
         PDS_TRACE_DEBUG("Programmed v6 Tx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1);
+                        "at %u", (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2) + 1);
     }
     return SDK_RET_OK;
 }

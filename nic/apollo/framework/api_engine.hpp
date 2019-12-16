@@ -18,6 +18,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -310,15 +311,19 @@ public:
         api_obj_ctxt_t *octxt;
 
         if (api_obj->in_dirty_list()) {
-            // update the update bitmap to indicate that more udpates are seen
-            // on an object thats being updated in this batch
+            // if needed, update the update bitmap to indicate that more udpates
+            // are seen on an object thats being updated in this batch
             if (batch_ctxt_.dom[api_obj]->cloned_obj) {
                 if ((batch_ctxt_.dom[api_obj]->upd_bmap & upd_bmap) !=
                         upd_bmap) {
                     batch_ctxt_.dom[api_obj]->upd_bmap |= upd_bmap;
+                    PDS_TRACE_DEBUG("%s already in DoL, updated upd bmap to "
+                                    "0x%lx", api_obj->key2str(),
+                                    batch_ctxt_.dom[api_obj]->upd_bmap);
                     return batch_ctxt_.dom[api_obj];
                 }
                 // entry exists and the update was already noted
+                PDS_TRACE_DEBUG("%s already in DoL", api_obj->key2str());
                 return NULL;
             }
 #if 0
@@ -331,9 +336,12 @@ public:
             // fall thru
         }
         if (api_obj->in_deps_list()) {
-            // update the update bitmap
+            // if needed, update the update bitmap
             if ((batch_ctxt_.aom[api_obj]->upd_bmap & upd_bmap) != upd_bmap) {
                 batch_ctxt_.aom[api_obj]->upd_bmap |= upd_bmap;
+                PDS_TRACE_DEBUG("%s already in AoL, update upd bmap to 0x%lx",
+                                api_obj->key2str(),
+                                batch_ctxt_.aom[api_obj]->upd_bmap);
                 return batch_ctxt_.aom[api_obj];
             }
             // if the object is in deps list already, push it to the end
@@ -343,9 +351,12 @@ public:
             batch_ctxt_.aol.remove(api_obj);
             batch_ctxt_.aol.push_back(api_obj);
             // entry exists and the update was already noted
+            PDS_TRACE_DEBUG("%s already in AoL", api_obj->key2str());
             return NULL;
         }
-        // add an entry to dependent object list/map
+
+        // object not in dirty list or dependent list, add it now to
+        // affected/dependent object list/map
         octxt = api_obj_ctxt_alloc_();
         octxt->api_op = api_op;
         octxt->obj_id = obj_id;
@@ -353,6 +364,8 @@ public:
         api_obj->set_in_deps_list();
         batch_ctxt_.aom[api_obj] = octxt;
         batch_ctxt_.aol.push_back(api_obj);
+        PDS_TRACE_DEBUG("Added %s to AoL, update bitmap 0x%lx",
+                        api_obj->key2str(), upd_bmap);
         return octxt;
     }
 

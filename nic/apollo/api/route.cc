@@ -134,6 +134,8 @@ route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       "on route table %u", key_.id);
         return SDK_RET_INVALID_ARG;
     }
+    // in all other cases we have to recompute the route table and program in
+    // the datapath
     return SDK_RET_OK;
 }
 
