@@ -145,21 +145,10 @@ security_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 {
     switch (api_op) {
     case API_OP_CREATE:
-        // for security policy create, there is no stage 0 programming
-        break;
-
     case API_OP_UPDATE:
-        // need to walk all vnics AND subnets to see which of them are using
-        // this policy table and then walk all the vnics that are part of the
-        // vpcs and subnets and write new epoch data
-        return SDK_RET_ERR;
-        break;
-
+        // no programming needed in stage0 for these
     case API_OP_DELETE:
-        // same as update but every entry written will have invalid bit set
-        //return SDK_RET_ERR;
-        break;
-
+        // delete operation will free the hbm region in use altogether
     default:
         break;
     }

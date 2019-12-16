@@ -59,7 +59,7 @@ operator<<(std::ostream& os, const pds_policy_spec_t *spec) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_policy_info_t *obj) {
-    os << "Policy info =>" << &obj->spec << std::endl;
+    os << " Policy info =>" << &obj->spec << std::endl;
     return os;
 }
 

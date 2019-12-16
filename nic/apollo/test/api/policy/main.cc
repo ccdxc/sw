@@ -75,8 +75,7 @@ TEST_F(policy, policy_workflow_b1) {
 
 /// \brief Policy WF_B2
 /// \ref WF_B2
-// TODO: Fix workflow to take one object at a time.
-TEST_F(policy, DISABLED_policy_workflow_b2) {
+TEST_F(policy, policy_workflow_b2) {
     if (!apulu()) return;
 
     pds_policy_key_t key = {.id = 1};
@@ -85,15 +84,15 @@ TEST_F(policy, DISABLED_policy_workflow_b2) {
     // v4 policy
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
-    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_EGRESS,
+    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                   POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.0/16", 1);
     workflow_b2<policy_feeder>(feeder1, feeder1A);
 
     // v6 policy
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "10001::1/64", 1);
-    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_EGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "20001::1/64", 1);
+                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "1001::1/64", 1);
+    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
     workflow_b2<policy_feeder>(feeder1, feeder1A);
 }
 
