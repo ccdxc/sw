@@ -8,6 +8,9 @@ const (
 	hostReboot         = "HostReboot"
 	veniceReboot       = "VeniceReboot"
 	venicePartition    = "VenicePartition"
+    veniceShutdownLeader = "VeniceShutdownLeader"
+    veniceShutdownNpmNode = "VeniceShutdownNpmNode"
+    veniceShutdownApiServerNode = "VeniceShutdownApiServerNode"
 	flapDataPorts      = "FlapDataPorts"
 	naplesRemoveAdd    = "NaplesRemoveAdd"
 	naplesMgmtLinkFlap = "NaplesMgmtLinkFlap"
@@ -33,6 +36,18 @@ type hostRebootTrigger struct {
 }
 
 type veniceRebootTrigger struct {
+	triggerBase
+}
+
+type veniceShutdownLeaderTrigger struct {
+	triggerBase
+}
+
+type veniceShutdownNpmNodeTrigger struct {
+	triggerBase
+}
+
+type veniceShutdownApiServerNodeTrigger struct {
 	triggerBase
 }
 
@@ -96,6 +111,18 @@ func (h *venicePartitionTrigger) Run() error {
 	return partitionVeniceNode(percent)
 }
 
+func (h *veniceShutdownLeaderTrigger) Run() error {
+	return shutdownVeniceLeaderNode()
+}
+
+func (h *veniceShutdownNpmNodeTrigger) Run() error {
+	return shutdownVeniceNpmNode()
+}
+
+func (h *veniceShutdownApiServerNodeTrigger) Run() error {
+	return shutdownVeniceApiServerNode()
+}
+
 func (h *flapDataPortsTrigger) Run() error {
 	percent, err := h.triggerBase.getPercent()
 	if err != nil {
@@ -140,6 +167,18 @@ func newVenicePartitionTrigger(name string, percent string) trigger {
 	return &venicePartitionTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
 }
 
+func newVeniceShutdownLeaderTrigger(name string, percent string) trigger {
+	return &veniceShutdownLeaderTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+}
+
+func newVeniceShutdownNpmNodeTrigger(name string, percent string) trigger {
+	return &veniceShutdownNpmNodeTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+}
+
+func newVeniceShutdownApiServerNodeTrigger(name string, percent string) trigger {
+	return &veniceShutdownApiServerNodeTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+}
+
 func newflapDataPortsTrigger(name string, percent string) trigger {
 	return &flapDataPortsTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
 }
@@ -164,6 +203,9 @@ var triggers = map[string]func(string, string) trigger{
 	naplesMgmtLinkFlap: newNaplesMgmtLinkFlapTrigger,
 	naplesUpgrade:      newNaplesUpgradeTrigger,
 	venicePartition:    newVenicePartitionTrigger,
+    veniceShutdownLeader: newVeniceShutdownLeaderTrigger,
+    veniceShutdownNpmNode: newVeniceShutdownNpmNodeTrigger,
+    veniceShutdownApiServerNode: newVeniceShutdownApiServerNodeTrigger,
 }
 
 func newTrigger(name string, percent string) trigger {

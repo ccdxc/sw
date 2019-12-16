@@ -44,6 +44,75 @@ func rebootVeniceNodes(percent int) error {
 	return setupModel.Action().ReloadVeniceNodes(vnc)
 }
 
+func shutdownVeniceLeaderNode() error {
+    naples := setupModel.Naples()
+    leader := setupModel.VeniceNodes().Leader()
+    setupModel.Action().DisconnectVeniceNodesFromCluster(leader, naples)
+
+    // Sleep for 600 seconds to make sure we detect partitioning.
+    time.Sleep(600 * time.Second)
+    setupModel.Action().VerifyClusterStatus()
+
+    //Connect Back and make sure cluster is good
+    setupModel.Action().ConnectVeniceNodesToCluster(leader, naples)
+    time.Sleep(60 * time.Second)
+
+    return nil
+}
+
+func shutdownVeniceNpmNode() error {
+    naples := setupModel.Naples()
+    npmNode, err := setupModel.VeniceNodes().GetVeniceNodeWithService("pen-npm")
+    setupModel.Action().DisconnectVeniceNodesFromCluster(npmNode, naples)
+
+    // Sleep for 600 seconds to make sure we detect partitioning.
+    time.Sleep(600 * time.Second)
+
+    //update is add and delete of the policy
+    setupModel.DefaultNetworkSecurityPolicy().Delete()
+    time.Sleep(30 * time.Second)
+    setupModel.DefaultNetworkSecurityPolicy().Restore()
+
+    // verify policy was propagated correctly
+    setupModel.Action().VerifyPolicyStatus(setupModel.DefaultNetworkSecurityPolicy())
+
+    // ping all workload pairs in same subnet
+    workloadPairs := setupModel.WorkloadPairs().Permit(setupModel.DefaultNetworkSecurityPolicy(), "tcp")
+    setupModel.Action().TCPSession(workloadPairs, 0)
+
+    //Connect Back and make sure cluster is good
+    setupModel.Action().ConnectVeniceNodesToCluster(npmNode, naples)
+    time.Sleep(60 * time.Second)
+
+    return err
+}
+
+func shutdownVeniceApiServerNode() error {
+    naples := setupModel.Naples()
+    apiServerNode, err := setupModel.VeniceNodes().GetVeniceNodeWithService("pen-apiserver")
+    setupModel.Action().DisconnectVeniceNodesFromCluster(apiServerNode, naples)
+
+    // Sleep for 600 seconds to make sure we detect partitioning.
+    time.Sleep(600 * time.Second)
+
+    //update is add and delete of the policy
+    setupModel.DefaultNetworkSecurityPolicy().Delete()
+    setupModel.DefaultNetworkSecurityPolicy().Restore()
+
+    // verify policy was propagated correctly
+    setupModel.Action().VerifyPolicyStatus(setupModel.DefaultNetworkSecurityPolicy())
+
+    // ping all workload pairs in same subnet
+    workloadPairs := setupModel.WorkloadPairs().Permit(setupModel.DefaultNetworkSecurityPolicy(), "tcp")
+    setupModel.Action().TCPSession(workloadPairs, 0)
+
+    //Connect Back and make sure cluster is good
+    setupModel.Action().ConnectVeniceNodesToCluster(apiServerNode, naples)
+    time.Sleep(60 * time.Second)
+
+    return err
+}
+
 func cleanUpVeniceNodes() {
 
 	vnc := setupModel.VeniceNodes()
