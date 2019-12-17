@@ -82,4 +82,20 @@
     ],
     "flags": [],
     "timeout": 300.0
+},
+{
+    "name": "pen-ntsa",
+    "command": "/nic/bin/ntsa -config /naples/nic/conf/naples-tsa.json",
+    "dependencies": [
+        {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                 "kind": "service",
+                 "service-name": "hal"
+         }
+    ],
+    "flags": [],
+    "timeout": 0.0
 }]

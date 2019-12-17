@@ -17,7 +17,7 @@ import (
 // GenerateTechsupportZip archives the contents of the techsupport into a tarball
 func GenerateTechsupportZip(techsupportFile string, directory string) error {
 	log.Infof("Creating techsupport tarball : %v from the directory : %v", techsupportFile, directory)
-	cmdStr := fmt.Sprintf("pushd %s && tar cvfz %s %s && popd", directory, techsupportFile, directory)
+	cmdStr := fmt.Sprintf("pushd %s && tar -zcvf  %s %s/* && popd", directory, techsupportFile, directory)
 	cmd := exec.Command("bash", "-c", cmdStr)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

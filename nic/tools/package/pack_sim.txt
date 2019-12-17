@@ -172,6 +172,7 @@ nic/sim/naples/hntap-with-qemu-cfg.json                          /nic/conf
 nic/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json      /nic/conf/
 nic/sysmgr/src/naples_sim.json                                   /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_sim_no_datapath.json                       /nic/conf/sysmgr_no_datapath.json
+nic/conf/naples-tsa.json                                         /nic/conf/
 
 nic/build/x86_64/iris/bin                                        /platform/bin/
 nic/build/x86_64/iris/lib                                        /platform/lib/
