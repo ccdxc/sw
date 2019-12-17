@@ -11,6 +11,7 @@ export const HelpLinkMap: { [id: string]: string } = {
   "policies" : "/assets/generated/docs/help/policies.html",
   "radius" : "/assets/generated/docs/help/radius.html",
   "securitygroups" : "/assets/generated/docs/help/securitygroups.html",
+  "snapshots" : "/assets/generated/docs/help/snapshots.html",
   "systemupgrade" : "/assets/generated/docs/help/systemupgrade.html",
   "techsupport" : "/assets/generated/docs/help/techsupport.html",
   "localuser" : "/assets/generated/docs/help/usermanagement.html",
