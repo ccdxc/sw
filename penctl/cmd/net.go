@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,8 +50,27 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("localhost") {
 		naplesURL = "http://127.0.0.1"
 	} else {
-		naplesURL = "http://169.254.0.1"
+		// figuring out the right IP now
+		out, err := exec.Command("/bin/bash", "-c", "/usr/bin/lspci -nd 1dd8:1004 | /usr/bin/head -1").Output()
+		if err == nil {
+			s := strings.Split(string(out), ":")
+			if len(s) != 0 && s[0] != "" {
+				bus, _ := strconv.ParseInt(s[0], 16, 64)
+				naplesURL = "http://169.254." + strconv.Itoa(int(bus)) + ".1"
+
+				// check if naples is reachable
+				naplesIP = strings.TrimPrefix(naplesURL, "http://")
+				revProxyPort = globals.AgentProxyPort
+				naplesURL += ":" + revProxyPort + "/"
+				if isNaplesReachable() == nil {
+					return nil
+				}
+			}
+		}
 	}
+	// should never be set to this. but trying this ip as a last resort anyways
+	// also needed for backwards compatibility
+	naplesURL = "http://169.254.0.1"
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.AgentProxyPort
 	naplesURL += ":" + revProxyPort + "/"
