@@ -73,8 +73,8 @@ function run_valgrind_gtest () {
         esac
     done
     echo "`date +%x_%H:%M:%S:%N` : Running ${TEST_NAME} > ${TEST_LOG} "
-    ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${TEST_LOG} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/${PIPELINE}/bin/apollo_scale_test -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml"
-    #$GDB ${NICDIR}/build/x86_64/${PIPELINE}/bin/apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json -f ${PIPELINE}
+    ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${TEST_LOG} --suppressions=${NICDIR}/apollo/test/tools/valgrind_suppression.txt ${NICDIR}/build/x86_64/${PIPELINE}/bin/${PIPELINE}_scale_test -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml"
+    #$GDB ${NICDIR}/build/x86_64/${PIPELINE}/bin/${PIPELINE}_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json -f ${PIPELINE}
 
     # check valgrind log for leaks
     python ${NICDIR}/apollo/test/tools/parse_valgrind_log.py ${TEST_LOG}

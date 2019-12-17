@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = apollo_scale_test.gtest
+MODULE_TARGET   = ${PIPELINE}_scale_test.gtest
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstest \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \

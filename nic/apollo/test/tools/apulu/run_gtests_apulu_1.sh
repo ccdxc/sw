@@ -14,7 +14,7 @@ if [[ "$1" ==  --coveragerun ]]; then
     run_sdk_gtest
 fi
 
-# run_gtest scale LOG="/dev/null" CFG=" -i ${NICDIR}/apollo/test/scale/${PIPELINE}/scale_cfg.json "
+run_gtest scale LOG="/dev/null" CFG=" -i ${NICDIR}/apollo/test/scale/${PIPELINE}/scale_cfg.json "
 run_gtest device
 run_gtest vpc
 run_gtest subnet

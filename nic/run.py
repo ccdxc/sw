@@ -657,7 +657,7 @@ def run_artemis_scale_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/artemis/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ["build/x86_64/artemis/bin/apollo_scale_test",
+    cmd = ["build/x86_64/artemis/bin/artemis_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/artemis/scale_cfg_sim.json",
            "--gtest_output=", "xml:build/x86_64/artemis/gtest_results/artemis_scale_test.xml"]
