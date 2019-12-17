@@ -745,6 +745,7 @@ func TestSNICOrder(t *testing.T) {
 	Assert(t, len(sn) == 2, "Should be one bucket")
 	Assert(t, len(sn[0]) == 3, "first bucket should have 3 naples")
 	Assert(t, len(sn[1]) == 1, "second bucket should have 1 naples")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 
 }
 
@@ -900,7 +901,7 @@ func TestFutureRollout(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec not to have PreCheck till timeout", "100ms", "2s")
 	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
-
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // When a preupgrade fails, the rollout should go to Failed state
@@ -957,6 +958,7 @@ func TestPreUpgFail(t *testing.T) {
 
 	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // When one smartNIC does not respond to preupgrade, the rollout should go to Failed state
@@ -1021,6 +1023,7 @@ func TestPreUpgTimeout(t *testing.T) {
 
 	AssertEventually(t, addSmartNICResponse("naples1", protos.DSCOp_DSCPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // When number of failures is Lessthan or Equal to MaxFailures, rollout should be considered success
@@ -1087,6 +1090,7 @@ func TestMaxFailuresNotHit(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Fail state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // When number of failures is > MaxFailures, rollout should be in failed state.
@@ -1153,6 +1157,7 @@ func TestMaxFailuresHit(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // Test Rollout Retry.
@@ -1226,6 +1231,7 @@ func TestRolloutRetry(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRetry) }, "Expecting Rollout to be in Retry state", "1000ms", "10s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 // Test Rollout Retry Timer.
@@ -1304,6 +1310,7 @@ func TestRolloutRetryTimer(t *testing.T) {
 	AssertEventually(t, addSmartNICResponse("naples0", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples0 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, addSmartNICFailResponse("naples1", protos.DSCOp_DSCDisruptiveUpgrade), "Expected naples1 spec to have outstanding Disruptive Upgrade")
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstPreCheckingSmartNIC) }, "Expecting RolloutRetry to be in PreCheckSmartNIC state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 
 //Test Rollout Suspend
@@ -1350,6 +1357,7 @@ func TestRolloutSuspend(t *testing.T) {
 	stateMgr.RolloutWatcher <- evt
 
 	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutSuspend) }, "Expecting Rollout to be in Fail state", "100ms", "2s")
+	stateMgr.RolloutWatcher <- kvstore.WatchEvent{Type: kvstore.Deleted, Object: &ro}
 }
 func TestExponentialRollout(t *testing.T) {
 	const version = "v1.2"
