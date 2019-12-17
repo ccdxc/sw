@@ -200,9 +200,10 @@
                 response timeout:
               </div>
               <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
-                     fxFlex="nogrow"
+                     fxFlex="nogrow" appErrorTooltip
                      spellcheck="false" placeholder="Enter length" type="text"
                      formControlName="query-response-timeout" pInputText>
+              <span class="newsecurityapp-dns-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
 
             </div>
           </div>
@@ -249,10 +250,11 @@
         <span>Timeout:</span>
       </div>
       <div fxFlex="10px"></div>
-      <div fxFlex="150px" fxLayout="row">
+      <div fxFlex="400px">
         <input class="newsecurityapp-input" fxFlex="nogrow"
-               spellcheck="false" type="text" pInputText
+               appErrorTooltip spellcheck="false" type="text" pInputText
                formControlName="timeout" placeholder="Enter...">
+        <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
       </div>
       <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
@@ -291,10 +293,11 @@
         <span>Timeout:</span>
       </div>
       <div fxFlex="10px"></div>
-      <div fxFlex="150px" fxLayout="row">
+      <div fxFlex="400px" fxLayout="row">
         <input class="newsecurityapp-input" fxFlex="nogrow"
                spellcheck="false" type="text" pInputText placeholder="Enter..."
-               formControlName="timeout">
+               appErrorTooltip formControlName="timeout">
+        <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
       </div>
       <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">

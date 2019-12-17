@@ -137,3 +137,14 @@ $vertical-gutter: 5px;
   padding-right: 10px;
   cursor: pointer;
 }
+
+.newsecurityapp-timeout-helper,
+.newsecurityapp-dns-timeout-helper {
+  line-height: 30px;
+  margin-left: 10px;
+}
+
+.newsecurityapp-dns-timeout-helper {
+  position: relative;
+  top: 5px;
+}

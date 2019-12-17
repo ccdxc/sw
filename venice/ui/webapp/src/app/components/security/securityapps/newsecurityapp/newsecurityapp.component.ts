@@ -7,11 +7,13 @@ import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
-import { FormArray, FormGroup, AbstractControl, ValidatorFn } from '@angular/forms';
+import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { SecurityAppOptions} from '@app/components/security';
 import { SecurityProtoPort } from '@sdk/v1/models/generated/search';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+
+const TIMEOUT_REGEX = /^(\d+(h|m|s|ms|ns|us|µs))+$/;
 
 @Component({
   selector: 'app-newsecurityapp',
@@ -51,6 +53,8 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     }
     this.securityForm = this.newObject.$formGroup;
     this.setUpTargets();
+    const dnsTimeout: AbstractControl = this.securityForm.get(['spec', 'alg', 'dns', 'query-response-timeout']);
+    this.addTimeoutValidator(dnsTimeout, 'dnsTimeout');
   }
 
   setCustomValidation() {
@@ -146,7 +150,10 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
 
   addSunRPCTarget() {
     const tempTargets = this.securityForm.get(['spec', 'alg', 'sunrpc']) as FormArray;
-    tempTargets.insert(0, new SecuritySunrpc().$formGroup);
+    const newFormGroup: FormGroup = new SecuritySunrpc().$formGroup;
+    const ctrl: AbstractControl = newFormGroup.get(['timeout']);
+    this.addTimeoutValidator(ctrl, 'sunrpcTimeout');
+    tempTargets.insert(0, newFormGroup);
   }
 
   addProtoTarget() {
@@ -156,7 +163,10 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
 
   addMSRPCTarget() {
     const tempTargets = this.securityForm.get(['spec', 'alg', 'msrpc']) as FormArray;
-    tempTargets.insert(0, new SecurityMsrpc().$formGroup);
+    const newFormGroup: FormGroup = new SecurityMsrpc().$formGroup;
+    const ctrl: AbstractControl = newFormGroup.get(['timeout']);
+    this.addTimeoutValidator(ctrl, 'msrpcTimeout');
+    tempTargets.insert(0, newFormGroup);
   }
 
   removeProtoTarget(index) {
@@ -268,7 +278,6 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     }
   }
 
-
   savePolicy() {
     this.processFormValues();
     this.saveObject();
@@ -322,5 +331,30 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     }
   }
 
+  isTimeoutValid(fieldName): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val: string = control.value;
+      if (!val) {
+        return null;
+      }
+      if (!TIMEOUT_REGEX.test(val)) {
+        return {
+          fieldname: {
+            required: false,
+            message: 'Invalid time out value. Only h, m, s, ms, us, and ns are allowed'
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  addTimeoutValidator(ctrl: AbstractControl, fieldName: string): void {
+    if (!ctrl.validator) {
+      ctrl.setValidators([this.isTimeoutValid(fieldName)]);
+    } else {
+      ctrl.setValidators([ctrl.validator, this.isTimeoutValid(fieldName)]);
+    }
+  }
 }
 

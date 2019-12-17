@@ -141,7 +141,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
       const isSuspendInProgressOrSuspended = (this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']
           || this.selectedRollout.status.state === RolloutRolloutStatus_state.suspended); // check it rollout is in 'suspend-in-progress' or 'suspended' states.
-      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgressOrSuspended) {  // VS-328.  We just want to add stop-button once.
+      const isSucceeded = (this.selectedRollout.status.state === RolloutRolloutStatus_state.success);
+      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgressOrSuspended && !isSucceeded) {  // VS-328.  We just want to add stop-button once.
         toolbarData.buttons.push(
           {
             cssClass: 'global-button-primary rolloutstatus-toolbar-button',
