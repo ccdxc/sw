@@ -63,16 +63,14 @@ control egress {
     if (control_metadata.span_copy == TRUE) {
         mirror();
     } else {
-        if (control_metadata.egress_bypass == FALSE) {
-            mapping();
-            session_lookup();
-            output_properties();
-            nat();
-            nexthops();
-            update_checksums();
-            rx_policers();
-            egress_stats();
-        }
+        mapping();
+        session_lookup();
+        output_properties();
+        nat();
+        rx_policers();
     }
+    nexthops();
+    update_checksums();
+    egress_stats();
     egress_inter_pipe();
 }

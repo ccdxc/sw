@@ -152,6 +152,8 @@ action egress_to_rxdma() {
     if (p4e_to_arm.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
         modify_field(p4e_to_arm.egress_bd_id, vnic_metadata.egress_bd_id);
+        modify_field(p4e_to_arm.sacl_action, txdma_to_p4e.sacl_action);
+        modify_field(p4e_to_arm.sacl_root, txdma_to_p4e.sacl_root_num);
     }
 
     modify_field(p4e_to_p4plus_classic_nic.packet_len,

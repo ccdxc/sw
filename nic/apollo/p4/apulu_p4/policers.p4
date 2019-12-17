@@ -19,7 +19,7 @@ action vnic_policer_tx(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
     modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
-@pragma stage 3
+@pragma stage 4
 @pragma index_table
 @pragma policer_table two_color
 table vnic_policer_tx {

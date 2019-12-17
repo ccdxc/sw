@@ -17,10 +17,10 @@ session_info:
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r7
     bcf             [c1],session_info_error
-    phvwrpair       p.control_metadata_update_checksum, \
-                        k.p4e_i2e_update_checksum, \
-                        p.control_metadata_rx_packet, \
-                        k.p4e_i2e_rx_packet
+    phvwrpair       p.control_metadata_rx_packet, \
+                        k.p4e_i2e_rx_packet, \
+                        p.control_metadata_update_checksum, \
+                        k.p4e_i2e_update_checksum
 
     // update timestamp (flush/unlock if packet is not TCP or dropped)
     seq             c1, k.tcp_valid, 0

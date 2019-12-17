@@ -104,7 +104,7 @@ action offloads() {
     }
 }
 
-@pragma stage 4
+@pragma stage 3
 table offloads {
     actions {
         offloads;

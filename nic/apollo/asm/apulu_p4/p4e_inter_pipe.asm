@@ -32,6 +32,8 @@ egress_to_rxdma:
     add             r6, r0, r7
     add.c1          r6, r6, APULU_P4_TO_ARM_HDR_SZ
     phvwr.c1        p.capri_p4_intrinsic_packet_len, r6
+    phvwr.c1        p.{p4e_to_arm_sacl_action,p4e_to_arm_sacl_root}, \
+                        k.{txdma_to_p4e_sacl_action,txdma_to_p4e_sacl_root_num}
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC

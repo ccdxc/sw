@@ -32,8 +32,9 @@ class P4ToARM(Packet):
             ShortField("nexthop_id", 0),
             ShortField("vpc_id", 0),
             ShortField("vnic_id", 0),
-            BitField("pad", 0, 4),
             BitField("mapping_hit", 0, 1),
+            BitField("sacl_action", 0, 1),
+            BitField("sacl_root", 0, 3),
             BitEnumField("nexthop_type", 0, 2,
                 {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
             BitField("drop", 0, 1) ]

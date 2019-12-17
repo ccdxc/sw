@@ -58,8 +58,9 @@ header_type apulu_p4_to_arm_header_t {
         nexthop_id          : 16;
         vpc_id              : 16;
         vnic_id             : 16;
-        pad                 : 4;
         mapping_hit         : 1;
+        sacl_action         : 1;
+        sacl_root           : 3;
         nexthop_type        : 2;
         drop                : 1;
     }
