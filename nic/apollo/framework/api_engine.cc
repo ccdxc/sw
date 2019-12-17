@@ -768,6 +768,12 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // the current obj is already deleted from the s/w db and swapped with
         // cloned_obj when update_db() was called on cloned_obj above
         del_from_dirty_list_(it, api_obj);
+        // if we allocated resources for the updated object, we need to release
+        // the resources being used by original object as they are not needed
+        // anymore
+        if (obj_ctxt->cloned_obj->rsvd_rsc()) {
+            api_obj->release_resources();
+        }
         if (api_base::stateless(obj_ctxt->obj_id)) {
             // destroy cloned object as it is not needed anymore
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",

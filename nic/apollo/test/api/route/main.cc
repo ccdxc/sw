@@ -122,9 +122,10 @@ TEST_F(route_test, v4v6_route_table_workflow_b1) {
 
 /// \brief Route table WF_B2
 /// \ref WF_B2
-// TODO: Fix workflow to take one object at a time.
-TEST_F(route_test, DISABLED_v4v6_route_table_workflow_b2) {
+TEST_F(route_test, v4v6_route_table_workflow_b2) {
     route_table_feeder feeder1, feeder1A;
+
+    if (!apulu()) return;
 
     // test one v4 route table with zero routes
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4, 0, 1);
