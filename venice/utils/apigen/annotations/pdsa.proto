@@ -17,13 +17,15 @@ extend google.protobuf.MessageOptions {
 };
 
 message PdsaFields {
-  string     Field          = 1;
-  string     SetFieldFn     = 5;
-  string     GetFieldFn     = 6;
-  string     SetKeyOidIndex = 7;
-  string     GetKeyOidIndex = 8;
-  string     SetKeyOidFn    = 9;
-  string     GetKeyOidFn    = 10;
+  string Field             = 1;
+  string SetFieldFn        = 2;
+  string GetFieldFn        = 3;
+  string SetKeyOidIndex    = 4;
+  string GetKeyOidIndex    = 5;
+  string SetKeyOidFn       = 6;
+  string GetKeyOidFn       = 7;
+  string SetKeyOidLenIndex = 8;
+  string GetKeyOidLenIndex = 9;
 }
 
 // PDSA Option extensions applicable to Fields

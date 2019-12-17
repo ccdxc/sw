@@ -61,7 +61,16 @@
                   {{if (eq .GetTypeName ".types.IPAddress")}}
         pdsa_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                    {{if (eq $castFn "")}}
         oid[{{$fieldOpt.SetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                    {{else}}
+                      {{if (eq $fieldOpt.SetKeyOidLenIndex "")}}
+        {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}});
+                      {{else}}
+        {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}}, {{$fieldOpt.SetKeyOidLenIndex}});
+                      {{end}}
+                    {{end}}
                   {{end}}
                 {{else}}
         {{$fieldOpt.SetKeyOidFn}}(req, oid);
@@ -101,7 +110,7 @@
               {{if not (eq $fieldOpt.Field "")}}
             // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
                 {{if (eq $fieldOpt.SetFieldFn "")}}
-                  {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType}}
+                  {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                   {{if (eq $castFn "")}}
                     {{if (eq .GetTypeName ".types.IPAddress")}}
             pdsa_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
@@ -109,7 +118,11 @@
             v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
                   {{else}}
+                    {{if (eq $fieldOpt.SetKeyOidLenIndex "")}}
             {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                    {{else}}
+            {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len, req.{{$fieldOpt.Name | ToLower}}());
+                    {{end}}
                   {{end}}
             AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
                 {{else}}
@@ -290,7 +303,7 @@
                     {{if not (eq $fieldOpt.Name "")}}
                 // {{.Type}} {{.GetTypeName}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}} {{.GetLabel}}
                       {{if (eq $fieldOpt.GetFieldFn "")}}
-                        {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType}}
+                        {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                         {{if (eq $castFn "")}}
                           {{if (eq .GetTypeName ".types.IPAddress")}}
                 auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
@@ -298,15 +311,23 @@
 		{{$fieldOpt.Name | ToLower}}_addr->set_af(pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->af());
 		{{$fieldOpt.Name | ToLower}}_addr->set_v4addr(pdsa_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->v4addr());
                           {{else}}
-                            {{$castFn = (getCppTypeFieldFromProto .Type .GetTypeName)}}
-                            {{if (eq $castFn "")}}
+                            {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
+                            {{if (eq $typeCastFn "")}}
                 ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
                             {{else}}
-                ent->set_{{$fieldOpt.Name | ToLower}}(({{$castFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
                             {{end}}
                           {{end}}
                         {{else}}
+                          {{if (eq $castFn "pdsa_nbb_get_long")}}
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
+                          {{else}}
+                            {{if (eq $fieldOpt.GetKeyOidLenIndex "")}}
+                ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
+                            {{else}}
+                ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
+                            {{end}}
+                          {{end}}
                         {{end}}
                       {{else}}
                 {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
@@ -461,7 +482,16 @@
                   {{if (eq .GetTypeName ".types.IPAddress")}}
         pdsa_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                    {{if (eq $castFn "")}}
         oid[{{$fieldOpt.GetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                    {{else}}
+                      {{if (eq $fieldOpt.GetKeyOidLenIndex "")}}
+        {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.GetKeyOidIndex}});
+                      {{else}}
+        {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.GetKeyOidIndex}}, {{$fieldOpt.GetKeyOidLenIndex}});
+                      {{end}}
+                    {{end}}
                   {{end}}
                 {{else}}
         {{$fieldOpt.GetKeyOidFn}}(req, oid);

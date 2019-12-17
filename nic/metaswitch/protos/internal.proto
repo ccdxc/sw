@@ -70,8 +70,8 @@ message LimVrfSpec {
     };
 
     uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_VRF_ENT_IX_INDEX"}];
-    string VrfName      = 2 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "pdsa_fill_lim_vrf_name_field", SetKeyOidFn: "pdsa_fill_lim_vrf_name_oid"}]; // TODO: SetFieldFn should be converted to auto-gen
-    uint32 VrfNameLen   = 3; //[(venice.pdsaFields) = {Field:"vrf_name_len", SetKeyOidIndex: "AMB_LIM_VRF_NAME_LEN_INDEX"}];
+    string VrfName      = 2 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_LIM_VRF_NAME_INDEX"}];
+    uint32 VrfNameLen   = 3 [(venice.pdsaFields) = {Field:"vrf_name_len", SetKeyOidIndex: "AMB_LIM_VRF_NAME_LEN_INDEX"}];
 }
 
 message LimGenIrbIfSpec {

@@ -4,7 +4,6 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 
 #define SHARED_DATA_TYPE CSS_LOCAL
-using namespace std;
 
 
 void
@@ -247,6 +246,72 @@ pdsa_nbb_get_long(NBB_BYTE *byteVal)
     return val;
 }
 
+NBB_VOID
+pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_LONG &len, string in_str)
+{
+    len = in_str.length();
+    NBB_MEMCPY(field, in_str.c_str(), len);
+}
+
+NBB_VOID
+pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx, NBB_LONG setKeyOidLenIdx)
+{
+    oid[setKeyOidLenIdx] = (NBB_ULONG)in_str.length();
+
+    const char* str = in_str.c_str();
+    for (NBB_ULONG i=0; i<in_str.length(); i++) {
+        oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
+string
+pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_LONG len)
+{
+    std::string ret(in_str, in_str + len);
+    return ret;
+}
+
+NBB_VOID
+pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx, NBB_LONG getKeyOidLenIdx)
+{
+    oid[getKeyOidLenIdx] = (NBB_ULONG)in_str.length();
+    const char* str = in_str.c_str();
+    for (NBB_ULONG i=0; i<in_str.length(); i++) {
+        oid[getKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
+NBB_VOID
+pdsa_set_string_in_byte_array(NBB_BYTE *field, string in_str)
+{
+    NBB_MEMCPY(field, in_str.c_str(), in_str.length());
+}
+
+NBB_VOID
+pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx)
+{
+    const char* str = in_str.c_str();
+    for (NBB_ULONG i=0; i<in_str.length(); i++) {
+        oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
+string
+pdsa_get_string_in_byte_array(NBB_BYTE *val, NBB_LONG len)
+{
+    std::string ret(val, val + len);
+    return ret;
+}
+
+NBB_VOID
+pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx)
+{
+    const char* str = in_str.c_str();
+    for (NBB_ULONG i=0; i<in_str.length(); i++) {
+        oid[getKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
 types::IPAddress   res;
 
 types::IPAddress*
@@ -300,36 +365,6 @@ pdsa_get_address(const NBB_CHAR  *tableName,
 
 namespace pds {
 NBB_VOID
-pdsa_fill_lim_vrf_name_field (LimVrfSpec req, AMB_GEN_IPS *mib_msg)
-{
-    AMB_LIM_VRF *data = NULL;
-
-    data = (AMB_LIM_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
-
-    data->vrf_name_len = (ulong)req.vrfnamelen();
-    NBB_MEMCPY (data->vrf_name, req.vrfname().c_str(), data->vrf_name_len); 
-
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME);
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_VRF_NAME_LEN);
-}
-
-NBB_VOID
-pdsa_fill_lim_vrf_name_oid (LimVrfSpec& req, NBB_ULONG *oid)
-{
-    NBB_ULONG   ii = 0;
-    NBB_ULONG   vrf_name_len = 0;
-    NBB_BYTE    vrf_name[AMB_VRF_NAME_MAX_LEN] = {0};
-
-    vrf_name_len = (ulong)req.vrfnamelen();
-    NBB_MEMCPY (vrf_name, req.vrfname().c_str(), vrf_name_len); 
-    for (ii = 0; ii < vrf_name_len; ii++)
-    {
-        oid[AMB_LIM_VRF_NAME_INDEX + ii] = (NBB_ULONG)vrf_name[ii];
-    }
-    oid[AMB_LIM_VRF_NAME_LEN_INDEX] = vrf_name_len;
-}
-
-NBB_VOID
 pdsa_fill_evpn_vrf_name_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg)
 {
     AMB_EVPN_IP_VRF *data = NULL;
@@ -363,10 +398,10 @@ pdsa_fill_evpn_evi_rd_field (EvpnEviSpec req, AMB_GEN_IPS *mib_msg)
 {
     AMB_EVPN_EVI *data = NULL;
 
-    data = (AMB_EVPN_EVI *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+    data = (AMB_EVPN_EVI *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
 
     if (req.autord() == AMB_EVPN_CONFIGURED) {
-        NBB_MEMCPY (data->cfg_rd, req.cfgrd().c_str(), AMB_EVPN_EXT_COMM_LENGTH); 
+        NBB_MEMCPY (data->cfg_rd, req.cfgrd().c_str(), AMB_EVPN_EXT_COMM_LENGTH);
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_CFG_RD);
     }
 }

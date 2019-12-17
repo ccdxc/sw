@@ -14,6 +14,7 @@ import (
 	govldtr "github.com/asaskevich/govalidator"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	gogoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	_ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
@@ -4459,6 +4460,15 @@ func TestApis(t *testing.T) {
 	if getFieldIsKeyFromCam(cam, "AMB_BGP_RM_ENT", "local_as") == true {
 		t.Errorf("Got wrong value")
 	}
+	if getFieldLenFromCam(cam, "AMB_BGP_RM_ENT", "index") != 0 {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIsReadOnlyFromCam(cam, "AMB_BGP_RM_ENT", "index") == true {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldIsReadOnlyFromCam(cam, "AMB_BGP_RM_ENT", "oper_status") == false {
+		t.Errorf("Got wrong value")
+	}
 	if getFieldIdxFromCam(cam, "AMB_BGP_RM_ENTXX", "index") != "" {
 		t.Errorf("Got wrong value")
 	}
@@ -4478,6 +4488,29 @@ func TestApis(t *testing.T) {
 		t.Errorf("Got wrong value")
 	}
 	if isFieldInCamTable(cam, "AMB_BGP_RM_ENT", "local_as") != true {
+		t.Errorf("Got wrong value")
+	}
+	opt := pdsaFieldOpt{}
+	opt.SetKeyOidLenIndex = ""
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "NBB_PUT_LONG" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_set_string_in_byte_array" {
+		t.Errorf("Got wrong value")
+	}
+	opt.SetKeyOidLenIndex = "temp"
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_set_string_in_byte_array_with_len" {
+		t.Errorf("Got wrong value")
+	}
+	opt.GetKeyOidLenIndex = ""
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "pdsa_nbb_get_long" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_get_string_in_byte_array" {
+		t.Errorf("Got wrong value")
+	}
+	opt.GetKeyOidLenIndex = "temp"
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_get_string_in_byte_array_with_len" {
 		t.Errorf("Got wrong value")
 	}
 }

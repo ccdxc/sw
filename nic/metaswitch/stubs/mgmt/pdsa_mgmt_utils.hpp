@@ -49,6 +49,8 @@ extern "C" {
 #define PDSA_HALS_ENT_INDEX     1
 #define PDSA_EVPN_ENT_INDEX     1
 
+using namespace std;
+
 NBB_VOID  pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 
                                                NBB_LONG      *type, 
                                                NBB_ULONG     *len, 
@@ -71,12 +73,49 @@ NBB_VOID pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
 
 NBB_LONG pdsa_nbb_get_long(NBB_BYTE *byteVal);
 
+NBB_VOID
+pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field,
+                                       NBB_LONG &len,
+                                       string in_str);
+
+NBB_VOID
+pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
+                                           string in_str,
+                                           NBB_LONG setKeyOidIdx,
+                                           NBB_LONG setKeyOidLenIdx);
+
+string
+pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str,
+                                       NBB_LONG len);
+
+NBB_VOID
+pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
+                                           string in_str,
+                                           NBB_LONG getKeyOidIdx,
+                                           NBB_LONG getKeyOidLenIdx);
+
+NBB_VOID
+pdsa_set_string_in_byte_array(NBB_BYTE *field,
+                              string in_str);
+
+NBB_VOID
+pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid,
+                                  string in_str,
+                                  NBB_LONG setKeyOidIdx);
+
+string
+pdsa_get_string_in_byte_array(NBB_BYTE *val,
+                              NBB_LONG len);
+
+NBB_VOID
+pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid,
+                                  string in_str,
+                                  NBB_LONG getKeyOidIdx);
+
 types::IPAddress* pdsa_get_address(const NBB_CHAR  *tableName,
                                   const NBB_CHAR  *fieldName,
                                   NBB_VOID    *src);
 namespace pds {
-NBB_VOID pdsa_fill_lim_vrf_name_field (LimVrfSpec req, AMB_GEN_IPS *mib_msg);
-NBB_VOID pdsa_fill_lim_vrf_name_oid (LimVrfSpec& req, NBB_ULONG *oid);
 NBB_VOID pdsa_fill_evpn_vrf_name_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg);
 NBB_VOID pdsa_fill_evpn_vrf_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
 NBB_VOID pdsa_fill_evpn_evi_rd_field (EvpnEviSpec req, AMB_GEN_IPS *mib_msg);

@@ -617,19 +617,22 @@ type fileMetricOptions struct {
 }
 
 type pdsaFieldOpt struct {
-	Field          string
-	Name           string
-	IsKey          bool
-	IsReadOnly     bool
-	SetFieldIdx    string
-	GetFieldIdx    string
-	SetFieldFn     string
-	GetFieldFn     string
-	SetKeyOidFn    string
-	GetKeyOidFn    string
-	SetKeyOidIndex string
-	GetKeyOidIndex string
-	CppDataType    string
+	Field             string
+	Name              string
+	IsKey             bool
+	IsReadOnly        bool
+	SetFieldIdx       string
+	GetFieldIdx       string
+	SetFieldFn        string
+	GetFieldFn        string
+	SetKeyOidFn       string
+	GetKeyOidFn       string
+	SetKeyOidIndex    string
+	GetKeyOidIndex    string
+	SetKeyOidLenIndex string
+	GetKeyOidLenIndex string
+	CppDataType       string
+	FieldLen          int
 }
 
 type fieldMetricOptions struct {
@@ -713,6 +716,23 @@ func getFieldIsKeyFromCam(cam *CamInfo, table string, field string) bool {
 	return false
 }
 
+func getFieldLenFromCam(cam *CamInfo, table string, field string) int {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field && fieldInfo.MaxLength != "" {
+					val, err := strconv.Atoi(fieldInfo.MaxLength)
+					if err != nil {
+						glog.Fatalf("unable to convert to int")
+					}
+					return val
+				}
+			}
+		}
+	}
+	return 0
+}
+
 func getFieldIdxFromCam(cam *CamInfo, table string, field string) string {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
@@ -774,6 +794,9 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.GetKeyOidFn = o.GetKeyOidFn
 		ret.SetKeyOidIndex = o.SetKeyOidIndex
 		ret.GetKeyOidIndex = o.GetKeyOidIndex
+		ret.SetKeyOidLenIndex = o.SetKeyOidLenIndex
+		ret.GetKeyOidLenIndex = o.GetKeyOidLenIndex
+		ret.FieldLen = getFieldLenFromCam(cam, table, o.Field)
 		ret.IsKey = getFieldIsKeyFromCam(cam, table, o.Field)
 		ret.IsReadOnly = getFieldIsReadOnlyFromCam(cam, table, o.Field)
 		ret.SetFieldIdx = getFieldIdxFromCam(cam, table, o.Field)
@@ -782,16 +805,28 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 	return ret, err
 }
 
-func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string) string {
+func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string, f pdsaFieldOpt) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "NBB_PUT_LONG"
+	}
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
+		if f.SetKeyOidLenIndex != "" {
+			return "pdsa_set_string_in_byte_array_with_len"
+		}
+		return "pdsa_set_string_in_byte_array"
 	}
 	return ""
 }
 
-func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string) string {
+func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string, f pdsaFieldOpt) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "pdsa_nbb_get_long"
+	}
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
+		if f.GetKeyOidLenIndex != "" {
+			return "pdsa_get_string_in_byte_array_with_len"
+		}
+		return "pdsa_get_string_in_byte_array"
 	}
 	return ""
 }
