@@ -194,6 +194,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 // Stop stops events manager
 func (em *EventsManager) Stop() {
 	em.cancelFunc()
+	em.wg.Wait() // wait for alerts garbage collector to stop
 
 	if em.moduleWatcher != nil {
 		em.moduleWatcher.Stop()
@@ -222,8 +223,6 @@ func (em *EventsManager) Stop() {
 		em.RPCServer.Stop()
 		em.RPCServer = nil
 	}
-
-	em.wg.Wait()
 }
 
 // gcAlerts garbage collects alerts that are in resolved state for over 24 hrs (default)
@@ -250,6 +249,11 @@ func (em *EventsManager) gcAlerts() {
 func (em *EventsManager) GCAlerts(retentionPeriod time.Duration) {
 	if retentionPeriod == 0 {
 		em.logger.Errorf("{GC alerts}: invalid retention period")
+		return
+	}
+
+	if em.configWatcher == nil {
+		em.logger.Errorf("{GC alerts}: nil config watcher, cannot GC alerts")
 		return
 	}
 
