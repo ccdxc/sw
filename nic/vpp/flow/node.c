@@ -580,6 +580,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     pds_flow_params_t   *local_params0 = params_arr + (*size),
                         *remote_params0 = local_params0 + 1;
     udp_header_t        *udp0;
+    icmp46_header_t     *icmp0;
 
     *size = *size + 2;
     vnet_buffer(p0)->pds_data.ses_id = session_id;
@@ -589,7 +590,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_entry_t *local_entry = &local_params0->entry4;
         ftlv4_entry_t *remote_entry = &remote_params0->entry4;
         u32 src_ip, dst_ip;
-        u16 sport, dport;
+        u16 sport, dport, r_sport, r_dport;
         u8 protocol;
         u16 lkp_id;
 
@@ -610,15 +611,28 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             udp0 = (udp_header_t *) (((u8 *) ip40) +
                     (vnet_buffer (p0)->l4_hdr_offset -
                             vnet_buffer (p0)->l3_hdr_offset));
-            sport = clib_net_to_host_u16(udp0->src_port);
-            dport = clib_net_to_host_u16(udp0->dst_port);
+            r_dport = sport = clib_net_to_host_u16(udp0->src_port);
+            r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
+        } else if (ip40->protocol == IP_PROTOCOL_ICMP) {
+            icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
+                    (vnet_buffer (p0)->l4_hdr_offset -
+                    vnet_buffer (p0)->l3_hdr_offset));
+            sport = ((u16) (icmp0->type << 8)) | icmp0->code;
+            dport = r_dport = 0;
+            if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
+                r_sport = (ICMP4_echo_reply << 8) | icmp0->code;
+            } else if (icmp0->type == ICMP4_echo_reply) {
+                r_sport = (ICMP4_echo_request << 8) | icmp0->code;
+            } else {
+                r_sport = sport;
+            }
         } else {
-            sport = dport =0;
+            sport = dport = r_sport = r_dport = 0;
         }
         ftlv4_set_key(local_entry, src_ip, dst_ip,
                       protocol, sport, dport, lkp_id);
         ftlv4_set_key(remote_entry, dst_ip, src_ip,
-                      protocol, dport, sport, lkp_id);
+                      protocol, r_sport, r_dport, lkp_id);
         pds_flow_extract_nexthop_info((void *)local_entry,
                                       (void *)remote_entry, p0, 1);
     } else {
@@ -626,7 +640,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_entry_t *local_entry = &local_params0->entry6;
         ftlv6_entry_t *remote_entry = &remote_params0->entry6;
         u8 *src_ip, *dst_ip;
-        u16 sport, dport;
+        u16 sport, dport, r_sport, r_dport;
         u8 protocol;
         u16 lkp_id;
 
@@ -647,15 +661,28 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             udp0 = (udp_header_t *) (((u8 *) ip60) +
                     (vnet_buffer (p0)->l4_hdr_offset -
                             vnet_buffer (p0)->l3_hdr_offset));
-            sport = clib_net_to_host_u16(udp0->src_port);
-            dport = clib_net_to_host_u16(udp0->dst_port);
+            r_dport = sport = clib_net_to_host_u16(udp0->src_port);
+            r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
+        } else if (ip60->protocol == IP_PROTOCOL_ICMP6) {
+            icmp0 = (icmp46_header_t *) (((u8 *) ip60) +
+                    (vnet_buffer (p0)->l4_hdr_offset -
+                    vnet_buffer (p0)->l3_hdr_offset));
+            sport = ((u16) (icmp0->type << 8)) | icmp0->code;
+            dport = r_dport = 0;
+            if (PREDICT_TRUE(icmp0->type == ICMP6_echo_request)) {
+                r_sport = (ICMP6_echo_reply << 8) | icmp0->code;
+            } else if (icmp0->type == ICMP6_echo_reply) {
+                r_sport = (ICMP6_echo_request << 8) | icmp0->code;
+            } else {
+                r_sport = sport;
+            }
         } else {
-            sport = dport =0;
+            sport = dport = r_sport = r_dport = 0;
         }
         ftlv6_set_key(local_entry, src_ip, dst_ip,
                       protocol, sport, dport, lkp_id, 0);
         ftlv6_set_key(remote_entry, dst_ip, src_ip,
-                      protocol, dport, sport, lkp_id, 0);
+                      protocol, r_sport, r_dport, lkp_id, 0);
         pds_flow_extract_nexthop_info((void *)local_entry,
                                       (void *)remote_entry, p0, 0);
     }
