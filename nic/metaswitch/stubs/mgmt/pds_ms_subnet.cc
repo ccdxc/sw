@@ -11,19 +11,6 @@
 namespace pds_ms {
 
 static void
-populate_evpn_evi_spec (pds_subnet_spec_t *subnet_spec,
-                        pds::EvpnEviSpec& req)
-{
-    // Only VXLAN overlay is supported for now
-    NBB_ASSERT_NUM_EQ (subnet_spec->fabric_encap.type, PDS_ENCAP_TYPE_VXLAN);
-
-    req.set_entityindex (PDSA_EVPN_ENT_INDEX);
-    req.set_eviindex (subnet_spec->key.id);
-    req.set_encap (pds::EVPN_ENCAPS_VXLAN);
-    req.set_autord (AMB_EVPN_AUTO);
-}
-
-static void
 populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
                        pds::EvpnBdSpec&  req)
 {
@@ -112,11 +99,6 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
     // Validate LIF
     SDK_ASSERT((subnet_spec->host_ifindex != IFINDEX_INVALID));
-
-    // EVPN EVI Row Update
-    pds::EvpnEviSpec evpn_evi_spec;
-    populate_evpn_evi_spec (subnet_spec, evpn_evi_spec);
-    pdsa_set_amb_evpn_evi (evpn_evi_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
     pds::EvpnBdSpec evpn_bd_spec;

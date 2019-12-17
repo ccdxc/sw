@@ -7,6 +7,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 
 using namespace std;
@@ -24,6 +25,7 @@ svc_reg (void)
 {
     ServerBuilder         *server_builder;
     BGPSvcImpl            bgp_svc;
+    EvpnSvcImpl           evpn_svc;
 
     grpc_init();
     g_grpc_server_addr =
@@ -35,6 +37,7 @@ svc_reg (void)
                                      grpc::InsecureServerCredentials());
 
     server_builder->RegisterService(&bgp_svc);
+    server_builder->RegisterService(&evpn_svc);
 
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();

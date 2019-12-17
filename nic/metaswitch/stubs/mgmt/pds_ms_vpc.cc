@@ -23,22 +23,6 @@ populate_lim_vrf_spec (pds_vpc_spec_t  *vpc_spec,
     req.set_vrfnamelen (vrf_name.length());
 }
 
-static void 
-populate_evpn_ip_vrf_spec (pds_vpc_spec_t        *vpc_spec,
-                           pds::EvpnIpVrfSpec&   req)
-{
-    std::string vrf_name;
-    
-    // Convert VRF ID to name
-    vrf_name = std::to_string (vpc_spec->key.id);
-
-    req.set_entityindex (PDSA_LIM_ENT_INDEX); 
-    req.set_vrfname (vrf_name);
-    req.set_vrfnamelen (vrf_name.length());
-    req.set_vni (vpc_spec->fabric_encap.val.vnid);
-    req.set_defaultrd (AMB_TRUE);
-}
-
 static void
 pds_cache_vni_to_vrf_mapping (pds_vpc_spec_t *vpc_spec, bool op_delete)
 {
@@ -62,11 +46,6 @@ process_vpc_update (pds_vpc_spec_t *vpc_spec,
     pds::LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vpc_spec, lim_vrf_spec);
     pdsa_set_amb_lim_vrf (lim_vrf_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
-
-    // EVPN IP VRF Row Update
-    pds::EvpnIpVrfSpec evpn_ip_vrf_spec;
-    populate_evpn_ip_vrf_spec (vpc_spec, evpn_ip_vrf_spec);
-    pdsa_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
     // TODO: AMB_EVPN_IP_VRF_RT to configure manual RT
 

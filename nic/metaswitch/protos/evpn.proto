@@ -1,0 +1,209 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// protobuf specification for EVPN EVI/IP VRF and associated RT configurations
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "pdsa.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// Evpn service definition
+service EvpnSvc
+{
+  rpc EvpnEviSpecCreate (EvpnEviRequest) returns (EvpnResponse) {}
+  rpc EvpnEviSpecUpdate (EvpnEviRequest) returns (EvpnResponse) {}
+  rpc EvpnEviSpecDelete (EvpnEviRequest) returns (EvpnResponse) {}
+  rpc EvpnEviSpecGet (EvpnEviRequest) returns (EvpnEviSpecResponse) {}
+  rpc EvpnEviSpecGetAll (EvpnEviRequest) returns (EvpnEviSpecResponse) {}
+  rpc EvpnEviRtSpecCreate (EvpnEviRtRequest) returns (EvpnResponse) {}
+  rpc EvpnEviRtSpecUpdate (EvpnEviRtRequest) returns (EvpnResponse) {}
+  rpc EvpnEviRtSpecDelete (EvpnEviRtRequest) returns (EvpnResponse) {}
+  rpc EvpnEviRtSpecGet (EvpnEviRtRequest) returns (EvpnEviRtSpecResponse) {}
+  rpc EvpnEviRtSpecGetAll (EvpnEviRtRequest) returns (EvpnEviRtSpecResponse) {}
+  rpc EvpnIpVrfSpecCreate (EvpnIpVrfRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfSpecUpdate (EvpnIpVrfRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfSpecDelete (EvpnIpVrfRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfSpecGet (EvpnIpVrfRequest) returns (EvpnIpVrfSpecResponse) {}
+  rpc EvpnIpvrfSpecGetAll (EvpnIpVrfRequest) returns (EvpnIpVrfSpecResponse) {}
+  rpc EvpnIpVrfRtSpecCreate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfRtSpecUpdate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfRtSpecDelete (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
+  rpc EvpnIpVrfRtSpecGet (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtSpecResponse) {}
+  rpc EvpnIpvrfRtSpecGetAll (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtSpecResponse) {}
+}
+
+// EVPN Configured or Auto Values
+enum EvpnCfg {
+  EVPN_CFG_INVALID = 0;
+  EVPN_CFG_MANUAL  = 2;
+  EVPN_CFG_AUTO    = 3;
+}
+
+enum EvpnEncaps {
+  EVPN_ENCAP_INVALID = 0;
+  EVPN_ENCAP_MPLS    = 1;
+  EVPN_ENCAP_VXLAN   = 2;
+}
+
+enum EvpnRtType {
+  EVPN_RT_INVALID         = 0;
+  EVPN_RT_IMPORT          = 1;
+  EVPN_RT_EXPORT          = 2;
+  EVPN_RT_IMPORT_EXPORT   = 3;
+  EVPN_RT_NONE            = 4;
+}
+
+// EVPN EVI configuration
+message EvpnEviSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_OID_LEN",
+    Mib:    "evpnEviTable"
+    FillFn: "evpn_evi_fill_func"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_OID_LEN",
+    Mib:    "evpnEviTable"
+  };
+
+  uint32      EVIId       = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  EvpnCfg     AutoRD      = 2 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}, (gogoproto.moretags) = "meta:mandatory"];
+  string      RD          = 3 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
+  EvpnCfg     AutoRT      = 4 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}, (gogoproto.moretags) = "meta:mandatory"];
+  EvpnRtType  RTType      = 5 [(venice.pdsaFields) = {Field:"auto_rt_type"}, (gogoproto.moretags) = "meta:mandatory"];
+  EvpnEncaps  Encap       = 6 [(venice.pdsaFields) = {Field:"encapsulation"}, (gogoproto.moretags) = "meta.default=EVPN_ENCAPS_VXLAN"];
+}
+
+// EVPN IP VRF configuration
+message EvpnIpVrfSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
+    Mib:    "evpnIpVrfTable"
+    FillFn: "evpn_ip_vrf_fill_func"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
+    Mib:    "evpnIpVrfTable"
+  };
+
+  uint32 VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_fill_name_oid", GetFieldFn: "evpn_ip_vrf_get_name_field", GetKeyOidFn: "evpn_ip_vrf_fill_name_oid"}, (gogoproto.moretags) = "meta:mandatory"]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
+  uint32 VNI      = 2 [(venice.pdsaFields) = {Field:"vni"}, (gogoproto.moretags) = "meta:mandatory"];
+  string RD       = 3 [(venice.pdsaFields) = {Field:"route_distinguisher"}, (gogoproto.moretags) = "meta:mandatory"];
+}
+
+// EVPN EVI RT Configuration
+message EvpnEviRtSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
+    Mib:    "evpnEviRtTable"
+    FillFn: "evpn_evi_rt_fill_func"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
+    Mib:    "evpnEviRtTable"
+  };
+
+  uint32      EVIId   = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  string      RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}, (gogoproto.moretags) = "meta:mandatory"];
+  EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}, (gogoproto.moretags) = "meta:mandatory"];
+}
+
+// EVPN IP VRF RT Configuration
+message EvpnIpVrfRtSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_RT_OID_LEN",
+    Mib:    "evpnIpVrfRtTable"
+    FillFn: "evpn_ip_vrf_rt_fill_func"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_RT_OID_LEN",
+    Mib:    "evpnIpVrfRtTable"
+  };
+
+  uint32      VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_rt_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid", GetFieldFn: "evpn_ip_vrf_rt_get_name_field", GetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid"}, (gogoproto.moretags) = "meta:mandatory"]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
+  string      RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}, (gogoproto.moretags) = "meta:mandatory"];
+}
+
+// EvpnEvi create and update request
+message EvpnEviRequest {
+  option (venice.pdsaSetGlobOpts) = {
+      Mib: "evpnEviTable"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+      Mib: "evpnEviTable"
+  };
+  // requests
+  repeated EvpnEviSpec  Request = 1;
+}
+
+// EvpnIPVrf create and update request
+message EvpnIpVrfRequest {
+  option (venice.pdsaSetGlobOpts) = {
+      Mib: "evpnIpVrfTable"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+      Mib: "evpnIpVrfTable"
+  };
+  // requests
+  repeated EvpnIpVrfSpec Request = 1;
+}
+
+//EvpnEviRtSpec create and update request
+message EvpnEviRtRequest {
+  option (venice.pdsaSetGlobOpts) = {
+      Mib: "evpnEviRtTable"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+      Mib: "evpnEviRtTable"
+  };
+  // requests
+  repeated EvpnEviRtSpec  Request = 1;
+}
+
+message EvpnIpVrfRtRequest {
+  option (venice.pdsaSetGlobOpts) = {
+      Mib: "evpnIpVrfRtTable"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+      Mib: "evpnIpVrfRtTable"
+  };
+  // requests
+  repeated EvpnIpVrfRtSpec Request = 1;
+}
+
+// operational status of EVPN, if any
+message EvpnStatus {
+}
+
+// EVPN specs create and update response
+message EvpnResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnStatus Response       = 2;
+}
+
+// EvpnEviSpec get response
+message EvpnEviSpecResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated EvpnEviSpec   Response  = 2;
+}
+
+// EvpnIpVrfSpec get response
+message EvpnIpVrfSpecResponse {
+  types.ApiStatus           ApiStatus   = 1;
+  repeated EvpnIpVrfSpec    Response    = 2;
+}
+
+// EvpnEviRtSpec get response
+message EvpnEviRtSpecResponse {
+  types.ApiStatus           ApiStatus   = 1;
+  repeated EvpnEviRtSpec    Response    = 2;
+}
+
+// EvpnIpVrfRtSpec get response
+message EvpnIpVrfRtSpecResponse {
+  types.ApiStatus           ApiStatus   = 1;
+  repeated EvpnIpVrfRtSpec  Response    = 2;
+}

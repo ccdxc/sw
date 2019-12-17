@@ -20,6 +20,7 @@
 #include <gen/proto/vpc.grpc.pb.h>
 #include <gen/proto/subnet.grpc.pb.h>
 #include <gen/proto/bgp.grpc.pb.h>
+#include <gen/proto/evpn.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -33,6 +34,7 @@ static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
 static unique_ptr<pds::IfSvc::Stub>     g_if_stub_;
 static unique_ptr<pds::BGPSvc::Stub>    g_bgp_stub_;
+static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 
@@ -109,6 +111,29 @@ static void create_bgp_global_proto_grpc () {
     printf("Sent BGP Global proto\n");
 }
 
+static void create_evpn_evi_proto_grpc () {
+    EvpnEviRequest  request;
+    EvpnResponse    response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request ();
+    proto_spec->set_eviid (1);
+    proto_spec->set_autord (pds::EVPN_CFG_AUTO);
+    proto_spec->set_autort (pds::EVPN_CFG_AUTO);
+    proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
+    proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
+
+    ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+    printf("Sent EVPN Evi proto\n");
+}
+
 static void create_bgp_peer_proto_grpc () {
     BGPPeerRequest  request;
     BGPResponse     response;
@@ -161,7 +186,7 @@ static void create_subnet_proto_grpc () {
 
     ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -205,6 +230,7 @@ int main(int argc, char** argv)
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
     g_bgp_stub_     = BGPSvc::NewStub (channel);
+    g_evpn_stub_    = EvpnSvc::NewStub (channel);
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
 
@@ -214,6 +240,7 @@ int main(int argc, char** argv)
     create_bgp_global_proto_grpc();
     create_bgp_peer_proto_grpc();
     create_vpc_proto_grpc();
+    create_evpn_evi_proto_grpc();
     create_subnet_proto_grpc();
 
     return 0;

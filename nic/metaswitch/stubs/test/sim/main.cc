@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
@@ -24,6 +25,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_bgp_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_evpn_utils_gen.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 
@@ -71,7 +73,6 @@ pdsa_sim_test_mac_ip()
 static NBB_VOID
 pdsa_sim_test_bgp_update ()
 {
-
     // Start CTM 
     PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
 
@@ -110,6 +111,27 @@ pdsa_sim_test_bgp_update ()
 }
 
 static NBB_VOID
+pdsa_sim_test_evpn_evi_update ()
+{
+    // Start CTM
+    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
+
+    // EvpnEviTable
+    pds::EvpnEviSpec evpn_evi_spec;
+    evpn_evi_spec.set_eviid (1);
+    evpn_evi_spec.set_autord(pds::EVPN_CFG_AUTO);
+    evpn_evi_spec.set_autort(pds::EVPN_CFG_AUTO);
+    evpn_evi_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
+    evpn_evi_spec.set_encap(pds::EVPN_ENCAP_VXLAN);
+    pdsa_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR);
+    // End CTM transaction
+    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
+
+    // Wait for MS response
+    pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+static NBB_VOID
 pdsa_sim_test_config ()
 {
     cout << "Config thread is waiting for Nbase....\n";
@@ -130,6 +152,9 @@ pdsa_sim_test_config ()
     // BGP Update
     pdsa_sim_test_bgp_update();
     cout << "Config thread: BGP Proto is done!\n";
+
+    // Evpn Evi Update
+    pdsa_sim_test_evpn_evi_update();
 
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
@@ -161,6 +186,7 @@ svc_reg (void)
 {
     ServerBuilder         *server_builder;
     BGPSvcImpl            bgp_svc;
+    EvpnSvcImpl           evpn_svc;
 
     grpc_init();
     g_grpc_server_addr =
@@ -172,6 +198,7 @@ svc_reg (void)
                                      grpc::InsecureServerCredentials());
 
     server_builder->RegisterService(&bgp_svc);
+    server_builder->RegisterService(&evpn_svc);
 
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();

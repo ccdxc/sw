@@ -6,11 +6,6 @@ package pds;
 import "pdsa.proto";
 import "types.proto";
 
-enum EvpnEncaps {
-    EVPN_ENCAPS_NONE    = 0;
-    EVPN_ENCAPS_MPLS    = 1;
-    EVPN_ENCAPS_VXLAN   = 2;
-}
 
 message EvpnBdSpec {
     option (venice.pdsaSetGlobOpts) = {
@@ -24,19 +19,6 @@ message EvpnBdSpec {
 
 }
 
-message EvpnEviSpec {
-    option (venice.pdsaSetGlobOpts) = {
-        OidLen: "AMB_EVPN_EVI_OID_LEN",
-        Mib:    "evpnEviTable"
-    };
-
-    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_EVI_ENTITY_IX_INDEX"}];
-    uint32 EVIIndex     = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}];
-    uint32 AutoRD       = 3 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
-    bytes  CfgRD        = 4 [(venice.pdsaFields) = {Field:"cfg_rd", SetFieldFn: "pdsa_fill_evpn_evi_rd_field"}];
-    EvpnEncaps Encap    = 5 [(venice.pdsaFields) = {Field:"encapsulation"}, (gogoproto.moretags) = "meta.default=EVPN_ENCAPS_VXLAN"];
-}
-
 message EvpnIfBindCfgSpec { 
 
     option (venice.pdsaSetGlobOpts) = {
@@ -47,20 +29,6 @@ message EvpnIfBindCfgSpec {
     uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_IF_BIND_CFG_ENT_INDEX"}];
     uint32 IfIndex      = 2 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_EVPN_IF_BIND_CFG_IF_INDEX"}];
     uint32 EviIndex     = 3 [(venice.pdsaFields) = {Field:"evi_index"}];
-}
-
-message EvpnIpVrfSpec {
-    option (venice.pdsaSetGlobOpts) = {
-        OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
-        Mib:    "evpnIpVrfTable"
-    };
-
-    uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_IP_VRF_ENT_INDEX"}];
-    uint32 VrfNameLen   = 2; //[(venice.pdsaFields) = {Field:"vrf_name_len", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX"}];
-    string VrfName      = 3 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "pdsa_fill_evpn_vrf_name_field", SetKeyOidFn: "pdsa_fill_evpn_vrf_name_oid"}]; // TODO: SetFieldFn should be converted to auto-gen
-    uint32 VNI          = 4 [(venice.pdsaFields) = {Field:"vni"}];
-    uint32 DefaultRD    = 5;
-    bytes  RD           = 6 [(venice.pdsaFields) = {Field:"route_distinguisher", SetFieldFn:"pdsa_fill_evpn_vrf_rd_field"}]; // TODO: SetFieldFn should be converted to auto-gen
 }
 
 message LimVrfSpec {
@@ -100,7 +68,7 @@ message LimInterfaceCfgSpec {
     uint32 IPv6Fwding   = 7 [(venice.pdsaFields) = {Field:"ipv6_forwarding"}];
     uint32 FwdingMode   = 8 [(venice.pdsaFields) = {Field:"forwarding_mode"}];
     uint32 VrfNameLen   = 9;
-    string VrfName      = 10 [(venice.pdsaFields) = {Field:"bind_vrf_name", SetFieldFn: "pdsa_fill_lim_if_cfg_vrf_name_field"}];
+    string VrfName      = 10 [(venice.pdsaFields) = {Field:"bind_vrf_name"}];
 }
 
 message LimInterfaceAddrSpec {

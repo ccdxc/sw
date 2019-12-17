@@ -86,6 +86,7 @@ enum BGPPeerRRClient {
   BGP_MESHED_CLIENT = 2;
 }
 
+
 // Global configuration for BGP
 message BGPGlobalSpec {
   option (venice.pdsaSetGlobOpts) = {

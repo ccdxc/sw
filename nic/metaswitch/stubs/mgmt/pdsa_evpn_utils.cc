@@ -4,6 +4,140 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "evpn_mgmt_if.h"
 
+namespace pds {
+NBB_VOID
+evpn_evi_fill_func (EvpnEviSpec&    req,
+                    AMB_GEN_IPS     *mib_msg,
+                    AMB_EVPN_EVI    *data,
+                    NBB_LONG        row_status)
+{
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    data->entity_index                = PDSA_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDSA_EVPN_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);
+}
+
+NBB_VOID
+evpn_ip_vrf_fill_func (EvpnIpVrfSpec&   req,
+                       AMB_GEN_IPS      *mib_msg,
+                       AMB_EVPN_IP_VRF  *data,
+                       NBB_LONG         row_status)
+{
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    data->entity_index              = PDSA_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_IP_VRF_ENT_INDEX]  = PDSA_EVPN_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_ENT_IX);
+}
+
+NBB_VOID
+evpn_evi_rt_fill_func (EvpnEviRtSpec&   req,
+                       AMB_GEN_IPS      *mib_msg,
+                       AMB_EVPN_EVI_RT  *data,
+                       NBB_LONG         row_status)
+{
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    data->entity_index              = PDSA_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_EVI_RT_ENT_INDEX]  = PDSA_EVPN_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_RT_ENT_IX);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
+                          AMB_GEN_IPS           *mib_msg,
+                          AMB_EVPN_IP_VRF_RT    *data,
+                          NBB_LONG         row_status)
+{
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    data->entity_index                  = PDSA_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_IP_VRF_RT_ENT_INDEX]   = PDSA_EVPN_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IV_RT_ENT_IX);
+}
+
+NBB_VOID
+evpn_ip_vrf_fill_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid)
+{
+    NBB_ULONG   ii = 0;
+    std::string vrf_name = std::to_string (req.vrfid());
+    const char  *name = vrf_name.c_str();
+
+    for (ii = 0; ii < vrf_name.length(); ii++)
+    {
+        oid[AMB_EVPN_IP_VRF_NAME_INDEX + ii] = (NBB_ULONG)name[ii];
+    }
+    oid[AMB_EVPN_IP_VRF_NAME_LEN_INDEX] = vrf_name.length();
+}
+
+NBB_VOID
+evpn_ip_vrf_fill_name_field (EvpnIpVrfSpec& req, AMB_GEN_IPS *mib_msg)
+{
+    std::string     vrf_name = std::to_string (req.vrfid());
+    AMB_EVPN_IP_VRF *data = NULL;
+
+    data = (AMB_EVPN_IP_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
+
+    data->vrf_name_len = vrf_name.length();
+    NBB_MEMCPY (data->vrf_name, vrf_name.c_str(), vrf_name.length());
+
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_NAME);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_fill_name_field (EvpnIpVrfRtSpec& req, AMB_GEN_IPS *mib_msg)
+{
+    std::string         vrf_name = std::to_string (req.vrfid());
+    AMB_EVPN_IP_VRF_RT  *data = NULL;
+
+    data = (AMB_EVPN_IP_VRF_RT *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
+
+    data->vrf_name_len = vrf_name.length();
+    NBB_MEMCPY (data->vrf_name, vrf_name.c_str(), vrf_name.length());
+
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IV_RT_VRF_NAME);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid)
+{
+    NBB_ULONG   ii = 0;
+    std::string vrf_name = std::to_string (req.vrfid());
+    const char  *name = vrf_name.c_str();
+
+    for (ii = 0; ii < vrf_name.length(); ii++)
+    {
+        oid[AMB_EVPN_IP_VRF_RT_NAME_INDEX + ii] = (NBB_ULONG)name[ii];
+    }
+    oid[AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX] = vrf_name.length();
+}
+
+NBB_VOID
+evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data)
+{
+    NBB_ULONG       vrf_id = 0;
+    if (data->vrf_name_len) {
+        vrf_id = strtol((const char*)data->vrf_name, NULL, 0);
+    }
+    req->set_vrfid(vrf_id);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req, AMB_EVPN_IP_VRF_RT *data)
+{
+    NBB_ULONG       vrf_id = 0;
+    if (data->vrf_name_len) {
+        vrf_id = strtol((const char *)data->vrf_name, NULL, 0);
+    }
+    req->set_vrfid(vrf_id);
+}
+} // End namespace pds
+
 namespace pdsa_stub {
 
 // Fill evpnEntTable: AMB_EVPN_ENT 

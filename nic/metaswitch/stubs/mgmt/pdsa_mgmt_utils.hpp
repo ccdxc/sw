@@ -29,6 +29,7 @@ extern "C" {
 #include "gen/proto/types.pb.h"
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
+#include "gen/proto/evpn.pb.h"
 
 #define PDSA_CTM_GRPC_CORRELATOR 0x101
 #define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
@@ -116,11 +117,6 @@ types::IPAddress* pdsa_get_address(const NBB_CHAR  *tableName,
                                   const NBB_CHAR  *fieldName,
                                   NBB_VOID    *src);
 namespace pds {
-NBB_VOID pdsa_fill_evpn_vrf_name_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg);
-NBB_VOID pdsa_fill_evpn_vrf_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
-NBB_VOID pdsa_fill_evpn_evi_rd_field (EvpnEviSpec req, AMB_GEN_IPS *mib_msg);
-NBB_VOID pdsa_fill_evpn_vrf_rd_field (EvpnIpVrfSpec req, AMB_GEN_IPS *mib_msg);
-NBB_VOID pdsa_fill_lim_if_cfg_vrf_name_field (LimInterfaceCfgSpec req, AMB_GEN_IPS *mib_msg);
 NBB_VOID bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req, 
                                AMB_GEN_IPS        *mib_msg, 
                                AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
@@ -129,6 +125,30 @@ NBB_VOID bgp_peer_fill_func (pds::BGPPeerSpec&   req,
                              AMB_GEN_IPS         *mib_msg,
                              AMB_BGP_PEER        *v_amb_bgp_peer,
                              NBB_LONG            row_status);
+NBB_VOID evpn_evi_fill_func (EvpnEviSpec&    req,
+                             AMB_GEN_IPS     *mib_msg,
+                             AMB_EVPN_EVI    *data,
+                             NBB_LONG        row_status);
+NBB_VOID  evpn_ip_vrf_fill_func (EvpnIpVrfSpec&   req,
+                                 AMB_GEN_IPS      *mib_msg,
+                                 AMB_EVPN_IP_VRF  *data,
+                                 NBB_LONG         row_status);
+NBB_VOID evpn_evi_rt_fill_func (EvpnEviRtSpec&   req,
+                                AMB_GEN_IPS      *mib_msg,
+                                AMB_EVPN_EVI_RT  *data,
+                                NBB_LONG         row_status);
+NBB_VOID evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
+                                   AMB_GEN_IPS           *mib_msg,
+                                   AMB_EVPN_IP_VRF_RT    *data,
+                                   NBB_LONG         row_status);
+NBB_VOID evpn_ip_vrf_fill_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
+NBB_VOID evpn_ip_vrf_fill_name_field (EvpnIpVrfSpec& req, AMB_GEN_IPS *mib_msg);
+NBB_VOID evpn_ip_vrf_rt_fill_name_field (EvpnIpVrfRtSpec& req,
+                                         AMB_GEN_IPS *mib_msg);
+NBB_VOID evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid);
+NBB_VOID evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data);
+NBB_VOID evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req,
+                                        AMB_EVPN_IP_VRF_RT *data);
 } // namespace pds
 
 namespace pdsa_stub {
