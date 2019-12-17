@@ -1,6 +1,7 @@
 export interface NaplesCondition {
     isHealthy: boolean;
     condition: string;
+    rebootNeeded: boolean;
 }
 
 export enum NaplesConditionValues {
@@ -8,6 +9,7 @@ export enum NaplesConditionValues {
     UNHEALTHY = 'unhealthy',
     UNKNOWN = 'unknown',
     EMPTY = '',
+    NOTADMITTED = 'not_admitted',
     REBOOT_NEEDED = 'reboot_needed',
 }
 

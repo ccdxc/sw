@@ -506,16 +506,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   isNICHealthy(data: Readonly<ClusterDistributedServiceCard>): boolean {
-    if (Utility.isNaplesNICHealthy(data)) {
-      return true;
-    }
-    return false;
+    return Utility.isNaplesNICHealthy(data);
   }
 
   isNICNotAdmitted(data: Readonly<ClusterDistributedServiceCard>): boolean {
-    if (Utility.isNICConditionEmpty(data)) {
-      return true;
-    }
-    return false;
+    return Utility.isNICConditionNotAdmitted(data);
   }
 }

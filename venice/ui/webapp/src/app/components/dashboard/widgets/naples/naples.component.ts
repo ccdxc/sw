@@ -431,7 +431,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
         this.unknownNaplesCount += 1;
       }
-      if (!Utility.isNICConditionEmpty(naple)) {
+      if (!Utility.isNICConditionNotAdmitted(naple)) {
         admittedNics.push(naple);
       }
       switch (naple.status['admission-phase']) {

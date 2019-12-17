@@ -23,7 +23,7 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
-import { NaplesConditionValues } from '.';
+import { NaplesCondition, NaplesConditionValues } from '.';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
@@ -50,6 +50,7 @@ import * as _ from 'lodash';
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
 
   public static  NAPLES_FIELD_WORKLOADS: string  = 'associatedWorkloads';
+  public static  NAPLES_FIELD_CONDITIONSTATUS: string  = 'associatedConditionStatus';
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
@@ -255,8 +256,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.naples);
         for (const naple of this.naples) {
           this.naplesMap[naple.meta.name] = naple;
+          const dscHealthCond: NaplesCondition = Utility.getNaplesConditionObject(naple);
           // Create search object for condition
-          switch (this.displayCondition(naple).toLowerCase()) {
+          switch (dscHealthCond.condition.toLowerCase()) {
             case NaplesConditionValues.HEALTHY:
                 (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
                 break;
@@ -266,10 +268,20 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
             case NaplesConditionValues.UNKNOWN:
                 (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
                 break;
-            case '':
+            case NaplesConditionValues.NOTADMITTED:
+                (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] || (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] = [])).push(naple.meta.name);
+                break;
+            case NaplesConditionValues.REBOOT_NEEDED:
+                (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] || (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] = [])).push(naple.meta.name);
+                break;
+            case NaplesConditionValues.EMPTY:
                 (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
                 break;
           }
+          naple[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] = {
+            dscCondStr: dscHealthCond.condition.toLowerCase(),
+            dscNeedReboot:  dscHealthCond.rebootNeeded
+          };
           naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
         }
         this.searchObject['status.conditions'] = this.conditionNaplesMap;
@@ -296,41 +308,27 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
   }
 
-  getNapleCardStatusTooltip(conditionType: string): string {
-    if (conditionType === ClusterDSCCondition_type.healthy) {
-      return 'Healthy';
-    }
-    if (conditionType === ClusterDSCCondition_type.nic_health_unknown) {
-      return 'Health Unknown';
-    }
-    if (conditionType === ClusterDSCCondition_type.reboot_needed) {
-      return 'Reboot Needed';
-    }
-    return '';
-  }
-
-  getNapleCardStatusIcon(conditionType: string): string {
-    if (conditionType === ClusterDSCCondition_type.healthy) {
-      return 'verified_user';
-    }
-    if (conditionType === ClusterDSCCondition_type.nic_health_unknown) {
-      return 'battery_unknown';
-    }
-    if (conditionType === ClusterDSCCondition_type.reboot_needed) {
-      return 'settings_power';
-    }
-    return '';
-  }
-
-  displayCondition(data: ClusterDistributedServiceCard): string {
-    return Utility.getNaplesCondition(data);
-  }
-
   isNICHealthy(data: ClusterDistributedServiceCard): boolean {
-    if (Utility.isNaplesNICHealthy(data)) {
-      return true;
-    }
-    return false;
+    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+        === NaplesConditionValues.HEALTHY;
+  }
+
+  isNICUnhealthy(data: ClusterDistributedServiceCard): boolean {
+    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+        === NaplesConditionValues.UNHEALTHY;
+  }
+
+  isNICHealthUnknown(data: ClusterDistributedServiceCard): boolean {
+    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+        === NaplesConditionValues.UNKNOWN;
+  }
+
+  isNicNeedReboot(data: ClusterDistributedServiceCard): boolean {
+    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
   }
 
   displayReasons(data: ClusterDistributedServiceCard): any {
@@ -338,10 +336,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   isNICNotAdmitted(data: ClusterDistributedServiceCard): boolean {
-    if (Utility.isNICConditionEmpty(data)) {
-      return true;
-    }
-    return false;
+    return Utility.isNICConditionNotAdmitted(data);
   }
 
   /**
@@ -616,6 +611,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
+      if (naplesObject[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS]) {  // remove UI fields
+        delete naplesObject[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS];
+      }
       if (naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS]) {  // remove UI fields
         delete naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS];
       }

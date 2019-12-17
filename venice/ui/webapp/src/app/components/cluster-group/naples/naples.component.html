@@ -107,15 +107,18 @@
       <ng-container *ngSwitchCase="'status.conditions'">
         <div
              [matTooltip]="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData) ? displayReasons(rowData) : ''">
-          <mat-icon *ngFor="let condition of rowData.status.conditions" class="naples-status-icon"
-                    fxFlex="nogrow" [inline]="true"
-                    [matTooltip]="getNapleCardStatusTooltip(condition.type)">
-            {{getNapleCardStatusIcon(condition.type)}}
-          </mat-icon>
-          <mat-icon *ngIf="!isNICHealthy(rowData) && !isNICNotAdmitted(rowData)" fxFlex="nogrow"
+          <mat-icon *ngIf="isNICHealthy(rowData)" fxFlex="nogrow" class="naples-status-icon"
                     [inline]="true"
-                    class="global-alert-critical-icon naples-bad-indicator-icon ">error
-          </mat-icon>
+                    matTooltip="Healthy">verified_user</mat-icon>
+          <mat-icon *ngIf="isNICUnhealthy(rowData)" fxFlex="nogrow" class="naples-status-icon"
+                    [inline]="true"
+                    matTooltip="Unhealthy">error</mat-icon>
+          <mat-icon *ngIf="isNICHealthUnknown(rowData)" fxFlex="nogrow" class="naples-status-icon"
+                    [inline]="true"
+                    matTooltip="Health Unknown">battery_unknown</mat-icon>
+          <mat-icon *ngIf="isNicNeedReboot(rowData)" fxFlex="nogrow" class="naples-status-icon"
+                    [inline]="true"
+                    matTooltip="Reboot Needed">settings_power</mat-icon>
         </div>
       </ng-container>
       <ng-container *ngSwitchCase="'workloads'">

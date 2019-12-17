@@ -1692,27 +1692,51 @@ export class Utility {
 
   public static getNaplesConditionObject(naples: Readonly<ClusterDistributedServiceCard>): NaplesCondition {
     if (!naples || naples.status['admission-phase'] !== ClusterDistributedServiceCardStatus_admission_phase.admitted) {
-      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY) };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.NOTADMITTED), rebootNeeded: this.isNaplesNeedReboot(naples) };
     } else if (naples.status.conditions == null || naples.status.conditions.length === 0) {
-      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.EMPTY), rebootNeeded: this.isNaplesNeedReboot(naples) };
     } else {
       for (const cond of naples.status.conditions) {
         if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.false)) {
-          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNHEALTHY) };
+          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNHEALTHY), rebootNeeded: this.isNaplesNeedReboot(naples) };
         }
         if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.true)) {
-          return { isHealthy: true, condition: _.upperFirst(NaplesConditionValues.HEALTHY) };
+          return { isHealthy: true, condition: _.upperFirst(NaplesConditionValues.HEALTHY), rebootNeeded: this.isNaplesNeedReboot(naples) };
         }
         if ((cond) && (cond.type === ClusterDSCCondition_type.healthy) && (cond.status === ClusterDSCCondition_status.unknown)) {
-          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
+          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN), rebootNeeded: this.isNaplesNeedReboot(naples) };
+        }
+        if ((cond) && (cond.type === ClusterDSCCondition_type.nic_health_unknown)) {
+          return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN), rebootNeeded: this.isNaplesNeedReboot(naples) };
         }
       }
-      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN) };
+      return { isHealthy: false, condition: _.upperFirst(NaplesConditionValues.UNKNOWN), rebootNeeded: this.isNaplesNeedReboot(naples) };
     }
+  }
+
+  public static isNaplesNeedReboot(naples: Readonly<ClusterDistributedServiceCard>): boolean {
+    if (naples) {
+      for (const cond of naples.status.conditions) {
+        if (cond && cond.type === ClusterDSCCondition_type.reboot_needed) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public static isNaplesNICHealthy(naples: Readonly<ClusterDistributedServiceCard>): boolean {
     return this.getNaplesConditionObject(naples).isHealthy;
+  }
+
+  public static isNaplesNICHealthUnknown(naples: Readonly<ClusterDistributedServiceCard>): boolean {
+    const cond: NaplesCondition = this.getNaplesConditionObject(naples);
+    return !cond.isHealthy && cond.condition === NaplesConditionValues.UNKNOWN;
+  }
+
+  public static isNaplesNICUnhealthy(naples: Readonly<ClusterDistributedServiceCard>): boolean {
+    const cond: NaplesCondition = this.getNaplesConditionObject(naples);
+    return !cond.isHealthy && cond.condition === NaplesConditionValues.UNHEALTHY;
   }
 
   public static getNaplesCondition(naples: Readonly<ClusterDistributedServiceCard>): string {
@@ -1723,7 +1747,7 @@ export class Utility {
 
   public static displayReasons(naples: Readonly<ClusterDistributedServiceCard>): string {
     const reasonarray: string[] = [];
-    if (naples.status.conditions != null) {
+    if (naples && naples.status && naples.status.conditions) {
       for (let i = 0; i < naples.status['conditions'].length; i++) {
         if (!this.isNaplesNICHealthy(naples)) {
           if (naples.status.conditions[i].reason != null) {
@@ -1742,8 +1766,8 @@ export class Utility {
   }
 
 
-  public static isNICConditionEmpty(naples: Readonly<ClusterDistributedServiceCard>): boolean { // If NIC not admitted, condition in table is left blank
-    return this.getNaplesCondition(naples) === NaplesConditionValues.EMPTY;
+  public static isNICConditionNotAdmitted(naples: Readonly<ClusterDistributedServiceCard>): boolean { // If NIC not admitted, condition in table is left blank
+    return this.getNaplesCondition(naples) === NaplesConditionValues.NOTADMITTED;
   }
 
   public static formatDateWithinString(cond: ClusterDSCCondition): string {

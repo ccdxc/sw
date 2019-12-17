@@ -101,8 +101,6 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   }
 
   postNgInit(): void {
-    console.log(typeof EventsEventAttributes_severity);
-    console.log(typeof this.severityEnum);
     this.alertUpdatable = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalert_update);
     this.genQueryBodies();
     // If get alerts/events wasn't triggered by on change
