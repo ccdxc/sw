@@ -734,9 +734,9 @@ asic_pd_set_half_clock (int chip_id, int inst_id)
 }
 
 sdk_ret_t
-asic_pd_unravel_hbm_intrs (bool *iscattrip, bool logging)
+asic_pd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
 {
-    return capri_unravel_hbm_intrs(iscattrip, logging);
+    return capri_unravel_hbm_intrs(iscattrip, iseccerr, logging);
 }
 
 sdk_ret_t

@@ -64,6 +64,7 @@ void
 intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 {
     bool iscattrip = false;
+    bool iseccerr = false;
     std::string desc;
 
     switch (field->severity) {
@@ -101,8 +102,8 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case 416:
     case 420:
     case 424:
-        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, true);
-        if (iscattrip == false) {
+        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
+        if (iscattrip == false && iseccerr == true) {
             TRACE_ERR(GetAsicErrObflLogger(), "ECCERR observed on the system.");
         }
         break;

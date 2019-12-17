@@ -42,11 +42,12 @@ void
 checkcattrip(void)
 {
     bool iscattrip = false;
+    bool iseccerr = false;
     int chip_id = 0;
     int inst_id = 0;
     static bool logcattrip = false;
 
-    asic_pd_unravel_hbm_intrs(&iscattrip, false);
+    asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, false);
     if (iscattrip == true && logcattrip == false) {
         // asic_pd_set_half_clock(chip_id, inst_id);
         if (g_sysmon_cfg.cattrip_event_cb) {

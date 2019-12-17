@@ -179,7 +179,7 @@ pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
                                             pd_adjust_perf_index_t &idx,
                                             pd_adjust_perf_type_t perf_type);
 void asic_pd_set_half_clock(int chip_id, int inst_id);
-sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool logging=false);
+sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr, bool logging=false);
 sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id);
 
 sdk_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
