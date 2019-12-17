@@ -24,6 +24,8 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   exportFilename: string = 'Venice-sgpolicies';
   exportMap: CustomExportMap = {};
 
+  // Currently venice supports only one security policy.
+  MAX_POLICY_NUM: number = 1;
 
   // Holds all policy objects
   sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
@@ -65,7 +67,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) ) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) && this.dataObjects.length < this.MAX_POLICY_NUM ) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD POLICY',
@@ -85,6 +87,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
     const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
+        this.setDefaultToolbar();
       },
       this._controllerService.webSocketErrorHandler('Failed to get security policies')
     );

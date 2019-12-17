@@ -45,12 +45,12 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
       this.newObject.$formGroup.get(['meta', 'name']).validator,
-      this.isNewHostNameValid(this.existingObjects) ]);
+      this.isNewPolicyNameValid(this.existingObjects) ]);
   }
 
-  isNewHostNameValid(existingObjects: IWorkloadWorkload[]): ValidatorFn {
+  isNewPolicyNameValid(existingObjects: IWorkloadWorkload[]): ValidatorFn {
     // checks if name field is valid
-    return Utility.isModelNameUniqueValidator(existingObjects, 'neWorkload-name');
+    return Utility.isModelNameUniqueValidator(existingObjects, 'newWorkload-name');
   }
 
   addInterface() {

@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit } from '@angular/core';
-import { ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
+import { ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup, ISecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -9,7 +9,7 @@ import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.comp
 import { Utility } from '@app/common/Utility';
 import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
-import { FormArray, FormControl } from '@angular/forms';
+import { FormArray, FormControl, ValidatorFn } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
@@ -43,27 +43,28 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   }
 
   attachOptions = [
-    {label: 'TENANT', value: this.ATTACH_TENANT},
-    {label: 'SECURITY GROUPS', value: this.ATTACH_SG},
+    { label: 'TENANT', value: this.ATTACH_TENANT },
+    // Product Release-A constraints
+    // { label: 'SECURITY GROUPS', value: this.ATTACH_SG },
   ];
 
   selectedAttachOption: string = this.ATTACH_TENANT;
 
   fakeSecurityGroups = [
-    { label: 'security-group-1', value: 'security-group-1'},
-    { label: 'security-group-2', value: 'security-group-2'},
-    { label: 'security-group-3', value: 'security-group-3'},
+    { label: 'security-group-1', value: 'security-group-1' },
+    { label: 'security-group-2', value: 'security-group-2' },
+    { label: 'security-group-3', value: 'security-group-3' },
   ];
 
   fakeApps = [
-    { label: 'app-1', value: 'security-group-1'},
-    { label: 'app-2', value: 'security-group-2'},
-    { label: 'app-3', value: 'security-group-3'},
+    { label: 'app-1', value: 'security-group-1' },
+    { label: 'app-2', value: 'security-group-2' },
+    { label: 'app-3', value: 'security-group-3' },
   ];
 
   protoAppOptions = [
-    {label: 'PROTO-PORTS', value: this.PROTO_PORTS_OPTION},
-    {label: 'APPS', value: this.APPS_OPTION},
+    { label: 'PROTO-PORTS', value: this.PROTO_PORTS_OPTION },
+    { label: 'APPS', value: this.APPS_OPTION },
   ];
 
   selectedProtoAppOption: string = this.PROTO_PORTS_OPTION;
@@ -98,6 +99,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   // Map from IP to workload name
   ipOptions: any[] = [];
 
+  @Input() isInline: boolean = false;
+  @Input() existingObjects: ISecurityNetworkSecurityPolicy[] = [];
+  @Input() objectData: ISecurityNetworkSecurityPolicy;
+  @Output() formClose: EventEmitter<any> = new EventEmitter();
+
 
   getClassName() {
     return this.constructor.name;
@@ -108,11 +114,37 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     this.getSecurityApps();
     this.getWorkloads();
     this.getSecuritygroups();
-    if (this.rules.length === 0) {
-      this.addRule();
+    if (!this.isInline) {
+      if (this.rules.length === 0) {
+        this.addRule();
+      }
+    } else {
+      // TODO: comment out me and implement editing policy
+      this.objectData.spec.rules.forEach((rule: SecuritySGRule) => {
+        const uiIRule = new SecuritySGRule(rule);
+
+        this.rules.push({
+          id: Utility.s4(),
+          data: uiIRule,
+          inEdit: false,
+        });
+      });
     }
+
+    this.setValidationRules();
     // Add a default protocol port if its the default option
     // if (this.selectedProtoAppOption === this.PROTO_PORTS_OPTION)
+  }
+
+  setValidationRules() {
+    this.newObject.$formGroup.get(['meta', 'name']).setValidators([
+      this.newObject.$formGroup.get(['meta', 'name']).validator,
+      this.isNewNetworkSecurityPolicyNameValid(this.existingObjects)]);
+  }
+
+  isNewNetworkSecurityPolicyNameValid(existingObjects: ISecurityNetworkSecurityPolicy[]): ValidatorFn {
+    // checks if name field is valid
+    return Utility.isModelNameUniqueValidator(existingObjects, 'newPolicy-name');
   }
 
   getWorkloads() {
@@ -133,15 +165,15 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     this.ipOptions = [];
     // Taking IPs from spec, since status isn't always filled out currently
     // TODO: Take IPs from status
-    this.workloads.forEach( (w) => {
-      w.spec.interfaces.forEach( (intf) => {
-        intf['ip-addresses'].forEach( (ip) => {
+    this.workloads.forEach((w) => {
+      w.spec.interfaces.forEach((intf) => {
+        intf['ip-addresses'].forEach((ip) => {
           ipMap[ip] = w.meta.name;
         });
       });
     });
-    Object.keys(ipMap).forEach( ip => {
-      this.ipOptions.push({ip: ip, workload: ipMap[ip]});
+    Object.keys(ipMap).forEach(ip => {
+      this.ipOptions.push({ ip: ip, workload: ipMap[ip] });
     });
   }
 
@@ -184,7 +216,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   // Empty Hook
   isFormValid() {
     if (!Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)
-    && this.newObject.$formGroup.valid
+      && this.newObject.$formGroup.valid
     ) {
       return true;
     }
@@ -261,10 +293,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
 
   editRule(index) {
     // Collapse any other open rules, and make index rule open
-    this.rules.forEach( (r, i) => {
-      if (i === index) {
-        r.inEdit = true;
-      } else {
+    this.rules.forEach((r, i) => {
         // Before we collapse rule, we clear the unused protoAppOption
         if (this.selectedProtoAppOption === this.PROTO_PORTS_OPTION) {
           r.data.$formGroup.get('apps').setValue([]);
@@ -275,14 +304,13 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
           }
         }
         // If rule number has changed we move it now
-        r.inEdit = false;
         // TODO: Check if number is valid, reset it if it isn't
-        if (this.ruleNumberEditControl.value !== i + 1) {
+        if ( r.inEdit && this.ruleNumberEditControl.value !== i + 1) {
           this.moveRule(i, this.ruleNumberEditControl.value - 1);
         }
-      }
+        r.inEdit = false;
     });
-    this.rules.some( (r, i) => {
+    this.rules.some((r, i) => {
       if (i === index) {
         r.inEdit = true;
         const appVal = r.data.$formGroup.get('apps').value;
@@ -310,13 +338,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
 
   addRule() {
     const rule = new SecuritySGRule();
-
     this.rules.push({
       id: Utility.s4(),
       data: rule,
       inEdit: false,
     });
-
     this.editRule(this.rules.length - 1);
   }
 

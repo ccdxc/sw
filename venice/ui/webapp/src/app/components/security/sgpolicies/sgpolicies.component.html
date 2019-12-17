@@ -1,5 +1,5 @@
 <app-pagebody [icon]="bodyIcon" header="Network Security Policies">
-  <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
+  <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget" style="height: 100%;"
                      [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand"
                      [data]="dataObjects"
@@ -8,6 +8,7 @@
                      [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
                      [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
                      [createTemplate]="createTemplate"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
@@ -51,11 +52,17 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <!-- <mat-icon *roleGuard="'monitoringfwlogpolicy_update'" matTooltip="Edit policy"
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_update'" matTooltip="Edit policy"
               class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
-              (click)="expandRowRequest($event, rowData)">edit</mat-icon> -->
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
     <mat-icon *roleGuard="'monitoringfwlogpolicy_delete'" matTooltip="Delete policy"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <app-newsgpolicy [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                   (formClose)="closeRowExpand()" fxFlex="none">
+  </app-newsgpolicy>
 </ng-template>

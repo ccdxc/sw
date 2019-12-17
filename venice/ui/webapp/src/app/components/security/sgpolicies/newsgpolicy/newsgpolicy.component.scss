@@ -19,6 +19,15 @@ $vertical-gutter: 5px;
   }
 }
 
+.newsgpolicy-save,
+.newsgpolicy-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
 .newsgpolicy-container {
   padding: 20px 15px;
   @include primary-font();
@@ -55,7 +64,7 @@ $vertical-gutter: 5px;
   margin-left: 15px;
 }
 
-.newworkload-add-rule {
+.newsgpolicy-add-rule {
   @include primary-font(16px, #6ba0e5, 500);
   width: 100px;
   cursor: pointer;
