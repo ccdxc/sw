@@ -33,6 +33,12 @@ typedef struct system_temperature {
     int dietemp;
     int localtemp;
     int hbmtemp;
+    int qsfp1temp;
+    int qsfp2temp;
+    int qsfp1warningtemp;
+    int qsfp2warningtemp;
+    int qsfp1alarmtemp;
+    int qsfp2alarmtemp;
 } system_temperature_t;
 
 typedef struct system_power {

@@ -133,6 +133,18 @@ pal_write_qsfp_temp(int data, int port)
 {
     return -1;
 }
+
+int
+pal_write_qsfp_alarm_temp(int data, int port)
+{
+    return -1;
+}
+
+int
+pal_write_qsfp_warning_temp(int data, int port)
+{
+    return -1;
+}
 #else
 #include <string.h>
 
@@ -444,6 +456,32 @@ pal_write_qsfp_temp(int data, int port)
         return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT1_TEMP, data);
     } else if (port == QSFP_PORT2) {
         return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT2_TEMP, data);
+    } else {
+        return -1;
+    }
+}
+
+int
+pal_write_qsfp_alarm_temp(int data, int port)
+{
+    data = (data > 127) ? 127 : data;
+    if (port == QSFP_PORT1) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT1_ALARM_TEMP, data);
+    } else if (port == QSFP_PORT2) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT2_ALARM_TEMP, data);
+    } else {
+        return -1;
+    }
+}
+
+int
+pal_write_qsfp_warning_temp(int data, int port)
+{
+    data = (data > 127) ? 127 : data;
+    if (port == QSFP_PORT1) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT1_WARNING_TEMP, data);
+    } else if (port == QSFP_PORT2) {
+        return cpld_reg_wr(CPLD_REGISTER_QSFP_PORT2_WARNING_TEMP, data);
     } else {
         return -1;
     }

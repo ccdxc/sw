@@ -111,6 +111,12 @@ int read_temperatures(system_temperature_t *temperature)
     {
         temperature->dietemp = temperature->dietemp - DIE_TEMP_STANDARD_DEVIATION;
         temperature->hbmtemp = cap_nwl_sbus_get_1500_temperature();
+        temperature->qsfp1temp = 40;
+        temperature->qsfp2temp = 40;
+        temperature->qsfp1warningtemp = 70;
+        temperature->qsfp2warningtemp = 70;
+        temperature->qsfp1alarmtemp = 75;
+        temperature->qsfp2alarmtemp = 75;
         return 0;
     }
     return -EINVAL;

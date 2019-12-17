@@ -19,6 +19,18 @@ type AsicTemperatureMetrics struct {
 
 	HbmTemperature metrics.Counter
 
+	QsfpPort1Temperature metrics.Counter
+
+	QsfpPort2Temperature metrics.Counter
+
+	QsfpPort1WarningTemperature metrics.Counter
+
+	QsfpPort2WarningTemperature metrics.Counter
+
+	QsfpPort1AlarmTemperature metrics.Counter
+
+	QsfpPort2AlarmTemperature metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -37,6 +49,18 @@ func (mtr *AsicTemperatureMetrics) Size() int {
 
 	sz += mtr.HbmTemperature.Size()
 
+	sz += mtr.QsfpPort1Temperature.Size()
+
+	sz += mtr.QsfpPort2Temperature.Size()
+
+	sz += mtr.QsfpPort1WarningTemperature.Size()
+
+	sz += mtr.QsfpPort2WarningTemperature.Size()
+
+	sz += mtr.QsfpPort1AlarmTemperature.Size()
+
+	sz += mtr.QsfpPort2AlarmTemperature.Size()
+
 	return sz
 }
 
@@ -54,6 +78,24 @@ func (mtr *AsicTemperatureMetrics) Unmarshal() error {
 
 	mtr.HbmTemperature = mtr.metrics.GetCounter(offset)
 	offset += mtr.HbmTemperature.Size()
+
+	mtr.QsfpPort1Temperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort1Temperature.Size()
+
+	mtr.QsfpPort2Temperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort2Temperature.Size()
+
+	mtr.QsfpPort1WarningTemperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort1WarningTemperature.Size()
+
+	mtr.QsfpPort2WarningTemperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort2WarningTemperature.Size()
+
+	mtr.QsfpPort1AlarmTemperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort1AlarmTemperature.Size()
+
+	mtr.QsfpPort2AlarmTemperature = mtr.metrics.GetCounter(offset)
+	offset += mtr.QsfpPort2AlarmTemperature.Size()
 
 	return nil
 }
@@ -77,6 +119,36 @@ func (mtr *AsicTemperatureMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.HbmTemperature.Size()
 
+	if fldName == "QsfpPort1Temperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort1Temperature.Size()
+
+	if fldName == "QsfpPort2Temperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort2Temperature.Size()
+
+	if fldName == "QsfpPort1WarningTemperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort1WarningTemperature.Size()
+
+	if fldName == "QsfpPort2WarningTemperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort2WarningTemperature.Size()
+
+	if fldName == "QsfpPort1AlarmTemperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort1AlarmTemperature.Size()
+
+	if fldName == "QsfpPort2AlarmTemperature" {
+		return offset
+	}
+	offset += mtr.QsfpPort2AlarmTemperature.Size()
+
 	return offset
 }
 
@@ -95,6 +167,42 @@ func (mtr *AsicTemperatureMetrics) SetDieTemperature(val metrics.Counter) error 
 // SetHbmTemperature sets cunter in shared memory
 func (mtr *AsicTemperatureMetrics) SetHbmTemperature(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("HbmTemperature"))
+	return nil
+}
+
+// SetQsfpPort1Temperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort1Temperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort1Temperature"))
+	return nil
+}
+
+// SetQsfpPort2Temperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort2Temperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort2Temperature"))
+	return nil
+}
+
+// SetQsfpPort1WarningTemperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort1WarningTemperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort1WarningTemperature"))
+	return nil
+}
+
+// SetQsfpPort2WarningTemperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort2WarningTemperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort2WarningTemperature"))
+	return nil
+}
+
+// SetQsfpPort1AlarmTemperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort1AlarmTemperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort1AlarmTemperature"))
+	return nil
+}
+
+// SetQsfpPort2AlarmTemperature sets cunter in shared memory
+func (mtr *AsicTemperatureMetrics) SetQsfpPort2AlarmTemperature(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QsfpPort2AlarmTemperature"))
 	return nil
 }
 

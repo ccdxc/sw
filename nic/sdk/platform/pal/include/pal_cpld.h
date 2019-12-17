@@ -4,20 +4,24 @@
 #include <stdbool.h>
 #include "pal_types.h"
 
-#define CPLD_REGISTER_REVISION              0x00
-#define CPLD_REGISTER_QSFP_CTRL             0x02
-#define CPLD_REGISTER_QSFP_LED              0x05
-#define CPLD_REGISTER_QSFP_LED_FREQUENCY    0x0F
-#define CPLD_REGISTER_SYSTEM_LED            0x15
-#define CPLD_REGISTER_CORE_TEMP             0x16
-#define CPLD_REGISTER_HBM_TEMP              0x17
-#define CPLD_REGISTER_BOARD_TEMP            0x18
-#define CPLD_REGISTER_QSFP_PORT1_TEMP       0x19
-#define CPLD_REGISTER_QSFP_PORT2_TEMP       0x1a
-#define CPLD_PERSISTENT_REG                 0x20
-#define CPLD_CONF_FLASH_READ_BYTE           0x50
-#define CPLD_DATA_CACHE_END_ADDR            0x5f
-#define CPLD_REGISTER_ID                    0x80
+#define CPLD_REGISTER_REVISION                0x00
+#define CPLD_REGISTER_QSFP_CTRL               0x02
+#define CPLD_REGISTER_QSFP_LED                0x05
+#define CPLD_REGISTER_QSFP_LED_FREQUENCY      0x0F
+#define CPLD_REGISTER_SYSTEM_LED              0x15
+#define CPLD_REGISTER_CORE_TEMP               0x16
+#define CPLD_REGISTER_HBM_TEMP                0x17
+#define CPLD_REGISTER_BOARD_TEMP              0x18
+#define CPLD_REGISTER_QSFP_PORT1_TEMP         0x19
+#define CPLD_REGISTER_QSFP_PORT2_TEMP         0x1a
+#define CPLD_PERSISTENT_REG                   0x20
+#define CPLD_REGISTER_QSFP_PORT1_ALARM_TEMP   0x34
+#define CPLD_REGISTER_QSFP_PORT1_WARNING_TEMP 0x35
+#define CPLD_REGISTER_QSFP_PORT2_ALARM_TEMP   0x36
+#define CPLD_REGISTER_QSFP_PORT2_WARNING_TEMP 0x37
+#define CPLD_CONF_FLASH_READ_BYTE             0x50
+#define CPLD_DATA_CACHE_END_ADDR              0x5f
+#define CPLD_REGISTER_ID                      0x80
 
 //CPLD ID and REV
 #define CPLD_NAPLES_100_ID    0x12
@@ -116,4 +120,6 @@ int pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_
 void pal_power_cycle(void);
 bool pal_cpld_hwlock_enabled(void);
 int pal_write_qsfp_temp(int data, int port);
+int pal_write_qsfp_alarm_temp(int data, int port);
+int pal_write_qsfp_warning_temp(int data, int port);
 #endif

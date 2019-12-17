@@ -36,9 +36,15 @@ message AsicTemperatureMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter local_temperature           = 2;
-    delphi.Counter die_temperature             = 3;
-    delphi.Counter hbm_temperature             = 4;
+    delphi.Counter local_temperature              = 2;
+    delphi.Counter die_temperature                = 3;
+    delphi.Counter hbm_temperature                = 4;
+    delphi.Counter qsfp_port1_temperature         = 5;
+    delphi.Counter qsfp_port2_temperature         = 6;
+    delphi.Counter qsfp_port1_warning_temperature = 7;
+    delphi.Counter qsfp_port2_warning_temperature = 8;
+    delphi.Counter qsfp_port1_alarm_temperature   = 9;
+    delphi.Counter qsfp_port2_alarm_temperature   = 10;
 }
 
 message AsicPowerMetrics {
