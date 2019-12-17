@@ -42,7 +42,7 @@ type tagsProbe struct {
 }
 
 // newTagsProbe creates a new instance of tagsProbe
-func (v *VCProbe) newTagsProbe(ctx context.Context) {
+func (v *VCProbe) newTagsProbe() {
 	restCl := rest.NewClient(v.client.Client)
 	tagCl := tags.NewManager(restCl)
 	v.tp = &tagsProbe{
@@ -58,7 +58,7 @@ func (v *VCProbe) newTagsProbe(ctx context.Context) {
 
 // Start starts the client
 func (t *tagsProbe) Start() {
-	err := t.tc.Login(t.ctx, t.vcURL.User)
+	err := t.tc.Login(t.watcherCtx, t.vcURL.User)
 	if err != nil {
 		t.Log.Errorf("Tags client failed to login, %s", err.Error())
 		return
@@ -70,7 +70,7 @@ func (t *tagsProbe) Start() {
 func (t *tagsProbe) pollTags() {
 	for {
 		select {
-		case <-t.ctx.Done():
+		case <-t.watcherCtx.Done():
 			// delete session using another ctx
 			doneCtx, cancel := context.WithTimeout(context.Background(), deleteDelay)
 			t.tc.Logout(doneCtx)
@@ -83,18 +83,18 @@ func (t *tagsProbe) pollTags() {
 }
 
 func (t *tagsProbe) fetchTags() error {
-	tagList, err := t.tc.ListTags(t.ctx)
+	tagList, err := t.tc.ListTags(t.watcherCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list tags failed, %s", err.Error())
 		if strings.Contains(err.Error(), "code: 401") { // auth error
-			loginErr := t.tc.Login(t.ctx, t.vcURL.User)
+			loginErr := t.tc.Login(t.watcherCtx, t.vcURL.User)
 			if loginErr != nil {
 				t.Log.Errorf("Tags client attempted to re-login but failed, %s", loginErr.Error())
 			}
 		}
 		return err
 	}
-	catList, err := t.tc.GetCategories(t.ctx)
+	catList, err := t.tc.GetCategories(t.watcherCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list categories failed, %s", err.Error())
 		return err
@@ -132,7 +132,7 @@ func (t *tagsProbe) fetchTags() error {
 }
 
 func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
-	objs, err := t.tc.GetAttachedObjectsOnTags(t.ctx, []string{tagID})
+	objs, err := t.tc.GetAttachedObjectsOnTags(t.watcherCtx, []string{tagID})
 	if err != nil {
 		t.Log.Errorf("tag: %s error: %v", tagID, err)
 		return

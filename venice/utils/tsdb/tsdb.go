@@ -157,6 +157,9 @@ type iObj struct {
 
 // NewObj creates a metric object that can be used to record arbitrary keys/fields
 func NewObj(tableName string, keys map[string]string, metrics interface{}, opts *ObjOpts) (Obj, error) {
+	if global == nil {
+		Init(context.Background(), &Opts{})
+	}
 	if strings.HasPrefix(tableName, "obj-") {
 		return nil, fmt.Errorf("Obj Name starting with 'obj-' is reserved for internal objs")
 	}

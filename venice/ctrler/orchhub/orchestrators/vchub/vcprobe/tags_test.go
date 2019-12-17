@@ -1,7 +1,6 @@
 package vcprobe
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -13,29 +12,15 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
-	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 var (
 	logConfig = log.GetDefaultConfig("tags-test")
 	logger    = log.SetConfig(logConfig)
 )
-
-func newStateManager() (*statemgr.Statemgr, error) {
-	tsdb.Init(context.Background(), &tsdb.Opts{})
-
-	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return stateMgr, nil
-}
 
 func TestTags(t *testing.T) {
 	vcID := "127.0.0.1:8990"
@@ -59,10 +44,11 @@ func TestTags(t *testing.T) {
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 
-	sm, err := newStateManager()
+	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. ERR : %v", err)
 
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
+	err = sm.Controller().Orchestrator().Create(orchConfig)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()

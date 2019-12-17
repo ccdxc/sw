@@ -82,7 +82,7 @@ func GetOrchestratorConfig(name, user, pass string) *orchestration.Orchestrator 
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
-			Tenant:    "default",
+			// Don't set Tenant as object is not scoped inside Tenant in proto file.
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "Orchestrator",

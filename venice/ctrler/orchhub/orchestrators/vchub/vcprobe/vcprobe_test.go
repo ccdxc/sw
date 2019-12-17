@@ -39,7 +39,8 @@ func TestNetworkCreate(t *testing.T) {
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
 
 	fmt.Println("Creating orchestrator")
-	sm.Controller().Orchestrator().Create(orchConfig)
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+	Assert(t, err == nil, "Failed to create orch")
 	time.Sleep(1 * time.Second)
 
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
@@ -122,7 +123,7 @@ func TestMessages(t *testing.T) {
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	probeCh := make(chan defs.Store2ProbeMsg, 24)
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
-
+	err = sm.Controller().Orchestrator().Create(orchConfig)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	vcp.Start()
 	defer vcp.Stop()
@@ -202,6 +203,7 @@ func TestReconnect(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+	err = sm.Controller().Orchestrator().Create(orchConfig)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
@@ -290,6 +292,7 @@ func TestLoginRetry(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990/sdk", "user", "pass")
+	err = sm.Controller().Orchestrator().Create(orchConfig)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
@@ -384,6 +387,7 @@ func TestDVS(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(testParams.testHostName, testParams.testUser, testParams.testPassword)
+	err = sm.Controller().Orchestrator().Create(orchConfig)
 	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, u.Scheme)
 	err = vcp.Start()
 	AssertOk(t, err, "Failed to start probe")
