@@ -101,6 +101,7 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
 
+    PDS_TRACE_DEBUG("Building %s", mapping->key2str().c_str());
     vpc = vpc_db()->find(&key->vpc);
     if (unlikely(vpc == NULL)) {
         return NULL;
@@ -125,6 +126,11 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
     impl->to_vip_nat_idx_ = svc_mapping_data.svc_mapping_action.xlate_id;
     impl->to_vip_handle_ = tparams.handle;
     return impl;
+
+end:
+
+    PDS_TRACE_ERR("Failed to build %s", mapping->key2str().c_str());
+    return NULL;
 }
 
 sdk_ret_t

@@ -38,7 +38,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
     tparams.max_recircs = 8;
-    tparams.entry_trace_en = true;
+    tparams.entry_trace_en = false;
     tparams.key2str = NULL;
     tparams.appdata2str = NULL;
 

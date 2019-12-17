@@ -176,7 +176,14 @@ public:
     }
 
     /// \brief    return stringified key of the object (for debugging)
-    virtual string key2str(void) const override;
+    virtual string key2str(void) const override {
+        std::string ret("svc-(");
+
+        ret += std::to_string(key_.vpc.id) + "," + ipaddr2str(&key_.backend_ip);
+        ret += ":" + std::to_string(key_.backend_port) + ")";
+
+        return ret;
+    }
 
     /// \brief   helper function to get size of key
     /// \return  size of key

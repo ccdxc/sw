@@ -206,16 +206,6 @@ svc_mapping::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_SVC_MAPPING, this);
 }
 
-string
-svc_mapping::key2str(void) const {
-    std::string ret("svc-(");
-
-    ret += std::to_string(key_.vpc.id) + "," + ipaddr2str(&key_.backend_ip);
-    ret += ":" + std::to_string(key_.backend_port) + ")";
-
-    return ret;
-}
-
 /** @} */    // end of PDS_SVC_MAPPING
 
 }    // namespace api

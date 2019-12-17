@@ -64,13 +64,13 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_b1) {
 
 /// \brief Service mapping WF_B2
 /// \ref WF_B2
-TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_b2) {
+TEST_F(svc_mapping_test, svc_mapping_workflow_b2) {
     if (!apulu()) return;
 
     svc_mapping_feeder feeder1, feeder1A;
 
     feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 1);
-    feeder1A.init("10.1.1.2", 10, 2, "20.1.1.1", 30, "30.1.1.2", 1);
+    feeder1A.init("10.1.1.2", 10, 2, "20.1.1.1", 20, "30.1.1.2", 1);
     workflow_b2<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
