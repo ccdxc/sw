@@ -244,16 +244,25 @@ read:
     j.c2           req_rx_rrqwqe_base_sge_process
 
     add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
-    srl            r5, r3, K_LOG_PAGE_SIZE
+
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    phvwr           CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 0
+
+    seq             c3, K_LOG_PAGE_SIZE, 0
+    sub.c3          r3, r3, 2, LOG_SIZEOF_SGE_T
+    bcf             [c3], page_boundary_check_done
+
+    srl            r5, r3, K_LOG_PAGE_SIZE // Branch Delay Slot
     add            r6, r3, (RRQWQE_SGE_TABLE_READ_SIZE - 1)
     srl            r6, r6, K_LOG_PAGE_SIZE
     sne            c3, r5, r6
     // move addr_to_load back by sizeof 2 SGE's
     sub.!c3        r3, r3, 2, LOG_SIZEOF_SGE_T
-    phvwr.!c3      CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 0
     // start addr and end addr are not in the same page, move addr_to_load back by sizeof 3 SGE's
     phvwr.c3       CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 1
     sub.c3         r3, r3, 3, LOG_SIZEOF_SGE_T
+
+page_boundary_check_done:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
                                 req_rx_rrqsge_process, r3)
 

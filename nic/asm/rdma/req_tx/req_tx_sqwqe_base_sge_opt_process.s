@@ -143,7 +143,12 @@ trigger_sqsge_process:
     phvwrpair       CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), \
                     CAPRI_PHV_FIELD(WQE_TO_SGE_P, imm_data_or_inv_key), d.{base.imm_data}
 
-    srl             r5, r3, K_LOG_PAGE_SIZE
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    seq             c3, K_LOG_PAGE_SIZE, 0
+    sub.c3          r3, r3, 2, LOG_SIZEOF_SGE_T
+    bcf             [c3], page_boundary_check_done
+
+    srl             r5, r3, K_LOG_PAGE_SIZE // BD Slot
     add             r6, r3, (SQWQE_SGE_TABLE_READ_SIZE - 1)
     srl             r6, r6, K_LOG_PAGE_SIZE
     sne             c3, r5, r6
@@ -153,6 +158,7 @@ trigger_sqsge_process:
     phvwr.c3        CAPRI_PHV_FIELD(WQE_TO_SGE_P, end_of_page), 1
     sub.c3          r3, r3, 3, LOG_SIZEOF_SGE_T
 
+page_boundary_check_done:
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
 

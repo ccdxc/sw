@@ -27,18 +27,24 @@ req_rx_sqcb1_recirc_sge_process:
     // If SGE length encoding is there, go past to the start of SGES[]
     add.c1            r1, r1, TXWQE_SGE_LEN_ENC_SIZE
 
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    phvwr           CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 0
 
-    srl            r3, r1, K_LOG_PAGE_SIZE
+    seq             c3, K_LOG_PAGE_SIZE, 0
+    sub.c3          r1, r1, 2, LOG_SIZEOF_SGE_T
+    bcf             [c3], page_boundary_check_done
+
+    srl            r3, r1, K_LOG_PAGE_SIZE //BD Slot
     add            r4, r1, (RRQWQE_SGE_TABLE_READ_SIZE - 1)
     srl            r4, r4, K_LOG_PAGE_SIZE
     sne            c3, r4, r3
     // move addr_to_load back by sizeof 2 SGE's
     sub.!c3         r1, r1, 2, LOG_SIZEOF_SGE_T
-    phvwr.!c3       CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 0
     // sge addr + 16 > end_of_page_addr, move addr_to_load back by sizeof 3 SGE's
     phvwr.c3        CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, end_of_page), 1
     sub.c3          r1, r1, 3, LOG_SIZEOF_SGE_T
 
+page_boundary_check_done:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqsge_process, r1)
 
     CAPRI_RESET_TABLE_0_ARG()

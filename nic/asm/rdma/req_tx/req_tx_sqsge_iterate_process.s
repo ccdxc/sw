@@ -44,7 +44,12 @@ trigger_stg3_sqsge_process:
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
     add            r1, r1, K_WQE_ADDR
 
-    srl            r3, r1, K_LOG_PAGE_SIZE
+    // if log_rq_page_size = 0, rq is in hbm and page boundary check is not needed
+    seq            c3, K_LOG_PAGE_SIZE, 0
+    sub.c3         r1, r1, 2, LOG_SIZEOF_SGE_T
+    bcf            [c3], page_boundary_check_done
+
+    srl            r3, r1, K_LOG_PAGE_SIZE //BD Slot
     add            r4, r1, (SQWQE_SGE_TABLE_READ_SIZE - 1)
     srl            r4, r4, K_LOG_PAGE_SIZE
     sne            c3, r4, r3
@@ -54,5 +59,6 @@ trigger_stg3_sqsge_process:
     phvwr.c3        CAPRI_PHV_FIELD(WQE_TO_SGE_P, end_of_page), 1
     sub.c3          r1, r1, 3, LOG_SIZEOF_SGE_T
 
+page_boundary_check_done:
     CAPRI_SET_TABLE_2_VALID(0)
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
