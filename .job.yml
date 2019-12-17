@@ -156,6 +156,8 @@ jobs:
     labels: ["precommit", "hourly"]
   test/ci_targets/e2e:
     labels: ["precommit", "2xhourly"]
+  test/verify-build:
+    labels: ["precommit"]
   venice:
     labels: ["precommit", "hourly"]
   venice/ui:
@@ -188,6 +190,8 @@ dependencies:
       exclude_dirs: ["test/venice", "test/iris"]
   metrics:
     - reference: venice/ui
+  minio:
+    - reference: test/verify-build
   nic/apollo:
   #  - reference: iota/test/venice
   #  - reference: iota/test/standalone/sanity/esx
@@ -344,6 +348,8 @@ dependencies:
  #     exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
   platform/src/third-party/app/pciutils:
     - reference: platform/src/app/pciemgrd
+  scripts:
+    - reference: test/verify-build
   storage/offload:
     - reference: storage/offload/linux-build-test
   venice:

@@ -1,0 +1,16 @@
+---
+version: 2.0
+targets:
+  gtests:
+    commands: ["sh", "-c", "true"]
+    owners: ["email:stavros@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-x86
+
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+

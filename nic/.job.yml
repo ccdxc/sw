@@ -527,7 +527,7 @@ targets:
 
   delphi:
     commands: ["sh", "-c", "cd /sw/nic && make && cd ./delphi && make test" ]
-    owners: ["email:shaleman@pensando.io"]
+    owners: ["email:stavros@pensando.io"]
     area:
     sub-area:
     feature:
