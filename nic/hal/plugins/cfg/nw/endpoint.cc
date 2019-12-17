@@ -594,6 +594,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t          *dhl_entry   = NULL;
     ep_t                 *ep          = NULL;
     vrf_t                *vrf         = NULL;
+    if_t                 *hal_if      = NULL;
     // hal_handle_t         hal_handle   = 0;
     ep_create_app_ctxt_t *app_ctxt    = NULL;
 
@@ -622,10 +623,15 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
      *   sessions may point to uplink. Have to change reachability of 
      *   those sessions.
      */
-    ret = endpoint_create_process_sessions(ep);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to process remote sessions. err: {}", ret);
-        goto end;
+    hal_if = app_ctxt->hal_if;
+    if (hal_if && hal_if->if_type == intf::IF_TYPE_ENIC &&
+        hal_if->enic_type == intf::IF_ENIC_TYPE_USEG) {
+        // Sessions would have been created only for micro seg EPs
+        ret = endpoint_create_process_sessions(ep);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to process remote sessions. err: {}", ret);
+            goto end;
+        }
     }
 
 end:
