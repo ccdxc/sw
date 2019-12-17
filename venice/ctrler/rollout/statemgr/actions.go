@@ -68,10 +68,16 @@ func verifyAdmittedDSCState(dscState *SmartNICState, ros *RolloutState, op proto
 	}
 	numRetries := atomic.LoadUint32(&ros.numRetries)
 
-	//if Admitted and Version is same and not retry: skip DSC
-	if dscState.Status.DSCVersion == ros.Spec.Version && numRetries == 0 {
-		//this is counted as successful rollout
-		ros.setSmartNICPhase(dscState.Name, "", "Skipped DSC from upgrade: DSC running same version", phase)
+	//if Admitted and Version is same
+	if dscState.Status.DSCVersion == ros.Spec.Version {
+		// not retry: skip DSC and set phase
+		if numRetries == 0 {
+			//this is counted as successful rollout so set the status
+			ros.setSmartNICPhase(dscState.Name, "", "Skipped DSC from upgrade: DSC running same version", phase)
+		} else {
+			//retry mode and same version, no need to to setPhase
+			log.Infof("SKIPDSC: Retry mode and running same version nothing to do.")
+		}
 		return false
 	}
 	//if Admitted and Healthy but unknown Status : skip DSC
