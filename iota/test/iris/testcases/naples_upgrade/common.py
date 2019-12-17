@@ -97,8 +97,8 @@ def stopTestUpgApp(node, unreg):
 
     return api.types.status.SUCCESS
 
-def GetNaplesMgmtIP():
-    return  "169.254.0.1"
+def GetNaplesMgmtIP(n):
+    return  api.GetNicIntMgmtIP(n)
 
 def GetNaplesMgmtPort():
     return  "8888"

@@ -32,11 +32,9 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
-    cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" 169.254.0.1:8888/api/v1/naples/rollout/'
-
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
+        cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
 
@@ -59,9 +57,9 @@ def Verify(tc):
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
 
-    cmd = 'curl 169.254.0.1:8888/api/v1/naples/rollout/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
+        cmd = 'curl ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
 
@@ -107,9 +105,9 @@ def Teardown(tc):
         if cmd_resp.exit_code != 0:
             api.Logger.error("Setup failed %s", cmd_resp.command)
 
-    cmd = 'curl -X DELETE 169.254.0.1:8888/api/v1/naples/rollout/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
+        cmd = 'curl -X DELETE ' +  api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
     for cmd in tc.resp.commands:

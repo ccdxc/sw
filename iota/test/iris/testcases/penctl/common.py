@@ -64,7 +64,7 @@ def RunLocalCommand(cmd):
 
 
 def GetNaplesMgmtIP(node):
-    return  "169.254.0.1"
+    return api.GetNicIntMgmtIP(node)
 
 def GetNaplesMgmtIntf(node):
     naples_host_mgmt_if = naples_host_util.GetHostInternalMgmtInterfaces(node)
@@ -535,7 +535,8 @@ def RebootHost(n):
     ret = api.RestartNodes(nodes)
     # Loop to check if the card is reachable
     reqPing = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddHostCommand(reqPing, n, "ping -c 2 169.254.0.1")
+    cmd = "ping -c 2 " + api.GetMgmtIPAddress(n)
+    api.Trigger_AddHostCommand(reqPing, n, cmd)
     retryCount = 0
 
     while retryCount < 6:
