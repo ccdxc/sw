@@ -268,6 +268,8 @@ apulu_impl::nacl_init_(void) {
         return ret;
     }
 
+#if 0 //Disable these protection nacls for now, they need to handle flow-miss case
+
     // allow encapped TCP traffic from uplinks
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -366,6 +368,7 @@ apulu_impl::nacl_init_(void) {
                       "host lifs, err %u", ret);
         goto error;
     }
+#endif
 #endif
 
     // drop all DHCP responses from host lifs (i.e., prevent DHCP server
