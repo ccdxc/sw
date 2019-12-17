@@ -109,7 +109,6 @@ func (r *rolloutMgr) doOP(op rolloutproto.VeniceOp, version string) rolloutproto
 }
 func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 	var opStatus []rolloutproto.VeniceOpStatus
-	needtoUpdateStatus := false
 
 	for _, opSpec := range ro.Spec.Ops {
 		key := statusKey{
@@ -147,13 +146,12 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 			}
 			opStatus = append(opStatus, st)
 			r.cachedStatus[key] = st
-			needtoUpdateStatus = true
 		} else {
 			opStatus = append(opStatus, existingStatus)
 		}
 	}
 
-	if r.statusWriter != nil && needtoUpdateStatus {
+	if r.statusWriter != nil {
 		s := rolloutproto.VeniceRolloutStatusUpdate{
 			ObjectMeta: ro.ObjectMeta,
 			Status: rolloutproto.VeniceRolloutStatus{
