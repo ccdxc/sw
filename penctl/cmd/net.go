@@ -67,10 +67,10 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 				}
 			}
 		}
+		// should never be set to this. but trying this ip as a last resort anyways
+		// also needed for backwards compatibility
+		naplesURL = "http://169.254.0.1"
 	}
-	// should never be set to this. but trying this ip as a last resort anyways
-	// also needed for backwards compatibility
-	naplesURL = "http://169.254.0.1"
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.AgentProxyPort
 	naplesURL += ":" + revProxyPort + "/"
