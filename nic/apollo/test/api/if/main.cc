@@ -139,7 +139,7 @@ TEST_F(if_test, if_workflow_neg_3) {
 
 /// \brief IF WF_N_5
 /// \ref WF_N_5
-TEST_F(if_test, DISABLED_if_workflow_neg_5) {
+TEST_F(if_test, if_workflow_neg_5) {
     if_feeder feeder1, feeder1A;
     feeder1.init(1);
     feeder1A.init(10);
