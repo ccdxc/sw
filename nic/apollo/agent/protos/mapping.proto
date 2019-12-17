@@ -15,7 +15,6 @@ service MappingSvc {
   rpc MappingCreate (MappingRequest) returns (MappingResponse) {}
   rpc MappingUpdate (MappingRequest) returns (MappingResponse) {}
   rpc MappingGet (MappingGetRequest) returns (MappingGetResponse) {}
-  rpc MappingDump (MappingDumpRequest) returns (types.Empty) {}
   rpc MappingDelete (MappingDeleteRequest) returns (MappingDeleteResponse) {}
 }
 
