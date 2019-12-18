@@ -28,12 +28,12 @@ export interface IRolloutRolloutSpec {
 
 
 export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec {
-    /** New Version of the image to rollout to */
+    /** New Version of the image to rollout to. */
     'version': string = null;
-    /** Time, if specified, at which the rollout is supposed to start */
+    /** Time, if specified, at which the rollout is supposed to start. (example:"2002-10-02T15:00:00.05Z"). */
     'scheduled-start-time': Date = null;
     /** ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time
-Typically represents the end of Maintenance window */
+Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:00.05Z"). */
     'scheduled-end-time': Date = null;
     'strategy': RolloutRolloutSpec_strategy = null;
     /** MaxParallel is the maximum number of nodes getting updated at any time
@@ -42,37 +42,37 @@ Controller nodes are always upgraded one after another. */
     'max-parallel': number = null;
     /** After these many failures are observed during NIC upgrade, the rollout process stops
 This setting applies to smartNICs only.
-The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards */
+The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards. */
     'max-nic-failures-before-abort': number = null;
     /** If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
 if a DistributedServiceCard matches multiple constraints, the first one is used.
  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
 This order is mainly for the smartNICs on Hosts
-Controller nodes are always rollout one after other */
+Controller nodes are always rollout one after other. */
     'order-constraints': Array<LabelsSelector> = null;
     /** When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one. */
     'suspend': boolean = null;
-    /** Dont upgrade Controller but only upgrade DistributedServiceCards */
+    /** Dont upgrade Controller but only upgrade DistributedServiceCards. */
     'dscs-only': boolean = null;
-    /** When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout */
+    /** When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout. */
     'dsc-must-match-constraint': boolean = null;
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
-    /** If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times */
+    /** If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times. */
     'retry': boolean = null;
     public static propInfo: { [prop in keyof IRolloutRolloutSpec]: PropInfoItem } = {
         'version': {
-            description:  'New Version of the image to rollout to',
+            description:  'New Version of the image to rollout to.',
             required: false,
             type: 'string'
         },
         'scheduled-start-time': {
-            description:  'Time, if specified, at which the rollout is supposed to start',
+            description:  'Time, if specified, at which the rollout is supposed to start. (example:&quot;2002-10-02T15:00:00.05Z&quot;).',
             required: false,
             type: 'Date'
         },
         'scheduled-end-time': {
-            description:  'ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time Typically represents the end of Maintenance window',
+            description:  'ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time Typically represents the end of Maintenance window. (example:&quot;2002-10-02T15:00:00.05Z&quot;).',
             required: false,
             type: 'Date'
         },
@@ -89,12 +89,12 @@ Controller nodes are always rollout one after other */
             type: 'number'
         },
         'max-nic-failures-before-abort': {
-            description:  'After these many failures are observed during NIC upgrade, the rollout process stops This setting applies to smartNICs only. The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards',
+            description:  'After these many failures are observed during NIC upgrade, the rollout process stops This setting applies to smartNICs only. The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.',
             required: false,
             type: 'number'
         },
         'order-constraints': {
-            description:  'If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used.  Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the smartNICs on Hosts Controller nodes are always rollout one after other',
+            description:  'If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used.  Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the smartNICs on Hosts Controller nodes are always rollout one after other.',
             required: false,
             type: 'object'
         },
@@ -104,12 +104,12 @@ Controller nodes are always rollout one after other */
             type: 'boolean'
         },
         'dscs-only': {
-            description:  'Dont upgrade Controller but only upgrade DistributedServiceCards',
+            description:  'Dont upgrade Controller but only upgrade DistributedServiceCards.',
             required: false,
             type: 'boolean'
         },
         'dsc-must-match-constraint': {
-            description:  'When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout',
+            description:  'When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.',
             required: false,
             type: 'boolean'
         },
@@ -120,7 +120,7 @@ Controller nodes are always rollout one after other */
             type: 'string'
         },
         'retry': {
-            description:  'If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times',
+            description:  'If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times.',
             required: false,
             type: 'boolean'
         },

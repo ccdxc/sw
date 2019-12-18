@@ -15,25 +15,25 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 
 // RolloutSpec is the Spec of a Rollout
 message RolloutSpec {
-    //  New Version of the image to rollout to
+    //  New Version of the image to rollout to.
     string Version                              = 1 [(gogoproto.jsontag) = "version,inline"];
 
-    // Time, if specified, at which the rollout is supposed to start
+    // Time, if specified, at which the rollout is supposed to start. (example:"2002-10-02T15:00:00.05Z").
     api.Timestamp ScheduledStartTime            = 2 [(gogoproto.jsontag) = "scheduled-start-time,omitempty"];
 
     // ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time
-    // Typically represents the end of Maintenance window
+    // Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:00.05Z").
     api.Timestamp ScheduledEndTime            = 3 [(gogoproto.jsontag) = "scheduled-end-time,omitempty"];
 
-    // Strategy in which the nodes are upgraded - subject to other constraints below
+    // Strategy in which the nodes are upgraded - subject to other constraints below.
     enum StrategyType {
-        // fixed number of Nodes are upgraded in parallel
+        // fixed number of Nodes are upgraded in parallel.
         //ui-hint: Linear
         LINEAR      = 0;
 
         // Start off with small number of node upgrade. As upgrades progress, increase the
         // number of nodes getting upgraded exponentially still maintaining the maximum number
-        // of nodes that are getting updated within limits below
+        // of nodes that are getting updated within limits below.
         //ui-hint: Exponential
         EXPONENTIAL = 1;
     }
@@ -47,27 +47,27 @@ message RolloutSpec {
 
     // After these many failures are observed during NIC upgrade, the rollout process stops
     // This setting applies to smartNICs only.
-    // The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards
+    // The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.
     uint32 MaxNICFailuresBeforeAbort           = 6 [(gogoproto.jsontag) = "max-nic-failures-before-abort"];
 
     // If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
     // if a DistributedServiceCard matches multiple constraints, the first one is used.
     //  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
     // This order is mainly for the smartNICs on Hosts
-    // Controller nodes are always rollout one after other
+    // Controller nodes are always rollout one after other.
     repeated labels.Selector OrderConstraints   = 7 [(gogoproto.jsontag) = "order-constraints,omitempty"];
 
     // When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
     //  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.
     bool Suspend                                = 8 [(gogoproto.jsontag) = "suspend,omitempty"];
 
-    // Dont upgrade Controller but only upgrade DistributedServiceCards
+    // Dont upgrade Controller but only upgrade DistributedServiceCards.
     bool DSCsOnly                          = 9 [(gogoproto.jsontag) = "dscs-only,omitempty"];
 
-    // When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout
+    // When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.
     bool DSCMustMatchConstraint            = 10 [(gogoproto.jsontag) = "dsc-must-match-constraint,omitempty"];
 
-    // By default the upgrade is Disruptive. However the API can specify the type of upgrade
+    // By default the upgrade is Disruptive. However the API can specify the type of upgrade.
     enum DSCUpgradeType {
         //ui-hint: Disruptive
         Disruptive          = 0;
@@ -77,7 +77,7 @@ message RolloutSpec {
     string UpgradeType                          = 11 [(gogoproto.jsontag) = "upgrade-type",
                                                     (venice.check) = "StrEnum(RolloutSpec.DSCUpgradeType)"];
 
-    // If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times
+    // If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times.
     bool Retry                          = 12 [(gogoproto.jsontag) = "retry,omitempty"];
 }
 

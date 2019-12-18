@@ -89,16 +89,16 @@ var RolloutPhase_Phases_value = map[string]int32{
 
 func (RolloutPhase_Phases) EnumDescriptor() ([]byte, []int) { return fileDescriptorRollout, []int{3, 0} }
 
-// Strategy in which the nodes are upgraded - subject to other constraints below
+// Strategy in which the nodes are upgraded - subject to other constraints below.
 type RolloutSpec_StrategyType int32
 
 const (
-	// fixed number of Nodes are upgraded in parallel
+	// fixed number of Nodes are upgraded in parallel.
 	// ui-hint: Linear
 	RolloutSpec_LINEAR RolloutSpec_StrategyType = 0
 	// Start off with small number of node upgrade. As upgrades progress, increase the
 	// number of nodes getting upgraded exponentially still maintaining the maximum number
-	// of nodes that are getting updated within limits below
+	// of nodes that are getting updated within limits below.
 	// ui-hint: Exponential
 	RolloutSpec_EXPONENTIAL RolloutSpec_StrategyType = 1
 )
@@ -116,7 +116,7 @@ func (RolloutSpec_StrategyType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorRollout, []int{4, 0}
 }
 
-// By default the upgrade is Disruptive. However the API can specify the type of upgrade
+// By default the upgrade is Disruptive. However the API can specify the type of upgrade.
 type RolloutSpec_DSCUpgradeType int32
 
 const (
@@ -384,12 +384,12 @@ func (m *RolloutPhase) GetNumberOfRetries() uint32 {
 
 // RolloutSpec is the Spec of a Rollout
 type RolloutSpec struct {
-	//  New Version of the image to rollout to
+	//  New Version of the image to rollout to.
 	Version string `protobuf:"bytes,1,opt,name=Version,json=version,inline,proto3" json:"version,inline"`
-	// Time, if specified, at which the rollout is supposed to start
+	// Time, if specified, at which the rollout is supposed to start. (example:"2002-10-02T15:00:00.05Z").
 	ScheduledStartTime *api.Timestamp `protobuf:"bytes,2,opt,name=ScheduledStartTime,json=scheduled-start-time,omitempty" json:"scheduled-start-time,omitempty"`
 	// ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time
-	// Typically represents the end of Maintenance window
+	// Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:00.05Z").
 	ScheduledEndTime *api.Timestamp `protobuf:"bytes,3,opt,name=ScheduledEndTime,json=scheduled-end-time,omitempty" json:"scheduled-end-time,omitempty"`
 	//
 	Strategy string `protobuf:"bytes,4,opt,name=Strategy,json=strategy,proto3" json:"strategy"`
@@ -399,24 +399,24 @@ type RolloutSpec struct {
 	MaxParallel uint32 `protobuf:"varint,5,opt,name=MaxParallel,json=max-parallel,proto3" json:"max-parallel"`
 	// After these many failures are observed during NIC upgrade, the rollout process stops
 	// This setting applies to smartNICs only.
-	// The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards
+	// The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.
 	MaxNICFailuresBeforeAbort uint32 `protobuf:"varint,6,opt,name=MaxNICFailuresBeforeAbort,json=max-nic-failures-before-abort,proto3" json:"max-nic-failures-before-abort"`
 	// If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
 	// if a DistributedServiceCard matches multiple constraints, the first one is used.
 	//  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
 	// This order is mainly for the smartNICs on Hosts
-	// Controller nodes are always rollout one after other
+	// Controller nodes are always rollout one after other.
 	OrderConstraints []*labels.Selector `protobuf:"bytes,7,rep,name=OrderConstraints,json=order-constraints,omitempty" json:"order-constraints,omitempty"`
 	// When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
 	//  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.
 	Suspend bool `protobuf:"varint,8,opt,name=Suspend,json=suspend,omitempty,proto3" json:"suspend,omitempty"`
-	// Dont upgrade Controller but only upgrade DistributedServiceCards
+	// Dont upgrade Controller but only upgrade DistributedServiceCards.
 	DSCsOnly bool `protobuf:"varint,9,opt,name=DSCsOnly,json=dscs-only,omitempty,proto3" json:"dscs-only,omitempty"`
-	// When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout
+	// When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.
 	DSCMustMatchConstraint bool `protobuf:"varint,10,opt,name=DSCMustMatchConstraint,json=dsc-must-match-constraint,omitempty,proto3" json:"dsc-must-match-constraint,omitempty"`
 	//
 	UpgradeType string `protobuf:"bytes,11,opt,name=UpgradeType,json=upgrade-type,proto3" json:"upgrade-type"`
-	// If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times
+	// If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times.
 	Retry bool `protobuf:"varint,12,opt,name=Retry,json=retry,omitempty,proto3" json:"retry,omitempty"`
 }
 
