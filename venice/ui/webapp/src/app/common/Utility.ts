@@ -33,6 +33,9 @@ export class Utility {
   public static MACADDRESS_REGEX =
     /^([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})$/;
 
+  // Define Valid time out format
+  public static TIMEOUT_REGEX = /^(\d+(h|m|s|ms|ns|us|µs))+$/;
+
   // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
   public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';
@@ -548,12 +551,67 @@ export class Utility {
     return this.getLodash().isPlainObject(anItem);
   }
 
-  static isEmpty(val) {
-    return (val === undefined || val === null || val.length <= 0) ? true : false;
+  static isEmpty(val, checkTrim: boolean = false) {
+    if (val === undefined || val === null || val.length <= 0) {
+      return true;
+    }
+    if (!checkTrim) {
+      return false;
+    }
+    return val.trim().length === 0;
   }
 
   public static isEmptyObject(obj: any): boolean {
     return this.getLodash().isEmpty(obj);
+  }
+
+  public static isPortValid(port: string): boolean {
+    if (!port || !port.trim()) {
+      return false;
+    }
+    const number = Number(port.trim());
+    if (isNaN(number)) {
+      return false;
+    }
+    if (number < 1 || number > 65536) {
+      return false;
+    }
+    return true;
+  }
+
+  // this one checks whether the string is a port, a port range or
+  // a list of ports or port ranges seperated by comma
+  // the method returns a string as error message
+  // returns null if there are no errors
+  public static isPortsValid(val: string, delimiter: string = ','): string {
+    const arr: string[] = val.trim().split(delimiter);
+    for (let i = 0; i < arr.length; i++) {
+      const port: string = arr[i].trim();
+      const portArr: string[] = port.split('-');
+      if (portArr.length > 2) {
+        return port + ' is an invalid port address or port range.';
+      }
+      if (portArr.length === 1) {
+        if (!this.isPortValid(portArr[0])) {
+          return portArr[0] + ' is an invalid port address.';
+        }
+      } else { // portArr.length === 2
+        if (!this.isPortValid(portArr[0])) {
+          return portArr[0] + ' is an invalid port address.';
+        }
+        if (!this.isPortValid(portArr[1])) {
+          return portArr[1] + ' is an invalid port address.';
+        }
+        if (parseInt(portArr[0], 10) >= parseInt(portArr[1], 10)) {
+          return port + ' is an invalid port range.';
+        }
+      }
+    }
+    return null;
+  }
+
+  public static isTimeoutValid(timeout: string): boolean {
+    return this.TIMEOUT_REGEX.test(timeout);
   }
 
   public static getMousePosition(event) {

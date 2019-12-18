@@ -13,8 +13,6 @@ import { SecurityProtoPort } from '@sdk/v1/models/generated/search';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
-const TIMEOUT_REGEX = /^(\d+(h|m|s|ms|ns|us|µs))+$/;
-
 @Component({
   selector: 'app-newsecurityapp',
   templateUrl: './newsecurityapp.component.html',
@@ -158,7 +156,11 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
 
   addProtoTarget() {
     const tempTargets = this.securityForm.get(['spec', 'proto-ports']) as FormArray;
-    tempTargets.insert(0, new SecurityProtoPort().$formGroup);
+    const newFormGroup: FormGroup = new SecurityProtoPort().$formGroup;
+    const ctrl: AbstractControl = newFormGroup.get(['ports']);
+    ctrl.disable();
+    this.addPortsValidator(ctrl);
+    tempTargets.insert(0, newFormGroup);
   }
 
   addMSRPCTarget() {
@@ -297,24 +299,27 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     } else if (this.pickedOption === SecurityAppOptions.ALGONLY) {
       return this.validatingALGinputs();
     } else {
-      if (this.validatingProtoInputs() && this.validatingALGinputs()) {
-        return true;
-      } else {
-        return false;
-      }
+      return this.validatingProtoInputs() && this.validatingALGinputs();
     }
   }
 
   validatingProtoInputs() {
-    const tempProto: any = this.securityForm.get(['spec', 'proto-ports']);
-      for (const i of tempProto.controls) {
-        if (i.controls.ports.value == null || i.controls.protocol.value == null) {
-          return false;
-        } else if (i.controls.ports.value === '' || i.controls.protocol.value === '') {
-          return false;
-        }
+    const tempProto: FormArray = this.securityForm.get(['spec', 'proto-ports']) as FormArray;
+    const formGroups: FormGroup[] = tempProto.controls as FormGroup[];
+    for (let i = 0; i < formGroups.length; i++) {
+      const formGroup: FormGroup = formGroups[i];
+      if (!formGroup.value || Utility.isEmpty(formGroup.value.protocol, true)) {
+        return false;
       }
-      return true;
+      if ((formGroup.value.protocol === 'tcp' || formGroup.value.protocol === 'udp')
+          && Utility.isEmpty(formGroup.value.ports, true)) {
+        return false;
+      }
+      if (!formGroup.valid) { // validate error
+        return false;
+      }
+    }
+    return true;
   }
 
   validatingALGinputs() {
@@ -331,13 +336,63 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     }
   }
 
+  onProtocolChange(event: any, formGroup: any): void {
+    let val = formGroup.get(['protocol']).value;
+    const portsField: AbstractControl = formGroup.get(['ports']);
+    if (val) {
+      val = val.trim();
+    }
+    if (val !== 'tcp' && val !== 'udp') {
+      portsField.setValue(null);
+      portsField.disable();
+    } else {
+      portsField.enable();
+    }
+  }
+
+  isPortRequired(formGroup: any): boolean {
+    const val = formGroup.get(['ports']).value;
+    if (val && val.trim()) {
+      return false;
+    }
+    const protocol = formGroup.get(['protocol']).value;
+    return protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
+  }
+
+  isPortsFieldValid(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val: string = control.value;
+      if (!val || !val.trim()) {
+        return null;
+      }
+      const errorMsg = Utility.isPortsValid(val);
+      if (errorMsg) {
+        return {
+          fieldPort: {
+            required: false,
+            message: errorMsg
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  addPortsValidator(ctrl: AbstractControl): void {
+    if (!ctrl.validator) {
+      ctrl.setValidators([this.isPortsFieldValid()]);
+    } else {
+      ctrl.setValidators([ctrl.validator, this.isPortsFieldValid()]);
+    }
+  }
+
   isTimeoutValid(fieldName): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const val: string = control.value;
       if (!val) {
         return null;
       }
-      if (!TIMEOUT_REGEX.test(val)) {
+      if (!Utility.isTimeoutValid(val)) {
         return {
           fieldname: {
             required: false,

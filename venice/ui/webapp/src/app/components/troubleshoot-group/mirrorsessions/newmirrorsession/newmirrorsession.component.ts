@@ -483,25 +483,16 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   isValidProto(chip: string) {
     const arr: string[] = chip.split('/');
     const prot: string = arr[0];
-    if (arr.length !== 2) {
-      return true;
-    }
-    if (prot.toLowerCase() !== 'tcp' &&
-        prot.toLowerCase() !== 'udp' &&
-        prot.toLowerCase() !== 'dns' &&
-        prot.toLowerCase() !== 'ftp' &&
-        prot.toLowerCase() !== 'sunrpc' &&
-        prot.toLowerCase() !== 'msrpc') {
+    if (arr.length > 2) {
       return false;
     }
-    const number = parseInt(arr[1], 10);
-    if (isNaN(number)) {
+    if (arr.length === 1) {
+      return prot !== 'tcp' && prot !== 'udp';
+    }
+    if (prot !== 'tcp' && prot !== 'udp') {
       return false;
     }
-    if (number < 1 || number > 65536) {
-      return false;
-    }
-    return true;
+    return Utility.isPortValid(arr[1]);
   }
 
   createObject(newObject: IMonitoringMirrorSession) {

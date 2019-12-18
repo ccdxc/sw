@@ -48,8 +48,12 @@ export class IPUtility {
     // None of the octets can be greater than 255
     if (ipParts.some(
       (part) => {
+        // fix 1.1.1.1a is a valid ip issue
+        if (isNaN(Number(part))) {
+          return true;
+        }
         const octet = parseInt(part, 10);
-        return isNaN(octet) || octet > 255;
+        return octet < 0 || octet > 255;
       }
     )) {
       return false;

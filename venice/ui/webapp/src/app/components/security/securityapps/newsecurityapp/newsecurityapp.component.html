@@ -90,17 +90,20 @@
       <div fxFlex="150px" fxLayout="row">
         <input class=newsecurityapp-input fxFlex="nogrow"
                spellcheck="false" placeholder="Enter ..." pInputText
+               (change)="onProtocolChange($event, securityForm.get(['spec','proto-ports',index]))"
                formControlName="protocol">
       </div>
       <div fxFlex="30px"></div>
-      <div fxFlex="30px" fxLayout="row">
-        <span>Ports:</span>
+      <div fxFlex="45px" fxLayout="row">
+        <div
+             [ngClass]="{'requiredLabel': isPortRequired(securityForm.get(['spec','proto-ports',index]))}">
+          Ports:</div>
       </div>
       <div fxFlex="20px"></div>
       <div fxFlex="150px" fxLayout="row">
         <input class="newsecurityapp-input" fxFlex="nogrow"
                spellcheck="false" placeholder="Enter ..." pInputText
-               formControlName="ports">
+               appErrorTooltip formControlName="ports">
       </div>
       <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
