@@ -79,6 +79,12 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     conf->remote_asn        = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("vni","");
     conf->vni               = strtol (value.c_str(),NULL, 0);
+    value                   = pt.get <std::string>("route.dest_ip","");
+    conf->route_dest_ip     = inet_network (value.c_str());
+    value                   = pt.get <std::string>("route.nh_ip","");
+    conf->route_nh_ip       = inet_network (value.c_str());
+    value                   = pt.get <std::string>("route.prefix","");
+    conf->route_prefix_len  = strtol (value.c_str(), NULL, 0);
 
     return 0;
 }

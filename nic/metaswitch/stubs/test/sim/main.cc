@@ -90,7 +90,7 @@ pdsa_sim_test_bgp_update ()
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(htonl(g_test_conf.remote_ip_addr));
     bgp_peer_spec.set_vrfid(1);
-    bgp_peer_spec.set_adminen(pds::BGP_ADMIN_UP);
+    bgp_peer_spec.set_adminen(pds::ADMIN_UP);
     bgp_peer_spec.set_peerport(0);
     auto localaddr = bgp_peer_spec.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);

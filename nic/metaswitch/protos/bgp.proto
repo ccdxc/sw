@@ -24,6 +24,7 @@ package pds;
 import "pdsa.proto";
 import "meta/meta.proto";
 import "types.proto";
+import "common.proto";
 
 // The bgp service definition
 service BGPSvc {
@@ -50,20 +51,6 @@ enum BGPAfi {
   BGP_AFI_IPV4  = 1;
   BGP_AFI_IPV6  = 2;
   BGP_AFI_L2VPN = 3;
-}
-
-// Admin Status
-enum BGPAdminSt {
-  BGP_ADMIN_NONE = 0;
-  BGP_ADMIN_UP   = 1;
-  BGP_ADMIN_DOWN = 2;
-}
-
-// AMB Bool
-enum AMBBool {
-  BOOL_NONE  = 0;
-  BOOL_TRUE  = 1;
-  BOOL_FALSE = 2;
 }
 
 // BGP sub-address family identitfier
@@ -189,7 +176,7 @@ message BGPPeerSpec {
   // local router must not initiate connections to the neighbor
   // and must not respond to TCP connections attempts from
   // neighbor
-  BGPAdminSt      AdminEn      = 3 [(venice.pdsaFields) = {Field: "admin_status"}];
+  AdminSt         AdminEn      = 3 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
   types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr"}, (gogoproto.moretags) = "meta:mandatory"];
   // BGP Peer Port Address

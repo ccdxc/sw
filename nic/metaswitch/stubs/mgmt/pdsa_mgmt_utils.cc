@@ -151,6 +151,16 @@ pdsa_set_address_oid(NBB_ULONG *oid,
             oidAddrTypeIdx = AMB_LIM_L3_ADDR_IPDDR_TYP_INDEX;
             oidAddrIdx = AMB_LIM_L3_ADDR_IPADDR_INDEX;
         }
+    } else if (strcmp(fieldName, "dest_addr")  == 0) {
+        if (strcmp(tableName, "rtmStaticRtTable") == 0) {
+            oidAddrTypeIdx  = AMB_QCR_STRT_DEST_ADDR_TYPE_IX;
+            oidAddrIdx      = AMB_QCR_STRT_DEST_ADDR_INDEX;
+         }
+    } else if (strcmp(fieldName, "next_hop")  == 0) {
+        if (strcmp(tableName, "rtmStaticRtTable") == 0) {
+            oidAddrTypeIdx  = AMB_QCR_STRT_NEXT_HOP_TYPE_IX;
+            oidAddrIdx      = AMB_QCR_STRT_NEXT_HOP_INDEX;
+        }
     } else {
         assert(0);
     }
@@ -230,6 +240,26 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
                                                  data->ipaddress);
             addrIdx  = AMB_OID_LIM_L3_ADDR_IPADDR;
             addrType = AMB_OID_LIM_L3_ADDR_TYPE; 
+        }
+    } else if (strcmp(fieldName, "dest_addr")  == 0) {
+        if (strcmp(tableName, "rtmStaticRtTable") == 0) {
+            AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
+            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+                                                 &data->dest_addr_type, 
+                                                 &data->dest_addr_len,
+                                                 data->dest_addr);
+            addrType = AMB_OID_QCR_STRT_DEST_ADDR_TYP;
+            addrIdx  = AMB_OID_QCR_STRT_DEST_ADDR;
+         }
+    } else if (strcmp(fieldName, "next_hop")  == 0) {
+        if (strcmp(tableName, "rtmStaticRtTable") == 0) {
+            AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
+            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+                                                 &data->next_hop_type, 
+                                                 &data->next_hop_len,
+                                                 data->next_hop);
+            addrType = AMB_OID_QCR_STRT_NEXT_HOP_TYP;
+            addrIdx  = AMB_OID_QCR_STRT_NEXT_HOP;
         }
     } else {
         assert(0);

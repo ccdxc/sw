@@ -24,7 +24,7 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(0);
         ent->set_vrfid(1);
-        ent->set_adminen(pds::BGP_ADMIN_UP);
+        ent->set_adminen(pds::ADMIN_UP);
         ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);

@@ -16,6 +16,9 @@ typedef struct test_config_s {
     uint32_t    local_asn;
     uint32_t    remote_asn;
     uint32_t    vni;
+    uint32_t    route_dest_ip;
+    uint32_t    route_nh_ip;
+    uint32_t    route_prefix_len;;
 }test_config_t;
 
 int parse_json_config (test_config_t *conf, uint8_t node);

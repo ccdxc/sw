@@ -21,6 +21,7 @@
 #include <gen/proto/subnet.grpc.pb.h>
 #include <gen/proto/bgp.grpc.pb.h>
 #include <gen/proto/evpn.grpc.pb.h>
+#include <gen/proto/staticroute.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -37,6 +38,7 @@ static unique_ptr<pds::BGPSvc::Stub>    g_bgp_stub_;
 static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
+static unique_ptr<pds::StaticRouteSvc::Stub>    g_route_stub_;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -134,6 +136,35 @@ static void create_evpn_evi_proto_grpc () {
     printf("Sent EVPN Evi proto\n");
 }
 
+static void create_route_proto_grpc () {
+    StaticRouteRequest  request;
+    StaticRouteResponse response;
+    ClientContext       context;
+    Status              ret_status;
+
+    auto proto_spec = request.add_request ();
+    auto dest_addr  = proto_spec->mutable_destaddr();
+    dest_addr->set_af (types::IP_AF_INET);
+    dest_addr->set_v4addr (htonl(g_test_conf_.route_dest_ip));
+    proto_spec->set_prefixlen (g_test_conf_.route_prefix_len);
+    auto next_hop   = proto_spec->mutable_nexthopaddr();
+    next_hop->set_af (types::IP_AF_INET);
+    next_hop->set_v4addr (htonl(g_test_conf_.route_nh_ip));
+    proto_spec->set_adminstatus (ADMIN_UP);
+    proto_spec->set_override (BOOL_TRUE);
+    proto_spec->set_admindist (1);
+    proto_spec->set_action (STRT_ACTION_FWD);
+
+    ret_status = g_route_stub_->StaticRouteSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+    printf("Sent Static Route proto\n");
+}
+
 static void create_bgp_peer_proto_grpc () {
     BGPPeerRequest  request;
     BGPResponse     response;
@@ -145,7 +176,7 @@ static void create_bgp_peer_proto_grpc () {
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(htonl(g_test_conf_.remote_ip_addr));
     proto_spec->set_vrfid(PDSA_BGP_RM_ENT_INDEX);
-    proto_spec->set_adminen(pds::BGP_ADMIN_UP);
+    proto_spec->set_adminen(pds::ADMIN_UP);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -233,6 +264,7 @@ int main(int argc, char** argv)
     g_evpn_stub_    = EvpnSvc::NewStub (channel);
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
+    g_route_stub_   = StaticRouteSvc::NewStub (channel);
 
     // Send protos to grpc server
     create_device_proto_grpc();
@@ -242,6 +274,7 @@ int main(int argc, char** argv)
     create_vpc_proto_grpc();
     create_evpn_evi_proto_grpc();
     create_subnet_proto_grpc();
+    create_route_proto_grpc();
 
     return 0;
 }

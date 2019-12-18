@@ -30,6 +30,7 @@ extern "C" {
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
 #include "gen/proto/evpn.pb.h"
+#include "gen/proto/staticroute.pb.h"
 
 #define PDSA_CTM_GRPC_CORRELATOR 0x101
 #define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
@@ -149,6 +150,10 @@ NBB_VOID evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data);
 NBB_VOID evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req,
                                         AMB_EVPN_IP_VRF_RT *data);
+NBB_VOID rtm_strt_fill_func (StaticRouteSpec&        req,
+                             AMB_GEN_IPS             *mib_msg,
+                             AMB_CIPR_RTM_STATIC_RT  *data,
+                             NBB_LONG                row_status);
 } // namespace pds
 
 namespace pdsa_stub {
