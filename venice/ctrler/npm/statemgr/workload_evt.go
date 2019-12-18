@@ -359,36 +359,11 @@ func (ws *WorkloadState) createEndpoints() error {
 		if len(ws.Workload.Spec.Interfaces[ii].IpAddresses) > 0 {
 			epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
 		}
-
-		// see if we need to delete old endpoint
-		/*oldEP, err := ws.stateMgr.FindEndpoint(ws.Workload.Tenant, epName)
-		if err == nil {
-			_, isSpecDifferent := ref.ObjDiff(oldEP.Endpoint.Spec, epInfo.Spec)
-			_, isStatusDifferent := ref.ObjDiff(oldEP.Endpoint.Status, epInfo.Status)
-
-			if isSpecDifferent || isStatusDifferent {
-				// delete the old endpoint
-				ws.stateMgr.ctrler.Endpoint().Delete(&oldEP.Endpoint.Endpoint)
-
-				// create new endpoint
-				err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
-				if err != nil {
-					log.Errorf("Error creating endpoint. Err: %v", err)
-				}
-			} else {
-				log.Infof("Existing endpoint for workload is same as new one %+v ", epInfo)
-			}
-		} else {
-			// create new endpoint
-			err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
-			if err != nil {
-				log.Errorf("Error creating endpoint. Err: %v", err)
-			}
-		}*/
 		// create new endpoint
 		err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
 		if err != nil {
 			log.Errorf("Error creating endpoint. Err: %v", err)
+			return kvstore.NewTxnFailedError()
 		}
 	}
 

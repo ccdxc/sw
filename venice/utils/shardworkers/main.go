@@ -51,6 +51,11 @@ func (w *worker) pendingCount() uint32 {
 	return (uint32)(len(w.queue))
 }
 
+func (w *worker) retryError(err error) bool {
+
+	return kvstore.IsKeyNotFoundError(err) || kvstore.IsTxnFailedError(err)
+}
+
 func (w *worker) Run(ctx context.Context) {
 	w.workMaster.StartWg.Done()
 	defer w.workMaster.DoneWg.Done()
@@ -64,7 +69,7 @@ func (w *worker) Run(ctx context.Context) {
 				} else {
 					err = workContext.workObj.WorkFunc(ctx)
 				}
-				if kvstore.IsKeyNotFoundError(err) {
+				if w.retryError(err) {
 					// retry after a some time
 					time.Sleep(20 * time.Millisecond * time.Duration(i+1))
 					continue
