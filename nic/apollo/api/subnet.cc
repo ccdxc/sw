@@ -314,9 +314,9 @@ subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-subnet_entry::reprogram_config(api_op_t api_op) {
+subnet_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        return impl_->reprogram_hw(this, api_op);
+        return impl_->reprogram_hw(this, obj_ctxt);
     }
     return SDK_RET_OK;
 }

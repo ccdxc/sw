@@ -78,14 +78,16 @@ public:
     ///            be based on existing state and any of the state present in
     ///            the dirty object list (like clone objects etc.)
     /// \param[in] api_obj API object being activated
-    /// \param[in] api_op  API operation
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return    #SDK_RET_OK on success, failure status code on error
-    /// \NOTE      this method is called when an object is in the dependent/puppet
+    /// \NOTE      this method is called when an object is in the dependent
     ///            object list
-    virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
+    virtual sdk_ret_t reprogram_hw(api_base *api_obj,
+                                   api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
-    ///            table(s), if any, by updating packed entries with latest epoch#
+    ///            table(s), if any, by updating packed entries with latest
+    ///            epoch#
     /// \param[in] api_obj  API object holding this resource
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -93,7 +95,8 @@ public:
                                  api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     update all h/w tables relevant to this object except stage 0
-    ///            table(s), if any, by updating packed entries with latest epoch#
+    ///            table(s), if any, by updating packed entries with latest
+    ///            epoch#
     /// \param[in] curr_obj current version of the unmodified object
     /// \param[in] prev_obj previous version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API

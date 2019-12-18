@@ -112,11 +112,6 @@ policer_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-policer_entry::reprogram_config(api_op_t api_op) {
-    return SDK_RET_ERR;
-}
-
-sdk_ret_t
 policer_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_policer_spec_t *spec = &obj_ctxt->api_params->policer_spec;
 
@@ -132,6 +127,11 @@ sdk_ret_t
 policer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
+}
+
+sdk_ret_t
+policer_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_ERR;
 }
 
 sdk_ret_t

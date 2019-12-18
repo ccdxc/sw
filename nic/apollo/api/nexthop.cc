@@ -141,7 +141,7 @@ nexthop::add_deps(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-nexthop::reprogram_config(api_op_t api_op) {
+nexthop::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_ERR;
 }
 

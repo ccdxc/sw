@@ -100,7 +100,7 @@ vpc_impl::nuke_resources(api_base *api_obj) {
 // TODO: when epoch support is added to these tables, we should pick
 //       old epoch contents and override them !!!
 sdk_ret_t
-vpc_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+vpc_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_ERR;
 }
 

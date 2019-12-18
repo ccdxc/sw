@@ -61,13 +61,6 @@ public:
     /// \return   SDK_RET_OK or error code
     static sdk_ret_t free(obj_id_t obj_id, api_base *api_obj);
 
-    /// \brief Initiaize the api object with given config
-    /// \param[in] api_ctxt Transient state associated with this API
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
-        return SDK_RET_INVALID_OP;
-    }
-
     /// \brief  Allocate hardware resources for this object
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
@@ -77,31 +70,25 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
+    /// \brief    free hardware resources used by this object, if any
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief Initiaize the api object with given config
+    /// \param[in] api_ctxt Transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief program config in the hardware during create operation
     /// Program all hardware tables relevant to this object except stage 0
     /// table(s), if any and also set the valid bit
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) {
-        return SDK_RET_INVALID_OP;
-    }
-
-    /// \brief    re-program config in the hardware
-    /// re-program all hardware tables relevant to this object except stage 0
-    /// table(s), if any and this reprogramming must be based on existing state
-    /// and any of the state present in the dirty object list (like cloned
-    /// objects etc.)
-    /// \param[in] api_op API operation
-    /// \return #SDK_RET_OK on success, failure status code on error
-    /// NOTE: this method is called when an object is in the dependent/puppet
-    ///       object list
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) {
-        return SDK_RET_INVALID_OP;
-    }
-
-    /// \brief    free hardware resources used by this object, if any
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) {
         return SDK_RET_INVALID_OP;
     }
 
@@ -146,6 +133,19 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
                                       api_obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief    re-program config in the hardware
+    /// re-program all hardware tables relevant to this object except stage 0
+    /// table(s), if any and this reprogramming must be based on existing state
+    /// and any of the state present in the dirty object list (like cloned
+    /// objects etc.)
+    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reprogram_config(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 

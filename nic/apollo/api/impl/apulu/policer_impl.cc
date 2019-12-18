@@ -143,7 +143,7 @@ policer_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-policer_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+policer_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 

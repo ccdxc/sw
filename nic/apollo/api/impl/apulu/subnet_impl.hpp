@@ -113,12 +113,12 @@ public:
     ///             must be based on existing state and any of the state
     ///             present in the dirty object list (like clone objects etc.)
     /// \param[in]  api_obj API object being activated
-    /// \param[in]  api_op API operation
+    /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     // NOTE: this method is called when an object is in the dependent/puppet
     //       object list
     virtual sdk_ret_t reprogram_hw(api_base *api_obj,
-                                   api_op_t api_op) override {
+                                   api_obj_ctxt_t *obj_ctxt) override {
         // other object updates don't affect subnet h/w programming when subnet
         // is sitting in the dependent object list, any updates to route
         // table(s) and/or policy table(s) that subnet is pointing to are

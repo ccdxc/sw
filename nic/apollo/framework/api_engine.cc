@@ -812,7 +812,7 @@ api_engine::activate_config_stage_(void) {
     // walk over all the dependent objects and reprogram hw, if any
     for (auto it = batch_ctxt_.aol.begin();
          it != batch_ctxt_.aol.end(); ++it) {
-        ret = (*it)->reprogram_config(batch_ctxt_.aom[*it]->api_op);
+        ret = (*it)->reprogram_config(batch_ctxt_.aom[*it]);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_REPGMCFG_UPDATE_COUNTER_INC(err, 1);
             goto error;

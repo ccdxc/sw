@@ -955,7 +955,7 @@ vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 }
 
 sdk_ret_t
-vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     vnic_entry *vnic;
     subnet_entry *subnet;

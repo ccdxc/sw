@@ -113,9 +113,10 @@ public:
     /// \brief          reprogram all h/w tables relevant to this object and
     ///                 dependent on other objects except stage 0 table(s),
     ///                 if any
-    /// \param[in] api_op    API operation
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
+    virtual sdk_ret_t reprogram_config(api_obj_ctxt_t *obj_ctxt) override {
         return SDK_RET_INVALID_OP;
     }
 

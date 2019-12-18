@@ -255,10 +255,10 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-vnic_entry::reprogram_config(api_op_t api_op) {
+vnic_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
                     key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
-    return impl_->reprogram_hw(this, api_op);
+    return impl_->reprogram_hw(this, obj_ctxt);
 }
 
 sdk_ret_t

@@ -255,7 +255,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 // TODO: when epoch support is added to these tables, we should pick
 //       old epoch contents and override them !!!
 sdk_ret_t
-vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_subnet_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;

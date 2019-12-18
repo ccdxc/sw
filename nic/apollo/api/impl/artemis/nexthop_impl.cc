@@ -131,7 +131,7 @@ error:
 }
 
 sdk_ret_t
-nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+nexthop_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_INVALID_OP;
 }
 

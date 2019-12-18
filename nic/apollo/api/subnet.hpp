@@ -121,9 +121,9 @@ public:
 
     /// \brief          reprogram all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
-    /// \param[in] api_op    API operation
+    /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
+    virtual sdk_ret_t reprogram_config(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief re-activate config in the hardware stage 0 tables relevant to
     ///        this object, if any, this reactivation must be based on existing

@@ -115,7 +115,7 @@ nexthop_group::program_create(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-nexthop_group::reprogram_config(api_op_t api_op) {
+nexthop_group::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_ERR;
 }
 
