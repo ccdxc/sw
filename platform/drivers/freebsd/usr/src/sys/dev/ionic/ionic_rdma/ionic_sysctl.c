@@ -45,7 +45,7 @@ bool ionic_dbg_enable = true;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbgfs_enable, CTLFLAG_RDTUN,
     &ionic_dbg_enable, 0, "Expose resource info in debug sysctls");
 
-int ionic_sqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
+int ionic_sqcmb_order = 5; /* 32 pages */
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, sqcmb_order, CTLFLAG_RWTUN,
     &ionic_sqcmb_order, 0, "Only alloc SQ in CMB if less than order");
 
@@ -53,7 +53,7 @@ bool ionic_sqcmb_inline = false;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, sqcmb_inline, CTLFLAG_RWTUN,
     &ionic_sqcmb_inline, 0, "Only alloc SQ in CMB when using inline data");
 
-int ionic_rqcmb_order = 0; /* DISABLED - temporary (was 32 pages) */
+int ionic_rqcmb_order = 5; /* 32 pages */
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, rqcmb_order, CTLFLAG_RWTUN,
     &ionic_rqcmb_order, 0, "Only alloc RQ in CMB if less than order");
 
