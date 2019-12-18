@@ -157,6 +157,9 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		case ErrInternal:
 			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
 			return
+		case context.DeadlineExceeded: // thrown when API server is unreachable because cluster lost its quorum
+			s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
+			return
 		case nil:
 			// do nothing
 		default:
@@ -169,6 +172,9 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		switch err {
 		case ErrUsernameConflict:
 			s.httpErrorHandler(w, req, fmt.Sprintf("%s|%s %s", user.Tenant, user.Name, err.Error()), http.StatusConflict)
+			return
+		case context.DeadlineExceeded: // thrown when API server is unreachable because cluster lost its quorum
+			s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
 			return
 		case nil:
 			// do nothing
@@ -206,6 +212,9 @@ func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredentia
 	user, ok, err := s.authnMgr.Authenticate(in)
 	if err != nil {
 		s.logger.Errorf("failed to authenticate user [%s|%s]:  err: %v", in.Tenant, in.Username, err)
+		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+			err = context.DeadlineExceeded
+		}
 		return nil, err
 	}
 	if !ok {
@@ -221,6 +230,9 @@ func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, passwor
 	user, err := s.updateUserStatus(in, password)
 	if err != nil {
 		s.logger.Errorf("Error updating status for user [%s|%s], Err: %v", in.Tenant, in.Name, err)
+		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+			err = context.DeadlineExceeded
+		}
 		return in, "", "", exp, err
 	}
 	// create CSRF token

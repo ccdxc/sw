@@ -729,6 +729,40 @@ func TestAuditingWithElasticNotAvailable(t *testing.T) {
 	AssertOk(t, err, "unable to delete techsupport request")
 }
 
+func TestAPIServerNotAvailable(t *testing.T) {
+	ti := tInfo{}
+	err := ti.setupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	err = ti.startSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.fdr.Stop()
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	err = ti.startAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.apiGw.Stop()
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, ti.logger); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(ti.apiServerAddr, true, false, userCred, ti.logger)
+	_, err = NewLoggedInContext(context.TODO(), ti.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	ti.apiServer.Stop()
+	AssertEventually(t, func() (bool, interface{}) {
+		_, _, err := login.UserLogin(context.TODO(), ti.apiGwAddr, userCred)
+		if err != nil && strings.Contains(err.Error(), "503") {
+			return true, nil
+		}
+		return false, err
+	}, "unexpected error when API server is unreachable")
+}
+
 // BenchmarkProcessEvents1Rule/auditor.ProcessEvents()-8         	     500	   6800263 ns/op
 func BenchmarkProcessEvents1Rule(b *testing.B) {
 	benchmarkProcessEvents(1, b)
