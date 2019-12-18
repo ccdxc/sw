@@ -111,29 +111,11 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	err = stateMgr.ctrler.NetworkSecurityPolicy().Create(&sgp)
 	AssertOk(t, err, "Error creating the sg policy")
 
-	AssertEventually(t, func() (bool, interface{}) {
-		sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
-		if err == nil && (len(sgps.groups) == 1) {
-			return true, nil
-		}
-		return false, nil
-	}, "Sg not found", "1ms", "1s")
-
 	// verify we can find the sg policy
 	sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
 	AssertOk(t, err, "Could not find the sg policy")
-	Assert(t, (len(sgps.groups) == 1), "Sg was not added to sgpolicy", sgps)
-	Assert(t, sgps.groups["procurement"].SecurityGroup.Name == "procurement", "Sgpolicy is not linked to sg", sgps)
 	Assert(t, len(sgps.NetworkSecurityPolicy.Status.RuleStatus) == len(sgps.NetworkSecurityPolicy.Spec.Rules), "Rule status was not updated")
 	Assert(t, sgps.NetworkSecurityPolicy.Status.RuleStatus[0].RuleHash != "", "Rule hash was not updated")
-
-	// verify sg has the policy info
-	prsg, err := stateMgr.FindSecurityGroup("default", "procurement")
-	AssertOk(t, err, "Could not find security group")
-	Assert(t, (len(prsg.policies) == 1), "sgpolicy was not added to sg", prsg)
-	Assert(t, (prsg.policies[sgps.NetworkSecurityPolicy.Name].NetworkSecurityPolicy.Name == sgps.NetworkSecurityPolicy.Name), "Sg is not linked to sgpolicy", prsg)
-	Assert(t, (len(prsg.SecurityGroup.Status.Policies) == 1), "Policy not found in sg status", prsg)
-	Assert(t, (prsg.SecurityGroup.Status.Policies[0] == sgps.NetworkSecurityPolicy.Name), "Policy not found in sg status", prsg)
 
 	// update sg policy
 	newRule := security.SGRule{
@@ -197,10 +179,6 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	// verify the sg policy is gone
 	_, err = stateMgr.FindSgpolicy("default", "test-sgpolicy")
 	Assert(t, (err != nil), "Security policy still found after deleting")
-
-	// verify sgpolicy is unlinked from sg
-	Assert(t, (len(prsg.policies) == 0), "sgpolicy was not removed sg", prsg)
-	Assert(t, (len(prsg.SecurityGroup.Status.Policies) == 0), "sgpolicy was not removed sg", prsg)
 }
 
 func createPolicy(s *Statemgr, name, version string) error {

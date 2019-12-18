@@ -32,7 +32,7 @@ type NetworkReactor interface {
 }
 type NetworkOStream struct {
 	sync.Mutex
-	stream netproto.NetworkApi_NetworkOperUpdateClient
+	stream netproto.NetworkApiV1_NetworkOperUpdateClient
 }
 
 // WatchNetworks runs Network watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "Network")
-	networkRPCClient := netproto.NewNetworkApiClient(client.rpcClient.ClientConn)
+	networkRPCClient := netproto.NewNetworkApiV1Client(client.rpcClient.ClientConn)
 	stream, err := networkRPCClient.WatchNetworks(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Network. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 }
 
 // watchNetworkRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchNetworkRecvLoop(stream netproto.NetworkApi_WatchNetworksClient, recvch chan<- *netproto.NetworkEvent) {
+func (client *NimbusClient) watchNetworkRecvLoop(stream netproto.NetworkApiV1_WatchNetworksClient, recvch chan<- *netproto.NetworkEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

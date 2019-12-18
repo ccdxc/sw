@@ -219,10 +219,7 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 			Name:      "default",
 			Namespace: "default",
 		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
+		Spec: netproto.NetworkSpec{},
 	}
 
 	// endpoint
@@ -234,17 +231,14 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			MacAddress:    "4242.4242.4242",
 			IPv4Addresses: []string{"10.1.1.1/24"},
-			IPv4Gateway:   "20.1.1.254",
 		},
 	}
 
 	// create an endpoint
-	err := ds.datapath.CreateRemoteEndpoint(&epinfo, &nt, nil, 0, vrf)
+	err := ds.datapath.CreateRemoteEndpoint(&epinfo, &nt, 0, vrf)
 	AssertOk(t, err, "Error creating endpoint in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -253,7 +247,7 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 		return (len(eplist) == 1), eplist
 	}, "invalid number of endpoints")
 
-	err = ds.datapath.UpdateRemoteEndpoint(&epinfo, &nt, nil)
+	err = ds.datapath.UpdateRemoteEndpoint(&epinfo, &nt)
 	AssertOk(t, err, "Error updating endpoint in delphi")
 
 	// delete the interface
@@ -286,10 +280,7 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 			Name:      "default",
 			Namespace: "default",
 		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
+		Spec: netproto.NetworkSpec{},
 	}
 
 	// endpoint
@@ -301,17 +292,14 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			MacAddress:    "4242.4242.4242",
 			IPv4Addresses: []string{"10.1.1.1/24"},
-			IPv4Gateway:   "20.1.1.254",
 		},
 	}
 
 	// create an endpoint
-	_, err := ds.datapath.CreateLocalEndpoint(&epinfo, &nt, nil, 0, 0, vrf)
+	_, err := ds.datapath.CreateLocalEndpoint(&epinfo, &nt, 0, 0, vrf)
 	AssertOk(t, err, "Error creating endpoint in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -320,7 +308,7 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 		return (len(eplist) == 1), eplist
 	}, "invalid number of endpoints")
 
-	err = ds.datapath.UpdateLocalEndpoint(&epinfo, &nt, nil)
+	err = ds.datapath.UpdateLocalEndpoint(&epinfo, &nt)
 	AssertOk(t, err, "Error updating endpoint in delphi")
 
 	// delete the interface
@@ -369,9 +357,7 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-			RouterMAC:   "0001.0203.0405",
+			VlanID: 42,
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: 100,
@@ -381,13 +367,6 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 	// create a network
 	err := ds.datapath.CreateNetwork(&nt, []*netproto.Interface{&intf}, vrf)
 	AssertOk(t, err, "Error creating network in delphi")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		ntlist := ds.datapath.delphiClient.List("NetworkSpec")
-		log.Infof("Got network : %+v", ntlist[0])
-		return (len(ntlist) == 1), ntlist
-	}, "invalid number of networks")
-
 	err = ds.datapath.UpdateNetwork(&nt, []*netproto.Interface{&intf}, vrf)
 	AssertOk(t, err, "Error updating network in delphi")
 
@@ -400,44 +379,6 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 		ntlist := ds.datapath.delphiClient.List("NetworkSpec")
 		return (len(ntlist) == 0), ntlist
 	}, "network still found after deleting")
-}
-
-func (ds *delphidpTestSuite) TestDelphiSecurityGroup(t *C) {
-	// security group
-	sg := netproto.SecurityGroup{
-		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "test-sg",
-		},
-		Spec: netproto.SecurityGroupSpec{
-			SecurityProfile: "unknown",
-		},
-	}
-
-	// create a network
-	err := ds.datapath.CreateSecurityGroup(&sg)
-	AssertOk(t, err, "Error creating sg in delphi")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		sglist := ds.datapath.delphiClient.List("SecurityGroupSpec")
-		log.Infof("Got sg : %+v", sglist[0])
-		return (len(sglist) == 1), sglist
-	}, "invalid number of sgs")
-
-	err = ds.datapath.UpdateSecurityGroup(&sg)
-	AssertOk(t, err, "Error updating sg in delphi")
-
-	// delete the network
-	err = ds.datapath.DeleteSecurityGroup(&sg)
-	AssertOk(t, err, "Error deleting sg")
-
-	// verify interface is acutually gone
-	AssertEventually(t, func() (bool, interface{}) {
-		sglist := ds.datapath.delphiClient.List("SecurityGroupSpec")
-		return (len(sglist) == 0), sglist
-	}, "sg still found after deleting")
 }
 
 func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
@@ -456,7 +397,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -479,7 +420,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					Action: "DENY",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0/24"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80-81",
 								Protocol: "tcp",
@@ -494,7 +435,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					Action: "REJECT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -503,7 +444,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -515,7 +456,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					Action: "LOG",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"any"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -530,7 +471,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 					Action: "LOG",
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80-90",
 								Protocol: "tcp",
@@ -549,7 +490,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 	}
 
 	// create a sg policy
-	err := ds.datapath.CreateNetworkSecurityPolicy(&sgPolicy, 100, nil, nil)
+	err := ds.datapath.CreateNetworkSecurityPolicy(&sgPolicy, 100, nil)
 	AssertOk(t, err, "Error creating sgpolicy in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -579,33 +520,9 @@ func (ds *delphidpTestSuite) TestDelphiDatapathStubs(c *C) {
 	ds.datapath.CreateVrf(0, "")
 	ds.datapath.DeleteVrf(0)
 	ds.datapath.UpdateVrf(0)
-	ds.datapath.CreateNatPool(nil, nil)
-	ds.datapath.UpdateNatPool(nil, nil)
-	ds.datapath.DeleteNatPool(nil, nil)
-	ds.datapath.CreateNatPolicy(nil, nil, nil)
-	ds.datapath.UpdateNatPolicy(nil, nil, nil)
-	ds.datapath.DeleteNatPolicy(nil, nil)
-	ds.datapath.CreateRoute(nil, nil)
-	ds.datapath.UpdateRoute(nil, nil)
-	ds.datapath.DeleteRoute(nil, nil)
-	ds.datapath.CreateNatBinding(nil, nil, 0, nil)
-	ds.datapath.UpdateNatBinding(nil, nil, 0, nil)
-	ds.datapath.DeleteNatBinding(nil, nil)
-	ds.datapath.CreateIPSecPolicy(nil, nil, nil)
-	ds.datapath.UpdateIPSecPolicy(nil, nil, nil)
-	ds.datapath.DeleteIPSecPolicy(nil, nil)
-	ds.datapath.CreateIPSecSAEncrypt(nil, nil, nil)
-	ds.datapath.UpdateIPSecSAEncrypt(nil, nil, nil)
-	ds.datapath.DeleteIPSecSAEncrypt(nil, nil)
-	ds.datapath.CreateIPSecSADecrypt(nil, nil, nil)
-	ds.datapath.UpdateIPSecSADecrypt(nil, nil, nil)
-	ds.datapath.DeleteIPSecSADecrypt(nil, nil)
 	ds.datapath.CreateTunnel(nil, nil)
 	ds.datapath.UpdateTunnel(nil, nil)
 	ds.datapath.DeleteTunnel(nil, nil)
-	ds.datapath.CreateTCPProxyPolicy(nil, nil)
-	ds.datapath.UpdateTCPProxyPolicy(nil, nil)
-	ds.datapath.DeleteTCPProxyPolicy(nil, nil)
 	ds.datapath.CreatePort(nil)
 	ds.datapath.ListInterfaces()
 }

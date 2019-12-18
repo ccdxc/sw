@@ -76,6 +76,7 @@ func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw str
 			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
+			VlanID:      42,
 		},
 		Status: network.NetworkStatus{},
 	}

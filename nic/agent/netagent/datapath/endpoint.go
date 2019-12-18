@@ -18,7 +18,7 @@ import (
 var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
-func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
+func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -58,14 +58,6 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
 
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
@@ -194,7 +186,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 }
 
 // UpdateLocalEndpoint updates the endpoint
-func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) error {
+func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -234,15 +226,6 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	}
 
 	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
 
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
@@ -260,7 +243,6 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
-		SgKeyHandle:        sgHandles,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -469,7 +451,7 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 // --------------------------- Remote Endpoint CRUDs --------------------------- //
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, uplinkID uint64, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -503,17 +485,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
 
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
-
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 			SegmentId: nw.Status.NetworkID,
@@ -532,7 +503,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		InterfaceKeyHandle: ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
-		SgKeyHandle:        sgHandles,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -590,7 +560,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 }
 
 // UpdateRemoteEndpoint updates an existing endpoint
-func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -616,20 +586,10 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
 
 	l2Handle := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
-			L2SegmentHandle: nw.Status.NetworkHandle,
+			L2SegmentHandle: nw.Status.NetworkID,
 		},
 	}
 
@@ -643,7 +603,6 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		InterfaceKeyHandle: &ifKeyHandle, //FIXME
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
-		SgKeyHandle:        sgHandles,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{

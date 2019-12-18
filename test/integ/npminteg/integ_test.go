@@ -90,7 +90,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.hub.Start()
 
 	// test parameters
-	it.numAgents = *numHosts
+	it.numAgents = 1
 	it.datapathKind = datapath.Kind(*datapathKind)
 
 	err := testutils.SetupIntegTLSProvider()
@@ -248,7 +248,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
-		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
+		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// delete the network
@@ -337,7 +337,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			cerr := it.CreateEndpoint("default", "default", "testNetwork", epname, epname, "0101.0101.0101", hostName, "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
+			cerr := it.CreateEndpoint("default", "default", "testNetwork", epname, hostName, "0101.0101.0101", hostName, "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 			if cerr != nil {
 				waitCh <- fmt.Errorf("endpoint create failed: %v", cerr)
 				return

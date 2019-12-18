@@ -54,14 +54,6 @@ func NewPusher(genDir string, netagentRESTEndpoints []string) (*CfgPush, error) 
 func (p *CfgPush) PushConfigs() error {
 	for _, restClient := range p.NetAgentRESTClients {
 		restClient := restClient
-		// push Namespaces
-		for _, ns := range p.Namespaces {
-			if err := restClient.NamespaceCreate(*ns); err != nil {
-				log.Errorf("Failed to push namespace %v. Err: %v", ns.Name, err)
-				return fmt.Errorf("failed to push namespace %v. Err: %v", ns.Name, err)
-			}
-			log.Infof("Pushing Namespace. %v", ns.Name)
-		}
 
 		// push Networks
 		for _, net := range p.Networks {

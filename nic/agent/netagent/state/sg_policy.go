@@ -24,7 +24,6 @@ var ErrNetworkSecurityPolicyNotFound = errors.New("sgpolicy not found")
 
 // CreateNetworkSecurityPolicy creates a security group policy
 func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
-	var securityGroups []*netproto.SecurityGroup
 	var ruleIDAppLUT sync.Map
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
 	if err != nil {
@@ -67,20 +66,6 @@ func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 		return err
 	}
 
-	for _, grp := range sgp.Spec.AttachGroup {
-		sgMeta := api.ObjectMeta{
-			Tenant:    sgp.Tenant,
-			Namespace: sgp.Namespace,
-			Name:      grp,
-		}
-		sg, err := na.FindSecurityGroup(sgMeta)
-		if err != nil {
-			log.Errorf("Could not find the security group to attach the sg policy")
-			return err
-		}
-		securityGroups = append(securityGroups, sg)
-	}
-
 	for i, r := range sgp.Spec.Rules {
 		ruleHash := sgp.Spec.Rules[i].ID
 		// Calculate the hash only if npm has not set it. Else use whatever is already set
@@ -101,9 +86,9 @@ func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
 			}
 
-			if app != nil && (len(r.Dst.AppConfigs) != 0 || len(r.Src.AppConfigs) != 0) {
-				log.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.AppConfigs, r.Dst.AppConfigs)
-				return fmt.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.AppConfigs, r.Dst.AppConfigs)
+			if app != nil && (len(r.Dst.ProtoPorts) != 0 || len(r.Src.ProtoPorts) != 0) {
+				log.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.ProtoPorts, r.Dst.ProtoPorts)
+				return fmt.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.ProtoPorts, r.Dst.ProtoPorts)
 
 			}
 
@@ -122,7 +107,7 @@ func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateNetworkSecurityPolicy(sgp, vrf.Status.VrfID, securityGroups, &ruleIDAppLUT)
+	err = na.Datapath.CreateNetworkSecurityPolicy(sgp, vrf.Status.VrfID, &ruleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. NetworkSecurityPolicy {%+v}. Err: %v", sgp.GetKey(), err)
 		return err
@@ -134,22 +119,10 @@ func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, sgp)
 		return err
 	}
-
-	// Add dependencies depending on the attachment points
-	if len(sgp.Spec.AttachGroup) > 0 {
-		for _, sg := range securityGroups {
-			err = na.Solver.Add(sg, sgp)
-			if err != nil {
-				log.Errorf("Could not add dependency. Parent: %v. Child: %v", sg, sgp)
-				return err
-			}
-		}
-	} else if sgp.Spec.AttachTenant {
-		err = na.Solver.Add(vrf, sgp)
-		if err != nil {
-			log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, sgp)
-			return err
-		}
+	err = na.Solver.Add(vrf, sgp)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, sgp)
+		return err
 	}
 
 	// save it in db
@@ -245,6 +218,7 @@ func (na *Nagent) ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy 
 // UpdateNetworkSecurityPolicy updates a security group policy
 func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	// find the corresponding namespace
+	log.Infof("Got SG Policy Update: %v", sgp)
 	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
@@ -255,8 +229,11 @@ func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 		return err
 	}
 
+	log.Infof("Existing SG Policy: %v", existingSgp)
+
 	// check if policy contents are same
 	if proto.Equal(&existingSgp.Spec, &sgp.Spec) {
+		log.Info("Nothing to update")
 		return nil
 	}
 
@@ -268,6 +245,8 @@ func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 
 // performNetworkSecurityPolicyUpdate
 func (na *Nagent) performNetworkSecurityPolicyUpdate(sgp *netproto.NetworkSecurityPolicy) error {
+	log.Infof("Updating SG Policy: %v", sgp)
+
 	var ruleIDAppLUT sync.Map
 
 	// find the corresponding vrf for the sg policy
@@ -307,6 +286,7 @@ func (na *Nagent) performNetworkSecurityPolicyUpdate(sgp *netproto.NetworkSecuri
 		return err
 	}
 
+	log.Infof("Saving SG Policy: %v", sgp)
 	err = na.saveNetworkSecurityPolicy(sgp)
 	return err
 }
@@ -356,25 +336,6 @@ func (na *Nagent) DeleteNetworkSecurityPolicy(tn, namespace, name string) error 
 	if err != nil {
 		log.Errorf("Error deleting security group policy {%+v}. Err: %v", sgp, err)
 		return err
-	}
-
-	// Update parent references
-	for _, s := range existingNetworkSecurityPolicy.Spec.AttachGroup {
-		sgMeta := api.ObjectMeta{
-			Tenant:    sgp.Tenant,
-			Namespace: sgp.Namespace,
-			Name:      s,
-		}
-		sg, err := na.FindSecurityGroup(sgMeta)
-		if err != nil {
-			log.Errorf("Could not find the security group to attach the sg policy")
-			return err
-		}
-		err = na.Solver.Remove(sg, existingNetworkSecurityPolicy)
-		if err != nil {
-			log.Errorf("Could not remove the reference to the security group: %v. Err: %v", sg.Name, err)
-			return err
-		}
 	}
 
 	if existingNetworkSecurityPolicy.Spec.AttachTenant {

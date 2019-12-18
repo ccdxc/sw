@@ -31,7 +31,7 @@ func testEmstoreAddDelete(t *testing.T, dbType DbType, dbPath string) {
 			Name:   "testName",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "10.1.1.1/24",
+			VlanID: 42,
 		},
 	}
 
@@ -50,7 +50,7 @@ func testEmstoreAddDelete(t *testing.T, dbType DbType, dbPath string) {
 	robj, err := db.Read(&ometa)
 	AssertOk(t, err, "Error reading from db")
 	nobj := robj.(*netproto.Network)
-	AssertEquals(t, nobj.Spec.IPv4Subnet, obj.Spec.IPv4Subnet, "Read invalid network params")
+	AssertEquals(t, nobj.Spec.VlanID, obj.Spec.VlanID, "Read invalid network params")
 
 	// write second object
 	obj2 := netproto.Network{
@@ -60,7 +60,7 @@ func testEmstoreAddDelete(t *testing.T, dbType DbType, dbPath string) {
 			Name:   "testName2",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "10.1.1.2/24",
+			VlanID: 42,
 		},
 	}
 
@@ -140,7 +140,7 @@ func TestBoltdbBenchmark(t *testing.T) {
 				Name:   fmt.Sprintf("testName%d", idx+1),
 			},
 			Spec: netproto.NetworkSpec{
-				IPv4Subnet: fmt.Sprintf("10.1.1.%d/24", idx+1),
+				VlanID: uint32(idx + 1),
 			},
 		}
 

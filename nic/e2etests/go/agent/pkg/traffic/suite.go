@@ -2,10 +2,7 @@ package traffic
 
 import (
 	"fmt"
-	"log"
 	"reflect"
-
-	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
@@ -42,57 +39,19 @@ type suite struct {
 }
 
 func EpsReachable(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
-	if ep.GetName() != otherEp.GetName() && ep.GetNamespace() == otherEp.GetNamespace() && ep.Spec.GetNetworkName() != otherEp.Spec.GetNetworkName() && (ep.Spec.Interface != otherEp.Spec.Interface) {
+	if ep.GetName() != otherEp.GetName() && ep.GetNamespace() == otherEp.GetNamespace() && ep.Spec.GetNetworkName() != otherEp.Spec.GetNetworkName() {
 		return true
 	}
 	return false
 }
 
-func EpPairMatchingTrafficType(ep *netproto.Endpoint, otherEp *netproto.Endpoint, trafficType int) bool {
-	switch trafficType {
-	case TrafficUplinkToUplink:
-		if ep.Spec.InterfaceType == UplinkIntefaceName && otherEp.Spec.InterfaceType == UplinkIntefaceName {
-			return true
-		}
-	case TrafficHostToHost:
-		if ep.Spec.InterfaceType == LifIntefaceName && otherEp.Spec.InterfaceType == LifIntefaceName {
-			return true
-		}
-	case TrafficUplinkToHost:
-		if (ep.Spec.InterfaceType == LifIntefaceName && otherEp.Spec.InterfaceType == UplinkIntefaceName) ||
-			(ep.Spec.InterfaceType == UplinkIntefaceName && otherEp.Spec.InterfaceType == LifIntefaceName) {
-			return true
-		}
-	default:
-		log.Fatalln("Invalid traffic type!")
-
-	}
-	return false
-}
-
-func EpMatchingTrafficType(ep *netproto.Endpoint, trafficType int) bool {
-	switch trafficType {
-	case TrafficUplinkToUplink:
-		if ep.Spec.InterfaceType == UplinkIntefaceName {
-			return true
-		}
-	case TrafficHostToHost:
-		if ep.Spec.InterfaceType == LifIntefaceName {
-			return true
-		}
-	default:
-		log.Fatalln("Invalid traffic type!")
-
-	}
-	return false
-}
 
 func getEpPairs(agentCfg *pkg.AgentConfig, trafficType int, maxTrafficPair int) []TestApi.EpPair {
 	eps := []TestApi.EpPair{}
 	trafficPair := 0
 	for _, srcEp := range agentCfg.Endpoints {
 		for _, dstEp := range agentCfg.Endpoints {
-			if EpsReachable(&srcEp, &dstEp) && EpPairMatchingTrafficType(&srcEp, &dstEp, trafficType) {
+			if EpsReachable(&srcEp, &dstEp) {
 				eps = append(eps, TestApi.EpPair{Src: srcEp, Dst: dstEp})
 				trafficPair++
 				if maxTrafficPair != 0 && trafficPair == maxTrafficPair {
@@ -109,12 +68,10 @@ func getEps(agentCfg *pkg.AgentConfig, trafficType int, maxEps int) []netproto.E
 	eps := []netproto.Endpoint{}
 	epCnt := 0
 	for _, ep := range agentCfg.Endpoints {
-		if EpMatchingTrafficType(&ep, trafficType) {
 			eps = append(eps, ep)
 			epCnt++
 			if maxEps != 0 && epCnt == maxEps {
 				goto out
-			}
 		}
 	}
 out:
@@ -150,24 +107,12 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 
 			testname := reflect.TypeOf(test).String()
 			fmt.Println("Running Test :" + testname)
-			srcIntf, err := trafficHelper.getTrafficInterface(epPair.Src.Spec.Interface)
-			if err != nil {
-				return errors.Wrapf(err, "Error getting traffic interface %s",
-					epPair.Src.Spec.Interface)
-			}
-			dstIntf, err := trafficHelper.getTrafficInterface(epPair.Dst.Spec.Interface)
-			if err != nil {
-				return errors.Wrapf(err, "Error getting traffic interface %s",
-					epPair.Dst.Spec.Interface)
-			}
-			fmt.Println("SRC EP :", epPair.Src.Spec.GetIPv4Addresses()[0], epPair.Src.Spec.Interface, srcIntf)
-			fmt.Println("DST EP :", epPair.Dst.Spec.GetIPv4Addresses()[0], epPair.Dst.Spec.Interface, dstIntf)
 			srcEphandle := newEpFromAgentConfig(&epPair.Src,
 				getNetworkFromConfig(epPair.Src.Spec.GetNetworkName(), agentCfg.Networks),
-				srcIntf)
+				"")
 			dstEphandle := newEpFromAgentConfig(&epPair.Dst,
 				getNetworkFromConfig(epPair.Dst.Spec.GetNetworkName(), agentCfg.Networks),
-				dstIntf)
+				"")
 			/* If differet Network, setup routes */
 			if epPair.Src.Spec.GetNetworkName() != epPair.Dst.Spec.GetNetworkName() {
 				setUpRoute(srcEphandle, dstEphandle)

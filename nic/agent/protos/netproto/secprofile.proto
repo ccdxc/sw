@@ -15,7 +15,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- SecurityProfile API ----------------------------
 // SecurityProfile controller api
-service SecurityProfileApi {
+service SecurityProfileApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "SecurityProfile",
@@ -24,11 +24,15 @@ service SecurityProfileApi {
         Prefix: "api/security/profiles"
     };
 
-    rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};
     rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
     rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEventList) {};
-    rpc UpdateSecurityProfile (SecurityProfile) returns (SecurityProfile) {};
     rpc SecurityProfileOperUpdate (stream SecurityProfileEvent) returns (api.TypeMeta) {};
+
+//    rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};
+//    rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
+//    rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEventList) {};
+//    rpc UpdateSecurityProfile (SecurityProfile) returns (SecurityProfile) {};
+//    rpc SecurityProfileOperUpdate (stream SecurityProfileEvent) returns (api.TypeMeta) {};
 
 }
 
@@ -98,8 +102,8 @@ message SecurityProfileList {
 
 // security profile watch event
 message SecurityProfileEvent {
-    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    SecurityProfile        SecurityProfile    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-profile,omitempty"];
+    api.EventType   EventType           = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    SecurityProfile SecurityProfile     = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-profile,omitempty"];
 }
 
 

@@ -16,7 +16,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- Tunnel API ----------------------------
 // Tunnel controller api
-service TunnelApi {
+service TunnelApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Tunnel",
@@ -25,9 +25,9 @@ service TunnelApi {
         Prefix: "api/tunnels"
     };
 
-    rpc GetTunnel (api.ObjectMeta) returns (Tunnel) {};
-    rpc ListTunnels (api.ObjectMeta) returns (TunnelList) {};
-    rpc WatchTunnels (api.ObjectMeta) returns (stream TunnelEventList) {};
+//    rpc GetTunnel (api.ObjectMeta) returns (Tunnel) {};
+//    rpc ListTunnels (api.ObjectMeta) returns (TunnelList) {};
+//    rpc WatchTunnels (api.ObjectMeta) returns (stream TunnelEventList) {};
 }
 
 // Tunnel object

@@ -6,11 +6,12 @@ import (
 	"net"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
+
 	"github.com/mdlayher/arp"
 	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -196,25 +197,6 @@ func (na *Nagent) DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP stri
 	return nil
 }
 
-func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
-	links, err := netlink.LinkList()
-	if err != nil {
-		log.Errorf("Failed to list the available links. Err: %v", err)
-		return
-	}
-
-	for _, l := range links {
-		addrs, _ := netlink.AddrList(l, netlink.FAMILY_V4)
-		for _, a := range addrs {
-			if a.IP.String() == mgmtIP {
-				mgmtLink = l
-				return
-			}
-		}
-	}
-	return
-}
-
 func (na *Nagent) startRefreshLoop(refreshCtx context.Context, IP net.IP) {
 	log.Infof("Starting ARP refresh loop for %v", IP)
 
@@ -337,8 +319,6 @@ func (na *Nagent) dedupReferences(compositeKey string) {
 }
 
 func (na *Nagent) generateLateralEP(objectName, destIP, mgmtIP string) (*netproto.Endpoint, error) {
-	var epIfType, epIf string
-
 	var dMAC string
 	epIP := destIP
 	mgmtLink := getMgmtLink(mgmtIP)
@@ -423,11 +403,6 @@ func (na *Nagent) generateLateralEP(objectName, destIP, mgmtIP string) (*netprot
 		return nil, fmt.Errorf("failed to resolve mac address for %s", destIP)
 	}
 
-	if mgmtLink.Attrs().Name == types.OOBManagementInterface {
-		epIf = types.ManagementUplink
-		epIfType = "uplink"
-	}
-
 	ep := &netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
@@ -436,14 +411,31 @@ func (na *Nagent) generateLateralEP(objectName, destIP, mgmtIP string) (*netprot
 			Name:      objectName,
 		},
 		Spec: netproto.EndpointSpec{
-			NetworkName:   "_internal_untagged_nw",
+			NetworkName:   types.InternalUntaggedNetwork,
 			NodeUUID:      "REMOTE",
 			IPv4Addresses: []string{fmt.Sprintf("%s/32", epIP)},
 			MacAddress:    dMAC,
-			InterfaceType: epIfType,
-			Interface:     epIf,
 		},
 	}
 
 	return ep, nil
+}
+
+func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
+	links, err := netlink.LinkList()
+	if err != nil {
+		log.Errorf("Failed to list the available links. Err: %v", err)
+		return
+	}
+
+	for _, l := range links {
+		addrs, _ := netlink.AddrList(l, netlink.FAMILY_V4)
+		for _, a := range addrs {
+			if a.IP.String() == mgmtIP {
+				mgmtLink = l
+				return
+			}
+		}
+	}
+	return
 }

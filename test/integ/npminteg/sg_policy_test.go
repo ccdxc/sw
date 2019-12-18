@@ -171,8 +171,27 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	Assert(c, err != nil, "sg policy with no apps and no proto ports must fail")
 
 	// create a valid sg policy with ports
+	updatedSGPolicy := security.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      c.TestName(),
+		},
+		Spec: security.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					Action:          "PERMIT",
+					ToIPAddresses:   []string{"10.1.1.1/24"},
+					FromIPAddresses: []string{"10.1.1.1/24"},
+					ProtoPorts:      protoPorts,
+				},
+			},
+		},
+	}
 	sgp.Spec.Rules[0].ProtoPorts = protoPorts
-	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &updatedSGPolicy)
 	AssertOk(c, err, "sgpolicy create must succeed with valid proto ports and no app")
 
 	// try updating the policy with invalid app
@@ -512,8 +531,8 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 				if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
 					return false, []int{len(gsgp.Spec.Rules), len(sgp.Spec.Rules)}
 				}
-				if gsgp.Spec.Rules[0].Dst.AppConfigs[0].Port != sgp.Spec.Rules[0].ProtoPorts[0].Ports {
-					return false, []string{gsgp.Spec.Rules[0].Dst.AppConfigs[0].Port, sgp.Spec.Rules[0].ProtoPorts[0].Ports}
+				if gsgp.Spec.Rules[0].Dst.ProtoPorts[0].Port != sgp.Spec.Rules[0].ProtoPorts[0].Ports {
+					return false, []string{gsgp.Spec.Rules[0].Dst.ProtoPorts[0].Port, sgp.Spec.Rules[0].ProtoPorts[0].Ports}
 				}
 				return true, nil
 			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())

@@ -89,7 +89,7 @@ func AddNetworkTopic(server *MbusServer, reactor NetworkStatusReactor) (*Network
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterNetworkApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterNetworkApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ObjectMeta
 }
 
 // WatchNetworks watches Networks and sends streaming resp
-func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.NetworkApi_WatchNetworksServer) error {
+func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.NetworkApiV1_WatchNetworksServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *NetworkTopic) updateNetworkOper(oper *netproto.NetworkEvent, nodeID st
 	return nil
 }
 
-func (eh *NetworkTopic) NetworkOperUpdate(stream netproto.NetworkApi_NetworkOperUpdateServer) error {
+func (eh *NetworkTopic) NetworkOperUpdate(stream netproto.NetworkApiV1_NetworkOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

@@ -61,8 +61,6 @@ var hpingRun = func(ep *Infra.Endpoint, cmd []string) error {
 func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf string) *Infra.Endpoint {
 	infraEp := &Infra.Endpoint{
 		Name: ep.GetName(),
-
-		Remote: ep.Spec.InterfaceType == "uplink",
 	}
 
 	var vlan int
@@ -81,8 +79,6 @@ func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf stri
 	infraEp.Interface.Name = vlanIntf
 	infraEp.Interface.MacAddress = ep.Spec.GetMacAddress()
 	infraEp.Interface.IPAddress = strings.Split(ep.Spec.GetIPv4Addresses()[0], "/")[0]
-	infraEp.Interface.PrefixLen, _ = strconv.Atoi(strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1])
-
 	infraEp.Init(false)
 
 	return infraEp
@@ -164,20 +160,15 @@ func SetUpEPs(trafficHelper TrafficHelper, agentCfg *Pkg.AgentConfig) error {
 	epHandles := []*Infra.Endpoint{}
 	fmt.Println("Setting up endpoints..")
 	for _, ep := range eps {
-		srcIntf, err := trafficHelper.getTrafficInterface(ep.Spec.Interface)
-		if err != nil {
-			return errors.Wrapf(err, "Error getting traffic interface %s",
-				ep.Spec.Interface)
-		}
 		nw := getNetworkFromConfig(ep.Spec.GetNetworkName(), agentCfg.Networks)
-		nwKey := srcIntf + strconv.Itoa(int(nw.Spec.GetVlanID()))
+		nwKey := strconv.Itoa(int(nw.Spec.GetVlanID()))
 		if otherEp, ok := nwKeyMap[nwKey]; ok {
 			fmt.Printf("Skipping EP %s(%s) setup as same Network Vlan already created for EP (%s)(%s)",
 				ep.Name, ep.Spec.GetIPv4Addresses(), otherEp.Name, otherEp.Spec.GetIPv4Addresses())
 			continue
 		}
 		nwKeyMap[nwKey] = ep
-		epHandle := newEpFromAgentConfig(&ep, nw, srcIntf)
+		epHandle := newEpFromAgentConfig(&ep, nw, "")
 		epHandles = append(epHandles, epHandle)
 	}
 

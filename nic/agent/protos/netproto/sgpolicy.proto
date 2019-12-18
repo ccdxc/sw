@@ -16,7 +16,7 @@ import "match.proto";
 
 // ---------------------------- NetworkSecurityPolicy API ----------------------------
 // NetworkSecurityPolicy controller api
-service NetworkSecurityPolicyApi {
+service NetworkSecurityPolicyApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "NetworkSecurityPolicy",
@@ -25,20 +25,24 @@ service NetworkSecurityPolicyApi {
         Prefix: "api/security/policies"
     };
 
-    rpc GetNetworkSecurityPolicy (api.ObjectMeta) returns (NetworkSecurityPolicy) {};
     rpc ListNetworkSecurityPolicys (api.ObjectMeta) returns (NetworkSecurityPolicyList) {};
     rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEventList) {};
-    rpc UpdateNetworkSecurityPolicy (NetworkSecurityPolicy) returns (NetworkSecurityPolicy) {};
     rpc NetworkSecurityPolicyOperUpdate (stream NetworkSecurityPolicyEvent) returns (api.TypeMeta) {};
+
+//    rpc GetNetworkSecurityPolicy (api.ObjectMeta) returns (NetworkSecurityPolicy) {};
+//    rpc ListNetworkSecurityPolicys (api.ObjectMeta) returns (NetworkSecurityPolicyList) {};
+//    rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEventList) {};
+//    rpc UpdateNetworkSecurityPolicy (NetworkSecurityPolicy) returns (NetworkSecurityPolicy) {};
+//    rpc NetworkSecurityPolicyOperUpdate (stream NetworkSecurityPolicyEvent) returns (api.TypeMeta) {};
 
 }
 
 // NetworkSecurityPolicy object
 message NetworkSecurityPolicy {
-    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    NetworkSecurityPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    NetworkSecurityPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    api.TypeMeta                TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta              ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NetworkSecurityPolicySpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NetworkSecurityPolicyStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
@@ -67,29 +71,29 @@ message PolicyRule {
     }
 
     // list of actions for the rule. Some combinations are invalid, eg: ["PERMIT", "DENY"]
-    string Action               = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
-                                     (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
+    string Action       = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
+                             (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
 
     // inbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy src is interpreted as match all
-    MatchSelector Src           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "source,omitempty"];
+    MatchSelector Src   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "source,omitempty"];
 
     // outbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy dst is interpreted as match all
-    MatchSelector Dst           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
+    MatchSelector Dst   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
 
     // Allocated ID
-    uint64 ID                   = 4 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    uint64 ID           = 4 [(gogoproto.jsontag) = "rule-id,omitempty"];
 
     // Optional AppName to fetch additional ALG configurations. ICMP Code is inferred from its corresponding App definition.
     // A single rule can have the match parameters through the selectors or its corresponding App object
-    string AppName              = 5 [(gogoproto.jsontag) = "app-name,omitempty"];
+    string AppName      = 5 [(gogoproto.jsontag) = "app-name,omitempty"];
 }
 
 
 // NetworkSecurityPolicyStatus captures the sg policy status
 message NetworkSecurityPolicyStatus {
-    uint64 NetworkSecurityPolicyID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+    uint64 NetworkSecurityPolicyID  = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
 message NetworkSecurityPolicyList {
@@ -98,8 +102,8 @@ message NetworkSecurityPolicyList {
 
 // sg policy watch event
 message NetworkSecurityPolicyEvent {
-    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    NetworkSecurityPolicy        NetworkSecurityPolicy    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
+    api.EventType           EventType               = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    NetworkSecurityPolicy   NetworkSecurityPolicy   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-policy,omitempty"];
 }
 
 // sg policy watch events batched

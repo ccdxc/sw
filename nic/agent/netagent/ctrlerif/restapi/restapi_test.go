@@ -112,8 +112,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.2.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 	err = nagent.CreateNetwork(&nt)
@@ -130,8 +129,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "preCreatedNetwork",
 			NodeUUID:      "dummy-node-uuid",
 			IPv4Addresses: []string{"10.1.1.0/24"},
@@ -141,69 +138,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 	err = nagent.CreateEndpoint(&ep)
 	if err != nil {
 		log.Errorf("Failed to create endpoint. {%v}", ep)
-		return
-	}
-
-	sg := netproto.SecurityGroup{
-		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedSecurityGroup",
-		},
-		Spec: netproto.SecurityGroupSpec{
-			SecurityProfile: "unknown",
-		},
-	}
-	err = nagent.CreateSecurityGroup(&sg)
-	if err != nil {
-		log.Errorf("Failed to create security group. {%v}", sg)
-		return
-	}
-
-	natPool := netproto.NatPool{
-		TypeMeta: api.TypeMeta{Kind: "NatPool"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedNatPool",
-		},
-		Spec: netproto.NatPoolSpec{
-			IPRange: "10.1.2.1-10.1.2.200",
-		},
-	}
-	err = nagent.CreateNatPool(&natPool)
-	if err != nil {
-		log.Errorf("Failed to create nat pool. {%v}", sg)
-		return
-	}
-
-	natPolicy := netproto.NatPolicy{
-		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedNatPolicy",
-		},
-		Spec: netproto.NatPolicySpec{
-			Rules: []netproto.NatRule{
-				{
-					Src: &netproto.MatchSelector{
-						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
-					},
-					NatPool: "preCreatedNatPool",
-					Action:  "SNAT",
-				},
-			},
-		},
-	}
-
-	err = nagent.CreateNatPolicy(&natPolicy)
-	if err != nil {
-		log.Errorf("Failed to create nat policy. {%v}", sg)
 		return
 	}
 
@@ -236,132 +170,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
-	rt := netproto.Route{
-		TypeMeta: api.TypeMeta{Kind: "Route"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "preCreatedTenant",
-			Name:      "preCreatedRoute",
-			Namespace: "preCreatedNamespace",
-		},
-		Spec: netproto.RouteSpec{
-			IPPrefix:  "192.168.1.0/24",
-			GatewayIP: "192.168.1.1",
-			Interface: "uplink-2",
-		},
-	}
-
-	err = nagent.CreateRoute(&rt)
-	if err != nil {
-		log.Errorf("Failed to create Route. {%v}", rt)
-		return
-
-	}
-
-	nb := netproto.NatBinding{
-		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "preCreatedNatBinding",
-			Namespace: "default",
-		},
-		Spec: netproto.NatBindingSpec{
-			NatPoolName: "preCreatedNatPool",
-			IPAddress:   "10.1.1.1",
-		},
-	}
-
-	err = nagent.CreateNatBinding(&nb)
-	if err != nil {
-		log.Errorf("Failed to create Nat Binding. {%v}", ns)
-		return
-	}
-
-	ipSecEncrypt := netproto.IPSecSAEncrypt{
-		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedIPSecSAEncrypt",
-		},
-		Spec: netproto.IPSecSAEncryptSpec{
-			Protocol:      "ESP",
-			AuthAlgo:      "AES_GCM",
-			AuthKey:       "someRandomString",
-			EncryptAlgo:   "AES_GCM_256",
-			EncryptionKey: "someRandomKey",
-			LocalGwIP:     "10.0.0.1",
-			RemoteGwIP:    "192.168.1.1",
-			TepVrf:        "default",
-		},
-	}
-	err = nagent.CreateIPSecSAEncrypt(&ipSecEncrypt)
-	if err != nil {
-		log.Errorf("Failed to create IPSec Encrypt SA. {%v}", ns)
-		return
-	}
-
-	ipSecDecrypt := netproto.IPSecSADecrypt{
-		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedIPSecSADecrypt",
-		},
-		Spec: netproto.IPSecSADecryptSpec{
-			Protocol:      "ESP",
-			AuthAlgo:      "AES_GCM",
-			AuthKey:       "someRandomString",
-			DecryptAlgo:   "AES_GCM_256",
-			DecryptionKey: "someRandomKey",
-			LocalGwIP:     "10.0.0.1",
-			RemoteGwIP:    "192.168.1.1",
-			TepVrf:        "default",
-		},
-	}
-	err = nagent.CreateIPSecSADecrypt(&ipSecDecrypt)
-	if err != nil {
-		log.Errorf("Failed to create IPSec Decrypt SA. {%v}", ns)
-		return
-	}
-
-	ipSecPolicy := netproto.IPSecPolicy{
-		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedIPSecPolicy",
-		},
-		Spec: netproto.IPSecPolicySpec{
-			Rules: []netproto.IPSecRule{
-				{
-					Src: &netproto.MatchSelector{
-						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-					},
-					SAName: "preCreatedIPSecSAEncrypt",
-					SAType: "ENCRYPT",
-				},
-				{
-					Src: &netproto.MatchSelector{
-						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-					},
-					SAName: "preCreatedIPSecSADecrypt",
-					SAType: "DECRYPT",
-				},
-			},
-		},
-	}
-	err = nagent.CreateIPSecPolicy(&ipSecPolicy)
-	if err != nil {
-		log.Errorf("Failed to create IPSec Policy. {%v}", ns)
-		return
-	}
-
 	sgPolicy := netproto.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -377,7 +185,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -394,7 +202,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 
 	err = nagent.CreateNetworkSecurityPolicy(&sgPolicy)
 	if err != nil {
-		log.Errorf("Failed to create SG policy. {%v}", sg)
+		log.Errorf("Failed to create SG policy. {%v}", sgPolicy)
 		return
 	}
 
@@ -416,35 +224,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 	err = nagent.CreateTunnel(&tunnel)
 	if err != nil {
 		log.Errorf("Failed to create tunnel. {%v}", tunnel)
-		return
-	}
-
-	tcpProxy := netproto.TCPProxyPolicy{
-		TypeMeta: api.TypeMeta{Kind: "TCPProxyPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedTCPProxyPolicy",
-		},
-		Spec: netproto.TCPProxyPolicySpec{
-			Rules: []netproto.TCPProxyRule{
-				{
-					Src: &netproto.MatchSelector{
-						Addresses: []string{"64.0.0.1"},
-					},
-
-					Dst: &netproto.MatchSelector{
-						Addresses: []string{"100.0.0.1"},
-					},
-					Action: "ENABLE",
-				},
-			},
-		},
-	}
-
-	err = nagent.CreateTCPProxyPolicy(&tcpProxy)
-	if err != nil {
-		log.Errorf("Failed to create tcp proxy policy. {%v}", tcpProxy)
 		return
 	}
 
@@ -488,7 +267,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 
 	err = nagent.CreatePort(&port)
 	if err != nil {
-		log.Errorf("Failed to create port. {%v}", enic)
+		log.Errorf("Failed to create port. {%v} | Err: %v", enic, err)
 		return
 	}
 
@@ -529,7 +308,12 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,

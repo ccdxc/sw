@@ -239,14 +239,14 @@ class RuleEntry:
 
         if source:
             sip = ','.join(source.get("addresses", ["any"]))
-            src_app_configs = source.get("app-configs", [])
+            src_app_configs = source.get("proto-ports", [])
             for config in src_app_configs:
                 srcProtoPort.append((config.get("protocol", "any"),
                                      config.get("port", "any")))
 
         if destination:
             dip = ','.join(destination.get("addresses", ["any"]))
-            dst_app_configs = destination.get("app-configs", [])
+            dst_app_configs = destination.get("proto-ports", [])
             for config in dst_app_configs:
                 dstProtoPort.append((config.get("protocol", "any"),
                                      config.get("port", "any")))

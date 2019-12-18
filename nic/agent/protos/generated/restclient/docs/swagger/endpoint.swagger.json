@@ -523,53 +523,14 @@
     },
     "netprotoEndpointSpec": {
       "type": "object",
-      "required": [
-        "interface-type"
-      ],
       "properties": {
         "vrf-name": {
           "type": "string",
           "title": "VrfName specifies the name of the VRF that the current EP belongs to"
         },
-        "endpoint-uuid": {
-          "type": "string"
-        },
-        "workload-uuid": {
-          "type": "string"
-        },
-        "workload-name": {
-          "type": "string"
-        },
         "network-name": {
           "type": "string",
           "title": "Name of the network to which the current endpoint belongs to. Required"
-        },
-        "workload-attributes": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "security-groups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "interface-type": {
-          "type": "string",
-          "enum": [
-            "none",
-            "lif",
-            "uplink",
-            "tunnel"
-          ],
-          "default": "none",
-          "title": "Interface type of the endpoint. For LocalEPs this should be LIF.\nFor Remote EPs this should either be of type UPLINK or TUNNEL. Required"
-        },
-        "interface": {
-          "type": "string",
-          "title": "Interface name of the endpoint. Required"
         },
         "ipv4-addresses": {
           "type": "array",
@@ -578,10 +539,6 @@
           },
           "title": "IP Address of the endpoint in CIDR IP/Prefix format. Required"
         },
-        "ipv4-gateway": {
-          "type": "string",
-          "title": "IP Gateway of the endpoint. Optional"
-        },
         "ipv6-address": {
           "type": "array",
           "items": {
@@ -589,23 +546,17 @@
           },
           "title": "IPv6 Address of the endpoint. Optional"
         },
-        "ipv6-gateway": {
-          "type": "string",
-          "title": "IPv6 Gateway of the endpoint. Optional"
-        },
         "mac-address": {
           "type": "string",
           "title": "MAC Address of the endpoint. Required"
         },
-        "homing-host-address": {
-          "type": "string"
-        },
-        "homing-host-name": {
-          "type": "string"
-        },
         "node-uuid": {
           "type": "string",
-          "description": "Specifies the name of the node where the endpoint lives."
+          "description": "Specifies the name of the node where the endpoint lives.\nOptional for LocalEPs and mandatory for RemoteEPs."
+        },
+        "homing-host-address": {
+          "type": "string",
+          "title": "IP Address of the node where EP is local"
         },
         "useg-vlan": {
           "type": "integer",

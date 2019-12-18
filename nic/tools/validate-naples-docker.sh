@@ -2,17 +2,18 @@
 
 set -x
 
-function create_namespaces {
-  NAMESPACE_URL="$NAPLES_AGENT_IP:8888/api/namespaces/"
+function create_vrfs {
+  VRF_URL="$NAPLES_AGENT_IP:8888/api/vrfs/"
 
-  curl -d'{"Kind":"Namespace","meta":{"Name":"kg1","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $NAMESPACE_URL
-  validate_get "kg1" $NAMESPACE_URL
+ 
+  $VRF_URL
+  validate_get "kg1" $VRF_URL
 
-  curl -d'{"Kind":"Namespace","meta":{"Name":"kg2","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $NAMESPACE_URL
-  validate_get "kg2" $NAMESPACE_URL
+  curl -d'{"Kind":"Vrf","meta":{"Name":"kg2", "Namespace":"default","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $VRF_URL
+  validate_get "kg2" $VRF_URLL
 
-  curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $NAMESPACE_URL
-  validate_get "public" $NAMESPACE_URL
+  curl -d'{"Kind":"Vrf","meta":{"Name":"public", "Namespace":"default" ,"Tenant":"default"}}' -X POST -H "Content-Type: application/json" $VRF_URL
+  validate_get "public" $VRF_URLL
 
   echo "All namespaces created"
 }

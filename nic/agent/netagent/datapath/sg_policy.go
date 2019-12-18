@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -15,7 +16,7 @@ import (
 )
 
 // CreateNetworkSecurityPolicy creates a security group policy in the datapath
-func (hd *Datapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
+func (hd *Datapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -65,6 +66,9 @@ func (hd *Datapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPol
 			},
 		},
 	}
+
+	b, _ := json.Marshal(sgPolicyReqMsg)
+	log.Infof("Create SG Policy: %s", string(b))
 
 	log.Infof("Sending NetworkSecurityPolicy Create to datapath: %+v", sgPolicyReqMsg.Request[0].KeyOrHandle)
 
@@ -166,7 +170,8 @@ func (hd *Datapath) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPol
 			},
 		},
 	}
-
+	b, _ := json.Marshal(sgPolicyUpdateReqMsg)
+	log.Infof("Update SG Policy: %s", string(b))
 	log.Infof("Sending NetworkSecurityPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {

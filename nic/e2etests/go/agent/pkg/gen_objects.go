@@ -251,8 +251,6 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 			Name:      "infra-nw",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "192.168.1.1/24",
-			IPv4Gateway: "192.168.1.1",
 			VlanID:      42,
 		},
 	}
@@ -266,7 +264,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 		name = fmt.Sprintf("%s-%d", o.Name, i)
 
 		subnet := subnets[i]
-		_, gwIP, _ := libs.GenIPAddress(subnet, 4, false)
+		_, _, _ = libs.GenIPAddress(subnet, 4, false)
 		nt := netproto.Network{
 			TypeMeta: api.TypeMeta{Kind: "Network"},
 			ObjectMeta: api.ObjectMeta{
@@ -275,8 +273,6 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 				Name:      name,
 			},
 			Spec: netproto.NetworkSpec{
-				IPv4Subnet:  subnet,
-				IPv4Gateway: gwIP,
 				VlanID:      uint32(vlanOffset+i) % 4096,
 			},
 		}
@@ -375,8 +371,6 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 				UsegVlan:      uint32(i) + 1,
 				IPv4Addresses:   []string{fmt.Sprintf("%s/32", ipAddr)},
 				MacAddress:    epMACAddresses[i],
-				InterfaceType: "uplink",
-				Interface:     fmt.Sprintf("uplink%d", (i%UPLINK_COUNT)+UPLINK_START),
 				NodeUUID:      "GWUUID",
 			},
 		}
@@ -387,7 +381,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 	}
 
 	for i := 0; i < o.Count; i++ {
-		var name, namespace, network, ifType, ifName, nodeUUID, epIP string
+		var name, namespace, network, nodeUUID, epIP string
 		name = fmt.Sprintf("%s-%d", o.Name, i)
 		//TODO FIX NW NAMES
 		namespace = fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
@@ -399,8 +393,6 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 		epMAC := epMACAddresses[i+INFRA_EP_COUNT]
 
 		if i%o.Count < 16 {
-			ifType = "uplink"
-			ifName = fmt.Sprintf("uplink%d", ((i/networkRef.Count)%UPLINK_COUNT)+UPLINK_START)
 			nodeUUID = "GWUUID" // This will ensure that the EP is remote
 		}
 		//else {
@@ -424,8 +416,6 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 				UsegVlan:      uint32(i) + 1,
 				IPv4Addresses:   []string{fmt.Sprintf("%s/32", epIP)},
 				MacAddress:    epMAC,
-				InterfaceType: ifType,
-				Interface:     ifName,
 				NodeUUID:      nodeUUID,
 			},
 		}
@@ -645,65 +635,6 @@ func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Obje
 }
 
 func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
-	var natPools []netproto.NatPool
-	specFile := "generated/nat_pools.json"
-	if !genRequired(o) {
-		return o, nil
-	}
-
-	// Nat Pools sessions need to refer to Namespaces
-	namespaceRef := objCache["Namespace"]
-	networkRef := objCache["Network"]
-
-	// generate networks distributed evenly across
-	for i := 0; i < o.Count; i++ {
-		name := fmt.Sprintf("%s-%d", o.Name, i)
-		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
-		network := fmt.Sprintf("%s-%d", networkRef.Name, i%networkRef.Count)
-		subnet := networkCache[network]
-		addrs, _, err := libs.GenIPAddress(subnet, 8, false)
-		if err != nil {
-			return nil, err
-		}
-		ipRange := fmt.Sprintf("%s-%s", addrs[0], addrs[len(addrs)-1])
-		//endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
-		np := netproto.NatPool{
-			TypeMeta: api.TypeMeta{Kind: "NatPool"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: namespace,
-				Name:      name,
-			},
-			Spec: netproto.NatPoolSpec{
-				IPRange: ipRange,
-			},
-		}
-		natPools = append(natPools, np)
-	}
-	out, err := json.MarshalIndent(&natPools, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-
-	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
-	configDir, _ := filepath.Split(manifestFile)
-
-	fileName := fmt.Sprintf("%s%s", configDir, specFile)
-
-	// create a generated dir in the config directory to dump the json
-	genDir, _ := filepath.Split(fileName)
-	if _, err := os.Stat(genDir); os.IsNotExist(err) {
-		err = os.MkdirAll(genDir, 0755)
-		if err != nil {
-			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
-		}
-	}
-
-	err = ioutil.WriteFile(fileName, out, 0644)
-	if err != nil {
-		return nil, err
-	}
-	o.SpecFile = specFile
 	return o, nil
 }
 

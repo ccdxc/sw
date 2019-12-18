@@ -215,7 +215,7 @@ var _ = Describe("security", func() {
 
 		// test cases
 		It("Security policy create delete should succeed", securityTg.testSgpolicyCreateDelete)
-		It("Security group create delete should succeed", securityTg.testSecurityGroupCreateDelete)
+		//It("Security group create delete should succeed", securityTg.testSecurityGroupCreateDelete)
 
 		// test cleanup
 		AfterEach(securityTg.teardownTest)

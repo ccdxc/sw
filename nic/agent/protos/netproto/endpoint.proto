@@ -12,7 +12,7 @@ import "github.com/pensando/sw/api/meta.proto";
 // ---------------------------- Endpoint API ----------------------------
 
 // endpoint controller api
-service EndpointApi {
+service EndpointApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Endpoint",
@@ -21,13 +21,17 @@ service EndpointApi {
         Prefix: "api/endpoints"
     };
 
-    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
-    rpc UpdateEndpoint (Endpoint) returns (Endpoint) {};
-    rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
     rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
-    rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
     rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEventList) {};
     rpc EndpointOperUpdate (stream EndpointEvent) returns (api.TypeMeta) {};
+
+//    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
+//    rpc UpdateEndpoint (Endpoint) returns (Endpoint) {};
+//    rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
+//    rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
+//    rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
+//    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEventList) {};
+//    rpc EndpointOperUpdate (stream EndpointEvent) returns (api.TypeMeta) {};
 }
 
 // Endpoint Object
@@ -47,55 +51,37 @@ message Endpoint {
 // RemoteEPs are bound to uplinks or a tunnel interface
 
 message EndpointSpec {
-    enum Type{
-        NONE    = 0;
-        LIF     = 1; // For local EPs
-        UPLINK  = 2; // For Remote EPs
-        TUNNEL  = 3; // For Remote EPs going over tunnels
-    }
     // VrfName specifies the name of the VRF that the current EP belongs to
     string VrfName                          = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
-    string EndpointUUID                     = 2 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
-    string WorkloadUUID                     = 3 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
-    string WorkloadName                     = 4 [(gogoproto.jsontag) = "workload-name,omitempty"];
     // Name of the network to which the current endpoint belongs to. Required
-    string NetworkName                      = 5 [(gogoproto.jsontag) = "network-name,omitempty"];
-    map<string,string> WorkloadAttributes   = 6 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
-    repeated string SecurityGroups          = 7 [(gogoproto.jsontag) = "security-groups,omitempty"];
-    // Interface type of the endpoint. For LocalEPs this should be LIF.
-    // For Remote EPs this should either be of type UPLINK or TUNNEL. Required
-    string InterfaceType                    = 8 [(venice.check) = "StrEnum(EndpointSpec.Type)",
-                                                 (gogoproto.jsontag) = "interface-type,omitempty"];
-    // Interface name of the endpoint. Required
-    string Interface                        = 9 [(gogoproto.jsontag) = "interface,omitempty"];
+    string NetworkName                      = 2 [(gogoproto.jsontag) = "network-name,omitempty"];
     // IP Address of the endpoint in CIDR IP/Prefix format. Required
-    repeated string IPv4Addresses           = 10  [(gogoproto.jsontag) = "ipv4-addresses,omitempty"];
-    // IP Gateway of the endpoint. Optional
-    string IPv4Gateway                      = 11  [(gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    repeated string IPv4Addresses           = 3  [(gogoproto.jsontag) = "ipv4-addresses,omitempty"];
     // IPv6 Address of the endpoint. Optional
-    repeated string IPv6Addresses           = 12  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
-    // IPv6 Gateway of the endpoint. Optional
-    string IPv6Gateway                      = 13  [(gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    repeated string IPv6Addresses           = 4  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
     // MAC Address of the endpoint. Required
-    string MacAddress                       = 14  [(gogoproto.jsontag) = "mac-address,omitempty"];
-    string HomingHostAddr                   = 15  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
-    string HomingHostName                   = 16  [(gogoproto.jsontag) = "homing-host-name,omitempty"];
+    string MacAddress                       = 5  [(gogoproto.jsontag) = "mac-address,omitempty"];
     // Specifies the name of the node where the endpoint lives.
-    string NodeUUID                         = 17  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+    // Optional for LocalEPs and mandatory for RemoteEPs.
+    string NodeUUID                         = 6  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+
+    // IP Address of the node where EP is local
+    string HomingHostAddr                   = 7  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
     // Microsegment VLAN for the endpoint. Required only for Local EPs.
-    uint32 UsegVlan                         = 18  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
+    uint32 UsegVlan                         = 8  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
+
 }
 
 // endpoint status
 message EndpointStatus {
     // Endpoint ID in datapath. Valid only for Local EPs
-    uint64 EnicID         = 10 [(gogoproto.jsontag) = "enic-id,omitempty"];
-    // NodeUUID is the nodeuuid where the endpoint currntly exists. 
-    string NodeUUID  = 11  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+    uint64 EnicID                     = 1 [(gogoproto.jsontag) = "enic-id,omitempty"];
+    // NodeUUID is the nodeuuid where the endpoint currntly exists.
+    string NodeUUID                   = 2  [(gogoproto.jsontag) = "node-uuid,omitempty"];
     // Spec of Migration of the endpoint
-    EndpointMigrationStatus Migration = 12 [(gogoproto.nullable) = true,
-                                          (gogoproto.jsontag) = "migration,omitempty"];
-    
+    EndpointMigrationStatus Migration = 3 [(gogoproto.nullable) = true,
+                                           (gogoproto.jsontag) = "migration,omitempty"];
+
 }
 
 // list of endpoints
@@ -105,8 +91,8 @@ message EndpointList {
 
 // endpoint watch event
 message EndpointEvent {
-    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    Endpoint       Endpoint = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoint,omitempty"];
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Endpoint        Endpoint    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoint,omitempty"];
 }
 
 

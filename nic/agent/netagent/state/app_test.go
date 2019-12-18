@@ -25,7 +25,12 @@ func TestAppCreateDelete(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -56,7 +61,7 @@ func TestAppCreateDelete(t *testing.T) {
 	// delete the app and verify its gone from db
 	err = ag.DeleteApp(app.Tenant, app.Namespace, app.Name)
 	AssertOk(t, err, "Error deleting app")
-	_, err = ag.FindNatPolicy(app.ObjectMeta)
+	_, err = ag.FindApp(app.ObjectMeta)
 	Assert(t, err != nil, "App was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
@@ -78,7 +83,12 @@ func TestAppCreateDNS(t *testing.T) {
 			Name:      "dns",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets:   true,
@@ -141,7 +151,11 @@ func TestAppCreateICMPWithProtocolSpecified(t *testing.T) {
 			Name:      "ping",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"icmp"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{},
 			},
@@ -171,7 +185,12 @@ func TestAppUpdateDNS(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -215,7 +234,11 @@ func TestAppUpdateICMP(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"icmp"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{
 					Type: 13,
@@ -233,7 +256,11 @@ func TestAppUpdateICMP(t *testing.T) {
 	Assert(t, p.Name == "testApp", "App names did not match", app)
 
 	appSpec := netproto.AppSpec{
-		ProtoPorts: []string{"icmp"},
+		ProtoPorts: []*netproto.ProtoPort{
+			{
+				Protocol: "icmp",
+			},
+		},
 		ALG: &netproto.ALG{
 			ICMP: &netproto.ICMP{
 				Type: 13,
@@ -264,7 +291,12 @@ func TestAppUpdateLinkedNetworkSecurityPolicyUpdate(t *testing.T) {
 			Name:      "dns",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -284,7 +316,12 @@ func TestAppUpdateLinkedNetworkSecurityPolicyUpdate(t *testing.T) {
 			Name:      "dns",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -378,7 +415,12 @@ func TestAppCreateOnNonExistingNamespace(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -408,7 +450,12 @@ func TestAppUpdateOnNonExistentApp(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -438,7 +485,12 @@ func TestAppRepeatedRPC(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SUNRPC: []*netproto.RPC{
 					{
@@ -472,7 +524,12 @@ func TestAppMultipleALGConfig_TwoALG(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -504,7 +561,12 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -541,7 +603,12 @@ func TestAppBadAppIdleTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -570,7 +637,12 @@ func TestAppBadDNSQueryResponseTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -599,7 +671,12 @@ func TestAppBadSIPMediaInActivityTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					MediaInactivityTimeout: "bad timeout format",
@@ -626,7 +703,12 @@ func TestAppBadSunRPCProgramIDTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"tcp/13373"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+					Port:     "13337",
+				},
+			},
 			ALG: &netproto.ALG{
 				SUNRPC: []*netproto.RPC{
 					{
@@ -660,7 +742,12 @@ func TestAppBadMSRPCProgramIDTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"tcp/13373"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+					Port:     "13337",
+				},
+			},
 			ALG: &netproto.ALG{
 				MSRPC: []*netproto.RPC{
 					{
@@ -694,7 +781,12 @@ func TestAppBadSIPMaxCallDuration(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					MaxCallDuration: "bad timeout format",
@@ -721,7 +813,12 @@ func TestAppBadSIPCTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					CTimeout: "bad timeout format",
@@ -748,7 +845,12 @@ func TestAppBadSIPT1Timeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					T1Timeout: "bad timeout format",
@@ -775,7 +877,12 @@ func TestAppBadSIPT4Timeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					T4Timeout: "bad timeout format",
@@ -803,7 +910,12 @@ func TestInvalidAppCreateICMPWithPortSpecified(t *testing.T) {
 			Name:      "ping",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"icmp/80"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "icmp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{},
 			},
@@ -829,7 +941,11 @@ func TestInvalidAppCreateICMPWithPortocolSpecified(t *testing.T) {
 			Name:      "ping",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"tcp"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+				},
+			},
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{},
 			},

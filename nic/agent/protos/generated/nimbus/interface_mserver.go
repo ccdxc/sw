@@ -89,7 +89,7 @@ func AddInterfaceTopic(server *MbusServer, reactor InterfaceStatusReactor) (*Int
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterInterfaceApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterInterfaceApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.Object
 }
 
 // WatchInterfaces watches Interfaces and sends streaming resp
-func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto.InterfaceApi_WatchInterfacesServer) error {
+func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto.InterfaceApiV1_WatchInterfacesServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *InterfaceTopic) updateInterfaceOper(oper *netproto.InterfaceEvent, nod
 	return nil
 }
 
-func (eh *InterfaceTopic) InterfaceOperUpdate(stream netproto.InterfaceApi_InterfaceOperUpdateServer) error {
+func (eh *InterfaceTopic) InterfaceOperUpdate(stream netproto.InterfaceApiV1_InterfaceOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

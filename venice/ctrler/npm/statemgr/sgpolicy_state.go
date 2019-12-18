@@ -23,10 +23,10 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
-	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy   `json:"-"` // embedded security policy object
-	groups                map[string]*SecurityGroupState // list of groups this policy is attached to
-	stateMgr              *Statemgr                      // pointer to state manager
-	NodeVersions          map[string]string              // Map for node -> version
+	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy `json:"-"` // embedded security policy object
+	groups                map[string]*SecurityGroupState
+	stateMgr              *Statemgr         // pointer to state manager
+	NodeVersions          map[string]string // Map for node -> version
 }
 
 func versionToInt(v string) int {
@@ -61,13 +61,11 @@ func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto
 				a := netproto.PolicyRule{
 					Action: convertPolicyAction(v.Action),
 					Src: &netproto.MatchSelector{
-						SecurityGroups: v.FromSecurityGroups,
-						Addresses:      v.FromIPAddresses,
+						Addresses: v.FromIPAddresses,
 					},
 					Dst: &netproto.MatchSelector{
-						SecurityGroups: v.ToSecurityGroups,
-						Addresses:      v.ToIPAddresses,
-						AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
+						Addresses:  v.ToIPAddresses,
+						ProtoPorts: convertAppConfig(v.Apps, v.ProtoPorts),
 					},
 					AppName: app,
 					ID:      rhash,
@@ -78,13 +76,11 @@ func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto
 			a := netproto.PolicyRule{
 				Action: convertPolicyAction(v.Action),
 				Src: &netproto.MatchSelector{
-					SecurityGroups: v.FromSecurityGroups,
-					Addresses:      v.FromIPAddresses,
+					Addresses: v.FromIPAddresses,
 				},
 				Dst: &netproto.MatchSelector{
-					SecurityGroups: v.ToSecurityGroups,
-					Addresses:      v.ToIPAddresses,
-					AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
+					Addresses:  v.ToIPAddresses,
+					ProtoPorts: convertAppConfig(v.Apps, v.ProtoPorts),
 				},
 				ID: rhash,
 			}
@@ -95,12 +91,12 @@ func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto
 }
 
 // convertAppConfig converts venice app information to port protocol for agent
-func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.AppConfig) {
+func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.ProtoPort) {
 	for _, pp := range protoPorts {
 		if pp.Protocol != "" && pp.Protocol != "any" {
 			portRanges := strings.Split(pp.Ports, ",")
 			for _, prange := range portRanges {
-				c := netproto.AppConfig{
+				c := netproto.ProtoPort{
 					Protocol: pp.Protocol,
 					Port:     prange,
 				}
@@ -170,36 +166,36 @@ func (sgp *SgpolicyState) Write() error {
 // Delete cleans up all state associated with the sg
 func (sgp *SgpolicyState) Delete() error {
 	// inform all SGs to remove the policy
-	for _, sg := range sgp.groups {
-		err := sg.DeletePolicy(sgp)
-		if err != nil {
-			log.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sg.SecurityGroup.Name, err)
-		}
-	}
+	//for _, sg := range sgp.groups {
+	//	err := sg.DeletePolicy(sgp)
+	//	if err != nil {
+	//		log.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sg.SecurityGroup.Name, err)
+	//	}
+	//}
 
 	return nil
 }
 
 // updateAttachedSgs update all attached sgs
 func (sgp *SgpolicyState) updateAttachedSgs() error {
-	// make sure the attached security group exists
-	for _, sgname := range sgp.NetworkSecurityPolicy.Spec.AttachGroups {
-		sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.NetworkSecurityPolicy.Tenant, sgname)
-		if err != nil {
-			log.Errorf("Could not find the security group %s. Err: %v", sgname, err)
-			return kvstore.NewKeyNotFoundError(sgname, 0)
-		}
-
-		// add the policy to sg
-		err = sgs.AddPolicy(sgp)
-		if err != nil {
-			log.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sgname, err)
-			return err
-		}
-
-		// link sgpolicy to sg
-		sgp.groups[sgs.SecurityGroup.Name] = sgs
-	}
+	//// make sure the attached security group exists
+	//for _, sgname := range sgp.NetworkSecurityPolicy.Spec.AttachGroups {
+	//	sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.NetworkSecurityPolicy.Tenant, sgname)
+	//	if err != nil {
+	//		log.Errorf("Could not find the security group %s. Err: %v", sgname, err)
+	//		return kvstore.NewKeyNotFoundError(sgname, 0)
+	//	}
+	//
+	//	// add the policy to sg
+	//	err = sgs.AddPolicy(sgp)
+	//	if err != nil {
+	//		log.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.NetworkSecurityPolicy.Name, sgname, err)
+	//		return err
+	//	}
+	//
+	//	// link sgpolicy to sg
+	//	sgp.groups[sgs.SecurityGroup.Name] = sgs
+	//}
 
 	return nil
 }
@@ -278,7 +274,6 @@ func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*Sg
 	// create sg state object
 	sgps := SgpolicyState{
 		NetworkSecurityPolicy: sgp,
-		groups:                make(map[string]*SecurityGroupState),
 		stateMgr:              stateMgr,
 		NodeVersions:          make(map[string]string),
 	}

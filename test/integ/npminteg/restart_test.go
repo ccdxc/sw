@@ -41,7 +41,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
-		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
+		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// stop API server
@@ -188,7 +188,7 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
-		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
+		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// stop NPM

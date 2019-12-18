@@ -159,7 +159,7 @@ func (na *Nagent) createDefaultUntaggedNw() error {
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "_internal_untagged_nw",
+			Name:      types.InternalUntaggedNetwork,
 			CreationTime: api.Timestamp{
 				Timestamp: *c,
 			},
@@ -187,22 +187,11 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.Datapath = dp
 	na.NetworkDB = make(map[string]*netproto.Network)
 	na.EndpointDB = make(map[string]*netproto.Endpoint)
-	na.SecgroupDB = make(map[string]*netproto.SecurityGroup)
 	na.TenantDB = make(map[string]*netproto.Tenant)
 	na.NamespaceDB = make(map[string]*netproto.Namespace)
-	na.NatPoolDB = make(map[string]*netproto.NatPool)
-	na.NatPoolLUT = make(map[string]*types.NatPoolRef)
-	na.NatPolicyDB = make(map[string]*netproto.NatPolicy)
-	na.NatBindingDB = make(map[string]*netproto.NatBinding)
 	na.HwIfDB = make(map[string]*netproto.Interface)
-	na.RouteDB = make(map[string]*netproto.Route)
-	na.IPSecPolicyDB = make(map[string]*netproto.IPSecPolicy)
-	na.IPSecSAEncryptDB = make(map[string]*netproto.IPSecSAEncrypt)
-	na.IPSecSADecryptDB = make(map[string]*netproto.IPSecSADecrypt)
-	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
 	na.NetworkSecurityPolicyDB = make(map[string]*netproto.NetworkSecurityPolicy)
 	na.TunnelDB = make(map[string]*netproto.Tunnel)
-	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.PortDB = make(map[string]*netproto.Port)
 	na.SecurityProfileDB = make(map[string]*netproto.SecurityProfile)
 	na.AppDB = make(map[string]*netproto.App)

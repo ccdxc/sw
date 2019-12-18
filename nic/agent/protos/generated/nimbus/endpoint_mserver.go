@@ -89,7 +89,7 @@ func AddEndpointTopic(server *MbusServer, reactor EndpointStatusReactor) (*Endpo
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterEndpointApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterEndpointApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMe
 }
 
 // WatchEndpoints watches Endpoints and sends streaming resp
-func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.EndpointApi_WatchEndpointsServer) error {
+func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.EndpointApiV1_WatchEndpointsServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *EndpointTopic) updateEndpointOper(oper *netproto.EndpointEvent, nodeID
 	return nil
 }
 
-func (eh *EndpointTopic) EndpointOperUpdate(stream netproto.EndpointApi_EndpointOperUpdateServer) error {
+func (eh *EndpointTopic) EndpointOperUpdate(stream netproto.EndpointApiV1_EndpointOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

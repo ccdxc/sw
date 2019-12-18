@@ -90,20 +90,7 @@ func (m *Network) GetStatus() NetworkStatus {
 type NetworkSpec struct {
 	// VrfName specifies the name of the VRF that the current Network belongs to
 	VrfName string `protobuf:"bytes,1,opt,name=VrfName,proto3" json:"vrf-name,omitempty"`
-	// IPv4Subnet of the L3 Network in CIDR format. Required
-	IPv4Subnet string `protobuf:"bytes,2,opt,name=IPv4Subnet,proto3" json:"ipv4-subnet,omitempty"`
-	// IPv4Gateway of the L3 Network. Required
-	IPv4Gateway string `protobuf:"bytes,3,opt,name=IPv4Gateway,proto3" json:"ipv4-gateway,omitempty"`
-	// IPv6Subnet of the L3 Network in CIDR format. Optional
-	IPv6Subnet string `protobuf:"bytes,4,opt,name=IPv6Subnet,proto3" json:"ipv6-subnet,omitempty"`
-	// IPv6Gateway of the L3 Network. Optional
-	IPv6Gateway string `protobuf:"bytes,5,opt,name=IPv6Gateway,proto3" json:"ipv6-gateway,omitempty"`
-	// VlanID of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
-	VlanID uint32 `protobuf:"varint,6,opt,name=VlanID,proto3" json:"vlan-id,omitempty"`
-	// VxlanVNI of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
-	VxlanVNI uint32 `protobuf:"varint,7,opt,name=VxlanVNI,proto3" json:"vxlan-vni,omitempty"`
-	// Router MAC Address of L3 network in OUI format. Optional
-	RouterMAC string `protobuf:"bytes,8,opt,name=RouterMAC,proto3" json:"router-mac,omitempty"`
+	VlanID  uint32 `protobuf:"varint,2,opt,name=VlanID,proto3" json:"vlan-id,omitempty"`
 }
 
 func (m *NetworkSpec) Reset()                    { *m = NetworkSpec{} }
@@ -118,34 +105,6 @@ func (m *NetworkSpec) GetVrfName() string {
 	return ""
 }
 
-func (m *NetworkSpec) GetIPv4Subnet() string {
-	if m != nil {
-		return m.IPv4Subnet
-	}
-	return ""
-}
-
-func (m *NetworkSpec) GetIPv4Gateway() string {
-	if m != nil {
-		return m.IPv4Gateway
-	}
-	return ""
-}
-
-func (m *NetworkSpec) GetIPv6Subnet() string {
-	if m != nil {
-		return m.IPv6Subnet
-	}
-	return ""
-}
-
-func (m *NetworkSpec) GetIPv6Gateway() string {
-	if m != nil {
-		return m.IPv6Gateway
-	}
-	return ""
-}
-
 func (m *NetworkSpec) GetVlanID() uint32 {
 	if m != nil {
 		return m.VlanID
@@ -153,26 +112,9 @@ func (m *NetworkSpec) GetVlanID() uint32 {
 	return 0
 }
 
-func (m *NetworkSpec) GetVxlanVNI() uint32 {
-	if m != nil {
-		return m.VxlanVNI
-	}
-	return 0
-}
-
-func (m *NetworkSpec) GetRouterMAC() string {
-	if m != nil {
-		return m.RouterMAC
-	}
-	return ""
-}
-
 // network status
 type NetworkStatus struct {
-	AllocatedVlanID   uint32 `protobuf:"varint,1,opt,name=AllocatedVlanID,proto3" json:"allocated-vlan-id,omitempty"`
-	AllocatedVxlanVNI uint32 `protobuf:"varint,2,opt,name=AllocatedVxlanVNI,proto3" json:"allocated-vxlan-vni,omitempty"`
-	NetworkID         uint64 `protobuf:"varint,3,opt,name=NetworkID,proto3" json:"network-id,omitempty"`
-	NetworkHandle     uint64 `protobuf:"varint,4,opt,name=NetworkHandle,proto3" json:"network-handle,omitempty"`
+	NetworkID uint64 `protobuf:"varint,3,opt,name=NetworkID,proto3" json:"network-id,omitempty"`
 }
 
 func (m *NetworkStatus) Reset()                    { *m = NetworkStatus{} }
@@ -180,30 +122,9 @@ func (m *NetworkStatus) String() string            { return proto.CompactTextStr
 func (*NetworkStatus) ProtoMessage()               {}
 func (*NetworkStatus) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{3} }
 
-func (m *NetworkStatus) GetAllocatedVlanID() uint32 {
-	if m != nil {
-		return m.AllocatedVlanID
-	}
-	return 0
-}
-
-func (m *NetworkStatus) GetAllocatedVxlanVNI() uint32 {
-	if m != nil {
-		return m.AllocatedVxlanVNI
-	}
-	return 0
-}
-
 func (m *NetworkStatus) GetNetworkID() uint64 {
 	if m != nil {
 		return m.NetworkID
-	}
-	return 0
-}
-
-func (m *NetworkStatus) GetNetworkHandle() uint64 {
-	if m != nil {
-		return m.NetworkHandle
 	}
 	return 0
 }
@@ -284,48 +205,37 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for NetworkApi service
+// Client API for NetworkApiV1 service
 
-type NetworkApiClient interface {
-	GetNetwork(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*Network, error)
+type NetworkApiV1Client interface {
 	ListNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*NetworkList, error)
-	WatchNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (NetworkApi_WatchNetworksClient, error)
-	UpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
-	NetworkOperUpdate(ctx context.Context, opts ...grpc.CallOption) (NetworkApi_NetworkOperUpdateClient, error)
+	WatchNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (NetworkApiV1_WatchNetworksClient, error)
+	NetworkOperUpdate(ctx context.Context, opts ...grpc.CallOption) (NetworkApiV1_NetworkOperUpdateClient, error)
 }
 
-type networkApiClient struct {
+type networkApiV1Client struct {
 	cc *grpc.ClientConn
 }
 
-func NewNetworkApiClient(cc *grpc.ClientConn) NetworkApiClient {
-	return &networkApiClient{cc}
+func NewNetworkApiV1Client(cc *grpc.ClientConn) NetworkApiV1Client {
+	return &networkApiV1Client{cc}
 }
 
-func (c *networkApiClient) GetNetwork(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*Network, error) {
-	out := new(Network)
-	err := grpc.Invoke(ctx, "/netproto.NetworkApi/GetNetwork", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *networkApiClient) ListNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*NetworkList, error) {
+func (c *networkApiV1Client) ListNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*NetworkList, error) {
 	out := new(NetworkList)
-	err := grpc.Invoke(ctx, "/netproto.NetworkApi/ListNetworks", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/netproto.NetworkApiV1/ListNetworks", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *networkApiClient) WatchNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (NetworkApi_WatchNetworksClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkApi_serviceDesc.Streams[0], c.cc, "/netproto.NetworkApi/WatchNetworks", opts...)
+func (c *networkApiV1Client) WatchNetworks(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (NetworkApiV1_WatchNetworksClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_NetworkApiV1_serviceDesc.Streams[0], c.cc, "/netproto.NetworkApiV1/WatchNetworks", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &networkApiWatchNetworksClient{stream}
+	x := &networkApiV1WatchNetworksClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -335,16 +245,16 @@ func (c *networkApiClient) WatchNetworks(ctx context.Context, in *api.ObjectMeta
 	return x, nil
 }
 
-type NetworkApi_WatchNetworksClient interface {
+type NetworkApiV1_WatchNetworksClient interface {
 	Recv() (*NetworkEventList, error)
 	grpc.ClientStream
 }
 
-type networkApiWatchNetworksClient struct {
+type networkApiV1WatchNetworksClient struct {
 	grpc.ClientStream
 }
 
-func (x *networkApiWatchNetworksClient) Recv() (*NetworkEventList, error) {
+func (x *networkApiV1WatchNetworksClient) Recv() (*NetworkEventList, error) {
 	m := new(NetworkEventList)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -352,39 +262,30 @@ func (x *networkApiWatchNetworksClient) Recv() (*NetworkEventList, error) {
 	return m, nil
 }
 
-func (c *networkApiClient) UpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
-	out := new(Network)
-	err := grpc.Invoke(ctx, "/netproto.NetworkApi/UpdateNetwork", in, out, c.cc, opts...)
+func (c *networkApiV1Client) NetworkOperUpdate(ctx context.Context, opts ...grpc.CallOption) (NetworkApiV1_NetworkOperUpdateClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_NetworkApiV1_serviceDesc.Streams[1], c.cc, "/netproto.NetworkApiV1/NetworkOperUpdate", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
-}
-
-func (c *networkApiClient) NetworkOperUpdate(ctx context.Context, opts ...grpc.CallOption) (NetworkApi_NetworkOperUpdateClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_NetworkApi_serviceDesc.Streams[1], c.cc, "/netproto.NetworkApi/NetworkOperUpdate", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &networkApiNetworkOperUpdateClient{stream}
+	x := &networkApiV1NetworkOperUpdateClient{stream}
 	return x, nil
 }
 
-type NetworkApi_NetworkOperUpdateClient interface {
+type NetworkApiV1_NetworkOperUpdateClient interface {
 	Send(*NetworkEvent) error
 	CloseAndRecv() (*api.TypeMeta, error)
 	grpc.ClientStream
 }
 
-type networkApiNetworkOperUpdateClient struct {
+type networkApiV1NetworkOperUpdateClient struct {
 	grpc.ClientStream
 }
 
-func (x *networkApiNetworkOperUpdateClient) Send(m *NetworkEvent) error {
+func (x *networkApiV1NetworkOperUpdateClient) Send(m *NetworkEvent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *networkApiNetworkOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error) {
+func (x *networkApiV1NetworkOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -395,114 +296,76 @@ func (x *networkApiNetworkOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error
 	return m, nil
 }
 
-// Server API for NetworkApi service
+// Server API for NetworkApiV1 service
 
-type NetworkApiServer interface {
-	GetNetwork(context.Context, *api.ObjectMeta) (*Network, error)
+type NetworkApiV1Server interface {
 	ListNetworks(context.Context, *api.ObjectMeta) (*NetworkList, error)
-	WatchNetworks(*api.ObjectMeta, NetworkApi_WatchNetworksServer) error
-	UpdateNetwork(context.Context, *Network) (*Network, error)
-	NetworkOperUpdate(NetworkApi_NetworkOperUpdateServer) error
+	WatchNetworks(*api.ObjectMeta, NetworkApiV1_WatchNetworksServer) error
+	NetworkOperUpdate(NetworkApiV1_NetworkOperUpdateServer) error
 }
 
-func RegisterNetworkApiServer(s *grpc.Server, srv NetworkApiServer) {
-	s.RegisterService(&_NetworkApi_serviceDesc, srv)
+func RegisterNetworkApiV1Server(s *grpc.Server, srv NetworkApiV1Server) {
+	s.RegisterService(&_NetworkApiV1_serviceDesc, srv)
 }
 
-func _NetworkApi_GetNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NetworkApiV1_ListNetworks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ObjectMeta)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NetworkApiServer).GetNetwork(ctx, in)
+		return srv.(NetworkApiV1Server).ListNetworks(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netproto.NetworkApi/GetNetwork",
+		FullMethod: "/netproto.NetworkApiV1/ListNetworks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NetworkApiServer).GetNetwork(ctx, req.(*api.ObjectMeta))
+		return srv.(NetworkApiV1Server).ListNetworks(ctx, req.(*api.ObjectMeta))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NetworkApi_ListNetworks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ObjectMeta)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NetworkApiServer).ListNetworks(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.NetworkApi/ListNetworks",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NetworkApiServer).ListNetworks(ctx, req.(*api.ObjectMeta))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NetworkApi_WatchNetworks_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _NetworkApiV1_WatchNetworks_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ObjectMeta)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(NetworkApiServer).WatchNetworks(m, &networkApiWatchNetworksServer{stream})
+	return srv.(NetworkApiV1Server).WatchNetworks(m, &networkApiV1WatchNetworksServer{stream})
 }
 
-type NetworkApi_WatchNetworksServer interface {
+type NetworkApiV1_WatchNetworksServer interface {
 	Send(*NetworkEventList) error
 	grpc.ServerStream
 }
 
-type networkApiWatchNetworksServer struct {
+type networkApiV1WatchNetworksServer struct {
 	grpc.ServerStream
 }
 
-func (x *networkApiWatchNetworksServer) Send(m *NetworkEventList) error {
+func (x *networkApiV1WatchNetworksServer) Send(m *NetworkEventList) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _NetworkApi_UpdateNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Network)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NetworkApiServer).UpdateNetwork(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.NetworkApi/UpdateNetwork",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NetworkApiServer).UpdateNetwork(ctx, req.(*Network))
-	}
-	return interceptor(ctx, in, info, handler)
+func _NetworkApiV1_NetworkOperUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NetworkApiV1Server).NetworkOperUpdate(&networkApiV1NetworkOperUpdateServer{stream})
 }
 
-func _NetworkApi_NetworkOperUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(NetworkApiServer).NetworkOperUpdate(&networkApiNetworkOperUpdateServer{stream})
-}
-
-type NetworkApi_NetworkOperUpdateServer interface {
+type NetworkApiV1_NetworkOperUpdateServer interface {
 	SendAndClose(*api.TypeMeta) error
 	Recv() (*NetworkEvent, error)
 	grpc.ServerStream
 }
 
-type networkApiNetworkOperUpdateServer struct {
+type networkApiV1NetworkOperUpdateServer struct {
 	grpc.ServerStream
 }
 
-func (x *networkApiNetworkOperUpdateServer) SendAndClose(m *api.TypeMeta) error {
+func (x *networkApiV1NetworkOperUpdateServer) SendAndClose(m *api.TypeMeta) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *networkApiNetworkOperUpdateServer) Recv() (*NetworkEvent, error) {
+func (x *networkApiV1NetworkOperUpdateServer) Recv() (*NetworkEvent, error) {
 	m := new(NetworkEvent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -510,32 +373,24 @@ func (x *networkApiNetworkOperUpdateServer) Recv() (*NetworkEvent, error) {
 	return m, nil
 }
 
-var _NetworkApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "netproto.NetworkApi",
-	HandlerType: (*NetworkApiServer)(nil),
+var _NetworkApiV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "netproto.NetworkApiV1",
+	HandlerType: (*NetworkApiV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetNetwork",
-			Handler:    _NetworkApi_GetNetwork_Handler,
-		},
-		{
 			MethodName: "ListNetworks",
-			Handler:    _NetworkApi_ListNetworks_Handler,
-		},
-		{
-			MethodName: "UpdateNetwork",
-			Handler:    _NetworkApi_UpdateNetwork_Handler,
+			Handler:    _NetworkApiV1_ListNetworks_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "WatchNetworks",
-			Handler:       _NetworkApi_WatchNetworks_Handler,
+			Handler:       _NetworkApiV1_WatchNetworks_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "NetworkOperUpdate",
-			Handler:       _NetworkApi_NetworkOperUpdate_Handler,
+			Handler:       _NetworkApiV1_NetworkOperUpdate_Handler,
 			ClientStreams: true,
 		},
 	},
@@ -657,45 +512,10 @@ func (m *NetworkSpec) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintNetwork(dAtA, i, uint64(len(m.VrfName)))
 		i += copy(dAtA[i:], m.VrfName)
 	}
-	if len(m.IPv4Subnet) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(len(m.IPv4Subnet)))
-		i += copy(dAtA[i:], m.IPv4Subnet)
-	}
-	if len(m.IPv4Gateway) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(len(m.IPv4Gateway)))
-		i += copy(dAtA[i:], m.IPv4Gateway)
-	}
-	if len(m.IPv6Subnet) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(len(m.IPv6Subnet)))
-		i += copy(dAtA[i:], m.IPv6Subnet)
-	}
-	if len(m.IPv6Gateway) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(len(m.IPv6Gateway)))
-		i += copy(dAtA[i:], m.IPv6Gateway)
-	}
 	if m.VlanID != 0 {
-		dAtA[i] = 0x30
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintNetwork(dAtA, i, uint64(m.VlanID))
-	}
-	if m.VxlanVNI != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(m.VxlanVNI))
-	}
-	if len(m.RouterMAC) > 0 {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(len(m.RouterMAC)))
-		i += copy(dAtA[i:], m.RouterMAC)
 	}
 	return i, nil
 }
@@ -715,25 +535,10 @@ func (m *NetworkStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.AllocatedVlanID != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(m.AllocatedVlanID))
-	}
-	if m.AllocatedVxlanVNI != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(m.AllocatedVxlanVNI))
-	}
 	if m.NetworkID != 0 {
 		dAtA[i] = 0x18
 		i++
 		i = encodeVarintNetwork(dAtA, i, uint64(m.NetworkID))
-	}
-	if m.NetworkHandle != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintNetwork(dAtA, i, uint64(m.NetworkHandle))
 	}
 	return i, nil
 }
@@ -878,31 +683,8 @@ func (m *NetworkSpec) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNetwork(uint64(l))
 	}
-	l = len(m.IPv4Subnet)
-	if l > 0 {
-		n += 1 + l + sovNetwork(uint64(l))
-	}
-	l = len(m.IPv4Gateway)
-	if l > 0 {
-		n += 1 + l + sovNetwork(uint64(l))
-	}
-	l = len(m.IPv6Subnet)
-	if l > 0 {
-		n += 1 + l + sovNetwork(uint64(l))
-	}
-	l = len(m.IPv6Gateway)
-	if l > 0 {
-		n += 1 + l + sovNetwork(uint64(l))
-	}
 	if m.VlanID != 0 {
 		n += 1 + sovNetwork(uint64(m.VlanID))
-	}
-	if m.VxlanVNI != 0 {
-		n += 1 + sovNetwork(uint64(m.VxlanVNI))
-	}
-	l = len(m.RouterMAC)
-	if l > 0 {
-		n += 1 + l + sovNetwork(uint64(l))
 	}
 	return n
 }
@@ -910,17 +692,8 @@ func (m *NetworkSpec) Size() (n int) {
 func (m *NetworkStatus) Size() (n int) {
 	var l int
 	_ = l
-	if m.AllocatedVlanID != 0 {
-		n += 1 + sovNetwork(uint64(m.AllocatedVlanID))
-	}
-	if m.AllocatedVxlanVNI != 0 {
-		n += 1 + sovNetwork(uint64(m.AllocatedVxlanVNI))
-	}
 	if m.NetworkID != 0 {
 		n += 1 + sovNetwork(uint64(m.NetworkID))
-	}
-	if m.NetworkHandle != 0 {
-		n += 1 + sovNetwork(uint64(m.NetworkHandle))
 	}
 	return n
 }
@@ -1329,122 +1102,6 @@ func (m *NetworkSpec) Unmarshal(dAtA []byte) error {
 			m.VrfName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv4Subnet", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv4Subnet = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv4Gateway", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv4Gateway = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv6Subnet", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv6Subnet = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv6Gateway", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv6Gateway = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VlanID", wireType)
 			}
@@ -1463,54 +1120,6 @@ func (m *NetworkSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VxlanVNI", wireType)
-			}
-			m.VxlanVNI = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.VxlanVNI |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RouterMAC", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthNetwork
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RouterMAC = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNetwork(dAtA[iNdEx:])
@@ -1561,44 +1170,6 @@ func (m *NetworkStatus) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: NetworkStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AllocatedVlanID", wireType)
-			}
-			m.AllocatedVlanID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AllocatedVlanID |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AllocatedVxlanVNI", wireType)
-			}
-			m.AllocatedVxlanVNI = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AllocatedVxlanVNI |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NetworkID", wireType)
@@ -1614,25 +1185,6 @@ func (m *NetworkStatus) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.NetworkID |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NetworkHandle", wireType)
-			}
-			m.NetworkHandle = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowNetwork
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NetworkHandle |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2027,67 +1579,52 @@ var (
 func init() { proto.RegisterFile("network.proto", fileDescriptorNetwork) }
 
 var fileDescriptorNetwork = []byte{
-	// 980 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x55, 0xd1, 0x6e, 0xdb, 0x36,
-	0x17, 0x8e, 0x62, 0x37, 0xb1, 0xe9, 0x38, 0xa9, 0x99, 0x3f, 0xa9, 0xe2, 0xbf, 0x8b, 0x32, 0x01,
-	0x03, 0x3c, 0xa0, 0xb2, 0x0b, 0xb7, 0xf0, 0x3a, 0x20, 0x2b, 0x66, 0xb5, 0x69, 0x67, 0x6c, 0x4d,
-	0x02, 0xa7, 0xcb, 0xae, 0x69, 0xf9, 0xc4, 0xd1, 0x26, 0x93, 0x82, 0x44, 0x3b, 0x0b, 0x86, 0x5e,
-	0xed, 0x3d, 0x76, 0x35, 0x60, 0xc0, 0x80, 0xdd, 0xec, 0x29, 0x7a, 0x33, 0xa0, 0x4f, 0x20, 0x0c,
-	0xb9, 0xd4, 0x53, 0x0c, 0xa2, 0x28, 0x8b, 0xae, 0x92, 0x3b, 0xf1, 0xf0, 0xfb, 0xbe, 0xf3, 0x1d,
-	0xf2, 0xe8, 0x10, 0xd5, 0x29, 0xf0, 0x2b, 0x16, 0xfc, 0xd4, 0xf6, 0x03, 0xc6, 0x19, 0xae, 0x50,
-	0xe0, 0xe2, 0xab, 0xf9, 0x70, 0xc2, 0xd8, 0xc4, 0x83, 0x0e, 0xf1, 0xdd, 0x0e, 0xa1, 0x94, 0x71,
-	0xc2, 0x5d, 0x46, 0xc3, 0x14, 0xd7, 0x3c, 0x9a, 0xb8, 0xfc, 0x72, 0x36, 0x6a, 0x3b, 0x6c, 0xda,
-	0xf1, 0x81, 0x86, 0x84, 0x8e, 0x59, 0x27, 0xbc, 0xea, 0xcc, 0x81, 0xba, 0x0e, 0x74, 0x66, 0xdc,
-	0xf5, 0xc2, 0x84, 0x3a, 0x01, 0xaa, 0xb2, 0x3b, 0x2e, 0x75, 0xbc, 0xd9, 0x18, 0x32, 0x19, 0x4b,
-	0x91, 0x99, 0xb0, 0x09, 0xeb, 0x88, 0xf0, 0x68, 0x76, 0x21, 0x56, 0x62, 0x21, 0xbe, 0x24, 0xfc,
-	0xb3, 0x3b, 0xb2, 0x26, 0x1e, 0xa7, 0xc0, 0x49, 0x0a, 0x33, 0xff, 0xd2, 0x50, 0xad, 0xef, 0xbb,
-	0x43, 0x08, 0x7d, 0x46, 0x43, 0xc0, 0x5f, 0x22, 0x74, 0xc6, 0x09, 0x9f, 0x85, 0x2f, 0xd8, 0x18,
-	0x74, 0xed, 0x40, 0x6b, 0xd5, 0xed, 0xbd, 0x38, 0x32, 0x76, 0x42, 0x11, 0xb5, 0x1c, 0x36, 0x86,
-	0x47, 0x6c, 0xea, 0x72, 0x98, 0xfa, 0xfc, 0x7a, 0xa8, 0x80, 0xf1, 0xe7, 0xe8, 0xde, 0x51, 0x10,
-	0xb0, 0x40, 0x5f, 0x3d, 0xd0, 0x5a, 0x55, 0x7b, 0x3b, 0x8e, 0x8c, 0x2d, 0x48, 0x02, 0x0a, 0x3e,
-	0x45, 0xe0, 0x67, 0x08, 0x0d, 0xe1, 0x02, 0x02, 0xa0, 0x0e, 0x84, 0x7a, 0xe9, 0xa0, 0xd4, 0xaa,
-	0xda, 0x7a, 0x1c, 0x19, 0xff, 0x0b, 0x16, 0x51, 0x35, 0x49, 0x8e, 0x35, 0x7f, 0x5f, 0x45, 0xeb,
-	0xc7, 0xe9, 0x35, 0xe0, 0xe7, 0xa8, 0xf2, 0xf6, 0xda, 0x87, 0x37, 0xc0, 0x89, 0x70, 0x5a, 0xeb,
-	0xd6, 0xdb, 0xc4, 0x77, 0xdb, 0x59, 0xd0, 0xde, 0x7e, 0x1f, 0x19, 0x2b, 0x1f, 0x22, 0x43, 0x8b,
-	0x23, 0x63, 0xfd, 0x91, 0x4b, 0x3d, 0x97, 0xc2, 0x70, 0xc1, 0xc1, 0xdf, 0x22, 0x74, 0x32, 0xfa,
-	0x11, 0x1c, 0x2e, 0x14, 0x56, 0x85, 0xc2, 0x96, 0x50, 0xc8, 0xc3, 0x76, 0x53, 0xd1, 0xd8, 0x4c,
-	0x0e, 0x4e, 0x35, 0x96, 0xe3, 0x70, 0x1f, 0x95, 0xcf, 0x7c, 0x70, 0xf4, 0x92, 0x90, 0xd9, 0x69,
-	0x67, 0xcd, 0xd1, 0x96, 0x6e, 0x93, 0x4d, 0x7b, 0x37, 0x11, 0x4b, 0x84, 0x42, 0x1f, 0x1c, 0x45,
-	0x48, 0x50, 0xf1, 0x00, 0xad, 0xa5, 0xc7, 0xa9, 0x97, 0x85, 0xc8, 0x83, 0xa2, 0x88, 0xd8, 0xb6,
-	0x75, 0x29, 0x73, 0x3f, 0xbd, 0x14, 0x45, 0x48, 0x0a, 0x98, 0xff, 0x94, 0x50, 0x4d, 0x49, 0x8c,
-	0x1f, 0xa3, 0xf5, 0xf3, 0xe0, 0xe2, 0x98, 0x4c, 0xd3, 0x3b, 0xad, 0xda, 0xbb, 0x71, 0x64, 0xe0,
-	0x79, 0x70, 0x61, 0x51, 0x32, 0x55, 0x2f, 0x34, 0x83, 0x25, 0x8d, 0x30, 0x38, 0x9d, 0x3f, 0x3d,
-	0x9b, 0x8d, 0x28, 0x70, 0x79, 0xa5, 0xa2, 0x11, 0x5c, 0x7f, 0xfe, 0xd4, 0x0a, 0x45, 0x58, 0x3d,
-	0x8a, 0x1c, 0x8c, 0x0f, 0x51, 0x2d, 0x59, 0xbd, 0x26, 0x1c, 0xae, 0xc8, 0xb5, 0x38, 0x91, 0xaa,
-	0xdd, 0x8c, 0x23, 0x63, 0x57, 0x70, 0x27, 0x69, 0x5c, 0x21, 0xab, 0x70, 0x99, 0xb8, 0x27, 0x13,
-	0x97, 0x97, 0x12, 0xf7, 0x6e, 0x4f, 0xdc, 0x5b, 0x4a, 0xdc, 0xcb, 0x12, 0xdf, 0x5b, 0x4a, 0xdc,
-	0xbb, 0x23, 0x71, 0x06, 0xc7, 0x16, 0x5a, 0x3b, 0xf7, 0x08, 0x1d, 0xbc, 0xd4, 0xd7, 0x44, 0xdb,
-	0xef, 0xc4, 0x91, 0xd1, 0x98, 0x7b, 0x84, 0x5a, 0xee, 0x58, 0x3d, 0xe2, 0x14, 0x84, 0x9f, 0xa0,
-	0xca, 0xf9, 0xcf, 0x1e, 0xa1, 0xe7, 0xc7, 0x03, 0x7d, 0x5d, 0x10, 0x1e, 0xc4, 0x91, 0xb1, 0x3d,
-	0x4f, 0x62, 0xd6, 0x9c, 0xba, 0x0a, 0x65, 0x01, 0xc4, 0x3d, 0x54, 0x1d, 0xb2, 0x19, 0x87, 0xe0,
-	0x4d, 0xff, 0x85, 0x5e, 0x11, 0xfe, 0xd2, 0xbe, 0x17, 0x41, 0x6b, 0x4a, 0xd4, 0xae, 0xc8, 0xa1,
-	0xe6, 0x1f, 0xab, 0xa8, 0xbe, 0xd4, 0x03, 0x78, 0x80, 0xb6, 0xfa, 0x9e, 0xc7, 0x1c, 0xc2, 0x61,
-	0x2c, 0x6d, 0xa7, 0x7f, 0xab, 0x11, 0x47, 0xc6, 0xff, 0x49, 0xb6, 0x65, 0x15, 0x0b, 0xf8, 0x98,
-	0x87, 0x4f, 0x50, 0x23, 0x0f, 0x65, 0x25, 0xad, 0x0a, 0xb1, 0x4f, 0xe3, 0xc8, 0xf8, 0x44, 0x11,
-	0xbb, 0xa5, 0xb8, 0x22, 0x37, 0xa9, 0x52, 0x9a, 0x1d, 0xbc, 0x14, 0xd7, 0x5f, 0x4e, 0xab, 0x94,
-	0xf3, 0x73, 0xd9, 0x4e, 0x0e, 0xc5, 0xf6, 0xa2, 0xc8, 0x6f, 0x08, 0x1d, 0x7b, 0x20, 0x6e, 0xbf,
-	0x6c, 0x3f, 0x8c, 0x23, 0x43, 0xcf, 0xb8, 0x97, 0x62, 0x47, 0xe1, 0x2f, 0x53, 0xcc, 0xc3, 0x45,
-	0xe3, 0x7f, 0xe7, 0x86, 0x1c, 0x5b, 0xa8, 0x22, 0x99, 0xa1, 0xae, 0x1d, 0x94, 0x5a, 0xb5, 0x6e,
-	0xa3, 0xf0, 0x57, 0x0d, 0x17, 0x10, 0xf3, 0x37, 0x0d, 0x6d, 0xc8, 0xe8, 0xd1, 0x1c, 0x28, 0xc7,
-	0xaf, 0x50, 0x55, 0x7c, 0x24, 0x43, 0x43, 0x1c, 0xf0, 0x66, 0x77, 0x53, 0x8c, 0x88, 0x45, 0x34,
-	0x2d, 0x0d, 0x92, 0xa5, 0xc5, 0xaf, 0x7d, 0xd5, 0x5a, 0x4e, 0xc5, 0xaf, 0x16, 0x63, 0x4b, 0x0e,
-	0x9a, 0xa2, 0x0d, 0x7b, 0x4f, 0xfe, 0xd6, 0x0d, 0x69, 0x47, 0xfd, 0x2d, 0x25, 0xc6, 0x3c, 0x45,
-	0xf7, 0x55, 0x7f, 0xa2, 0xc6, 0xc3, 0xc5, 0xcb, 0x24, 0x62, 0x59, 0xa1, 0xbb, 0x85, 0x0c, 0x62,
-	0x7b, 0xb8, 0x0c, 0xee, 0xfe, 0x59, 0x42, 0x48, 0xee, 0xf7, 0x7d, 0x17, 0x77, 0x11, 0x7a, 0x0d,
-	0x3c, 0x1b, 0xb1, 0x1f, 0x8f, 0xc3, 0x66, 0xd1, 0xb6, 0xb9, 0x82, 0x9f, 0xa1, 0x8d, 0xc4, 0x88,
-	0x0c, 0x84, 0x45, 0x56, 0x71, 0x1c, 0x26, 0x78, 0x73, 0x05, 0x7f, 0x8d, 0xea, 0x3f, 0x10, 0xee,
-	0x5c, 0xde, 0x4d, 0x6d, 0xde, 0x5e, 0x45, 0xca, 0x7f, 0xac, 0xe1, 0x2f, 0x50, 0xfd, 0x7b, 0x7f,
-	0x4c, 0x38, 0x64, 0x96, 0x8b, 0x0e, 0x6f, 0x37, 0xfd, 0x1c, 0x35, 0xe4, 0xe2, 0xc4, 0x87, 0x20,
-	0xd5, 0xc0, 0x77, 0x9c, 0x59, 0x73, 0xf9, 0x61, 0x31, 0x57, 0x5a, 0x5a, 0x33, 0xfc, 0xfb, 0xd7,
-	0x3d, 0x96, 0x3f, 0x46, 0x65, 0x2f, 0xb9, 0x8a, 0xb2, 0xcf, 0x42, 0x8e, 0x4b, 0xfe, 0x8c, 0xe3,
-	0xb5, 0x31, 0x78, 0xc0, 0xa1, 0xf9, 0x55, 0xe7, 0x97, 0xbc, 0x9c, 0xf6, 0x5b, 0xa0, 0x84, 0xf2,
-	0x77, 0x4b, 0xb1, 0x64, 0xde, 0x86, 0x3e, 0x71, 0xa0, 0x18, 0x7e, 0x67, 0x6e, 0x24, 0x0f, 0x76,
-	0xd6, 0x9f, 0xf6, 0xc6, 0xfb, 0x9b, 0x7d, 0xed, 0xc3, 0xcd, 0xbe, 0xf6, 0xef, 0xcd, 0xbe, 0x76,
-	0xaa, 0x8d, 0xd6, 0x84, 0xd7, 0x27, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0x82, 0xc3, 0xae, 0xb1,
-	0x9b, 0x08, 0x00, 0x00,
+	// 747 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x54, 0x4d, 0x4f, 0xe3, 0x46,
+	0x18, 0xc6, 0x49, 0x1a, 0xc8, 0x24, 0x01, 0x32, 0x14, 0x6a, 0xac, 0x0a, 0x47, 0x96, 0x2a, 0xa5,
+	0x12, 0x89, 0x69, 0x2a, 0x55, 0x54, 0xa2, 0xa8, 0xb8, 0x40, 0x85, 0xda, 0x02, 0x0a, 0x94, 0x9e,
+	0x27, 0xce, 0x9b, 0xe0, 0xae, 0x33, 0x33, 0xf2, 0x4c, 0x82, 0xd0, 0x8a, 0xd3, 0xfe, 0x8f, 0x3d,
+	0xed, 0x75, 0x2f, 0xfb, 0x07, 0xf6, 0xca, 0x91, 0x5f, 0x60, 0xad, 0x38, 0xe6, 0x57, 0xac, 0x3c,
+	0x76, 0x1c, 0x67, 0xb3, 0xdc, 0x3c, 0xcf, 0x3c, 0xef, 0xf3, 0x3e, 0xef, 0xc7, 0x18, 0x55, 0x29,
+	0xc8, 0x3b, 0x16, 0xbc, 0x6a, 0xf1, 0x80, 0x49, 0x86, 0x57, 0x28, 0x48, 0xf5, 0x65, 0x7c, 0x3f,
+	0x60, 0x6c, 0xe0, 0x83, 0x4d, 0xb8, 0x67, 0x13, 0x4a, 0x99, 0x24, 0xd2, 0x63, 0x54, 0xc4, 0x3c,
+	0xe3, 0x64, 0xe0, 0xc9, 0xdb, 0x51, 0xb7, 0xe5, 0xb2, 0xa1, 0xcd, 0x81, 0x0a, 0x42, 0x7b, 0xcc,
+	0x16, 0x77, 0xf6, 0x18, 0xa8, 0xe7, 0x82, 0x3d, 0x92, 0x9e, 0x2f, 0xa2, 0xd0, 0x01, 0xd0, 0x6c,
+	0xb4, 0xed, 0x51, 0xd7, 0x1f, 0xf5, 0x60, 0x2a, 0xd3, 0xcc, 0xc8, 0x0c, 0xd8, 0x80, 0xd9, 0x0a,
+	0xee, 0x8e, 0xfa, 0xea, 0xa4, 0x0e, 0xea, 0x2b, 0xa1, 0xff, 0xf0, 0x42, 0xd6, 0xc8, 0xe3, 0x10,
+	0x24, 0x89, 0x69, 0xd6, 0x7b, 0x0d, 0x95, 0x8f, 0xb8, 0xd7, 0x01, 0xc1, 0x19, 0x15, 0x80, 0x7f,
+	0x45, 0xe8, 0x4a, 0x12, 0x39, 0x12, 0x7f, 0xb0, 0x1e, 0xe8, 0x5a, 0x5d, 0x6b, 0x54, 0x9d, 0xed,
+	0x49, 0x68, 0x6e, 0x0a, 0x85, 0x36, 0x5d, 0xd6, 0x83, 0x5d, 0x36, 0xf4, 0x24, 0x0c, 0xb9, 0xbc,
+	0xef, 0x64, 0xc8, 0xf8, 0x47, 0xf4, 0xcd, 0x49, 0x10, 0xb0, 0x40, 0xcf, 0xd5, 0xb5, 0x46, 0xc9,
+	0xd9, 0x98, 0x84, 0xe6, 0x1a, 0x44, 0x40, 0x86, 0x1f, 0x33, 0xf0, 0x3e, 0x42, 0x1d, 0xe8, 0x43,
+	0x00, 0xd4, 0x05, 0xa1, 0xe7, 0xeb, 0xf9, 0x46, 0xc9, 0xd1, 0x27, 0xa1, 0xf9, 0x6d, 0x90, 0xa2,
+	0xd9, 0x24, 0x33, 0xae, 0xf5, 0x2e, 0x87, 0x96, 0xcf, 0xe3, 0x31, 0xe0, 0x43, 0xb4, 0x72, 0x7d,
+	0xcf, 0xe1, 0x1f, 0x90, 0x44, 0x39, 0x2d, 0xb7, 0xab, 0x2d, 0xc2, 0xbd, 0xd6, 0x14, 0x74, 0x36,
+	0x1e, 0x43, 0x73, 0xe9, 0x29, 0x34, 0xb5, 0x49, 0x68, 0x2e, 0xef, 0x7a, 0xd4, 0xf7, 0x28, 0x74,
+	0xd2, 0x18, 0xfc, 0x17, 0x42, 0x17, 0xdd, 0xff, 0xc1, 0x95, 0x4a, 0x21, 0xa7, 0x14, 0xd6, 0x94,
+	0xc2, 0x0c, 0x76, 0x8c, 0x8c, 0xc6, 0x6a, 0xd4, 0xb8, 0xac, 0xb1, 0x19, 0x0f, 0x1f, 0xa1, 0xc2,
+	0x15, 0x07, 0x57, 0xcf, 0x2b, 0x99, 0xcd, 0xd6, 0x74, 0x39, 0x5a, 0x89, 0xdb, 0xe8, 0xd2, 0xd9,
+	0x8a, 0xc4, 0x22, 0x21, 0xc1, 0xc1, 0xcd, 0x08, 0xa9, 0x50, 0x7c, 0x86, 0x8a, 0x71, 0x3b, 0xf5,
+	0x82, 0x12, 0xf9, 0x6e, 0x51, 0x44, 0x5d, 0x3b, 0x7a, 0x22, 0xb3, 0x1e, 0x0f, 0x25, 0x23, 0x94,
+	0x08, 0x58, 0x14, 0x95, 0x33, 0x79, 0xf1, 0x1e, 0x5a, 0xbe, 0x09, 0xfa, 0xe7, 0x64, 0x18, 0x8f,
+	0xb4, 0xe4, 0x6c, 0x4d, 0x42, 0x13, 0x8f, 0x83, 0x7e, 0x93, 0x92, 0x61, 0x76, 0x9e, 0x53, 0x1a,
+	0x6e, 0xa2, 0xe2, 0x8d, 0x4f, 0xe8, 0xd9, 0xb1, 0xea, 0x4b, 0xd5, 0xd9, 0x9c, 0x84, 0x66, 0x6d,
+	0xec, 0x13, 0xda, 0xf4, 0x7a, 0xd9, 0x7c, 0x31, 0xc9, 0xfa, 0x13, 0x55, 0xe7, 0x2c, 0xe2, 0x5f,
+	0x50, 0x29, 0x01, 0xce, 0x8e, 0x55, 0x4f, 0x0a, 0xf1, 0x80, 0x93, 0x27, 0x34, 0xaf, 0x32, 0xa3,
+	0x5a, 0x07, 0xa9, 0xf1, 0xbf, 0x3d, 0x21, 0x71, 0x13, 0xad, 0x24, 0x11, 0x42, 0xd7, 0xea, 0xf9,
+	0x46, 0xb9, 0x5d, 0x5b, 0x68, 0x4a, 0x27, 0xa5, 0x58, 0x6f, 0x35, 0x54, 0x49, 0xd0, 0x93, 0x31,
+	0x50, 0x89, 0x4f, 0x51, 0x49, 0x7d, 0x44, 0x33, 0x57, 0xa5, 0xaf, 0xb6, 0x57, 0xd5, 0x84, 0x53,
+	0x34, 0xb6, 0x05, 0xd1, 0xb1, 0x29, 0xef, 0x79, 0xb6, 0x19, 0xb3, 0x50, 0x7c, 0x9a, 0x6e, 0x5d,
+	0xb2, 0x27, 0x8b, 0x36, 0x9c, 0xed, 0x64, 0x2a, 0xb5, 0xc4, 0x4e, 0xb6, 0xad, 0x09, 0xc7, 0xba,
+	0x44, 0xeb, 0x59, 0x7f, 0xaa, 0xc6, 0x83, 0xf4, 0xc7, 0xa2, 0xb0, 0x69, 0xa1, 0x5b, 0x0b, 0x19,
+	0xd4, 0x75, 0x67, 0x9e, 0xdc, 0xfe, 0x98, 0x4b, 0x4b, 0x3e, 0xe2, 0xde, 0xcd, 0x4f, 0x78, 0x1f,
+	0x55, 0x22, 0xd9, 0x04, 0x13, 0xf8, 0xcb, 0x8d, 0x36, 0x16, 0x77, 0x33, 0xe2, 0x5b, 0x4b, 0xf8,
+	0x77, 0x54, 0xfd, 0x8f, 0x48, 0xf7, 0xf6, 0xe5, 0x50, 0xe3, 0xeb, 0x9e, 0xe2, 0xf8, 0x3d, 0x0d,
+	0x1f, 0xa2, 0x5a, 0x82, 0x5f, 0x70, 0x08, 0xfe, 0xe5, 0x3d, 0x22, 0x01, 0xbf, 0x50, 0x88, 0x31,
+	0xff, 0x58, 0xad, 0xa5, 0x86, 0x66, 0x88, 0x0f, 0x6f, 0xb6, 0xd9, 0xec, 0x81, 0x17, 0xfc, 0xa8,
+	0x3f, 0x05, 0xce, 0x84, 0xc4, 0x79, 0x3e, 0x92, 0xb8, 0xd8, 0x03, 0x1f, 0x24, 0x18, 0xbf, 0xd9,
+	0xaf, 0x67, 0xae, 0x5a, 0xd7, 0x40, 0x09, 0x95, 0x0f, 0x73, 0x58, 0xb4, 0xc4, 0x82, 0x13, 0x17,
+	0x16, 0xe1, 0x07, 0xab, 0x12, 0xfd, 0x04, 0xa7, 0x4b, 0xe3, 0x54, 0x1e, 0x9f, 0x77, 0xb4, 0xa7,
+	0xe7, 0x1d, 0xed, 0xd3, 0xf3, 0x8e, 0x76, 0xa9, 0x75, 0x8b, 0xca, 0xeb, 0xcf, 0x9f, 0x03, 0x00,
+	0x00, 0xff, 0xff, 0x7c, 0x58, 0x57, 0x61, 0xef, 0x05, 0x00, 0x00,
 }

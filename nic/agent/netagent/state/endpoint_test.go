@@ -25,8 +25,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -43,10 +42,8 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -76,9 +73,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "invalid",
+			NetworkName: "invalid",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(ep2)
@@ -97,9 +92,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID2",
-			WorkloadUUID: "testWorkloadUUID2",
-			NetworkName:  "default",
+			NetworkName: "default",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(&depinfo)
@@ -134,8 +127,7 @@ func TestLocalEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -152,11 +144,9 @@ func TestLocalEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    ag.NodeUUID,
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -168,7 +158,6 @@ func TestLocalEndpointUpdate(t *testing.T) {
 	AssertOk(t, err, "EP not found")
 	Assert(t, ep.Name == epinfo.Name, "Endpoints didn't match")
 
-	epinfo.Spec.WorkloadName = "updatedWorkloadName"
 	err = ag.UpdateEndpoint(epinfo)
 	AssertOk(t, err, "Local endpoint update failed")
 }
@@ -188,8 +177,7 @@ func TestEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -206,57 +194,19 @@ func TestEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
 	// create the endpoint
 	err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Error creating endpoint")
-
-	// security group
-	sg := netproto.SecurityGroup{
-		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "test-sg",
-			Namespace: "default",
-		},
-		Spec: netproto.SecurityGroupSpec{
-			SecurityProfile: "unknown",
-		},
-	}
-
-	// create a security group
-	err = ag.CreateSecurityGroup(&sg)
-	AssertOk(t, err, "Error creating security group")
-
-	// update the remote endpoint
-	epupd := epinfo
-	epupd.Spec.SecurityGroups = []string{"test-sg"}
-	err = ag.UpdateEndpoint(&epupd)
-	AssertOk(t, err, "Error updating endpoint")
-
-	// update the remote endpoint
-	epupd.Spec.SecurityGroups = []string{"test-sg"}
-	epupd.Spec.NodeUUID = ag.NodeUUID
-	err = ag.UpdateEndpoint(&epupd)
-	AssertOk(t, err, "Error updating endpoint")
-
 	// try changing the network of endpoint
-	epupd2 := epupd
+	epupd2 := epinfo
 	epupd2.Spec.NetworkName = "unknown"
 	err = ag.UpdateEndpoint(&epupd2)
 	Assert(t, (err != nil), "Changing network to non-existing network succeeded")
-
-	// try updating security group to an unknown
-	epupd2 = epupd
-	epupd2.Spec.SecurityGroups = []string{"unknown"}
-	err = ag.UpdateEndpoint(&epupd2)
-	Assert(t, (err != nil), "Changing to non-existing security group succeeded")
 
 	// create another network
 	nt2 := netproto.Network{
@@ -267,9 +217,7 @@ func TestEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-			VlanID:      1,
+			VlanID: 84,
 		},
 	}
 
@@ -302,8 +250,7 @@ func TestEndpointConcurrency(t *testing.T) {
 			Name:      "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -325,10 +272,8 @@ func TestEndpointConcurrency(t *testing.T) {
 					Name:      fmt.Sprintf("testEndpoint-%d", idx),
 				},
 				Spec: netproto.EndpointSpec{
-					EndpointUUID: "testEndpointUUID",
-					WorkloadUUID: "testWorkloadUUID",
-					NetworkName:  "default",
-					MacAddress:   "4242.4242.4242",
+					NetworkName: "default",
+					MacAddress:  "4242.4242.4242",
 				},
 			}
 
@@ -376,8 +321,7 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -394,11 +338,9 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    ag.NodeUUID,
+			MacAddress:  "4242.4242.4242",
 		}}
 
 	// create the endpoint
@@ -421,8 +363,7 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -439,13 +380,10 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
 			//WorkloadUUID:  "testWorkloadUUID",
-			NetworkName:   "default",
-			InterfaceType: "lif",
-			Interface:     "lif1",
-			NodeUUID:      ag.NodeUUID,
-			MacAddress:    "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    ag.NodeUUID,
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -469,8 +407,7 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -487,11 +424,9 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     "different-uuid-than-agent",
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    "different-uuid-than-agent",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -515,8 +450,7 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -533,13 +467,9 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			//WorkloadUUID:  "testWorkloadUUID",
-			NetworkName:   "default",
-			InterfaceType: "uplink",
-			Interface:     "uplink128",
-			NodeUUID:      "some-different-uuid-than-agent",
-			MacAddress:    "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    "some-different-uuid-than-agent",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -563,8 +493,7 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -600,13 +529,9 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
-			NetworkName:   "default",
-			InterfaceType: "tunnel",
-			Interface:     "public-tunnel",
-			NodeUUID:      "remote",
-			MacAddress:    "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    "remote",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -641,8 +566,7 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -678,13 +602,9 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
-			NetworkName:   "default",
-			Interface:     "public-ns/public-tunnel",
-			InterfaceType: "tunnel",
-			NodeUUID:      "remote",
-			MacAddress:    "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    "remote",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -708,8 +628,7 @@ func TestFindLocalEndpoint(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -726,11 +645,9 @@ func TestFindLocalEndpoint(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    ag.NodeUUID,
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -747,99 +664,6 @@ func TestFindLocalEndpoint(t *testing.T) {
 }
 
 //--------------------- Corner Case Tests ---------------------//
-
-func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "nonExistentNamespace",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
-		},
-	}
-
-	// create the endpoint
-	_, _, err = ag.EndpointCreateReq(epinfo)
-	Assert(t, err != nil, "Creating an endpoint on non-existent Namespace should fail.")
-}
-
-func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			Interface:    "bad-interface",
-			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
-		},
-	}
-
-	// create the endpoint
-	err = ag.CreateEndpoint(epinfo)
-	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
-}
-
 func TestNonExistentEndpointUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -855,8 +679,7 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -873,65 +696,15 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			Interface:    "bad-interface",
-			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "default",
+			NodeUUID:    ag.NodeUUID,
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
 	// update the endpoint
 	err = ag.UpdateEndpoint(epinfo)
 	Assert(t, err != nil, "Creating an endpoint with non existent interfaces should fail.")
-}
-
-func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			Interface:    "remoteNS/nonExistentRemoteNatPool",
-			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
-		},
-	}
-
-	// create the endpoint
-	err = ag.CreateEndpoint(epinfo)
-	Assert(t, err != nil, "remote ep creates on non-existent tunnels should fail")
 }
 
 func TestEndpointCreateInvalidIPAddress(t *testing.T) {
@@ -949,8 +722,7 @@ func TestEndpointCreateInvalidIPAddress(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -967,8 +739,6 @@ func TestEndpointCreateInvalidIPAddress(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			NodeUUID:      "remote",
 			MacAddress:    "4242.4242.4242",
@@ -996,8 +766,7 @@ func TestEndpointCreateCIDRIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -1014,8 +783,6 @@ func TestEndpointCreateCIDRIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			NodeUUID:      "remote",
 			MacAddress:    "4242.4242.4242",
@@ -1043,8 +810,7 @@ func TestEndpointCreateIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 
@@ -1061,8 +827,6 @@ func TestEndpointCreateIP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			NodeUUID:      "remote",
 			MacAddress:    "4242.4242.4242",

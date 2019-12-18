@@ -94,8 +94,8 @@ def get_destination(dst_ip, protocol, port):
         dst['addresses'] = []
         dst['addresses'].append(dst_ip)
 
-    dst['app-configs'] = []
-    dst['app-configs'].append(get_appconfig(protocol, port))
+    dst['proto-ports'] = []
+    dst['proto-ports'].append(get_appconfig(protocol, port))
     return dst
 
 def get_source(src_ip):

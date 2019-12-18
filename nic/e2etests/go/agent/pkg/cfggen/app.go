@@ -58,9 +58,13 @@ func (c *CfgGen) GenerateALGs() error {
 					Name:      appName,
 				},
 				Spec: netproto.AppSpec{
-					ALGType:        appType,
 					AppIdleTimeout: idleTimeout,
-					ProtoPorts:     []string{fmt.Sprintf("%s/%s", proto, port)},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: proto,
+							Port: port,
+						},
+					},
 					ALG: &netproto.ALG{
 						FTP: &netproto.FTP{
 							AllowMismatchIPAddresses: true,
@@ -79,9 +83,13 @@ func (c *CfgGen) GenerateALGs() error {
 					Name:      appName,
 				},
 				Spec: netproto.AppSpec{
-					ALGType:        appType,
 					AppIdleTimeout: idleTimeout,
-					ProtoPorts:     []string{fmt.Sprintf("%s/%s", proto, port)},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: proto,
+							Port: port,
+						},
+					},
 					ALG: &netproto.ALG{
 						TFTP: &netproto.TFTP{},
 					},
@@ -98,9 +106,13 @@ func (c *CfgGen) GenerateALGs() error {
 					Name:      appName,
 				},
 				Spec: netproto.AppSpec{
-					ALGType:        appType,
 					AppIdleTimeout: idleTimeout,
-					ProtoPorts:     []string{fmt.Sprintf("%s/%s", proto, port)},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: proto,
+							Port: port,
+						},
+					},
 					ALG: &netproto.ALG{
 						DNS: &netproto.DNS{
 							DropMultiQuestionPackets: true,
@@ -125,12 +137,16 @@ func (c *CfgGen) GenerateALGs() error {
 					Name:      appName,
 				},
 				Spec: netproto.AppSpec{
-					ALGType:        appType,
 					AppIdleTimeout: idleTimeout,
 					ALG: &netproto.ALG{
 						ICMP: &netproto.ICMP{
 							Type: uint32(t),
 							Code: uint32(c),
+						},
+					},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: "icmp",
 						},
 					},
 				},

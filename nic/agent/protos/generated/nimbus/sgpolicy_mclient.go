@@ -32,7 +32,7 @@ type NetworkSecurityPolicyReactor interface {
 }
 type NetworkSecurityPolicyOStream struct {
 	sync.Mutex
-	stream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateClient
+	stream netproto.NetworkSecurityPolicyApiV1_NetworkSecurityPolicyOperUpdateClient
 }
 
 // WatchNetworkSecurityPolicys runs NetworkSecurityPolicy watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "NetworkSecurityPolicy")
-	networksecuritypolicyRPCClient := netproto.NewNetworkSecurityPolicyApiClient(client.rpcClient.ClientConn)
+	networksecuritypolicyRPCClient := netproto.NewNetworkSecurityPolicyApiV1Client(client.rpcClient.ClientConn)
 	stream, err := networksecuritypolicyRPCClient.WatchNetworkSecurityPolicys(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching NetworkSecurityPolicy. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 }
 
 // watchNetworkSecurityPolicyRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchNetworkSecurityPolicyRecvLoop(stream netproto.NetworkSecurityPolicyApi_WatchNetworkSecurityPolicysClient, recvch chan<- *netproto.NetworkSecurityPolicyEvent) {
+func (client *NimbusClient) watchNetworkSecurityPolicyRecvLoop(stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysClient, recvch chan<- *netproto.NetworkSecurityPolicyEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

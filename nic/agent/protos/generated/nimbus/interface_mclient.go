@@ -32,7 +32,7 @@ type InterfaceReactor interface {
 }
 type InterfaceOStream struct {
 	sync.Mutex
-	stream netproto.InterfaceApi_InterfaceOperUpdateClient
+	stream netproto.InterfaceApiV1_InterfaceOperUpdateClient
 }
 
 // WatchInterfaces runs Interface watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "Interface")
-	interfaceRPCClient := netproto.NewInterfaceApiClient(client.rpcClient.ClientConn)
+	interfaceRPCClient := netproto.NewInterfaceApiV1Client(client.rpcClient.ClientConn)
 	stream, err := interfaceRPCClient.WatchInterfaces(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Interface. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchInterfaces(ctx context.Context, reactor Interfa
 }
 
 // watchInterfaceRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchInterfaceRecvLoop(stream netproto.InterfaceApi_WatchInterfacesClient, recvch chan<- *netproto.InterfaceEvent) {
+func (client *NimbusClient) watchInterfaceRecvLoop(stream netproto.InterfaceApiV1_WatchInterfacesClient, recvch chan<- *netproto.InterfaceEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

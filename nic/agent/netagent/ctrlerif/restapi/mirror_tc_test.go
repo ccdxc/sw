@@ -101,10 +101,7 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			Name:      "default",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "66.0.0.0/16",
-			IPv4Gateway: "66.0.2.1",
-			VlanID:      100,
-			RouterMAC:   "0022.0A00.0201",
+			VlanID: 100,
 		},
 	}
 
@@ -124,8 +121,6 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "default",
-				InterfaceType: "uplink",
-				Interface:     "uplink128",
 				IPv4Addresses: []string{"66.0.2.1/16"},
 				MacAddress:    "0022.0A00.0201",
 				NodeUUID:      "GWUUID",
@@ -140,8 +135,6 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "default",
-				InterfaceType: "uplink",
-				Interface:     "uplink129",
 				IPv4Addresses: []string{"66.0.2.1/16"},
 				MacAddress:    "0022.0A00.0201",
 				NodeUUID:      "GWUUID",
@@ -156,8 +149,6 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "default",
-				InterfaceType: "uplink",
-				Interface:     "uplink128",
 				IPv4Addresses: []string{"66.0.3.1/16"},
 				MacAddress:    "0022.0A00.0201",
 				NodeUUID:      "GWUUID",
@@ -172,8 +163,6 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "default",
-				InterfaceType: "uplink",
-				Interface:     "uplink129",
 				IPv4Addresses: []string{"66.0.4.1/16"},
 				MacAddress:    "0022.0A00.0201",
 				NodeUUID:      "GWUUID",
@@ -188,8 +177,6 @@ func setupMirrorSessionDependenctObjects(baseURL string) error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName:   "default",
-				InterfaceType: "uplink",
-				Interface:     "uplink129",
 				IPv4Addresses: []string{"66.0.5.1/16"},
 				MacAddress:    "0022.0A00.0201",
 				NodeUUID:      "GWUUID",

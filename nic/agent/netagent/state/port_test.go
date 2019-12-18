@@ -51,7 +51,7 @@ func TestPortCreateDelete(t *testing.T) {
 	// delete the port and verify its gone from db
 	err = ag.DeletePort(port.Tenant, port.Namespace, port.Name)
 	AssertOk(t, err, "Error deleting port")
-	_, err = ag.FindNatPolicy(port.ObjectMeta)
+	_, err = ag.FindPort(port.ObjectMeta)
 	Assert(t, err != nil, "Port was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant

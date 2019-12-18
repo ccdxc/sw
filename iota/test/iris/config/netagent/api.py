@@ -413,7 +413,7 @@ def __getWorkloadPairsBy(protocol, port, action, wl_pair_type=WORKLOAD_PAIR_TYPE
             # TODO may be way to just check action here.
             if not destination:
                 continue
-            app_configs = getattr(destination, "app_configs", None)
+            app_configs = getattr(destination, "proto_ports", None)
             if not app_configs:
                 continue
             for app_config in app_configs:

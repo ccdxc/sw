@@ -27,7 +27,12 @@ var (
 				Name:      "dns",
 			},
 			Spec: netproto.AppSpec{
-				ProtoPorts: []string{"udp/53"},
+				ProtoPorts: []*netproto.ProtoPort{
+					{
+						Protocol: "udp",
+						Port:     "53",
+					},
+				},
 				ALG: &netproto.ALG{
 					DNS: &netproto.DNS{
 						DropLargeDomainPackets: true,
@@ -44,7 +49,12 @@ var (
 				Name:      "ftp",
 			},
 			Spec: netproto.AppSpec{
-				ProtoPorts: []string{"tcp/21"},
+				ProtoPorts: []*netproto.ProtoPort{
+					{
+						Protocol: "tcp",
+						Port:     "21",
+					},
+				},
 				ALG: &netproto.ALG{
 					FTP: &netproto.FTP{
 						AllowMismatchIPAddresses: true,
@@ -72,7 +82,7 @@ var (
 						},
 						Dst: &netproto.MatchSelector{
 							Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-							AppConfigs: []*netproto.AppConfig{
+							ProtoPorts: []*netproto.ProtoPort{
 								{
 									Port:     "80",
 									Protocol: "tcp",
@@ -104,8 +114,7 @@ var (
 				Namespace: "default",
 			},
 			Spec: netproto.NetworkSpec{
-				IPv4Subnet:  "10.1.1.0/24",
-				IPv4Gateway: "10.1.1.254",
+				VlanID: 84,
 			},
 		},
 	}
@@ -119,10 +128,8 @@ var (
 				Namespace: "default",
 			},
 			Spec: netproto.EndpointSpec{
-				EndpointUUID: "testEndpointUUID",
-				WorkloadUUID: "testWorkloadUUID",
-				NetworkName:  "default",
-				MacAddress:   "4242.4242.4242",
+				NetworkName: "default",
+				MacAddress:  "4242.4242.4242",
 			},
 		},
 		{
@@ -134,10 +141,8 @@ var (
 				Namespace: "default",
 			},
 			Spec: netproto.EndpointSpec{
-				EndpointUUID: "testEndpointUUID",
-				WorkloadUUID: "testWorkloadUUID",
-				NetworkName:  "_internal_untagged_nw",
-				MacAddress:   "4242.4242.4242",
+				NetworkName: "_internal_untagged_nw",
+				MacAddress:  "4242.4242.4242",
 			},
 		},
 	}
@@ -213,10 +218,8 @@ func TestNetAgentConfigPersistenceVeniceCreatedObjs(t *testing.T) {
 			Labels:    map[string]string{"CreatedBy": "Venice"},
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "skynet",
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "skynet",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -229,7 +232,12 @@ func TestNetAgentConfigPersistenceVeniceCreatedObjs(t *testing.T) {
 			Labels:    map[string]string{"CreatedBy": "Venice"},
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -249,7 +257,12 @@ func TestNetAgentConfigPersistenceVeniceCreatedObjs(t *testing.T) {
 			Labels:    map[string]string{"CreatedBy": "Venice"},
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"tcp/21"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+					Port:     "21",
+				},
+			},
 			ALG: &netproto.ALG{
 				FTP: &netproto.FTP{
 					AllowMismatchIPAddresses: true,
@@ -400,10 +413,8 @@ func TestNetAgentConfigPersistenceNonVeniceCreatedObjs(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "skynet",
-			MacAddress:   "4242.4242.4242",
+			NetworkName: "skynet",
+			MacAddress:  "4242.4242.4242",
 		},
 	}
 
@@ -415,7 +426,12 @@ func TestNetAgentConfigPersistenceNonVeniceCreatedObjs(t *testing.T) {
 			Name:      "dns",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "udp",
+					Port:     "53",
+				},
+			},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -434,7 +450,12 @@ func TestNetAgentConfigPersistenceNonVeniceCreatedObjs(t *testing.T) {
 			Name:      "ftp",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"tcp/21"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+					Port:     "21",
+				},
+			},
 			ALG: &netproto.ALG{
 				FTP: &netproto.FTP{
 					AllowMismatchIPAddresses: true,

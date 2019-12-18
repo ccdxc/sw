@@ -45,7 +45,7 @@ type {{$crudObject}}Reactor interface {
 }
 type {{$crudObject}}OStream struct {
 	sync.Mutex
-	stream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateClient
+	stream netproto.{{$crudObject}}ApiV1_{{$crudObject}}OperUpdateClient
 }
 
 
@@ -64,7 +64,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "{{$crudObject}}")
-	{{lower $crudObject}}RPCClient := netproto.New{{$crudObject}}ApiClient(client.rpcClient.ClientConn)
+	{{lower $crudObject}}RPCClient := netproto.New{{$crudObject}}ApiV1Client(client.rpcClient.ClientConn)
 	stream, err := {{lower $crudObject}}RPCClient.Watch{{$crudObject}}s(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching {{$crudObject}}. Err: %v", err)
@@ -151,7 +151,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 
 
 // watch{{$crudObject}}RecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watch{{$crudObject}}RecvLoop(stream netproto.{{$crudObject}}Api_Watch{{$crudObject}}sClient, recvch chan<- *netproto.{{$crudObject}}Event) {
+func (client *NimbusClient) watch{{$crudObject}}RecvLoop(stream netproto.{{$crudObject}}ApiV1_Watch{{$crudObject}}sClient, recvch chan<- *netproto.{{$crudObject}}Event) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

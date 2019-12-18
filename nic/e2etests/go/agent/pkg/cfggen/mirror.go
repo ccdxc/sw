@@ -17,10 +17,10 @@ func (c *CfgGen) generateMirrorRules(namespace string, count int) (rules []tspro
 	for _, s := range sgpRules {
 		var protoPorts []string
 		// Pick up from APP Object
-		if len(s.Dst.AppConfigs) == 0 {
+		if len(s.Dst.ProtoPorts) == 0 {
 			continue
 		} else {
-			protoPorts = convertProtoPort(s.Dst.AppConfigs[0])
+			protoPorts = convertProtoPort(s.Dst.ProtoPorts[0])
 		}
 
 		r := tsproto.MatchRule{

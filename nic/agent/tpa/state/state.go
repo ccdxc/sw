@@ -15,6 +15,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/netagent/datapath/constants"
+
 	"github.com/pensando/sw/venice/globals"
 
 	"golang.org/x/sys/unix"
@@ -585,7 +587,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			//  TODO: will be removed from HAL
 			Encap: &halproto.EncapInfo{
 				EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
-				EncapValue: netObj.AllocatedVlanID,
+				EncapValue: constants.UntaggedCollVLAN,
 			},
 
 			L2SegKeyHandle: &halproto.L2SegmentKeyHandle{

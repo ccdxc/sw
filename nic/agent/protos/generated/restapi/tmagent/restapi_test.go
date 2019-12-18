@@ -104,7 +104,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.2.0/24",
+			VlanID:      42,
 			IPv4Gateway: "10.1.1.254",
 		},
 	}
@@ -122,8 +122,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:  "testEndpointUUID",
-			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "preCreatedNetwork",
 			NodeUUID:      "dummy-node-uuid",
 			IPv4Addresses: []string{"10.1.1.0/24"},

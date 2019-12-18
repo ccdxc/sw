@@ -16,7 +16,7 @@ import "github.com/pensando/sw/api/meta.proto";
 // ---------------------------- Namespace API ----------------------------
 
 // Namespace controller api
-service NamespaceApi {
+service NamespaceApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Namespace",
@@ -25,11 +25,11 @@ service NamespaceApi {
         Prefix: "api/namespaces"
     };
 
-    rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};
-    rpc ListNamespaces (api.ObjectMeta) returns (NamespaceList) {};
-    rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEventList) {};
-    rpc UpdateNamespace (Namespace) returns (Namespace) {};
-    rpc NamespaceOperUpdate (stream NamespaceEvent) returns (api.TypeMeta) {};
+//    rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};
+//    rpc ListNamespaces (api.ObjectMeta) returns (NamespaceList) {};
+//    rpc WatchNamespaces (api.ObjectMeta) returns (stream NamespaceEventList) {};
+//    rpc UpdateNamespace (Namespace) returns (Namespace) {};
+//    rpc NamespaceOperUpdate (stream NamespaceEvent) returns (api.TypeMeta) {};
 }
 
 // Namespace object

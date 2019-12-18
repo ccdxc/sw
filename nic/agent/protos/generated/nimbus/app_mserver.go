@@ -89,7 +89,7 @@ func AddAppTopic(server *MbusServer, reactor AppStatusReactor) (*AppTopic, error
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterAppApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterAppApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ObjectMeta) (*netp
 }
 
 // WatchApps watches Apps and sends streaming resp
-func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_WatchAppsServer) error {
+func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApiV1_WatchAppsServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *AppTopic) updateAppOper(oper *netproto.AppEvent, nodeID string) error 
 	return nil
 }
 
-func (eh *AppTopic) AppOperUpdate(stream netproto.AppApi_AppOperUpdateServer) error {
+func (eh *AppTopic) AppOperUpdate(stream netproto.AppApiV1_AppOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

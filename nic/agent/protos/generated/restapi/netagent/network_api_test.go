@@ -49,9 +49,8 @@ func TestNetworkPost(t *testing.T) {
 			Name:      "testPostNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			VrfName:     "default",
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VrfName: "default",
+			VlanID:  42,
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &postData, &resp)
@@ -77,9 +76,8 @@ func TestNetworkUpdate(t *testing.T) {
 	var networkList []*netproto.Network
 
 	updatedNetworkSpec := netproto.NetworkSpec{
-		VrfName:     "default",
-		IPv4Subnet:  "192.168.1.1/24",
-		IPv4Gateway: "192.168.1.254",
+		VrfName: "default",
+		VlanID:  42,
 	}
 	var actualNetworkSpec netproto.NetworkSpec
 	putData := netproto.Network{
@@ -120,9 +118,8 @@ func TestNetworkDelete(t *testing.T) {
 			Name:      "testDeleteNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			VrfName:     "default",
-			IPv4Subnet:  "10.1.3.0/24",
-			IPv4Gateway: "10.1.3.254",
+			VrfName: "default",
+			VlanID:  42,
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &deleteData, &resp)

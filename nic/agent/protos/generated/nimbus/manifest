@@ -1,12 +1,9 @@
 
-App AppApi
-Endpoint EndpointApi
-IPAMPolicy IPAMPolicyApi
-Interface InterfaceApi
-Namespace NamespaceApi
-Network NetworkApi
-NetworkSecurityPolicy NetworkSecurityPolicyApi
-SecurityGroup SecurityGroupApi
-SecurityProfile SecurityProfileApi
-Tenant TenantApi
-Tenant TenantApi
+App AppApiV1
+Endpoint EndpointApiV1
+IPAMPolicy IPAMPolicyApiV1
+Interface InterfaceApiV1
+Interface InterfaceApiV1
+Network NetworkApiV1
+NetworkSecurityPolicy NetworkSecurityPolicyApiV1
+SecurityProfile SecurityProfileApiV1

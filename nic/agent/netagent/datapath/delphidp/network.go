@@ -3,19 +3,13 @@
 package delphidp
 
 import (
-	"encoding/binary"
-	"fmt"
-	"net"
-
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
 // CreateNetwork creates a network
 func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error {
-	var nwKey halproto.NetworkKeyHandle
 	var nwKeyOrHandle []*halproto.NetworkKeyHandle
-	var macAddr uint64
 	var wireEncap halproto.EncapInfo
 	var bcastPolicy halproto.BroadcastFwdPolicy
 	// construct vrf key that gets passed on to hal
@@ -24,80 +18,9 @@ func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netprot
 			VrfId: vrf.Status.VrfID,
 		},
 	}
-
-	if len(nw.Spec.IPv4Subnet) != 0 {
-		ip, network, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
-		if err != nil {
-			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
-		}
-		prefixLen, _ := network.Mask.Size()
-
-		gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
-		if len(gwIP) == 0 {
-			return fmt.Errorf("could not parse IP from {%v}", nw.Spec.IPv4Gateway)
-		}
-
-		halGwIP := &halproto.IPAddress{
-			IpAf: halproto.IPAddressFamily_IP_AF_INET,
-			V4OrV6: &halproto.IPAddress_V4Addr{
-				V4Addr: ipv4Touint32(gwIP),
-			},
-		}
-
-		nwKey = halproto.NetworkKeyHandle{
-			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
-				NwKey: &halproto.NetworkKey{
-					IpPrefix: &halproto.IPPrefix{
-						Address: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: ipv4Touint32(ip),
-							},
-						},
-						PrefixLen: uint32(prefixLen),
-					},
-					VrfKeyHandle: vrfKey,
-				},
-			},
-		}
-		nwKeyOrHandle = append(nwKeyOrHandle, &nwKey)
-
-		if len(nw.Spec.RouterMAC) != 0 {
-			mac, err := net.ParseMAC(nw.Spec.RouterMAC)
-			if err != nil {
-				return fmt.Errorf("could not parse router mac from %v", nw.Spec.RouterMAC)
-			}
-			b := make([]byte, 8)
-			// oui-48 format
-			if len(mac) == 6 {
-				// fill 0 lsb
-				copy(b[2:], mac)
-			}
-			macAddr = binary.BigEndian.Uint64(b)
-
-		}
-
-		halNw := &halproto.NetworkSpec{
-			KeyOrHandle: &nwKey,
-			GatewayIp:   halGwIP,
-			Rmac:        macAddr,
-		}
-
-		err = dp.delphiClient.SetObject(halNw)
-		if err != nil {
-			return err
-		}
-	}
-	// build the appropriate wire encap
-	if nw.Spec.VxlanVNI != 0 {
-		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_VXLAN
-		wireEncap.EncapValue = nw.Spec.VxlanVNI
-		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_DROP
-	} else {
-		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_DOT1Q
-		wireEncap.EncapValue = nw.Spec.VlanID
-		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
-	}
+	wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_DOT1Q
+	wireEncap.EncapValue = nw.Spec.VlanID
+	bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
 
 	// TODO Remove uplink pinning prior to FCS. This is needed temporarily to enable bring up.
 	pinnedUplinkIdx := nw.Status.NetworkID % uint64(len(uplinks))
@@ -192,40 +115,6 @@ func (dp *DelphiDatapath) DeleteNetwork(nw *netproto.Network, uplinks []*netprot
 	err := dp.delphiClient.DeleteObject(seg)
 	if err != nil {
 		return err
-	}
-
-	// Check if we need to perform network deletes as well
-	if len(nw.Spec.IPv4Subnet) != 0 {
-		ip, network, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
-		if err != nil {
-			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
-		}
-		prefixLen, _ := network.Mask.Size()
-
-		nwKey := &halproto.NetworkKeyHandle{
-			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{
-				NwKey: &halproto.NetworkKey{
-					IpPrefix: &halproto.IPPrefix{
-						Address: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: ipv4Touint32(ip),
-							},
-						},
-						PrefixLen: uint32(prefixLen),
-					},
-					VrfKeyHandle: vrfKey,
-				},
-			},
-		}
-		nwDel := &halproto.NetworkSpec{
-			KeyOrHandle: nwKey,
-		}
-
-		err = dp.delphiClient.DeleteObject(nwDel)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

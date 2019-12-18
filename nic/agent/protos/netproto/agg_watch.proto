@@ -12,7 +12,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- Aggregagte API ----------------------------
 // app controller api
-service AggWatchApi {
+service AggWatchApiV1 {
     rpc WatchObjects (AggKinds) returns (stream AggObjectEventList) {};
     rpc ObjectOperUpdate (stream AggObjectEvent) returns (api.TypeMeta) {};
     rpc ListObjects (AggKinds) returns (AggObjectList) {};

@@ -126,7 +126,7 @@ type IPAMPolicyReactor interface {
 func (m *IPAMPolicy) Reset()                    { *m = IPAMPolicy{} }
 func (m *IPAMPolicy) String() string            { return proto.CompactTextString(m) }
 func (*IPAMPolicy) ProtoMessage()               {}
-func (*IPAMPolicy) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (*IPAMPolicy) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 func (m *IPAMPolicy) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*IPAMPolicy)(nil), "dnetproto.IPAMPolicy")
 }
 
-func init() { proto.RegisterFile("delphi/ipam.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("delphi/ipam.proto", fileDescriptor2) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor2 = []byte{
 	// 190 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0xcf, 0x2c, 0x48, 0xcc, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c,

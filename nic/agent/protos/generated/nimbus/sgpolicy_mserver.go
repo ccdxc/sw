@@ -89,7 +89,7 @@ func AddNetworkSecurityPolicyTopic(server *MbusServer, reactor NetworkSecurityPo
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterNetworkSecurityPolicyApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterNetworkSecurityPolicyApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Con
 }
 
 // WatchNetworkSecurityPolicys watches NetworkSecurityPolicys and sends streaming resp
-func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(ometa *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApi_WatchNetworkSecurityPolicysServer) error {
+func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(ometa *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *NetworkSecurityPolicyTopic) updateNetworkSecurityPolicyOper(oper *netp
 	return nil
 }
 
-func (eh *NetworkSecurityPolicyTopic) NetworkSecurityPolicyOperUpdate(stream netproto.NetworkSecurityPolicyApi_NetworkSecurityPolicyOperUpdateServer) error {
+func (eh *NetworkSecurityPolicyTopic) NetworkSecurityPolicyOperUpdate(stream netproto.NetworkSecurityPolicyApiV1_NetworkSecurityPolicyOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

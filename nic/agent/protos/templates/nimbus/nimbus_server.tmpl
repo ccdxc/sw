@@ -535,7 +535,7 @@ func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crud
 	return nil
 }
 
-func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$crudObject}}Api_{{$crudObject}}OperUpdateServer) error {
+func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$crudObject}}ApiV1_{{$crudObject}}OperUpdateServer) error {
     ctx := stream.Context()
     nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

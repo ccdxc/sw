@@ -21,18 +21,23 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	it.DeleteSgpolicy("default", "default", "test-sgpolicy")
 	it.DeleteSgpolicy("default", "default", "testpolicy")
 	it.DeleteSgpolicy("default", "default", "sgpolicy-0")
+
+	// Check agent doesn't have any SG Policies
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			policies := ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()
+			if len(policies) != 0 {
+				return false, nil
+			}
+			return true, nil
+		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+	}
+
 	// if not present create the default tenant
 	it.CreateTenant("default")
 	// create sg in watcher
 	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
-
-	// verify all agents have the security group
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListSecurityGroup()) == 1, nil
-		}, "Sg not found on agent", "10ms", it.pollTimeout())
-	}
 
 	// incoming rule
 	rules := []security.SGRule{
@@ -113,13 +118,6 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 		name := "app-" + port
 		apps = append(apps, name)
 		ports = append(ports, port)
-	}
-
-	// verify all agents have the security group
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListSecurityGroup()) == 1, nil
-		}, "Sg not found on agent", "10ms", it.pollTimeout())
 	}
 
 	//Stop App Watch so that we  miss apps update.
@@ -425,14 +423,9 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 				Namespace: "default",
 				Name:      "testEndpoint1",
 			}
-			ep, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+			_, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
 			if err != nil {
 				return false, nil
-			}
-			for _, sgName := range ep.Spec.SecurityGroups {
-				if sgName == "testsg" {
-					return false, nil
-				}
 			}
 			return true, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())

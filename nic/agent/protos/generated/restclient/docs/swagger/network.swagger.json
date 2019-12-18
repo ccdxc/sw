@@ -504,35 +504,9 @@
           "type": "string",
           "title": "VrfName specifies the name of the VRF that the current Network belongs to"
         },
-        "ipv4-subnet": {
-          "type": "string",
-          "title": "IPv4Subnet of the L3 Network in CIDR format. Required"
-        },
-        "ipv4-gateway": {
-          "type": "string",
-          "title": "IPv4Gateway of the L3 Network. Required"
-        },
-        "ipv6-subnet": {
-          "type": "string",
-          "title": "IPv6Subnet of the L3 Network in CIDR format. Optional"
-        },
-        "ipv6-gateway": {
-          "type": "string",
-          "title": "IPv6Gateway of the L3 Network. Optional"
-        },
         "vlan-id": {
           "type": "integer",
-          "format": "int64",
-          "title": "VlanID of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both"
-        },
-        "vxlan-vni": {
-          "type": "integer",
-          "format": "int64",
-          "title": "VxlanVNI of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both"
-        },
-        "router-mac": {
-          "type": "string",
-          "title": "Router MAC Address of L3 network in OUI format. Optional"
+          "format": "int64"
         }
       },
       "title": "network spec"
@@ -540,19 +514,7 @@
     "netprotoNetworkStatus": {
       "type": "object",
       "properties": {
-        "allocated-vlan-id": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "allocated-vxlan-vni": {
-          "type": "integer",
-          "format": "int64"
-        },
         "network-id": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "network-handle": {
           "type": "string",
           "format": "uint64"
         }

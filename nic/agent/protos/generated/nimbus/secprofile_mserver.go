@@ -89,7 +89,7 @@ func AddSecurityProfileTopic(server *MbusServer, reactor SecurityProfileStatusRe
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterSecurityProfileApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterSecurityProfileApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 }
 
 // WatchSecurityProfiles watches SecurityProfiles and sends streaming resp
-func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, stream netproto.SecurityProfileApi_WatchSecurityProfilesServer) error {
+func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, stream netproto.SecurityProfileApiV1_WatchSecurityProfilesServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *SecurityProfileTopic) updateSecurityProfileOper(oper *netproto.Securit
 	return nil
 }
 
-func (eh *SecurityProfileTopic) SecurityProfileOperUpdate(stream netproto.SecurityProfileApi_SecurityProfileOperUpdateServer) error {
+func (eh *SecurityProfileTopic) SecurityProfileOperUpdate(stream netproto.SecurityProfileApiV1_SecurityProfileOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

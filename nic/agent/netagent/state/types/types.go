@@ -63,6 +63,7 @@ const (
 	UntaggedCollVLAN        = 8191
 	OOBManagementInterface  = "oob_mnic0"
 	ManagementUplink        = "uplink130"
+	InternalUntaggedNetwork = "_internal_untagged_nw"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -128,21 +129,10 @@ type NetAgent struct {
 	Solver                  DepSolver                                  // Object dependency resolver
 	NetworkDB               map[string]*netproto.Network               // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
 	EndpointDB              map[string]*netproto.Endpoint              // Endpoint object db
-	SecgroupDB              map[string]*netproto.SecurityGroup         // security group object db
 	TenantDB                map[string]*netproto.Tenant                // tenant object db
 	NamespaceDB             map[string]*netproto.Namespace             // tenant object db
-	NatPoolDB               map[string]*netproto.NatPool               // Nat Pool object DB
-	NatPolicyDB             map[string]*netproto.NatPolicy             // Nat Policy Object DB
-	NatBindingDB            map[string]*netproto.NatBinding            // Nat Binding Object DB
-	RouteDB                 map[string]*netproto.Route                 // Route Object DB
-	IPSecPolicyDB           map[string]*netproto.IPSecPolicy           // IPSecPolicy Object DB
-	IPSecSAEncryptDB        map[string]*netproto.IPSecSAEncrypt        // IPSecSAEncrypt Object DB
-	IPSecSADecryptDB        map[string]*netproto.IPSecSADecrypt        // IPSecSADecrypt Object DB
 	NetworkSecurityPolicyDB map[string]*netproto.NetworkSecurityPolicy // Security group policy DB
 	TunnelDB                map[string]*netproto.Tunnel                // Tunnel object DB
-	TCPProxyPolicyDB        map[string]*netproto.TCPProxyPolicy        // TCP Proxy Policy DB
-	IPSecPolicyLUT          map[string]*IPSecRuleRef                   // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
-	NatPoolLUT              map[string]*NatPoolRef                     // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB                  map[string]*netproto.Interface             // Has all the Uplinks and Lifs
 	PortDB                  map[string]*netproto.Port                  // HW Port DB
 	AppDB                   map[string]*netproto.App                   // App DB
@@ -155,6 +145,7 @@ type NetAgent struct {
 	ArpClient               *arp.Client                          // Arp Client Handler
 	ArpCache                ArpCache                             // ARP Cache
 	LateralDB               map[string][]string                  // Tracks the dependencies for lateral objects
+	MgmtLink                string                               // current management link name
 }
 
 // ArpCache maintains a list of ARP entries for the SPAN Dest IPs
@@ -175,119 +166,88 @@ type CtrlerAPI interface {
 type CtrlerIntf interface {
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
 	GetAgentID() string
-	CreateNetwork(nt *netproto.Network) error                                               // create a network
-	UpdateNetwork(nt *netproto.Network) error                                               // update a network
-	DeleteNetwork(tn, ns, name string) error                                                // delete a network
-	ListNetwork() []*netproto.Network                                                       // lists all networks
-	FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)                             // finds a network
-	CreateEndpoint(ep *netproto.Endpoint) error                                             // create an endpoint
-	UpdateEndpoint(ep *netproto.Endpoint) error                                             // update an endpoint
-	DeleteEndpoint(tn, ns, name string) error                                               // delete an endpoint
-	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error)                           // find an endpoint
-	ListEndpoint() []*netproto.Endpoint                                                     // list all endpoints
-	CreateSecurityGroup(nt *netproto.SecurityGroup) error                                   // create a sg
-	UpdateSecurityGroup(nt *netproto.SecurityGroup) error                                   // update a sg
-	DeleteSecurityGroup(tn, ns, name string) error                                          // delete a sg
-	FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error)                 // find an sg
-	ListSecurityGroup() []*netproto.SecurityGroup                                           // list all sgs
-	CreateTenant(tn *netproto.Tenant) error                                                 // create a tenant
-	DeleteTenant(tn, ns, name string) error                                                 // delete a tenant
-	FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error)                               // find a tenant
-	ListTenant() []*netproto.Tenant                                                         // lists all tenants
-	UpdateTenant(tn *netproto.Tenant) error                                                 // updates a tenant
-	CreateNamespace(ns *netproto.Namespace) error                                           // create a namespace
-	DeleteNamespace(tn, ns, name string) error                                              // delete a namespace
-	FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error)                         // find a namespace
-	ListNamespace() []*netproto.Namespace                                                   // lists all namespaces
-	UpdateNamespace(ns *netproto.Namespace) error                                           // updates a namespace
-	CreateInterface(intf *netproto.Interface) error                                         // creates an interface
-	UpdateInterface(intf *netproto.Interface) error                                         // updates an interface
-	DeleteInterface(tn, ns, name string) error                                              // deletes an interface
-	ListInterface() []*netproto.Interface                                                   // lists all interfaces
-	CreateNatPool(np *netproto.NatPool) error                                               // creates nat pool
-	FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error)                             // finds a nat pool
-	ListNatPool() []*netproto.NatPool                                                       // lists nat pools
-	UpdateNatPool(np *netproto.NatPool) error                                               // updates a nat pool
-	DeleteNatPool(tn, ns, name string) error                                                // deletes a nat pool
-	CreateNatPolicy(np *netproto.NatPolicy) error                                           // creates nat policy
-	FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error)                         // finds a nat policy
-	ListNatPolicy() []*netproto.NatPolicy                                                   // lists nat policy
-	UpdateNatPolicy(np *netproto.NatPolicy) error                                           // updates a nat policy
-	DeleteNatPolicy(tn, ns, name string) error                                              // deletes a nat policy
-	CreateNatBinding(np *netproto.NatBinding) error                                         // creates nat binding
-	FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, error)                       // finds a nat binding
-	ListNatBinding() []*netproto.NatBinding                                                 // lists nat binding
-	UpdateNatBinding(np *netproto.NatBinding) error                                         // updates a nat binding
-	DeleteNatBinding(tn, ns, name string) error                                             // deletes a nat binding
-	CreateRoute(rt *netproto.Route) error                                                   // creates a route
-	FindRoute(meta api.ObjectMeta) (*netproto.Route, error)                                 // finds a route
-	ListRoute() []*netproto.Route                                                           // lists routes
-	UpdateRoute(rt *netproto.Route) error                                                   // updates a route
-	DeleteRoute(tn, ns, name string) error                                                  // deletes a route
-	CreateIPSecPolicy(rt *netproto.IPSecPolicy) error                                       // creates a route
-	FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, error)                     // finds a route
-	ListIPSecPolicy() []*netproto.IPSecPolicy                                               // lists routes
-	UpdateIPSecPolicy(rt *netproto.IPSecPolicy) error                                       // updates a route
-	DeleteIPSecPolicy(tn, ns, name string) error                                            // deletes a route
-	CreateIPSecSAEncrypt(rt *netproto.IPSecSAEncrypt) error                                 // creates an IPSec SA Encrypt Rule
-	FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEncrypt, error)               // finds an IPSec SA Encrypt Rule
-	ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt                                         // lists IPSec SA Encrypt Rules
-	UpdateIPSecSAEncrypt(rt *netproto.IPSecSAEncrypt) error                                 // updates an IPSec SA Encrypt Rule
-	DeleteIPSecSAEncrypt(tn, ns, name string) error                                         // deletes an IPSec SA Encrypt Rule
-	CreateIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                                 // creates an IPSec SA Decrypt Rule
-	FindIPSecSADecrypt(meta api.ObjectMeta) (*netproto.IPSecSADecrypt, error)               // finds an IPSec SA Decrypt Rule
-	ListIPSecSADecrypt() []*netproto.IPSecSADecrypt                                         // lists IPSec SA Decrypt Rules
-	UpdateIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                                 // updates an IPSec SA Decrypt Rule
-	DeleteIPSecSADecrypt(tn, ns, name string) error                                         // deletes an IPSec SA Decrypt Rule
+
+	CreateNetwork(nt *netproto.Network) error                   // create a network
+	UpdateNetwork(nt *netproto.Network) error                   // update a network
+	DeleteNetwork(tn, ns, name string) error                    // delete a network
+	ListNetwork() []*netproto.Network                           // lists all networks
+	FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) // finds a network
+
+	CreateEndpoint(ep *netproto.Endpoint) error                   // create an endpoint
+	UpdateEndpoint(ep *netproto.Endpoint) error                   // update an endpoint
+	DeleteEndpoint(tn, ns, name string) error                     // delete an endpoint
+	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) // find an endpoint
+	ListEndpoint() []*netproto.Endpoint                           // list all endpoints
+
+	CreateTenant(tn *netproto.Tenant) error                   // create a tenant
+	DeleteTenant(tn, ns, name string) error                   // delete a tenant
+	FindTenant(meta api.ObjectMeta) (*netproto.Tenant, error) // find a tenant
+	ListTenant() []*netproto.Tenant                           // lists all tenants
+	UpdateTenant(tn *netproto.Tenant) error                   // updates a tenant
+
+	CreateNamespace(ns *netproto.Namespace) error                   // create a namespace
+	DeleteNamespace(tn, ns, name string) error                      // delete a namespace
+	FindNamespace(meta api.ObjectMeta) (*netproto.Namespace, error) // find a namespace
+	ListNamespace() []*netproto.Namespace                           // lists all namespaces
+	UpdateNamespace(ns *netproto.Namespace) error                   // updates a namespace
+
+	CreateInterface(intf *netproto.Interface) error // creates an interface
+	UpdateInterface(intf *netproto.Interface) error // updates an interface
+	DeleteInterface(tn, ns, name string) error      // deletes an interface
+	ListInterface() []*netproto.Interface           // lists all interfaces
+
 	CreateNetworkSecurityPolicy(rt *netproto.NetworkSecurityPolicy) error                   // creates an Security Group Policy
 	FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) // finds an Security Group Policy
 	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                           // lists Security Group Policy
 	UpdateNetworkSecurityPolicy(rt *netproto.NetworkSecurityPolicy) error                   // updates an Security Group Policy
 	DeleteNetworkSecurityPolicy(tn, ns, name string) error                                  // deletes an Security Group Policy
-	CreateTunnel(tun *netproto.Tunnel) error                                                // creates an Tunnel
-	FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error)                               // finds an Tunnel
-	ListTunnel() []*netproto.Tunnel                                                         // lists Tunnel
-	UpdateTunnel(tun *netproto.Tunnel) error                                                // updates an Tunnel
-	DeleteTunnel(tn, ns, name string) error                                                 // deletes an Tunnel
-	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error                                // creates an TCP Proxy Policy
-	FindTCPProxyPolicy(meta api.ObjectMeta) (*netproto.TCPProxyPolicy, error)               // finds an TCP Proxy Policy
-	ListTCPProxyPolicy() []*netproto.TCPProxyPolicy                                         // lists TCP Proxy Policy
-	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error                                // updates an TCP Proxy Policy
-	DeleteTCPProxyPolicy(tcp, ns, name string) error                                        // deletes an TCP Proxy Policy
-	CreatePort(tcp *netproto.Port) error                                                    // creates an Port
-	FindPort(meta api.ObjectMeta) (*netproto.Port, error)                                   // finds an Port
-	ListPort() []*netproto.Port                                                             // lists Port
-	UpdatePort(port *netproto.Port) error                                                   // updates an Port
-	DeletePort(port, ns, name string) error                                                 // deletes an Port
-	CreateSecurityProfile(profile *netproto.SecurityProfile) error                          // creates an SecurityProfile
-	FindSecurityProfile(meta api.ObjectMeta) (*netproto.SecurityProfile, error)             // finds an SecurityProfile
-	ListSecurityProfile() []*netproto.SecurityProfile                                       // lists SecurityProfile
-	UpdateSecurityProfile(profile *netproto.SecurityProfile) error                          // updates an SecurityProfile
-	DeleteSecurityProfile(profile, ns, name string) error                                   // deletes an SecurityProfile
-	CreateApp(app *netproto.App) error                                                      // creates an App
-	FindApp(meta api.ObjectMeta) (*netproto.App, error)                                     // finds an App
-	ListApp() []*netproto.App                                                               // lists App
-	UpdateApp(app *netproto.App) error                                                      // updates an App
-	DeleteApp(app, ns, name string) error                                                   // deletes an App
-	CreateVrf(vrf *netproto.Vrf) error                                                      // creates an Vrf
-	FindVrf(meta api.ObjectMeta) (*netproto.Vrf, error)                                     // finds an Vrf
-	ListVrf() []*netproto.Vrf                                                               // lists Vrf
-	UpdateVrf(vrf *netproto.Vrf) error                                                      // updates an Vrf
-	DeleteVrf(tn, namespace, name string) error                                             // deletes an Vrf
-	CreateIPAMPolicy(nt *netproto.IPAMPolicy) error                                         // create an IPAM policy
-	UpdateIPAMPolicy(nt *netproto.IPAMPolicy) error                                         // update an IPAM policy
-	DeleteIPAMPolicy(tn, ns, name string) error                                             // delete an IPAM policy
-	ListIPAMPolicy() []*netproto.IPAMPolicy                                                 // lists all IPAM policies
-	FindIPAMPolicy(meta api.ObjectMeta) (*netproto.IPAMPolicy, error)                       // finds an IPAM Policy
-	GetHwInterfaces() error                                                                 // Gets all the uplinks created on the hal by nic mgr
-	GetNaplesInfo() (*NaplesInfo, error)                                                    // Returns Naples information
-	GetNetagentUptime() (string, error)                                                     // Returns NetAgent Uptime
-	CreateLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to use to create dependent objects
-	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error  // API for TSAgent and TPAgent to delete dependent objects
-	PurgeConfigs() error                                                                    // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                        // Allow client to query for options to use for watch
-	LifUpdateHandler(lif *halproto.LifGetResponse) error                                    // Handle async lif updates
-	GetInterfaceByID(intfID uint64) (*netproto.Interface, error)                            // ID to name mapping API for interfaces
+
+	CreateTunnel(tun *netproto.Tunnel) error                  // creates an Tunnel
+	FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error) // finds an Tunnel
+	ListTunnel() []*netproto.Tunnel                           // lists Tunnel
+	UpdateTunnel(tun *netproto.Tunnel) error                  // updates an Tunnel
+	DeleteTunnel(tn, ns, name string) error                   // deletes an Tunnel
+
+	CreatePort(tcp *netproto.Port) error                  // creates an Port
+	FindPort(meta api.ObjectMeta) (*netproto.Port, error) // finds an Port
+	ListPort() []*netproto.Port                           // lists Port
+	UpdatePort(port *netproto.Port) error                 // updates an Port
+	DeletePort(port, ns, name string) error               // deletes an Port
+
+	CreateSecurityProfile(profile *netproto.SecurityProfile) error              // creates an SecurityProfile
+	FindSecurityProfile(meta api.ObjectMeta) (*netproto.SecurityProfile, error) // finds an SecurityProfile
+	ListSecurityProfile() []*netproto.SecurityProfile                           // lists SecurityProfile
+	UpdateSecurityProfile(profile *netproto.SecurityProfile) error              // updates an SecurityProfile
+	DeleteSecurityProfile(profile, ns, name string) error                       // deletes an SecurityProfile
+
+	CreateApp(app *netproto.App) error                  // creates an App
+	FindApp(meta api.ObjectMeta) (*netproto.App, error) // finds an App
+	ListApp() []*netproto.App                           // lists App
+	UpdateApp(app *netproto.App) error                  // updates an App
+	DeleteApp(app, ns, name string) error               // deletes an App
+
+	CreateVrf(vrf *netproto.Vrf) error                  // creates an Vrf
+	FindVrf(meta api.ObjectMeta) (*netproto.Vrf, error) // finds an Vrf
+	ListVrf() []*netproto.Vrf                           // lists Vrf
+	UpdateVrf(vrf *netproto.Vrf) error                  // updates an Vrf
+	DeleteVrf(tn, namespace, name string) error         // deletes an Vrf
+
+	CreateIPAMPolicy(nt *netproto.IPAMPolicy) error                   // create an IPAM policy
+	UpdateIPAMPolicy(nt *netproto.IPAMPolicy) error                   // update an IPAM policy
+	DeleteIPAMPolicy(tn, ns, name string) error                       // delete an IPAM policy
+	ListIPAMPolicy() []*netproto.IPAMPolicy                           // lists all IPAM policies
+	FindIPAMPolicy(meta api.ObjectMeta) (*netproto.IPAMPolicy, error) // finds an IPAM Policy
+
+	GetHwInterfaces() error              // Gets all the uplinks created on the hal by nic mgr
+	GetNaplesInfo() (*NaplesInfo, error) // Returns Naples information
+	GetNetagentUptime() (string, error)  // Returns NetAgent Uptime
+
+	CreateLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error // API for TSAgent and TPAgent to use to create dependent objects
+	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error // API for TSAgent and TPAgent to delete dependent objects
+	PurgeConfigs() error                                                                   // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
+	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                       // Allow client to query for options to use for watch
+	LifUpdateHandler(lif *halproto.LifGetResponse) error                                   // Handle async lif updates
+	GetInterfaceByID(intfID uint64) (*netproto.Interface, error)                           // ID to name mapping API for interfaces
 }
 
 // PluginIntf is the API provided by the netagent to plugins
@@ -299,20 +259,17 @@ type PluginIntf interface {
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
-	CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*IntfInfo, error)
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) error
+
+	CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) (*IntfInfo, error)
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) error
 	DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error
-	CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error
-	UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error
+	CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, uplinkID uint64, vrf *netproto.Vrf) error
+	UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error
 	DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error
 
 	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error
 	UpdateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error
 	DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error
-
-	CreateSecurityGroup(sg *netproto.SecurityGroup) error
-	UpdateSecurityGroup(sg *netproto.SecurityGroup) error
-	DeleteSecurityGroup(sg *netproto.SecurityGroup) error
 
 	CreateVrf(vrfID uint64, vrfType string) error
 	DeleteVrf(vrfID uint64) error
@@ -323,45 +280,13 @@ type NetDatapathAPI interface {
 	DeleteInterface(intf *netproto.Interface) error
 	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)
 
-	CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) (*netproto.NatBinding, error)
-	UpdateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) error
-	DeleteNatBinding(nb *netproto.NatBinding, vrf *netproto.Vrf) error
-
-	CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, vrf *netproto.Vrf) error
-	UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, vrf *netproto.Vrf) error
-	DeleteNatPolicy(np *netproto.NatPolicy, vrf *netproto.Vrf) error
-
-	CreateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
-	UpdateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
-	DeleteNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
-
-	CreateRoute(rt *netproto.Route, vrf *netproto.Vrf) error
-	UpdateRoute(rt *netproto.Route, vrf *netproto.Vrf) error
-	DeleteRoute(rt *netproto.Route, vrf *netproto.Vrf) error
-
-	CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error
-	UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error
-	DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf *netproto.Vrf) error
-
-	CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error
-	UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error
-	DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf *netproto.Vrf) error
-
-	CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*IPSecRuleRef) error
-	UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*IPSecRuleRef) error
-	DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf) error
-
-	CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error
+	CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error
 	UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error
 	DeleteNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64) error
 
 	CreateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
 	UpdateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
 	DeleteTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
-
-	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
-	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
-	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
 
 	CreatePort(ports ...*netproto.Port) error
 	UpdatePort(port *netproto.Port) (*netproto.Port, error)

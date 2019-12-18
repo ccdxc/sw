@@ -32,15 +32,8 @@ type AgentConfig struct {
 	Networks           []netproto.Network
 	Endpoints          []netproto.Endpoint
 	SgPolicies         []netproto.NetworkSecurityPolicy
-	IPSecSAEncryption  []netproto.IPSecSAEncrypt
-	IPSecSADecryption  []netproto.IPSecSADecrypt
-	IPSecPolicies      []netproto.IPSecPolicy
 	MirrorSessions     []tsproto.MirrorSession
-	NatPools           []netproto.NatPool
-	NatBindings        []netproto.NatBinding
-	NatPolicies        []netproto.NatPolicy
 	Tunnels            []netproto.Tunnel
-	TCPProxies         []netproto.TCPProxyPolicy
 	FlowExportPolicies []monitoring.FlowExportPolicy
 	restApiMap         map[reflect.Type]string
 }
@@ -77,14 +70,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 		"Endpoint":         &agentCfg.Endpoints,
 		"NetworkSecurityPolicy":         &agentCfg.SgPolicies,
 		"MirrorSession":    &agentCfg.MirrorSessions,
-		"IPSecSAEncrypt":   &agentCfg.IPSecSAEncryption,
-		"IPSecSADecrypt":   &agentCfg.IPSecSADecryption,
-		"IPSecPolicy":      &agentCfg.IPSecPolicies,
-		"NatPool":          &agentCfg.NatPools,
-		"NatBinding":       &agentCfg.NatBindings,
-		"NatPolicy":        &agentCfg.NatPolicies,
 		"Tunnel":           &agentCfg.Tunnels,
-		"TCPProxyPolicy":   &agentCfg.TCPProxies,
 		"FlowExportPolicy": &agentCfg.FlowExportPolicies,
 	}
 
@@ -157,48 +143,6 @@ func (agentCfg *AgentConfig) push() error {
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.MirrorSessions)])
 	for _, ms := range agentCfg.MirrorSessions {
 		doConfig(ms, restURL)
-	}
-
-	fmt.Printf("Configuring %d IPSec SA Encrypt Rules...\n", len(agentCfg.IPSecSAEncryption))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecSAEncryption)])
-	for _, saEncrypt := range agentCfg.IPSecSAEncryption {
-		doConfig(saEncrypt, restURL)
-	}
-
-	fmt.Printf("Configuring %d IPSec SA Decrypt Rules...\n", len(agentCfg.IPSecSADecryption))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecSADecryption)])
-	for _, saDecrypt := range agentCfg.IPSecSADecryption {
-		doConfig(saDecrypt, restURL)
-	}
-
-	fmt.Printf("Configuring %d IPSec Policies...\n", len(agentCfg.IPSecPolicies))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecPolicies)])
-	for _, ipSec := range agentCfg.IPSecPolicies {
-		doConfig(ipSec, restURL)
-	}
-
-	fmt.Printf("Configuring %d Nat Pools...\n", len(agentCfg.NatPools))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.NatPools)])
-	for _, np := range agentCfg.NatPools {
-		doConfig(np, restURL)
-	}
-
-	fmt.Printf("Configuring %d Flow Export Policies...\n", len(agentCfg.FlowExportPolicies))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.FlowExportPolicies)])
-	for _, fe := range agentCfg.FlowExportPolicies {
-		doConfig(fe, restURL)
-	}
-
-	fmt.Printf("Configuring %d TCP Proxies...\n", len(agentCfg.TCPProxies))
-	restURL = fmt.Sprintf("%s%s", AGENT_URL,
-		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.TCPProxies)])
-	for _, tcp := range agentCfg.TCPProxies {
-		doConfig(tcp, restURL)
 	}
 	return nil
 }

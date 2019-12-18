@@ -166,39 +166,12 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.Endpoint:
 		ep := o.(*netproto.Endpoint)
 		return ep.TypeMeta, ep.ObjectMeta, nil
-	case *netproto.Route:
-		rt := o.(*netproto.Route)
-		return rt.TypeMeta, rt.ObjectMeta, nil
-	case *netproto.NatPool:
-		np := o.(*netproto.NatPool)
-		return np.TypeMeta, np.ObjectMeta, nil
-	case *netproto.NatBinding:
-		nb := o.(*netproto.NatBinding)
-		return nb.TypeMeta, nb.ObjectMeta, nil
-	case *netproto.NatPolicy:
-		np := o.(*netproto.NatPolicy)
-		return np.TypeMeta, np.ObjectMeta, nil
-	case *netproto.IPSecSAEncrypt:
-		ie := o.(*netproto.IPSecSAEncrypt)
-		return ie.TypeMeta, ie.ObjectMeta, nil
-	case *netproto.IPSecSADecrypt:
-		id := o.(*netproto.IPSecSADecrypt)
-		return id.TypeMeta, id.ObjectMeta, nil
-	case *netproto.IPSecPolicy:
-		ip := o.(*netproto.IPSecPolicy)
-		return ip.TypeMeta, ip.ObjectMeta, nil
 	case *netproto.NetworkSecurityPolicy:
 		sp := o.(*netproto.NetworkSecurityPolicy)
 		return sp.TypeMeta, sp.ObjectMeta, nil
 	case *netproto.Tunnel:
 		tu := o.(*netproto.Tunnel)
 		return tu.TypeMeta, tu.ObjectMeta, nil
-	case *netproto.SecurityGroup:
-		sg := o.(*netproto.SecurityGroup)
-		return sg.TypeMeta, sg.ObjectMeta, nil
-	case *netproto.TCPProxyPolicy:
-		tcp := o.(*netproto.TCPProxyPolicy)
-		return tcp.TypeMeta, tcp.ObjectMeta, nil
 	case *netproto.Port:
 		port := o.(*netproto.Port)
 		return port.TypeMeta, port.ObjectMeta, nil
@@ -266,53 +239,20 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 	case "endpoint":
 		selfLink = fmt.Sprintf("/api/endpoints/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
-	case "route":
-		selfLink = fmt.Sprintf("/api/routes/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "natpool":
-		selfLink = fmt.Sprintf("/api/nat/pools/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "natbinding":
-		selfLink = fmt.Sprintf("/api/nat/bindings/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "natpolicy":
-		selfLink = fmt.Sprintf("/api/nat/policies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "ipsecsaencrypt":
-		selfLink = fmt.Sprintf("/api/ipsec/encryption/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "ipsecsadecrypt":
-		selfLink = fmt.Sprintf("/api/ipsec/decryption/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "ipsecpolicy":
-		selfLink = fmt.Sprintf("/api/ipsec/policies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
 	case "networksecuritypolicy":
 		selfLink = fmt.Sprintf("/api/security/policies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	case "tunnel":
 		selfLink = fmt.Sprintf("/api/tunnels/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
-	case "securitygroup":
-		selfLink = fmt.Sprintf("/api/sgs/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "tcpproxypolicy":
-		selfLink = fmt.Sprintf("/api/tcp/proxies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+	case "app":
+		selfLink = fmt.Sprintf("/api/apps/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	case "port":
 		selfLink = fmt.Sprintf("/api/system/ports/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	case "securityprofile":
 		selfLink = fmt.Sprintf("/api/security/profiles/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "app":
-		selfLink = fmt.Sprintf("/api/apps/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "mirrorsession":
-		selfLink = fmt.Sprintf("/api/mirror/sessions/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
-		return
-	case "flowexportpolicy":
-		selfLink = fmt.Sprintf("/api/telemetry/flowexports/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	default:
 		log.Errorf("Invalid object type %v. Obj: %v", m.T, m.O)

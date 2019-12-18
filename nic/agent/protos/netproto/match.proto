@@ -12,27 +12,21 @@ import "github.com/pensando/sw/api/meta.proto";
 
 
 
-// Common MatchSelector. ToDo Add ICMP Match criteria
+// Common MatchSelector.
 message MatchSelector {
     // Automatically interpret the string as an octet, a CIDR or an hyphen separated range
-    repeated string Addresses           = 1 [(gogoproto.jsontag) = "addresses,omitempty"];
-
-    // Match on the security group
-    repeated string SecurityGroups      = 2 [(gogoproto.jsontag) = "security-groups,omitempty"];
+    repeated string Addresses          = 1 [(gogoproto.jsontag) = "addresses,omitempty"];
 
     // Match on the App info
-    repeated AppConfig AppConfigs       = 4 [(gogoproto.jsontag) = "app-configs,omitempty"];
+    repeated ProtoPort ProtoPorts      = 2 [(gogoproto.jsontag) = "proto-ports,omitempty"];
 
 }
 
-message AppConfig {
-    // Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.
-    // If the app name is specified all the protocol port information will be fetched from the corresponding app object
+// ProtoPort captures protocol and port
+message ProtoPort {
+    // Protocol for the app.
     string Protocol     = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
 
     // Port for the app
     string Port         = 2 [(gogoproto.jsontag) = "port,omitempty"];
-//
-//    // Additional ALG configurations
-//    string AppName      = 3 [(gogoproto.jsontag) = "app-name,omitempty"];
 }

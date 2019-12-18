@@ -308,7 +308,7 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 						},
 						Dst: &netproto.MatchSelector{
 							Addresses:  populatedPair.dstIPAddresses,
-							AppConfigs: appConfig,
+							ProtoPorts: appConfig,
 						},
 					},
 				}
@@ -330,8 +330,8 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 	return
 }
 
-func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig {
-	var appConfigs []*netproto.AppConfig
+func (c *CfgGen) generateL4Match(offset int) []*netproto.ProtoPort {
+	var appConfigs []*netproto.ProtoPort
 	matches := c.Template.FirewallPolicyRules[offset:]
 
 	if len(matches) < c.Template.L4MatchPerRule {
@@ -350,7 +350,7 @@ func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig {
 			port = components[1]
 		}
 
-		appConfig := &netproto.AppConfig{
+		appConfig := &netproto.ProtoPort{
 			Protocol: proto,
 			Port:     port,
 		}

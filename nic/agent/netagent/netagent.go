@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vishvananda/netlink"
+
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -223,6 +225,12 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCard
 			// Lock netagent state
 			ag.NetworkAgent.Lock()
 
+			mgmtLink := getMgmtLink(obj.MgmtIP)
+
+			if mgmtLink != nil {
+				ag.NetworkAgent.MgmtLink = mgmtLink.Attrs().Name
+			}
+
 			// Stop previous tsdb instance
 			if ag.StopTSDB != nil {
 				ag.StopTSDB()
@@ -314,4 +322,24 @@ func (ag *Agent) GetMgmtIPAddr() string {
 	ag.Lock()
 	defer ag.Unlock()
 	return ag.mgmtIPAddr
+}
+
+// getMgmtLink returns management interface by IP
+func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
+	links, err := netlink.LinkList()
+	if err != nil {
+		log.Errorf("Failed to list the available links. Err: %v", err)
+		return
+	}
+
+	for _, l := range links {
+		addrs, _ := netlink.AddrList(l, netlink.FAMILY_V4)
+		for _, a := range addrs {
+			if a.IP.String() == mgmtIP {
+				mgmtLink = l
+				return
+			}
+		}
+	}
+	return
 }

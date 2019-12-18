@@ -26,7 +26,7 @@
                   "addresses": [
                      "192.168.100.102"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "59379"
@@ -46,7 +46,7 @@
                   "addresses": [
                      "192.168.100.101"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "59739"
@@ -65,7 +65,7 @@
                   "addresses": [
                      "192.168.100.101"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "33456"
@@ -84,7 +84,7 @@
                   "addresses": [
                      "192.168.100.101"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "tcp",
                         "port": "33456"
@@ -100,7 +100,7 @@
               ]
             },
             "destination": {
-              "app-configs": [
+              "proto-ports": [
                 {
                   "protocol": "icmp",
                   "port": "65535"
@@ -119,7 +119,7 @@
               ]
             },
             "destination": {
-              "app-configs": [
+              "proto-ports": [
                 {
                   "protocol": "icmp",
                   "port": "65535"

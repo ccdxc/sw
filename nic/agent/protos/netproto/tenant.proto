@@ -52,7 +52,7 @@ message TenantEventList {
 }
 
 // Tenant controller api
-service TenantApi {
+service TenantApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Tenant",
@@ -61,10 +61,10 @@ service TenantApi {
         Prefix:"api/tenants",
     };
 
-    rpc GetTenant (api.ObjectMeta) returns (Tenant) {};
-    rpc ListTenants (api.ObjectMeta) returns (TenantList) {};
-    rpc WatchTenants (api.ObjectMeta) returns (stream TenantEventList) {};
-    rpc UpdateTenant (Tenant) returns (Tenant) {};
-    rpc TenantOperUpdate (stream TenantEvent) returns (api.TypeMeta) {};
+//    rpc GetTenant (api.ObjectMeta) returns (Tenant) {};
+//    rpc ListTenants (api.ObjectMeta) returns (TenantList) {};
+//    rpc WatchTenants (api.ObjectMeta) returns (stream TenantEventList) {};
+//    rpc UpdateTenant (Tenant) returns (Tenant) {};
+//    rpc TenantOperUpdate (stream TenantEvent) returns (api.TypeMeta) {};
 
 }

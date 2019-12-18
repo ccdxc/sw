@@ -222,7 +222,7 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 			log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
 			return nil, err
 		}
-		for _, s := range src.AppConfigs {
+		for _, s := range src.ProtoPorts {
 			sPort, err := convertPort(s.Port)
 			if err != nil {
 				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", s, err)
@@ -240,7 +240,7 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 			log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
 			return nil, err
 		}
-		for _, d := range dst.AppConfigs {
+		for _, d := range dst.ProtoPorts {
 			dPort, err := convertPort(d.Port)
 			if err != nil {
 				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", d, err)
@@ -346,7 +346,7 @@ func convertRuleAction(action string) *halproto.SecurityRuleAction {
 }
 
 // CreateNetworkSecurityPolicy creates a security group policy in the datapath
-func (dp *DelphiDatapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
+func (dp *DelphiDatapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{

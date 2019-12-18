@@ -64,7 +64,7 @@ type AggReactor interface {
 
 type AggWatchOStream struct {
 	sync.Mutex
-	stream netproto.AggWatchApi_ObjectOperUpdateClient
+	stream netproto.AggWatchApiV1_ObjectOperUpdateClient
 }
 
 // lockObject locks an object
@@ -92,7 +92,7 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 	client.Unlock()
 }
 // watchAggWatchRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApi_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
+func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApiV1_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -310,7 +310,7 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 	}
 
 	// start the watch
-	aggRPCClient := netproto.NewAggWatchApiClient(client.rpcClient.ClientConn)
+	aggRPCClient := netproto.NewAggWatchApiV1Client(client.rpcClient.ClientConn)
 	aggKinds := netproto.AggKinds{}
 	for _, kind := range kinds {
 		aggKinds.Kinds = append(aggKinds.Kinds, kind)
@@ -392,5 +392,3 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 		}
 	}
 }
-
-

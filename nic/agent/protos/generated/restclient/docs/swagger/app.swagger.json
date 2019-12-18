@@ -539,16 +539,12 @@
         "proto-ports": {
           "type": "array",
           "items": {
-            "type": "string"
-          },
-          "description": "List of protocol/ports. Valid combinations tcp/80 udp/10000-20000 icmp/5. For ICMP the port is interpreted as ICMP Code.."
-        },
-        "alg-type": {
-          "type": "string",
-          "title": "ALG specific configuration"
+            "$ref": "#/definitions/netprotoProtoPort"
+          }
         },
         "alg": {
-          "$ref": "#/definitions/netprotoALG"
+          "$ref": "#/definitions/netprotoALG",
+          "title": "ALG specific configuration"
         },
         "app-idle-timeout": {
           "type": "string",
@@ -628,6 +624,20 @@
         }
       },
       "title": "ICMP ALG configuration"
+    },
+    "netprotoProtoPort": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "description": "Protocol for the app."
+        },
+        "port": {
+          "type": "string",
+          "title": "Port for the app"
+        }
+      },
+      "title": "ProtoPort captures protocol and port"
     },
     "netprotoRPC": {
       "type": "object",

@@ -110,16 +110,6 @@
     }
   },
   "definitions": {
-    "apiEventType": {
-      "type": "string",
-      "enum": [
-        "CreateEvent",
-        "UpdateEvent",
-        "DeleteEvent"
-      ],
-      "default": "CreateEvent",
-      "title": "Watch event types"
-    },
     "apiListWatchOptions": {
       "type": "object",
       "required": [
@@ -373,20 +363,6 @@
         }
       }
     },
-    "apiTypeMeta": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "Kind represents the type of the API object."
-        },
-        "api-version": {
-          "type": "string",
-          "title": "APIVersion defines the version of the API object. This can only be set by the server"
-        }
-      },
-      "description": "TypeMeta contains the metadata about kind and version for all API objects."
-    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -440,127 +416,6 @@
           }
         }
       }
-    },
-    "netprotoTunnel": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoTunnelSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoTunnelStatus"
-        }
-      },
-      "title": "Tunnel object"
-    },
-    "netprotoTunnelEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "tunnel": {
-          "$ref": "#/definitions/netprotoTunnel"
-        }
-      },
-      "title": "tunnel watch event"
-    },
-    "netprotoTunnelEventList": {
-      "type": "object",
-      "properties": {
-        "TunnelEvents": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoTunnelEvent"
-          }
-        }
-      },
-      "title": "tunnel watch events batched"
-    },
-    "netprotoTunnelList": {
-      "type": "object",
-      "properties": {
-        "tunnels": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoTunnel"
-          }
-        }
-      }
-    },
-    "netprotoTunnelSpec": {
-      "type": "object",
-      "required": [
-        "type",
-        "admin-status"
-      ],
-      "properties": {
-        "vrf-name": {
-          "type": "string",
-          "title": "VrfName specifies the name of the VRF that the current Tunnel belongs to"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "none",
-            "vxlan",
-            "gre"
-          ],
-          "default": "none",
-          "title": "Overlay Tunnel Type. Required. Only VXLAN is currently supported"
-        },
-        "admin-status": {
-          "type": "string",
-          "enum": [
-            "none",
-            "up",
-            "down"
-          ],
-          "default": "none",
-          "description": "AdminStatus of the overlay tunnel."
-        },
-        "source": {
-          "type": "string",
-          "title": "Local TEP IP Address"
-        },
-        "destination": {
-          "type": "string",
-          "title": "Remote TEP IP Address"
-        }
-      },
-      "title": "TunnelSpec captures all the tunnel level configuration"
-    },
-    "netprotoTunnelStatus": {
-      "type": "object",
-      "required": [
-        "oper-status"
-      ],
-      "properties": {
-        "oper-status": {
-          "type": "string",
-          "enum": [
-            "none",
-            "up",
-            "down"
-          ],
-          "default": "none"
-        },
-        "id": {
-          "type": "string",
-          "format": "uint64",
-          "title": "TunnelID in the datapath"
-        }
-      },
-      "title": "Tunnel Status"
     }
   }
 }

@@ -44,7 +44,7 @@ func (c *CfgGen) GenerateNetworks() error {
 		nsIdx := i % len(ns)
 		namespace := ns[nsIdx]
 		subnet := subnets[i]
-		addrs, gateway, err := libs.GenIPAddress(subnet, 0, true)
+		addrs, _, err := libs.GenIPAddress(subnet, 0, true)
 		if err != nil {
 			log.Errorf("Failed to calculate default gateway.Err: %v", err)
 		}
@@ -61,8 +61,6 @@ func (c *CfgGen) GenerateNetworks() error {
 				Name:      networkName,
 			},
 			Spec: netproto.NetworkSpec{
-				IPv4Subnet:  subnet,
-				IPv4Gateway: gateway,
 				VlanID:      c.Template.VlanOffset + uint32(i),
 			},
 		}

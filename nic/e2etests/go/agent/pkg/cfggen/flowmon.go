@@ -84,10 +84,10 @@ func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []*mon
 	for _, s := range sgpRules {
 		var protoPorts []string
 		// Pick up from APP Object
-		if len(s.Dst.AppConfigs) == 0 {
+		if len(s.Dst.ProtoPorts) == 0 {
 			continue
 		} else {
-			protoPorts = convertProtoPort(s.Dst.AppConfigs[0])
+			protoPorts = convertProtoPort(s.Dst.ProtoPorts[0])
 		}
 		r := &monitoring.MatchRule{
 			Src: &monitoring.MatchSelector{
@@ -128,7 +128,7 @@ func (c *CfgGen) generateExportConfigs(namespace string) (exportCfg []monitoring
 	return
 }
 
-func convertProtoPort(app *netproto.AppConfig) []string {
+func convertProtoPort(app *netproto.ProtoPort) []string {
 	var proto, port string
 	if len(app.Protocol) == 0 {
 		proto = "any"

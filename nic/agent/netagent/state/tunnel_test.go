@@ -48,7 +48,7 @@ func TestTunnelCreateDelete(t *testing.T) {
 	// delete the tunnel and verify its gone from db
 	err = ag.DeleteTunnel(tun.Tenant, tun.Namespace, tun.Name)
 	AssertOk(t, err, "Error deleting tunnel")
-	_, err = ag.FindNatPolicy(tun.ObjectMeta)
+	_, err = ag.FindTunnel(tun.ObjectMeta)
 	Assert(t, err != nil, "Tunnel was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant

@@ -32,7 +32,7 @@ type SecurityProfileReactor interface {
 }
 type SecurityProfileOStream struct {
 	sync.Mutex
-	stream netproto.SecurityProfileApi_SecurityProfileOperUpdateClient
+	stream netproto.SecurityProfileApiV1_SecurityProfileOperUpdateClient
 }
 
 // WatchSecurityProfiles runs SecurityProfile watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "SecurityProfile")
-	securityprofileRPCClient := netproto.NewSecurityProfileApiClient(client.rpcClient.ClientConn)
+	securityprofileRPCClient := netproto.NewSecurityProfileApiV1Client(client.rpcClient.ClientConn)
 	stream, err := securityprofileRPCClient.WatchSecurityProfiles(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching SecurityProfile. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 }
 
 // watchSecurityProfileRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchSecurityProfileRecvLoop(stream netproto.SecurityProfileApi_WatchSecurityProfilesClient, recvch chan<- *netproto.SecurityProfileEvent) {
+func (client *NimbusClient) watchSecurityProfileRecvLoop(stream netproto.SecurityProfileApiV1_WatchSecurityProfilesClient, recvch chan<- *netproto.SecurityProfileEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

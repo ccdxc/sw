@@ -187,7 +187,7 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterAggWatchApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterAggWatchApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -232,6 +232,10 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 				return nil, err
 			}
 			for _, obj := range objlist {
+				if obj.Spec.NodeUUID != nodeID {
+					log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+					continue
+				}
 				mobj, err := types.MarshalAny(obj)
 				if err != nil {
 					log.Errorf("Error  marshalling any object. Err: %v", err)
@@ -257,21 +261,6 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return nil, err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return nil, err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "Namespace":
-			objlist, err := eh.server.ListNamespaces(context.Background(), nil)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -315,38 +304,8 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
-		case "SecurityGroup":
-			objlist, err := eh.server.ListSecurityGroups(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return nil, err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return nil, err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
 		case "SecurityProfile":
 			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return nil, err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return nil, err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "Tenant":
-			objlist, err := eh.server.ListTenants(context.Background(), nil)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -366,7 +325,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 	return objList, nil
 }
 
-func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
+func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -436,16 +395,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
 
-			case "Namespace":
-				if _, ok := eh.statusReactor.(NamespaceStatusReactor); ok {
-					err = eh.statusReactor.(NamespaceStatusReactor).OnNamespaceOperUpdate(nodeID,
-						object.Message.(*netproto.Namespace))
-					if err != nil {
-						log.Errorf("Error updating Namespace oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Namespace).GetObjectMeta())
-
 			case "Network":
 				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
 					err = eh.statusReactor.(NetworkStatusReactor).OnNetworkOperUpdate(nodeID,
@@ -466,16 +415,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
 
-			case "SecurityGroup":
-				if _, ok := eh.statusReactor.(SecurityGroupStatusReactor); ok {
-					err = eh.statusReactor.(SecurityGroupStatusReactor).OnSecurityGroupOperUpdate(nodeID,
-						object.Message.(*netproto.SecurityGroup))
-					if err != nil {
-						log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityGroup).GetObjectMeta())
-
 			case "SecurityProfile":
 				if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
 					err = eh.statusReactor.(SecurityProfileStatusReactor).OnSecurityProfileOperUpdate(nodeID,
@@ -485,16 +424,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
-
-			case "Tenant":
-				if _, ok := eh.statusReactor.(TenantStatusReactor); ok {
-					err = eh.statusReactor.(TenantStatusReactor).OnTenantOperUpdate(nodeID,
-						object.Message.(*netproto.Tenant))
-					if err != nil {
-						log.Errorf("Error updating Tenant oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Tenant).GetObjectMeta())
 
 			}
 		case api.EventType_DeleteEvent:
@@ -540,16 +469,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
 
-			case "Namespace":
-				if _, ok := eh.statusReactor.(NamespaceStatusReactor); ok {
-					err = eh.statusReactor.(NamespaceStatusReactor).OnNamespaceOperDelete(nodeID,
-						object.Message.(*netproto.Namespace))
-					if err != nil {
-						log.Errorf("Error updating Namespace oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Namespace).GetObjectMeta())
-
 			case "Network":
 				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
 					err = eh.statusReactor.(NetworkStatusReactor).OnNetworkOperDelete(nodeID,
@@ -570,16 +489,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
 
-			case "SecurityGroup":
-				if _, ok := eh.statusReactor.(SecurityGroupStatusReactor); ok {
-					err = eh.statusReactor.(SecurityGroupStatusReactor).OnSecurityGroupOperDelete(nodeID,
-						object.Message.(*netproto.SecurityGroup))
-					if err != nil {
-						log.Errorf("Error updating SecurityGroup oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityGroup).GetObjectMeta())
-
 			case "SecurityProfile":
 				if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
 					err = eh.statusReactor.(SecurityProfileStatusReactor).OnSecurityProfileOperDelete(nodeID,
@@ -589,16 +498,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOpe
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
-
-			case "Tenant":
-				if _, ok := eh.statusReactor.(TenantStatusReactor); ok {
-					err = eh.statusReactor.(TenantStatusReactor).OnTenantOperDelete(nodeID,
-						object.Message.(*netproto.Tenant))
-					if err != nil {
-						log.Errorf("Error updating Tenant oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Tenant).GetObjectMeta())
 
 			}
 		}
@@ -778,7 +677,7 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 }
 
 // WatchObjects watches aggregate  and sends streaming resp
-func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApi_WatchObjectsServer) error {
+func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
@@ -830,6 +729,10 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 				return err
 			}
 			for _, obj := range objlist {
+				if obj.Spec.NodeUUID != nodeID {
+					log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+					continue
+				}
 				mobj, err := types.MarshalAny(obj)
 				if err != nil {
 					log.Errorf("Error  marshalling any object. Err: %v", err)
@@ -855,21 +758,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "Namespace":
-			objlist, err := eh.server.ListNamespaces(context.Background(), nil)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -913,38 +801,8 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
-		case "SecurityGroup":
-			objlist, err := eh.server.ListSecurityGroups(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
 		case "SecurityProfile":
 			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "Tenant":
-			objlist, err := eh.server.ListTenants(context.Background(), nil)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -989,6 +847,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 	}
 
 	// loop forever on watch channel
+Watching:
 	for {
 		select {
 		// read from channel
@@ -1034,6 +893,10 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 				if err != nil {
 					return err
 				}
+				if obj.Spec.NodeUUID != nodeID {
+					log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
+					continue Watching
+				}
 				mobj, err = types.MarshalAny(obj)
 				if err != nil {
 					log.Errorf("Error  marshalling any object. Err: %v", err)
@@ -1053,17 +916,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 
 			case "Interface":
 				obj, err := InterfaceFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Namespace":
-				obj, err := NamespaceFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}
@@ -1095,30 +947,8 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 					return err
 				}
 
-			case "SecurityGroup":
-				obj, err := SecurityGroupFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
 			case "SecurityProfile":
 				obj, err := SecurityProfileFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Tenant":
-				obj, err := TenantFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

@@ -25,7 +25,7 @@
             "addresses": [
               "192.168.100.103"
             ],
-            "app-configs": [
+            "proto-ports": [
               {
                 "protocol": "tcp",
                 "port": "20001-21000"
@@ -49,7 +49,7 @@
             "addresses": [
               "192.168.100.103"
             ],
-            "app-configs": [
+            "proto-ports": [
               {
                 "protocol": "tcp",
                 "port": "21001-22000"
@@ -73,7 +73,7 @@
             "addresses": [
               "192.168.100.103"
             ],
-            "app-configs": [
+            "proto-ports": [
               {
                 "protocol": "tcp",
                 "port": "22001-23000"
@@ -97,7 +97,7 @@
             "addresses": [
               "192.168.100.103"
             ],
-            "app-configs": [
+            "proto-ports": [
               {
                 "protocol": "tcp",
                 "port": "23001-24000"

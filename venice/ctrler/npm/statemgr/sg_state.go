@@ -4,15 +4,11 @@ package statemgr
 
 import (
 	"fmt"
-	"time"
-
-	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -76,7 +72,7 @@ func (sg *SecurityGroupState) AddEndpoint(ep *EndpointState) error {
 	sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads, ep.Endpoint.Name)
 	sg.SecurityGroup.Write()
 	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
-		convertSecurityGroup(sg), references(sg.SecurityGroup))
+		sg.SecurityGroup, references(sg.SecurityGroup))
 }
 
 // DelEndpoint removes an endpoint from sg
@@ -92,7 +88,7 @@ func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 	}
 	sg.SecurityGroup.Write()
 	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
-		convertSecurityGroup(sg), references(sg.SecurityGroup))
+		sg.SecurityGroup, references(sg.SecurityGroup))
 }
 
 // AddPolicy adds a policcy to sg
@@ -110,7 +106,7 @@ func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 	// trigger an update
 	sg.SecurityGroup.Write()
 	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
-		convertSecurityGroup(sg), references(sg.SecurityGroup))
+		sg.SecurityGroup, references(sg.SecurityGroup))
 }
 
 // DeletePolicy deletes a policcy from sg
@@ -125,7 +121,7 @@ func (sg *SecurityGroupState) DeletePolicy(sgp *SgpolicyState) error {
 	// trigger an update
 	sg.SecurityGroup.Write()
 	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
-		convertSecurityGroup(sg), references(sg.SecurityGroup))
+		sg.SecurityGroup, references(sg.SecurityGroup))
 }
 
 // SecurityGroupStateFromObj conerts from memdb object to network state
@@ -159,20 +155,6 @@ func NewSecurityGroupState(sg *ctkit.SecurityGroup, stateMgr *Statemgr) (*Securi
 	sg.HandlerCtx = &sgs
 
 	return &sgs, nil
-}
-
-func convertSecurityGroup(sgs *SecurityGroupState) *netproto.SecurityGroup {
-	creationTime, _ := types.TimestampProto(time.Now())
-	sg := netproto.SecurityGroup{
-		TypeMeta:   sgs.SecurityGroup.TypeMeta,
-		ObjectMeta: agentObjectMeta(sgs.SecurityGroup.ObjectMeta),
-		Spec: netproto.SecurityGroupSpec{
-			SecurityProfile: "", // FIXME: fill in security profile
-		},
-	}
-	sg.CreationTime = api.Timestamp{Timestamp: *creationTime}
-
-	return &sg
 }
 
 // FindSecurityGroup finds security group by name
@@ -228,7 +210,7 @@ func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 	log.Infof("Created Security Group state {%+v}", sgs)
 
 	// store it in local DB
-	return sm.mbus.AddObjectWithReferences(sg.MakeKey("security"), convertSecurityGroup(sgs), references(sg))
+	return sm.mbus.AddObjectWithReferences(sg.MakeKey("security"), sgs.SecurityGroup, references(sg))
 }
 
 // OnSecurityGroupUpdate handles sg updates
@@ -253,7 +235,8 @@ func (sm *Statemgr) OnSecurityGroupDelete(sgo *ctkit.SecurityGroup) error {
 		return fmt.Errorf("SecurityGroup not found")
 	}
 
-	// convert it to security group state
+	// convert it to security group statevenice/ctrler/npm/statemgr/network_state.go:80
+
 	sg, err := SecurityGroupStateFromObj(obj)
 	if err != nil {
 		return err
@@ -275,5 +258,5 @@ func (sm *Statemgr) OnSecurityGroupDelete(sgo *ctkit.SecurityGroup) error {
 	}
 	// delete it from the DB
 	return sm.mbus.DeleteObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
-		convertSecurityGroup(sg), references(sg.SecurityGroup))
+		sg.SecurityGroup, references(sg.SecurityGroup))
 }

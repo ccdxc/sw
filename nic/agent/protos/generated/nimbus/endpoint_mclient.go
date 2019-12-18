@@ -32,7 +32,7 @@ type EndpointReactor interface {
 }
 type EndpointOStream struct {
 	sync.Mutex
-	stream netproto.EndpointApi_EndpointOperUpdateClient
+	stream netproto.EndpointApiV1_EndpointOperUpdateClient
 }
 
 // WatchEndpoints runs Endpoint watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "Endpoint")
-	endpointRPCClient := netproto.NewEndpointApiClient(client.rpcClient.ClientConn)
+	endpointRPCClient := netproto.NewEndpointApiV1Client(client.rpcClient.ClientConn)
 	stream, err := endpointRPCClient.WatchEndpoints(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching Endpoint. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 }
 
 // watchEndpointRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchEndpointRecvLoop(stream netproto.EndpointApi_WatchEndpointsClient, recvch chan<- *netproto.EndpointEvent) {
+func (client *NimbusClient) watchEndpointRecvLoop(stream netproto.EndpointApiV1_WatchEndpointsClient, recvch chan<- *netproto.EndpointEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

@@ -146,8 +146,8 @@ def update_sgpolicy(src, dst, proto, dport, action="DENY"):
 
     for object in store_policy_objects:
         for rule in object.spec.policy_rules:
-            if (rule.action == action and rule.destination.app_configs != None):
-                for app_config in rule.destination.app_configs:
+            if (rule.action == action and rule.destination.proto_ports != None):
+                for app_config in rule.destination.proto_ports:
                     if app_config.protocol == proto:
                        app_config.port = str(dport)
 

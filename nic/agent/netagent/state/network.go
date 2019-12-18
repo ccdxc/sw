@@ -49,14 +49,8 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	// reject config that specifies both vlan and vxlan configs.
-	if nt.Spec.VlanID != 0 && nt.Spec.VxlanVNI != 0 {
-		log.Errorf("Should specify either vlan-id or vxlan-vni, but not both")
-		return fmt.Errorf("must specify either vlan-id or vxlan-id, but not both. vlan-id: %v, vxlan-vni: %v", nt.Spec.VlanID, nt.Spec.VxlanVNI)
-	}
-
 	// reject duplicate network prefixes
-	if err = na.validateDuplicateNetworks(nt.Spec.VrfName, nt.Spec.IPv4Subnet, nt.Spec.VlanID); err != nil {
+	if err = na.validateDuplicateNetworks(nt.Spec.VrfName, nt.Spec.VlanID); err != nil {
 		log.Errorf("Invalid network parameters for network %v. Err: %v", nt.Name, err)
 		return err
 	}
@@ -256,7 +250,7 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	return err
 }
 
-func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint32) (err error) {
+func (na *Nagent) validateDuplicateNetworks(vrfName string, vlanID uint32) (err error) {
 	for _, net := range na.ListNetwork() {
 		if vrfName == net.Spec.VrfName && vlanID == net.Spec.VlanID {
 			err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)

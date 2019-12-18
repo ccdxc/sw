@@ -22,7 +22,7 @@
                "addresses": [
                   "192.168.0.1 - 192.168.1.0"
                ],
-               "app-configs": [
+               "proto-ports": [
                   {
                      "protocol": "tcp",
                      "port": "80"

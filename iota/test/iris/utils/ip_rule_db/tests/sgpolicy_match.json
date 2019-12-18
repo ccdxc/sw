@@ -22,7 +22,7 @@
                     "addresses": [
                         "192.168.0.1 - 192.168.1.0"
                     ],
-                    "app-configs": [
+                    "proto-ports": [
                         {
                             "protocol": "tcp",
                             "port": "80"
@@ -42,7 +42,7 @@
                     "addresses": [
                         "192.168.0.1 - 192.168.1.0"
                     ],
-                    "app-configs": [
+                    "proto-ports": [
                         {
                             "protocol": "tcp",
                             "port": "443"
@@ -62,7 +62,7 @@
                     "addresses": [
                         "192.168.0.1 - 192.168.1.0"
                     ],
-                    "app-configs": [
+                    "proto-ports": [
                         {
                             "protocol": "udp",
                             "port": "53"
@@ -82,7 +82,7 @@
                     "addresses": [
                         "192.168.0.1 - 192.168.1.0"
                     ],
-                    "app-configs": [
+                    "proto-ports": [
                         {
                             "protocol": "tcp",
                             "port": "0-40"
@@ -102,7 +102,7 @@
                     "addresses": [
                         "192.168.0.1 - 192.168.1.0"
                     ],
-                    "app-configs": [
+                    "proto-ports": [
                         {
                             "protocol": "tcp",
                             "port": "60000-65535"

@@ -33,7 +33,7 @@ func TestNetworkSecurityPolicyCreateDelete(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -118,7 +118,7 @@ func TestNetworkSecurityPolicyCreatePortas0(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "0",
 								Protocol: "tcp",
@@ -152,12 +152,15 @@ func TestNetworkSecurityPolicyUpdate(t *testing.T) {
 			Name:      "dns",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts: []string{"udp/53"},
+			ProtoPorts: []*netproto.ProtoPort{
+				{
+					Protocol: "tcp",
+					Port:     "21",
+				},
+			},
 			ALG: &netproto.ALG{
-				DNS: &netproto.DNS{
-					DropLargeDomainPackets: true,
-					DropMultiZonePackets:   true,
-					QueryResponseTimeout:   "30s",
+				FTP: &netproto.FTP{
+					AllowMismatchIPAddresses: true,
 				},
 			},
 		},
@@ -254,8 +257,10 @@ func TestNetworkSecurityPolicyALGMatchMSRPC(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.AppSpec{
-			ProtoPorts:     []string{"tcp/111"},
-			ALGType:        "sunrpc",
+			ProtoPorts: []*netproto.ProtoPort{
+				{Protocol: "tcp",
+					Port: "111"},
+			},
 			AppIdleTimeout: "100s",
 			ALG: &netproto.ALG{
 				SUNRPC: []*netproto.RPC{
@@ -326,7 +331,6 @@ func TestNetworkSecurityPolicyALGMatchICMP(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.AppSpec{
-			ALGType: "ICMP",
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{
 					Type: 8,
@@ -392,7 +396,7 @@ func TestNetworkSecurityPolicyMatchAllSrc(t *testing.T) {
 					Action: "PERMIT",
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -434,7 +438,7 @@ func TestNetworkSecurityPolicyMatchAllDst(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -505,7 +509,7 @@ func TestNetworkSecurityPolicyICMPProtoMatch(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Protocol: "icmp",
 							},
@@ -552,7 +556,7 @@ func TestNetworkSecurityPolicyCreateIANA6_TCP(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "6",
@@ -599,7 +603,7 @@ func TestNetworkSecurityPolicyCreateIANA17_UDP(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "53",
 								Protocol: "17",
@@ -646,7 +650,7 @@ func TestNetworkSecurityPolicyCreateIANA1_ICMP(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Protocol: "1",
 							},
@@ -692,7 +696,7 @@ func TestNetworkSecurityPolicyCreatePort0(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Protocol: "tcp",
 								Port:     "0",
@@ -738,7 +742,7 @@ func TestInvalidNetworkSecurityPolicyICMPPortMatch(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "42",
 								Protocol: "icmp",
@@ -811,7 +815,7 @@ func TestNetworkSecurityPolicyOnMatchAllDst(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -871,22 +875,6 @@ func TestNetworkSecurityPolicyUpdateOnNonExistentNetworkSecurityPolicy(t *testin
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// create the backing nat pool
-	np := netproto.NatPool{
-		TypeMeta: api.TypeMeta{Kind: "NatPool"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testNatPool",
-		},
-		Spec: netproto.NatPoolSpec{
-			IPRange: "10.1.2.1-10.1.2.200",
-		},
-	}
-
-	// create nat pool
-	err := ag.CreateNatPool(&np)
-	AssertOk(t, err, "Error creating nat pool")
 	// sg policy
 	sgPolicy := netproto.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
@@ -903,7 +891,7 @@ func TestNetworkSecurityPolicyUpdateOnNonExistentNetworkSecurityPolicy(t *testin
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -919,47 +907,8 @@ func TestNetworkSecurityPolicyUpdateOnNonExistentNetworkSecurityPolicy(t *testin
 	}
 
 	// create sg policy
-	err = ag.UpdateNetworkSecurityPolicy(&sgPolicy)
+	err := ag.UpdateNetworkSecurityPolicy(&sgPolicy)
 	Assert(t, err != nil, "Nat policy updates on non existing nat policies fail")
-}
-
-func TestNetworkSecurityPolicyOnNonExistentSG(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// sg policy
-	sgPolicy := netproto.NetworkSecurityPolicy{
-		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testNetworkSecurityPolicy",
-		},
-		Spec: netproto.NetworkSecurityPolicySpec{
-			AttachGroup:  []string{"nonExistentSG"},
-			AttachTenant: false,
-			Rules: []netproto.PolicyRule{
-				{
-					Action: "PERMIT",
-					Src: &netproto.MatchSelector{
-						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
-							{
-								Port:     "80",
-								Protocol: "tcp",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	// create sg policy
-	err := ag.CreateNetworkSecurityPolicy(&sgPolicy)
-	Assert(t, err != nil, "SG Policy creation with non existent security group attachment point should fail.")
 }
 
 func TestNetworkSecurityPolicyOnNonAttachmentPoints(t *testing.T) {
@@ -982,7 +931,7 @@ func TestNetworkSecurityPolicyOnNonAttachmentPoints(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -1052,7 +1001,7 @@ func TestNetworkSecurityPolicyBadPortRange(t *testing.T) {
 					Action: "PERMIT",
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "foo",
 								Protocol: "tcp",
@@ -1090,7 +1039,7 @@ func TestNetworkSecurityPolicyOutsidePortRange(t *testing.T) {
 					Action: "PERMIT",
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "123456 - 123456",
 								Protocol: "tcp",
@@ -1121,7 +1070,6 @@ func TestInvalidNetworkSecurityPolicyWithAppAndProtoPort(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.AppSpec{
-			ALGType: "ICMP",
 			ALG: &netproto.ALG{
 				ICMP: &netproto.ICMP{
 					Type: 8,
@@ -1148,7 +1096,7 @@ func TestInvalidNetworkSecurityPolicyWithAppAndProtoPort(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"any"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Protocol: "icmp",
 							},
@@ -1190,7 +1138,7 @@ func TestConsistentRuleHashes(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",
@@ -1237,7 +1185,7 @@ func TestConsistentRuleHashes(t *testing.T) {
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
-						AppConfigs: []*netproto.AppConfig{
+						ProtoPorts: []*netproto.ProtoPort{
 							{
 								Port:     "80",
 								Protocol: "tcp",

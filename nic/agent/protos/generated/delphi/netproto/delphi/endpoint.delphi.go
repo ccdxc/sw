@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto1 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto2 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Endpoint struct {
 	Meta     *delphi.ObjectMeta  `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key      string              `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Endpoint *netproto1.Endpoint `protobuf:"bytes,3,opt,name=Endpoint" json:"Endpoint,omitempty"`
+	Endpoint *netproto2.Endpoint `protobuf:"bytes,3,opt,name=Endpoint" json:"Endpoint,omitempty"`
 }
 
 func (m *Endpoint) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *Endpoint) GetKey() string {
 	return ""
 }
 
-func (m *Endpoint) GetEndpoint() *netproto1.Endpoint {
+func (m *Endpoint) GetEndpoint() *netproto2.Endpoint {
 	if m != nil {
 		return m.Endpoint
 	}

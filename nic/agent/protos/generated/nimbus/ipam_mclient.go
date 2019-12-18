@@ -32,7 +32,7 @@ type IPAMPolicyReactor interface {
 }
 type IPAMPolicyOStream struct {
 	sync.Mutex
-	stream netproto.IPAMPolicyApi_IPAMPolicyOperUpdateClient
+	stream netproto.IPAMPolicyApiV1_IPAMPolicyOperUpdateClient
 }
 
 // WatchIPAMPolicys runs IPAMPolicy watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchIPAMPolicys(ctx context.Context, reactor IPAMPo
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "IPAMPolicy")
-	ipampolicyRPCClient := netproto.NewIPAMPolicyApiClient(client.rpcClient.ClientConn)
+	ipampolicyRPCClient := netproto.NewIPAMPolicyApiV1Client(client.rpcClient.ClientConn)
 	stream, err := ipampolicyRPCClient.WatchIPAMPolicys(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching IPAMPolicy. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchIPAMPolicys(ctx context.Context, reactor IPAMPo
 }
 
 // watchIPAMPolicyRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchIPAMPolicyRecvLoop(stream netproto.IPAMPolicyApi_WatchIPAMPolicysClient, recvch chan<- *netproto.IPAMPolicyEvent) {
+func (client *NimbusClient) watchIPAMPolicyRecvLoop(stream netproto.IPAMPolicyApiV1_WatchIPAMPolicysClient, recvch chan<- *netproto.IPAMPolicyEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

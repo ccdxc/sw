@@ -55,17 +55,12 @@ func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 		TypeMeta:   eps.TypeMeta,
 		ObjectMeta: agentObjectMeta(eps.ObjectMeta),
 		Spec: netproto.EndpointSpec{
-			WorkloadName:       eps.Status.WorkloadName,
-			WorkloadAttributes: eps.Status.WorkloadAttributes,
-			NetworkName:        eps.Status.Network,
-			SecurityGroups:     eps.Status.SecurityGroups,
-			IPv4Addresses:      []string{eps.Status.IPv4Address},
-			IPv4Gateway:        eps.Status.IPv4Gateway,
-			IPv6Addresses:      []string{eps.Status.IPv6Address},
-			IPv6Gateway:        eps.Status.IPv6Gateway,
-			MacAddress:         eps.Status.MacAddress,
-			UsegVlan:           eps.Status.MicroSegmentVlan,
-			NodeUUID:           eps.Status.NodeUUID,
+			NetworkName:   eps.Status.Network,
+			IPv4Addresses: []string{eps.Status.IPv4Address},
+			IPv6Addresses: []string{eps.Status.IPv6Address},
+			MacAddress:    eps.Status.MacAddress,
+			UsegVlan:      eps.Status.MicroSegmentVlan,
+			NodeUUID:      eps.Status.NodeUUID,
 		},
 	}
 	nep.CreationTime = api.Timestamp{Timestamp: *creationTime}

@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -193,20 +192,6 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	_, err = it.restClient.SecurityV1().SecurityGroup().Create(ctx, &sg)
 	AssertOk(c, err, "Error creating security group")
 
-	// verify policy gets created in agent
-	AssertEventually(c, func() (bool, interface{}) {
-		notFound := false
-		var cerr error
-		var rsg *netproto.SecurityGroup
-		for _, sn := range it.snics {
-			rsg, cerr = sn.agent.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
-			if (cerr != nil) || (rsg.Name != sg.Name) {
-				notFound = true
-			}
-		}
-		return (notFound == false), []interface{}{rsg, cerr}
-	}, "security group not found in agent", "100ms", it.pollTimeout())
-
 	// create a workload on each NIC/host
 	for i := range it.snics {
 		// workload params
@@ -261,10 +246,6 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
 					foundLocal = true
 				}
-				// verify endpoint is part of the security group
-				if (len(sep.Spec.SecurityGroups) != 1) || (sep.Spec.SecurityGroups[0] != sg.Name) {
-					waitCh <- fmt.Errorf("Endpoint has invalid security group. {%+v}", sep)
-				}
 			}
 			if !foundLocal {
 				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.NetworkAgent.NodeUUID)
@@ -284,18 +265,6 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	_, err = it.restClient.SecurityV1().SecurityGroup().Delete(ctx, &sg.ObjectMeta)
 	AssertOk(c, err, "Error creating workload")
 
-	// verify policy gets removed from agent
-	AssertEventually(c, func() (bool, interface{}) {
-		found := false
-		for _, sn := range it.snics {
-			_, cerr := sn.agent.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
-			if cerr == nil {
-				found = true
-			}
-		}
-		return (found == false), nil
-	}, "security group still found in agent", "100ms", it.pollTimeout())
-
 	// verify SG to endpoint association is removed
 	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
@@ -307,12 +276,9 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 						Namespace: "default",
 						Name:      epname,
 					}
-					sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+					_, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 					if perr != nil {
 						return false, perr
-					}
-					if len(sep.Spec.SecurityGroups) != 0 {
-						return false, sep
 					}
 				}
 				return true, nil
@@ -328,15 +294,10 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 					Namespace: "default",
 					Name:      epname,
 				}
-				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+				_, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, epname, perr, ag.NetworkAgent.EndpointDB)
 					return
-				}
-
-				// verify endpoint is part of the security group
-				if len(sep.Spec.SecurityGroups) != 0 {
-					waitCh <- fmt.Errorf("Endpoint has invalid security group. {%+v}", sep)
 				}
 			}
 

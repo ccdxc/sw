@@ -65,7 +65,10 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				log.Errorf("failed to cast App object. %v", obj)
 				return nil, fmt.Errorf("failed to cast App object. %v", obj)
 			}
-			appProtoPorts = app.Spec.ProtoPorts
+			for _, a := range app.Spec.ProtoPorts {
+				protoPort := fmt.Sprintf("%s/%s", a.Protocol, a.Port)
+				appProtoPorts = append(appProtoPorts, protoPort)
+			}
 		}
 	}
 
@@ -77,7 +80,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		}
 
 		// Build proto/port from src app configs.
-		for _, s := range src.AppConfigs {
+		for _, s := range src.ProtoPorts {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
 			protoPort := fmt.Sprintf("%s/%s", s.Protocol, s.Port)
 			srcProtoPorts = append(srcProtoPorts, protoPort)
@@ -91,7 +94,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			return nil, err
 		}
 
-		for _, d := range dst.AppConfigs {
+		for _, d := range dst.ProtoPorts {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
 			protoPort := fmt.Sprintf("%s/%s", d.Protocol, d.Port)
 			dstProtoPorts = append(dstProtoPorts, protoPort)

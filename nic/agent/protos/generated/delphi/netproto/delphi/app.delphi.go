@@ -7,26 +7,20 @@ Package dnetproto is a generated protocol buffer package.
 It is generated from these files:
 	delphi/app.proto
 	delphi/endpoint.proto
-	delphi/interface.proto
 	delphi/ipam.proto
-	delphi/namespace.proto
 	delphi/network.proto
-	delphi/security.proto
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
-	delphi/tenant.proto
+	delphi/interface.proto
 
 It has these top-level messages:
 	App
 	Endpoint
-	Interface
 	IPAMPolicy
-	Namespace
 	Network
-	SecurityGroup
 	NetworkSecurityPolicy
 	SecurityProfile
-	Tenant
+	Interface
 */
 package dnetproto
 
@@ -34,7 +28,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto1 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -52,7 +46,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 type App struct {
 	Meta *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key  string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	App  *netproto.App      `protobuf:"bytes,3,opt,name=App" json:"App,omitempty"`
+	App  *netproto1.App     `protobuf:"bytes,3,opt,name=App" json:"App,omitempty"`
 }
 
 func (m *App) GetDelphiMessage() proto.Message {
@@ -175,7 +169,7 @@ func (m *App) GetKey() string {
 	return ""
 }
 
-func (m *App) GetApp() *netproto.App {
+func (m *App) GetApp() *netproto1.App {
 	if m != nil {
 		return m.App
 	}

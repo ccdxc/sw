@@ -17,7 +17,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- Port API ----------------------------
 // Port controller api
-service PortApi {
+service PortApiV1 {
     // options for auto generating rest endpoints
     // Allow only list and update methods
     option(venice.naplesRestService) = {
@@ -27,9 +27,9 @@ service PortApi {
         Prefix: "api/ports"
     };
 
-    rpc GetPort (api.ObjectMeta) returns (Port) {};
-    rpc ListPorts (api.ObjectMeta) returns (PortList) {};
-    rpc WatchPorts (api.ObjectMeta) returns (stream PortEvent) {};
+//    rpc GetPort (api.ObjectMeta) returns (Port) {};
+//    rpc ListPorts (api.ObjectMeta) returns (PortList) {};
+//    rpc WatchPorts (api.ObjectMeta) returns (stream PortEvent) {};
 }
 
 // Port object
@@ -111,5 +111,5 @@ message PortList {
 // port watch event
 message PortEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    Port            Port        = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "port,omitempty"];
+    Port            Port        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "port,omitempty"];
 }

@@ -441,19 +441,6 @@
         }
       }
     },
-    "netprotoAppConfig": {
-      "type": "object",
-      "properties": {
-        "protocol": {
-          "type": "string",
-          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nIf the app name is specified all the protocol port information will be fetched from the corresponding app object"
-        },
-        "port": {
-          "type": "string",
-          "title": "Port for the app"
-        }
-      }
-    },
     "netprotoMatchSelector": {
       "type": "object",
       "properties": {
@@ -464,22 +451,15 @@
           },
           "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
         },
-        "security-groups": {
+        "proto-ports": {
           "type": "array",
           "items": {
-            "type": "string"
-          },
-          "title": "Match on the security group"
-        },
-        "app-configs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoAppConfig"
+            "$ref": "#/definitions/netprotoProtoPort"
           },
           "title": "Match on the App info"
         }
       },
-      "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
+      "description": "Common MatchSelector."
     },
     "netprotoNetworkSecurityPolicy": {
       "type": "object",
@@ -611,6 +591,20 @@
           "title": "Optional AppName to fetch additional ALG configurations. ICMP Code is inferred from its corresponding App definition.\nA single rule can have the match parameters through the selectors or its corresponding App object"
         }
       }
+    },
+    "netprotoProtoPort": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "description": "Protocol for the app."
+        },
+        "port": {
+          "type": "string",
+          "title": "Port for the app"
+        }
+      },
+      "title": "ProtoPort captures protocol and port"
     }
   }
 }

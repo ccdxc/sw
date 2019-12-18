@@ -23,7 +23,7 @@
                   "addresses": [
                      "192.168.100.102"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "59379"
@@ -42,7 +42,7 @@
                   "addresses": [
                      "192.168.100.101"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "59739"
@@ -61,7 +61,7 @@
                   "addresses": [
                      "192.168.100.102"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "69"
@@ -80,7 +80,7 @@
                   "addresses": [
                      "192.168.100.101"
                   ],
-                  "app-configs": [
+                  "proto-ports": [
                      {
                         "protocol": "udp",
                         "port": "69"

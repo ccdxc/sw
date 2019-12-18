@@ -16,7 +16,7 @@ import "github.com/pensando/sw/api/meta.proto";
 // ---------------------------- Vrf API ----------------------------
 
 // Vrf controller api
-service VrfApi {
+service VrfApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Vrf",
@@ -25,10 +25,10 @@ service VrfApi {
         Prefix: "api/vrfs"
     };
 
-    rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
-    rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
-    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEventList) {};
-    rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
+//    rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
+//    rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
+//    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEventList) {};
+//    rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
 
 }
 
@@ -59,7 +59,7 @@ message VrfSpec {
 // Vrf Status
 message VrfStatus {
     // VRF ID in the datapath
-    uint64 VrfID  = 1 [(gogoproto.jsontag) = "vrf-id,omitempty"];     // Vrf identifier
+    uint64 VrfID  = 1 [(gogoproto.jsontag) = "vrf-id,omitempty"]; // Vrf identifier
 }
 
 
@@ -70,7 +70,7 @@ message VrfList {
 // vrf watch event
 message VrfEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    Vrf       Vrf   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "vrf,omitempty"];
+    Vrf             Vrf         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "vrf,omitempty"];
 }
 
 

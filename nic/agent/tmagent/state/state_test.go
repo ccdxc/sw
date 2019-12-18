@@ -174,8 +174,7 @@ func startNetagent() (*state.Nagent, *restapi.RestServer, error) {
 			Name:      "preCreatedNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.2.0/24",
-			IPv4Gateway: "10.1.1.254",
+			VlanID: 42,
 		},
 	}
 	err = nagent.CreateNetwork(&nt)

@@ -91,7 +91,7 @@ func (ms *MbusServer) FindObject(obj memdb.Object) (memdb.Object, error) {
 func (ms *MbusServer) DeleteObject(obj memdb.Object) error {
 	ms.Stats(obj.GetObjectKind(), "DeleteEvent").Inc()
 	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
-	
+
 	return ms.memDB.DeleteObject(obj)
 }
 
@@ -189,7 +189,7 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterAggWatchApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterAggWatchApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -212,20 +212,43 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 
 		switch kind {
 		{{range $key, $value := $manifest}}
-		case "{{$value.Object}}":
-			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return nil, err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
+			{{ if strEq $value.Object "Endpoint"}}
+			case "{{$value.Object}}":
+				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
 				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
+					log.Errorf("Error getting a list of objects. Err: %v", err)
 					return nil, err
 				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
+				for _, obj := range objlist {
+					if obj.Spec.NodeUUID != nodeID {
+						log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+						continue
+					}
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return nil, err
+					}
+					addAggObjectEvent(mobj, obj.GetObjectMeta())
+				}
+			{{else}}
+			case "{{$value.Object}}":
+				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
+				if err != nil {
+					log.Errorf("Error getting a list of objects. Err: %v", err)
+					return nil, err
+				}
+				for _, obj := range objlist {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return nil, err
+					}
+					addAggObjectEvent(mobj, obj.GetObjectMeta())
+				}
+
+			{{end}}
+
 		{{end}}
 		}
 	}
@@ -233,7 +256,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 	return objList, nil
 }
 
-func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApi_ObjectOperUpdateServer) error {
+func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -378,7 +401,7 @@ func (eh *AggregateTopic) updateAckedObjStatus(nodeID, kind string, event api.Ev
 			//Watcher already unregistered.
 			continue
 		}
-	
+
 		kindStatus, ok := nodeStatus.kindStatus[kind]
 		if !ok {
 			//This watch not interested in this kind
@@ -467,7 +490,7 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 
 
 // WatchObjects watches aggregate  and sends streaming resp
-func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApi_WatchObjectsServer) error {
+func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
@@ -497,6 +520,26 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 		}
 		switch kind {
 		{{range $key, $value := $manifest}}
+		{{ if strEq $value.Object "Endpoint"}}
+		case "{{$value.Object}}":
+			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				if obj.Spec.NodeUUID != nodeID {
+					log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+					continue
+				}
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+		{{else}}
 		case "{{$value.Object}}":
 			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
 			if err != nil {
@@ -512,6 +555,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 				addAggObjectEvent(mobj,obj.GetObjectMeta())
 			}
 		{{end}}
+	{{end}}
 		}
 
 		// walk all objects and send it out
@@ -543,6 +587,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 	}
 
 	// loop forever on watch channel
+	Watching:
 	for {
 		select {
 		// read from channel
@@ -572,6 +617,23 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 			var mobj *types.Any
 			switch kind {
 			{{range $key, $value := $manifest}}
+			{{ if strEq $value.Object "Endpoint"}}
+			case "{{$value.Object}}":
+				obj, err := {{$value.Object}}FromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				if obj.Spec.NodeUUID != nodeID {
+					log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
+					continue Watching
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+			{{else}}
+
 			case "{{$value.Object}}":
 				obj, err := {{$value.Object}}FromObj(evt.Obj)
 				if err != nil {
@@ -583,6 +645,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 					return err
 				}
 			{{end}}
+		{{end}}
 			}
 			watchEvt.AggObj.Object.Any = *mobj
 			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)

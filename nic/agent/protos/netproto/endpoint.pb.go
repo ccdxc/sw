@@ -23,33 +23,6 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-type EndpointSpec_Type int32
-
-const (
-	EndpointSpec_NONE   EndpointSpec_Type = 0
-	EndpointSpec_LIF    EndpointSpec_Type = 1
-	EndpointSpec_UPLINK EndpointSpec_Type = 2
-	EndpointSpec_TUNNEL EndpointSpec_Type = 3
-)
-
-var EndpointSpec_Type_name = map[int32]string{
-	0: "NONE",
-	1: "LIF",
-	2: "UPLINK",
-	3: "TUNNEL",
-}
-var EndpointSpec_Type_value = map[string]int32{
-	"NONE":   0,
-	"LIF":    1,
-	"UPLINK": 2,
-	"TUNNEL": 3,
-}
-
-func (x EndpointSpec_Type) String() string {
-	return proto.EnumName(EndpointSpec_Type_name, int32(x))
-}
-func (EndpointSpec_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{1, 0} }
-
 // State
 type EndpointMigrationStatus_MigrationState int32
 
@@ -109,35 +82,22 @@ func (m *Endpoint) GetStatus() EndpointStatus {
 
 type EndpointSpec struct {
 	// VrfName specifies the name of the VRF that the current EP belongs to
-	VrfName      string `protobuf:"bytes,1,opt,name=VrfName,proto3" json:"vrf-name,omitempty"`
-	EndpointUUID string `protobuf:"bytes,2,opt,name=EndpointUUID,proto3" json:"endpoint-uuid,omitempty"`
-	WorkloadUUID string `protobuf:"bytes,3,opt,name=WorkloadUUID,proto3" json:"workload-uuid,omitempty"`
-	WorkloadName string `protobuf:"bytes,4,opt,name=WorkloadName,proto3" json:"workload-name,omitempty"`
+	VrfName string `protobuf:"bytes,1,opt,name=VrfName,proto3" json:"vrf-name,omitempty"`
 	// Name of the network to which the current endpoint belongs to. Required
-	NetworkName        string            `protobuf:"bytes,5,opt,name=NetworkName,proto3" json:"network-name,omitempty"`
-	WorkloadAttributes map[string]string `protobuf:"bytes,6,rep,name=WorkloadAttributes" json:"workload-attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	SecurityGroups     []string          `protobuf:"bytes,7,rep,name=SecurityGroups" json:"security-groups,omitempty"`
-	// Interface type of the endpoint. For LocalEPs this should be LIF.
-	// For Remote EPs this should either be of type UPLINK or TUNNEL. Required
-	InterfaceType string `protobuf:"bytes,8,opt,name=InterfaceType,proto3" json:"interface-type,omitempty"`
-	// Interface name of the endpoint. Required
-	Interface string `protobuf:"bytes,9,opt,name=Interface,proto3" json:"interface,omitempty"`
+	NetworkName string `protobuf:"bytes,2,opt,name=NetworkName,proto3" json:"network-name,omitempty"`
 	// IP Address of the endpoint in CIDR IP/Prefix format. Required
-	IPv4Addresses []string `protobuf:"bytes,10,rep,name=IPv4Addresses" json:"ipv4-addresses,omitempty"`
-	// IP Gateway of the endpoint. Optional
-	IPv4Gateway string `protobuf:"bytes,11,opt,name=IPv4Gateway,proto3" json:"ipv4-gateway,omitempty"`
+	IPv4Addresses []string `protobuf:"bytes,3,rep,name=IPv4Addresses" json:"ipv4-addresses,omitempty"`
 	// IPv6 Address of the endpoint. Optional
-	IPv6Addresses []string `protobuf:"bytes,12,rep,name=IPv6Addresses" json:"ipv6-address,omitempty"`
-	// IPv6 Gateway of the endpoint. Optional
-	IPv6Gateway string `protobuf:"bytes,13,opt,name=IPv6Gateway,proto3" json:"ipv6-gateway,omitempty"`
+	IPv6Addresses []string `protobuf:"bytes,4,rep,name=IPv6Addresses" json:"ipv6-address,omitempty"`
 	// MAC Address of the endpoint. Required
-	MacAddress     string `protobuf:"bytes,14,opt,name=MacAddress,proto3" json:"mac-address,omitempty"`
-	HomingHostAddr string `protobuf:"bytes,15,opt,name=HomingHostAddr,proto3" json:"homing-host-address,omitempty"`
-	HomingHostName string `protobuf:"bytes,16,opt,name=HomingHostName,proto3" json:"homing-host-name,omitempty"`
+	MacAddress string `protobuf:"bytes,5,opt,name=MacAddress,proto3" json:"mac-address,omitempty"`
 	// Specifies the name of the node where the endpoint lives.
-	NodeUUID string `protobuf:"bytes,17,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
+	// Optional for LocalEPs and mandatory for RemoteEPs.
+	NodeUUID string `protobuf:"bytes,6,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
+	// IP Address of the node where EP is local
+	HomingHostAddr string `protobuf:"bytes,7,opt,name=HomingHostAddr,proto3" json:"homing-host-address,omitempty"`
 	// Microsegment VLAN for the endpoint. Required only for Local EPs.
-	UsegVlan uint32 `protobuf:"varint,18,opt,name=UsegVlan,proto3" json:"useg-vlan,omitempty"`
+	UsegVlan uint32 `protobuf:"varint,8,opt,name=UsegVlan,proto3" json:"useg-vlan,omitempty"`
 }
 
 func (m *EndpointSpec) Reset()                    { *m = EndpointSpec{} }
@@ -152,58 +112,9 @@ func (m *EndpointSpec) GetVrfName() string {
 	return ""
 }
 
-func (m *EndpointSpec) GetEndpointUUID() string {
-	if m != nil {
-		return m.EndpointUUID
-	}
-	return ""
-}
-
-func (m *EndpointSpec) GetWorkloadUUID() string {
-	if m != nil {
-		return m.WorkloadUUID
-	}
-	return ""
-}
-
-func (m *EndpointSpec) GetWorkloadName() string {
-	if m != nil {
-		return m.WorkloadName
-	}
-	return ""
-}
-
 func (m *EndpointSpec) GetNetworkName() string {
 	if m != nil {
 		return m.NetworkName
-	}
-	return ""
-}
-
-func (m *EndpointSpec) GetWorkloadAttributes() map[string]string {
-	if m != nil {
-		return m.WorkloadAttributes
-	}
-	return nil
-}
-
-func (m *EndpointSpec) GetSecurityGroups() []string {
-	if m != nil {
-		return m.SecurityGroups
-	}
-	return nil
-}
-
-func (m *EndpointSpec) GetInterfaceType() string {
-	if m != nil {
-		return m.InterfaceType
-	}
-	return ""
-}
-
-func (m *EndpointSpec) GetInterface() string {
-	if m != nil {
-		return m.Interface
 	}
 	return ""
 }
@@ -215,25 +126,11 @@ func (m *EndpointSpec) GetIPv4Addresses() []string {
 	return nil
 }
 
-func (m *EndpointSpec) GetIPv4Gateway() string {
-	if m != nil {
-		return m.IPv4Gateway
-	}
-	return ""
-}
-
 func (m *EndpointSpec) GetIPv6Addresses() []string {
 	if m != nil {
 		return m.IPv6Addresses
 	}
 	return nil
-}
-
-func (m *EndpointSpec) GetIPv6Gateway() string {
-	if m != nil {
-		return m.IPv6Gateway
-	}
-	return ""
 }
 
 func (m *EndpointSpec) GetMacAddress() string {
@@ -243,23 +140,16 @@ func (m *EndpointSpec) GetMacAddress() string {
 	return ""
 }
 
-func (m *EndpointSpec) GetHomingHostAddr() string {
-	if m != nil {
-		return m.HomingHostAddr
-	}
-	return ""
-}
-
-func (m *EndpointSpec) GetHomingHostName() string {
-	if m != nil {
-		return m.HomingHostName
-	}
-	return ""
-}
-
 func (m *EndpointSpec) GetNodeUUID() string {
 	if m != nil {
 		return m.NodeUUID
+	}
+	return ""
+}
+
+func (m *EndpointSpec) GetHomingHostAddr() string {
+	if m != nil {
+		return m.HomingHostAddr
 	}
 	return ""
 }
@@ -274,11 +164,11 @@ func (m *EndpointSpec) GetUsegVlan() uint32 {
 // endpoint status
 type EndpointStatus struct {
 	// Endpoint ID in datapath. Valid only for Local EPs
-	EnicID uint64 `protobuf:"varint,10,opt,name=EnicID,proto3" json:"enic-id,omitempty"`
+	EnicID uint64 `protobuf:"varint,1,opt,name=EnicID,proto3" json:"enic-id,omitempty"`
 	// NodeUUID is the nodeuuid where the endpoint currntly exists.
-	NodeUUID string `protobuf:"bytes,11,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
+	NodeUUID string `protobuf:"bytes,2,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
 	// Spec of Migration of the endpoint
-	Migration *EndpointMigrationStatus `protobuf:"bytes,12,opt,name=Migration" json:"migration,omitempty"`
+	Migration *EndpointMigrationStatus `protobuf:"bytes,3,opt,name=Migration" json:"migration,omitempty"`
 }
 
 func (m *EndpointStatus) Reset()                    { *m = EndpointStatus{} }
@@ -391,7 +281,6 @@ func init() {
 	proto.RegisterType((*EndpointEvent)(nil), "netproto.EndpointEvent")
 	proto.RegisterType((*EndpointEventList)(nil), "netproto.EndpointEventList")
 	proto.RegisterType((*EndpointMigrationStatus)(nil), "netproto.EndpointMigrationStatus")
-	proto.RegisterEnum("netproto.EndpointSpec_Type", EndpointSpec_Type_name, EndpointSpec_Type_value)
 	proto.RegisterEnum("netproto.EndpointMigrationStatus_MigrationState", EndpointMigrationStatus_MigrationState_name, EndpointMigrationStatus_MigrationState_value)
 }
 
@@ -403,77 +292,37 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for EndpointApi service
+// Client API for EndpointApiV1 service
 
-type EndpointApiClient interface {
-	CreateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	UpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	GetEndpoint(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*Endpoint, error)
+type EndpointApiV1Client interface {
 	ListEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*EndpointList, error)
-	DeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	WatchEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (EndpointApi_WatchEndpointsClient, error)
-	EndpointOperUpdate(ctx context.Context, opts ...grpc.CallOption) (EndpointApi_EndpointOperUpdateClient, error)
+	WatchEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (EndpointApiV1_WatchEndpointsClient, error)
+	EndpointOperUpdate(ctx context.Context, opts ...grpc.CallOption) (EndpointApiV1_EndpointOperUpdateClient, error)
 }
 
-type endpointApiClient struct {
+type endpointApiV1Client struct {
 	cc *grpc.ClientConn
 }
 
-func NewEndpointApiClient(cc *grpc.ClientConn) EndpointApiClient {
-	return &endpointApiClient{cc}
+func NewEndpointApiV1Client(cc *grpc.ClientConn) EndpointApiV1Client {
+	return &endpointApiV1Client{cc}
 }
 
-func (c *endpointApiClient) CreateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
-	out := new(Endpoint)
-	err := grpc.Invoke(ctx, "/netproto.EndpointApi/CreateEndpoint", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *endpointApiClient) UpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
-	out := new(Endpoint)
-	err := grpc.Invoke(ctx, "/netproto.EndpointApi/UpdateEndpoint", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *endpointApiClient) GetEndpoint(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*Endpoint, error) {
-	out := new(Endpoint)
-	err := grpc.Invoke(ctx, "/netproto.EndpointApi/GetEndpoint", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *endpointApiClient) ListEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*EndpointList, error) {
+func (c *endpointApiV1Client) ListEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*EndpointList, error) {
 	out := new(EndpointList)
-	err := grpc.Invoke(ctx, "/netproto.EndpointApi/ListEndpoints", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/netproto.EndpointApiV1/ListEndpoints", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *endpointApiClient) DeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
-	out := new(Endpoint)
-	err := grpc.Invoke(ctx, "/netproto.EndpointApi/DeleteEndpoint", in, out, c.cc, opts...)
+func (c *endpointApiV1Client) WatchEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (EndpointApiV1_WatchEndpointsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_EndpointApiV1_serviceDesc.Streams[0], c.cc, "/netproto.EndpointApiV1/WatchEndpoints", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
-}
-
-func (c *endpointApiClient) WatchEndpoints(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (EndpointApi_WatchEndpointsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_EndpointApi_serviceDesc.Streams[0], c.cc, "/netproto.EndpointApi/WatchEndpoints", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &endpointApiWatchEndpointsClient{stream}
+	x := &endpointApiV1WatchEndpointsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -483,16 +332,16 @@ func (c *endpointApiClient) WatchEndpoints(ctx context.Context, in *api.ObjectMe
 	return x, nil
 }
 
-type EndpointApi_WatchEndpointsClient interface {
+type EndpointApiV1_WatchEndpointsClient interface {
 	Recv() (*EndpointEventList, error)
 	grpc.ClientStream
 }
 
-type endpointApiWatchEndpointsClient struct {
+type endpointApiV1WatchEndpointsClient struct {
 	grpc.ClientStream
 }
 
-func (x *endpointApiWatchEndpointsClient) Recv() (*EndpointEventList, error) {
+func (x *endpointApiV1WatchEndpointsClient) Recv() (*EndpointEventList, error) {
 	m := new(EndpointEventList)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -500,30 +349,30 @@ func (x *endpointApiWatchEndpointsClient) Recv() (*EndpointEventList, error) {
 	return m, nil
 }
 
-func (c *endpointApiClient) EndpointOperUpdate(ctx context.Context, opts ...grpc.CallOption) (EndpointApi_EndpointOperUpdateClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_EndpointApi_serviceDesc.Streams[1], c.cc, "/netproto.EndpointApi/EndpointOperUpdate", opts...)
+func (c *endpointApiV1Client) EndpointOperUpdate(ctx context.Context, opts ...grpc.CallOption) (EndpointApiV1_EndpointOperUpdateClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_EndpointApiV1_serviceDesc.Streams[1], c.cc, "/netproto.EndpointApiV1/EndpointOperUpdate", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &endpointApiEndpointOperUpdateClient{stream}
+	x := &endpointApiV1EndpointOperUpdateClient{stream}
 	return x, nil
 }
 
-type EndpointApi_EndpointOperUpdateClient interface {
+type EndpointApiV1_EndpointOperUpdateClient interface {
 	Send(*EndpointEvent) error
 	CloseAndRecv() (*api.TypeMeta, error)
 	grpc.ClientStream
 }
 
-type endpointApiEndpointOperUpdateClient struct {
+type endpointApiV1EndpointOperUpdateClient struct {
 	grpc.ClientStream
 }
 
-func (x *endpointApiEndpointOperUpdateClient) Send(m *EndpointEvent) error {
+func (x *endpointApiV1EndpointOperUpdateClient) Send(m *EndpointEvent) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *endpointApiEndpointOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error) {
+func (x *endpointApiV1EndpointOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -534,152 +383,76 @@ func (x *endpointApiEndpointOperUpdateClient) CloseAndRecv() (*api.TypeMeta, err
 	return m, nil
 }
 
-// Server API for EndpointApi service
+// Server API for EndpointApiV1 service
 
-type EndpointApiServer interface {
-	CreateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	UpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	GetEndpoint(context.Context, *api.ObjectMeta) (*Endpoint, error)
+type EndpointApiV1Server interface {
 	ListEndpoints(context.Context, *api.ObjectMeta) (*EndpointList, error)
-	DeleteEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	WatchEndpoints(*api.ObjectMeta, EndpointApi_WatchEndpointsServer) error
-	EndpointOperUpdate(EndpointApi_EndpointOperUpdateServer) error
+	WatchEndpoints(*api.ObjectMeta, EndpointApiV1_WatchEndpointsServer) error
+	EndpointOperUpdate(EndpointApiV1_EndpointOperUpdateServer) error
 }
 
-func RegisterEndpointApiServer(s *grpc.Server, srv EndpointApiServer) {
-	s.RegisterService(&_EndpointApi_serviceDesc, srv)
+func RegisterEndpointApiV1Server(s *grpc.Server, srv EndpointApiV1Server) {
+	s.RegisterService(&_EndpointApiV1_serviceDesc, srv)
 }
 
-func _EndpointApi_CreateEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Endpoint)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EndpointApiServer).CreateEndpoint(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.EndpointApi/CreateEndpoint",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointApiServer).CreateEndpoint(ctx, req.(*Endpoint))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EndpointApi_UpdateEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Endpoint)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EndpointApiServer).UpdateEndpoint(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.EndpointApi/UpdateEndpoint",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointApiServer).UpdateEndpoint(ctx, req.(*Endpoint))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EndpointApi_GetEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EndpointApiV1_ListEndpoints_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ObjectMeta)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EndpointApiServer).GetEndpoint(ctx, in)
+		return srv.(EndpointApiV1Server).ListEndpoints(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netproto.EndpointApi/GetEndpoint",
+		FullMethod: "/netproto.EndpointApiV1/ListEndpoints",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointApiServer).GetEndpoint(ctx, req.(*api.ObjectMeta))
+		return srv.(EndpointApiV1Server).ListEndpoints(ctx, req.(*api.ObjectMeta))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EndpointApi_ListEndpoints_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ObjectMeta)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EndpointApiServer).ListEndpoints(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.EndpointApi/ListEndpoints",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointApiServer).ListEndpoints(ctx, req.(*api.ObjectMeta))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EndpointApi_DeleteEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Endpoint)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EndpointApiServer).DeleteEndpoint(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/netproto.EndpointApi/DeleteEndpoint",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointApiServer).DeleteEndpoint(ctx, req.(*Endpoint))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EndpointApi_WatchEndpoints_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _EndpointApiV1_WatchEndpoints_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ObjectMeta)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(EndpointApiServer).WatchEndpoints(m, &endpointApiWatchEndpointsServer{stream})
+	return srv.(EndpointApiV1Server).WatchEndpoints(m, &endpointApiV1WatchEndpointsServer{stream})
 }
 
-type EndpointApi_WatchEndpointsServer interface {
+type EndpointApiV1_WatchEndpointsServer interface {
 	Send(*EndpointEventList) error
 	grpc.ServerStream
 }
 
-type endpointApiWatchEndpointsServer struct {
+type endpointApiV1WatchEndpointsServer struct {
 	grpc.ServerStream
 }
 
-func (x *endpointApiWatchEndpointsServer) Send(m *EndpointEventList) error {
+func (x *endpointApiV1WatchEndpointsServer) Send(m *EndpointEventList) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _EndpointApi_EndpointOperUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(EndpointApiServer).EndpointOperUpdate(&endpointApiEndpointOperUpdateServer{stream})
+func _EndpointApiV1_EndpointOperUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(EndpointApiV1Server).EndpointOperUpdate(&endpointApiV1EndpointOperUpdateServer{stream})
 }
 
-type EndpointApi_EndpointOperUpdateServer interface {
+type EndpointApiV1_EndpointOperUpdateServer interface {
 	SendAndClose(*api.TypeMeta) error
 	Recv() (*EndpointEvent, error)
 	grpc.ServerStream
 }
 
-type endpointApiEndpointOperUpdateServer struct {
+type endpointApiV1EndpointOperUpdateServer struct {
 	grpc.ServerStream
 }
 
-func (x *endpointApiEndpointOperUpdateServer) SendAndClose(m *api.TypeMeta) error {
+func (x *endpointApiV1EndpointOperUpdateServer) SendAndClose(m *api.TypeMeta) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *endpointApiEndpointOperUpdateServer) Recv() (*EndpointEvent, error) {
+func (x *endpointApiV1EndpointOperUpdateServer) Recv() (*EndpointEvent, error) {
 	m := new(EndpointEvent)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -687,40 +460,24 @@ func (x *endpointApiEndpointOperUpdateServer) Recv() (*EndpointEvent, error) {
 	return m, nil
 }
 
-var _EndpointApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "netproto.EndpointApi",
-	HandlerType: (*EndpointApiServer)(nil),
+var _EndpointApiV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "netproto.EndpointApiV1",
+	HandlerType: (*EndpointApiV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateEndpoint",
-			Handler:    _EndpointApi_CreateEndpoint_Handler,
-		},
-		{
-			MethodName: "UpdateEndpoint",
-			Handler:    _EndpointApi_UpdateEndpoint_Handler,
-		},
-		{
-			MethodName: "GetEndpoint",
-			Handler:    _EndpointApi_GetEndpoint_Handler,
-		},
-		{
 			MethodName: "ListEndpoints",
-			Handler:    _EndpointApi_ListEndpoints_Handler,
-		},
-		{
-			MethodName: "DeleteEndpoint",
-			Handler:    _EndpointApi_DeleteEndpoint_Handler,
+			Handler:    _EndpointApiV1_ListEndpoints_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "WatchEndpoints",
-			Handler:       _EndpointApi_WatchEndpoints_Handler,
+			Handler:       _EndpointApiV1_WatchEndpoints_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "EndpointOperUpdate",
-			Handler:       _EndpointApi_EndpointOperUpdate_Handler,
+			Handler:       _EndpointApiV1_EndpointOperUpdate_Handler,
 			ClientStreams: true,
 		},
 	},
@@ -798,77 +555,15 @@ func (m *EndpointSpec) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.VrfName)))
 		i += copy(dAtA[i:], m.VrfName)
 	}
-	if len(m.EndpointUUID) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.EndpointUUID)))
-		i += copy(dAtA[i:], m.EndpointUUID)
-	}
-	if len(m.WorkloadUUID) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.WorkloadUUID)))
-		i += copy(dAtA[i:], m.WorkloadUUID)
-	}
-	if len(m.WorkloadName) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.WorkloadName)))
-		i += copy(dAtA[i:], m.WorkloadName)
-	}
 	if len(m.NetworkName) > 0 {
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.NetworkName)))
 		i += copy(dAtA[i:], m.NetworkName)
 	}
-	if len(m.WorkloadAttributes) > 0 {
-		for k, _ := range m.WorkloadAttributes {
-			dAtA[i] = 0x32
-			i++
-			v := m.WorkloadAttributes[k]
-			mapSize := 1 + len(k) + sovEndpoint(uint64(len(k))) + 1 + len(v) + sovEndpoint(uint64(len(v)))
-			i = encodeVarintEndpoint(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintEndpoint(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintEndpoint(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.SecurityGroups) > 0 {
-		for _, s := range m.SecurityGroups {
-			dAtA[i] = 0x3a
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	if len(m.InterfaceType) > 0 {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.InterfaceType)))
-		i += copy(dAtA[i:], m.InterfaceType)
-	}
-	if len(m.Interface) > 0 {
-		dAtA[i] = 0x4a
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.Interface)))
-		i += copy(dAtA[i:], m.Interface)
-	}
 	if len(m.IPv4Addresses) > 0 {
 		for _, s := range m.IPv4Addresses {
-			dAtA[i] = 0x52
+			dAtA[i] = 0x1a
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -880,16 +575,10 @@ func (m *EndpointSpec) MarshalTo(dAtA []byte) (int, error) {
 			i++
 			i += copy(dAtA[i:], s)
 		}
-	}
-	if len(m.IPv4Gateway) > 0 {
-		dAtA[i] = 0x5a
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.IPv4Gateway)))
-		i += copy(dAtA[i:], m.IPv4Gateway)
 	}
 	if len(m.IPv6Addresses) > 0 {
 		for _, s := range m.IPv6Addresses {
-			dAtA[i] = 0x62
+			dAtA[i] = 0x22
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -902,44 +591,26 @@ func (m *EndpointSpec) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	if len(m.IPv6Gateway) > 0 {
-		dAtA[i] = 0x6a
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.IPv6Gateway)))
-		i += copy(dAtA[i:], m.IPv6Gateway)
-	}
 	if len(m.MacAddress) > 0 {
-		dAtA[i] = 0x72
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.MacAddress)))
 		i += copy(dAtA[i:], m.MacAddress)
 	}
-	if len(m.HomingHostAddr) > 0 {
-		dAtA[i] = 0x7a
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.HomingHostAddr)))
-		i += copy(dAtA[i:], m.HomingHostAddr)
-	}
-	if len(m.HomingHostName) > 0 {
-		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.HomingHostName)))
-		i += copy(dAtA[i:], m.HomingHostName)
-	}
 	if len(m.NodeUUID) > 0 {
-		dAtA[i] = 0x8a
-		i++
-		dAtA[i] = 0x1
+		dAtA[i] = 0x32
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.NodeUUID)))
 		i += copy(dAtA[i:], m.NodeUUID)
 	}
-	if m.UsegVlan != 0 {
-		dAtA[i] = 0x90
+	if len(m.HomingHostAddr) > 0 {
+		dAtA[i] = 0x3a
 		i++
-		dAtA[i] = 0x1
+		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.HomingHostAddr)))
+		i += copy(dAtA[i:], m.HomingHostAddr)
+	}
+	if m.UsegVlan != 0 {
+		dAtA[i] = 0x40
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.UsegVlan))
 	}
@@ -962,18 +633,18 @@ func (m *EndpointStatus) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.EnicID != 0 {
-		dAtA[i] = 0x50
+		dAtA[i] = 0x8
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.EnicID))
 	}
 	if len(m.NodeUUID) > 0 {
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(len(m.NodeUUID)))
 		i += copy(dAtA[i:], m.NodeUUID)
 	}
 	if m.Migration != nil {
-		dAtA[i] = 0x62
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEndpoint(dAtA, i, uint64(m.Migration.Size()))
 		n5, err := m.Migration.MarshalTo(dAtA[i:])
@@ -1130,41 +801,7 @@ func (m *EndpointSpec) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
-	l = len(m.EndpointUUID)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
-	l = len(m.WorkloadUUID)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
-	l = len(m.WorkloadName)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
 	l = len(m.NetworkName)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
-	if len(m.WorkloadAttributes) > 0 {
-		for k, v := range m.WorkloadAttributes {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovEndpoint(uint64(len(k))) + 1 + len(v) + sovEndpoint(uint64(len(v)))
-			n += mapEntrySize + 1 + sovEndpoint(uint64(mapEntrySize))
-		}
-	}
-	if len(m.SecurityGroups) > 0 {
-		for _, s := range m.SecurityGroups {
-			l = len(s)
-			n += 1 + l + sovEndpoint(uint64(l))
-		}
-	}
-	l = len(m.InterfaceType)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
-	l = len(m.Interface)
 	if l > 0 {
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
@@ -1174,21 +811,17 @@ func (m *EndpointSpec) Size() (n int) {
 			n += 1 + l + sovEndpoint(uint64(l))
 		}
 	}
-	l = len(m.IPv4Gateway)
-	if l > 0 {
-		n += 1 + l + sovEndpoint(uint64(l))
-	}
 	if len(m.IPv6Addresses) > 0 {
 		for _, s := range m.IPv6Addresses {
 			l = len(s)
 			n += 1 + l + sovEndpoint(uint64(l))
 		}
 	}
-	l = len(m.IPv6Gateway)
+	l = len(m.MacAddress)
 	if l > 0 {
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
-	l = len(m.MacAddress)
+	l = len(m.NodeUUID)
 	if l > 0 {
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
@@ -1196,16 +829,8 @@ func (m *EndpointSpec) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEndpoint(uint64(l))
 	}
-	l = len(m.HomingHostName)
-	if l > 0 {
-		n += 2 + l + sovEndpoint(uint64(l))
-	}
-	l = len(m.NodeUUID)
-	if l > 0 {
-		n += 2 + l + sovEndpoint(uint64(l))
-	}
 	if m.UsegVlan != 0 {
-		n += 2 + sovEndpoint(uint64(m.UsegVlan))
+		n += 1 + sovEndpoint(uint64(m.UsegVlan))
 	}
 	return n
 }
@@ -1515,93 +1140,6 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EndpointUUID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.EndpointUUID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WorkloadUUID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.WorkloadUUID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WorkloadName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.WorkloadName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NetworkName", wireType)
 			}
 			var stringLen uint64
@@ -1629,212 +1167,7 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.NetworkName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WorkloadAttributes", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.WorkloadAttributes == nil {
-				m.WorkloadAttributes = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEndpoint
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEndpoint
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthEndpoint
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEndpoint
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthEndpoint
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipEndpoint(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthEndpoint
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.WorkloadAttributes[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SecurityGroups", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SecurityGroups = append(m.SecurityGroups, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InterfaceType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Interface", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Interface = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 10:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IPv4Addresses", wireType)
 			}
@@ -1863,36 +1196,7 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.IPv4Addresses = append(m.IPv4Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv4Gateway", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv4Gateway = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 12:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IPv6Addresses", wireType)
 			}
@@ -1921,36 +1225,7 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.IPv6Addresses = append(m.IPv6Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 13:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPv6Gateway", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IPv6Gateway = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 14:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MacAddress", wireType)
 			}
@@ -1979,65 +1254,7 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.MacAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 15:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HomingHostAddr", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.HomingHostAddr = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 16:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HomingHostName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEndpoint
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEndpoint
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.HomingHostName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 17:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NodeUUID", wireType)
 			}
@@ -2066,7 +1283,36 @@ func (m *EndpointSpec) Unmarshal(dAtA []byte) error {
 			}
 			m.NodeUUID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 18:
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HomingHostAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEndpoint
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEndpoint
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HomingHostAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UsegVlan", wireType)
 			}
@@ -2135,7 +1381,7 @@ func (m *EndpointStatus) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: EndpointStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 10:
+		case 1:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EnicID", wireType)
 			}
@@ -2154,7 +1400,7 @@ func (m *EndpointStatus) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 11:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NodeUUID", wireType)
 			}
@@ -2183,7 +1429,7 @@ func (m *EndpointStatus) Unmarshal(dAtA []byte) error {
 			}
 			m.NodeUUID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 12:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Migration", wireType)
 			}
@@ -2685,85 +1931,65 @@ var (
 func init() { proto.RegisterFile("endpoint.proto", fileDescriptorEndpoint) }
 
 var fileDescriptorEndpoint = []byte{
-	// 1278 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x41, 0x6f, 0xdb, 0x36,
-	0x14, 0x8e, 0x62, 0x37, 0x89, 0xe9, 0xd8, 0x75, 0xd8, 0x36, 0x51, 0xdc, 0x36, 0x72, 0x0d, 0x0c,
-	0xf0, 0x80, 0xda, 0x6e, 0xd3, 0x2e, 0xd8, 0x8a, 0x6d, 0x6d, 0xb4, 0x38, 0xad, 0xdb, 0xd4, 0x2d,
-	0x1c, 0xbb, 0xbd, 0xec, 0x50, 0x46, 0x66, 0x14, 0xad, 0x36, 0xa5, 0x49, 0x94, 0x0b, 0x63, 0xe8,
-	0x61, 0x18, 0xd0, 0x3f, 0xb2, 0xc3, 0x80, 0x1e, 0x86, 0x61, 0xbf, 0xa2, 0xc7, 0x62, 0xb7, 0x5d,
-	0x84, 0x21, 0x47, 0xfd, 0x8a, 0x81, 0x94, 0x25, 0x51, 0xb2, 0x3d, 0x0c, 0xbd, 0x91, 0x8f, 0xdf,
-	0xf7, 0xbd, 0xc7, 0x47, 0xf2, 0x3d, 0x82, 0x22, 0x26, 0x03, 0xcb, 0x34, 0x08, 0x6d, 0x58, 0xb6,
-	0x49, 0x4d, 0xb8, 0x46, 0x30, 0xe5, 0xa3, 0xf2, 0x35, 0xdd, 0x34, 0xf5, 0x21, 0x6e, 0x22, 0xcb,
-	0x68, 0x22, 0x42, 0x4c, 0x8a, 0xa8, 0x61, 0x12, 0x27, 0xc0, 0x95, 0x5b, 0xba, 0x41, 0xcf, 0xdc,
-	0x93, 0x86, 0x66, 0x8e, 0x9a, 0x16, 0x26, 0x0e, 0x22, 0x03, 0xb3, 0xe9, 0xbc, 0x69, 0x8e, 0x31,
-	0x31, 0x34, 0xdc, 0x74, 0xa9, 0x31, 0x74, 0x18, 0x55, 0xc7, 0x44, 0x64, 0x37, 0x0d, 0xa2, 0x0d,
-	0xdd, 0x01, 0x0e, 0x65, 0xea, 0x82, 0x8c, 0x6e, 0xea, 0x66, 0x93, 0x9b, 0x4f, 0xdc, 0x53, 0x3e,
-	0xe3, 0x13, 0x3e, 0x9a, 0xc2, 0x3f, 0x5b, 0xe0, 0x95, 0xc5, 0x38, 0xc2, 0x14, 0x05, 0xb0, 0xea,
-	0x6f, 0xcb, 0x60, 0xad, 0x35, 0xdd, 0x17, 0xfc, 0x16, 0xac, 0xf5, 0x26, 0x16, 0x7e, 0x8a, 0x29,
-	0x92, 0xa5, 0x8a, 0x54, 0xcb, 0xef, 0x16, 0x1a, 0xc8, 0x32, 0x1a, 0xa1, 0x51, 0xbd, 0xf4, 0xc1,
-	0x53, 0x96, 0x3e, 0x7a, 0x8a, 0xe4, 0x7b, 0xca, 0xea, 0x4d, 0x83, 0x0c, 0x0d, 0x82, 0xbb, 0x11,
-	0x07, 0x3e, 0x01, 0xe0, 0xd9, 0xc9, 0x0f, 0x58, 0xa3, 0x5c, 0x61, 0x99, 0x2b, 0x5c, 0xe4, 0x0a,
-	0xb1, 0x59, 0x2d, 0x0b, 0x1a, 0x45, 0x16, 0xc9, 0x4d, 0x73, 0x64, 0x50, 0x3c, 0xb2, 0xe8, 0xa4,
-	0x2b, 0xd0, 0xa1, 0x0a, 0xb2, 0xc7, 0x16, 0xd6, 0xe4, 0x0c, 0x97, 0xd9, 0x6c, 0x84, 0xd9, 0x6e,
-	0x84, 0xe1, 0xb2, 0x55, 0x75, 0x93, 0xa9, 0x31, 0x25, 0xc7, 0xc2, 0x9a, 0xa0, 0xc4, 0xb9, 0xf0,
-	0x31, 0x58, 0x39, 0xa6, 0x88, 0xba, 0x8e, 0x9c, 0xe5, 0x2a, 0xf2, 0x1c, 0x15, 0xbe, 0xae, 0xca,
-	0x53, 0x9d, 0x92, 0xc3, 0xe7, 0x82, 0xd2, 0x54, 0xa1, 0xfa, 0x37, 0x00, 0xeb, 0xa2, 0x6b, 0x78,
-	0x0b, 0xac, 0xbe, 0xb0, 0x4f, 0x3b, 0x68, 0x84, 0x79, 0xb2, 0x72, 0xea, 0xa6, 0xef, 0x29, 0x70,
-	0x6c, 0x9f, 0xd6, 0x09, 0x1a, 0x61, 0x41, 0x21, 0x84, 0xc1, 0xfb, 0xb1, 0x42, 0xbf, 0xdf, 0x3e,
-	0xe0, 0x19, 0xca, 0xa9, 0x57, 0x7d, 0x4f, 0xd9, 0x0a, 0xef, 0x56, 0xdd, 0x75, 0x8d, 0x81, 0xc0,
-	0x4d, 0x10, 0x98, 0xc0, 0x4b, 0xd3, 0x7e, 0x3d, 0x34, 0xd1, 0x80, 0x0b, 0x64, 0x62, 0x81, 0x37,
-	0x53, 0xfb, 0x8c, 0x80, 0x48, 0x10, 0x05, 0x78, 0xe0, 0xd9, 0x39, 0x02, 0xa9, 0xe8, 0x13, 0x04,
-	0xf8, 0x35, 0xc8, 0x77, 0x30, 0x65, 0x58, 0xce, 0xbf, 0xc0, 0xf9, 0x65, 0xdf, 0x53, 0x36, 0x49,
-	0x60, 0x4e, 0xd3, 0x45, 0x38, 0xfc, 0x59, 0x02, 0x30, 0x94, 0xdb, 0xa7, 0xd4, 0x36, 0x4e, 0x5c,
-	0x8a, 0x1d, 0x79, 0xa5, 0x92, 0xa9, 0xe5, 0x77, 0x1b, 0xf3, 0x8f, 0xb8, 0x31, 0x4b, 0x68, 0x11,
-	0x6a, 0x4f, 0xd4, 0x1b, 0xbe, 0xa7, 0x5c, 0x8f, 0xa2, 0x46, 0xd1, 0xaa, 0xe0, 0x7c, 0x8e, 0x33,
-	0xd8, 0x02, 0xc5, 0x63, 0xac, 0xb9, 0xb6, 0x41, 0x27, 0x0f, 0x6d, 0xd3, 0xb5, 0x1c, 0x79, 0xb5,
-	0x92, 0xa9, 0xe5, 0xd4, 0xeb, 0xbe, 0xa7, 0x6c, 0x3b, 0xd3, 0x95, 0xba, 0xce, 0x97, 0x04, 0xa9,
-	0x14, 0x09, 0xbe, 0x02, 0x85, 0x36, 0xa1, 0xd8, 0x3e, 0x45, 0x1a, 0x66, 0x0f, 0x40, 0x5e, 0xe3,
-	0xa9, 0xb8, 0xf7, 0xfe, 0xdd, 0x76, 0xf9, 0x98, 0xda, 0x2d, 0xe2, 0x8e, 0x6a, 0x89, 0x6d, 0x30,
-	0xd0, 0xe7, 0xbe, 0xa7, 0xc8, 0x46, 0x48, 0xab, 0xd3, 0x89, 0x25, 0xa6, 0x2a, 0x29, 0x08, 0xbf,
-	0x00, 0xb9, 0xc8, 0x20, 0xe7, 0xb8, 0xfa, 0x96, 0xef, 0x29, 0x97, 0x22, 0xbe, 0x40, 0x8d, 0x91,
-	0x50, 0x05, 0x85, 0xf6, 0xf3, 0xf1, 0xdd, 0xfd, 0xc1, 0xc0, 0xc6, 0x8e, 0x83, 0x1d, 0x19, 0xf0,
-	0xed, 0x5d, 0xe3, 0xae, 0xad, 0xf1, 0xdd, 0x3a, 0x0a, 0x57, 0x12, 0xae, 0x45, 0x0a, 0x3b, 0x65,
-	0x66, 0x78, 0x88, 0x28, 0x7e, 0x83, 0x26, 0x72, 0x3e, 0x3e, 0x65, 0xae, 0xa0, 0x07, 0x76, 0xf1,
-	0x94, 0x05, 0x38, 0x7c, 0xc0, 0x23, 0xd8, 0x8b, 0x23, 0x58, 0xe7, 0x11, 0x84, 0xfc, 0xbd, 0x30,
-	0x82, 0x94, 0xff, 0xbd, 0xb4, 0xff, 0xbd, 0xd0, 0x7f, 0x21, 0xe1, 0x7f, 0x6f, 0x81, 0xff, 0x10,
-	0x0e, 0xbf, 0x02, 0xe0, 0x29, 0xd2, 0xa6, 0x6a, 0x72, 0x91, 0x93, 0xb7, 0x7d, 0x4f, 0xb9, 0x32,
-	0x42, 0xda, 0x1c, 0xdf, 0x02, 0x18, 0xb6, 0x41, 0xf1, 0x91, 0x39, 0x32, 0x88, 0xfe, 0xc8, 0x74,
-	0x28, 0x33, 0xca, 0x17, 0x39, 0x9d, 0xdf, 0xb5, 0x33, 0xbe, 0x52, 0x3f, 0x33, 0x1d, 0x3a, 0x47,
-	0x26, 0x45, 0x84, 0x87, 0xa2, 0x14, 0x7f, 0x2c, 0x25, 0x2e, 0xb5, 0xe3, 0x7b, 0x4a, 0x59, 0x94,
-	0x4a, 0x3d, 0x98, 0x14, 0x0b, 0xde, 0x01, 0x6b, 0x1d, 0x73, 0x80, 0xf9, 0x7b, 0xdf, 0x88, 0x6f,
-	0x01, 0x31, 0x07, 0x38, 0xfd, 0xd6, 0x23, 0x20, 0x23, 0xf5, 0x1d, 0xac, 0xbf, 0x18, 0x22, 0x22,
-	0xc3, 0x8a, 0x54, 0x2b, 0x04, 0x24, 0xd7, 0xc1, 0x7a, 0x7d, 0x3c, 0x44, 0x44, 0x24, 0x85, 0xc0,
-	0x72, 0x0b, 0x6c, 0x2d, 0x78, 0x6b, 0xb0, 0x04, 0x32, 0xaf, 0xf1, 0x24, 0xa8, 0x73, 0x5d, 0x36,
-	0x84, 0x97, 0xc1, 0x85, 0x31, 0x1a, 0xba, 0x38, 0x28, 0x62, 0xdd, 0x60, 0x72, 0x6f, 0xf9, 0x4b,
-	0xa9, 0x7a, 0x1b, 0x64, 0xf9, 0xfd, 0x5d, 0x03, 0xd9, 0xce, 0xb3, 0x4e, 0xab, 0xb4, 0x04, 0x57,
-	0x41, 0xe6, 0xa8, 0x7d, 0x58, 0x92, 0x20, 0x00, 0x2b, 0xfd, 0xe7, 0x47, 0xed, 0xce, 0x93, 0xd2,
-	0x32, 0x1b, 0xf7, 0xfa, 0x9d, 0x4e, 0xeb, 0xa8, 0x94, 0xa9, 0xfe, 0x25, 0x81, 0x62, 0xb2, 0x20,
-	0xc3, 0x3a, 0x58, 0x69, 0x11, 0x43, 0x6b, 0x1f, 0xc8, 0xa0, 0x22, 0xd5, 0xb2, 0xea, 0x15, 0xdf,
-	0x53, 0x36, 0x58, 0xc7, 0xac, 0x27, 0xb6, 0x3c, 0x05, 0x25, 0xb2, 0x94, 0xff, 0xbf, 0x59, 0xfa,
-	0x1e, 0xe4, 0x9e, 0x1a, 0xba, 0xcd, 0xfb, 0xad, 0xbc, 0xce, 0x3b, 0xc4, 0x8d, 0xd9, 0x22, 0x14,
-	0x41, 0xa6, 0xad, 0xe2, 0xea, 0x87, 0xa0, 0x79, 0x5d, 0x1a, 0x85, 0x0b, 0xe2, 0x43, 0x8c, 0xd0,
-	0xd5, 0x07, 0x71, 0xb5, 0x3f, 0x32, 0x1c, 0x0a, 0x6f, 0x81, 0x5c, 0x58, 0xe5, 0x1d, 0x59, 0xe2,
-	0x25, 0x0f, 0xce, 0x7a, 0xeb, 0xc6, 0xa0, 0xea, 0xaf, 0x12, 0x28, 0x84, 0xf6, 0xd6, 0x18, 0x13,
-	0x0a, 0x0f, 0x41, 0x8e, 0x0f, 0x78, 0xc5, 0x61, 0xa7, 0x51, 0xdc, 0x2d, 0xf2, 0x06, 0x1b, 0x59,
-	0x55, 0xd9, 0xf7, 0x94, 0xcb, 0x98, 0x4d, 0xd3, 0xf5, 0x25, 0xa6, 0xc2, 0xc7, 0x71, 0xd7, 0x9f,
-	0xf6, 0xe9, 0x39, 0xa1, 0x04, 0xad, 0x9a, 0x35, 0xb5, 0x30, 0x24, 0x31, 0x8b, 0x21, 0xaa, 0xda,
-	0x03, 0x1b, 0x89, 0x20, 0xf9, 0x66, 0xef, 0xc7, 0x07, 0xca, 0x8d, 0xe1, 0x8e, 0xb7, 0x66, 0xdd,
-	0xf0, 0xf5, 0x6e, 0x0a, 0x5e, 0xfd, 0x5d, 0x02, 0x5b, 0x0b, 0x4e, 0x00, 0xbe, 0x8a, 0xda, 0x7a,
-	0xd0, 0x78, 0x1f, 0xbd, 0x7f, 0xb7, 0xdd, 0x4c, 0x17, 0xdd, 0x14, 0xa9, 0x91, 0x98, 0xf3, 0x4a,
-	0xbc, 0x31, 0xed, 0xf5, 0x95, 0xd9, 0x66, 0x7f, 0x1b, 0x14, 0x93, 0x78, 0xe1, 0x36, 0xe7, 0xc0,
-	0x85, 0xe3, 0xde, 0x7e, 0xb7, 0x17, 0xdc, 0xe7, 0xc3, 0xfd, 0xf6, 0x51, 0xeb, 0xa0, 0xb4, 0xbc,
-	0xfb, 0x47, 0x16, 0xe4, 0x43, 0xdf, 0xfb, 0x96, 0x01, 0xef, 0x81, 0xe2, 0x77, 0x36, 0x46, 0x14,
-	0x47, 0xdf, 0xab, 0x39, 0x29, 0x2e, 0xcf, 0xb1, 0x55, 0x97, 0x18, 0xb7, 0x6f, 0x0d, 0x3e, 0x8d,
-	0x7b, 0x17, 0xe4, 0x1f, 0x62, 0x1a, 0x11, 0xd3, 0xff, 0xaf, 0x85, 0x1e, 0x0b, 0xec, 0xdc, 0x42,
-	0x8b, 0x33, 0xcb, 0x9b, 0xf3, 0x03, 0x63, 0x8c, 0x20, 0xda, 0x03, 0x3c, 0xc4, 0x9f, 0x14, 0xad,
-	0x0a, 0x8a, 0x2f, 0x11, 0xd5, 0xce, 0xfe, 0xc3, 0xf1, 0xd5, 0x05, 0x57, 0x26, 0xf0, 0x7e, 0x4b,
-	0x82, 0x0f, 0x00, 0x0c, 0x17, 0x9e, 0x59, 0xd8, 0x0e, 0x32, 0x07, 0x17, 0xdd, 0xb4, 0x72, 0xf2,
-	0x4f, 0x5b, 0x5d, 0xaa, 0x49, 0x65, 0xf7, 0xcf, 0x5f, 0xb6, 0x7f, 0x14, 0x3e, 0xc2, 0xd9, 0x21,
-	0xbb, 0xc3, 0x59, 0xcb, 0x74, 0x28, 0xcc, 0x58, 0x2e, 0x85, 0x2b, 0x03, 0xbe, 0xc1, 0xf2, 0x37,
-	0xcd, 0x9f, 0xe2, 0xc8, 0x1a, 0x3d, 0x4c, 0x10, 0xa1, 0x6f, 0x13, 0x36, 0x56, 0xb3, 0x1d, 0x0b,
-	0x69, 0x78, 0xd6, 0xfc, 0xb6, 0x5a, 0x60, 0xbf, 0xef, 0xe8, 0x7d, 0xab, 0xeb, 0x1f, 0xce, 0x77,
-	0xa4, 0x8f, 0xe7, 0x3b, 0xd2, 0x3f, 0xe7, 0x3b, 0xd2, 0x73, 0xe9, 0x64, 0x85, 0x87, 0x7b, 0xe7,
-	0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x74, 0x53, 0x0f, 0x6a, 0x0c, 0x00, 0x00,
+	// 953 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0x4d, 0x6f, 0xdb, 0x36,
+	0x18, 0x8e, 0x6c, 0xd7, 0xb1, 0x99, 0xda, 0x4b, 0x99, 0x35, 0x51, 0xdc, 0x2e, 0x72, 0x05, 0x0c,
+	0xf0, 0x80, 0xda, 0x4a, 0xd3, 0xa2, 0xc0, 0x86, 0x7d, 0x24, 0x42, 0x5c, 0xc4, 0x5d, 0xe3, 0x14,
+	0x8e, 0x93, 0x5d, 0x76, 0x98, 0x22, 0x31, 0x0a, 0x37, 0x8b, 0xd4, 0x4c, 0xca, 0x45, 0x30, 0xf4,
+	0x34, 0x60, 0x7f, 0x64, 0x87, 0x01, 0x3b, 0xec, 0xb0, 0x5f, 0x91, 0x63, 0xb0, 0x1f, 0x20, 0x0c,
+	0x39, 0xfa, 0xbc, 0x1f, 0x30, 0x90, 0x96, 0x2c, 0xc9, 0x1f, 0xc3, 0x6e, 0xe2, 0xcb, 0xe7, 0x79,
+	0xde, 0xf7, 0x25, 0x5f, 0x3e, 0x02, 0x55, 0x44, 0x1c, 0x9f, 0x62, 0xc2, 0x5b, 0xfe, 0x90, 0x72,
+	0x0a, 0x4b, 0x04, 0x71, 0xf9, 0x55, 0x7b, 0xec, 0x52, 0xea, 0x0e, 0x90, 0x61, 0xf9, 0xd8, 0xb0,
+	0x08, 0xa1, 0xdc, 0xe2, 0x98, 0x12, 0x36, 0xc1, 0xd5, 0xda, 0x2e, 0xe6, 0x57, 0xc1, 0x45, 0xcb,
+	0xa6, 0x9e, 0xe1, 0x23, 0xc2, 0x2c, 0xe2, 0x50, 0x83, 0xbd, 0x33, 0x46, 0x88, 0x60, 0x1b, 0x19,
+	0x01, 0xc7, 0x03, 0x26, 0xa8, 0x2e, 0x22, 0x69, 0xb6, 0x81, 0x89, 0x3d, 0x08, 0x1c, 0x14, 0xcb,
+	0x34, 0x53, 0x32, 0x2e, 0x75, 0xa9, 0x21, 0xc3, 0x17, 0xc1, 0xa5, 0x5c, 0xc9, 0x85, 0xfc, 0x8a,
+	0xe0, 0x1f, 0x2f, 0xc9, 0x2a, 0x6a, 0xf4, 0x10, 0xb7, 0x26, 0x30, 0xfd, 0xb7, 0x1c, 0x28, 0xb5,
+	0xa3, 0xbe, 0xe0, 0x97, 0xa0, 0xd4, 0xbf, 0xf6, 0xd1, 0x31, 0xe2, 0x96, 0xaa, 0xd4, 0x95, 0xc6,
+	0xda, 0x5e, 0xa5, 0x65, 0xf9, 0xb8, 0x15, 0x07, 0xcd, 0x8d, 0x9b, 0x50, 0x5b, 0xb9, 0x0d, 0x35,
+	0x65, 0x1c, 0x6a, 0xab, 0x4f, 0x31, 0x19, 0x60, 0x82, 0x7a, 0x53, 0x0e, 0xfc, 0x1a, 0x80, 0x93,
+	0x8b, 0xef, 0x91, 0xcd, 0xa5, 0x42, 0x4e, 0x2a, 0x7c, 0x20, 0x15, 0x92, 0xb0, 0x59, 0x4b, 0x69,
+	0x54, 0x45, 0x25, 0x4f, 0xa9, 0x87, 0x39, 0xf2, 0x7c, 0x7e, 0xdd, 0x4b, 0xd1, 0xa1, 0x09, 0x0a,
+	0xa7, 0x3e, 0xb2, 0xd5, 0xbc, 0x94, 0xd9, 0x6c, 0xc5, 0xa7, 0xdd, 0x8a, 0xcb, 0x15, 0xbb, 0xe6,
+	0xa6, 0x50, 0x13, 0x4a, 0xcc, 0x47, 0x76, 0x4a, 0x49, 0x72, 0xe1, 0x6b, 0x50, 0x3c, 0xe5, 0x16,
+	0x0f, 0x98, 0x5a, 0x90, 0x2a, 0xea, 0x02, 0x15, 0xb9, 0x6f, 0xaa, 0x91, 0xce, 0x3a, 0x93, 0xeb,
+	0x94, 0x52, 0xa4, 0xa0, 0xff, 0x93, 0x07, 0xf7, 0xd3, 0xa9, 0xe1, 0x2e, 0x58, 0x3d, 0x1f, 0x5e,
+	0x76, 0x2d, 0x0f, 0xc9, 0xc3, 0x2a, 0x9b, 0x9b, 0xe3, 0x50, 0x83, 0xa3, 0xe1, 0x65, 0x93, 0x58,
+	0x1e, 0x4a, 0x29, 0xc4, 0x30, 0xf8, 0x39, 0x58, 0xeb, 0x22, 0xfe, 0x8e, 0x0e, 0x7f, 0x90, 0xac,
+	0x9c, 0x64, 0xd5, 0xc6, 0xa1, 0xb6, 0x49, 0x26, 0xe1, 0x59, 0x66, 0x1a, 0x0e, 0x4d, 0x50, 0xe9,
+	0xbc, 0x1d, 0xbd, 0x38, 0x70, 0x9c, 0x21, 0x62, 0x0c, 0x31, 0x35, 0x5f, 0xcf, 0x37, 0xca, 0xe6,
+	0xe3, 0x71, 0xa8, 0xa9, 0xd8, 0x1f, 0xbd, 0x68, 0x5a, 0xf1, 0x4e, 0x4a, 0x21, 0x4b, 0x81, 0xfb,
+	0x52, 0xe3, 0x65, 0xa2, 0x51, 0x90, 0x1a, 0xb2, 0x06, 0xec, 0x8f, 0x5e, 0xc6, 0x1a, 0x33, 0x0a,
+	0x09, 0x01, 0x7e, 0x0a, 0xc0, 0xb1, 0x65, 0x47, 0x6b, 0xf5, 0x9e, 0x6c, 0x61, 0x7b, 0x1c, 0x6a,
+	0x0f, 0x3d, 0xcb, 0x5e, 0xc0, 0x4e, 0x81, 0xe1, 0x73, 0x50, 0xea, 0x52, 0x07, 0x9d, 0x9d, 0x75,
+	0x0e, 0xd5, 0xa2, 0x24, 0x6e, 0x8d, 0x43, 0x6d, 0x83, 0x50, 0x07, 0x35, 0x83, 0x00, 0x3b, 0x29,
+	0xda, 0x14, 0x08, 0x3b, 0xa0, 0x7a, 0x44, 0x3d, 0x4c, 0xdc, 0x23, 0xca, 0xb8, 0x50, 0x52, 0x57,
+	0x25, 0xf5, 0xc9, 0x38, 0xd4, 0x3e, 0xba, 0x92, 0x3b, 0xcd, 0x2b, 0xca, 0xf8, 0x82, 0xdc, 0x33,
+	0x44, 0x91, 0xff, 0x8c, 0x21, 0xf7, 0x7c, 0x60, 0x11, 0xb5, 0x54, 0x57, 0x1a, 0x95, 0x49, 0xfe,
+	0x80, 0x21, 0xb7, 0x39, 0x1a, 0x58, 0x24, 0x9d, 0x3f, 0x06, 0xea, 0x7f, 0x29, 0xa0, 0x9a, 0x9d,
+	0x15, 0xd8, 0x04, 0xc5, 0x36, 0xc1, 0x76, 0xe7, 0x50, 0xde, 0x7b, 0xc1, 0x7c, 0x38, 0x0e, 0xb5,
+	0x07, 0xe2, 0x31, 0x37, 0x33, 0x3d, 0x44, 0xa0, 0x4c, 0xdb, 0xb9, 0xff, 0xdb, 0xf6, 0xb7, 0xa0,
+	0x7c, 0x8c, 0xdd, 0xa1, 0xb4, 0x82, 0xe8, 0x09, 0x3c, 0x99, 0x1f, 0xde, 0x29, 0x24, 0x9a, 0xe2,
+	0x47, 0x37, 0x93, 0x77, 0xb5, 0xe1, 0xc5, 0x1b, 0x29, 0xf1, 0x44, 0x50, 0xdf, 0x4f, 0x46, 0xf9,
+	0x0d, 0x66, 0x1c, 0xee, 0x82, 0x72, 0x6c, 0x6e, 0x4c, 0x55, 0xea, 0xf9, 0xc6, 0xda, 0x1e, 0x9c,
+	0xcf, 0xd6, 0x4b, 0x40, 0xfa, 0xaf, 0x0a, 0xa8, 0xc4, 0xf1, 0xf6, 0x08, 0x11, 0x0e, 0x5f, 0x81,
+	0xb2, 0xfc, 0x10, 0x6e, 0x20, 0x0f, 0xa6, 0xba, 0x57, 0x95, 0x6f, 0x7f, 0x1a, 0x35, 0xd5, 0x71,
+	0xa8, 0x7d, 0x88, 0xc4, 0xb2, 0xc9, 0xaf, 0xfd, 0xf4, 0xa0, 0x27, 0x54, 0xf8, 0x3a, 0x31, 0xa4,
+	0xc8, 0x42, 0x16, 0x94, 0x32, 0x71, 0x11, 0xf1, 0xde, 0xe2, 0x92, 0xd2, 0xa7, 0x18, 0xa3, 0xf4,
+	0x3e, 0x78, 0x90, 0x29, 0x52, 0x36, 0xfb, 0x55, 0x72, 0xa1, 0x32, 0x18, 0x77, 0xbc, 0x35, 0x9f,
+	0x46, 0xee, 0xf7, 0x66, 0xe0, 0xfa, 0x1f, 0x0a, 0xd8, 0x5a, 0x72, 0x03, 0xf0, 0xbb, 0xa9, 0xe3,
+	0x4c, 0x3c, 0xe1, 0xe8, 0xf7, 0x5f, 0xb6, 0x8d, 0x53, 0x3e, 0x6c, 0x93, 0xc0, 0x6b, 0x2c, 0x21,
+	0xb5, 0x32, 0x6b, 0xf4, 0x89, 0x18, 0xa7, 0xc8, 0x86, 0xea, 0xf3, 0x3e, 0xf4, 0x0c, 0x54, 0xb3,
+	0x78, 0x58, 0x02, 0x85, 0xee, 0x49, 0xb7, 0xbd, 0xbe, 0x02, 0xcb, 0xe0, 0xde, 0x69, 0xff, 0xa0,
+	0xd7, 0x5f, 0x57, 0x20, 0x00, 0xc5, 0x57, 0x07, 0x9d, 0x37, 0xed, 0xc3, 0xf5, 0xdc, 0xde, 0x4d,
+	0x2e, 0xb9, 0xac, 0x03, 0x1f, 0x9f, 0x3f, 0x83, 0x9f, 0x81, 0x8a, 0x38, 0x8b, 0x38, 0xc8, 0xe0,
+	0xac, 0x4d, 0xd7, 0x16, 0x18, 0xae, 0x60, 0xe8, 0x2b, 0xd0, 0x04, 0xd5, 0x6f, 0x2c, 0x6e, 0x5f,
+	0xfd, 0x07, 0xf9, 0xd1, 0x92, 0xa3, 0x9c, 0x28, 0xec, 0x2a, 0x70, 0x1f, 0xc0, 0x78, 0xe3, 0xc4,
+	0x47, 0xc3, 0x33, 0xdf, 0x11, 0x8d, 0x2c, 0xbb, 0x81, 0x5a, 0xf6, 0x37, 0xa4, 0xaf, 0x34, 0x94,
+	0x5a, 0xf0, 0xe7, 0xcf, 0xdb, 0x3f, 0xa6, 0xfe, 0x5d, 0x85, 0x81, 0xb8, 0xdb, 0x82, 0x4f, 0x19,
+	0x87, 0x79, 0x3f, 0xe0, 0xb0, 0xe8, 0xa0, 0x01, 0xe2, 0xa8, 0xf6, 0x85, 0xf1, 0x53, 0x52, 0x59,
+	0xab, 0x8f, 0x88, 0x45, 0xf8, 0xfb, 0x4c, 0x4c, 0xb8, 0x2b, 0xf3, 0x2d, 0x1b, 0xcd, 0x87, 0xdf,
+	0xeb, 0x15, 0xf1, 0xc3, 0x9c, 0xce, 0xbd, 0x79, 0xff, 0xe6, 0x6e, 0x47, 0xb9, 0xbd, 0xdb, 0x51,
+	0xfe, 0xbe, 0xdb, 0x51, 0xde, 0x2a, 0x17, 0x45, 0x59, 0xee, 0xf3, 0x7f, 0x03, 0x00, 0x00, 0xff,
+	0xff, 0x31, 0x9f, 0x44, 0xda, 0x1d, 0x08, 0x00, 0x00,
 }

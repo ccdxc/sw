@@ -25,7 +25,7 @@
 		"addresses": [
 		  "192.0.0.0 - 192.255.255.255"
 		],
-		"app-configs": [
+		"proto-ports": [
 		    {
 		       "protocol": "tcp",
 		       "port": "69"

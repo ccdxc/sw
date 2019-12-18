@@ -12,7 +12,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- Security API ----------------------------
 // security group rpc service
-service SecurityGroupApi {
+service SecurityGroupApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "SecurityGroup",

@@ -84,12 +84,8 @@ func (ag *Dpagent) createEndpointReq(tenant, namespace, net, epname, host string
 			Namespace: namespace,
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:   epname,
-			WorkloadName:   epname,
-			WorkloadUUID:   epname,
 			NetworkName:    net,
 			HomingHostAddr: host,
-			HomingHostName: host,
 		},
 	}
 
@@ -107,12 +103,8 @@ func (ag *Dpagent) deleteEndpointReq(tenant, net, epname, host string) (*netprot
 			Name:   epname,
 		},
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:   epname,
-			WorkloadName:   epname,
-			WorkloadUUID:   epname,
 			NetworkName:    net,
 			HomingHostAddr: host,
-			HomingHostName: host,
 		},
 	}
 
@@ -135,6 +127,7 @@ func (it *integTestSuite) CreateNetwork(tenant, namespace, net, subnet, gw strin
 			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
+			VlanID:      42,
 		},
 		Status: network.NetworkStatus{},
 	}
@@ -178,6 +171,7 @@ func (it *integTestSuite) CreateEndpoint(tenant, namespace, net, epName, vmName,
 			HomingHostAddr:     hostAddr,
 			HomingHostName:     hostName,
 			MicroSegmentVlan:   usegVlan,
+			NodeUUID:           "testHost-0",
 		},
 	}
 

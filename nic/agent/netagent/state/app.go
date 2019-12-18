@@ -18,6 +18,7 @@ import (
 
 // CreateApp creates a app
 func (na *Nagent) CreateApp(app *netproto.App) error {
+	log.Infof("Got App Create: %v", app)
 	var algMapper int
 	err := na.validateMeta(app.Kind, app.ObjectMeta)
 	if err != nil {
@@ -59,9 +60,14 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		if alg.ICMP != nil {
 			// TODO Validate ICMP Code and Type Ranges here
 			for _, protoPort := range app.Spec.ProtoPorts {
-				if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) != 1 || components[0] != "icmp" {
+				if strings.TrimSpace(protoPort.Protocol) != "icmp" {
 					log.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
 					return fmt.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
+				}
+
+				if len(protoPort.Port) != 0 {
+					log.Errorf("icmp app must not specify port. Found: %v", protoPort.Port)
+					return fmt.Errorf("icmp app must not specify port. Found: %v", protoPort.Port)
 				}
 			}
 
@@ -250,6 +256,8 @@ func (na *Nagent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
 
 // UpdateApp updates a app.
 func (na *Nagent) UpdateApp(app *netproto.App) error {
+	log.Infof("Got App Update: %v", app)
+
 	var linkedSGPolicies []*netproto.NetworkSecurityPolicy
 	var algMapper int
 
@@ -296,7 +304,7 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 		if alg.ICMP != nil {
 			// TODO Validate ICMP Code and Type Ranges here
 			for _, protoPort := range app.Spec.ProtoPorts {
-				if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) != 1 || components[0] != "icmp" {
+				if strings.TrimSpace(protoPort.Protocol) != "icmp" {
 					log.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
 					return fmt.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
 				}

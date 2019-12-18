@@ -11,7 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
 // ipam policy controller api
-service IPAMPolicyApi {
+service IPAMPolicyApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "IPAMPolicy",
@@ -20,16 +20,21 @@ service IPAMPolicyApi {
         Prefix: "api/ipam-policies"
     };
 
-    rpc GetIPAMPolicy (api.ObjectMeta) returns (IPAMPolicy) {};
     rpc ListIPAMPolicys (api.ObjectMeta) returns (IPAMPolicyList) {};
     rpc WatchIPAMPolicys (api.ObjectMeta) returns (stream IPAMPolicyEventList) {};
-    rpc UpdateIPAMPolicy (IPAMPolicy) returns (IPAMPolicy) {};
     rpc IPAMPolicyOperUpdate (stream IPAMPolicyEvent) returns (api.TypeMeta) {};
+
+//    rpc GetIPAMPolicy (api.ObjectMeta) returns (IPAMPolicy) {};
+//    rpc ListIPAMPolicys (api.ObjectMeta) returns (IPAMPolicyList) {};
+//    rpc WatchIPAMPolicys (api.ObjectMeta) returns (stream IPAMPolicyEventList) {};
+//    rpc UpdateIPAMPolicy (IPAMPolicy) returns (IPAMPolicy) {};
+//    rpc IPAMPolicyOperUpdate (stream IPAMPolicyEvent) returns (api.TypeMeta) {};
 }
 
 message DHCPServer {
     // IP Address of the server.
     string IPAddress = 1 [(gogoproto.jsontag) = "ip-address,omitempty", (venice.check) = "IPAddr()"];
+
     // Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached.
     string VirtualRouter = 2 [(gogoproto.jsontag) = "virtual-router,omitempty"];
 }

@@ -38,19 +38,19 @@ const (
 // EndpointCreateReq creates an endpoint
 func (na *Nagent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *types.IntfInfo, error) {
 	// make an RPC call to controller
-	ep, err := na.Ctrlerif.EndpointCreateReq(epinfo)
-	if err != nil {
-		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
-		return nil, nil, err
-	}
+	//ep, err := na.Ctrlerif.EndpointCreateReq(epinfo)
+	//if err != nil {
+	//	log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
+	//	return nil, nil, err
+	//}
 
 	// call the datapath
-	err = na.CreateEndpoint(ep)
+	err := na.CreateEndpoint(epinfo)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return ep, nil, nil
+	return epinfo, nil, nil
 }
 
 // EndpointDeleteReq deletes an endpoint
@@ -110,18 +110,6 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 
-	// check if security groups its referring to exists
-	// FIXME: how do we handle security group getting deleted after ep is created.
-	var sgs []*netproto.SecurityGroup
-	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: sgname})
-		if serr != nil {
-			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
-			return serr
-		}
-
-		sgs = append(sgs, sg)
-	}
 	origSpecIPAddresses := ep.Spec.IPv4Addresses
 
 	// Validate EP IP.
@@ -163,7 +151,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 			// save the enic id in the ep status for deletions
 			ep.Status.EnicID = enicID
 		}
-		_, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, ep.Status.EnicID, vrf)
+		_, err = na.Datapath.CreateLocalEndpoint(ep, nw, lifID, ep.Status.EnicID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
@@ -175,7 +163,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 			log.Errorf("could not find an interface to associate to the endpoint")
 			return err
 		}
-		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, intfID, vrf)
+		err = na.Datapath.CreateRemoteEndpoint(ep, nw, intfID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
@@ -317,18 +305,6 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 
-	// check if security groups its referring to exists
-	var sgs []*netproto.SecurityGroup
-	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: sgname})
-		if serr != nil {
-			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
-			return serr
-		}
-
-		sgs = append(sgs, sg)
-	}
-
 	// If endpoint's network changes, delete the old endpoint and create new one
 	// this can happen if endpoint was deleted and re-created on Venice while this naples was disconnected from it.
 	if oldEp.Spec.NetworkName != ep.Spec.NetworkName {
@@ -365,13 +341,13 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 	// call the datapath
 	if ep.Spec.NodeUUID == na.NodeUUID {
-		err = na.Datapath.UpdateLocalEndpoint(ep, nw, sgs, lifID, ep.Status.EnicID, vrf)
+		err = na.Datapath.UpdateLocalEndpoint(ep, nw, lifID, ep.Status.EnicID, vrf)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
 		}
 	} else {
-		err = na.Datapath.UpdateRemoteEndpoint(ep, nw, sgs)
+		err = na.Datapath.UpdateRemoteEndpoint(ep, nw)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
@@ -583,24 +559,22 @@ func (na *Nagent) findTunnelID(epMeta api.ObjectMeta, intfName string) (uint64, 
 }
 
 func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64, error) {
-	// perform pre-flight checks
-	if len(ep.Spec.InterfaceType) > 0 && !((strings.ToLower(ep.Spec.InterfaceType) == "lif") ||
-		(strings.ToLower(ep.Spec.InterfaceType) == "uplink") ||
-		(strings.ToLower(ep.Spec.InterfaceType) == "tunnel")) {
-		return 0, fmt.Errorf("invalid interface type %v", ep.Spec.InterfaceType)
-
-	}
-	// Spec should not have specify an interface name without specifying interface type.
-	if len(ep.Spec.Interface) > 0 && len(ep.Spec.InterfaceType) == 0 {
-		return 0, fmt.Errorf("user specified interfaces should be qualified with interface type")
-	}
-
 	switch {
 	// Local EP Create, interface types unspecified by user. Don't associate any LIFs
-	case epType == Local && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
+	case epType == Local:
 		return 0, nil
 		// Remote EP Create, interface types unspecified by user. Pass through
-	case epType == Remote && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
+	case epType == Remote:
+		// check if internal EPs for lateral objects. This is to enable OOB tests in IOTA. TODO Revisit this with HAL
+		log.Infof("Management Link for Remote EP Creates: %v", na.MgmtLink)
+		if ep.Spec.NetworkName == types.InternalUntaggedNetwork && na.MgmtLink == types.OOBManagementInterface {
+			mgmtUplink, ok := na.findIntfByName(types.ManagementUplink)
+			if !ok {
+				log.Error("Failed to find management uplink.")
+				return 0, nil
+			}
+			return mgmtUplink.Status.InterfaceID, nil
+		}
 		uplinkCount, err := na.countIntfs("UPLINK_ETH")
 		if err != nil {
 			log.Errorf("could not enumerate uplinks. Err: %v", err)
@@ -617,29 +591,6 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 			return 0, fmt.Errorf("could not find uplink %v in state", epUplink)
 		}
 		return uplink.Status.InterfaceID, nil
-
-	// Local EP Create, associate with the user specified lif
-	case epType == Local && len(ep.Spec.Interface) > 0:
-		lif, ok := na.findIntfByName(ep.Spec.Interface)
-		if !ok {
-			log.Errorf("could not find lif %v in state", ep.Spec.Interface)
-			return 0, fmt.Errorf("could not find lif %v in state", ep.Spec.Interface)
-		}
-		return lif.Status.InterfaceID, nil
-
-	// Remote EP Create on an Uplink, associate with the user specified uplink
-	case epType == Remote && strings.ToLower(ep.Spec.InterfaceType) == "uplink" && len(ep.Spec.Interface) > 0:
-		uplink, ok := na.findIntfByName(ep.Spec.Interface)
-		if !ok {
-			log.Errorf("could not find uplink %v in state", uplink)
-			return 0, fmt.Errorf("could not find uplink %v in state", ep.Spec.Interface)
-		}
-		return uplink.Status.InterfaceID, nil
-
-	// Remote EP Create on an a tunnel, associate with the user specified tunnel
-	case epType == Remote && strings.ToLower(ep.Spec.InterfaceType) == "tunnel" && len(ep.Spec.Interface) > 0:
-		return na.findTunnelID(ep.ObjectMeta, ep.Spec.Interface)
-
 	}
 	log.Errorf("invalid endpoint create spec. {%v} ", ep)
 	return 0, fmt.Errorf("ep create should either be remote or local. Remote EPs should point to either a valid uplink or a tunnel")

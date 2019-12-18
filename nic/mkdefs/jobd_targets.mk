@@ -355,10 +355,7 @@ jobd/agent: ${JOBD_PREREQS}
 	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
 	${NICDIR}/tools/release.sh
-	go install github.com/pensando/sw/nic/agent/cmd/netagent
-	bash agent/netagent/scripts/sanity.sh
-	bash agent/netagent/scripts/sanity.sh single-threaded
-	bash agent/netagent/scripts/sanity.sh stand-alone
+	go test github.com/pensando/sw/nic/agent/netagent/state
 	# TODO uncomment the sanities once these are fixed
 	#${NICDIR}/e2etests/go/agent/scripts/golden-sanity.sh
 

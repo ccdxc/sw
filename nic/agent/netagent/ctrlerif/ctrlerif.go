@@ -117,11 +117,10 @@ func (client *NpmClient) runWatchLoop(ctx context.Context) {
 		}
 
 		// watch objects
-		go nimbusClient.WatchNetworks(client.watchCtx, client.agent)
-		go nimbusClient.WatchEndpoints(client.watchCtx, client.agent)
-		go nimbusClient.WatchSecurityGroups(client.watchCtx, client.agent)
-		go nimbusClient.WatchSecurityProfiles(client.watchCtx, client.agent)
 		go nimbusClient.WatchAggregate(client.watchCtx, []string{"App", "NetworkSecurityPolicy"}, client.agent)
+		go nimbusClient.WatchAggregate(client.watchCtx, []string{"Network", "Endpoint"}, client.agent)
+		go nimbusClient.WatchAggregate(client.watchCtx, []string{"SecurityProfile"}, client.agent)
+
 		go nimbusClient.WatchIPAMPolicys(client.watchCtx, client.agent)
 
 		// spawn worker thread to update network interface status to npm and watch for updates
@@ -175,34 +174,7 @@ func (client *NpmClient) isStopped() bool {
 
 // EndpointCreateReq creates an endpoint
 func (client *NpmClient) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	// keep track of pending request
-	client.Lock()
-	client.pendingEpCreate[epinfo.Name] = epinfo
-	client.Unlock()
-
-	// create a grpc client
-	rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
-		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
-	if err != nil {
-		log.Errorf("Error connecting to grpc server. Err: %v", err)
-		return nil, err
-	}
-	defer rpcClient.Close()
-
-	// make an RPC call to controller
-	endpointRPCClient := netproto.NewEndpointApiClient(rpcClient.ClientConn)
-	ep, err := endpointRPCClient.CreateEndpoint(context.Background(), epinfo)
-	if err != nil {
-		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
-		return nil, err
-	}
-
-	// delete pending req
-	client.Lock()
-	delete(client.pendingEpCreate, epinfo.Name)
-	client.Unlock()
-
-	return ep, err
+	return nil, nil
 }
 
 // EndpointAgeoutNotif sends an endpoint ageout notification to controller
@@ -211,42 +183,15 @@ func (client *NpmClient) EndpointAgeoutNotif(epinfo *netproto.Endpoint) error {
 	return nil
 }
 
-// EndpointDeleteReq deletes an endpoint
+//EndpointDeleteReq deletes an endpoint
 func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	// keep track of pending request
-	client.Lock()
-	client.pendingEpDelete[epinfo.Name] = epinfo
-	client.Unlock()
-
-	// create a grpc client
-	rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
-		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
-	if err != nil {
-		log.Errorf("Error connecting to grpc server. Err: %v", err)
-		return nil, err
-	}
-	defer rpcClient.Close()
-
-	// make an RPC call to controller
-	endpointRPCClient := netproto.NewEndpointApiClient(rpcClient.ClientConn)
-	ep, err := endpointRPCClient.DeleteEndpoint(context.Background(), epinfo)
-	if err != nil {
-		log.Errorf("Error resp from netctrler for ep delete {%+v}. Err: %v", epinfo, err)
-		return nil, err
-	}
-
-	// delete pending req
-	client.Lock()
-	delete(client.pendingEpDelete, epinfo.Name)
-	client.Unlock()
-
-	return ep, err
+	return nil, nil
 }
 
 // createNpmNetIfs creates network-interface object in npm to reflect the interface status to the user
 func (client *NpmClient) netifWorker() {
 
-	netIfRPCClient := netproto.NewInterfaceApiClient(client.rpcClient.ClientConn)
+	netIfRPCClient := netproto.NewInterfaceApiV1Client(client.rpcClient.ClientConn)
 	idPrefix := client.agent.GetAgentID()
 
 	// fetch interfaes discovered by hw and populate them in npm

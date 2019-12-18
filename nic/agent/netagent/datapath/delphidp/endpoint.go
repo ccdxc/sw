@@ -30,7 +30,7 @@ func ipv4Touint32(ip net.IP) uint32 {
 }
 
 // CreateLocalEndpoint creates a local endpoint in datapath
-func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
+func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
 	var halIPAddresses []*halproto.IPAddress
 	var lifHandle *halproto.LifKeyHandle
 
@@ -61,17 +61,6 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		},
 	}
 
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
-
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 			SegmentId: nt.Status.NetworkID,
@@ -88,7 +77,6 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
-		SgKeyHandle:        sgHandles,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -159,7 +147,7 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 
 // UpdateLocalEndpoint updates a local endpoint in datapath
 // FIXME: revisit this
-func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network) error {
 	var halIPAddresses []*halproto.IPAddress
 
 	// convert mac address
@@ -183,17 +171,6 @@ func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
 
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
-
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 			SegmentId: nt.Status.NetworkID,
@@ -201,9 +178,8 @@ func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		UsegVlan:    ep.Spec.UsegVlan,
-		IpAddress:   halIPAddresses,
-		SgKeyHandle: sgHandles,
+		UsegVlan:  ep.Spec.UsegVlan,
+		IpAddress: halIPAddresses,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -280,7 +256,7 @@ func (dp *DelphiDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netprot
 }
 
 // CreateRemoteEndpoint creates a remote endpoint in datapath
-func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error {
+func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, uplinkID uint64, vrf *netproto.Vrf) error {
 	var halIPAddresses []*halproto.IPAddress
 
 	// convert mac address
@@ -303,16 +279,6 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
 
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
@@ -330,7 +296,6 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
-		SgKeyHandle:        sgHandles,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -366,7 +331,7 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 }
 
 // UpdateRemoteEndpoint updates a remote endpoint in datapath
-func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network) error {
 	var halIPAddresses []*halproto.IPAddress
 
 	// convert mac address
@@ -389,16 +354,6 @@ func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
-	// get sg ids
-	var sgHandles []*halproto.SecurityGroupKeyHandle
-	for _, sg := range sgs {
-		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
-				SecurityGroupId: sg.Status.SecurityGroupID,
-			},
-		}
-		sgHandles = append(sgHandles, &sgKey)
-	}
 
 	l2Key := halproto.L2SegmentKeyHandle{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
@@ -407,9 +362,8 @@ func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		UsegVlan:    ep.Spec.UsegVlan,
-		IpAddress:   halIPAddresses,
-		SgKeyHandle: sgHandles,
+		UsegVlan:  ep.Spec.UsegVlan,
+		IpAddress: halIPAddresses,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{

@@ -32,7 +32,7 @@ type AppReactor interface {
 }
 type AppOStream struct {
 	sync.Mutex
-	stream netproto.AppApi_AppOperUpdateClient
+	stream netproto.AppApiV1_AppOperUpdateClient
 }
 
 // WatchApps runs App watcher loop
@@ -50,7 +50,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 
 	// start the watch
 	ometa := reactor.GetWatchOptions(ctx, "App")
-	appRPCClient := netproto.NewAppApiClient(client.rpcClient.ClientConn)
+	appRPCClient := netproto.NewAppApiV1Client(client.rpcClient.ClientConn)
 	stream, err := appRPCClient.WatchApps(ctx, &ometa)
 	if err != nil {
 		log.Errorf("Error watching App. Err: %v", err)
@@ -134,7 +134,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 }
 
 // watchAppRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchAppRecvLoop(stream netproto.AppApi_WatchAppsClient, recvch chan<- *netproto.AppEvent) {
+func (client *NimbusClient) watchAppRecvLoop(stream netproto.AppApiV1_WatchAppsClient, recvch chan<- *netproto.AppEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()

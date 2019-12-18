@@ -77,14 +77,7 @@ func convertNetwork(nw *NetworkState) *netproto.Network {
 		TypeMeta:   nw.Network.TypeMeta,
 		ObjectMeta: agentObjectMeta(nw.Network.ObjectMeta),
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  nw.Network.Spec.IPv4Subnet,
-			IPv4Gateway: nw.Network.Spec.IPv4Gateway,
-			IPv6Subnet:  nw.Network.Spec.IPv6Subnet,
-			IPv6Gateway: nw.Network.Spec.IPv6Gateway,
-			VlanID:      nw.Network.Spec.VlanID,
-		},
-		Status: netproto.NetworkStatus{
-			AllocatedVlanID: nw.Network.Spec.VlanID,
+			VlanID: nw.Network.Spec.VlanID,
 		},
 	}
 	nt.CreationTime = api.Timestamp{Timestamp: *creationTime}

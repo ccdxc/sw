@@ -110,16 +110,6 @@
     }
   },
   "definitions": {
-    "apiEventType": {
-      "type": "string",
-      "enum": [
-        "CreateEvent",
-        "UpdateEvent",
-        "DeleteEvent"
-      ],
-      "default": "CreateEvent",
-      "title": "Watch event types"
-    },
     "apiListWatchOptions": {
       "type": "object",
       "required": [
@@ -373,20 +363,6 @@
         }
       }
     },
-    "apiTypeMeta": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "Kind represents the type of the API object."
-        },
-        "api-version": {
-          "type": "string",
-          "title": "APIVersion defines the version of the API object. This can only be set by the server"
-        }
-      },
-      "description": "TypeMeta contains the metadata about kind and version for all API objects."
-    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -440,133 +416,6 @@
           }
         }
       }
-    },
-    "netprotoPort": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoPortSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoPortStatus"
-        }
-      },
-      "title": "Port object"
-    },
-    "netprotoPortEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "port": {
-          "$ref": "#/definitions/netprotoPort"
-        }
-      },
-      "title": "port watch event"
-    },
-    "netprotoPortList": {
-      "type": "object",
-      "properties": {
-        "ports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoPort"
-          }
-        }
-      }
-    },
-    "netprotoPortSpec": {
-      "type": "object",
-      "required": [
-        "type",
-        "admin-status"
-      ],
-      "properties": {
-        "speed": {
-          "type": "string",
-          "description": "Port Speed."
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "type_none",
-            "type_ethernet",
-            "type_management"
-          ],
-          "default": "type_none",
-          "description": "Type of Port. Either TYPE_ETHERNET or TYPE_MANAGEMENT."
-        },
-        "breakout-mode": {
-          "type": "string",
-          "title": "Port Breakout Mode"
-        },
-        "admin-status": {
-          "type": "string",
-          "enum": [
-            "none",
-            "up",
-            "down"
-          ],
-          "default": "none",
-          "description": "AdminStatus of the port."
-        },
-        "lanes": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Number of Lanes on the port."
-        }
-      },
-      "title": "PortSpec captures all the port level configuration"
-    },
-    "netprotoPortStatus": {
-      "type": "object",
-      "required": [
-        "oper-status",
-        "oper-speed"
-      ],
-      "properties": {
-        "oper-status": {
-          "type": "string",
-          "enum": [
-            "none",
-            "up",
-            "down"
-          ],
-          "default": "none",
-          "title": "Operational Status"
-        },
-        "oper-speed": {
-          "type": "string",
-          "enum": [
-            "speed_none",
-            "speed_1g",
-            "speed_10g",
-            "speed_25g",
-            "speed_40g",
-            "speed_50g",
-            "speed_100g",
-            "speed_autoneg"
-          ],
-          "default": "speed_none",
-          "title": "Operational Speed in case of AutoNeg"
-        },
-        "id": {
-          "type": "string",
-          "format": "uint64",
-          "title": "PortID in the datapath"
-        }
-      },
-      "title": "Port Status"
     }
   }
 }

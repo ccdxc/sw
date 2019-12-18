@@ -125,16 +125,6 @@
   version = "0.11.0"
 
 [[projects]]
-  digest = "1:b8fb5132e1f3a863594e3e8abe19e6611f41350662bb9ca4816f194e05d05bcd"
-  name = "github.com/appc/cni"
-  packages = [
-    "pkg/types",
-    "pkg/version",
-  ]
-  pruneopts = "NUT"
-  revision = "98ff61aac32dcf2eb3044a0d5e5f1814837b3c75"
-
-[[projects]]
   branch = "master"
   digest = "1:50dba5c53c526d131059a349872dd0db092e58d555748b1c59fa566735f2fab7"
   name = "github.com/armon/go-radix"
@@ -251,17 +241,6 @@
   pruneopts = "NUT"
   revision = "37d7f8432a3e684eef9b2edece76bdfa6ac85b39"
   version = "v1.0-rc1"
-
-[[projects]]
-  digest = "1:c8640de3cfd56464d8226dfbad8545027cdf4e8021405e14e34687895fd478ae"
-  name = "github.com/containernetworking/cni"
-  packages = [
-    "pkg/skel",
-    "pkg/types",
-    "pkg/version",
-  ]
-  pruneopts = "NUT"
-  revision = "98ff61aac32dcf2eb3044a0d5e5f1814837b3c75"
 
 [[projects]]
   digest = "1:2dd6e24559768e3fb19fee5941ac14118ffd5dd995af445791b0386a2defa8fa"
@@ -2891,8 +2870,6 @@
     "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
     "github.com/RackSec/srslog",
-    "github.com/appc/cni/pkg/types",
-    "github.com/appc/cni/pkg/version",
     "github.com/asaskevich/govalidator",
     "github.com/boltdb/bolt",
     "github.com/c9s/goprocinfo/linux",
@@ -2905,8 +2882,6 @@
     "github.com/cenkalti/backoff",
     "github.com/cheggaaa/pb",
     "github.com/codahale/hdrhistogram",
-    "github.com/containernetworking/cni/pkg/skel",
-    "github.com/containernetworking/cni/pkg/types",
     "github.com/coreos/etcd/clientv3",
     "github.com/coreos/etcd/clientv3/concurrency",
     "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",

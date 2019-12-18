@@ -40,7 +40,6 @@ type Topics struct {
 	EndpointTopic              *nimbus.EndpointTopic
 	NetworkTopic               *nimbus.NetworkTopic
 	SecurityProfileTopic       *nimbus.SecurityProfileTopic
-	SecurityGroupTopic         *nimbus.SecurityGroupTopic
 	NetworkSecurityPolicyTopic *nimbus.NetworkSecurityPolicyTopic
 	NetworkInterfaceTopic      *nimbus.InterfaceTopic
 	AggregateTopic             *nimbus.AggregateTopic
@@ -221,11 +220,6 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, statemgr)
 	if err != nil {
 		logger.Errorf("Error starting SecurityProfile RPC server")
-		return nil, err
-	}
-	statemgr.topics.SecurityGroupTopic, err = nimbus.AddSecurityGroupTopic(mserver, nil)
-	if err != nil {
-		logger.Errorf("Error starting SG RPC server")
 		return nil, err
 	}
 	statemgr.topics.NetworkSecurityPolicyTopic, err = nimbus.AddNetworkSecurityPolicyTopic(mserver, statemgr)

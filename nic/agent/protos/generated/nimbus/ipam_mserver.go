@@ -89,7 +89,7 @@ func AddIPAMPolicyTopic(server *MbusServer, reactor IPAMPolicyStatusReactor) (*I
 
 	// register the RPC handlers
 	if server.grpcServer != nil {
-		netproto.RegisterIPAMPolicyApiServer(server.grpcServer.GrpcServer, &handler)
+		netproto.RegisterIPAMPolicyApiV1Server(server.grpcServer.GrpcServer, &handler)
 	}
 
 	return &handler, nil
@@ -369,7 +369,7 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.Obje
 }
 
 // WatchIPAMPolicys watches IPAMPolicys and sends streaming resp
-func (eh *IPAMPolicyTopic) WatchIPAMPolicys(ometa *api.ObjectMeta, stream netproto.IPAMPolicyApi_WatchIPAMPolicysServer) error {
+func (eh *IPAMPolicyTopic) WatchIPAMPolicys(ometa *api.ObjectMeta, stream netproto.IPAMPolicyApiV1_WatchIPAMPolicysServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -525,7 +525,7 @@ func (eh *IPAMPolicyTopic) updateIPAMPolicyOper(oper *netproto.IPAMPolicyEvent, 
 	return nil
 }
 
-func (eh *IPAMPolicyTopic) IPAMPolicyOperUpdate(stream netproto.IPAMPolicyApi_IPAMPolicyOperUpdateServer) error {
+func (eh *IPAMPolicyTopic) IPAMPolicyOperUpdate(stream netproto.IPAMPolicyApiV1_IPAMPolicyOperUpdateServer) error {
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

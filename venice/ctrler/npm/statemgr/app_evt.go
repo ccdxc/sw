@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -57,11 +56,15 @@ func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
 
 // convertApp converts from npm state to netproto app
 func convertApp(aps *AppState) *netproto.App {
-	protoPort := []string{}
+	var protoPort []*netproto.ProtoPort
 
 	// convert protocol/port
 	for _, pp := range aps.App.Spec.ProtoPorts {
-		protoPort = append(protoPort, fmt.Sprintf("%s/%s", pp.Protocol, pp.Ports))
+		p := &netproto.ProtoPort{
+			Protocol: pp.Protocol,
+			Port:     pp.Ports,
+		}
+		protoPort = append(protoPort, p)
 	}
 
 	// build sg message
@@ -78,12 +81,14 @@ func convertApp(aps *AppState) *netproto.App {
 	app.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
 	if aps.App.Spec.ALG != nil {
-		app.Spec.ALGType = aps.App.Spec.ALG.Type
-
 		switch aps.App.Spec.ALG.Type {
 		case security.ALG_ICMP.String():
 			if aps.App.Spec.ALG.Icmp != nil {
-				app.Spec.ProtoPorts = []string{"icmp"}
+				app.Spec.ProtoPorts = []*netproto.ProtoPort{
+					{
+						Protocol: "icmp",
+					},
+				}
 				ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
 				icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
 

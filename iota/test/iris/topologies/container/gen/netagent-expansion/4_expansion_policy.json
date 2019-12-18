@@ -20,7 +20,7 @@
                             ]
                         }, 
                         "destination": {
-                            "app-configs": [
+                            "proto-ports": [
                                 {
                                     "protocol": "udp", 
                                     "port": "1"
@@ -39,7 +39,7 @@
                             ]
                         }, 
                         "destination": {
-                            "app-configs": [
+                            "proto-ports": [
                                 {
                                     "protocol": "udp", 
                                     "port": "2"
@@ -58,7 +58,7 @@
                             ]
                         }, 
                         "destination": {
-                            "app-configs": [
+                            "proto-ports": [
                                 {
                                     "protocol": "udp", 
                                     "port": "3"

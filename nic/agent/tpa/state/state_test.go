@@ -182,7 +182,7 @@ func TestFindNumExports(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
+			VlanID: 42,
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
@@ -325,7 +325,7 @@ func TestValidatePolicy(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
+			VlanID: 42,
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
@@ -628,8 +628,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},
@@ -811,8 +810,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},
@@ -1035,8 +1033,7 @@ func TestNetagentInfo(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},
@@ -1197,8 +1194,7 @@ func TestTpaDebug(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},
@@ -1297,8 +1293,7 @@ func TestPolicyOps(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},
@@ -1571,8 +1566,7 @@ func TestMatchRule(t *testing.T) {
 	na.NetworkDB[key] = &netproto.Network{
 		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet: "",
-		},
+			VlanID: 42},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
 		},

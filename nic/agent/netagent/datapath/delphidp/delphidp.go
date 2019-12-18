@@ -71,111 +71,6 @@ func (dp *DelphiDatapath) UpdateVrf(vrfID uint64) error {
 	return nil
 }
 
-// CreateNatPool creates a nat pool in the datapath
-func (dp *DelphiDatapath) CreateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateNatPool updates a nat pool in the datapath
-func (dp *DelphiDatapath) UpdateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteNatPool deletes a nat pool in the datapath
-func (dp *DelphiDatapath) DeleteNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateNatPolicy creates a nat policy in the datapath
-func (dp *DelphiDatapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateNatPolicy updates a nat policy in the datapath
-func (dp *DelphiDatapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteNatPolicy deletes a nat policy in the datapath
-func (dp *DelphiDatapath) DeleteNatPolicy(np *netproto.NatPolicy, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateRoute creates a route
-func (dp *DelphiDatapath) CreateRoute(rt *netproto.Route, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateRoute updates a route
-func (dp *DelphiDatapath) UpdateRoute(rt *netproto.Route, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteRoute deletes a route
-func (dp *DelphiDatapath) DeleteRoute(rt *netproto.Route, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateNatBinding creates a nat policy in the datapath
-func (dp *DelphiDatapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) (*netproto.NatBinding, error) {
-	return nil, nil
-}
-
-// UpdateNatBinding updates a nat policy in the datapath
-func (dp *DelphiDatapath) UpdateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteNatBinding deletes a nat policy in the datapath
-func (dp *DelphiDatapath) DeleteNatBinding(np *netproto.NatBinding, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateIPSecPolicy creates a IPSec policy in the datapath
-func (dp *DelphiDatapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*types.IPSecRuleRef) error {
-	return nil
-}
-
-// UpdateIPSecPolicy updates a IPSec policy in the datapath
-func (dp *DelphiDatapath) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*types.IPSecRuleRef) error {
-	return nil
-}
-
-// DeleteIPSecPolicy deletes a IPSec policy in the datapath
-func (dp *DelphiDatapath) DeleteIPSecPolicy(np *netproto.IPSecPolicy, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateIPSecSAEncrypt creates a IPSecSA encrypt rule in the datapath
-func (dp *DelphiDatapath) CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateIPSecSAEncrypt updates a IPSecSA encrypt rule in the datapath
-func (dp *DelphiDatapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteIPSecSAEncrypt deletes a IPSecSA encrypt rule in the datapath
-func (dp *DelphiDatapath) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateIPSecSADecrypt creates a IPSecSA decrypt rule in the datapath
-func (dp *DelphiDatapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateIPSecSADecrypt updates a IPSecSA decrypt rule in the datapath
-func (dp *DelphiDatapath) UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteIPSecSADecrypt deletes a IPSecSA decrypt rule in the datapath
-func (dp *DelphiDatapath) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, vrf *netproto.Vrf) error {
-	return nil
-}
-
 // CreateTunnel deletes a security group policy in the datapath
 func (dp *DelphiDatapath) CreateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error {
 	return nil
@@ -188,21 +83,6 @@ func (dp *DelphiDatapath) UpdateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) 
 
 // DeleteTunnel updates a tunnel in the datapath
 func (dp *DelphiDatapath) DeleteTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// CreateTCPProxyPolicy deletes a tunnel in the datapath
-func (dp *DelphiDatapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// UpdateTCPProxyPolicy creates a tcp proxy policy in the datapath
-func (dp *DelphiDatapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
-	return nil
-}
-
-// DeleteTCPProxyPolicy updates a tcp proxy policy in the datapath
-func (dp *DelphiDatapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
 	return nil
 }
 

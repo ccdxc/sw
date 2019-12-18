@@ -9,10 +9,11 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "match.proto";
 
 // ---------------------------- App API ----------------------------
 // app controller api
-service AppApi {
+service AppApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "App",
@@ -20,12 +21,12 @@ service AppApi {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/apps"
     };
-
-    rpc GetApp (api.ObjectMeta) returns (App) {};
     rpc ListApps (api.ObjectMeta) returns (AppList) {};
     rpc WatchApps (api.ObjectMeta) returns (stream AppEventList) {};
-    rpc UpdateApp (App) returns (App) {};
     rpc AppOperUpdate (stream AppEvent) returns (api.TypeMeta) {};
+
+//    rpc GetApp (api.ObjectMeta) returns (App) {};
+//    rpc UpdateApp (App) returns (App) {};
 
 }
 
@@ -39,15 +40,13 @@ message App {
 
 // app spec
 message AppSpec {
-    // List of protocol/ports. Valid combinations tcp/80 udp/10000-20000 icmp/5. For ICMP the port is interpreted as ICMP Code..
-    repeated string ProtoPorts      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "proto-ports,omitempty"];
+    repeated ProtoPort ProtoPorts   = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "proto-ports,omitempty"];
 
     // ALG specific configuration
-    string          ALGType         = 2 [(gogoproto.jsontag) = "alg-type,omitempty"];
-    ALG             ALG             = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+    ALG             ALG             = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
 
     // AppIdleTimeout is the app specific idle timeout. Specfied in parseable time, Eg: 10s, 1m30s or 1h45m15s and so on
-    string          AppIdleTimeout  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "app-idle-timeout,omitempty"];
+    string          AppIdleTimeout  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "app-idle-timeout,omitempty"];
 }
 
 message ALG {
@@ -134,8 +133,9 @@ message RTSP {
 message ICMP {
     // ICMP Type
     uint32 Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
+
     // ICMP Code is sub-command for a given ICMP Type
-    uint32 Code =2 [(gogoproto.jsontag) = "code,omitempty"];
+    uint32 Code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 }
 
 // app status

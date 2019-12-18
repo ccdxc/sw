@@ -12,7 +12,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // ---------------------------- Network API ----------------------------
 // network controller api
-service NetworkApi {
+service NetworkApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Network",
@@ -21,22 +21,26 @@ service NetworkApi {
         Prefix: "api/networks"
     };
 
-    rpc GetNetwork (api.ObjectMeta) returns (Network) {};
     rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
     rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
-    rpc UpdateNetwork (Network) returns (Network) {};
     rpc NetworkOperUpdate (stream NetworkEvent) returns (api.TypeMeta) {};
+
+//    rpc GetNetwork (api.ObjectMeta) returns (Network) {};
+//    rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
+//    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
+//    rpc UpdateNetwork (Network) returns (Network) {};
+//    rpc NetworkOperUpdate (stream NetworkEvent) returns (api.TypeMeta) {};
 
 }
 
 // ApiResponse Object
 message ApiResponse {
     // http status code
-    uint32 StatusCode  = 1 [(gogoproto.jsontag)="status-code,omitempty"];
+    uint32 StatusCode           = 1 [(gogoproto.jsontag)="status-code,omitempty"];
     // error message if any
-    string Error       = 2 [(gogoproto.jsontag)="error,omitempty"];
+    string Error                = 2 [(gogoproto.jsontag)="error,omitempty"];
     // self link references
-    repeated string References = 3 [(gogoproto.jsontag)="references,omitempty"];
+    repeated string References  = 3 [(gogoproto.jsontag)="references,omitempty"];
 }
 // network object
 message Network {
@@ -50,28 +54,12 @@ message Network {
 message NetworkSpec {
     // VrfName specifies the name of the VRF that the current Network belongs to
     string VrfName     = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
-    // IPv4Subnet of the L3 Network in CIDR format. Required
-    string IPv4Subnet  = 2[(gogoproto.jsontag)="ipv4-subnet,omitempty"];
-    // IPv4Gateway of the L3 Network. Required
-    string IPv4Gateway = 3[(gogoproto.jsontag)="ipv4-gateway,omitempty"];
-    // IPv6Subnet of the L3 Network in CIDR format. Optional
-    string IPv6Subnet  = 4[(gogoproto.jsontag)="ipv6-subnet,omitempty"];
-    // IPv6Gateway of the L3 Network. Optional
-    string IPv6Gateway = 5[(gogoproto.jsontag)="ipv6-gateway,omitempty"];
-    // VlanID of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
-    uint32 VlanID      = 6[(gogoproto.jsontag)="vlan-id,omitempty"];
-    // VxlanVNI of the L2 Segment. Required. Must specify either VlanID or VXLAN VNI. But not both
-    uint32 VxlanVNI    = 7[(gogoproto.jsontag)="vxlan-vni,omitempty"];
-    // Router MAC Address of L3 network in OUI format. Optional
-    string RouterMAC   = 8[(gogoproto.jsontag)="router-mac,omitempty"];
+    uint32 VlanID      = 2 [(gogoproto.jsontag)="vlan-id,omitempty"];
 }
 
 // network status
 message NetworkStatus {
-    uint32 AllocatedVlanID   = 1[(gogoproto.jsontag)="allocated-vlan-id,omitempty"];  // allocated Vlan ID
-    uint32 AllocatedVxlanVNI = 2[(gogoproto.jsontag)="allocated-vxlan-vni,omitempty"];  // Allocated VXLAN VNI
     uint64 NetworkID         = 3[(gogoproto.jsontag)="network-id,omitempty"];  // Network identifier
-    uint64 NetworkHandle     = 4[(gogoproto.jsontag)="network-handle,omitempty"];  // datapath handle for the network
 }
 
 // list of networks
