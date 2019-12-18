@@ -2,6 +2,7 @@ package apierrors
 
 import (
 	"fmt"
+	"net/http"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,7 +35,7 @@ func FromError(err error) api.Status {
 			break
 		}
 	}
-	ret.Code = int32(gwruntime.HTTPStatusFromCode(grpcstatus.Code()))
+	ret.Code = int32(HTTPStatusFromCode(grpcstatus.Code()))
 	return ret
 }
 
@@ -78,4 +79,14 @@ func AddDetails(s *api.Status) error {
 		return s
 	}
 	return grpcstatus.Err()
+}
+
+// HTTPStatusFromCode converts a gRPC error code into the corresponding HTTP response status.
+func HTTPStatusFromCode(code codes.Code) int {
+	switch code {
+	case codes.ResourceExhausted:
+		return http.StatusRequestEntityTooLarge
+	default:
+		return gwruntime.HTTPStatusFromCode(code)
+	}
 }

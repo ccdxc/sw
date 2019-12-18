@@ -19,7 +19,6 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	gwruntime "github.com/pensando/grpc-gateway/runtime"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 
@@ -1175,7 +1174,7 @@ func TestCrudOps(t *testing.T) {
 		t.Errorf("gRPC: apply discount action should have failed")
 	}
 	status := apierrors.FromError(err)
-	if status.Code != int32(gwruntime.HTTPStatusFromCode(codes.ResourceExhausted)) {
+	if status.Code != int32(apierrors.HTTPStatusFromCode(codes.ResourceExhausted)) {
 		t.Fatalf("Code does not match [%+v]", status)
 	}
 	if len(status.Message) != 1 || status.Message[0] != "test message" {
