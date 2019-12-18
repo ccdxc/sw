@@ -80,6 +80,7 @@ typedef struct linkmgr_sync_s {
     pthread_mutex_t mutex;
     pthread_cond_t  cond;
     int             post;
+    bool            waiting;
 } linkmgr_sync_t;
 
 

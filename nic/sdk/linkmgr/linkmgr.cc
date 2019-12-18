@@ -49,6 +49,7 @@ wait_linkmgr(void) {
 
     pthread_mutex_lock(&g_linkmgr_sync.mutex);
     while (g_linkmgr_sync.post == 0) {
+        g_linkmgr_sync.waiting = true;
         int rc = pthread_cond_wait(&g_linkmgr_sync.cond, &g_linkmgr_sync.mutex);
         if (rc != 0) {
             // ETIMEDOUT/EINVAL/EPERM error condition not expected.
@@ -57,6 +58,7 @@ wait_linkmgr(void) {
                 SDK_LINKMGR_TRACE_ERR("pthread_cond_wait returned %u", rc);
             }
         }
+        g_linkmgr_sync.waiting = false;
     }
     g_linkmgr_sync.post = 0;
     pthread_mutex_unlock(&g_linkmgr_sync.mutex);
@@ -434,6 +436,20 @@ port_link_poll_timer (linkmgr_entry_data_t *data)
 }
 
 //------------------------------------------------------------------------------
+// linkmgr thread cleanup
+//------------------------------------------------------------------------------
+void
+linkmgr_thread_cleanup (void *arg)
+{
+    // if the cancellation request executed during pthread_conditional_wait
+    // release the lock taken by the cancellation routine.
+    //  linkmgr-timer may be poling for this lock in signal_linkmgr()
+    if (g_linkmgr_sync.waiting) {
+        pthread_mutex_unlock(&g_linkmgr_sync.mutex);
+    }
+}
+
+//------------------------------------------------------------------------------
 // linkmgr's forever loop
 //------------------------------------------------------------------------------
 void*
@@ -448,6 +464,7 @@ linkmgr_event_loop (void* ctxt)
     // opting for graceful termination as pthrad_cond_wait
     // is part of pthread_cancel list
     SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    pthread_cleanup_push(linkmgr_thread_cleanup, NULL);
 
     while (TRUE) {
         work_done = false;
@@ -517,6 +534,7 @@ linkmgr_event_loop (void* ctxt)
             wait_linkmgr(); //Wait here until any one of the producers gives work to do
         }
     }
+    pthread_cleanup_pop(1);
 }
 
 //------------------------------------------------------------------------------
