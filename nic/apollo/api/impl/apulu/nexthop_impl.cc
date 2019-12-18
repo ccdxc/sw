@@ -110,11 +110,6 @@ nexthop_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
                                       pds_nexthop_spec_t *spec) {
     sdk_ret_t ret;
@@ -195,6 +190,11 @@ nexthop_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
     }
     return ret;
+}
+
+sdk_ret_t
+nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

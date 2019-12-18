@@ -118,8 +118,30 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     v4_meter_ = spec->v4_meter;
     v6_meter_ = spec->v6_meter;
     vnic_encap_ = spec->vnic_encap;
+    if (unlikely((vnic_encap_.type != PDS_ENCAP_TYPE_NONE) &&
+                 (vnic_encap_.type != PDS_ENCAP_TYPE_DOT1Q))) {
+        PDS_TRACE_ERR("Invalid encap type %u on vnic %u",
+                      vnic_encap_.type, key_.id);
+        return SDK_RET_INVALID_ARG;
+
+    }
     fabric_encap_ = spec->fabric_encap;
     switch_vnic_ = spec->switch_vnic;
+    if (switch_vnic_) {
+        // switch vnics can send/receive traffic multiple SIPs/SMACs
+        if (unlikely(spec->src_dst_check)) {
+            PDS_TRACE_ERR("switch vnics can't have src/dst check knob enabled, "
+                          "vnic %u api op %u failed", key_.id,
+                          api_ctxt->api_op);
+            return SDK_RET_INVALID_ARG;
+        }
+        // switch vnics can send/receive traffic on multiple vlans
+        if (unlikely(vnic_encap_.type != PDS_ENCAP_TYPE_NONE)) {
+            PDS_TRACE_ERR("switch vnic can'thave VLAN encap, vnic %u api op %u "
+                          "failed", key_.id, api_ctxt->api_op);
+            return SDK_RET_INVALID_ARG;
+        }
+    }
     num_ing_v4_policy_ = spec->num_ing_v4_policy;
     for (uint8_t i = 0; i < num_ing_v4_policy_; i++) {
         ing_v4_policy_[i].id = spec->ing_v4_policy[i].id;

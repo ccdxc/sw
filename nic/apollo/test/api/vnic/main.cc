@@ -147,7 +147,7 @@ TEST_F(vnic_test, vnic_workflow_6) {
     vnic_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(1);
-    feeder1A.init(1, k_max_vnic, k_feeder_mac, PDS_ENCAP_TYPE_QINQ);
+    feeder1A.init(1, k_max_vnic, k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q);
     feeder1B.init(1, k_max_vnic, 0xb010101010101010,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_6<vnic_feeder>(feeder1, feeder1A, feeder1B);
@@ -161,7 +161,7 @@ TEST_F(vnic_test, vnic_workflow_7) {
     vnic_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(1);
-    feeder1A.init(1, k_max_vnic, k_feeder_mac, PDS_ENCAP_TYPE_QINQ);
+    feeder1A.init(1, k_max_vnic, k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q);
     feeder1B.init(1, k_max_vnic, 0xb010101010101010,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_7<vnic_feeder>(feeder1, feeder1A, feeder1B);

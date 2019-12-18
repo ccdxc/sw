@@ -250,12 +250,12 @@ private:
                                                  ip_addr_t *ip);
 
 private:
-    bool              is_local_;
+    bool        is_local_;
     // need to save the below for entry removal as the memhash handle is
     // not valid b/w the transactions.
-    uint32_t          vnic_hw_id_;
-    uint32_t          vpc_hw_id_;
-    uint32_t          subnet_hw_id_;
+    uint32_t    vnic_hw_id_;
+    uint32_t    vpc_hw_id_;
+    uint32_t    subnet_hw_id_;
 
     // handles or indices for NAT table
     uint32_t    to_public_ip_nat_idx_;

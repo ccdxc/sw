@@ -141,7 +141,11 @@ public:
     /// \NOTE      this method is called when an object is in the
     ///            dependent/puppet object list
     virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                                    api_op_t api_op) override;
+                                    api_op_t api_op) override {
+        // no tables programmed in activation stage will be affected because of
+        // updates to other objects like route tables, policy tables etc.
+        return SDK_RET_OK;
+    }
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj  API object
@@ -237,6 +241,16 @@ private:
     /// \param[in] vnic  VNIC obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_(pds_epoch_t epoch, vnic_entry *vnic);
+
+    /// \brief      program VNIC related tables during vnic update by
+    ///             enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] vnic  VNIC obj being programmed
+    /// \param[in] orig_vnic  original VNIC obj that is being modified
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
+                               vnic_entry *orig_vnic, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      fill the VNIC spec
     /// \param[out] spec specification

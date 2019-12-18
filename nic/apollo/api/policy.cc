@@ -150,6 +150,8 @@ policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       dir_, spec->direction, key_.id);
         return SDK_RET_INVALID_ARG;
     }
+    // in all other cases we have to recompute the policy table and program in
+    // the datapath
     return SDK_RET_OK;
 }
 
@@ -318,14 +320,15 @@ policy::read(pds_policy_info_t *info) {
 }
 sdk_ret_t
 policy::add_to_db(void) {
-    return policy_db()->policy_ht()->insert_with_key(&key_,
-                                                           this, &ht_ctxt_);
+    return policy_db()->insert(this);
 }
 
 sdk_ret_t
 policy::del_from_db(void) {
-    policy_db()->policy_ht()->remove(&key_);
-    return SDK_RET_OK;
+    if (policy_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
