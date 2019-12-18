@@ -105,7 +105,7 @@ int pal_qsfp_set_low_power_mode(int port);
 int pal_qsfp_reset_low_power_mode(int port);
 int pal_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t frequency);
 int pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency);
-int pal_program_marvell(uint8_t marvell_addr, uint32_t data);
+int pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy);
 int pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy);
 int pal_get_cpld_rev(void);
 int pal_get_cpld_id(void);

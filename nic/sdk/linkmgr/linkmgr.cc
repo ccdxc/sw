@@ -661,9 +661,7 @@ linkmgr_oob_init (linkmgr_cfg_t *cfg)
 {
     for (uint32_t port = 0;
          port < cfg->catalog->num_logical_oob_ports(); ++port) {
-        // pal_program_oob(port);
     }
-    // sdk::lib::pal_program_marvell(0, 0x8140);
     return SDK_RET_OK;
 }
 

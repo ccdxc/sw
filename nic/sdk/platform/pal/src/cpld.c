@@ -6,6 +6,15 @@
 #include "pal_locks.h"
 #include "pal.h"
 
+#define MDIO_CRTL_LO_REG        0x6
+#define MDIO_CRTL_HI_REG        0x7
+#define MDIO_DATA_LO_REG        0x8
+#define MDIO_DATA_HI_REG        0x9
+
+#define MDIO_ACC_ENA            0x1
+#define MDIO_RD_ENA             0x2
+#define MDIO_WR_ENA             0x4
+
 #ifdef __x86_64__
 int pal_is_qsfp_port_psnt(int port_no)
 {
@@ -44,7 +53,7 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
 }
 
 int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data)
+pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy)
 {
     return -1;
 }
@@ -340,15 +349,22 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
     }
 }
 
-int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data)
+static int
+mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
 {
-    cpld_reg_wr(0x7, marvell_addr);
-    cpld_reg_wr(0x8, (data >> 8) && 0xff);
-    cpld_reg_wr(0x9, data && 0xff);
-    cpld_reg_wr(0x6, (0xc << 3) | 0x4 | 0x1);
-    cpld_reg_wr(0x6, 0);
+    cpld_reg_wr(MDIO_CRTL_HI_REG, addr);
+    cpld_reg_wr(MDIO_DATA_LO_REG, (data & 0xFF));
+    cpld_reg_wr(MDIO_DATA_HI_REG, ((data >> 8) & 0xFF));
+    cpld_reg_wr(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_WR_ENA | MDIO_ACC_ENA);
+    usleep(100);
+    cpld_reg_wr(MDIO_CRTL_LO_REG, 0);
+    return 0;
+}
 
+int
+pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy)
+{
+    mdio_wr(marvell_addr, data, phy);
     return CPLD_SUCCESS;
 }
 
@@ -357,7 +373,7 @@ pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
 {
     int rc = CPLD_FAIL;
     rc = cpld_mdio_rd(marvell_addr, data, phy);
-    *data =  (*data >> 2) & 0x1;
+    *data =  (*data >> 11) & 0x1;
     return rc;
 }
 

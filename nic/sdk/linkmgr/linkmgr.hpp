@@ -11,6 +11,17 @@
 
 #define TIME_STR_SIZE 30
 
+#define MARVELL_PORT0           0x10  // marvell port connected to Asic
+
+#define MARVELL_PORT_STATUS_REG 0x0
+#define MARVELL_PORT_CTRL_REG   0x1
+
+#define MARVELL_PORT_CTRL_SPEED_OFFSET     0x0   // force speed
+#define MARVELL_PORT_CTRL_FORCEDDPX_OFFSET 0x2   // force duplex
+#define MARVELL_PORT_CTRL_DPX_OFFSET       0x3   // duplex value
+#define MARVELL_PORT_CTRL_FORCEDFC_OFFSET  0x6   // force flow contrl
+#define MARVELL_PORT_CTRL_FC_OFFSET        0x7   // flow control value
+
 namespace sdk {
 namespace linkmgr {
 
@@ -100,6 +111,14 @@ static inline void
 port_args_init (port_args_t *args)
 {
     memset(args, 0, sizeof(port_args_t));
+}
+
+static inline uint16_t
+marvell_port_cfg_1g (void) {
+    return (0x1 << MARVELL_PORT_CTRL_FORCEDFC_OFFSET)  |
+           (0x1 << MARVELL_PORT_CTRL_DPX_OFFSET)       |
+           (0x1 << MARVELL_PORT_CTRL_FORCEDDPX_OFFSET) |
+           (0x2 << MARVELL_PORT_CTRL_SPEED_OFFSET);
 }
 
 }    // namespace linkmgr

@@ -268,7 +268,9 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     // pal_init done in hal_pd_init
-    sdk::lib::pal_program_marvell(0, 0x8140);
+    sdk::lib::pal_program_marvell(MARVELL_PORT_CTRL_REG,
+                                  sdk::linkmgr::marvell_port_cfg_1g(),
+                                  MARVELL_PORT0);
 
     // linkmgr init
     hal_linkmgr_init(hal_cfg, hal::port_event_cb);

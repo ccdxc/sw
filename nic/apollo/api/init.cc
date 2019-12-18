@@ -12,6 +12,7 @@
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -62,6 +63,11 @@ static inline sdk_ret_t
 linkmgr_init (catalog *catalog, const char *cfg_path)
 {
     linkmgr_cfg_t    cfg;
+
+    // program the marvell port
+    sdk::lib::pal_program_marvell(MARVELL_PORT_CTRL_REG,
+                                  sdk::linkmgr::marvell_port_cfg_1g(),
+                                  MARVELL_PORT0);
 
     memset(&cfg, 0, sizeof(cfg));
     cfg.platform_type = g_pds_state.platform_type();

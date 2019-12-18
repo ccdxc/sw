@@ -158,7 +158,7 @@ pal_default_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t freq
 }
 
 static pal_ret_t
-pal_default_program_marvell(uint8_t addr, uint32_t data)
+pal_default_program_marvell(uint8_t addr, uint32_t data, uint8_t phy)
 {
     SDK_TRACE_DEBUG("PAL default program marvell called.");
     return PAL_RET_OK;
