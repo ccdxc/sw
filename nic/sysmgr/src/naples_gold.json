@@ -30,7 +30,7 @@
                 "service-name": "pciemgrd"
             }],
         "flags": [],
-        "timeout": 30.0
+        "timeout": 0.0
     },
     {
         "name": "hal",

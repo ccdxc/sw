@@ -172,11 +172,12 @@ void Service::fault(std::string reason)
             this->spec->name);
         return;
     }
-    glog->info("System in fault mode ({})", reason);
     if (this->spec->flags & PANIC_ON_FAILURE) {
         glog->info("{} is critical. Triggering watchdog", this->spec->name);
         FaultLoop::getInstance()->set_fault(reason);
     }
+    
+    glog->info("System in fault mode ({})", reason);
     g_bus->SystemFault(reason);
 }
 
@@ -219,11 +220,12 @@ void Service::on_child(pid_t pid)
 
 void Service::on_timer()
 {
-    glog->info("Service {} timed out", this->spec->name);
+    glog->warn("Service {} timed out. Killing it", this->spec->name);
     this->timer_watcher->stop();
 
-    this->fault("Process timed-out");
-    run_debug(this->pid);
+    // Killing the process will end `on_child` getting called where we
+    // will run debugs for the process and set fault
+    kill(this->pid, SIGQUIT);
 }
 
 void Service::reset_dependencies()
