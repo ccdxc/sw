@@ -260,7 +260,7 @@ policer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
 sdk_ret_t
 policer_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                            api_op_t api_op) {
+                            api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

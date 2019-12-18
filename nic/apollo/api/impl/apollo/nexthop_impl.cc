@@ -163,7 +163,7 @@ nexthop_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
 sdk_ret_t
 nexthop_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                            api_op_t api_op) {
+                            api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_ERR;
 }
 

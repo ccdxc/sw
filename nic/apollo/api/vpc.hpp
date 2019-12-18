@@ -131,12 +131,12 @@ public:
     ///        state and any of the state present in the dirty object list
     ///        (like cloned objects etc.) only and not directly on db objects
     /// \param[in] epoch epoch/version of new config
-    /// \param[in] api_op API operation
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
-                                        api_op_t api_op) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  add given VPC to the database
     /// \return SDK_RET_OK on success, failure status code on error

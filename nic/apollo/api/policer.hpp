@@ -128,7 +128,7 @@ public:
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
-                                        api_op_t api_op) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add given policer to the database
     /// \return         SDK_RET_OK on success, failure status code on error

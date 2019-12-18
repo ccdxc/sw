@@ -199,7 +199,7 @@ nexthop_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
 
 sdk_ret_t
 nexthop_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                            api_op_t api_op) {
+                            api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 void

@@ -262,10 +262,10 @@ vnic_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+vnic_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Reactivating vnic %u, subnet %u, fabric encap %s, ",
                     key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
-    return impl_->reactivate_hw(this, epoch, api_op);
+    return impl_->reactivate_hw(this, epoch, obj_ctxt);
 }
 
 sdk_ret_t

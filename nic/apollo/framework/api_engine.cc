@@ -825,8 +825,7 @@ api_engine::activate_config_stage_(void) {
          it != batch_ctxt_.aol.end(); it = aol_next_it) {
         aol_next_it++;
         octxt = batch_ctxt_.aom[*it];
-        ret = (*it)->reactivate_config(batch_ctxt_.epoch,
-                                       batch_ctxt_.aom[*it]->api_op);
+        ret = (*it)->reactivate_config(batch_ctxt_.epoch, batch_ctxt_.aom[*it]);
         del_from_deps_list_(it, *it);
         api_obj_ctxt_free_(octxt);
         if (unlikely(ret != SDK_RET_OK)) {

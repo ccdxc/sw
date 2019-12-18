@@ -92,7 +92,7 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    api_obj_ctxt_t *obj_ctxt) override;
+                                     api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     activate the epoch in the dataplane by programming
     ///            stage 0 tables, if any
@@ -109,12 +109,12 @@ public:
     ///        this object, if any, this reactivation must be based on existing
     ///        state and any of the state present in the dirty object list
     ///        (like clone objects etc.) only and not directly on db objects
-    /// \param[in] api_op API operation
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
-                                        api_op_t api_op) override;
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  add given nexthop group to the database
     /// \return SDK_RET_OK on success, failure status code on error

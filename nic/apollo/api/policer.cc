@@ -135,7 +135,7 @@ policer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-policer_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+policer_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

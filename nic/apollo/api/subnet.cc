@@ -322,9 +322,9 @@ subnet_entry::reprogram_config(api_op_t api_op) {
 }
 
 sdk_ret_t
-subnet_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+subnet_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        return impl_->reactivate_hw(this, epoch, api_op);
+        return impl_->reactivate_hw(this, epoch, obj_ctxt);
     }
     return SDK_RET_OK;
 }

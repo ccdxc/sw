@@ -627,7 +627,7 @@ vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 //       old epoch contents and override them !!!
 sdk_ret_t
 vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                         api_op_t api_op) {
+                         api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     mem_addr_t addr;
     subnet_entry *subnet;

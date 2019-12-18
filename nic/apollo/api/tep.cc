@@ -234,11 +234,11 @@ tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-tep_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+tep_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
     // we hit this when a tunnel (T1) is pointing to a tunnel (T2), and
     // T2 is updated necessitating an update on T1
     if (impl_) {
-        impl_->reactivate_hw(this, epoch, api_op);
+        impl_->reactivate_hw(this, epoch, obj_ctxt);
     }
     return SDK_RET_OK;
 }
