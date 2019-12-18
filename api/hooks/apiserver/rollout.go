@@ -267,7 +267,7 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 
 	if buf.Spec.ScheduledEndTime != nil {
 		var numVenice uint32
-		var numNaples uint32
+		var numNaples int32
 		var numRounds uint32
 
 		if buf.Spec.ScheduledStartTime == nil {
@@ -308,6 +308,7 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		h.l.Infof("DSC List is %+v", into.GetItems())
 
 		numNaples = countSmarNICS(into, buf.Spec.OrderConstraints, buf.Spec.DSCMustMatchConstraint, buf.Spec.Version)
+		h.l.Infof("Number of Naples (%d) MaxParallel (%d)", numNaples, buf.Spec.MaxParallel)
 
 		if buf.Spec.Strategy == rollout.RolloutSpec_LINEAR.String() {
 			if buf.Spec.MaxParallel == 0 {
@@ -316,19 +317,19 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 				numRounds = uint32(math.Ceil(float64(numNaples) / float64(buf.Spec.MaxParallel)))
 			}
 		} else {
-			var count uint32 = 1
+			var count int32 = 1
 			for numNaples > 0 {
 				numRounds++
 				numNaples = numNaples - count
 				count = count * 2
 				if buf.Spec.MaxParallel != 0 { // user limited max parallelism to this
-					count = min(count, buf.Spec.MaxParallel)
+					count = min(count, int32(buf.Spec.MaxParallel))
 				}
 			}
 		}
 
 		timeInMinutes := numRounds*5 + numVenice*10
-		h.l.Infof("Number of Naples (%d) Number of Rounds (%d) timeInMinutes (%d)", numNaples, numRounds, timeInMinutes)
+		h.l.Infof("Number of Rounds (%d) timeInMinutes (%d)", numRounds, timeInMinutes)
 		var endTime int64
 
 		if buf.Spec.ScheduledStartTime.Seconds > int64(time.Now().Second()) {
@@ -428,8 +429,8 @@ func init() {
 	apisrv.RegisterHooksCb("rollout.RolloutV1", registerRolloutHooks)
 }
 
-func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels.Selector, smartNICMustMatchConstraint bool, version string) uint32 {
-	var numDscs uint32
+func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels.Selector, smartNICMustMatchConstraint bool, version string) int32 {
+	var numDscs int32
 	snicMap := make(map[int]*cluster.DistributedServiceCard)
 	for name, s := range snics.GetItems() {
 		snicMap[name] = s
@@ -438,7 +439,6 @@ func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels
 	for _, ls := range labelSels {
 		for index, s := range snicMap {
 			if ls.Matches(labels.Set(s.ObjectMeta.Labels)) {
-				log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
 				if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
 					numDscs++
 					delete(snicMap, index)
@@ -449,7 +449,6 @@ func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels
 	if !smartNICMustMatchConstraint {
 		// add the remaining SNICs
 		for _, s := range snicMap {
-			log.Infof("SmartNIC Phase is %+v", s.Status.AdmissionPhase)
 			if s.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() && s.Status.DSCVersion != version {
 				numDscs++
 			}
@@ -457,7 +456,7 @@ func countSmarNICS(snics cluster.DistributedServiceCardList, labelSels []*labels
 	}
 	return numDscs
 }
-func min(a, b uint32) uint32 {
+func min(a, b int32) int32 {
 	if a < b {
 		return a
 	}

@@ -606,7 +606,10 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 	case roproto.RolloutPhase_PROGRESSING:
 		startTime := api.Timestamp{}
 		startTime.SetTime(time.Now())
-		ros.Status.DSCsStatus[index].StartTime = &startTime
+		//dont want to reset the starttime during retry
+		if ros.Status.DSCsStatus[index].StartTime == nil {
+			ros.Status.DSCsStatus[index].StartTime = &startTime
+		}
 
 	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
 		if ros.Status.DSCsStatus[index].StartTime != nil {
