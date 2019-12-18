@@ -30,6 +30,8 @@
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
+#include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
 
 namespace api {
 
@@ -69,6 +71,12 @@ union api_params_u {
     pds_nexthop_group_spec_t     nexthop_group_spec;
     pds_policer_key_t            policer_key;
     pds_policer_spec_t           policer_spec;
+    pds_nat_port_block_key_t     nat_port_block_key;
+    pds_nat_port_block_spec_t    nat_port_block_spec;
+    pds_dhcp_relay_key_t         dhcp_relay_key;
+    pds_dhcp_relay_spec_t        dhcp_relay_spec;
+    pds_dhcp_policy_key_t        dhcp_policy_key;
+    pds_dhcp_policy_spec_t       dhcp_policy_spec;
 };
 
 slab *api_params_slab(void);

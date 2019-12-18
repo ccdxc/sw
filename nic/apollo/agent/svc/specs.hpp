@@ -2242,10 +2242,10 @@ pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_agent_proto_to_api_spec (pds_dhcp_relay_agent_spec_t *api_spec,
-                                        const pds::DHCPRelayAgentSpec &proto_spec)
+pds_dhcp_relay_proto_to_api_spec (pds_dhcp_relay_spec_t *api_spec,
+                                  const pds::DHCPRelayAgentSpec &proto_spec)
 {
-    api_spec->id = proto_spec.id();
+    api_spec->key.id = proto_spec.id();
     api_spec->vpc.id = proto_spec.vpcid();
     ipaddr_proto_spec_to_api_spec(&api_spec->server_ip, proto_spec.serverip());
     ipaddr_proto_spec_to_api_spec(&api_spec->agent_ip, proto_spec.agentip());
@@ -2253,10 +2253,10 @@ pds_dhcp_relay_agent_proto_to_api_spec (pds_dhcp_relay_agent_spec_t *api_spec,
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_agent_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
-                                        const pds_dhcp_relay_agent_spec_t *api_spec)
+pds_dhcp_relay_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
+                                  const pds_dhcp_relay_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->id);
+    proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vpc.id);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_serverip(),
                                   &api_spec->server_ip);
@@ -2266,40 +2266,40 @@ pds_dhcp_relay_agent_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_agent_api_status_to_proto (pds::DHCPRelayAgentStatus *proto_status,
-                                          const pds_dhcp_relay_agent_status_t *api_status)
+pds_dhcp_relay_api_status_to_proto (pds::DHCPRelayAgentStatus *proto_status,
+                                    const pds_dhcp_relay_status_t *api_status)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_agent_api_stats_to_proto (pds::DHCPRelayAgentStats *proto_stats,
-                                         const pds_dhcp_relay_agent_stats_t *api_stats)
+pds_dhcp_relay_api_stats_to_proto (pds::DHCPRelayAgentStats *proto_stats,
+                                   const pds_dhcp_relay_stats_t *api_stats)
 {
     return SDK_RET_OK;
 }
 
 // populate proto buf from route table API info
 static inline void
-pds_dhcp_relay_agent_api_info_to_proto (const pds_dhcp_relay_agent_info_t *api_info,
-                                        void *ctxt)
+pds_dhcp_relay_api_info_to_proto (const pds_dhcp_relay_info_t *api_info,
+                                  void *ctxt)
 {
-    pds::DHCPRelayAgentGetResponse *proto_rsp = (pds::DHCPRelayAgentGetResponse *)ctxt;
+    pds::DHCPRelayAgentGetResponse *proto_rsp =(pds::DHCPRelayAgentGetResponse *)ctxt;
     auto dhcp = proto_rsp->add_response();
     pds::DHCPRelayAgentSpec *proto_spec = dhcp->mutable_spec();
     pds::DHCPRelayAgentStatus *proto_status = dhcp->mutable_status();
     pds::DHCPRelayAgentStats *proto_stats = dhcp->mutable_stats();
 
-    pds_dhcp_relay_agent_api_spec_to_proto(proto_spec, &api_info->spec);
-    pds_dhcp_relay_agent_api_status_to_proto(proto_status, &api_info->status);
-    pds_dhcp_relay_agent_api_stats_to_proto(proto_stats, &api_info->stats);
+    pds_dhcp_relay_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_dhcp_relay_api_status_to_proto(proto_status, &api_info->status);
+    pds_dhcp_relay_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
 static inline sdk_ret_t
 pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
                                       const pds::NatPortBlockSpec &proto_spec)
 {
-    api_spec->id = proto_spec.id();
+    api_spec->key.id = proto_spec.id();
     api_spec->vpc.id = proto_spec.vpcid();
     api_spec->ip_proto = proto_spec.protocol();
     if (proto_spec.nataddress().has_prefix()) {
@@ -2318,7 +2318,7 @@ static inline sdk_ret_t
 pds_nat_port_block_api_spec_to_proto (pds::NatPortBlockSpec *proto_spec,
                                       const pds_nat_port_block_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->id);
+    proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vpc.id);
     proto_spec->set_protocol(api_spec->ip_proto);
     auto range_spec = proto_spec->mutable_nataddress()->mutable_range();

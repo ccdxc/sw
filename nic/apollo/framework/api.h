@@ -46,6 +46,9 @@ typedef enum obj_id_e {
     OBJ_ID_NEXTHOP,        ///< nexthop
     OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
     OBJ_ID_POLICER,        ///< policer
+    OBJ_ID_NAT_PORT_BLOCK, ///< NAT port block
+    OBJ_ID_DHCP_RELAY,     ///< DHCP relay
+    OBJ_ID_DHCP_POLICY,    ///< DHCP suppression
     OBJ_ID_MAX,
 } obj_id_t;
 

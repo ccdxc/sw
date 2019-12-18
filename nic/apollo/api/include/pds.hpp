@@ -54,7 +54,7 @@ typedef uint32_t    pds_nexthop_group_id_t;    ///< nexthop group table index
 typedef uint32_t    pds_tep_id_t;              ///< TEP table index
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 typedef uint32_t    pds_policer_id_t;          ///< policer id
-typedef uint32_t    pds_dhcp_relay_agent_id_t; ///< DHCP relay agent id
+typedef uint32_t    pds_dhcp_relay_id_t;       ///< DHCP relay policy id
 typedef uint32_t    pds_dhcp_policy_id_t;      ///< DHCP policy id
 typedef uint32_t    pds_nat_port_block_id_t;   ///< NAT port block id
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
@@ -226,6 +226,21 @@ typedef struct pds_nexthop_group_key_s {
 typedef struct pds_policer_key_s {
     pds_policer_id_t id;
 } __PACK__ pds_policer_key_t;
+
+/// \brief    NAT port block key
+typedef struct pds_nat_port_block_key_s {
+    pds_nat_port_block_id_t id;
+} __PACK__ pds_nat_port_block_key_t;
+
+/// \brief    DHCP relay policy key
+typedef struct pds_dhcp_relay_key_s {
+    pds_dhcp_relay_id_t id;
+} __PACK__ pds_dhcp_relay_key_t;
+
+/// \brief    DHCP suppression policy key
+typedef struct pds_dhcp_policy_key_s {
+    pds_dhcp_policy_id_t id;
+} pds_dhcp_policy_key_t;
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {

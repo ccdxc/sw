@@ -20,11 +20,11 @@
 
 /// \brief nat port block specification
 typedef struct pds_nat_port_block_spec_s {
-    pds_nat_port_block_id_t id;             ///< id
-    pds_vpc_key_t           vpc;            ///< vpc
-    uint8_t                 ip_proto;       ///< ip protocol
-    ipvx_range_t            nat_ip_range;   ///< NAT ip range
-    port_range_t            nat_port_range; ///< NAT port range
+    pds_nat_port_block_key_t key;            ///< NAT port block key
+    pds_vpc_key_t            vpc;            ///< vpc
+    uint8_t                  ip_proto;       ///< ip protocol
+    ipvx_range_t             nat_ip_range;   ///< NAT ip range
+    port_range_t             nat_port_range; ///< NAT port range
 } __PACK__ pds_nat_port_block_spec_t;
 
 /// \brief nat port block status
@@ -34,7 +34,8 @@ typedef struct pds_nat_port_block_status_s {
 /// \brief nat port block statistics
 typedef struct pds_nat_port_block_stats_s {
     uint32_t    in_use_count;               ///< number of NAT ports in use
-    uint32_t    session_count;              ///< number of sessions using the port block
+    uint32_t    session_count;              ///< number of sessions using
+                                            ///< the port block
 } __PACK__ pds_nat_port_block_stats_t;
 
 /// \brief nat port block information
@@ -52,10 +53,11 @@ sdk_ret_t pds_nat_port_block_create(pds_nat_port_block_spec_t *spec,
                                     pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief      read a given nat port block
-/// \param[in]  id    id of the nat port block
+/// \param[in]  key   key/id of the nat port block
 /// \param[out] info  nat port block information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nat_port_block_read(pds_nat_port_block_id_t *id, pds_nat_port_block_info_t *info);
+sdk_ret_t pds_nat_port_block_read(pds_nat_port_block_key_t *key,
+                                  pds_nat_port_block_info_t *info);
 
 /// \brief     update nat_port_block
 /// \param[in] spec   nat port block specification
@@ -65,11 +67,11 @@ sdk_ret_t pds_nat_port_block_update(pds_nat_port_block_spec_t *spec,
                                     pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief     delete a given nat port block
-/// \param[in] id id of the nat port block
+/// \param[in] key/id id of the nat port block
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid nat_port_block id should be passed
-sdk_ret_t pds_nat_port_block_delete(pds_nat_port_block_id_t *id,
+sdk_ret_t pds_nat_port_block_delete(pds_nat_port_block_key_t *key,
                                     pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}
