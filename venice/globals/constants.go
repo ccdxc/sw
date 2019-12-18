@@ -183,6 +183,7 @@ const (
 	NodesKey         = "/venice/config/cluster/nodes"
 	ModulesKey       = "/venice/config/diagnostics/modules"
 	StagingBasePath  = "/venice/staged"
+	IDGeneratorsPath = "/venice/idgenerators"
 
 	// API Infra constants
 	ConfigURIPrefix  = "configs"

@@ -1,0 +1,22 @@
+syntax = "proto3";
+// Service name
+package idgenpb;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// BufferItem is used to persist contents of the staging buffer in KV store.
+// This is sperate from the user visible staging Buffer. This is an internal
+// object used by the API Server
+message IDGenObj {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+
+    message IDInfo {
+        int32 Type = 1 [(gogoproto.jsontag) = "type"];
+        uint64 LastId = 2 [(gogoproto.jsontag) = "last-id"];
+    }
+    IDInfo Info = 3 [(gogoproto.jsontag) = "info", (gogoproto.nullable) = false];
+}
