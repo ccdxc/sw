@@ -59,8 +59,9 @@ sge_loop:
     CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)
 
     cmov        SGE_OFFSET, F_FIRST_PASS, K_SGE_OFFSET, 0
+    ble         r6, SGE_OFFSET, local_len_err
     //sge_remaining_bytes = sge_p->len - current_sge_offset;
-    sub         r6, r6, SGE_OFFSET
+    sub         r6, r6, SGE_OFFSET  // BD Slot
 
     //transfer_bytes = min(sge_remaining_bytes, remaining_payload_bytes);
     slt         c2, r6, REM_PYLD_BYTES
@@ -160,6 +161,7 @@ table_error:
     phvwrpair.c7   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_resp_error), 1
 
+error_disable:
     CAPRI_SET_TABLE_0_VALID(0)
 
     //Generate DMA command to skip to payload end if non-zero payload
@@ -169,3 +171,18 @@ table_error:
 
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
+local_len_err:
+    // set err_dis_qp and completion flags
+    // turn on ACK req bit
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ACK_REQ
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_LEN_ERR_OFFSET))
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_insuff_sge_err), 1
+    b           error_disable
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)  // BD Slot
