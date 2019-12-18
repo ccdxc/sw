@@ -4,6 +4,9 @@
 //---------------------------------------------------------------
  
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
@@ -11,8 +14,6 @@
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
-#include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "li_fte.hpp"
 
 namespace pds_ms {
@@ -58,16 +59,23 @@ NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     try {
-        auto vrf_id = vrfname_2_vrfid(vrf_add_upd_ips->vrf_name, vrf_add_upd_ips->vrf_name_len);
-        vrf_id = vrf_id;
+        li_vrf_t vrf;
+        vrf.handle_add_upd_ips (vrf_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR("VRF Add Update failed %s", e.what());
+        SDK_TRACE_ERR ("IRB Add Update processing failed %s", e.what());
+        vrf_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
 
 NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_len) {
+    try {
+        li_vrf_t vrf;
+        vrf.handle_delete(vrf_name, vrf_len);
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("IRB Add Update processing failed %s", e.what());
+    }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
 }
@@ -114,6 +122,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_port_delete(NBB_ULONG vxlan_port_ifindex) {
 NBB_BYTE li_integ_subcomp_t::irb_add_update(ATG_LIPI_IRB_ADD_UPDATE* irb_add_upd_ips) {
     return ATG_OK;
 }
+
 NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex) {
     return ATG_OK;
 }

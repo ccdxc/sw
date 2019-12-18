@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <gtest/gtest.h>
@@ -19,9 +19,9 @@
 #include <iostream>
 
 using pdsa_stub::state_t;
-using pdsa_stub::bd_store_t;
-using pdsa_stub::bd_obj_t;
-using pdsa_stub::bd_obj_uptr_t;
+using pdsa_stub::tep_store_t;
+using pdsa_stub::tep_obj_t;
+using pdsa_stub::tep_obj_uptr_t;
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
@@ -32,68 +32,83 @@ sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
 
 namespace api_test {
 
-class bd_store_test : public ::testing::Test {
+class tep_store_test : public ::testing::Test {
 protected:
-    bd_store_test() : state_thr_ctxt (state_t::thread_context()) {};
-    virtual ~bd_store_test() {}
+    tep_store_test() : state_thr_ctxt (state_t::thread_context()) {};
+    virtual ~tep_store_test() {}
 
 public:
     state_t::context_t state_thr_ctxt;
 };
 
-TEST_F(bd_store_test, create) {
+TEST_F(tep_store_test, create) {
     auto state = state_thr_ctxt.state();
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 0);
-    state->bd_store().add_upd (100,   // MS bd id
-                               bd_obj_uptr_t (new bd_obj_t (
-                               {      // bd properties
-                               100,    // MS bd id
-                               501009, // vni
-                               100     // hal bd index
-                               })
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 0);
+    ipv4_addr_t tep_ip;
+    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+
+    ip_addr_t tep_ip_prop;
+    tep_ip_prop.af = IP_AF_IPV4;
+    tep_ip_prop.addr.v4_addr = tep_ip; 
+
+    state->tep_store().add_upd (tep_ip,   // TEP IP
+                               tep_obj_uptr_t (new tep_obj_t (
+                               tep_ip_prop, // MS bd id
+                               11,     // Underlay ECMP Idx
+                               501009, // PDS TEP Idx
+                               501009  // PDS Overlay ECMP index
+                               )
                               ));
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 1);
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 1);
 }
 
-TEST_F(bd_store_test, get) {
+TEST_F(tep_store_test, get) {
     // Test the BD store
     auto state = state_thr_ctxt.state();
-    auto bd_obj = state->bd_store().get (100);
-    ASSERT_TRUE (bd_obj != nullptr);
-    ASSERT_TRUE (bd_obj->properties().bd_id == 100);
-    ASSERT_TRUE (bd_obj->properties().vni == 501009);
-    ASSERT_TRUE (bd_obj->properties().hal_idx == 100);
+    ipv4_addr_t tep_ip;
+    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    auto tep_obj = state->tep_store().get (tep_ip);
+    ASSERT_TRUE (tep_obj != nullptr);
+    ASSERT_TRUE (tep_obj->properties().tep_ip.addr.v4_addr == tep_ip);
+    ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 11);
+    ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
+    ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
 }
 
-TEST_F(bd_store_test, update) {
+TEST_F(tep_store_test, update) {
     // Update existing entry
     auto state = state_thr_ctxt.state();
-    auto bd_old = state->bd_store().get (100);
+    ipv4_addr_t tep_ip;
+    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    auto tep_old = state->tep_store().get (tep_ip);
 
     // Make a new copy of the old object and update a field
-    auto bd_obj = new bd_obj_t(*bd_old);
-    bd_obj->properties().hal_idx = 101;
+    auto tep_obj = new tep_obj_t(*tep_old);
+    tep_obj->properties().hal_uecmp_idx = 12;
 
     // After insert old object should be freed back to slab
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 2);
-    state->bd_store().add_upd (100, bd_obj);
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 1);
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 2);
+    state->tep_store().add_upd (tep_ip, tep_obj);
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 1);
 
     // Test the BD store
-    auto bd_obj_test = state->bd_store().get (100);
-    ASSERT_TRUE (bd_obj_test != nullptr);
-    ASSERT_TRUE (bd_obj_test->properties().bd_id == 100);
-    ASSERT_TRUE (bd_obj_test->properties().vni == 501009);
-    ASSERT_TRUE (bd_obj_test->properties().hal_idx == 101);
+    auto tep_obj_test = state->tep_store().get (tep_ip);
+    ASSERT_TRUE (tep_obj_test != nullptr);
+    ASSERT_TRUE (tep_obj_test->properties().tep_ip.addr.v4_addr == tep_ip);
+    ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 12);
+    ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
+    ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
 }
 
-TEST_F(bd_store_test, delete_store) {
+TEST_F(tep_store_test, delete_store) {
     // Delete entry
     auto state = state_thr_ctxt.state();
-    state->bd_store().erase (100);
-    auto bd_obj = state->bd_store().get (100);
-    ASSERT_TRUE (bd_obj == nullptr);
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == 0);
+    ipv4_addr_t tep_ip;
+    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    state->tep_store().erase (tep_ip);
+    auto tep_obj = state->tep_store().get (tep_ip);
+    ASSERT_TRUE (tep_obj == nullptr);
+    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 0);
 }
 
 } // namespace api_test

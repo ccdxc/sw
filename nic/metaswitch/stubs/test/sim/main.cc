@@ -29,7 +29,6 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 
-
 namespace pdsa_test {
 test_params_t* test_params() {    
     static test_params_t  g_test_params;
@@ -153,8 +152,13 @@ pdsa_sim_test_config ()
     pdsa_sim_test_bgp_update();
     cout << "Config thread: BGP Proto is done!\n";
 
-    // Evpn Evi Update
-    pdsa_sim_test_evpn_evi_update();
+    // VPC update
+    pds_vpc_spec_t vpc_spec = {0};
+    vpc_spec.key.id = 1;
+    vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
+    pds_ms::vpc_create (&vpc_spec, 0);
+    cout << "Config thread: VPC Proto is done!\n";
 
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
@@ -166,19 +170,13 @@ pdsa_sim_test_config ()
     pds_ms::subnet_create (&subnet_spec, 0);
     cout << "Config thread: Subnet Proto is done!\n";
 
-    // VPC update
-    pds_vpc_spec_t vpc_spec = {0};
-    vpc_spec.key.id = 1;
-    vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
-    pds_ms::vpc_create (&vpc_spec, 0);
-    cout << "Config thread: VPC Proto is done!\n";
+    // Evpn Evi Update
+    pdsa_sim_test_evpn_evi_update();
 
     // Push MAC-IP
     pdsa_sim_test_mac_ip();
     cout << "Config thread: pushed a mac-ip entry to l2fMacIpCfgTable\n";
 }
-
 } // End of pds_ms_test  namespace
 
 static void
@@ -229,4 +227,5 @@ main (int argc, char **argv)
     // Push the test config, this will wait for nbase init to complete
     pds_ms_test::pdsa_sim_test_config();
     svc_reg();
+    return 0;
 }

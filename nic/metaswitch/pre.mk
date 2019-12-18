@@ -25,11 +25,11 @@ ifeq ($(MODE),debug)
 endif
 
 MS_INCLPATH = \
-        code/comn/intface        \
-        code/comn/custom         \
-        code/comn                \
-        buildcfg                 \
-        code/comn/ambl           \
+	code/comn/intface        \
+	code/comn/custom         \
+	code/comn                \
+	buildcfg                 \
+	code/comn/ambl           \
 	code/comn/fte            \
 	code/comn/fte/joins      \
 	code/comn/ntlpp          \
@@ -53,6 +53,7 @@ MS_INCLPATH = \
 	code/stubs/l2/unix       \
 	code/comn/worker         \
 	code/lim                 \
+	autogen/comn/ambl        \
 	output/$(GMK_TARGETOS)
 
 MS_LD_LIBS = dcsmi si

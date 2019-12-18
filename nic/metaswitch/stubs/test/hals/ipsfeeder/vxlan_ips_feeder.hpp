@@ -29,7 +29,7 @@ public:
                                               &(add_upd.vxlan_settings.source_ip));
         pdsa_stub::convert_ipaddr_pdsa_to_ms (dest_ip, 
                                               &(add_upd.vxlan_settings.dest_ip));
-        NBB_CORR_PUT_VALUE(add_upd.id.hw_correlator, unh_dp_idx);
+        NBB_CORR_PUT_VALUE(add_upd.vxlan_settings.dp_pathset_correlator, unh_dp_idx);
         return add_upd;
     }
 

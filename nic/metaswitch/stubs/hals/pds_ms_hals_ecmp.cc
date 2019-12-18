@@ -211,10 +211,12 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
 
     auto pathset_id = ips_info_.pathset_id;
     cookie_uptr_->send_ips_reply = 
-        [add_upd_ecmp_ips, pathset_id] (bool pds_status) -> void {
+        [add_upd_ecmp_ips, pathset_id] (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
+            if (unlikely(ips_mock)) return; // UT
+
             NBB_CREATE_THREAD_CONTEXT
             NBS_ENTER_SHARED_CONTEXT(hals_proc_id);
             NBS_GET_SHARED_DATA();
@@ -253,10 +255,12 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     // All processing complete, only batch commit remains - 
     // safe to release the cookie unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (unlikely (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK)) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update Nexthop ")
-                    .append(std::to_string(ips_info_.pathset_id)));
+                    .append(std::to_string(ips_info_.pathset_id))
+                    .append(" err=").append(std::to_string(ret)));
     }
     add_upd_ecmp_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
@@ -272,12 +276,10 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
-    // MS Integration APIs do not allow Async callback for deletes.
+    // MS Stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL proessing is always asynchrnous even for deletes. 
-    // Assuming that Deletes never fail the Store is also updated
-    // in a synchronous fashion for deletes so that it is in sync
-    // if there is a subsequent create from MS.
+    // the HAL processing is always asynchronous even for deletes. 
+    // Assuming that Deletes never fail.
 
     NBB_CORR_GET_VALUE (ips_info_.pathset_id, ms_pathset_id);
     SDK_TRACE_DEBUG ("MS ECMP %ld: Delete IPS", ips_info_.pathset_id);
@@ -296,7 +298,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
 
     auto pathset_id = ips_info_.pathset_id;
     cookie_uptr_->send_ips_reply = 
-        [pathset_id] (bool pds_status) -> void {
+        [pathset_id] (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
@@ -308,10 +310,12 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS ECMP ")
-                    .append(std::to_string(ips_info_.pathset_id)));
+                    .append(std::to_string(ips_info_.pathset_id))
+                    .append(" err=").append(std::to_string(ret)));
     }
     SDK_TRACE_DEBUG ("MS ECMP %ld: Delete PDS Batch commit successful", 
                      ips_info_.pathset_id);

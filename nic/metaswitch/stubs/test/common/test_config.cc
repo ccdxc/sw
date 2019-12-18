@@ -8,7 +8,6 @@
 #include <iostream>
 
 using boost::property_tree::ptree;
-
 namespace pds_ms_test {
 int
 parse_json_config (test_config_t *conf, uint8_t node) {
@@ -62,7 +61,6 @@ parse_json_config (test_config_t *conf, uint8_t node) {
         return -1;
     }
 
-     
     value                   = pt.get <std::string>("local.ip","");
     conf->local_ip_addr     = inet_network (value.c_str());
     value                   = pt.get <std::string>("local.gwip","");

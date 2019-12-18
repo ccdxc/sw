@@ -66,7 +66,7 @@ void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_
     pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_dest_ip, &ips_info_.tep_ip);
     ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd_ips->vxlan_settings.source_ip;
     pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
-    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd_ips->id.hw_correlator);
+    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
     ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
 }
 
@@ -92,8 +92,8 @@ void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     // Create new Tep Object but do not save it in the Global State yet
     // Use the MS Tunnel IfIndex as the HAL index for ECMP and TEP tables
     std::unique_ptr<tep_obj_t> new_tep_obj 
-        (new tep_obj_t({ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
-                       ips_info_.if_index, ips_info_.if_index}));
+        (new tep_obj_t(ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
+                       ips_info_.if_index, ips_info_.if_index));
     // Update the local store info context so that the make_pds_spec 
     // refers to the latest fields
     store_info_.tep_obj = new_tep_obj.get(); 
@@ -146,18 +146,26 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     bctxt_guard_.set (bctxt);
 
     if (op_delete_) { // Delete
-        auto tep_key = make_pds_tep_key_();
-        if (!PDS_MOCK_MODE()) {
-            pds_tep_delete(&tep_key, bctxt);
-        }
-
+        // First delete Overlay ECMP entry before TEP entry to ensure
+        // Overlay ECMP does not point to deleted TEP in hardware. 
         auto nhgroup_key = make_pds_nhgroup_key_();
         if (!PDS_MOCK_MODE()) {
             ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
         }
         if (unlikely (ret != SDK_RET_OK)) {
+            throw Error(std::string("PDS ECMP Delete failed for TEP ")
+                        .append(ipaddr2str(&store_info_.tep_obj->properties().tep_ip))
+                        .append(" err=").append(std::to_string(ret)));
+        }
+
+        auto tep_key = make_pds_tep_key_();
+        if (!PDS_MOCK_MODE()) {
+            ret = pds_tep_delete(&tep_key, bctxt);
+        }
+        if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS TEP Delete failed for TEP ")
-                        .append(ipaddr2str(&store_info_.tep_obj->properties().tep_ip)));
+                        .append(ipaddr2str(&store_info_.tep_obj->properties().tep_ip))
+                        .append(" err=").append(std::to_string(ret)));
         }
 
     } else { // Add or update
@@ -172,8 +180,9 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
             }
         }
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error("PDS TEP Create failed for TEP " 
-                        + ips_info_.tep_ip_str);
+            throw Error(std::string("PDS TEP Create or Update failed for TEP ")
+                        .append(ips_info_.tep_ip_str)
+                        .append(" err=").append(std::to_string(ret)));
         }
 
         auto nhgroup_spec = make_pds_nhgroup_spec_();
@@ -187,8 +196,9 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
             }
         }
         if (unlikely (ret != SDK_RET_OK)) {
-            throw Error("PDS ECMP Create failed for TEP "
-                        + ips_info_.tep_ip_str);
+            throw Error(std::string("PDS ECMP Create or Update failed for TEP ")
+                        .append(ips_info_.tep_ip_str)
+                        .append(" err=").append(std::to_string(ret)));
         }
     }
     return bctxt_guard_;
@@ -230,10 +240,12 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
       // Do Not access/modify global state after this
 
     cookie_uptr_->send_ips_reply = 
-        [vxlan_tnl_add_upd_ips] (bool pds_status) -> void {
+        [vxlan_tnl_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
+            if (unlikely(ips_mock)) return; // UT
+
             NBB_CREATE_THREAD_CONTEXT
             NBS_ENTER_SHARED_CONTEXT(li_proc_id);
             NBS_GET_SHARED_DATA();
@@ -269,10 +281,12 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update TEP ")
-                    .append(ips_info_.tep_ip_str));
+                    .append(ips_info_.tep_ip_str)
+                    .append(" err=").append(std::to_string(ret)));
     }
     vxlan_tnl_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
@@ -288,9 +302,9 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
-    // MS Integration APIs do not allow Async callback for deletes.
+    // MS stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL proessing is always asynchrnous even for deletes. 
+    // the HAL processing is always asynchronous even for deletes. 
     // Assuming that Deletes never fail the Store is also updated
     // in a synchronous fashion for deletes so that it is in sync
     // if there is a subsequent create from MS.
@@ -322,7 +336,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
       // Do Not access/modify global state after this
 
     cookie_uptr_->send_ips_reply = 
-        [tep_ip] (bool pds_status) -> void {
+        [tep_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
@@ -334,10 +348,12 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
-        throw Error(std::string("Batch commit failed for delete TEP ").
-                    append(ipaddr2str(&tep_ip)));
+        throw Error(std::string("Batch commit failed for delete TEP ")
+                    .append(ipaddr2str(&tep_ip))
+                    .append(" err=").append(std::to_string(ret)));
     }
     SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
                      ipaddr2str(&tep_ip));

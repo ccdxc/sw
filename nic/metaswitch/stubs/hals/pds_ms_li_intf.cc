@@ -56,16 +56,14 @@ void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
 }
 
 bool li_intf_t::cache_new_obj_in_cookie_(void) {
-    void *fw;
+    void *fw = nullptr;
     std::unique_ptr<if_obj_t> new_if_obj; 
     if (store_info_.phy_port_if_obj == nullptr) {
         // This is the first time we are seeing this uplink interface
         // Create the FRI worker
-        if (TGD) {
-            ntl::Frl &frl = li::Fte::get().get_frl();
-            fw = frl.create_fri_worker(ips_info_.ifindex);
-            SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
-        }
+        ntl::Frl &frl = li::Fte::get().get_frl();
+        fw = frl.create_fri_worker(ips_info_.ifindex);
+        SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
         // TODO: Set the initial interface state by doing a port get
 
         auto port_prop = if_obj_t::phy_port_properties_t {0};
@@ -180,7 +178,8 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS If Create or Update failed for MS If ")
-                        .append(std::to_string(ips_info_.ifindex)));
+                        .append(std::to_string(ips_info_.ifindex))
+                        .append(" err=").append(std::to_string(ret)));
         }
     }
     return bctxt_guard_;
@@ -228,10 +227,12 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
       // Do Not access/modify global state after this
 
     cookie_uptr_->send_ips_reply = 
-        [port_add_upd_ips] (bool pds_status) -> void {
+        [port_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
+            if (unlikely(ips_mock)) return; // UT
+
             NBB_CREATE_THREAD_CONTEXT
             NBS_ENTER_SHARED_CONTEXT(li_proc_id);
             NBS_GET_SHARED_DATA();
@@ -266,10 +267,12 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (unlikely (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK)) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update Port MS If ")
-                    .append(std::to_string(ips_info_.ifindex)));
+                    .append(std::to_string(ips_info_.ifindex))
+                    .append(" err=").append(std::to_string(ret)));
     }
     port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful", 
@@ -285,17 +288,17 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
-    // TODO: Current API signature does not allow Async callback to MS
+    // MS stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL proessing is always asynchrnous. 
+    // the HAL processing is always asynchronous even for deletes. 
     // Assuming that Deletes never fail the Store is also updated
-    // in a synchronous fashion for deletes so that it is in sync with MS.
+    // in a synchronous fashion for deletes so that it is in sync
+    // if there is a subsequent create from MS.
 
     ips_info_.ifindex = ifindex;
     SDK_TRACE_INFO ("MS If 0x%lx: Delete IPS", ips_info_.ifindex);
 
     // Empty cookie to force async PDS.
-    // But it does not have any cached objects for now
     cookie_uptr_.reset (new cookie_t);
     pds_bctxt_guard = make_batch_pds_spec_ (); 
 
@@ -308,7 +311,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
       // Do Not access/modify global state after this
 
     cookie_uptr_->send_ips_reply = 
-        [ifindex] (bool pds_status) -> void {
+        [ifindex] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
@@ -319,10 +322,12 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    if (pds_batch_commit(pds_bctxt_guard.release()) != SDK_RET_OK) {
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS If ")
-                    .append(std::to_string(ips_info_.ifindex)));
+                    .append(std::to_string(ips_info_.ifindex))
+                    .append(" err=").append(std::to_string(ret)));
     }
     SDK_TRACE_DEBUG ("MS If 0x%lx: Delete PDS Batch commit successful", 
                      ips_info_.ifindex);

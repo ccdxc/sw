@@ -22,9 +22,10 @@ constexpr int k_max_cookie = 1000;
 
 class cookie_t : public slab_obj_t<cookie_t> {
 public:    
+    bool ips_mock = false; // Is this part of a gtest with ips_feeder
     std::vector<std::unique_ptr<pdsa_stub::base_obj_t>> objs;
     void print_debug_str(void);
-    std::function<void(bool)> send_ips_reply;
+    std::function<void(bool,bool)> send_ips_reply;
 };
 
 inline void cookie_t::print_debug_str(void) {

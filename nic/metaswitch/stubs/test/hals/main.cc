@@ -20,6 +20,8 @@ extern "C"
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
+#include "nic/metaswitch/stubs/test/hals/bd_test_params.hpp"
+#include "nic/metaswitch/stubs/test/hals/vrf_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
@@ -59,6 +61,7 @@ test_params_t* test_params() {
 class pdsa_hals_test: public ::testing::Test {
 protected:
     void TearDown(void) {
+        pdsa_test::test_params()->test_input->cleanup();
         pdsa_test::test_params()->test_output->cleanup();
         pdsa_test::test_params()->test_input = nullptr;
         pdsa_test::test_params()->test_output = nullptr;
@@ -237,19 +240,193 @@ TEST_F(pdsa_hals_test, underlay_ecmp_test) {
     test_output->validate();
 }
 
+TEST_F(pdsa_hals_test, bd_test) {
+    pdsa_test::load_bd_test();
+    auto test_input = pdsa_test::test_params()->test_input;
+    auto test_output = pdsa_test::test_params()->test_output;
+
+    // Initialize
+    auto bd_input = dynamic_cast<pdsa_test::bd_input_params_t*>
+                              (test_input);
+    bd_input->init ();
+
+    // Create
+    std::cout << "=== BD Create test ===" << std::endl;
+    test_output->expect_create();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Update
+    std::cout << "=== BD Update test ===" << std::endl;
+    // Modify both fastpath and slowpath fields
+    // Expect update of only fastpath fields first
+    ((pdsa_test::bd_input_params_t*) test_input)->modify_fast_fields();
+    test_output->expect_update();
+    ((pdsa_test::bd_input_params_t*) test_input)->modify_slow_fields();
+    // Trigger direct update
+    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    test_output->validate();
+    sleep(1);
+    // Next Expect update of slowpath fields
+    test_output->expect_update();
+    // Trigger BD stub call for slowpath fields
+    test_input->trigger_update();
+    test_output->validate();
+
+    std::cout << "=== BD If bind test ===" << std::endl;
+    ((pdsa_test::bd_input_params_t*) test_input)->add_if_bind();
+    test_output->expect_update();
+    test_input->trigger_update();
+    test_output->validate();
+
+    std::cout << "=== BD If Unbind test ===" << std::endl;
+    ((pdsa_test::bd_input_params_t*) test_input)->del_if_bind();
+    test_output->expect_update();
+    test_input->trigger_update();
+    test_output->validate();
+
+    // Delete
+    std::cout << "=== BD Delete test ===" << std::endl;
+    test_output->expect_delete();
+    test_input->trigger_delete();
+    test_output->validate();
+
+    // Mock batch spec create failure
+    std::cout << "=== BD Spec Create failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_pds_spec_op_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock batch commit failure
+    std::cout << "=== BD Spec Batch commit failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_pds_batch_commit_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock async batch failure return
+    std::cout << "=== BD Spec Batch commit async failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_create_pds_async_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock Direct update received before L2F Stub create call
+    std::cout << "=== BD Direct update out of sequence test ===" << std::endl;
+    ((pdsa_test::bd_input_params_t*) test_input)->init_direct_update();
+    test_output->expect_create();
+    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock Direct update received after L2F Stub create call
+    std::cout << "=== BD Direct update in sequence test ===" << std::endl;
+    ((pdsa_test::bd_input_params_t*) test_input)->modify_direct_update();
+    test_output->expect_update();
+    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    test_output->validate();
+}
+
+TEST_F(pdsa_hals_test, vrf_test) {
+    pdsa_test::load_vrf_test();
+    auto test_input = pdsa_test::test_params()->test_input;
+    auto test_output = pdsa_test::test_params()->test_output;
+
+    // Initialize
+    auto vrf_input = dynamic_cast<pdsa_test::vrf_input_params_t*>
+                              (test_input);
+    vrf_input->init ();
+
+    // Create
+    std::cout << "=== VRF Create test ===" << std::endl;
+    test_output->expect_create();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Update
+    std::cout << "=== VRF Update test ===" << std::endl;
+    test_input->modify(); 
+    test_output->expect_update();
+    test_input->trigger_update();
+    test_output->validate();
+
+    // Delete
+    std::cout << "=== VRF Delete test ===" << std::endl;
+    test_output->expect_delete();
+    test_input->trigger_delete();
+    test_output->validate();
+
+    // Mock batch spec create failure
+    std::cout << "=== VRF Spec Create failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_pds_spec_op_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock batch commit failure
+    std::cout << "=== VRF Spec Batch commit failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_pds_batch_commit_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // Mock async batch failure return
+    std::cout << "=== VRF Spec Batch commit async failure test ===" << std::endl;
+    test_input->next();
+    test_output->expect_create_pds_async_fail();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // LI Direct update received before LI Stub create call
+    std::cout << "=== VRF Direct update out of sequence test ===" << std::endl;
+    ((pdsa_test::vrf_input_params_t*) test_input)->init_direct_update();
+    test_output->expect_create();
+    ((pdsa_test::vrf_input_params_t*) test_input)->send_direct_update();
+    test_input->trigger_create();
+    test_output->validate();
+
+    // LI Direct update received after LI Stub create call
+    std::cout << "=== VRF Direct update in sequence test ===" << std::endl;
+    ((pdsa_test::vrf_input_params_t*) test_input)->modify_direct_update();
+    test_output->expect_update();
+    ((pdsa_test::vrf_input_params_t*) test_input)->send_direct_update();
+    test_output->validate();
+}
+
 
 //----------------------------------------------------------------------------
 // Entry point
 //----------------------------------------------------------------------------
+static sdk::lib::thread *g_routing_thread;
 int
 main (int argc, char **argv)
 {
     // Call the mock pds init
     pds_init(nullptr);
-    // Initialize the State and HAL stubs
-    pdsa_stub::state_init();
-    pds_ms::mgmt_state_init();
+    // This will start nbase
+    g_routing_thread =
+        sdk::lib::thread::factory(
+            "routing", 0, sdk::lib::THREAD_ROLE_CONTROL,
+            0x0, &pdsa_stub::pdsa_thread_init,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            false);
+    SDK_ASSERT_TRACE_RETURN((g_routing_thread != NULL), SDK_RET_ERR,
+                            "Routing thread create failure");
+    g_routing_thread->start(g_routing_thread);
+    std::cout << "Config thread is waiting for Nbase....\n";
+    while (!g_routing_thread->ready()) {
+         pthread_yield();
+    }
+    std::cout << "Nbase is ready!\n";
+    sleep(1);
 
+    while (pdsa_stub::state_t::thread_context().state()->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID)
+           != 0) {
+        sleep(1);
+    }
+    std::cout << "Nbase is really ready!\n";
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

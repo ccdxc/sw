@@ -40,6 +40,7 @@ public:
    virtual void next(void) = 0;
    virtual ~test_input_base_t(void) {};
    virtual bool ips_mock() = 0;
+    virtual void cleanup(void) {};
 };
 
 class test_params_t;

@@ -44,7 +44,7 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
     mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
     // TODO: Change to EthIfIndex when HAL supports it 
     // spec.l3_if_info.port_num = ETH_IFINDEX (1,1,1);
-    spec.l3_if_info.port_num = 0;
+    spec.l3_if_info.port_num = input.phy_port-1;
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE; 
     spec.l3_if_info.encap.val.vnid = 0;
     spec.l3_if_info.vpc.id = 0;
@@ -91,16 +91,8 @@ void phy_port_pds_mock_t::validate_()
     // Mock callback
     auto pds_mock = dynamic_cast<pds_mock_t*>(test_params()->test_output);
     auto cookie = (pdsa_stub::cookie_t*) pds_mock->cookie;
-    if (test_params()->test_input->ips_mock()) {
-        cookie->send_ips_reply = [] (bool status) -> void {};
-    }
-    sdk_ret_t ret;
-    if (mock_pds_batch_async_fail_) {
-        ret = SDK_RET_ERR;
-    } else {
-        ret = SDK_RET_OK;
-    }
-    pdsa_stub::hal_callback(ret, cookie);
+    pdsa_stub::hal_callback((mock_pds_batch_async_fail_) ? SDK_RET_ERR : SDK_RET_OK,
+                            cookie);
 
     if (mock_pds_batch_async_fail_) {
         // Verify no change to slab - all temporary objects released

@@ -18,6 +18,7 @@
 #include "nic/apollo/test/api/utils/vpc_peer.hpp"
 #include "nic/apollo/framework/api.h"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
 
 namespace pdsa_test {
 
@@ -38,11 +39,13 @@ struct spec_t {
 };
 
 using batch_spec_t = std::vector<spec_t>;
+using pdsa_stub::cookie_t;
 
 class pds_mock_t : public test_output_base_t {
 public:
     bool          sim;
-    void*         cookie = nullptr;
+    bool          async = true;
+    cookie_t*     cookie = nullptr;
     batch_spec_t  expected_pds;
     batch_spec_t  rcvd_pds;
 

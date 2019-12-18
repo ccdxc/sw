@@ -108,7 +108,8 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             }
             else
             {
-                NBB_TRC_FLOW((NBB_FORMAT "Config injection failure"));
+                NBB_TRC_FLOW((NBB_FORMAT "Config injection failure %d",
+                              trans_done->return_subcode));
                 status = types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED;
             }
             break;

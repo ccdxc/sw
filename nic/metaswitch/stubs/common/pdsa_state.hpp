@@ -43,9 +43,21 @@ public:
         context_t(std::mutex& m, state_t* s) : l_(m), state_(s)  {};
         state_t* state(void) {return state_;}
         void release(void) {l_.unlock(); state_ = nullptr;}
+        context_t(context_t&& c) {
+            state_ = c.state_;
+            c.state_ = nullptr;
+            l_ = std::move(c.l_);
+        }
+        context_t& operator=(context_t&& c) {
+            state_ = c.state_;
+            c.state_ = nullptr;
+            l_ = std::move(c.l_);
+            return *this;
+        }
+            
     private:    
         std::unique_lock<std::mutex> l_;
-        state_t* state_;
+        state_t* state_ = nullptr;
     };
     static void create(void) { 
         SDK_ASSERT (g_state_ == nullptr);

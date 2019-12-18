@@ -26,22 +26,21 @@ hal_callback (sdk_ret_t status, const void *cookie)
     SDK_TRACE_DEBUG("Async PDS HAL callback, status: %d, cookie: 0x%lx",
                      status, cookie);
     if (status != SDK_RET_OK) {
-        SDK_TRACE_ERR("Async PDS HAL callback failure");
+        SDK_TRACE_ERR("Async PDS HAL callback failure err=%d", status);
         cookie_ptr->print_debug_str(); 
-        return;
-    }
+    } else {
+        SDK_TRACE_DEBUG("Async PDS Batch success"); 
+        cookie_ptr->print_debug_str(); 
 
-    cookie_ptr->print_debug_str(); 
-    {
         auto state_ctxt = pdsa_stub::state_t::thread_context();
         for (auto& obj_uptr: cookie_ptr->objs) {
-            obj_uptr->update_store (state_ctxt.state(), false);
+            obj_uptr->update_store (state_ctxt.state(), false); 
             // For create/update operations the underlying obj is saved in store.
             // Release the obj ownership from cookie
             obj_uptr.release();
         }
     }
-    cookie_ptr->send_ips_reply(true);
+    cookie_ptr->send_ips_reply((status == SDK_RET_OK), cookie_ptr->ips_mock);
 }
 
 static void

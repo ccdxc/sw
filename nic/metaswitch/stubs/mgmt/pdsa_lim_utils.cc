@@ -2,6 +2,7 @@
 // Purpose: Helper APIs for metaswitch LIM stub programming 
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "evpn_prod.h"
 #include "lim_mgmt_if.h"
 
 namespace pdsa_stub {
@@ -139,6 +140,13 @@ pdsa_lim_create (pdsa_config_t *conf)
     // limMjTable - SMI
     conf->interface_id   = AMB_LIM_IF_ATG_SMI;
     conf->partner_type   = AMB_LIM_MJ_PARTNER_SMI;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pdsa_row_update_lim_mj (conf);
+
+    // limMjTable - BDII to EVPN
+    conf->interface_id   = AMB_LIM_IF_ATG_BDII;
+    conf->partner_type   = AMB_LIM_MJ_PARTNER_EVPN;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
     pdsa_row_update_lim_mj (conf);

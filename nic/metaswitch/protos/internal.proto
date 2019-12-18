@@ -49,8 +49,8 @@ message LimGenIrbIfSpec {
     };
 
     uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_ENT_IX_INDEX"}];
-    uint32 BDIndex      = 2 [(venice.pdsaFields) = {Field:"bd_type", SetKeyOidIndex: "AMB_OID_LIM_GEN_IRB_IF_BD_TYPE"}];
-    uint32 BDType       = 3 [(venice.pdsaFields) = {Field:"bd_index", SetKeyOidIndex: "AMB_OID_LIM_GEN_IRB_IF_BD_ID"}];
+    uint32 BDType      = 2 [(venice.pdsaFields) = {Field:"bd_type", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_TYPE"}];
+    uint32 BDIndex       = 3 [(venice.pdsaFields) = {Field:"bd_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_INDEX"}];
 }
 
 message LimInterfaceCfgSpec {

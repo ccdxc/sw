@@ -19,8 +19,12 @@ class vpc_obj_t : public slab_obj_t<vpc_obj_t>,
                   public base_obj_t {
 public:
     struct properties_t {
+        uint32_t        vrf_id;
         pds_vpc_spec_t  vpc_spec;
-        properties_t(const pds_vpc_spec_t& vpc_spec_) : vpc_spec(vpc_spec_) {};
+        bool            hal_created = false; // Is the VPC created in HAL
+
+        properties_t(const pds_vpc_spec_t& vpc_spec_) 
+            : vrf_id(vpc_spec_.key.id), vpc_spec(vpc_spec_) {};
     };
     vpc_obj_t(const properties_t& prop) : prop_(prop) {};
     vpc_obj_t(const pds_vpc_spec_t& vpc_spec_) : prop_(vpc_spec_) {};

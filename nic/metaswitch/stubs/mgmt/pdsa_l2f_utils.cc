@@ -157,7 +157,6 @@ pdsa_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg,
     NBB_TRC_EXIT ();
     return;
 }
-
 NBB_VOID
 pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr, NBB_ULONG host_ifindex)
 {

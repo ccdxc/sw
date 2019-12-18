@@ -12,6 +12,8 @@
 #include "nic/apollo/test/base/utils.hpp"
 #include <nbase.h>
 
+extern NBB_ULONG hals_proc_id;
+
 namespace pdsa_test {
 
 class underlay_ecmp_ips_feeder_t final : public underlay_ecmp_input_params_t {
@@ -20,18 +22,11 @@ public:
 
     void fill_add_update_sz_array(
                               NBB_BUF_SIZE (&size_array)[OFL_ATG_NHPI_ADD_UPDATE_ECMP + 1]);
-    void init(std::vector<nhinfo_t>&& nhs) override {
-        if (!NBS_INITIALIZE()) {
-            throw std::runtime_error(" Failed to initialize N-BASE.\n");
-        }
+    void init(std::vector<nhinfo_t>&& nhs) override;
 
-        /* Enter N-BASE root context.  This allows this code to make N-BASE calls  */
-        /* as it had been created as an N-BASE process.                            */
-        NBB_SAVED_CONTEXT saved_context;
-        nbs_enter_shared_context(NBS_ROOT_PROCESS, &saved_context NBB_CCXT);
-
-        underlay_ecmp_input_params_t::init(std::move(nhs));
-        pathset_id = 1;
+    void cleanup(void) override {
+        nbs_exit_shared_context(&saved_context);
+        NBB_DESTROY_THREAD_CONTEXT
     }
 
     void trigger_create(void) override {
@@ -63,7 +58,7 @@ private:
 
     pds_ms::hals_l3_integ_subcomp_t hal_is;
     bool op_create_ = false;
-
+    NBB_SAVED_CONTEXT saved_context;
 };
 
 } // End Namespace

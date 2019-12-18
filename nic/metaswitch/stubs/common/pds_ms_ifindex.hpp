@@ -27,6 +27,12 @@ uint32_t ms_to_pds_eth_ifindex(uint32_t ms_ifindex);
 NBB_LONG ms_to_lnx_ifindex(NBB_LONG ms_ifindex, NBB_ULONG location);
 NBB_LONG lnx_to_ms_ifindex(NBB_LONG lnx_ifindex, NBB_ULONG location);
 
+static constexpr uint32_t k_ms_lif_if_base = 
+    (lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE |
+     (AMB_LIM_SOFTWIF_DUMMY << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT) |
+     lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+static constexpr uint32_t k_ms_lif_if_mask = 0xFFFFF000;
+
 // Used in the Mgmt Stubs to convert from PDS IfIndex to MS IfIndex
 static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type) {
     if (if_type == IF_TYPE_ETH) {
@@ -39,9 +45,7 @@ static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type)
                 (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
     } else if (if_type == IF_TYPE_LIF) {
         // Get SW ifindex base, add dummy interface type and bd_id and OR it with LIM Index Base
-        return ((lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE + LIF_IFINDEX_TO_LIF_ID  (pds_ifindex) +
-                (AMB_LIM_SOFTWIF_DUMMY << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT)) |
-                lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+        return (k_ms_lif_if_base + LIF_IFINDEX_TO_LIF_ID(pds_ifindex));
     }
     // Return the pds_ifindex if it is not Eth or Lif
     return pds_ifindex;
@@ -58,8 +62,11 @@ static inline uint32_t bd_id_to_ms_ifindex (uint32_t bd_id) {
 uint32_t pds_port_to_ms_ifindex_and_ifname(uint32_t port, std::string* ifname);
 
 static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
+    if ((ms_ifindex & k_ms_lif_if_mask) == k_ms_lif_if_base) {
+        return IF_TYPE_LIF;
+    }
     if (ms_ifindex >= lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE) {
-        // LIM allocated internsl MS interface
+        // LIM allocated internal MS interface
         // eg - VXLAN tunnel, IRB etc
         return IF_TYPE_NONE;
     }
@@ -70,9 +77,7 @@ static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
     if (ms_ifindex >= (1 << ETH_IF_PARENT_PORT_SHIFT)) {
         return IF_TYPE_L3;
     } 
-    //TODO: This assumes that LIFs are created as first-class interfaces
-    // in MS. Needs to be changed if LIFS are created as software interfaces
-    return IF_TYPE_LIF;
+    return IF_TYPE_NONE;
 }
 
 } // End namespace

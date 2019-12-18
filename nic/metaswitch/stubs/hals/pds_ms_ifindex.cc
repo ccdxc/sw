@@ -23,10 +23,12 @@ ms_to_pds_ifindex (uint32_t ms_ifindex)
         ms_ifindex |= ((api::g_pds_state.catalogue()->slot() << ETH_IF_SLOT_SHIFT) 
                        & (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
         return L3_IFINDEX(ms_ifindex);
-    } else {
-        // Assumption: Everything else is a LIF
-        return LIF_IFINDEX(ms_ifindex);
+    } else if (ms_ifindex_to_pds_type(ms_ifindex) == IF_TYPE_LIF) {
+        auto lif_id = ms_ifindex - k_ms_lif_if_base;
+        return LIF_IFINDEX(lif_id);
     }
+    SDK_TRACE_ERR("If 0x%x: Unknown Metaswitch interface type", ms_ifindex);
+    return ms_ifindex;
 }
 
 uint32_t 

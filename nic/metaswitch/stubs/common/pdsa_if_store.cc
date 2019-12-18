@@ -75,6 +75,10 @@ void if_obj_t::print_debug_str(void) {
         SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for VXLAN Tunnel", 
                          prop_.vxt_.ifindex);
         break;    
+    case ms_iftype_t::IRB:    
+        SDK_TRACE_DEBUG ("  - MS Interface 0x%lx for IRB", 
+                         prop_.irb_.ifindex);
+        break;    
     default:
         break;
     };

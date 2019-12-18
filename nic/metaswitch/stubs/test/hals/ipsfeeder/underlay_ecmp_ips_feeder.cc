@@ -6,10 +6,20 @@
 
 namespace pdsa_test {
 
-void load_underlay_ecmp_test_input ()
+void
+load_underlay_ecmp_test_input ()
 {
     static underlay_ecmp_ips_feeder_t g_underlay_ecmp_ips_feeder;
     test_params()->test_input = &g_underlay_ecmp_ips_feeder;
+}
+
+void underlay_ecmp_ips_feeder_t::init(std::vector<nhinfo_t>&& nhs) {
+    /* Enter N-BASE hals stub context.  This allows this code to make N-BASE calls  */
+    NBB_CREATE_STATIC_THREAD_CXT
+    nbs_enter_shared_context(hals_proc_id, &saved_context NBB_CCXT);
+
+    underlay_ecmp_input_params_t::init(std::move(nhs));
+    pathset_id = 1;
 }
 
 void 

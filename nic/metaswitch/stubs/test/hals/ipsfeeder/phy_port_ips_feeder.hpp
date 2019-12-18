@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/apollo/test/base/base.hpp"
 
+extern NBB_ULONG li_proc_id;
 namespace pdsa_test {
 
 class phy_port_ips_feeder_t final : public phy_port_input_params_t {
@@ -33,7 +34,14 @@ public:
 
     void trigger_create(void) override {
         auto add_upd = generate_add_upd_ips();
+        // Need to enter MS context since this creates MS FRL woker
+            NBB_CREATE_THREAD_CONTEXT
+            NBS_ENTER_SHARED_CONTEXT(li_proc_id);
+            NBS_GET_SHARED_DATA();
         pds_ms::li_is()->port_add_update(&add_upd);
+            NBS_RELEASE_SHARED_DATA();
+            NBS_EXIT_SHARED_CONTEXT();
+            NBB_DESTROY_THREAD_CONTEXT    
     }
 
     void trigger_delete(void) override {

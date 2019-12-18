@@ -9,6 +9,8 @@
 #include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_object_store.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 
@@ -18,18 +20,19 @@ class bd_obj_t : public slab_obj_t<bd_obj_t>,
                  public base_obj_t {
 public:
     struct properties_t {
-        ms_bd_id_t        bd_id;
-        pds_vnid_id_t     vni;
-        pds_subnet_id_t   hal_idx;
-        properties_t(ms_bd_id_t bd_id_, pds_vnid_id_t vni_, pds_subnet_id_t hal_idx_) 
-            : bd_id(bd_id_), vni(vni_), hal_idx(hal_idx_) {};
+        pds_subnet_spec_t  pds_spec;        // PDS owned
+        pds_encap_t        fabric_encap;    // MS owned
+        pds_ifindex_t      host_ifindex;    // MS owned
+        bool               hal_created = false;
+        properties_t(const pds_subnet_spec_t& pds_spec_) 
+            : pds_spec(pds_spec_) {};
     };
 
-    bd_obj_t(const properties_t& prop) : prop_(prop) {};
+    bd_obj_t(const pds_subnet_spec_t& spec) : prop_(spec) {};
     void set_properties(const properties_t& prop) {prop_ = prop;}
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
-    ms_bd_id_t key(void) const {return prop_.bd_id;}
+    ms_bd_id_t key(void) const {return prop_.pds_spec.key.id;}
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};
 

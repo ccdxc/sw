@@ -93,16 +93,8 @@ void vxlan_pds_mock_t::validate_()
     // Mock callback
     auto pds_mock = dynamic_cast<pds_mock_t*>(test_params()->test_output);
     auto cookie = (pdsa_stub::cookie_t*) pds_mock->cookie;
-    if (test_params()->test_input->ips_mock()) {
-        cookie->send_ips_reply = [] (bool status) -> void {};
-    }
-    sdk_ret_t ret;
-    if (mock_pds_batch_async_fail_) {
-        ret = SDK_RET_ERR;
-    } else {
-        ret = SDK_RET_OK;
-    }
-    pdsa_stub::hal_callback(ret, cookie);
+    pdsa_stub::hal_callback((mock_pds_batch_async_fail_) ? SDK_RET_ERR : SDK_RET_OK,
+                            cookie);
 
     if (mock_pds_batch_async_fail_) {
         // Verify no change to slab - all temporary objects released

@@ -27,6 +27,21 @@ public:
     void delete_bd_if(const ATG_L2_BD_ID *bd_id,
                       NBB_CORRELATOR dp_bd_correlator,
                       ATG_BDPI_INTERFACE_BIND *if_bind);
+
+    void add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac); 
+    void delete_fdb_mac(l2f::FdbMacKey *key) ;
+    NBB_ULONG add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
+                                     NBB_BYTE sticky);
+
+    void delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
+                               bool programmed);
+    NBB_BYTE add_upd_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
+                                           const char *vrf_name);
+
+    void delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
+                                      const char *vrf_name);
+
+
 };
 
 } // End namespace

@@ -4,8 +4,13 @@
 //---------------------------------------------------------------
  
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
+#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 
 namespace pds_ms {
+
+using pdsa_stub::vpc_obj_t;
+using pdsa_stub::state_t;
 
 li_integ_subcomp_t* li_is () 
 {
@@ -82,4 +87,10 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
     return ATG_OK;
 }
 
+sdk_ret_t
+li_vrf_update_pds_synch (state_t::context_t&& state_ctxt,
+                         vpc_obj_t* vpc_obj)
+{
+    return SDK_RET_OK;
+}
 } // End namespace
