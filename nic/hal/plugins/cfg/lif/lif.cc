@@ -1126,7 +1126,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);
 
     // Send updates to Agent
-    hal_stream_lif_updates(lif);
+    // TBD - Enable Async streaming 
+    //hal_stream_lif_updates(lif);
     return ret;
 }
 
@@ -1744,7 +1745,8 @@ end:
      }
 
     // Send updates to Agent
-    hal_stream_lif_updates(lif);
+    // TBD - Enable Async streaming
+    //hal_stream_lif_updates(lif);
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
