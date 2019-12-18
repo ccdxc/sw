@@ -52,7 +52,7 @@ api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 
 bool
 is_api_thread_ready (void) {
-    return core::thread_get(core::THREAD_ID_API)->ready();
+    return core::thread_get(core::PDS_THREAD_ID_API)->ready();
 }
 
 }    // namespace api

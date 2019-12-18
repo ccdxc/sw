@@ -18,21 +18,22 @@
 
 namespace core {
 
+// threads inside the PDS HAL library (these ids are also used as IPC endpoints)
 enum {
-    THREAD_ID_NONE       = 0,
-    THREAD_ID_CFG        = 1,
-    THREAD_ID_API        = 2,
-    THREAD_ID_PERIODIC   = 3,
-    THREAD_ID_NICMGR     = 4,
-    THREAD_ID_PCIEMGR    = 5,
-    THREAD_ID_LEARN      = 6,
-    THREAD_ID_MAX        = 48
+    PDS_THREAD_ID_NONE       = 0,
+    PDS_THREAD_ID_CFG        = 1,
+    PDS_THREAD_ID_API        = 2,
+    PDS_THREAD_ID_PERIODIC   = 3,
+    PDS_THREAD_ID_NICMGR     = 4,
+    PDS_THREAD_ID_PCIEMGR    = 5,
+    PDS_THREAD_ID_LEARN      = 6,
+    PDS_THREAD_ID_MAX        = 32
 };
 
 enum {
-    TIMER_ID_NONE         = 0,
-    TIMER_ID_SESSION_AGE  = 1,
-    TIMER_ID_SYSTEM_SCAN  = 2,
+    PDS_TIMER_ID_NONE         = 0,
+    PDS_TIMER_ID_SESSION_AGE  = 1,
+    PDS_TIMER_ID_SYSTEM_SCAN  = 2,
 };
 
 sdk_ret_t spawn_periodic_thread(pds_state *state);

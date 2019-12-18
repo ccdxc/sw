@@ -93,7 +93,7 @@ api_batch_destroy (pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-// Called directly by client of this library. No async. No batch
+// called directly by client of this library. No async. No batch
 sdk_ret_t
 process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
 {
@@ -112,7 +112,7 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
             api_msg->batch.apis.push_back(api_ctxt);
         }
 
-        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+        sdk::ipc::request(core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
                           sizeof(api_msg), api_process_sync_result_, &ret);
 
         api_batch_destroy((pds_batch_ctxt_t)api_msg);
@@ -128,11 +128,11 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
     }
     // batch commit happening, ship APIs to API thread
     if (api_msg->batch.async) {
-        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+        sdk::ipc::request(core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
                           sizeof(api_msg), api_process_async_result_, api_msg);
         return SDK_RET_OK;
     } else {
-        sdk::ipc::request(core::THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
+        sdk::ipc::request(core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, &api_msg,
                           sizeof(api_msg), api_process_sync_result_, &ret);
         api_batch_destroy((pds_batch_ctxt_t)api_msg);
         return ret;

@@ -30,11 +30,11 @@ using boost::property_tree::ptree;
 // TODO: create a "system" class and move all this into that class
 namespace core {
 
-thread *g_thread_store[THREAD_ID_MAX];
+thread *g_thread_store[PDS_THREAD_ID_MAX];
 
 thread *
 thread_get(uint32_t thread_id) {
-    if (thread_id >= THREAD_ID_MAX) {
+    if (thread_id >= PDS_THREAD_ID_MAX) {
         return NULL;
     }
     return g_thread_store[thread_id];
@@ -136,7 +136,7 @@ schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
         // start periodic timer for scanning system interrupts, temparature,
         // power etc.
         sysmon_timer = sdk::lib::timer_schedule(
-                           TIMER_ID_SYSTEM_SCAN,
+                           PDS_TIMER_ID_SYSTEM_SCAN,
                            SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
                            nullptr, sysmon_cb, true);
         if (sysmon_timer == NULL) {
@@ -190,7 +190,7 @@ spawn_periodic_thread (pds_state *state)
     // spawn periodic thread that does background tasks
     new_thread =
         thread_create(std::string("periodic").c_str(),
-            THREAD_ID_PERIODIC,
+            PDS_THREAD_ID_PERIODIC,
             sdk::lib::THREAD_ROLE_CONTROL,
             0x0,    // use all control cores
             periodic_thread_start,
@@ -212,7 +212,7 @@ spawn_pciemgr_thread (pds_state *state)
     if (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL) {
         // spawn pciemgr thread
         new_thread =
-            thread_create("pciemgr", THREAD_ID_PCIEMGR,
+            thread_create("pciemgr", PDS_THREAD_ID_PCIEMGR,
                 sdk::lib::THREAD_ROLE_CONTROL,
                 0x0,    // use all control cores
                 pdspciemgr::pciemgrapi::pciemgr_thread_start,
@@ -235,7 +235,7 @@ spawn_nicmgr_thread (pds_state *state)
         // spawn nicmgr thread
         new_thread =
             sdk::event_thread::event_thread::factory(
-                "nicmgr", THREAD_ID_NICMGR,
+                "nicmgr", PDS_THREAD_ID_NICMGR,
                 sdk::lib::THREAD_ROLE_CONTROL,
                 0x0,    // use all control cores
                 nicmgr::nicmgrapi::nicmgr_thread_init,
@@ -247,7 +247,7 @@ spawn_nicmgr_thread (pds_state *state)
         SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                                 "nicmgr thread create failure");
         new_thread->set_data(state);
-        g_thread_store[THREAD_ID_NICMGR] = new_thread;
+        g_thread_store[PDS_THREAD_ID_NICMGR] = new_thread;
         new_thread->start(new_thread);
     }
     return SDK_RET_OK;
@@ -256,7 +256,7 @@ spawn_nicmgr_thread (pds_state *state)
 bool
 is_nicmgr_ready (void)
 {
-    return g_thread_store[THREAD_ID_NICMGR]->ready();
+    return g_thread_store[PDS_THREAD_ID_NICMGR]->ready();
 }
 
 sdk_ret_t
@@ -266,7 +266,7 @@ spawn_api_thread (pds_state *state)
 
     new_thread =
         sdk::event_thread::event_thread::factory(
-            "cfg", THREAD_ID_API,
+            "cfg", PDS_THREAD_ID_API,
             sdk::lib::THREAD_ROLE_CONTROL,
             0x0,    // use all control cores
             api::api_thread_init_fn,
@@ -277,7 +277,7 @@ spawn_api_thread (pds_state *state)
             NULL);
      SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                              "cfg thread create failure");
-     g_thread_store[THREAD_ID_API] = new_thread;
+     g_thread_store[PDS_THREAD_ID_API] = new_thread;
      new_thread->start(new_thread);
      return SDK_RET_OK;
 }
@@ -300,7 +300,7 @@ spawn_fte_thread (pds_state *state)
     for (i = 0; i < state->num_data_cores(); i++) {
         // pin each data thread to a specific core
         cores_mask = 1 << (ffsl(data_cores_mask) - 1);
-        tid = THREAD_ID_FTE_START + i;
+        tid = PDS_THREAD_ID_FTE_START + i;
         snprintf(thread_name, sizeof(thread_name), "fte-%u",
                  ffsl(data_cores_mask) - 1);
         PDS_TRACE_DEBUG("Spawning FTE thread %s", thread_name);
@@ -330,7 +330,7 @@ spawn_learn_thread (pds_state *state)
     if (learn::learn_thread_enabled()) {
         // spawn learn thread
         PDS_TRACE_DEBUG("Spawning learn thread %s", thread_name);
-        new_thread = thread_create(thread_name, THREAD_ID_LEARN,
+        new_thread = thread_create(thread_name, PDS_THREAD_ID_LEARN,
                 sdk::lib::THREAD_ROLE_CONTROL, 0, //Control core
                 learn::learn_thread_start,
                 sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -339,7 +339,7 @@ spawn_learn_thread (pds_state *state)
         SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                                 "%s thread create failure",
                                 thread_name);
-        g_thread_store[THREAD_ID_LEARN] = new_thread;
+        g_thread_store[PDS_THREAD_ID_LEARN] = new_thread;
         new_thread->start(new_thread);
     } else {
         PDS_TRACE_DEBUG("Skip spawning learn thread");
@@ -353,14 +353,14 @@ threads_stop (void)
 {
     int thread_id;
 
-    for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
+    for (thread_id = 0; thread_id < PDS_THREAD_ID_MAX; thread_id++) {
         if (g_thread_store[thread_id] != NULL) {
             // stop the thread
             PDS_TRACE_DEBUG("Stopping thread %s", g_thread_store[thread_id]->name());
             g_thread_store[thread_id]->stop();
         }
     }
-    for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
+    for (thread_id = 0; thread_id < PDS_THREAD_ID_MAX; thread_id++) {
         if (g_thread_store[thread_id] != NULL) {
             PDS_TRACE_DEBUG("Waiting thread %s to exit", g_thread_store[thread_id]->name());
             g_thread_store[thread_id]->wait();

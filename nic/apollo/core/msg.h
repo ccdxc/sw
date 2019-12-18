@@ -18,6 +18,20 @@ extern "C" {
 #include "nic/apollo/framework/api.h"
 #include "nic/apollo/framework/api.hpp"
 
+/// IPC endpoints
+/// IPC endpoints internal to PDS agent/HAL use their unique thread ids as their
+/// IPC (client/server) identifier
+/// IPC endpoints external to PDS agent/HAL can use the enums defined below to
+/// identify themselves and register for (sync/async events)
+/// IPC id split currrently is as below:
+/// [PDS_THREAD_ID_NONE - PDS_THREAD_ID_MAX] are for PDS HAL threads
+/// [PDS_THREAD_ID_MAX + 1 - PDS_AGENT_THREAD_ID_MAX]
+typedef enum pds_ipc_id_s {
+    PDS_IPC_ID_NONE = 48,
+    PDS_IPC_ID_MIN  = PDS_IPC_ID_NONE,
+    PDS_IPC_ID_VPP,
+} pds_ipc_id_t;
+
 /// message types
 typedef enum pds_msg_type_s {
     PDS_MSG_TYPE_NONE,

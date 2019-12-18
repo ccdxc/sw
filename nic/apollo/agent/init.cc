@@ -236,9 +236,9 @@ spawn_cmd_server_thread (void)
     // spawn periodic thread that does background tasks
     g_cmd_server_thread =
         sdk::event_thread::event_thread::factory(
-            "cfg", THREAD_ID_AGENT_CMD_SERVER, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, core::cmd_server_thread_init, core::cmd_server_thread_exit,
-            NULL, // message
+            "cfg", PDS_AGENT_THREAD_ID_CMD_SERVER,
+            sdk::lib::THREAD_ROLE_CONTROL, 0x0, core::cmd_server_thread_init,
+            core::cmd_server_thread_exit, NULL, // message
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             true);
@@ -259,8 +259,9 @@ spawn_routing_thread (void)
     // spawn control plane routing thread
     g_routing_thread =
         sdk::lib::thread::factory(
-            "routing", THREAD_ID_AGENT_ROUTING, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, &pdsa_stub::pdsa_thread_init,
+            "routing", PDS_AGENT_THREAD_ID_ROUTING,
+            sdk::lib::THREAD_ROLE_CONTROL, 0x0,
+            pdsa_stub::pdsa_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             false);
@@ -302,7 +303,7 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    
+
     // spawn metaswitch control plane thread
     ret = spawn_routing_thread();
     if (ret != SDK_RET_OK) {
