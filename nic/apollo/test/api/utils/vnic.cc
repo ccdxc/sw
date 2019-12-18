@@ -130,7 +130,7 @@ increment_num (uint8_t *num)
 void
 vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     static uint8_t num_policy = 0;
-    static uint32_t lif_id = HOST_LIF_ID_MIN;
+    //static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     memset(spec, 0, sizeof(pds_vnic_spec_t));
     this->key_build(&spec->key);
@@ -143,10 +143,14 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     spec->src_dst_check = src_dst_check;
     spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
     spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
+
+#if 0
+    // TODO: this should be under platform == HW check
     spec->host_ifindex = LIF_IFINDEX(lif_id++);
     if (lif_id > HOST_LIF_ID_MAX) {
         lif_id = HOST_LIF_ID_MIN;
     }
+#endif
 
     if (this->configure_policy) {
         increment_num(&num_policy);

@@ -134,8 +134,9 @@ class VnicObject(base.ConfigObjectBase):
             spec.EgV4SecurityPolicyId.append(policyid)
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(policyid)
-        if self.HostIf:
-            spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+        if utils.IsPipelineApulu():
+            if self.HostIf:
+                spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
 
     def ValidateSpec(self, spec):

@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -152,6 +153,7 @@ subnet_entry::nuke_resources_(void) {
 
 sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_lif_key_t lif_key = { 0 };
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
     PDS_TRACE_VERBOSE(
@@ -189,6 +191,14 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     }
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     host_ifindex_ = spec->host_ifindex;
+    if (host_ifindex_ != IFINDEX_INVALID) {
+        lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        if (unlikely(lif_db()->find(&lif_key) == NULL)) {
+            PDS_TRACE_ERR("lif 0x%x not found, subnet %u init failed",
+                          spec->host_ifindex, spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
+    }
     return SDK_RET_OK;
 }
 

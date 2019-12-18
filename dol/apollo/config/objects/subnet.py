@@ -152,8 +152,9 @@ class SubnetObject(base.ConfigObjectBase):
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(policyid)
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
-        if self.HostIf:
-            spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+        if utils.IsPipelineApulu():
+            if self.HostIf:
+                spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
         return
 
     def ValidateSpec(self, spec):

@@ -110,6 +110,7 @@ vnic_entry::nuke_resources_(void) {
 
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
+     pds_lif_key_t lif_key = { 0 };
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
     memcpy(&key_, &spec->key, sizeof(pds_vnic_key_t));
@@ -139,6 +140,14 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
     host_ifindex_ = spec->host_ifindex;
+    if (host_ifindex_ != IFINDEX_INVALID) {
+        lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        if (unlikely(lif_db()->find(&lif_key) == NULL)) {
+            PDS_TRACE_ERR("lif 0x%x not found, vnic %u init failed",
+                          spec->host_ifindex, spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
+    }
     return SDK_RET_OK;
 }
 
