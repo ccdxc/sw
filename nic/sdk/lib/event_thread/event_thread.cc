@@ -540,6 +540,12 @@ timer_init (timer_t *timer, timer_cb callback,
 }
 
 void
+timer_set (timer_t *timer, double initial_delay, double repeat)
+{
+    ev_timer_set(&timer->ev_watcher, initial_delay, repeat);
+}
+
+void
 timer_start (timer_t *timer)
 {
     // We can only add and remove events from inside the context of the thread
