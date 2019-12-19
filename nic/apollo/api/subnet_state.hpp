@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined(__API_SUBNET_STATE_HPP__)
+#ifndef __API_SUBNET_STATE_HPP__
 #define __API_SUBNET_STATE_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -41,7 +41,7 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(subnet_entry *subnet);
 
-    /// \brief     remove the (singleton) instance of device object from db
+    /// \brief     remove the instance of subnet object from db
     /// \param[in] subnet    subnet entry to be deleted from the db
     /// \return    pointer to the removed subnet instance or NULL, if not found
     subnet_entry *remove(subnet_entry *subnet);
@@ -71,8 +71,8 @@ private:
                                   ///< subnet_state
 
 private:
-    ht *subnet_ht_;               ///< Hash table root
-    indexer *subnet_idxr_;        ///< Indexer to allocate hw subnet id
+    ht *subnet_ht_;               ///< hash table root
+    indexer *subnet_idxr_;        ///< indexer to allocate hw subnet id
     slab *subnet_slab_;           ///< slab for allocating subnet entry
 };
 
@@ -81,7 +81,7 @@ subnet_find (pds_subnet_key_t *key) {
     return (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, key);
 }
 
-/// \@}    // end of PDS_SUBNET_ENTRY
+/// \@}    // end of PDS_SUBNET_STATE
 
 }    // namespace api
 

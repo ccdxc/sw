@@ -388,4 +388,19 @@ api_base::stateless(obj_id_t obj_id) {
     return false;
 }
 
+bool
+api_base::circulate(obj_id_t obj_id) {
+    switch (obj_id) {
+    case OBJ_ID_SUBNET:
+    case OBJ_ID_VNIC:
+    case OBJ_ID_NAT_PORT_BLOCK:
+    case OBJ_ID_DHCP_RELAY:
+    case OBJ_ID_DHCP_POLICY:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 }    // namespace api

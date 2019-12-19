@@ -31,6 +31,7 @@
 #include "nic/apollo/api/nexthop_state.hpp"
 #include "nic/apollo/api/nexthop_group_state.hpp"
 #include "nic/apollo/api/policer_state.hpp"
+#include "nic/apollo/api/nat_state.hpp"
 
 using std::string;
 
@@ -57,6 +58,7 @@ enum {
     PDS_STATE_NEXTHOP,
     PDS_STATE_NEXTHOP_GROUP,
     PDS_STATE_POLICER,
+    PDS_STATE_NAT,
     PDS_STATE_MAX,
 };
 
@@ -174,6 +176,9 @@ public:
     }
     policer_state *policer_db(void) {
         return (policer_state *)state_[PDS_STATE_POLICER];
+    }
+    nat_state *nat_db(void) {
+        return (nat_state *)state_[PDS_STATE_NAT];
     }
 
 private:
@@ -304,6 +309,12 @@ static inline policer_state *
 policer_db (void)
 {
     return api::g_pds_state.policer_db();
+}
+
+static inline nat_state *
+nat_db (void)
+{
+    return api::g_pds_state.nat_db();
 }
 
 #endif    // __PDS_STATE_HPP__

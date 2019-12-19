@@ -21,20 +21,10 @@ using std::string;
 
 namespace api {
 
-/// \brief  Basse class for all api related objects
+/// \brief  base class for all api related objects
 class api_base : public obj_base {
 public:
-     /// \brief Constructor
-    api_base() {
-        in_dol_ = 0;
-        in_dol_ = 0;
-        rsvd_rsc_ = 0;
-    };
-
-     /// \brief Destructor
-    virtual ~api_base(){};
-
-    /// \brief Factory method to instantiate an object
+    /// \brief factory method to instantiate an object
     /// \param[in] api_ctxt API context carrying object related configuration
     static api_base *factory(api_ctxt_t *api_ctxt);
 
@@ -54,6 +44,13 @@ public:
     /// \param[in] api_obj    api object being freed
     static void soft_delete(obj_id_t obj_id, api_base *api_obj);
 
+    /// \brief clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) {
+        return NULL;
+    }
+
     /// \brief    free all the memory associated with this object without
     ///           touching any of the databases or h/w etc.
     /// \param[in] obj_id     object identifier
@@ -63,7 +60,7 @@ public:
 
     /// \brief  Allocate hardware resources for this object
     /// \param[in] orig_obj Old version of the unmodified object
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) {
@@ -76,8 +73,8 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
-    /// \brief Initiaize the api object with given config
-    /// \param[in] api_ctxt Transient state associated with this API
+    /// \brief initialize the api object with given config
+    /// \param[in] api_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
         return SDK_RET_INVALID_OP;
@@ -86,17 +83,17 @@ public:
     /// \brief program config in the hardware during create operation
     /// Program all hardware tables relevant to this object except stage 0
     /// table(s), if any and also set the valid bit
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
     /// \brief    cleanup config from the hardware
-    /// Cleanup all hardware tables relevant to this object except stage 0
+    /// cleanup all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
     /// and setting invalid bit (if any) in the hardware entries
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
@@ -113,22 +110,30 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
+    /// \brief compute all the objects depending on this object and add to
+    ///        framework's dependency list
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief    update config in the hardware
     /// update all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
     /// \param[in] orig_obj old/original version of the unmodified object
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
                                      api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
-    /// \brief Activate the epoch in the dataplane
+    /// \brief activate the epoch in the dataplane
     /// \param[in] epoch epoch/version of new config
     /// \param[in] api_op API operation
     /// \param[in] orig_obj old/original version of the unmodified object
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
@@ -141,7 +146,7 @@ public:
     /// table(s), if any and this reprogramming must be based on existing state
     /// and any of the state present in the dirty object list (like cloned
     /// objects etc.)
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
@@ -163,28 +168,27 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
-    /// \brief Update software database with new object
+    /// \brief upate software database with new object
     /// This method is called on new object that needs to replace the
     /// old version of the object in the DBs
     /// \param[in] old Old version of the object being swapped out
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *old_obj, api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_OP;
     }
 
-    /// \brief Add the object to corresponding internal db(s)
+    /// \brief add the object to corresponding internal db(s)
     virtual sdk_ret_t add_to_db(void) { return SDK_RET_INVALID_OP; }
 
-    /// \brief Delete the object from corresponding internal db(s)
+    /// \brief delete the object from corresponding internal db(s)
     virtual sdk_ret_t del_from_db(void) { return SDK_RET_INVALID_OP; }
 
-    ///< \brief Enqueue the object for delayed destruction
+    ///< \brief enqueue the object for delayed destruction
     virtual sdk_ret_t delay_delete(void) { return SDK_RET_INVALID_OP; }
 
     /// \brief Find an object based on the object id & key information
     /// \param[in] api_ctxt API context carrying object related information
-    /// \remark
     static api_base *find_obj(api_ctxt_t *api_ctxt);
 
     /// \brief find an object based on the object id & key information
@@ -197,41 +201,32 @@ public:
     ///     returned as-is
     static api_base *find_obj(obj_id_t obj_id, void *key);
 
-    /// \brief clone this object and return cloned object
-    /// \param[in]    api_ctxt API context carrying object related configuration
-    /// \return       new object instance of current object
-    virtual api_base *clone(api_ctxt_t *api_ctxt) {
-        return NULL;
-    }
-
-    /// \brief compute all the objects depending on this object and add to
-    ///        framework's dependency list
-    /// \param[in] obj_ctxt Transient state associated with this API
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) {
-        return SDK_RET_INVALID_OP;
-    }
-
-    /// \brief Mark the object as dirty
+    /// \brief mark the object as dirty
     void set_in_dirty_list(void) { in_dol_ = 1; }
 
     /// \brief returns true if the object is in dirty list
     bool in_dirty_list(void) const { return in_dol_ ? true : false; }
 
-    /// \brief Clear the dirty bit on this object
+    /// \brief clear the dirty bit on this object
     void clear_in_dirty_list(void) { in_dol_ = 0; }
 
-    /// \brief Mark the object as dependent object
+    /// \brief mark the object as dependent object
     void set_in_deps_list(void) { in_dol_ = 1; }
 
     /// \brief returns true if the object is in dependent list
     bool in_deps_list(void) const { return in_dol_ ? true : false; }
 
-    /// \brief Clear the dependent object bit on this object
+    /// \brief clear the dependent object bit on this object
     void clear_in_deps_list(void) { in_dol_ = 0; }
 
     /// \brief return true if object is 'stateless' given an object id
+    /// \param[in] obj_id    object id
     static bool stateless(obj_id_t obj_id);
+
+    /// \brief return true if object needs to be circulated to other components
+    /// (potentially multiple) in the system
+    /// \param[in] obj_id    object id
+    static bool circulate(obj_id_t obj_id);
 
     /// \brief return true if object reserved any h/w resources
     bool rsvd_rsc(void) const { return rsvd_rsc_ ? true : false; }
@@ -247,6 +242,17 @@ public:
 
     /// \brief return stringified contents of the obj (for debugging)
     virtual string tostr(void) const { return "api_base"; }
+
+protected:
+    /// \brief constructor
+    api_base() {
+        in_dol_ = 0;
+        in_dol_ = 0;
+        rsvd_rsc_ = 0;
+    };
+
+    /// \brief destructor
+    virtual ~api_base(){};
 
 protected:
     uint8_t in_dol_:1;      ///< true if object is in the dirty list
