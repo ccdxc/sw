@@ -24,8 +24,8 @@ service NatPoolApi {
     };
 
     rpc GetNatPool (api.ObjectMeta) returns (NatPool) {};
-    rpc ListNatPools (api.ObjectMeta) returns (NatPoolList) {};
-    rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEventList) {};
+    rpc ListNatPools (api.ListWatchOptions) returns (NatPoolList) {};
+    rpc WatchNatPools (api.ListWatchOptions) returns (stream NatPoolEventList) {};
 }
 
 // Nat Pool Object.

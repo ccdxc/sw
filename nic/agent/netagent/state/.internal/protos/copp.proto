@@ -28,8 +28,8 @@ service ControlPlanePolicerApi {
     };
 
     rpc GetControlPlanePolicer (api.ObjectMeta) returns (ControlPlanePolicer) {};
-    rpc ListControlPlanePoliceres (api.ObjectMeta) returns (ControlPlanePolicerList) {};
-    rpc WatchControlPlanePoliceres (api.ObjectMeta) returns (stream ControlPlanePolicerEventList) {};
+    rpc ListControlPlanePoliceres (api.ListWatchOptions) returns (ControlPlanePolicerList) {};
+    rpc WatchControlPlanePoliceres (api.ListWatchOptions) returns (stream ControlPlanePolicerEventList) {};
 }
 
 // ControlPlanePolicer object

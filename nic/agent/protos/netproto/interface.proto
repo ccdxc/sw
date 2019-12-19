@@ -24,8 +24,8 @@ service InterfaceApiV1 {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
-    rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
-    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEventList) {};
+    rpc ListInterfaces (api.ListWatchOptions) returns (InterfaceList) {};
+    rpc WatchInterfaces (api.ListWatchOptions) returns (stream InterfaceEventList) {};
     rpc InterfaceOperUpdate (stream InterfaceEvent) returns (api.TypeMeta) {};
     rpc CreateInterface (Interface) returns (Interface) {};
 //    rpc GetInterface (api.ObjectMeta) returns (Interface) {};

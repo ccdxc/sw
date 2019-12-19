@@ -25,8 +25,8 @@ service NetworkSecurityPolicyApiV1 {
         Prefix: "api/security/policies"
     };
 
-    rpc ListNetworkSecurityPolicys (api.ObjectMeta) returns (NetworkSecurityPolicyList) {};
-    rpc WatchNetworkSecurityPolicys (api.ObjectMeta) returns (stream NetworkSecurityPolicyEventList) {};
+    rpc ListNetworkSecurityPolicys (api.ListWatchOptions) returns (NetworkSecurityPolicyList) {};
+    rpc WatchNetworkSecurityPolicys (api.ListWatchOptions) returns (stream NetworkSecurityPolicyEventList) {};
     rpc NetworkSecurityPolicyOperUpdate (stream NetworkSecurityPolicyEvent) returns (api.TypeMeta) {};
 
 //    rpc GetNetworkSecurityPolicy (api.ObjectMeta) returns (NetworkSecurityPolicy) {};

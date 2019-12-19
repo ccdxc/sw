@@ -245,7 +245,7 @@ type CtrlerIntf interface {
 	CreateLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error // API for TSAgent and TPAgent to use to create dependent objects
 	DeleteLateralNetAgentObjects(owner string, mgmtIP, destIP string, tunnelOp bool) error // API for TSAgent and TPAgent to delete dependent objects
 	PurgeConfigs() error                                                                   // Deletes all netagent configs. This is called on decommission workflow/switch to network managed mode
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta                       // Allow client to query for options to use for watch
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions                 // Allow client to query for options to use for watch
 	LifUpdateHandler(lif *halproto.LifGetResponse) error                                   // Handle async lif updates
 	GetInterfaceByID(intfID uint64) (*netproto.Interface, error)                           // ID to name mapping API for interfaces
 }

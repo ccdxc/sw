@@ -313,7 +313,7 @@ type NetworkSecurityPolicyReactor interface {
 	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
 	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
 	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 
 type AppReactor interface {
@@ -322,7 +322,7 @@ type AppReactor interface {
 	ListApp() []*netproto.App                           // lists all Apps
 	UpdateApp(appObj *netproto.App) error               // updates an App
 	DeleteApp(appObj, ns, name string) error            // deletes an App
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 
 const (
@@ -410,8 +410,8 @@ func (t *testAgent) DeleteNetworkSecurityPolicy(tenant, ns, name string) error {
 	return fmt.Errorf("Not found")
 }
 
-func (*testAgent) GetWatchOptions(cts context.Context, kind string) api.ObjectMeta {
-	return api.ObjectMeta{}
+func (*testAgent) GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions {
+	return api.ListWatchOptions{}
 }
 
 func (t *testAgent) CreateApp(obj *netproto.App) error {

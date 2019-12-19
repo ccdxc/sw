@@ -28,7 +28,7 @@ type NetworkReactor interface {
 	ListNetwork() []*netproto.Network                           // lists all Networks
 	UpdateNetwork(networkObj *netproto.Network) error           // updates an Network
 	DeleteNetwork(networkObj, ns, name string) error            // deletes an Network
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type NetworkOStream struct {
 	sync.Mutex
@@ -49,9 +49,9 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "Network")
+	watchOptions := reactor.GetWatchOptions(ctx, "Network")
 	networkRPCClient := netproto.NewNetworkApiV1Client(client.rpcClient.ClientConn)
-	stream, err := networkRPCClient.WatchNetworks(ctx, &ometa)
+	stream, err := networkRPCClient.WatchNetworks(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching Network. Err: %v", err)
 		return
@@ -67,7 +67,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 	ostream := &NetworkOStream{stream: opStream}
 
 	// get a list of objects
-	objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
+	objList, err := networkRPCClient.ListNetworks(ctx, &watchOptions)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() == codes.Unavailable {
@@ -117,7 +117,7 @@ func (client *NimbusClient) WatchNetworks(ctx context.Context, reactor NetworkRe
 			default:
 			}
 			// get a list of objects
-			objList, err := networkRPCClient.ListNetworks(ctx, &ometa)
+			objList, err := networkRPCClient.ListNetworks(ctx, &watchOptions)
 			if err != nil {
 				st, ok := status.FromError(err)
 				if !ok || st.Code() == codes.Unavailable {

@@ -28,7 +28,7 @@ type SecurityProfileReactor interface {
 	ListSecurityProfile() []*netproto.SecurityProfile                           // lists all SecurityProfiles
 	UpdateSecurityProfile(securityprofileObj *netproto.SecurityProfile) error   // updates an SecurityProfile
 	DeleteSecurityProfile(securityprofileObj, ns, name string) error            // deletes an SecurityProfile
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type SecurityProfileOStream struct {
 	sync.Mutex
@@ -49,9 +49,9 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "SecurityProfile")
+	watchOptions := reactor.GetWatchOptions(ctx, "SecurityProfile")
 	securityprofileRPCClient := netproto.NewSecurityProfileApiV1Client(client.rpcClient.ClientConn)
-	stream, err := securityprofileRPCClient.WatchSecurityProfiles(ctx, &ometa)
+	stream, err := securityprofileRPCClient.WatchSecurityProfiles(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching SecurityProfile. Err: %v", err)
 		return
@@ -67,7 +67,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 	ostream := &SecurityProfileOStream{stream: opStream}
 
 	// get a list of objects
-	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
+	objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &watchOptions)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() == codes.Unavailable {
@@ -117,7 +117,7 @@ func (client *NimbusClient) WatchSecurityProfiles(ctx context.Context, reactor S
 			default:
 			}
 			// get a list of objects
-			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &ometa)
+			objList, err := securityprofileRPCClient.ListSecurityProfiles(ctx, &watchOptions)
 			if err != nil {
 				st, ok := status.FromError(err)
 				if !ok || st.Code() == codes.Unavailable {

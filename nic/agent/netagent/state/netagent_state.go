@@ -96,8 +96,8 @@ func (na *Nagent) GetAgentID() string {
 }
 
 // GetWatchOptions returns the options to be used while establishing a watch from this agent.
-func (na *Nagent) GetWatchOptions(cts context.Context, kind string) api.ObjectMeta {
-	var ret api.ObjectMeta
+func (na *Nagent) GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions {
+	var ret api.ListWatchOptions
 	switch kind {
 	case "Endpoint":
 		ret.Name = na.NodeUUID

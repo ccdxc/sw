@@ -503,8 +503,8 @@ func (ag *fakeAgent) PurgeConfigs() error {
 }
 
 // GetWatchOptions gets watch options to be used when establishing a watch
-func (ag *fakeAgent) GetWatchOptions(cts context.Context, kind string) api.ObjectMeta {
-	return api.ObjectMeta{}
+func (ag *fakeAgent) GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions {
+	return api.ListWatchOptions{}
 }
 
 type fakeRPCServer struct {
@@ -763,11 +763,11 @@ func (srv *fakeRPCServer) GetNetwork(context.Context, *api.ObjectMeta) (*netprot
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListNetworks(context.Context, *api.ObjectMeta) (*netproto.NetworkList, error) {
+func (srv *fakeRPCServer) ListNetworks(context.Context, *api.ListWatchOptions) (*netproto.NetworkList, error) {
 	return &netproto.NetworkList{}, nil
 }
 
-func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.NetworkApiV1_WatchNetworksServer) error {
+func (srv *fakeRPCServer) WatchNetworks(meta *api.ListWatchOptions, stream netproto.NetworkApiV1_WatchNetworksServer) error {
 	// walk local db and send stream resp
 	return nil
 }
@@ -788,7 +788,7 @@ func (srv *fakeRPCServer) GetEndpoint(context.Context, *api.ObjectMeta) (*netpro
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListEndpoints(context.Context, *api.ObjectMeta) (*netproto.EndpointList, error) {
+func (srv *fakeRPCServer) ListEndpoints(context.Context, *api.ListWatchOptions) (*netproto.EndpointList, error) {
 	return &netproto.EndpointList{}, nil
 }
 
@@ -796,7 +796,7 @@ func (srv *fakeRPCServer) DeleteEndpoint(ctx context.Context, ep *netproto.Endpo
 	return ep, nil
 }
 
-func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.EndpointApiV1_WatchEndpointsServer) error {
+func (srv *fakeRPCServer) WatchEndpoints(meta *api.ListWatchOptions, stream netproto.EndpointApiV1_WatchEndpointsServer) error {
 	return nil
 }
 
@@ -812,7 +812,7 @@ func (srv *fakeRPCServer) GetNetworkSecurityPolicy(ctx context.Context, ometa *a
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListNetworkSecurityPolicys(context.Context, *api.ObjectMeta) (*netproto.NetworkSecurityPolicyList, error) {
+func (srv *fakeRPCServer) ListNetworkSecurityPolicys(context.Context, *api.ListWatchOptions) (*netproto.NetworkSecurityPolicyList, error) {
 	return &netproto.NetworkSecurityPolicyList{}, nil
 }
 
@@ -823,7 +823,7 @@ func (srv *fakeRPCServer) UpdateNetworkSecurityPolicy(ctx context.Context, sgp *
 	return sgp, nil
 }
 
-func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysServer) error {
+func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ListWatchOptions, stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysServer) error {
 	// walk local db and send stream resp
 	for _, sgp := range srv.sgpdb {
 		// watch event
@@ -882,11 +882,11 @@ func (srv *fakeRPCServer) GetSecurityProfile(ctx context.Context, ometa *api.Obj
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListSecurityProfiles(context.Context, *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
+func (srv *fakeRPCServer) ListSecurityProfiles(context.Context, *api.ListWatchOptions) (*netproto.SecurityProfileList, error) {
 	return &netproto.SecurityProfileList{}, nil
 }
 
-func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netproto.SecurityProfileApiV1_WatchSecurityProfilesServer) error {
+func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ListWatchOptions, stream netproto.SecurityProfileApiV1_WatchSecurityProfilesServer) error {
 	// walk local db and send stream resp
 
 	return nil
@@ -904,11 +904,11 @@ func (srv *fakeRPCServer) GetApp(ctx context.Context, ometa *api.ObjectMeta) (*n
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) ListApps(context.Context, *api.ObjectMeta) (*netproto.AppList, error) {
+func (srv *fakeRPCServer) ListApps(context.Context, *api.ListWatchOptions) (*netproto.AppList, error) {
 	return &netproto.AppList{}, nil
 }
 
-func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApiV1_WatchAppsServer) error {
+func (srv *fakeRPCServer) WatchApps(sel *api.ListWatchOptions, stream netproto.AppApiV1_WatchAppsServer) error {
 	// walk local db and send stream resp
 	for _, app := range srv.appdb {
 		// watch event

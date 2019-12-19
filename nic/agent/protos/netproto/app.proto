@@ -21,8 +21,8 @@ service AppApiV1 {
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/apps"
     };
-    rpc ListApps (api.ObjectMeta) returns (AppList) {};
-    rpc WatchApps (api.ObjectMeta) returns (stream AppEventList) {};
+    rpc ListApps (api.ListWatchOptions) returns (AppList) {};
+    rpc WatchApps (api.ListWatchOptions) returns (stream AppEventList) {};
     rpc AppOperUpdate (stream AppEvent) returns (api.TypeMeta) {};
 
 //    rpc GetApp (api.ObjectMeta) returns (App) {};

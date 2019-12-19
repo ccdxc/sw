@@ -58,7 +58,7 @@ type EndpointStatusReactor interface {
 	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type EndpointNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *EndpointTopic) GetEndpoint(ctx context.Context, objmeta *api.ObjectMet
 }
 
 // ListEndpoints lists all Endpoints matching object selector
-func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMeta) (*netproto.EndpointList, error) {
+func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.EndpointList, error) {
 	var objlist netproto.EndpointList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ObjectMe
 }
 
 // WatchEndpoints watches Endpoints and sends streaming resp
-func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.EndpointApiV1_WatchEndpointsServer) error {
+func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stream netproto.EndpointApiV1_WatchEndpointsServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Endpoint", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Endpoint", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *EndpointTopic) WatchEndpoints(ometa *api.ObjectMeta, stream netproto.E
 	defer eh.server.memDB.StopWatchObjects("Endpoint", &watcher)
 
 	// get a list of all Endpoints
-	objlist, err := eh.ListEndpoints(context.Background(), ometa)
+	objlist, err := eh.ListEndpoints(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

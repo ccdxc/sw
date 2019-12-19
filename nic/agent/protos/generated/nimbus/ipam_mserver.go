@@ -58,7 +58,7 @@ type IPAMPolicyStatusReactor interface {
 	OnIPAMPolicyDeleteReq(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperUpdate(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperDelete(nodeID string, objinfo *netproto.IPAMPolicy) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type IPAMPolicyNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *IPAMPolicyTopic) GetIPAMPolicy(ctx context.Context, objmeta *api.Objec
 }
 
 // ListIPAMPolicys lists all IPAMPolicys matching object selector
-func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.ObjectMeta) (*netproto.IPAMPolicyList, error) {
+func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.IPAMPolicyList, error) {
 	var objlist netproto.IPAMPolicyList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.Obje
 }
 
 // WatchIPAMPolicys watches IPAMPolicys and sends streaming resp
-func (eh *IPAMPolicyTopic) WatchIPAMPolicys(ometa *api.ObjectMeta, stream netproto.IPAMPolicyApiV1_WatchIPAMPolicysServer) error {
+func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, stream netproto.IPAMPolicyApiV1_WatchIPAMPolicysServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("IPAMPolicy", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("IPAMPolicy", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(ometa *api.ObjectMeta, stream netpro
 	defer eh.server.memDB.StopWatchObjects("IPAMPolicy", &watcher)
 
 	// get a list of all IPAMPolicys
-	objlist, err := eh.ListIPAMPolicys(context.Background(), ometa)
+	objlist, err := eh.ListIPAMPolicys(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

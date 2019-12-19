@@ -21,8 +21,8 @@ service NetworkApiV1 {
         Prefix: "api/networks"
     };
 
-    rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
-    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
+    rpc ListNetworks (api.ListWatchOptions) returns (NetworkList) {};
+    rpc WatchNetworks (api.ListWatchOptions) returns (stream NetworkEventList) {};
     rpc NetworkOperUpdate (stream NetworkEvent) returns (api.TypeMeta) {};
 
 //    rpc GetNetwork (api.ObjectMeta) returns (Network) {};

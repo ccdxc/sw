@@ -64,7 +64,7 @@ type {{$crudObject}}StatusReactor interface {
     On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
-    GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+    GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type {{$crudObject}}NodeStatus struct {
@@ -347,7 +347,7 @@ func (eh *{{$crudObject}}Topic) Get{{$crudObject}}(ctx context.Context, objmeta 
 }
 
 // List{{$crudObject}}s lists all {{$crudObject}}s matching object selector
-func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel *api.ObjectMeta) (*netproto.{{$crudObject}}List, error) {
+func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.{{$crudObject}}List, error) {
     var objlist netproto.{{$crudObject}}List
     nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -376,14 +376,14 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
 }
 
 // Watch{{$crudObject}}s watches {{$crudObject}}s and sends streaming resp
-func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, stream netproto.{{$svcname}}_Watch{{$crudObject}}sServer) error {
+func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatchOptions, stream netproto.{{$svcname}}_Watch{{$crudObject}}sServer) error {
     // watch for changes
     watcher := memdb.Watcher{}
     watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
     defer close(watcher.Channel)
 
     if  eh.statusReactor != nil {
-        watcher.Filter = eh.statusReactor.GetWatchFilter("{{$crudObject}}", ometa)
+        watcher.Filter = eh.statusReactor.GetWatchFilter("{{$crudObject}}", watchOptions)
     } else {
         watcher.Filter = func(memdb.Object) bool {
             return true
@@ -397,7 +397,7 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
     defer eh.server.memDB.StopWatchObjects("{{$crudObject}}", &watcher)
 
     // get a list of all {{$crudObject}}s
-    objlist, err := eh.List{{$crudObject}}s(context.Background(), ometa)
+    objlist, err := eh.List{{$crudObject}}s(context.Background(), watchOptions)
     if err != nil {
         log.Errorf("Error getting a list of objects. Err: %v", err)
         return err

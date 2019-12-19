@@ -28,7 +28,7 @@ type EndpointReactor interface {
 	ListEndpoint() []*netproto.Endpoint                           // lists all Endpoints
 	UpdateEndpoint(endpointObj *netproto.Endpoint) error          // updates an Endpoint
 	DeleteEndpoint(endpointObj, ns, name string) error            // deletes an Endpoint
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type EndpointOStream struct {
 	sync.Mutex
@@ -49,9 +49,9 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "Endpoint")
+	watchOptions := reactor.GetWatchOptions(ctx, "Endpoint")
 	endpointRPCClient := netproto.NewEndpointApiV1Client(client.rpcClient.ClientConn)
-	stream, err := endpointRPCClient.WatchEndpoints(ctx, &ometa)
+	stream, err := endpointRPCClient.WatchEndpoints(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching Endpoint. Err: %v", err)
 		return
@@ -67,7 +67,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 	ostream := &EndpointOStream{stream: opStream}
 
 	// get a list of objects
-	objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
+	objList, err := endpointRPCClient.ListEndpoints(ctx, &watchOptions)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() == codes.Unavailable {
@@ -117,7 +117,7 @@ func (client *NimbusClient) WatchEndpoints(ctx context.Context, reactor Endpoint
 			default:
 			}
 			// get a list of objects
-			objList, err := endpointRPCClient.ListEndpoints(ctx, &ometa)
+			objList, err := endpointRPCClient.ListEndpoints(ctx, &watchOptions)
 			if err != nil {
 				st, ok := status.FromError(err)
 				if !ok || st.Code() == codes.Unavailable {

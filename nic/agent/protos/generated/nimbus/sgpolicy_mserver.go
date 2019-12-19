@@ -58,7 +58,7 @@ type NetworkSecurityPolicyStatusReactor interface {
 	OnNetworkSecurityPolicyDeleteReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperUpdate(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperDelete(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type NetworkSecurityPolicyNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *NetworkSecurityPolicyTopic) GetNetworkSecurityPolicy(ctx context.Conte
 }
 
 // ListNetworkSecurityPolicys lists all NetworkSecurityPolicys matching object selector
-func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Context, objsel *api.ObjectMeta) (*netproto.NetworkSecurityPolicyList, error) {
+func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.NetworkSecurityPolicyList, error) {
 	var objlist netproto.NetworkSecurityPolicyList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Con
 }
 
 // WatchNetworkSecurityPolicys watches NetworkSecurityPolicys and sends streaming resp
-func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(ometa *api.ObjectMeta, stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysServer) error {
+func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *api.ListWatchOptions, stream netproto.NetworkSecurityPolicyApiV1_WatchNetworkSecurityPolicysServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(ometa *api.Obj
 	defer eh.server.memDB.StopWatchObjects("NetworkSecurityPolicy", &watcher)
 
 	// get a list of all NetworkSecurityPolicys
-	objlist, err := eh.ListNetworkSecurityPolicys(context.Background(), ometa)
+	objlist, err := eh.ListNetworkSecurityPolicys(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

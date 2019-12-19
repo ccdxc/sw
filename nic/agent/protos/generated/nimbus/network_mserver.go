@@ -58,7 +58,7 @@ type NetworkStatusReactor interface {
 	OnNetworkDeleteReq(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperUpdate(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperDelete(nodeID string, objinfo *netproto.Network) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type NetworkNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *NetworkTopic) GetNetwork(ctx context.Context, objmeta *api.ObjectMeta)
 }
 
 // ListNetworks lists all Networks matching object selector
-func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ObjectMeta) (*netproto.NetworkList, error) {
+func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.NetworkList, error) {
 	var objlist netproto.NetworkList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ObjectMeta
 }
 
 // WatchNetworks watches Networks and sends streaming resp
-func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.NetworkApiV1_WatchNetworksServer) error {
+func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream netproto.NetworkApiV1_WatchNetworksServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Network", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Network", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 	defer eh.server.memDB.StopWatchObjects("Network", &watcher)
 
 	// get a list of all Networks
-	objlist, err := eh.ListNetworks(context.Background(), ometa)
+	objlist, err := eh.ListNetworks(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

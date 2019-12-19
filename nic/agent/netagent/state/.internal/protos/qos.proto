@@ -28,8 +28,8 @@ service QosClassApi {
     };
 
     rpc GetQosClass (api.ObjectMeta) returns (QosClass) {};
-    rpc ListQosClasses (api.ObjectMeta) returns (QosClassList) {};
-    rpc WatchQosClasses (api.ObjectMeta) returns (stream QosClassEventList) {};
+    rpc ListQosClasses (api.ListWatchOptions) returns (QosClassList) {};
+    rpc WatchQosClasses (api.ListWatchOptions) returns (stream QosClassEventList) {};
 }
 
 // QosClass object

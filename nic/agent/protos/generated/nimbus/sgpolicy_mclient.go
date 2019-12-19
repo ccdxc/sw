@@ -28,7 +28,7 @@ type NetworkSecurityPolicyReactor interface {
 	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
 	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
 	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type NetworkSecurityPolicyOStream struct {
 	sync.Mutex
@@ -49,9 +49,9 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "NetworkSecurityPolicy")
+	watchOptions := reactor.GetWatchOptions(ctx, "NetworkSecurityPolicy")
 	networksecuritypolicyRPCClient := netproto.NewNetworkSecurityPolicyApiV1Client(client.rpcClient.ClientConn)
-	stream, err := networksecuritypolicyRPCClient.WatchNetworkSecurityPolicys(ctx, &ometa)
+	stream, err := networksecuritypolicyRPCClient.WatchNetworkSecurityPolicys(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching NetworkSecurityPolicy. Err: %v", err)
 		return
@@ -67,7 +67,7 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 	ostream := &NetworkSecurityPolicyOStream{stream: opStream}
 
 	// get a list of objects
-	objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
+	objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &watchOptions)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() == codes.Unavailable {
@@ -117,7 +117,7 @@ func (client *NimbusClient) WatchNetworkSecurityPolicys(ctx context.Context, rea
 			default:
 			}
 			// get a list of objects
-			objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &ometa)
+			objList, err := networksecuritypolicyRPCClient.ListNetworkSecurityPolicys(ctx, &watchOptions)
 			if err != nil {
 				st, ok := status.FromError(err)
 				if !ok || st.Code() == codes.Unavailable {

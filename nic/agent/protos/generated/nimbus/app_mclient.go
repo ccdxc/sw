@@ -28,7 +28,7 @@ type AppReactor interface {
 	ListApp() []*netproto.App                           // lists all Apps
 	UpdateApp(appObj *netproto.App) error               // updates an App
 	DeleteApp(appObj, ns, name string) error            // deletes an App
-	GetWatchOptions(cts context.Context, kind string) api.ObjectMeta
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type AppOStream struct {
 	sync.Mutex
@@ -49,9 +49,9 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	}
 
 	// start the watch
-	ometa := reactor.GetWatchOptions(ctx, "App")
+	watchOptions := reactor.GetWatchOptions(ctx, "App")
 	appRPCClient := netproto.NewAppApiV1Client(client.rpcClient.ClientConn)
-	stream, err := appRPCClient.WatchApps(ctx, &ometa)
+	stream, err := appRPCClient.WatchApps(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching App. Err: %v", err)
 		return
@@ -67,7 +67,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 	ostream := &AppOStream{stream: opStream}
 
 	// get a list of objects
-	objList, err := appRPCClient.ListApps(ctx, &ometa)
+	objList, err := appRPCClient.ListApps(ctx, &watchOptions)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() == codes.Unavailable {
@@ -117,7 +117,7 @@ func (client *NimbusClient) WatchApps(ctx context.Context, reactor AppReactor) {
 			default:
 			}
 			// get a list of objects
-			objList, err := appRPCClient.ListApps(ctx, &ometa)
+			objList, err := appRPCClient.ListApps(ctx, &watchOptions)
 			if err != nil {
 				st, ok := status.FromError(err)
 				if !ok || st.Code() == codes.Unavailable {

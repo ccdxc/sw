@@ -21,8 +21,8 @@ service EndpointApiV1 {
         Prefix: "api/endpoints"
     };
 
-    rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
-    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEventList) {};
+    rpc ListEndpoints (api.ListWatchOptions) returns (EndpointList) {};
+    rpc WatchEndpoints (api.ListWatchOptions) returns (stream EndpointEventList) {};
     rpc EndpointOperUpdate (stream EndpointEvent) returns (api.TypeMeta) {};
 
 //    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
@@ -81,8 +81,8 @@ message EndpointStatus {
     // Spec of Migration of the endpoint
     EndpointMigrationStatus Migration = 3 [(gogoproto.nullable) = true,
                                            (gogoproto.jsontag) = "migration,omitempty"];
-
 }
+
 
 // list of endpoints
 message EndpointList {
@@ -104,12 +104,12 @@ message EndpointEventList {
 message EndpointMigrationStatus {
     // State
     enum MigrationState {
-        // ui-hint: None
-        NONE    = 0; // No Migration is in progress
-        // ui-hint: Start
-        START = 1; // Start migration
-        // ui-hint: Abort
-        FAILED = 2; // Abort Migration
+      // ui-hint: None
+      NONE    = 0; // No Migration is in progress
+      // ui-hint: Start
+      START = 1; // Start migration
+      // ui-hint: Abort
+      FAILED = 2; // Abort Migration
     }
 
     // Status of migration

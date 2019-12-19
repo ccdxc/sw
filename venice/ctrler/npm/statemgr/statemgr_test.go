@@ -2458,11 +2458,11 @@ func TestWatchFilter(t *testing.T) {
 		return
 	}
 
-	ometa := api.ObjectMeta{
-		Name: "0000.0000.0001",
-	}
-	filterFn1 := stateMgr.GetWatchFilter("Network", &ometa)
-	filterFn2 := stateMgr.GetWatchFilter("Endpoint", &ometa)
+	options := api.ListWatchOptions{}
+	options.Name = "0000.0000.0001"
+
+	filterFn1 := stateMgr.GetWatchFilter("Network", &options)
+	filterFn2 := stateMgr.GetWatchFilter("Endpoint", &options)
 
 	obj1 := netproto.Network{}
 	obj1.Name = "xyz"

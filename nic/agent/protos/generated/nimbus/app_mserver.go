@@ -58,7 +58,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type AppNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *AppTopic) GetApp(ctx context.Context, objmeta *api.ObjectMeta) (*netpr
 }
 
 // ListApps lists all Apps matching object selector
-func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ObjectMeta) (*netproto.AppList, error) {
+func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.AppList, error) {
 	var objlist netproto.AppList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ObjectMeta) (*netp
 }
 
 // WatchApps watches Apps and sends streaming resp
-func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApiV1_WatchAppsServer) error {
+func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netproto.AppApiV1_WatchAppsServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("App", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("App", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApiV1_Wa
 	defer eh.server.memDB.StopWatchObjects("App", &watcher)
 
 	// get a list of all Apps
-	objlist, err := eh.ListApps(context.Background(), ometa)
+	objlist, err := eh.ListApps(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

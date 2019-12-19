@@ -58,7 +58,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type SecurityProfileNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *SecurityProfileTopic) GetSecurityProfile(ctx context.Context, objmeta 
 }
 
 // ListSecurityProfiles lists all SecurityProfiles matching object selector
-func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
+func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.SecurityProfileList, error) {
 	var objlist netproto.SecurityProfileList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 }
 
 // WatchSecurityProfiles watches SecurityProfiles and sends streaming resp
-func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, stream netproto.SecurityProfileApiV1_WatchSecurityProfilesServer) error {
+func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatchOptions, stream netproto.SecurityProfileApiV1_WatchSecurityProfilesServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("SecurityProfile", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("SecurityProfile", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 	defer eh.server.memDB.StopWatchObjects("SecurityProfile", &watcher)
 
 	// get a list of all SecurityProfiles
-	objlist, err := eh.ListSecurityProfiles(context.Background(), ometa)
+	objlist, err := eh.ListSecurityProfiles(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

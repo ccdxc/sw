@@ -58,7 +58,7 @@ type InterfaceStatusReactor interface {
 	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
-	GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
 }
 
 type InterfaceNodeStatus struct {
@@ -340,7 +340,7 @@ func (eh *InterfaceTopic) GetInterface(ctx context.Context, objmeta *api.ObjectM
 }
 
 // ListInterfaces lists all Interfaces matching object selector
-func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ObjectMeta) (*netproto.InterfaceList, error) {
+func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.InterfaceList, error) {
 	var objlist netproto.InterfaceList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
@@ -369,14 +369,14 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.Object
 }
 
 // WatchInterfaces watches Interfaces and sends streaming resp
-func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto.InterfaceApiV1_WatchInterfacesServer) error {
+func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, stream netproto.InterfaceApiV1_WatchInterfacesServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Interface", ometa)
+		watcher.Filter = eh.statusReactor.GetWatchFilter("Interface", watchOptions)
 	} else {
 		watcher.Filter = func(memdb.Object) bool {
 			return true
@@ -390,7 +390,7 @@ func (eh *InterfaceTopic) WatchInterfaces(ometa *api.ObjectMeta, stream netproto
 	defer eh.server.memDB.StopWatchObjects("Interface", &watcher)
 
 	// get a list of all Interfaces
-	objlist, err := eh.ListInterfaces(context.Background(), ometa)
+	objlist, err := eh.ListInterfaces(context.Background(), watchOptions)
 	if err != nil {
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err

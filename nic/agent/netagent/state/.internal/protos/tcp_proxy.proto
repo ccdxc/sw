@@ -24,8 +24,8 @@ service TCPProxyPolicyApi {
     };
 
     rpc GetTCPProxyPolicy(api.ObjectMeta) returns (TCPProxyPolicy) {};
-    rpc ListTCPProxyPolicies (api.ObjectMeta) returns (TCPProxyPolicyList) {};
-    rpc WatchTCPProxyPolicies (api.ObjectMeta) returns (stream TCPProxyEventList) {};
+    rpc ListTCPProxyPolicies (api.ListWatchOptions) returns (TCPProxyPolicyList) {};
+    rpc WatchTCPProxyPolicies (api.ListWatchOptions) returns (stream TCPProxyEventList) {};
 }
 
 // TCP Proxy Policy object

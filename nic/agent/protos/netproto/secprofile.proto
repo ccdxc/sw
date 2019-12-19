@@ -24,8 +24,8 @@ service SecurityProfileApiV1 {
         Prefix: "api/security/profiles"
     };
 
-    rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
-    rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEventList) {};
+    rpc ListSecurityProfiles (api.ListWatchOptions) returns (SecurityProfileList) {};
+    rpc WatchSecurityProfiles (api.ListWatchOptions) returns (stream SecurityProfileEventList) {};
     rpc SecurityProfileOperUpdate (stream SecurityProfileEvent) returns (api.TypeMeta) {};
 
 //    rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};

@@ -315,7 +315,7 @@ func references(obj apiServerObject) map[string]apiintf.ReferenceObj {
 }
 
 // GetWatchFilter returns a filter function to filter Watch Events
-func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ObjectMeta) func(memdb.Object) bool {
+func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ListWatchOptions) func(memdb.Object) bool {
 	switch kind {
 	case "Endpoint":
 		objMac, err := net.ParseMAC(ometa.Name)

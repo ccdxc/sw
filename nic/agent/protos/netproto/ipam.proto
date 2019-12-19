@@ -20,8 +20,8 @@ service IPAMPolicyApiV1 {
         Prefix: "api/ipam-policies"
     };
 
-    rpc ListIPAMPolicys (api.ObjectMeta) returns (IPAMPolicyList) {};
-    rpc WatchIPAMPolicys (api.ObjectMeta) returns (stream IPAMPolicyEventList) {};
+    rpc ListIPAMPolicys (api.ListWatchOptions) returns (IPAMPolicyList) {};
+    rpc WatchIPAMPolicys (api.ListWatchOptions) returns (stream IPAMPolicyEventList) {};
     rpc IPAMPolicyOperUpdate (stream IPAMPolicyEvent) returns (api.TypeMeta) {};
 
 //    rpc GetIPAMPolicy (api.ObjectMeta) returns (IPAMPolicy) {};

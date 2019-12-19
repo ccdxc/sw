@@ -23,8 +23,8 @@ service IPSecPolicyApi {
     };
 
     rpc GetIPSecPolicy (api.ObjectMeta) returns (IPSecPolicy) {};
-    rpc ListIPSecPolicies (api.ObjectMeta) returns (IPSecPolicyList) {};
-    rpc WatchIPSecPolicies (api.ObjectMeta) returns (stream IPSecPolicyEvent) {};
+    rpc ListIPSecPolicies (api.ListWatchOptions) returns (IPSecPolicyList) {};
+    rpc WatchIPSecPolicies (api.ListWatchOptions) returns (stream IPSecPolicyEvent) {};
 }
 
 // IPSec Policy object
