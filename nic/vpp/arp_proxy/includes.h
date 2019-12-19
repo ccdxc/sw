@@ -11,6 +11,6 @@
 #include <vnet/plugin/plugin.h>
 #include <pkt.h>
 #include "node.h"
-#include <impl.h>
+#include <mapping.h>
 
 #endif  //__VPP_ARP_PROXY_INCLUDES_H__

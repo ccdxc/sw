@@ -9,12 +9,24 @@
 #include <vnet/ip/ip.h>
 #include <vnet/udp/udp_packet.h>
 #include <nic/p4/common/defines.h>
-#include "hw_program.h"
+#include <ftl_wrapper.h>
 
-//Session ID is 23 bits and ID 0 is reserved, so Max sessions are (8 * 1024 * 1024) - 2.
-#define MAX_SESSION_INDEX (8388606)
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
+
+#define foreach_flow_classify_next                                  \
+        _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
+        _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
+        _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
+        _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(DROP, "error-drop")                                       \
+
+#define foreach_flow_classify_counter                               \
+        _(IP4_FLOW, "IPv4 flow packets" )                           \
+        _(IP6_FLOW, "IPv6 flow packets" )                           \
+        _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
+        _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
+        _(UNKOWN, "Unknown flow packets")                           \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -42,6 +54,22 @@
 #define foreach_session_prog_counter                                \
         _(SESSION_SUCCESS, "Session programming success" )          \
         _(SESSION_FAILED, "Session programming failed")             \
+
+typedef enum
+{
+#define _(s,n) FLOW_CLASSIFY_NEXT_##s,
+    foreach_flow_classify_next
+#undef _
+    FLOW_CLASSIFY_N_NEXT,
+} flow_classify_next_t;
+
+typedef enum
+{
+#define _(n,s) FLOW_CLASSIFY_COUNTER_##n,
+    foreach_flow_classify_counter
+#undef _
+    FLOW_CLASSIFY_COUNTER_LAST,
+} flow_classify_counter_t;
 
 typedef enum
 {
@@ -101,6 +129,15 @@ typedef struct flow_prog_trace_s {
     u8 iprotocol, rprotocol;
 } flow_prog_trace_t;
 
+typedef struct flow_classify_trace_s {
+    u32 l2_offset;
+    u32 l3_offset;
+    u32 l4_offset;
+    u32 vnic;
+    u32 flow_hash;
+    u32 flags;
+} flow_classify_trace_t;
+
 typedef struct session_prog_trace_s {
     u32 session_id;
     u8  data[64];
@@ -135,6 +172,7 @@ typedef struct pds_flow_main_s {
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     u16 *nh_flags;
+    u32 max_sessions;
 } pds_flow_main_t;
 
 extern pds_flow_main_t pds_flow_main;
@@ -194,7 +232,7 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
     }
     pds_flow_prog_lock();
     while (refill_count) {
-        if (PREDICT_FALSE(MAX_SESSION_INDEX <= pool_elts(fm->session_index_pool))) {
+        if (PREDICT_FALSE(fm->max_sessions <= pool_elts(fm->session_index_pool))) {
             break;
         }
         thr_local_pool->pool_count++;
@@ -231,7 +269,7 @@ always_inline u32 pds_session_id_alloc(void)
     refill_count = PDS_FLOW_SESSION_POOL_COUNT_MAX;
     pds_flow_prog_lock();
     while (refill_count) {
-        if (PREDICT_FALSE(MAX_SESSION_INDEX <= pool_elts(fm->session_index_pool))) {
+        if (PREDICT_FALSE(fm->max_sessions <= pool_elts(fm->session_index_pool))) {
             break;
         }
         thr_local_pool->pool_count++;

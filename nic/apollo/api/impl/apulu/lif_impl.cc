@@ -20,6 +20,7 @@
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/nacl_data.h"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
@@ -530,6 +531,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_ARP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_TO_ARM_ID,
                                    sdk::table::handle_t::null());
@@ -569,6 +571,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_TO_ARM_ID,
                                    sdk::table::handle_t::null());
@@ -596,6 +599,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_ID,
                                    sdk::table::handle_t::null());
@@ -896,6 +900,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_ARP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_TO_ARM_ID,
                                    sdk::table::handle_t::null());
@@ -937,6 +942,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_DHCP;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
                                    NACL_NACL_REDIRECT_TO_ARM_ID,
                                    sdk::table::handle_t::null());

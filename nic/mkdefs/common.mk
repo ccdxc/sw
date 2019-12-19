@@ -169,9 +169,11 @@ export VPP_FLAGS_COMMON    := -Wall -Werror
 export VPP_FLAGS_x86_64    := ${VPP_FLAGS_COMMON} -O0
 export VPP_FLAGS_aarch64   := ${VPP_FLAGS_COMMON} -O3
 export VPP_PLUGINS_PATH    := ${TOPDIR}/nic/vpp
-export VPP_PLUGINS_INCS    := ${SDK_THIRD_PARTY_VPP_INCLUDES}           \
-                              ${VPP_PLUGINS_PATH}/infra/                \
-                              ${VPP_PLUGINS_PATH}/infra/${PIPELINE}
+export VPP_PLUGINS_INCS    := ${SDK_THIRD_PARTY_VPP_INCLUDES}               \
+                              ${VPP_PLUGINS_PATH}/impl/                     \
+                              ${VPP_PLUGINS_PATH}/impl/${PIPELINE}          \
+                              ${VPP_PLUGINS_PATH}/infra/                    \
+                              ${VPP_PLUGINS_PATH}/infra/api/
 
 # ==========================================================================
 #                           Apollo GTEST common LDLIBS

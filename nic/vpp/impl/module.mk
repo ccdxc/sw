@@ -2,19 +2,23 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsvpp_impl.so
-MODULE_PIPELINE = apulu
+MODULE_PIPELINE = apulu apollo artemis
 MODULE_SRCS     = $(wildcard ${MODULE_DIR}/*.c)                             \
                   $(wildcard ${MODULE_DIR}/*.cc)                            \
                   $(wildcard ${MODULE_DIR}/${PIPELINE}/*.c)                 \
                   $(wildcard ${MODULE_DIR}/${PIPELINE}/*.cc)
 MODULE_PREREQS  = vpp_pkg.export
-MODULE_SOLIBS   = logger sdkpal sdkcapri ftlv4 ftlv6                        \
-                  sdkp4 sdkp4utils sdkasicpd bm_allocator                   \
-                  ${NIC_SDK_SOLIBS} ${NIC_${PIPELINE}_P4PD_SOLIBS}          \
-                  ${NIC_HAL_PD_SOLIBS_${ARCH}} memhash
+MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl               \
+                  ${NIC_${PIPELINE}_P4PD_SOLIBS} ${NIC_SDK_SOLIBS}          \
+                  sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri              \
+                  sdkplatformutils sdkxcvrdriver sdkasicpd                  \
+                  rfc_${PIPELINE} pdsrfc                                    \
+                  bm_allocator sdklinkmgr sdklinkmgrcsr ftlv6 ftlv4 utils   \
+                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS} 
 MODULE_LDLIBS   = ${SDK_THIRDPARTY_CAPRI_LDLIBS}                            \
                   ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} dl              \
-                  ${SDK_THIRD_PARTY_VPP_LIBS}
+                  ${SDK_THIRD_PARTY_VPP_LIBS} AAPL
 MODULE_INCS     = ${VPP_PLUGINS_INCS} ${MODULE_DIR}/${PIPELINE}
 MODULE_DEFS     = ${VPP_DEFINES_${ARCH}}
+MODULE_FLAGS    = ${VPP_FLAGS_${ARCH}}
 include ${MKDEFS}/post.mk

@@ -505,6 +505,7 @@ show_flow_session_info_command_fn (vlib_main_t * vm,
     u32 index = ~0;
     u8 *entry = NULL;
     u32 size = 0;
+    pds_flow_main_t *fm = &pds_flow_main;
 
     while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
         if (unformat(input, "index %u", &index)) {
@@ -515,9 +516,9 @@ show_flow_session_info_command_fn (vlib_main_t * vm,
         }
     }
 
-    if ((MAX_SESSION_INDEX < index) || (0 == index)) {
+    if ((fm->max_sessions < index) || (0 == index)) {
         vlib_cli_output(vm, "Invalid session index, Valid range 0-%u",
-                        MAX_SESSION_INDEX);
+                        fm->max_sessions);
         goto done;
     }
     session_get_addr(index, &entry, &size);

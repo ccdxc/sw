@@ -26,6 +26,8 @@ VPP_PKG_DIR=$NICDIR/sdk/third-party/vpp-pkg/x86_64
 rm -rf /usr/lib/vpp_plugins/*
 mkdir -p /usr/lib/vpp_plugins/
 ln -s $VPP_PKG_DIR/lib/vpp_plugins/dpdk_plugin.so /usr/lib/vpp_plugins/dpdk_plugin.so
+rm -f $NICDIR/conf/vpp_startup.conf
+ln -s $NICDIR/vpp/conf/startup_$PIPELINE.conf $NICDIR/conf/vpp_startup.conf
 #Create softlink for all vpp plugins
 find $NICDIR/vpp/ -name *.mk | xargs grep MODULE_TARGET | grep "\.so" | awk '{ print $3 }' | xargs -I@ bash -c "ln -s $NICDIR/build/x86_64/$PIPELINE/lib/@ /usr/lib/vpp_plugins/@"
 

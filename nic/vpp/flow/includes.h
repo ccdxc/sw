@@ -9,7 +9,7 @@
 #include "node.h"
 #include <nic/utils/ftl/ftl_structs.hpp>
 #include <pkt.h>
-#include <impl.h>
+#include <flow.h>
 
 #endif  //__VPP_FLOW_INCLUDES_H__
 
