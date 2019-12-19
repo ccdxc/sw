@@ -18,6 +18,9 @@ cp -a /var/log ${LOCATION}/log
 # One final CPU load check
 top -b -n 1 -d 1 > ${LOCATION}/top_end.txt
 top -b -n 1 -d 1 -m >> ${LOCATION}/top_end.txt
+cat /proc/vmstat > ${LOCATION}/vm_stat.txt
+cat /proc/loadavg > ${LOCATION}/loadavg.txt
+dmesg > ${LOCATION}/dmesg.txt
 
 # Delete old logs
 find ${TOP} -mtime +${MAX_DAYS} -type d -prune -exec rm -rf {} \;

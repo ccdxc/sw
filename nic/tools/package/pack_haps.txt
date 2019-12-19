@@ -23,6 +23,7 @@ nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.js
 nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_txdma_table_map.json
 
 nic/build/aarch64/iris/bin/sysmgr                                   /nic/bin/
+nic/build/aarch64/iris/bin/canary                                   /nic/bin/
 nic/build/aarch64/iris/bin/coremgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/console                                  /nic/bin/
 nic/build/aarch64/iris/bin/delphi_hub                               /nic/bin/

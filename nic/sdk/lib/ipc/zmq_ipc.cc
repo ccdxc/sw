@@ -210,6 +210,13 @@ zmq_ipc_endpoint::recv_msg(zmq_ipc_user_msg_ptr msg) {
 
     rc = zmq_recvmsg(this->zsocket_, msg->zmsg(), 0);
     assert(rc != -1);
+
+    // Check crc32 to make sure the message contents haven't changed
+    // This can happen if we were passed a stack pointer
+    uint32_t crc = sdk::utils::crc32(
+        (const unsigned char *)msg->data(), msg->length(),
+        sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
+    assert(crc == preamble->crc);
 }
 
 
@@ -292,8 +299,15 @@ zmq_ipc_server::reply(ipc_msg_ptr msg, const void *data,
     zmq_ipc_user_msg_ptr zmsg =
         std::dynamic_pointer_cast<zmq_ipc_user_msg>(msg);
 
-    assert(zmsg->preamble()->recipient == this->id_);
+    // Check crc32 to make sure the message contents haven't changed
+    // This can happen if we were passed a stack pointer
+    uint32_t crc = sdk::utils::crc32(
+        (const unsigned char *)msg->data(), msg->length(),
+        sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
+    assert(crc == zmsg->preamble()->crc);
 
+    assert(zmsg->preamble()->recipient == this->id_);
+    
     // See ZMQ Router to understand why we do this
     for (auto header: zmsg->headers()) {
         rc = zmq_send(this->zsocket_, header->data(), header->length(),

@@ -12,6 +12,7 @@
 #include "log.hpp"
 #include "service_factory.hpp"
 #include "utils.hpp"
+#include "vmstats.hpp"
 #include "watchdog.hpp"
 
 SysmgrBusPtr g_bus;
@@ -27,6 +28,7 @@ main (int argc, char *argv[])
     init_logger();
 
     cg_init();
+    vmstats_init(loop);
 
     if (argc == 3) {
         log_location = argv[2];

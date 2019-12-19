@@ -3,9 +3,9 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = canary.bin
 MODULE_PIPELINE = iris
-MODULE_SOLIBS   = 
-MODULE_LDLIBS   = 
-MODULE_ARLIBS   = 
+MODULE_SOLIBS   = delphisdk sysmgr
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
+MODULE_ARLIBS   = sysmgrproto delphiproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))

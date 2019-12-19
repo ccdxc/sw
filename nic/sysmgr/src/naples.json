@@ -7,6 +7,42 @@
         "timeout": 0.0
     },
     {
+        "name": "canary0",
+        "command": "/nic/bin/canary canary0",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            }],
+        "flags": [],
+        "timeout": 15.0,
+        "cpu-affinity": "0x1"
+    },
+    {
+        "name": "canary2",
+        "command": "/nic/bin/canary canary2",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            }],
+        "flags": [],
+        "timeout": 15.0,
+        "cpu-affinity": "0x4"
+    },
+    {
+        "name": "canary3",
+        "command": "/nic/bin/canary canary3",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            }],
+        "flags": [],
+        "timeout": 15.0,
+        "cpu-affinity": "0x8"
+    },
+    {
         "name": "pciemgrd",
         "command": "/platform/bin/pciemgrd -d",
         "dependencies": [

@@ -1,46 +1,51 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+#include <memory>
 #include <iostream>
 #include <string>
 
-#include <time.h>
-#include <unistd.h>
+#include <stdio.h>
 
-/* LOG_SIZE is 1440 for 6 hour worth of logs. 1 log every 15 seconds */
-#define LOG_SIZE 1440
+#include "gen/proto/sysmgr.delphi.hpp"
+#include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/sysmgr/lib/sysmgr_client.hpp"
 
-int main(int argc, char *argv[])
+using namespace std;
+
+class Canary : public delphi::Service
 {
-    FILE   *logfile;
-    char   *filename;
-    time_t now;
-    int    size = 0;
+private:
+    string name;
+    delphi::SdkPtr delphi;
+    sysmgr::ClientPtr sysmgr;
 
-    if (argc < 2)
-    {
-        printf("Usage: %s <LOGFILENAME>", argv[0]);
-        exit(-1);
+public:
+    Canary(delphi::SdkPtr delphi, string name) {
+        this->delphi = delphi;
+        this->name = name;
+        this->sysmgr = sysmgr::CreateClient(delphi, name);
     }
 
-    filename = argv[1];
-    logfile = fopen(filename, "w");
-    if (logfile == NULL)
-    {
-        printf("Failed to open %s", filename);
+    virtual string Name() {
+        return this->name;
     }
+
+    virtual void OnMountComplete() override {
+        this->sysmgr->init_done();
+    }
+};
+
+int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        printf("Please use: %s <SERICE_NAME>\n", argv[0]);
+        return -1;
+    }
+
+    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     
-    while (true) {
-        time(&now);
-        fprintf(logfile, "%s", asctime(gmtime(&now)));
-        fflush(logfile);
-        size += 1;
-        if (size > LOG_SIZE) {
-            char old[256];
-            snprintf(old, sizeof(old), "%s.1", filename);
-            unlink(old);
-            fclose(logfile);
-            rename(filename, old);
-            logfile = fopen(filename, "w");
-            size = 0;
-        }
-        sleep(15);
-    }
+    std::shared_ptr<Canary> svc = std::make_shared<Canary>(sdk, argv[1]);
+    sdk->RegisterService(svc);
+    
+    return sdk->MainLoop();
 }

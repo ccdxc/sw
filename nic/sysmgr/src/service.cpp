@@ -198,6 +198,10 @@ void Service::on_child(pid_t pid)
 
     run_debug(this->pid);
 
+    if (spec->mem_limit > 0.0) {
+        cg_reset(this->pid);
+    }
+
     // SERVICE_CONFIG_STATE_OFF means we killed the process, don't worry about
     // copying stdout
     if (this->config_state == SERVICE_CONFIG_STATE_ON &&
