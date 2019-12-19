@@ -95,6 +95,11 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
     spec->kind = service_kind_from_obj(obj);
     spec->flags = flags_from_obj(obj);
     spec->timeout = obj.get<double>("timeout");
+    if (obj.count("memory-limit") == 0) {
+        spec->mem_limit = 0.0;
+    } else {
+        spec->mem_limit = obj.get<double>("memory-limit");
+    }
     spec->dependencies = dependencies_from_obj(obj);
     spec->cpu_affinity = cpu_affinity_from_obj(obj);
 

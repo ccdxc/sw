@@ -37,6 +37,7 @@ public:
     enum service_kind              kind;
     int                            flags;
     double                         timeout;
+    double                         mem_limit;
     unsigned long                  cpu_affinity;
     static std::shared_ptr<ServiceSpec>   create();
 };

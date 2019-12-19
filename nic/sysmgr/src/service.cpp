@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "cgroups.hpp"
 #include "events_api.hpp"
 #include "fault_watcher.hpp"
 #include "pipedio.hpp"
@@ -41,7 +42,7 @@ void Service::launch()
     process_t new_process;
 
     ::launch(this->spec->name, this->spec->command, this->spec->cpu_affinity,
-        &new_process);
+             this->spec->mem_limit, &new_process);
     this->pid = new_process.pid;
     this->stdout_pipe = PipedIO::create(new_process.stdout,
         get_logname_for_process(this->spec->name, this->pid, "out"));
@@ -51,7 +52,6 @@ void Service::launch()
                this->spec->name, this->pid, this->spec->command,
                this->spec->cpu_affinity);
     
-
     if (this->child_watcher != nullptr)
     {
         this->child_watcher->stop();
@@ -100,6 +100,12 @@ ServicePtr Service::create(ServiceSpecPtr spec)
 
     glog->info("Created service {}", spec->name);
 
+    // If it has memory limitation, create a cgroup for it
+    if (spec->mem_limit > 0.0) {
+        glog->info("Creating cgroup with size %d", spec->mem_limit);
+        cg_create(spec->name.c_str(), (size_t)spec->mem_limit * (1024 * 1024));
+    }
+    
     for (auto spec_dep: spec->dependencies)
     {
         auto dep = ServiceDep::create(spec_dep);

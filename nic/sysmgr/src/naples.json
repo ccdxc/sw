@@ -41,6 +41,7 @@
                 "service-name": "delphi"
             }],
         "flags": [],
+        "memory-limit": 800.0,
         "timeout": 30.0
     },
     {

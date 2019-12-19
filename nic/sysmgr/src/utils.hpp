@@ -27,7 +27,8 @@ extern SysmgrEventsPtr g_events;
 extern void        exec_command(const std::string &command);
 extern void        exists_or_mkdir(const char *dir);
 extern void        launch(const std::string &name, const std::string &command,
-                          unsigned long cpu_affinity, process_t *new_process);
+                          unsigned long cpu_affinity, double mem_limit,
+                          process_t *new_process);
 extern void        mkdirs(const char *dir);
 extern std::string parse_status(int status);
 extern void        redirect(const std::string &filename, int fd);

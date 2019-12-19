@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "bus_api.hpp"
 #include "bus_callbacks.hpp"
+#include "cgroups.hpp"
 #include "events_api.hpp"
 #include "log.hpp"
 #include "service_factory.hpp"
@@ -22,8 +23,10 @@ main (int argc, char *argv[])
     ev::default_loop loop;
     ServiceFactoryPtr service_factory = ServiceFactory::getInstance();
     WatchdogPtr watchdog;
-
+    
     init_logger();
+
+    cg_init();
 
     if (argc == 3) {
         log_location = argv[2];

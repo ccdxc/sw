@@ -18,6 +18,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "cgroups.hpp"
 #include "log.hpp"
 
 #define CHUNK_SIZE (64 * 1024)
@@ -182,7 +183,8 @@ void close_on_exec(int fd)
 }
 
 void launch(const std::string &name, const std::string &command,
-    unsigned long cpu_affinity, process_t *new_process)
+            unsigned long cpu_affinity, double mem_limit,
+            process_t *new_process)
 {
     pid_t pid;
     int outfds[2];
@@ -217,6 +219,10 @@ void launch(const std::string &name, const std::string &command,
         // replace the stderr with the "output" side of the "stderr" pipe
         replace_fd(errfds[1], 2);
         cpulock(cpu_affinity);
+        // add it to the cgroup if there is a mem_limit
+        if (mem_limit) {
+            cg_add(name.c_str(), getpid());
+        }
         exec_command(command);
     }
 
