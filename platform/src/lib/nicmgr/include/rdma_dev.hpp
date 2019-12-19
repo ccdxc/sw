@@ -999,20 +999,22 @@ typedef struct rqcb2_s {
 } PACKED rqcb2_t;
 
 typedef struct rqcb3_s {
-	uint32_t     pad[5]; //20B
+    uint64_t     resp_rx_timestamp;
+    uint64_t     resp_tx_timestamp;
+    uint32_t     pad; //4B
 
-	uint32_t     dma_len: 32;
-	uint32_t     num_pkts_in_curr_msg: 32;
+    uint32_t     dma_len: 32;
+    uint32_t     num_pkts_in_curr_msg: 32;
 
-	uint32_t     rsvd1:             16;
-	uint32_t     roce_opt_mss:      16;
-	uint32_t     roce_opt_ts_echo:  32;
-	uint32_t     roce_opt_ts_value: 32;
+    uint32_t     rsvd1:             16;
+    uint32_t     roce_opt_mss:      16;
+    uint32_t     roce_opt_ts_echo:  32;
+    uint32_t     roce_opt_ts_value: 32;
 
-	uint32_t     r_key: 32;
-	uint32_t     len: 32;
-	uint64_t     va: 64;         
-	uint64_t     wrid: 64;
+    uint32_t     r_key: 32;
+    uint32_t     len: 32;
+    uint64_t     va: 64;
+    uint64_t     wrid: 64;
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {

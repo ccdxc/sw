@@ -725,27 +725,31 @@ rdma_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
         printf("=====\n");
         printf("RQCB3\n");
         printf("=====\n");
-		printf(
-			"dma_len=0x%0x\n"
-			"num_pkts_in_curr_msg=0x%0x\n"
-			"rsvd1=0x%0x\n"
-			"roce_opt_mss=0x%0x\n"
-			"roce_opt_ts_echo=0x%0x\n"
-			"roce_opt_ts_value=0x%0x\n"
-			"r_key=0x%0x\n"
-			"len=0x%0x\n"
-			"va=0x%0lx\n"
-			"wrid=0x%0lx\n",
+        printf(
+            "resp_rx_timestamp=0x%0lx\n"
+            "resp_tx_timestamp=0x%0lx\n"
+            "dma_len=0x%0x\n"
+            "num_pkts_in_curr_msg=0x%0x\n"
+            "rsvd1=0x%0x\n"
+            "roce_opt_mss=0x%0x\n"
+            "roce_opt_ts_echo=0x%0x\n"
+            "roce_opt_ts_value=0x%0x\n"
+            "r_key=0x%0x\n"
+            "len=0x%0x\n"
+            "va=0x%0lx\n"
+            "wrid=0x%0lx\n",
+            qstate_rq.rqcb3.resp_rx_timestamp,
+            qstate_rq.rqcb3.resp_tx_timestamp,
             qstate_rq.rqcb3.dma_len,
-			qstate_rq.rqcb3.num_pkts_in_curr_msg,
-			qstate_rq.rqcb3.rsvd1,
-			qstate_rq.rqcb3.roce_opt_mss,
-			qstate_rq.rqcb3.roce_opt_ts_echo,
-			qstate_rq.rqcb3.roce_opt_ts_value,
-			qstate_rq.rqcb3.r_key,
-			qstate_rq.rqcb3.len,
-			qstate_rq.rqcb3.va,
-			qstate_rq.rqcb3.wrid);
+            qstate_rq.rqcb3.num_pkts_in_curr_msg,
+            qstate_rq.rqcb3.rsvd1,
+            qstate_rq.rqcb3.roce_opt_mss,
+            qstate_rq.rqcb3.roce_opt_ts_echo,
+            qstate_rq.rqcb3.roce_opt_ts_value,
+            qstate_rq.rqcb3.r_key,
+            qstate_rq.rqcb3.len,
+            qstate_rq.rqcb3.va,
+            qstate_rq.rqcb3.wrid);
         printf("=====\n");
         printf("RQCB4\n");
         printf("=====\n");
