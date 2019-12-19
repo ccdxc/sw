@@ -16,8 +16,8 @@ run "yum install -y epel-release"
 run "yum install -y nfs-utils nfs-utils-lib"
 run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
 run "yum install -y centos-release-scl" # Needed by buildroot for newer "make" installed by devtoolset-7
-run "yum install -y numactl-devel libuuid-devel libaio-devel CUnit-devel"
-run "yum install -y patch libedit2 libedit-devel"
+run "yum install -y numactl-devel libuuid-devel libaio-devel CUnit-devel" # For storage/offload
+run "yum install -y patch libedit2 libedit-devel" # For platform
 run "yum install -y tcpdump"
 
 PIP2_PACKAGES = %w[
