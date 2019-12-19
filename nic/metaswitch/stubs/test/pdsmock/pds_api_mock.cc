@@ -146,6 +146,7 @@ sdk_ret_t pds_if_create(pds_if_spec_s *spec,
 }
 
 sdk_ret_t pds_if_read(pds_if_key_t *key, pds_if_info_t *info) {
+    info->status.state = PDS_IF_STATE_UP;
     return SDK_RET_OK;
 }
 

@@ -19,8 +19,35 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
+using pdsa_stub::ms_ifindex_t;
 using pdsa_stub::Error;
 using pdsa_stub::get_linux_intf_params;
+
+static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
+    sdk_ret_t ret;
+    pds_if_key_t key = {0};
+    pds_if_info_t info = {0};
+    
+    auto eth_ifindex = ms_to_pds_eth_ifindex(ifindex);
+    key.id = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
+    ret = pds_if_read(&key, &info);
+    if (unlikely (ret != SDK_RET_OK)) {
+        throw Error(std::string("PDS If Get failed for MS If ")
+                    .append(std::to_string(ifindex))
+                    .append(" err=").append(std::to_string(ret)));
+    }
+    if (info.status.state == PDS_IF_STATE_DOWN) {
+        SDK_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
+        return ATG_FRI_FAULT_PRESENT;
+    } else if (info.status.state == PDS_IF_STATE_UP) {
+        SDK_TRACE_DEBUG("MS If 0x%lx: Port UP", ifindex);
+        return ATG_FRI_FAULT_NONE;
+    }
+
+    /* Invalid state. Should not come here. Indicate fault */
+    SDK_TRACE_DEBUG("MS If 0x%lx: Port state invalid", ifindex);
+    return ATG_FRI_FAULT_PRESENT;
+}
 
 void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     ips_info_.ifindex = port_add_upd_ips->id.if_index;
@@ -58,14 +85,9 @@ void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
 bool li_intf_t::cache_new_obj_in_cookie_(void) {
     void *fw = nullptr;
     std::unique_ptr<if_obj_t> new_if_obj; 
+    FRL_FAULT_STATE fault_state;
     if (store_info_.phy_port_if_obj == nullptr) {
         // This is the first time we are seeing this uplink interface
-        // Create the FRI worker
-        ntl::Frl &frl = li::Fte::get().get_frl();
-        fw = frl.create_fri_worker(ips_info_.ifindex);
-        SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
-        // TODO: Set the initial interface state by doing a port get
-
         auto port_prop = if_obj_t::phy_port_properties_t {0};
         port_prop.ifindex = ips_info_.ifindex;
         port_prop.fri_worker = fw;
@@ -92,6 +114,16 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
                          ips_info_.ifindex, ips_info_.admin_state,
                          ips_info_.switchport);
+        // Create the FRI worker
+        ntl::Frl &frl = li::Fte::get().get_frl();
+        fw = frl.create_fri_worker(ips_info_.ifindex);
+        SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
+        // Set the initial interface state. The port event subscribe is already
+        // done by this point. Any events after creating worker and setting
+        // initial state is handled by the port event callback
+        frl.init_fault_state(&fault_state);
+        fault_state.hw_link_faults = fetch_port_fault_status(ips_info_.ifindex);
+        frl.send_fault_ind(fw, &fault_state);
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
             SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 
