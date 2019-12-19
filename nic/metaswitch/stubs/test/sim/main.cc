@@ -28,6 +28,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_evpn_utils_gen.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 
 namespace pdsa_test {
 test_params_t* test_params() {    
@@ -176,6 +177,41 @@ pdsa_sim_test_config ()
     // Push MAC-IP
     pdsa_sim_test_mac_ip();
     cout << "Config thread: pushed a mac-ip entry to l2fMacIpCfgTable\n";
+    sleep(40);
+
+    // Simulate MAC IP learn
+    if (g_node_id == 1) {
+        std::cout << " Simulate MAC and IP learn on Node " << g_node_id << std::endl;
+        ip_addr_t   ip;
+        mac_addr_t  mac;
+        str2ipaddr((char*) "99.0.0.1", &ip);
+        mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
+        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        str2ipaddr((char*) "99.0.0.2", &ip);
+        mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
+        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        str2ipaddr((char*) "99.0.0.5", &ip);
+        mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
+        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+    }
+    sleep(10);
+    if (g_node_id == 2) {
+        std::cout << " Simulate MAC move to Node " << g_node_id << std::endl;
+        ip_addr_t   ip;
+        str2ipaddr((char*) "0.0.0.0", &ip);
+        mac_addr_t  mac;
+        mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
+        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+    }
+    sleep(10);
+    if (g_node_id == 2) {
+        std::cout << " Simulate MAC age on Node " << g_node_id << std::endl;
+        ip_addr_t   ip;
+        str2ipaddr((char*) "0.0.0.0", &ip);
+        mac_addr_t  mac;
+        mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
+        pds_ms::l2f_local_mac_ip_del (1, ip, mac);
+    }
 }
 } // End of pds_ms_test  namespace
 

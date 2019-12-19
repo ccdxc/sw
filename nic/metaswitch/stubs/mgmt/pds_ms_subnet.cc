@@ -102,11 +102,11 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
 
     // Get IRB If Index
     if_index = bd_id_to_ms_ifindex (subnet_spec->key.id);
-    SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X", 
-                    subnet_spec->key.id, if_index);
-
     // Convert VRF ID to name
     vrf_name = std::to_string (subnet_spec->vpc.id);
+
+    SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X VRF name %s len %d", 
+                    subnet_spec->key.id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDSA_LIM_ENT_INDEX);
     req.set_ifindex (if_index);
@@ -159,9 +159,6 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     uint32_t lif_ifindex;
     
     PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
-
-    // Validate LIF
-    SDK_ASSERT((subnet_spec->host_ifindex != IFINDEX_INVALID));
 
     // EVPN BD Row Update
     pds::EvpnBdSpec evpn_bd_spec;

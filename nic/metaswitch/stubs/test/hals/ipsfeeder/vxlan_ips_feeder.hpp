@@ -25,10 +25,9 @@ public:
         ATG_LIPI_VXLAN_ADD_UPDATE add_upd;
       // generate_ips_header (add_upd); 
         add_upd.id.if_index = tnl_ifindex;
-        pdsa_stub::convert_ipaddr_pdsa_to_ms (source_ip, 
-                                              &(add_upd.vxlan_settings.source_ip));
-        pdsa_stub::convert_ipaddr_pdsa_to_ms (dest_ip, 
-                                              &(add_upd.vxlan_settings.dest_ip));
+        pdsa_stub::pds_to_ms_ipaddr(source_ip, 
+                                    &(add_upd.vxlan_settings.source_ip));
+        pdsa_stub::pds_to_ms_ipaddr(dest_ip, &(add_upd.vxlan_settings.dest_ip));
         NBB_CORR_PUT_VALUE(add_upd.vxlan_settings.dp_pathset_correlator, unh_dp_idx);
         return add_upd;
     }

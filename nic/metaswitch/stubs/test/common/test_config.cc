@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <iostream>
 
+int g_node_id = 0;
+
 using boost::property_tree::ptree;
 namespace pds_ms_test {
 int
@@ -60,6 +62,7 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     {
         return -1;
     }
+    g_node_id = test_config;
 
     value                   = pt.get <std::string>("local.ip","");
     conf->local_ip_addr     = inet_network (value.c_str());

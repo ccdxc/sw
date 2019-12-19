@@ -76,8 +76,8 @@ struct ipaddr_req_nlmsg_t {
     char buf_[NETLINK_SEND_BUF_LEN];
 };
 
-ipaddr_req_nlmsg_t
-make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const ip_addr_t& ip,
+static ipaddr_req_nlmsg_t
+make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& ip,
                        uint32_t prefix_len, uint64_t seq, bool del)
 {
     ipaddr_req_nlmsg_t req = {0};
@@ -116,7 +116,7 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const ip_addr_t& ip,
     return req;
 }    
 
-void
+static void
 send_nlmsg (int fd, nlmsghdr* nlh)
 {
     struct iovec iov;
@@ -167,7 +167,7 @@ private :
     int fd_ = -1;
 };
 
-fd_guard_t
+static fd_guard_t
 create_and_bind_nl_socket (void)
 {
     fd_guard_t fdg(socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE));
@@ -239,7 +239,7 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
 }
 
 void 
-config_linux_loopback_ip (const ip_addr_t& ip, uint32_t prefix_len, bool del)
+config_linux_loopback_ip (const in_ipx_addr_t& ip, uint32_t prefix_len, bool del)
 {
     try {
         auto fdg = create_and_bind_nl_socket();

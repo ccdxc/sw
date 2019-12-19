@@ -56,4 +56,4 @@ MS_INCLPATH = \
 	autogen/comn/ambl        \
 	output/$(GMK_TARGETOS)
 
-MS_LD_LIBS = dcsmi si
+MS_LD_LIBS = dcsmi dcl2f si

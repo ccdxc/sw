@@ -1,6 +1,6 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// LI IRB (SVI) HAL integration
+// L2F BD HAL integration
 //---------------------------------------------------------------
 
 #ifndef __PDSA_L2F_BD_HPP__

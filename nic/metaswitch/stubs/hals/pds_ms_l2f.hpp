@@ -40,8 +40,6 @@ public:
 
     void delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                       const char *vrf_name);
-
-
 };
 
 } // End namespace

@@ -19,8 +19,8 @@
 namespace pds_ms {
 
 using pdsa_stub::Error;
-using pdsa_stub::convert_ipaddr_ms_to_pdsa;
 using pdsa_stub::vrfname_2_vrfid;
+using pdsa_stub::in_ipx_addr_t;
 
 li_integ_subcomp_t* li_is () 
 {
@@ -148,14 +148,35 @@ NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
 //--------------------------------------------------
 // Software interface IP (Loopback)
 //-------------------------------------------------
+static void 
+ms_to_lnx_ipaddr (const ATG_INET_ADDRESS& in_ip, in_ipx_addr_t* out_ip)
+{
+    switch (in_ip.type) {
+    case AMB_INETWK_ADDR_TYPE_IPV4:
+        out_ip->af = AF_INET;
+        SDK_ASSERT (in_ip.length == IP4_ADDR8_LEN);
+        break;
+    case AMB_INETWK_ADDR_TYPE_IPV6:
+        out_ip->af = AF_INET6;
+        SDK_ASSERT (in_ip.length == IP6_ADDR8_LEN);
+        break;
+    default:
+        SDK_ASSERT (0);
+    }
+    memcpy (&(out_ip->addr), &(in_ip.address), in_ip.length);
+}
+
 NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {
     try {
-        ip_addr_t ip; 
-        convert_ipaddr_ms_to_pdsa (ip_addr->inet_addr, &ip);
+        in_ipx_addr_t ip; 
+        ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
+
+        char buf[INET6_ADDRSTRLEN];
         SDK_TRACE_INFO("Loopback interface IP address set request %s %s", 
-                       if_name, ipaddr2str(&ip));
+                       if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
+
         if (ip.af == IP_AF_IPV6) {
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
@@ -172,10 +193,13 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {
     try {
-        ip_addr_t ip; 
-        convert_ipaddr_ms_to_pdsa (ip_addr->inet_addr, &ip);
+        in_ipx_addr_t ip; 
+        ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
+
+        char buf[INET6_ADDRSTRLEN];
         SDK_TRACE_INFO("Loopback interface IP address delete request %s %s", 
-                       if_name, ipaddr2str(&ip));
+                       if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
+
         if (ip.af == IP_AF_IPV6) {
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;

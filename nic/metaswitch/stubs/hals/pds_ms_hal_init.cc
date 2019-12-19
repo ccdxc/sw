@@ -107,14 +107,36 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     }
     SDK_TRACE_DEBUG("Got event id %u", event->event_id);
     switch (event->event_id) {
-        case EVENT_ID_PORT_STATUS:
-            handle_port_event(event->port);
-            break;
-        case EVENT_ID_LIF_STATUS:
-            // TODO: Need to propagate LIF events to the software-IF
-            break;
-        default:
-            break;
+    case EVENT_ID_PORT_STATUS:
+        handle_port_event(event->port);
+        break;
+    case EVENT_ID_LIF_STATUS:
+        // TODO: Need to propagate LIF events to the software-IF
+        break;
+#if 0 // TODO: Enable when MAC IP learn is implemented
+    case EVENT_ID_MAC_LEARN:
+        {
+        ip_addr_t ip = {0};
+        pds_ms::l2f_local_mac_ip_add(event->macip.subnet_id, ip, event->macip.mac,
+                                     event->macip.lifindex);
+        }
+        break;
+    case EVENT_ID_IP_LEARN:
+        pds_ms::l2f_local_mac_ip_add(event->macip.subnet_id, event->macip.ip,
+                                     event->macip.mac, event->macip.lifindex);
+        break;
+    case EVENT_ID_MAC_AGE:
+        {
+        ip_addr_t ip = {0};
+        pds_ms::l2f_local_mac_ip_del(event->macip.subnet_id, ip, event->macip.mac);
+        }
+        break;
+    case EVENT_ID_IP_AGE:
+        pds_ms::l2f_local_mac_ip_del(event->macip.subnet_id, event->macip.ip, event->macip.mac);
+        break;
+#endif
+    default:
+        break;
     }
     
     return;

@@ -172,10 +172,9 @@ TEST_F(pdsa_hals_test, vxlan_test) {
 TEST(pdsa_loopback_test, test) {
    
     ip_addr_t in_ip;
-    inet_aton ("39.0.0.1", (in_addr*) &(in_ip.addr.v4_addr));
-    in_ip.af = IP_AF_IPV4;
+    str2ipaddr((char*)"39.0.0.1", &in_ip);
     ATG_LIPI_L3_IP_ADDR ip_addr = {0};
-    pdsa_stub::convert_ipaddr_pdsa_to_ms (in_ip, &ip_addr.inet_addr);
+    pdsa_stub::pds_to_ms_ipaddr(in_ip, &ip_addr.inet_addr);
 
     std::cout << "=== Loopback IP Add test ===" << std::endl;
     pds_ms::li_is()->softwif_addr_set("lo1", &ip_addr,

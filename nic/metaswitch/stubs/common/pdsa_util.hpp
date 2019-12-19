@@ -37,7 +37,7 @@ vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 }
 
 static inline void 
-convert_ipaddr_ms_to_pdsa (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
+ms_to_pds_ipaddr (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
 {
     switch (in_ip.type) {
     case AMB_INETWK_ADDR_TYPE_IPV4:
@@ -52,12 +52,21 @@ convert_ipaddr_ms_to_pdsa (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
         SDK_ASSERT (0);
     }
     memcpy (&(out_ip->addr), &(in_ip.address), in_ip.length);
+    if (out_ip->af == IP_AF_IPV4) {
+        // MS IP addresses are byte arrays
+        // HAL uses SDK ipv4_addr_t address which is in host order
+        out_ip->addr.v4_addr = ntohl(out_ip->addr.v4_addr);
+    }
 }
 
 static inline void 
-convert_ipaddr_pdsa_to_ms (const ip_addr_t&   in_ip, 
-                           ATG_INET_ADDRESS*  out_ip) 
+pds_to_ms_ipaddr (ip_addr_t   in_ip, ATG_INET_ADDRESS*  out_ip)
 {
+    if (in_ip.af == IP_AF_IPV4) {
+        // HAL uses SDK ipv4_addr_t address which is in host order
+        // MS IP addresses are byte arrays
+        in_ip.addr.v4_addr = htonl(in_ip.addr.v4_addr);
+    }
     switch (in_ip.af)
     {
         case IP_AF_IPV4:

@@ -24,5 +24,6 @@ typedef struct test_config_s {
 int parse_json_config (test_config_t *conf, uint8_t node);
 } // end namepsace pds_ms_test
 
+extern int g_node_id;
 
 #endif // __TEST_CONFIG_HPP__

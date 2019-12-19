@@ -18,7 +18,7 @@ extern NBB_ULONG li_proc_id;
 namespace pds_ms {
 
 using pdsa_stub::Error;
-using pdsa_stub::convert_ipaddr_ms_to_pdsa;
+using pdsa_stub::ms_to_pds_ipaddr;
 
 void li_vxlan_tnl::fetch_store_info_(pdsa_stub::state_t* state) {
     store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);
@@ -63,9 +63,9 @@ pds_nexthop_group_spec_t li_vxlan_tnl::make_pds_nhgroup_spec_(void) {
 void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
     ips_info_.if_index = vxlan_tnl_add_upd_ips->id.if_index;
     ATG_INET_ADDRESS& ms_dest_ip = vxlan_tnl_add_upd_ips->vxlan_settings.dest_ip;
-    pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_dest_ip, &ips_info_.tep_ip);
+    ms_to_pds_ipaddr(ms_dest_ip, &ips_info_.tep_ip);
     ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd_ips->vxlan_settings.source_ip;
-    pdsa_stub::convert_ipaddr_ms_to_pdsa(ms_src_ip, &ips_info_.src_ip);
+    ms_to_pds_ipaddr(ms_src_ip, &ips_info_.src_ip);
     NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
     ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
 }
