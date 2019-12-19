@@ -62,6 +62,8 @@ nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     IsUpgFailed = false;
 
+    NIC_LOG_INFO("Upgrade: CompatCheck");
+
     if (!devmgr->UpgradeCompatCheck())
         resp.resp=FAIL;
 
@@ -71,6 +73,9 @@ nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: ProcessQuiesce");
+
     return resp;
 }
 
@@ -79,6 +84,8 @@ HdlrResp
 nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: LinkDown");
 
     if (devmgr->HandleUpgradeEvent(UPG_EVENT_QUIESCE)) {
         NIC_FUNC_DEBUG("UPG_EVENT_QUIESCE event Failed! Cannot continue upgrade FSM");
@@ -97,18 +104,13 @@ nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
     return resp;
 }
 
-HdlrResp
-nicmgr_upg_hndlr::PostHostDownHandler(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-
-    return resp;
-}
-
 // Post-binary restart handling
 HdlrResp
 nicmgr_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: PostRestart");
 
     return resp;
 }
@@ -119,6 +121,8 @@ nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
+    NIC_LOG_INFO("Upgrade: LinkUp");
+
     return resp;
 }
 
@@ -126,6 +130,8 @@ nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 void
 nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 {
+    NIC_LOG_INFO("Upgrade: Success");
+
     NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
     // walk all objects and delete them
     vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
@@ -143,6 +149,8 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     IsUpgFailed = true;
+
+    NIC_LOG_INFO("Upgrade: Failed");
 
     // walk all objects and delete them
     NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
@@ -192,6 +200,7 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 void
 nicmgr_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
+    NIC_LOG_INFO("Upgrade: Abort");
 }
 
 void SaveUplinkInfo(uplink_t *up, delphi::objects::UplinkInfoPtr proto_obj)
@@ -257,6 +266,8 @@ HdlrResp
 nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
+    NIC_LOG_INFO("Upgrade: SaveState");
+
     std::vector <struct EthDevInfo*> dev_info;
     std::map<uint32_t, uplink_t*> up_links = devmgr->GetUplinks();
 
@@ -284,6 +295,8 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
 HdlrResp 
 nicmgr_upg_hndlr::PostLinkUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: PostLinkUp");
 
     return resp;
 }
@@ -372,6 +385,8 @@ HdlrResp
 nicmgr_upg_hndlr::HostDownHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
 
+    NIC_LOG_INFO("Upgrade: HostDown");
+
     if (devmgr->HandleUpgradeEvent(UPG_EVENT_DEVICE_RESET)) {
         NIC_FUNC_DEBUG("UPG_EVENT_DEVICE_RESET event Failed! Cannot continue upgrade FSM");
         resp.resp = FAIL;
@@ -389,8 +404,19 @@ nicmgr_upg_hndlr::HostDownHandler(UpgCtx& upgCtx) {
 }
 
 HdlrResp
+nicmgr_upg_hndlr::PostHostDownHandler(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: PostHostDown");
+
+    return resp;
+}
+
+HdlrResp
 nicmgr_upg_hndlr::HostUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+
+    NIC_LOG_INFO("Upgrade: HostUp");
 
     return resp;
 }

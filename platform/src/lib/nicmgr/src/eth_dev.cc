@@ -1003,7 +1003,10 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
         CASE(CMD_OPCODE_QOS_CLASS_RESET);
         CASE(CMD_OPCODE_FW_DOWNLOAD);
         CASE(CMD_OPCODE_FW_CONTROL);
-        default: return "PROXY_CMD";
+        CASE(CMD_OPCODE_VF_GETATTR);
+        CASE(CMD_OPCODE_VF_SETATTR);
+        default:
+            return EthLif::opcode_to_str(opcode);
     }
 }
 
@@ -2005,6 +2008,24 @@ Eth::XcvrEventHandler(port_status_t *evd)
 }
 
 void
+Eth::QuiesceEventHandler(bool quiesce)
+{
+    port_status_t port_status = {0};
+
+    /* HAL will bringdown the real ports so devices bound to those ports will
+       get a link event. Generate a link down event here for fake ports. */
+    if (spec->uplink_port_num != 0) {
+        return;
+    }
+
+    port_status.id = 0;
+    port_status.speed = IONIC_SPEED_100G;
+    port_status.status = quiesce ? PORT_OPER_STATUS_DOWN : PORT_OPER_STATUS_UP;
+
+    LinkEventHandler(&port_status);
+}
+
+void
 Eth::PcieResetEventHandler(uint32_t rsttype)
 {
     const char *rsttype_str;
@@ -2062,7 +2083,7 @@ Eth::IsDevQuiesced()
         EthLif *eth_lif = it->second;
 
         if (!eth_lif->IsLifQuiesced()) {
-            NIC_LOG_DEBUG("{}: Device not Quiesced", spec->name);
+            NIC_LOG_DEBUG("{}: Device is not Quiesced", spec->name);
             return false;
         }
     }
@@ -2072,14 +2093,15 @@ Eth::IsDevQuiesced()
     return true;
 }
 
-bool Eth::IsDevReset()
+bool
+Eth::IsDevReset()
 {
     if (!active_lif_ref_cnt) {
         NIC_LOG_DEBUG("{}: Device is in reset state!", spec->name);
         return true;
     }
 
-    NIC_LOG_DEBUG("{}: Device is not in reset state yet! active_lif_ref_cnt: {}",
+    NIC_LOG_DEBUG("{}: Device is not in reset state yet! active_lif_cnt: {}",
             spec->name, active_lif_ref_cnt);
     return false;
 }

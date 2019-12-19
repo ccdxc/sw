@@ -687,10 +687,8 @@ DeviceManager::HalEventHandler(bool status)
     // Bringup OOB first
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        NIC_LOG_DEBUG("dev: {}, type: {}", it->first, dev->GetType());
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *)dev;
-            NIC_LOG_DEBUG("eth dev type: {}", eth_dev->GetType());
             if (eth_dev->GetType() == ETH_MNIC_OOB_MGMT) {
                 eth_dev->HalEventHandler(status);
                 break;
@@ -862,32 +860,54 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     return 0;
 }
 
+static const char *
+upgrade_state_to_str(UpgradeState state)
+{
+    switch (state) {
+        CASE(UNKNOWN_STATE);
+        CASE(DEVICES_ACTIVE_STATE);
+        CASE(DEVICES_QUIESCED_STATE);
+        CASE(DEVICES_RESET_STATE);
+        default: return "invalid";
+    }
+}
+
+static const char *
+upgrade_event_to_str(UpgradeEvent event)
+{
+    switch (event) {
+        CASE(UPG_EVENT_QUIESCE);
+        CASE(UPG_EVENT_DEVICE_RESET);
+        default: return "invalid";
+    }
+}
+
 int
 DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
 {
-    port_status_t st = {0};
+    NIC_LOG_DEBUG(upgrade_event_to_str(event));
 
-    switch(event) {
+    switch (event) {
         case UPG_EVENT_QUIESCE:
-            //send link down event for all the uplinks
-            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-                uplink_t *up = it->second;
-                st.id = up->port;
-                LinkEventHandler(&st);
+            for (auto it = devices.begin(); it != devices.end(); it++) {
+                Device *dev = it->second;
+                if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+                    Eth *eth_dev = (Eth *) dev;
+                    eth_dev->QuiesceEventHandler(true);
+                }
             }
-
-            //send link down event to mgmt port
-            st.id = 0;
-            LinkEventHandler(&st);
-
             break;
         case UPG_EVENT_DEVICE_RESET:
-            //Send fw_down event
+            if (upg_state != DEVICES_QUIESCED_STATE) {
+                NIC_LOG_ERR("Invalid event {} in state {}",
+                    upgrade_event_to_str(event),
+                    upgrade_state_to_str(upg_state));
+                break;
+            }
             SendFWDownEvent();
-
             break;
         default:
-            NIC_LOG_DEBUG("Upgrade Event {} not implemented", event);
+            break;
     }
 
     return 0;
@@ -898,18 +918,17 @@ DeviceManager::GetUpgradeState()
 {
     switch (upg_state) {
         case DEVICES_ACTIVE_STATE:
-            if(IsDataPathQuiesced())
+            if (IsDataPathQuiesced()) {
                 upg_state = DEVICES_QUIESCED_STATE;
-
+            }
             break;
         case DEVICES_QUIESCED_STATE:
-            if(CheckAllDevsDisabled())
+            if (CheckAllDevsDisabled()) {
                 upg_state = DEVICES_RESET_STATE;
-
+            }
             break;
         case DEVICES_RESET_STATE:
             //nothing to be done here
-
             break;
         default:
             NIC_LOG_DEBUG("Unsupported upgrade state {}", upg_state);

@@ -117,6 +117,8 @@ public:
     status_code_t CmdHandler(void *req, void *req_data,
                              void *resp, void *resp_data);
 
+    static const char *opcode_to_str(cmd_opcode_t opcode);
+
     // Event Handlers
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
@@ -125,11 +127,10 @@ public:
 
     void SetHalClient(devapi *dev_api);
 
+    bool IsLifQuiesced();
+
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
-    uint32_t GetActiveQRefCnt() { return active_q_ref_cnt; }
-
-    bool IsLifQuiesced() { return ( (state == LIF_STATE_UP) ? false:true); }
     EV_P;
 
 private:
@@ -237,7 +238,6 @@ private:
     void FreeUpMacVlanFilters();
 
     static const char *lif_state_to_str(enum eth_lif_state state);
-    static const char *opcode_to_str(cmd_opcode_t opcode);
     static lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
 };
 

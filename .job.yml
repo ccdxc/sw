@@ -261,6 +261,7 @@ dependencies:
     - reference: nic/apollo
   nic/sysmgr:
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/esx    # for testing upgrade support in sysmgr
   nic/third-party:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx

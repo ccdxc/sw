@@ -126,6 +126,9 @@ ionic_open(struct lif *lif)
         vmk_uint32 max_rx_rss_queues = 0;
         struct ionic *ionic = lif->ionic;
 
+        ionic_en_info("%s: ionic_open",
+                vmk_NameToString(&lif->uplink_handle->uplink_name));
+
         priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
@@ -229,6 +232,9 @@ ionic_stop(struct lif *lif)
         vmk_uint32 max_rx_rss_queues = 0;
         vmk_uint32 shared_q_data_idx = 0;
         struct ionic *ionic = lif->ionic;
+
+        ionic_en_info("%s: ionic_stop",
+                vmk_NameToString(&lif->uplink_handle->uplink_name));
 
         priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,

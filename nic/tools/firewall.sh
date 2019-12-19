@@ -80,4 +80,3 @@ echo "Process INPUT chain ..."
 $IPT -A INPUT -p UDP -j udp_inbound
 #$IPT -A INPUT -p UDP -i $OOB_IFACE -j udp_inbound
 $IPT -A INPUT -p ICMP -j icmp_inbound
-

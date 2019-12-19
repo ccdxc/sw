@@ -163,5 +163,31 @@
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0
+    },
+    {
+        "name": "network",
+        "command": "/bin/sh /nic/tools/bringup_mgmt_ifs.sh",
+        "kind": "oneshot",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            }
+        ],
+        "flags": [],
+        "timeout": 0.0
+    },
+    {
+        "name": "firewall",
+        "command": "/bin/sh /nic/tools/firewall.sh",
+        "kind": "oneshot",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            }
+        ],
+        "flags": [],
+        "timeout": 0.0
     }
 ]

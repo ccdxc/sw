@@ -105,9 +105,9 @@ def Teardown(tc):
         if cmd_resp.exit_code != 0:
             api.Logger.error("Setup failed %s", cmd_resp.command)
             return api.types.status.FAILURE
-    cmd = 'curl -X DELETE ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
+        cmd = 'curl -X DELETE ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
     for cmd in tc.resp.commands:

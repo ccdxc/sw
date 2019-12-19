@@ -96,6 +96,7 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
         CASE(CMD_OPCODE_RX_MODE_SET);
         CASE(CMD_OPCODE_RX_FILTER_ADD);
         CASE(CMD_OPCODE_RX_FILTER_DEL);
+        CASE(CMD_OPCODE_Q_IDENTIFY);
         CASE(CMD_OPCODE_Q_INIT);
         CASE(CMD_OPCODE_Q_CONTROL);
         CASE(CMD_OPCODE_RDMA_RESET_LIF);
@@ -104,7 +105,7 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
         CASE(CMD_OPCODE_RDMA_CREATE_ADMINQ);
         CASE(CMD_OPCODE_FW_DOWNLOAD);
         CASE(CMD_OPCODE_FW_CONTROL);
-        default: return "ADMINCMD_UNKNOWN";
+        default: return "UNKNOWN";
     }
 }
 
@@ -433,6 +434,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
+    active_q_ref_cnt = 0;
+
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
         addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_ADMIN, qid);
         if (addr < 0) {
@@ -618,6 +621,8 @@ EthLif::Reset()
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
+    active_q_ref_cnt = 0;
+
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
         addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_ADMIN, qid);
         if (addr < 0) {
@@ -649,6 +654,20 @@ EthLif::Reset()
 
     return (IONIC_RC_SUCCESS);
 }
+
+bool
+EthLif::IsLifQuiesced()
+{
+    if (!active_q_ref_cnt) {
+        NIC_LOG_DEBUG("{}: Lif is quiesced!", spec->name);
+        return true;
+    }
+
+    NIC_LOG_DEBUG("{}: Lif is not quiesced yet! active_q_cnt: {}",
+            spec->name, active_q_ref_cnt);
+    return false;
+}
+
 
 bool
 EthLif::EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
@@ -2020,10 +2039,10 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
                     return (IONIC_RC_ERROR);
                 }
                 READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-                if (cmd->state == IONIC_Q_ENABLE) {
+                if (!cfg.eth.enable && cmd->state == IONIC_LIF_ENABLE) {
                     cfg.eth.enable = 0x1;
                     active_q_ref_cnt++;
-                } else if (cmd->state == IONIC_Q_DISABLE) {
+                } else if (cfg.eth.enable && cmd->state == IONIC_LIF_DISABLE) {
                     cfg.eth.enable = 0x0;
                     active_q_ref_cnt--;
                 }
@@ -2040,10 +2059,10 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
                     return (IONIC_RC_ERROR);
                 }
                 READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-                if (cmd->state == IONIC_Q_ENABLE) {
+                if (!cfg.eth.enable && cmd->state == IONIC_LIF_ENABLE) {
                     cfg.eth.enable = 0x1;
                     active_q_ref_cnt++;
-                } else if (cmd->state == IONIC_Q_DISABLE) {
+                } else if (cfg.eth.enable && cmd->state == IONIC_LIF_DISABLE) {
                     cfg.eth.enable = 0x0;
                     active_q_ref_cnt--;
                 }
@@ -2132,10 +2151,10 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         off = offsetof(eth_rx_qstate_t, q.cfg);
         READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-        if (cmd->oper == IONIC_Q_ENABLE) {
+        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
             cfg.eth.enable = 0x1;
             active_q_ref_cnt++;
-        } else if (cmd->oper == IONIC_Q_DISABLE) {
+        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
             cfg.eth.enable = 0x0;
             active_q_ref_cnt--;
         }
@@ -2159,10 +2178,10 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         off = offsetof(eth_tx_qstate_t, q.cfg);
         READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-        if (cmd->oper == IONIC_Q_ENABLE) {
+        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
             cfg.eth.enable = 0x1;
             active_q_ref_cnt++;
-        } else if (cmd->oper == IONIC_Q_DISABLE) {
+        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
             cfg.eth.enable = 0x0;
             active_q_ref_cnt--;
         }
@@ -2180,10 +2199,10 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 
         addr = res->rx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
         READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        if (cmd->oper == IONIC_Q_ENABLE) {
+        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
             cfg.eq.eq_enable = 0x1;
             active_q_ref_cnt++;
-        } else if (cmd->oper == IONIC_Q_DISABLE) {
+        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
             cfg.eq.eq_enable = 0x0;
             active_q_ref_cnt--;
         }
@@ -2193,10 +2212,10 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 
         addr = res->tx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
         READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        if (cmd->oper == IONIC_Q_ENABLE) {
+        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
             cfg.eq.eq_enable = 0x1;
             active_q_ref_cnt++;
-        } else if (cmd->oper == IONIC_Q_DISABLE) {
+        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
             cfg.eq.eq_enable = 0x0;
             active_q_ref_cnt--;
         }

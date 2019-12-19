@@ -1,67 +1,130 @@
-#!/bin/sh
+#!/bin/bash
 
-counter=300
-int_mnic_up=0
-oob_mnic_up=0
+int_mnic0_up=0
+int_mnic0_admin_up=0
+
+oob_mnic0_up=0
+oob_mnic0_admin_up=0
+
 inb_mnic0_up=0
+inb_mnic0_admin_up=0
+inb_mnic0_enslaved=0
+
 inb_mnic1_up=0
+inb_mnic1_admin_up=0
+inb_mnic1_enslaved=0
 
-echo "Waiting for mgmt interfaces(int_mnic0 and oob_mnic0) to show up"
+#setup the bonding device for inband management
+ip link s dev bond0 type bond mode active-backup miimon 100
+mkfifo /tmp/bond0_fifo
 
-#Wait for 5 minutes for int_mnic0 nad oob_mnic0 to show up
-while [ $counter -gt 0 ]
+log() {
+    d=`date '+%Y-%m-%d %H:%M:%S'`
+    echo "[$d] $1"
+}
+
+debug() {
+    log "int_mnic0_up=$int_mnic0_up"
+    log "int_mnic0_admin_up=$int_mnic0_admin_up"
+    log "oob_mnic0_up=$oob_mnic0_up"
+    log "oob_mnic0_admin_up=$oob_mnic0_admin_up"
+    log "inb_mnic0_up=$inb_mnic0_up"
+    log "inb_mnic0_admin_up=$inb_mnic0_admin_up"
+    log "inb_mnic0_enslaved=$inb_mnic0_enslaved"
+    log "inb_mnic1_up=$inb_mnic1_up"
+    log "inb_mnic1_admin_up=$inb_mnic1_admin_up"
+    log "inb_mnic1_enslaved=$inb_mnic1_enslaved"
+}
+
+trap debug 0 1 2 3 6
+
+log "Waiting for mgmt interfaces to show up"
+
+#Wait for mnic interfaces to show up
+while true
 do
-    if [ -d "/sys/class/net/int_mnic0" ] && [ $int_mnic_up -eq 0 ] ; then
-        ifup int_mnic0
-        int_mnic_up=1
+    if [ -d "/sys/class/net/int_mnic0" ] && [ $int_mnic0_up -eq 0 ] ; then
+        if [ $int_mnic0_admin_up -eq 0 ]; then
+            log "bringing up int_mnic0"
+            ifconfig int_mnic0 169.254.0.1 netmask 255.255.255.0 up && int_mnic0_admin_up=1
+        fi
+
         irq_number=`find /proc/irq  -name *int_mnic0* | awk -F/ '{ print $4 }'`
-        echo d > /proc/irq/$irq_number/smp_affinity
-    else
-        sleep 1
-        counter=$(( $counter - 1 ))
+        if [[ ! -z $irq_number ]]; then
+            log "int_mnic0 is up!"
+            echo d > /proc/irq/$irq_number/smp_affinity
+            int_mnic0_up=1
+        fi
     fi
 
-    if [ -d "/sys/class/net/oob_mnic0" ] && [ $oob_mnic_up -eq 0 ] ; then
-        #ifup oob_mnic0
+    if [ -d "/sys/class/net/oob_mnic0" ] && [ $oob_mnic0_up -eq 0 ] ; then
+        if [ $oob_mnic0_admin_up -eq 0 ]; then
+            log "bringing up oob_mnic0"
+            ifconfig oob_mnic0 up && oob_mnic0_admin_up=1
+        fi
+
         irq_number=`find /proc/irq  -name *oob_mnic0* | awk -F/ '{ print $4 }'`
         if [[ ! -z $irq_number ]]; then
+            log "oob_mnic0 is up!"
             echo d > /proc/irq/$irq_number/smp_affinity
-            oob_mnic_up=1
-        else 
-            sleep 1
+            oob_mnic0_up=1
         fi
     fi
 
-    if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] ; then
+    # bond0 will keep the mac address of the last slave which got enslaved so we are enslaving inb_mnic0 at last
+    if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] && [ $inb_mnic1_up -eq 1 ]; then
+        if [ $inb_mnic0_enslaved -eq 0 ]; then
+            log "adding inb_mnic0 (inband mgmt0) interface to bond0"
+            ifconfig bond0 up && ifenslave bond0 inb_mnic0 && inb_mnic0_enslaved=1
+        fi
+
+        if [ $inb_mnic0_admin_up -eq 0 ]; then
+            log "bringing up inb_mnic0"
+            ifconfig inb_mnic0 up && inb_mnic0_admin_up=1
+        fi
+
         irq_number=`find /proc/irq  -name *inb_mnic0* | awk -F/ '{ print $4 }'`
         if [[ ! -z $irq_number ]]; then
+            log "inb_mnic0 is up!"
             echo d > /proc/irq/$irq_number/smp_affinity
             inb_mnic0_up=1
-        else 
-            sleep 1
         fi
     fi
 
-    if [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ] ; then
+    if [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ]; then
+        if [ $inb_mnic1_enslaved -eq 0 ]; then
+            log "adding inb_mnic1 (inband mgmt1) interface to bond0"
+            ifconfig bond0 up && ifenslave bond0 inb_mnic1 && inb_mnic1_enslaved=1
+        fi
+
+        if [ $inb_mnic1_admin_up -eq 0 ]; then
+            log "bringing up inb_mnic1"
+            ifconfig inb_mnic1 up && inb_mnic1_admin_up=1
+        fi
+
         irq_number=`find /proc/irq  -name *inb_mnic1* | awk -F/ '{ print $4 }'`
         if [[ ! -z $irq_number ]]; then
+            log "inb_mnic1 is up!"
             echo d > /proc/irq/$irq_number/smp_affinity
             inb_mnic1_up=1
-        else 
-            sleep 1
         fi
     fi
 
-    if [ $int_mnic_up -eq 1 ] && [ $oob_mnic_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
+    sleep 1
+
+    if [ $int_mnic0_up -eq 1 ] && [ $oob_mnic0_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
+        if [ -d "/sys/class/net/inb_mnic0/bonding_slave/" ]; then
+            inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/bonding_slave/perm_hwaddr`
+        else
+            inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/address`
+        fi
+
+        echo "setting inb_mnic0 mac address as bond0 mac address"
+        ifconfig bond0 hw ether $inb_mnic0_mac_addr
+        ifconfig bond0
+
+        echo "done" > /tmp/bond0_fifo
         break
     fi
 
 done
-
-echo ""
-
-if [ $int_mnic_up -eq 1 ]; then
-    echo "Brought up int_mnic0(169.254.0.1) interface for Naples management"
-else
-    echo "int_mnic0 (mgmt) interface didn't show up for 5 minutes!!!"
-fi

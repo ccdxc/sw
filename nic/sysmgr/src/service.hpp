@@ -59,7 +59,6 @@ private:
     void check_dep_and_launch();
     void start_heartbeat();
     void launch();
-    void reset_dependencies();
     void fault(std::string reason);
 public:
     static std::shared_ptr<Service> create(ServiceSpecPtr spec);
@@ -71,6 +70,7 @@ public:
     void stop();
     void start();
     bool is_running();
+    void reset_dependencies();
 };
 typedef std::shared_ptr<Service> ServicePtr;
 

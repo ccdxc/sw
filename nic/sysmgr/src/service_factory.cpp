@@ -177,6 +177,7 @@ void ServiceFactory::respawn_all()
     {
         if (!s.second->is_running()) {
             glog->info("Service {} is not running, skiping", s.first);
+            s.second->reset_dependencies();
             continue;
         }
         s.second->stop();

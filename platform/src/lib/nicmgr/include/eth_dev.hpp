@@ -144,6 +144,7 @@ public:
 
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
+    void QuiesceEventHandler(bool quiesce);
     void HalEventHandler(bool status);
     status_code_t Reset();
     void PcieResetEventHandler(uint32_t rsttype);

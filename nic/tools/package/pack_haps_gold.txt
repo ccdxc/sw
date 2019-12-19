@@ -137,7 +137,6 @@ nic/sdk/third-party/libev/aarch64/lib/libev.so                      /nic/lib/
 nic/third-party/liblmdb/aarch64/lib/liblmdb.so                      /nic/lib/
 nic/sdk/third-party/sknobs/aarch64/lib/libsknobs.so                 /nic/lib/
 nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                   /nic/lib/
-nic/build/aarch64/iris/lib/libhaltestutils.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsysmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libpenlog.so                             /nic/lib/

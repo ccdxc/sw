@@ -34,7 +34,10 @@ static int ionic_lif_addr_del(struct ionic_lif *lif, const u8 *addr);
 static void ionic_link_status_check(struct ionic_lif *lif);
 static void ionic_lif_handle_fw_down(struct ionic_lif *lif);
 
+static int ionic_lif_open(struct ionic_lif *lif);
+static int ionic_lif_stop(struct ionic_lif *lif);
 static int ionic_lif_quiesce(struct ionic_lif *lif);
+static int ionic_lif_unquiesce(struct ionic_lif *lif);
 static struct ionic_lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index);
 static int ionic_lif_init(struct ionic_lif *lif);
 static int ionic_lif_init_queues(struct ionic_lif *lif);
@@ -118,16 +121,20 @@ static void ionic_link_status_check(struct ionic_lif *lif)
 			    le32_to_cpu(lif->info->status.link_speed) / 1000);
 
 		if (test_bit(IONIC_LIF_UP, lif->state)) {
+			ionic_lif_unquiesce(lif);
 			netif_tx_wake_all_queues(lif->netdev);
-			netif_carrier_on(netdev);
 		}
+		/* carrier off last to avoid watchdog timeout */
+		netif_carrier_on(netdev);
 	} else {
 		netdev_info(netdev, "Link down\n");
 
 		/* carrier off first to avoid watchdog timeout */
 		netif_carrier_off(netdev);
-		if (test_bit(IONIC_LIF_UP, lif->state))
+		if (test_bit(IONIC_LIF_UP, lif->state)) {
 			netif_tx_stop_all_queues(netdev);
+			ionic_lif_quiesce(lif);
+		}
 	}
 
 link_out:
@@ -323,6 +330,29 @@ static int ionic_lif_quiesce(struct ionic_lif *lif)
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
 		dev_err(dev, "failed to quiesce lif, error = %d\n", err);
+		return err;
+	}
+	
+	return 0;
+}
+
+static int ionic_lif_unquiesce(struct ionic_lif *lif)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.lif_setattr = {
+			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.attr = IONIC_LIF_ATTR_STATE,
+			.index = lif->index,
+			.state = IONIC_LIF_ENABLE
+		},
+	};
+	struct device *dev = lif->ionic->dev;
+	int err;
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		dev_err(dev, "failed to unquiesce lif, error = %d\n", err);
 		return err;
 	}
 	
