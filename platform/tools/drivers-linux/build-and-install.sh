@@ -45,6 +45,10 @@ ninja
 ninja install
 cd ../..
 
+# Clean out refs to drivers which have been removed
+rm -f /etc/libibverbs.d/nes.driver
+rm -f /etc/libibverbs.d/cxgb3.driver
+
 #
 # build perftest
 # and install
