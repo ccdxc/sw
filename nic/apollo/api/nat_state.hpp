@@ -49,7 +49,7 @@ public:
     /// \param[in]  port_block    pointer to the allocated NAT port block
     void free(nat_port_block *port_block);
 
-    /// \brief      lookup a NAT port blockk in database given the key
+    /// \brief      lookup a NAT port block in database given the key
     /// \param[in]  key NAT port block key
     /// \return     pointer to the NAT port block found or NULL
     nat_port_block *find(pds_nat_port_block_key_t *key) const;
@@ -64,7 +64,7 @@ private:
 
 private:
     ht *nat_port_block_ht_;        ///< NAT port block hash table root
-    slab *nat_port_block_slab_;    ///< slab for allocating NAT port block entry
+    slab *nat_port_block_slab_;    ///< slab for allocating NAT port block
 };
 
 static inline nat_port_block *

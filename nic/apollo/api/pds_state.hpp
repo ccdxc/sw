@@ -32,6 +32,7 @@
 #include "nic/apollo/api/nexthop_group_state.hpp"
 #include "nic/apollo/api/policer_state.hpp"
 #include "nic/apollo/api/nat_state.hpp"
+#include "nic/apollo/api/dhcp_state.hpp"
 
 using std::string;
 
@@ -59,6 +60,7 @@ enum {
     PDS_STATE_NEXTHOP_GROUP,
     PDS_STATE_POLICER,
     PDS_STATE_NAT,
+    PDS_STATE_DHCP,
     PDS_STATE_MAX,
 };
 
@@ -179,6 +181,9 @@ public:
     }
     nat_state *nat_db(void) {
         return (nat_state *)state_[PDS_STATE_NAT];
+    }
+    dhcp_state *dhcp_db(void) {
+        return (dhcp_state *)state_[PDS_STATE_DHCP];
     }
 
 private:
@@ -315,6 +320,12 @@ static inline nat_state *
 nat_db (void)
 {
     return api::g_pds_state.nat_db();
+}
+
+static inline dhcp_state *
+dhcp_db (void)
+{
+    return api::g_pds_state.dhcp_db();
 }
 
 #endif    // __PDS_STATE_HPP__

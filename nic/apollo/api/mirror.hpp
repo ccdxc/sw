@@ -125,7 +125,7 @@ public:
     virtual sdk_ret_t del_from_db(void) override;
 
     /// \brief          this method is called on new object that needs to
-    ///                 replace theold version of the object in the DBs
+    ///                 replace the old version of the object in the DBs
     /// \param[in]      orig_obj    old version of the object being swapped out
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
