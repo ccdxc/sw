@@ -120,7 +120,6 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 				if decommission {
 					// NIC has been decommissioned by user. Go back to classic mode.
 					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
-					recorder.Event(eventtypes.DSC_DECOMMISSIONED, fmt.Sprintf("DSC %s(%s) decommissioned from the cluster", nic.Spec.ID, nic.Name), nic)
 
 					// Update the object to be sent as health update to CMD
 					nic.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_DECOMMISSIONED.String()
