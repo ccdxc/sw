@@ -36,7 +36,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create AuthenticationPolicy object */
-  public AddAuthenticationPolicy(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddAuthenticationPolicy(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy';
     const opts = {
       eventID: 'AddAuthenticationPolicy',
@@ -48,13 +48,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update AuthenticationPolicy object */
-  public UpdateAuthenticationPolicy(body: IAuthAuthenticationPolicy, stagingID: string = "", previousVal: IAuthAuthenticationPolicy = null, trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateAuthenticationPolicy(body: IAuthAuthenticationPolicy, stagingID: string = "", previousVal: IAuthAuthenticationPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy';
     const opts = {
       eventID: 'UpdateAuthenticationPolicy',
@@ -66,13 +66,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Test LDAP bind operation */
-  public LdapBindCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public LdapBindCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapBindCheck';
     const opts = {
       eventID: 'LdapBindCheck',
@@ -84,13 +84,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Test LDAP connection */
-  public LdapConnectionCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public LdapConnectionCheck(body: IAuthAuthenticationPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapConnectionCheck';
     const opts = {
       eventID: 'LdapConnectionCheck',
@@ -102,13 +102,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Generate secret for token signing */
-  public TokenSecretGenerate(body: IAuthTokenSecretRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public TokenSecretGenerate(body: IAuthTokenSecretRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/TokenSecretGenerate';
     const opts = {
       eventID: 'TokenSecretGenerate',
@@ -120,7 +120,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthTokenSecretRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthTokenSecretRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -141,7 +141,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create RoleBinding object */
-  public AddRoleBinding_1(body: IAuthRoleBinding, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public AddRoleBinding_1(body: IAuthRoleBinding, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';
     const opts = {
       eventID: 'AddRoleBinding_1',
@@ -153,7 +153,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
@@ -191,7 +191,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update RoleBinding object */
-  public UpdateRoleBinding_1(O_Name, body: IAuthRoleBinding, stagingID: string = "", previousVal: IAuthRoleBinding = null, trimObject: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public UpdateRoleBinding_1(O_Name, body: IAuthRoleBinding, stagingID: string = "", previousVal: IAuthRoleBinding = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -204,7 +204,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
@@ -225,7 +225,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create Role object */
-  public AddRole_1(body: IAuthRole, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public AddRole_1(body: IAuthRole, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles';
     const opts = {
       eventID: 'AddRole_1',
@@ -237,7 +237,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
@@ -275,7 +275,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update Role object */
-  public UpdateRole_1(O_Name, body: IAuthRole, stagingID: string = "", previousVal: IAuthRole = null, trimObject: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public UpdateRole_1(O_Name, body: IAuthRole, stagingID: string = "", previousVal: IAuthRole = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -288,7 +288,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
@@ -310,7 +310,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create RoleBinding object */
-  public AddRoleBinding(body: IAuthRoleBinding, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public AddRoleBinding(body: IAuthRoleBinding, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -323,7 +323,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
@@ -363,7 +363,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update RoleBinding object */
-  public UpdateRoleBinding(O_Name, body: IAuthRoleBinding, stagingID: string = "", previousVal: IAuthRoleBinding = null, trimObject: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public UpdateRoleBinding(O_Name, body: IAuthRoleBinding, stagingID: string = "", previousVal: IAuthRoleBinding = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -377,7 +377,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
@@ -399,7 +399,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create Role object */
-  public AddRole(body: IAuthRole, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public AddRole(body: IAuthRole, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -412,7 +412,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
@@ -452,7 +452,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update Role object */
-  public UpdateRole(O_Name, body: IAuthRole, stagingID: string = "", previousVal: IAuthRole = null, trimObject: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public UpdateRole(O_Name, body: IAuthRole, stagingID: string = "", previousVal: IAuthRole = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -466,7 +466,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
@@ -489,7 +489,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update UserPreference object */
-  public UpdateUserPreference(O_Name, body: IAuthUserPreference, stagingID: string = "", previousVal: IAuthUserPreference = null, trimObject: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+  public UpdateUserPreference(O_Name, body: IAuthUserPreference, stagingID: string = "", previousVal: IAuthUserPreference = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/user-preferences/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -503,7 +503,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
   }
@@ -525,7 +525,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create User object */
-  public AddUser(body: IAuthUser, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public AddUser(body: IAuthUser, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -538,7 +538,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
@@ -578,7 +578,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update User object */
-  public UpdateUser(O_Name, body: IAuthUser, stagingID: string = "", previousVal: IAuthUser = null, trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public UpdateUser(O_Name, body: IAuthUser, stagingID: string = "", previousVal: IAuthUser = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -592,13 +592,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Review authorization for user */
-  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -612,13 +612,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Change user password */
-  public PasswordChange(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public PasswordChange(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -632,13 +632,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Reset user password */
-  public PasswordReset(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public PasswordReset(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordReset';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -652,7 +652,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
@@ -674,7 +674,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update UserPreference object */
-  public UpdateUserPreference_1(O_Name, body: IAuthUserPreference, stagingID: string = "", previousVal: IAuthUserPreference = null, trimObject: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+  public UpdateUserPreference_1(O_Name, body: IAuthUserPreference, stagingID: string = "", previousVal: IAuthUserPreference = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/user-preferences/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -687,7 +687,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
   }
@@ -708,7 +708,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create User object */
-  public AddUser_1(body: IAuthUser, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public AddUser_1(body: IAuthUser, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users';
     const opts = {
       eventID: 'AddUser_1',
@@ -720,7 +720,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
@@ -758,7 +758,7 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update User object */
-  public UpdateUser_1(O_Name, body: IAuthUser, stagingID: string = "", previousVal: IAuthUser = null, trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public UpdateUser_1(O_Name, body: IAuthUser, stagingID: string = "", previousVal: IAuthUser = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -771,13 +771,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Review authorization for user */
-  public IsAuthorized_1(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public IsAuthorized_1(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/IsAuthorized';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -790,13 +790,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Change user password */
-  public PasswordChange_1(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public PasswordChange_1(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/PasswordChange';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -809,13 +809,13 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Reset user password */
-  public PasswordReset_1(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public PasswordReset_1(O_Name, body: IAuthPasswordResetRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/PasswordReset';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -828,7 +828,7 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }

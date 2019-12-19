@@ -52,7 +52,7 @@ export class Diagnosticsv1Service extends AbstractService {
   }
   
   /** Update Module object */
-  public UpdateModule(O_Name, body: IDiagnosticsModule, stagingID: string = "", previousVal: IDiagnosticsModule = null, trimObject: boolean = true):Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}> {
+  public UpdateModule(O_Name, body: IDiagnosticsModule, stagingID: string = "", previousVal: IDiagnosticsModule = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/diagnostics/v1/modules/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -65,13 +65,13 @@ export class Diagnosticsv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsModule(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsModule(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Request Diagnostics information for a module */
-  public Debug(O_Name, body: IDiagnosticsDiagnosticsRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IDiagnosticsDiagnosticsResponse | IApiStatus | Error, statusCode: number}> {
+  public Debug(O_Name, body: IDiagnosticsDiagnosticsRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IDiagnosticsDiagnosticsResponse | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/diagnostics/v1/modules/{O.Name}/Debug';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -84,7 +84,7 @@ export class Diagnosticsv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsDiagnosticsRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new DiagnosticsDiagnosticsRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IDiagnosticsDiagnosticsResponse | IApiStatus | Error, statusCode: number}>;
   }

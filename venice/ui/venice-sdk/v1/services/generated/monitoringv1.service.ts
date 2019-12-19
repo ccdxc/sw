@@ -36,7 +36,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create MirrorSession object */
-  public AddMirrorSession_1(body: IMonitoringMirrorSession, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public AddMirrorSession_1(body: IMonitoringMirrorSession, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/MirrorSession';
     const opts = {
       eventID: 'AddMirrorSession_1',
@@ -48,7 +48,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -86,7 +86,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update MirrorSession object */
-  public UpdateMirrorSession_1(O_Name, body: IMonitoringMirrorSession, stagingID: string = "", previousVal: IMonitoringMirrorSession = null, trimObject: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public UpdateMirrorSession_1(O_Name, body: IMonitoringMirrorSession, stagingID: string = "", previousVal: IMonitoringMirrorSession = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/MirrorSession/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -99,7 +99,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -120,7 +120,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create TroubleshootingSession object */
-  public AddTroubleshootingSession_1(body: IMonitoringTroubleshootingSession, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public AddTroubleshootingSession_1(body: IMonitoringTroubleshootingSession, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/TroubleshootingSession';
     const opts = {
       eventID: 'AddTroubleshootingSession_1',
@@ -132,7 +132,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -170,7 +170,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update TroubleshootingSession object */
-  public UpdateTroubleshootingSession_1(O_Name, body: IMonitoringTroubleshootingSession, stagingID: string = "", previousVal: IMonitoringTroubleshootingSession = null, trimObject: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public UpdateTroubleshootingSession_1(O_Name, body: IMonitoringTroubleshootingSession, stagingID: string = "", previousVal: IMonitoringTroubleshootingSession = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/TroubleshootingSession/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -183,7 +183,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -204,7 +204,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create AlertDestination object */
-  public AddAlertDestination_1(body: IMonitoringAlertDestination, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public AddAlertDestination_1(body: IMonitoringAlertDestination, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertDestinations';
     const opts = {
       eventID: 'AddAlertDestination_1',
@@ -216,7 +216,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
@@ -254,7 +254,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update AlertDestination object */
-  public UpdateAlertDestination_1(O_Name, body: IMonitoringAlertDestination, stagingID: string = "", previousVal: IMonitoringAlertDestination = null, trimObject: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlertDestination_1(O_Name, body: IMonitoringAlertDestination, stagingID: string = "", previousVal: IMonitoringAlertDestination = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertDestinations/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -267,7 +267,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
@@ -288,7 +288,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create AlertPolicy object */
-  public AddAlertPolicy_1(body: IMonitoringAlertPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddAlertPolicy_1(body: IMonitoringAlertPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertPolicies';
     const opts = {
       eventID: 'AddAlertPolicy_1',
@@ -300,7 +300,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -338,7 +338,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update AlertPolicy object */
-  public UpdateAlertPolicy_1(O_Name, body: IMonitoringAlertPolicy, stagingID: string = "", previousVal: IMonitoringAlertPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlertPolicy_1(O_Name, body: IMonitoringAlertPolicy, stagingID: string = "", previousVal: IMonitoringAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertPolicies/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -351,7 +351,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -388,7 +388,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update Alert object */
-  public UpdateAlert_1(O_Name, body: IMonitoringAlert, stagingID: string = "", previousVal: IMonitoringAlert = null, trimObject: boolean = true):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlert_1(O_Name, body: IMonitoringAlert, stagingID: string = "", previousVal: IMonitoringAlert = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alerts/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -401,7 +401,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
   }
@@ -422,7 +422,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create EventPolicy object */
-  public AddEventPolicy_1(body: IMonitoringEventPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddEventPolicy_1(body: IMonitoringEventPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/event-policy';
     const opts = {
       eventID: 'AddEventPolicy_1',
@@ -434,7 +434,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -472,7 +472,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update EventPolicy object */
-  public UpdateEventPolicy_1(O_Name, body: IMonitoringEventPolicy, stagingID: string = "", previousVal: IMonitoringEventPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateEventPolicy_1(O_Name, body: IMonitoringEventPolicy, stagingID: string = "", previousVal: IMonitoringEventPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/event-policy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -485,7 +485,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -506,7 +506,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create FlowExportPolicy object */
-  public AddFlowExportPolicy_1(body: IMonitoringFlowExportPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddFlowExportPolicy_1(body: IMonitoringFlowExportPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/flowExportPolicy';
     const opts = {
       eventID: 'AddFlowExportPolicy_1',
@@ -518,7 +518,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -556,7 +556,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update FlowExportPolicy object */
-  public UpdateFlowExportPolicy_1(O_Name, body: IMonitoringFlowExportPolicy, stagingID: string = "", previousVal: IMonitoringFlowExportPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateFlowExportPolicy_1(O_Name, body: IMonitoringFlowExportPolicy, stagingID: string = "", previousVal: IMonitoringFlowExportPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/flowExportPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -569,7 +569,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -590,7 +590,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create FwlogPolicy object */
-  public AddFwlogPolicy_1(body: IMonitoringFwlogPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddFwlogPolicy_1(body: IMonitoringFwlogPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy';
     const opts = {
       eventID: 'AddFwlogPolicy_1',
@@ -602,7 +602,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -640,7 +640,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update FwlogPolicy object */
-  public UpdateFwlogPolicy_1(O_Name, body: IMonitoringFwlogPolicy, stagingID: string = "", previousVal: IMonitoringFwlogPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateFwlogPolicy_1(O_Name, body: IMonitoringFwlogPolicy, stagingID: string = "", previousVal: IMonitoringFwlogPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -653,7 +653,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -690,7 +690,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update StatsPolicy object */
-  public UpdateStatsPolicy_1(O_Name, body: IMonitoringStatsPolicy, stagingID: string = "", previousVal: IMonitoringStatsPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateStatsPolicy_1(O_Name, body: IMonitoringStatsPolicy, stagingID: string = "", previousVal: IMonitoringStatsPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -703,7 +703,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -724,7 +724,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create TechSupportRequest object */
-  public AddTechSupportRequest(body: IMonitoringTechSupportRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
+  public AddTechSupportRequest(body: IMonitoringTechSupportRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport';
     const opts = {
       eventID: 'AddTechSupportRequest',
@@ -736,7 +736,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringTechSupportRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringTechSupportRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
   }
@@ -790,7 +790,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create MirrorSession object */
-  public AddMirrorSession(body: IMonitoringMirrorSession, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public AddMirrorSession(body: IMonitoringMirrorSession, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -803,7 +803,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -843,7 +843,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update MirrorSession object */
-  public UpdateMirrorSession(O_Name, body: IMonitoringMirrorSession, stagingID: string = "", previousVal: IMonitoringMirrorSession = null, trimObject: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public UpdateMirrorSession(O_Name, body: IMonitoringMirrorSession, stagingID: string = "", previousVal: IMonitoringMirrorSession = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -857,7 +857,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -879,7 +879,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create TroubleshootingSession object */
-  public AddTroubleshootingSession(body: IMonitoringTroubleshootingSession, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public AddTroubleshootingSession(body: IMonitoringTroubleshootingSession, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -892,7 +892,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -932,7 +932,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update TroubleshootingSession object */
-  public UpdateTroubleshootingSession(O_Name, body: IMonitoringTroubleshootingSession, stagingID: string = "", previousVal: IMonitoringTroubleshootingSession = null, trimObject: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public UpdateTroubleshootingSession(O_Name, body: IMonitoringTroubleshootingSession, stagingID: string = "", previousVal: IMonitoringTroubleshootingSession = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -946,7 +946,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
@@ -968,7 +968,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create AlertDestination object */
-  public AddAlertDestination(body: IMonitoringAlertDestination, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public AddAlertDestination(body: IMonitoringAlertDestination, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -981,7 +981,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
@@ -1021,7 +1021,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update AlertDestination object */
-  public UpdateAlertDestination(O_Name, body: IMonitoringAlertDestination, stagingID: string = "", previousVal: IMonitoringAlertDestination = null, trimObject: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlertDestination(O_Name, body: IMonitoringAlertDestination, stagingID: string = "", previousVal: IMonitoringAlertDestination = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1035,7 +1035,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
@@ -1057,7 +1057,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create AlertPolicy object */
-  public AddAlertPolicy(body: IMonitoringAlertPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddAlertPolicy(body: IMonitoringAlertPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -1070,7 +1070,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1110,7 +1110,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update AlertPolicy object */
-  public UpdateAlertPolicy(O_Name, body: IMonitoringAlertPolicy, stagingID: string = "", previousVal: IMonitoringAlertPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlertPolicy(O_Name, body: IMonitoringAlertPolicy, stagingID: string = "", previousVal: IMonitoringAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1124,7 +1124,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1163,7 +1163,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update Alert object */
-  public UpdateAlert(O_Name, body: IMonitoringAlert, stagingID: string = "", previousVal: IMonitoringAlert = null, trimObject: boolean = true):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
+  public UpdateAlert(O_Name, body: IMonitoringAlert, stagingID: string = "", previousVal: IMonitoringAlert = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alerts/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1177,7 +1177,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
   }
@@ -1199,7 +1199,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create EventPolicy object */
-  public AddEventPolicy(body: IMonitoringEventPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddEventPolicy(body: IMonitoringEventPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/event-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -1212,7 +1212,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1252,7 +1252,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update EventPolicy object */
-  public UpdateEventPolicy(O_Name, body: IMonitoringEventPolicy, stagingID: string = "", previousVal: IMonitoringEventPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateEventPolicy(O_Name, body: IMonitoringEventPolicy, stagingID: string = "", previousVal: IMonitoringEventPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/event-policy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1266,7 +1266,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1288,7 +1288,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create FlowExportPolicy object */
-  public AddFlowExportPolicy(body: IMonitoringFlowExportPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddFlowExportPolicy(body: IMonitoringFlowExportPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -1301,7 +1301,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1341,7 +1341,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update FlowExportPolicy object */
-  public UpdateFlowExportPolicy(O_Name, body: IMonitoringFlowExportPolicy, stagingID: string = "", previousVal: IMonitoringFlowExportPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateFlowExportPolicy(O_Name, body: IMonitoringFlowExportPolicy, stagingID: string = "", previousVal: IMonitoringFlowExportPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1355,7 +1355,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1377,7 +1377,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create FwlogPolicy object */
-  public AddFwlogPolicy(body: IMonitoringFwlogPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddFwlogPolicy(body: IMonitoringFwlogPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -1390,7 +1390,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1430,7 +1430,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update FwlogPolicy object */
-  public UpdateFwlogPolicy(O_Name, body: IMonitoringFwlogPolicy, stagingID: string = "", previousVal: IMonitoringFwlogPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateFwlogPolicy(O_Name, body: IMonitoringFwlogPolicy, stagingID: string = "", previousVal: IMonitoringFwlogPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1444,7 +1444,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -1483,7 +1483,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Update StatsPolicy object */
-  public UpdateStatsPolicy(O_Name, body: IMonitoringStatsPolicy, stagingID: string = "", previousVal: IMonitoringStatsPolicy = null, trimObject: boolean = true):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateStatsPolicy(O_Name, body: IMonitoringStatsPolicy, stagingID: string = "", previousVal: IMonitoringStatsPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1497,7 +1497,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
   }

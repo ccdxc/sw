@@ -62,7 +62,7 @@ export class Browserv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}>;
   }
   
-  public PostQuery(body: IBrowserBrowseRequestList, stagingID: string = "", trimObject: boolean = true):Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}> {
+  public PostQuery(body: IBrowserBrowseRequestList, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/query';
     const opts = {
       eventID: 'PostQuery',
@@ -74,7 +74,7 @@ export class Browserv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new BrowserBrowseRequestList(body))
+      body = TrimDefaultsAndEmptyFields(body, new BrowserBrowseRequestList(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IBrowserBrowseResponseList | Error, statusCode: number}>;
   }

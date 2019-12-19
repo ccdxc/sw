@@ -36,7 +36,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create App object */
-  public AddApp_1(body: ISecurityApp, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public AddApp_1(body: ISecurityApp, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps';
     const opts = {
       eventID: 'AddApp_1',
@@ -48,7 +48,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
@@ -86,7 +86,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update App object */
-  public UpdateApp_1(O_Name, body: ISecurityApp, stagingID: string = "", previousVal: ISecurityApp = null, trimObject: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public UpdateApp_1(O_Name, body: ISecurityApp, stagingID: string = "", previousVal: ISecurityApp = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -99,7 +99,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
@@ -136,7 +136,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update FirewallProfile object */
-  public UpdateFirewallProfile_1(O_Name, body: ISecurityFirewallProfile, stagingID: string = "", previousVal: ISecurityFirewallProfile = null, trimObject: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+  public UpdateFirewallProfile_1(O_Name, body: ISecurityFirewallProfile, stagingID: string = "", previousVal: ISecurityFirewallProfile = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -149,7 +149,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
@@ -170,7 +170,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create NetworkSecurityPolicy object */
-  public AddNetworkSecurityPolicy_1(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddNetworkSecurityPolicy_1(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies';
     const opts = {
       eventID: 'AddNetworkSecurityPolicy_1',
@@ -182,7 +182,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -220,7 +220,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update NetworkSecurityPolicy object */
-  public UpdateNetworkSecurityPolicy_1(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetworkSecurityPolicy_1(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -233,7 +233,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -254,7 +254,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SecurityGroup object */
-  public AddSecurityGroup_1(body: ISecuritySecurityGroup, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public AddSecurityGroup_1(body: ISecuritySecurityGroup, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups';
     const opts = {
       eventID: 'AddSecurityGroup_1',
@@ -266,7 +266,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
@@ -304,7 +304,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SecurityGroup object */
-  public UpdateSecurityGroup_1(O_Name, body: ISecuritySecurityGroup, stagingID: string = "", previousVal: ISecuritySecurityGroup = null, trimObject: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public UpdateSecurityGroup_1(O_Name, body: ISecuritySecurityGroup, stagingID: string = "", previousVal: ISecuritySecurityGroup = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -317,7 +317,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
@@ -339,7 +339,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create App object */
-  public AddApp(body: ISecurityApp, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public AddApp(body: ISecurityApp, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -352,7 +352,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
@@ -392,7 +392,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update App object */
-  public UpdateApp(O_Name, body: ISecurityApp, stagingID: string = "", previousVal: ISecurityApp = null, trimObject: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public UpdateApp(O_Name, body: ISecurityApp, stagingID: string = "", previousVal: ISecurityApp = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -406,7 +406,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
@@ -445,7 +445,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update FirewallProfile object */
-  public UpdateFirewallProfile(O_Name, body: ISecurityFirewallProfile, stagingID: string = "", previousVal: ISecurityFirewallProfile = null, trimObject: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+  public UpdateFirewallProfile(O_Name, body: ISecurityFirewallProfile, stagingID: string = "", previousVal: ISecurityFirewallProfile = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -459,7 +459,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
@@ -481,7 +481,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create NetworkSecurityPolicy object */
-  public AddNetworkSecurityPolicy(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddNetworkSecurityPolicy(body: ISecurityNetworkSecurityPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -494,7 +494,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -534,7 +534,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update NetworkSecurityPolicy object */
-  public UpdateNetworkSecurityPolicy(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetworkSecurityPolicy(O_Name, body: ISecurityNetworkSecurityPolicy, stagingID: string = "", previousVal: ISecurityNetworkSecurityPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -548,7 +548,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -570,7 +570,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SecurityGroup object */
-  public AddSecurityGroup(body: ISecuritySecurityGroup, stagingID: string = "", trimObject: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public AddSecurityGroup(body: ISecuritySecurityGroup, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -583,7 +583,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body))
+      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
@@ -623,7 +623,7 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SecurityGroup object */
-  public UpdateSecurityGroup(O_Name, body: ISecuritySecurityGroup, stagingID: string = "", previousVal: ISecuritySecurityGroup = null, trimObject: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public UpdateSecurityGroup(O_Name, body: ISecuritySecurityGroup, stagingID: string = "", previousVal: ISecuritySecurityGroup = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -637,7 +637,7 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }

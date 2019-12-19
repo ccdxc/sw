@@ -36,7 +36,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create IPAMPolicy object */
-  public AddIPAMPolicy_1(body: INetworkIPAMPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddIPAMPolicy_1(body: INetworkIPAMPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/ipam-policies';
     const opts = {
       eventID: 'AddIPAMPolicy_1',
@@ -48,7 +48,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -86,7 +86,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update IPAMPolicy object */
-  public UpdateIPAMPolicy_1(O_Name, body: INetworkIPAMPolicy, stagingID: string = "", previousVal: INetworkIPAMPolicy = null, trimObject: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateIPAMPolicy_1(O_Name, body: INetworkIPAMPolicy, stagingID: string = "", previousVal: INetworkIPAMPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/ipam-policies/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -99,7 +99,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -120,7 +120,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create NetworkInterface object */
-  public AddNetworkInterface(body: INetworkNetworkInterface, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
+  public AddNetworkInterface(body: INetworkNetworkInterface, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces';
     const opts = {
       eventID: 'AddNetworkInterface',
@@ -132,7 +132,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
   }
@@ -154,7 +154,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update NetworkInterface object */
-  public UpdateNetworkInterface(O_Name, body: INetworkNetworkInterface, stagingID: string = "", previousVal: INetworkNetworkInterface = null, trimObject: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetworkInterface(O_Name, body: INetworkNetworkInterface, stagingID: string = "", previousVal: INetworkNetworkInterface = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -167,7 +167,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
   }
@@ -188,7 +188,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Network object */
-  public AddNetwork_1(body: INetworkNetwork, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public AddNetwork_1(body: INetworkNetwork, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks';
     const opts = {
       eventID: 'AddNetwork_1',
@@ -200,7 +200,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
@@ -238,7 +238,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Network object */
-  public UpdateNetwork_1(O_Name, body: INetworkNetwork, stagingID: string = "", previousVal: INetworkNetwork = null, trimObject: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetwork_1(O_Name, body: INetworkNetwork, stagingID: string = "", previousVal: INetworkNetwork = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -251,7 +251,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
@@ -303,7 +303,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create RoutingConfig object */
-  public AddRoutingConfig(body: INetworkRoutingConfig, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}> {
+  public AddRoutingConfig(body: INetworkRoutingConfig, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/routing-config';
     const opts = {
       eventID: 'AddRoutingConfig',
@@ -315,7 +315,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}>;
   }
@@ -353,7 +353,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update RoutingConfig object */
-  public UpdateRoutingConfig(O_Name, body: INetworkRoutingConfig, stagingID: string = "", previousVal: INetworkRoutingConfig = null, trimObject: boolean = true):Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}> {
+  public UpdateRoutingConfig(O_Name, body: INetworkRoutingConfig, stagingID: string = "", previousVal: INetworkRoutingConfig = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/routing-config/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -366,7 +366,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}>;
   }
@@ -388,7 +388,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create IPAMPolicy object */
-  public AddIPAMPolicy(body: INetworkIPAMPolicy, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddIPAMPolicy(body: INetworkIPAMPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/ipam-policies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -401,7 +401,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -441,7 +441,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update IPAMPolicy object */
-  public UpdateIPAMPolicy(O_Name, body: INetworkIPAMPolicy, stagingID: string = "", previousVal: INetworkIPAMPolicy = null, trimObject: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateIPAMPolicy(O_Name, body: INetworkIPAMPolicy, stagingID: string = "", previousVal: INetworkIPAMPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/ipam-policies/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -455,7 +455,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
@@ -477,7 +477,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Network object */
-  public AddNetwork(body: INetworkNetwork, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public AddNetwork(body: INetworkNetwork, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -490,7 +490,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
@@ -530,7 +530,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Network object */
-  public UpdateNetwork(O_Name, body: INetworkNetwork, stagingID: string = "", previousVal: INetworkNetwork = null, trimObject: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetwork(O_Name, body: INetworkNetwork, stagingID: string = "", previousVal: INetworkNetwork = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -544,7 +544,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
@@ -599,7 +599,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create VirtualRouter object */
-  public AddVirtualRouter(body: INetworkVirtualRouter, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+  public AddVirtualRouter(body: INetworkVirtualRouter, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/virtualrouters';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -612,7 +612,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }
@@ -652,7 +652,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update VirtualRouter object */
-  public UpdateVirtualRouter(O_Name, body: INetworkVirtualRouter, stagingID: string = "", previousVal: INetworkVirtualRouter = null, trimObject: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+  public UpdateVirtualRouter(O_Name, body: INetworkVirtualRouter, stagingID: string = "", previousVal: INetworkVirtualRouter = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/virtualrouters/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -666,7 +666,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }
@@ -687,7 +687,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create VirtualRouter object */
-  public AddVirtualRouter_1(body: INetworkVirtualRouter, stagingID: string = "", trimObject: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+  public AddVirtualRouter_1(body: INetworkVirtualRouter, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/virtualrouters';
     const opts = {
       eventID: 'AddVirtualRouter_1',
@@ -699,7 +699,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body))
+      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }
@@ -737,7 +737,7 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update VirtualRouter object */
-  public UpdateVirtualRouter_1(O_Name, body: INetworkVirtualRouter, stagingID: string = "", previousVal: INetworkVirtualRouter = null, trimObject: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+  public UpdateVirtualRouter_1(O_Name, body: INetworkVirtualRouter, stagingID: string = "", previousVal: INetworkVirtualRouter = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/virtualrouters/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -750,7 +750,7 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }

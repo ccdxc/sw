@@ -30,7 +30,7 @@ export class Eventsv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
-  public PostGetEvents(body: any, trimObject: boolean = true):Observable<{body: IEventsEventList | Error, statusCode: number}> {
+  public PostGetEvents(body: any, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
     const opts = {
       eventID: 'PostGetEvents',

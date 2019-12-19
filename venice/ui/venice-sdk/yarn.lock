@@ -32,7 +32,7 @@
 
 "@pensando/swagger-ts-generator@file:pensando-swagger-ts-generator-1.1.29.tgz":
   version "1.1.29"
-  resolved "file:pensando-swagger-ts-generator-1.1.29.tgz#e72d19b9764c6a5e116c30c96bd841fec6118ebc"
+  resolved "file:pensando-swagger-ts-generator-1.1.29.tgz#9c1cd9e4f409b5e8988e23b0ac53ef2b6179ff1b"
   dependencies:
     fs "0.0.2"
     handlebars "^4.0.11"

@@ -32,7 +32,7 @@ export class Telemetry_queryv1Service extends AbstractService {
   }
   
   /** Firewall logs query */
-  public PostFwlogs(body: ITelemetry_queryFwlogsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
+  public PostFwlogs(body: ITelemetry_queryFwlogsQueryList, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/fwlogs';
     const opts = {
       eventID: 'PostFwlogs',
@@ -40,7 +40,7 @@ export class Telemetry_queryv1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryFwlogsQueryList(body))
+      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryFwlogsQueryList(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
   }
@@ -57,7 +57,7 @@ export class Telemetry_queryv1Service extends AbstractService {
   }
   
   /** telemetry metrics query */
-  public PostMetrics(body: ITelemetry_queryMetricsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
+  public PostMetrics(body: ITelemetry_queryMetricsQueryList, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/metrics';
     const opts = {
       eventID: 'PostMetrics',
@@ -65,7 +65,7 @@ export class Telemetry_queryv1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryMetricsQueryList(body))
+      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryMetricsQueryList(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
   }

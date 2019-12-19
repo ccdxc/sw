@@ -72,7 +72,7 @@ export class Objstorev1Service extends AbstractService {
   }
   
   /** Create Object object */
-  public AddObject(O_Namespace, body: IObjstoreObject, trimObject: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+  public AddObject(O_Namespace, body: IObjstoreObject, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Namespace}', O_Namespace);
@@ -82,7 +82,7 @@ export class Objstorev1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body))
+      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
   }
@@ -153,7 +153,7 @@ export class Objstorev1Service extends AbstractService {
   }
   
   /** Create Object object */
-  public AddObject_1(O_Namespace, body: IObjstoreObject, trimObject: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+  public AddObject_1(O_Namespace, body: IObjstoreObject, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects';
     url = url.replace('{O.Namespace}', O_Namespace);
     const opts = {
@@ -162,7 +162,7 @@ export class Objstorev1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body))
+      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
   }

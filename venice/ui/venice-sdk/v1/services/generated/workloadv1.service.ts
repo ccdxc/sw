@@ -101,7 +101,7 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Workload object */
-  public AddWorkload(body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public AddWorkload(body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -114,7 +114,7 @@ export class Workloadv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body))
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
@@ -154,7 +154,7 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Workload object */
-  public UpdateWorkload(O_Name, body: IWorkloadWorkload, stagingID: string = "", previousVal: IWorkloadWorkload = null, trimObject: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public UpdateWorkload(O_Name, body: IWorkloadWorkload, stagingID: string = "", previousVal: IWorkloadWorkload = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -168,7 +168,7 @@ export class Workloadv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
@@ -251,7 +251,7 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Workload object */
-  public AddWorkload_1(body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public AddWorkload_1(body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads';
     const opts = {
       eventID: 'AddWorkload_1',
@@ -263,7 +263,7 @@ export class Workloadv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body))
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
@@ -301,7 +301,7 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Workload object */
-  public UpdateWorkload_1(O_Name, body: IWorkloadWorkload, stagingID: string = "", previousVal: IWorkloadWorkload = null, trimObject: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public UpdateWorkload_1(O_Name, body: IWorkloadWorkload, stagingID: string = "", previousVal: IWorkloadWorkload = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -314,7 +314,7 @@ export class Workloadv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }

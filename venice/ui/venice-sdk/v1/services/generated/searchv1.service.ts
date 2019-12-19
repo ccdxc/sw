@@ -32,7 +32,7 @@ export class Searchv1Service extends AbstractService {
   }
   
   /** Security Policy Query */
-  public PostPolicyQuery(body: ISearchPolicySearchRequest, trimObject: boolean = true):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
+  public PostPolicyQuery(body: ISearchPolicySearchRequest, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/policy-query';
     const opts = {
       eventID: 'PostPolicyQuery',
@@ -40,7 +40,7 @@ export class Searchv1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SearchPolicySearchRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new SearchPolicySearchRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
@@ -57,7 +57,7 @@ export class Searchv1Service extends AbstractService {
   }
   
   /** Structured or free-form search */
-  public PostQuery(body: ISearchSearchRequest, trimObject: boolean = true):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
+  public PostQuery(body: ISearchSearchRequest, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
     const opts = {
       eventID: 'PostQuery',
@@ -65,7 +65,7 @@ export class Searchv1Service extends AbstractService {
       isStaging: false,
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new SearchSearchRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new SearchSearchRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }

@@ -36,7 +36,7 @@ export class Orchestratorv1Service extends AbstractService {
   }
   
   /** Create Orchestrator object */
-  public AddOrchestrator(body: IOrchestrationOrchestrator, stagingID: string = "", trimObject: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
+  public AddOrchestrator(body: IOrchestrationOrchestrator, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator';
     const opts = {
       eventID: 'AddOrchestrator',
@@ -48,7 +48,7 @@ export class Orchestratorv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new OrchestrationOrchestrator(body))
+      body = TrimDefaultsAndEmptyFields(body, new OrchestrationOrchestrator(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}>;
   }
@@ -86,7 +86,7 @@ export class Orchestratorv1Service extends AbstractService {
   }
   
   /** Update Orchestrator object */
-  public UpdateOrchestrator(O_Name, body: IOrchestrationOrchestrator, stagingID: string = "", previousVal: IOrchestrationOrchestrator = null, trimObject: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
+  public UpdateOrchestrator(O_Name, body: IOrchestrationOrchestrator, stagingID: string = "", previousVal: IOrchestrationOrchestrator = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -99,7 +99,7 @@ export class Orchestratorv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new OrchestrationOrchestrator(body), previousVal)
+      body = TrimDefaultsAndEmptyFields(body, new OrchestrationOrchestrator(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}>;
   }

@@ -36,7 +36,7 @@ export class Rolloutv1Service extends AbstractService {
   }
   
   /** Start Rollout operation */
-  public CreateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public CreateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/CreateRollout';
     const opts = {
       eventID: 'CreateRollout',
@@ -48,13 +48,13 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Remove a Rollout */
-  public RemoveRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public RemoveRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/RemoveRollout';
     const opts = {
       eventID: 'RemoveRollout',
@@ -66,13 +66,13 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Stop a Rollout operation */
-  public StopRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public StopRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/StopRollout';
     const opts = {
       eventID: 'StopRollout',
@@ -84,13 +84,13 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update Rollout configuration */
-  public UpdateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public UpdateRollout(body: IRolloutRollout, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/UpdateRollout';
     const opts = {
       eventID: 'UpdateRollout',
@@ -102,7 +102,7 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body))
+      body = TrimDefaultsAndEmptyFields(body, new RolloutRollout(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }

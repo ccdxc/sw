@@ -36,7 +36,7 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Create Buffer object */
-  public AddBuffer_1(body: IStagingBuffer, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public AddBuffer_1(body: IStagingBuffer, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers';
     const opts = {
       eventID: 'AddBuffer_1',
@@ -48,7 +48,7 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
@@ -86,7 +86,7 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Clear operations from a configuration buffer */
-  public Clear_1(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
+  public Clear_1(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/clear';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -99,13 +99,13 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Commit a staged configuration buffer */
-  public Commit_1(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
+  public Commit_1(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/commit';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -118,7 +118,7 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
   }
@@ -140,7 +140,7 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Create Buffer object */
-  public AddBuffer(body: IStagingBuffer, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public AddBuffer(body: IStagingBuffer, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -153,7 +153,7 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
@@ -193,7 +193,7 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Clear operations from a configuration buffer */
-  public Clear(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
+  public Clear(O_Name, body: IStagingClearAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/clear';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -207,13 +207,13 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Commit a staged configuration buffer */
-  public Commit(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
+  public Commit(O_Name, body: IStagingCommitAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/commit';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -227,7 +227,7 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body))
+      body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
   }

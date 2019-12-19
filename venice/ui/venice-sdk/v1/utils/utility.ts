@@ -8,14 +8,14 @@ import * as _ from 'lodash';
   // This is useful for removing nested objects that have validation that
   // only apply if an object is given (Ex. pagination spec for telemetry queries)
   // If the field's empty value is present in previousVal, the field is not trimmed
-  export const TrimDefaultsAndEmptyFields = (request: any, model, previousVal = null) => {
+  export const TrimDefaultsAndEmptyFields = (request: any, model, previousVal = null,
+                                      trimDefaults = true) => {
     request = _.cloneDeep(request);
     const helperFunc = (obj, model, previousVal): boolean => {
       let retValue = true;
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
           // for debug: console.log(key, obj, model);
-          
           // We want to send the timestamp as a string
           // to the backend, not as a js date object.
           if (obj[key] instanceof Date) {
@@ -46,7 +46,7 @@ import * as _ from 'lodash';
               }
               retValue = false;
             }
-          } else if (obj[key] != null && (model == null || model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {
+          } else if (obj[key] != null && (trimDefaults === false || model == null || model.getPropInfo == null || model.getPropInfo(key)== null || obj[key] !== model.getPropInfo(key).default)) {
             retValue = false;
           }
         }
