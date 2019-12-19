@@ -98,6 +98,10 @@
           </div> -->
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
                fxLayoutAlign="start center">
+            <div>Name:</div>
+          </div>
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+               fxLayoutAlign="start center">
             <div>NTP Servers:</div>
           </div>
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
@@ -115,6 +119,10 @@
           <!-- <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-virtual-ip">{{ cluster?.spec['virtual-ip'] }}</div>
           </div> -->
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div class="cluster-details-panel-cluster-name">
+              {{ cluster?.meta.name }}</div>
+          </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-ntp-servers">
               {{ cluster?.spec['ntp-servers'].join(', ') }}</div>

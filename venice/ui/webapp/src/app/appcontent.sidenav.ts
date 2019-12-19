@@ -279,13 +279,13 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/admin', 'snapshots']
       },
       {
-        label: 'Update TLS',
+        label: 'Server Certificate',
         icon: {
           cssClass: 'material-icons',
           matIconName: 'security'
           },
           roleGuard: UIRolePermissions.adminrole,
-        link: ['/admin', 'updateTLS']
+        link: ['/admin', 'certificate']
       }
     ]
   },

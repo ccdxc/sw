@@ -57,6 +57,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   naplesWithoutHosts: ClusterDistributedServiceCard[] = [];
   notAdmittedCount: number = 0;
 
+  // Used for the table - when true there is a loading icon displayed
+  tableLoading: boolean = false;
+
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 15 },
     { field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: false, width: 25 },
@@ -82,14 +85,19 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
   getHosts() {
+    this.tableLoading = true;
     this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
     this.dataObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
     const subscription = this.clusterService.WatchHost().subscribe(
       response => {
         this.hostsEventUtility.processEvents(response);
         this.buildHostWorkloadsMap();  // host[i] -> workloads[] map
+        this.tableLoading = false;
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
+      (error) => {
+        this.tableLoading = false;
+        this.controllerService.invokeRESTErrorToaster('Failed to get hosts', error);
+      }
     );
     this.subscriptions.push(subscription);
   }

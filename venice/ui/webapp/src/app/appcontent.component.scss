@@ -1,5 +1,6 @@
 @import 'src/global-mixins';
 
+
 .pensUI-app {
   width: 100vw;
   height: 100vh;
@@ -29,6 +30,19 @@
   width: 30px;
   padding: 1px 3px;
   margin: auto 4px auto 1px;
+}
+
+.app-shell-cluster-name {
+  margin-left: 20px;
+  font-family: "Fira Sans Condensed";
+  font-size: 20px;
+  font-weight: normal;
+  color: #676763 !important;
+
+}
+
+.app-shell-doclink {
+  font-family: "Fira Sans Condensed";
 }
 
 .app-shell-doclink,
@@ -361,4 +375,9 @@ $sidenavWidth: 200px;
 
 .app-shell-version-text {
   @include primary-font();
+}
+
+.app-shell-cluster-version {
+  cursor: pointer;
+  color: #8cafda;
 }

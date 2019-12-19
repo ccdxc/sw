@@ -20,12 +20,12 @@ export class UpdateclusterTlsComponent implements OnInit {
    let buttons = [];
       buttons = [{
         cssClass: 'global-button-primary updateclustertls-toolbar-button',
-        text: 'UPDATE TLS',
+        text: 'UPDATE',
         callback: () => { this.certMode =  !this.certMode; },
       }];
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Update TLS', url: Utility.getBaseUIUrl() + 'admin/updateTLS' }],
+      breadcrumb: [{ label: 'Update Server Certificate', url: Utility.getBaseUIUrl() + 'admin/certificate' }],
     });
   }
   onCertificateCancel(event) {

@@ -32,7 +32,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   encapsulation: ViewEncapsulation.None,
 })
 export class RolloutstatusComponent extends BaseComponent implements OnInit, OnDestroy {
-  public static STOP_BUTTON_TEXT  = 'STOP ROLLOUT';
+  public static STOP_BUTTON_TEXT = 'STOP ROLLOUT';
   public static DSC_TABLE_NAME = 'Distributed Services Cards';
 
   subscriptions = [];
@@ -66,10 +66,10 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     { field: 'phase', header: 'Phase', class: 'rolloutstatus-column rolloutstatus-column-phase', sortable: true, width: 15 },
     { field: 'start-time', header: 'Start Time', class: 'rolloutstatus-column rolloutstatus-column-sdate', sortable: true, width: 15 },
     { field: 'end-time', header: 'End Time', class: 'rolloutstatus-column rolloutstatus-column-edate', sortable: true, width: 15 },
-  /*  VS-355 comment out reason field for now
-   { field: 'reason', header: 'Previous Phase', class: 'rolloutstatus-column rolloutstatus-column-reason', sortable: true, width: 20 }, // VS-299
-   */
-  { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
+    /*  VS-355 comment out reason field for now
+     { field: 'reason', header: 'Previous Phase', class: 'rolloutstatus-column rolloutstatus-column-reason', sortable: true, width: 20 }, // VS-299
+     */
+    { field: 'message', header: 'Message', class: 'rolloutstatus-column rolloutstatus-column-message', sortable: false, width: 40 }
   ];
 
   // Only DSC should show number of retries. We use a seperate column configuration. See html about how to how to set columns to table
@@ -83,9 +83,9 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   ];
 
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-// During progressing rollout, WatchDistributedServiceCard may fail resulting in this.naples to be set to empty.
-// This affects the "name" column of the NICs table (see getNICID func).
-// Hence we keep the last valid copy of naples as naplesCopy, which is used to render NIC names.
+  // During progressing rollout, WatchDistributedServiceCard may fail resulting in this.naples to be set to empty.
+  // This affects the "name" column of the NICs table (see getNICID func).
+  // Hence we keep the last valid copy of naples as naplesCopy, which is used to render NIC names.
   naplesCopy: ReadonlyArray<ClusterDistributedServiceCard> = [];
 
   // Used for processing the stream events
@@ -138,33 +138,38 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   addToolbarButton() {
     const toolbarData: ToolbarData = this._controllerService.getToolbarData();
-    if (this.selectedRollout && RolloutUtil.isRolloutPending(this.selectedRollout) ) {
-      const isSuspendInProgressOrSuspended = (this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']
-          || this.selectedRollout.status.state === RolloutRolloutStatus_state.suspended); // check it rollout is in 'suspend-in-progress' or 'suspended' states.
+    if (this.selectedRollout) {
       const isSucceeded = (this.selectedRollout.status.state === RolloutRolloutStatus_state.success);
-      if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgressOrSuspended && !isSucceeded) {  // VS-328.  We just want to add stop-button once.
-        toolbarData.buttons.push(
-          {
-            cssClass: 'global-button-primary rolloutstatus-toolbar-button',
-            text: RolloutstatusComponent.STOP_BUTTON_TEXT,
-            callback: () => {
-              this.onStopRollout();
+      const isFailed = (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure);
+      if (RolloutUtil.isRolloutPending(this.selectedRollout)) {
+        const isSuspendInProgressOrSuspended = (this.selectedRollout.status.state === RolloutRolloutStatus_state['suspend-in-progress']
+          || this.selectedRollout.status.state === RolloutRolloutStatus_state.suspended); // check it rollout is in 'suspend-in-progress' or 'suspended' states.
+        if (!this.hasStopButtonAlready(toolbarData) && this.uiconfigsService.isAuthorized(UIRolePermissions.rolloutrollout_delete) && !isSuspendInProgressOrSuspended && !isSucceeded && !isFailed) {  // VS-328.  We just want to add stop-button once.
+          toolbarData.buttons.push(
+            {
+              cssClass: 'global-button-primary rolloutstatus-toolbar-button',
+              text: RolloutstatusComponent.STOP_BUTTON_TEXT,
+              callback: () => {
+                this.onStopRollout();
+              }
             }
-          }
-        );
+          );
+        }
+        this._controllerService.setToolbarData(toolbarData);
+      } else if (isSucceeded || isFailed ) {
+        toolbarData.buttons = []; // clear all buttons
+        this._controllerService.setToolbarData(toolbarData);
       }
-      this._controllerService.setToolbarData(toolbarData);
     }
   }
 
   /**
    * This function check whethere to add [STOP ROLLOUT] button in toolbar
    */
-  private hasStopButtonAlready(toolbarData: ToolbarData ): boolean {
-      const hasStop = toolbarData.buttons.some( (button) => {
-        return (button.text === RolloutstatusComponent.STOP_BUTTON_TEXT);
-      });
-      return hasStop;
+  private hasStopButtonAlready(toolbarData: ToolbarData): boolean {
+    return toolbarData.buttons.some((button) => {
+      return (button.text === RolloutstatusComponent.STOP_BUTTON_TEXT);
+    });
   }
 
   /**
@@ -287,7 +292,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
             this.watchRolloutDetail();
           }, 3000);
         } else {
-        this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
+          this._controllerService.webSocketErrorToaster('Failed to get Rollout', error);
         }
         // If we can not watch the  running rollout object, just hide the stop-rollout toolbar button. // VS-656
         this.removeStopRolloutToolbarButton();
@@ -331,19 +336,19 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * We check "tablename" to build name column display.
    */
   displayNameColumn(data: any, col: TableCol, tablename: string): string {
-      if (tablename === RolloutstatusComponent.DSC_TABLE_NAME) {
-        const fields = col.field.split('.');
-        const value = Utility.getObjectValueByPropertyPath(data, fields);
-        const column = col.field;
-        const id  = this.getNICID(value);
-        return id;
-      } else {
-        return this.displayColumn(data, col);
-      }
+    if (tablename === RolloutstatusComponent.DSC_TABLE_NAME) {
+      const fields = col.field.split('.');
+      const value = Utility.getObjectValueByPropertyPath(data, fields);
+      const column = col.field;
+      const id = this.getNICID(value);
+      return id;
+    } else {
+      return this.displayColumn(data, col);
+    }
   }
 
   getNICID(nicNameInMAC: string): string {
-    const matchedNaple  = this.naplesCopy.find(naple => {
+    const matchedNaple = this.naplesCopy.find(naple => {
       return naple.meta.name === nicNameInMAC;
     });
     return matchedNaple ? matchedNaple.spec.id : nicNameInMAC;
@@ -372,7 +377,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    */
   onFailureReasonClick($event) {
     const reasons = this.getRolloutFailureReasons();
-    const delimiter  = '<br/>';
+    const delimiter = '<br/>';
     const msg = reasons.join(delimiter);
     this._controllerService.invokeConfirm({
       header: 'Rollout [' + this.selectedRollout.meta.name + '] Failed',
@@ -384,18 +389,18 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         // When a primeng alert is created, it tries to "focus" on a button, not adding a button returns an error.
         // So we create a button but hide it later.
       }
-      });
+    });
   }
 
   /**
    * Loop through rollout.status .. to collect failure reasons.
    */
   getRolloutFailureReasons(): string[] {
-    if (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure ) {
+    if (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure) {
       const controllerNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['controller-nodes-status']);
       const nicsNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['dscs-status']);
       let reasons = [];
-      if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0 ) {
+      if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0) {
         reasons = reasons.concat(controllerNodesReasons);
         reasons = reasons.concat(nicsNodesReasons);
       }
@@ -408,20 +413,20 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * helper function
    * @param nodes
    */
-  getNodesFailureReasons (nodes: IRolloutRolloutPhase[]): any[] {
+  getNodesFailureReasons(nodes: IRolloutRolloutPhase[]): any[] {
     const reasons = [];
-    for (let i = 0 ; i < nodes.length; i ++ ) {
+    for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
-      const reason =  this.getStatusReasonHelper(node);
-      if (reason ) {
+      const reason = this.getStatusReasonHelper(node);
+      if (reason) {
         reasons.push(reason);
       }
     }
     return reasons;
   }
 
-  getStatusReasonHelper(node: IRolloutRolloutPhase ): string {
-    if (node.reason === RolloutRolloutStatus_state.failure ) {
+  getStatusReasonHelper(node: IRolloutRolloutPhase): string {
+    if (node.reason === RolloutRolloutStatus_state.failure) {
       return node.name + ' - ' + node.message;
     }
     return null;

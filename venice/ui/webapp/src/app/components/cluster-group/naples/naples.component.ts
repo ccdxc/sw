@@ -74,6 +74,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   maxWorkloadsPerRow: number = 10;
 
   isTabComponent: boolean = false;
+  // Used for the table - when true there is a loading icon displayed
+  tableLoading: boolean = false;
+
   cols: TableCol[] = [
     { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
     { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
@@ -249,9 +252,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     this.dataObjects = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
+    this.tableLoading = true;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
+        this.tableLoading = false;
         this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
         this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.naples);
         for (const naple of this.naples) {
@@ -286,7 +291,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         }
         this.searchObject['status.conditions'] = this.conditionNaplesMap;
       },
-      this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
+      (error) => {
+        this.tableLoading = false;
+        this.controllerService.invokeRESTErrorToaster('Failed to get Naples', error);
+      }
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

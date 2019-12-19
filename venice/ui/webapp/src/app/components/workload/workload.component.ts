@@ -299,14 +299,19 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * Fetch workloads.
    */
   getWorkloads() {
+    this.tableLoading = true;
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.dataObjects = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
         this.buildObjectsMap();
+        this.tableLoading = false;
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
+      (error) => {
+        this.tableLoading = false;
+        this.controllerService.invokeRESTErrorToaster('Failed to get workloads', error);
+      }
     );
     this.subscriptions.push(subscription);
   }

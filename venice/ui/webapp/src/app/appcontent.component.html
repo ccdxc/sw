@@ -6,7 +6,8 @@
 <img [style.display]="'none'" src="../../../assets/images/venice/venice-pictures-wallpapers-7.jpg"
      alt="Pensando Venice" />
 
-<div class="pensUI-app {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
+<div
+     class="pensUI-app {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
      id="pensando-ui-screen">
   <p-confirmDialog #confirmDialog [closable]="false" icon="pi pi-exclamation-triangle">
   </p-confirmDialog>
@@ -34,6 +35,7 @@
               <app-searchbox></app-searchbox>
             </div>
           </ng-container>
+          <span class="app-shell-cluster-name"> {{ cluster?.meta.name}}</span>
           <span class="app-shell-spacer"></span>
           <div class="app-shell-toolbar-icon-div">
             <a class="app-shell-doclink" [href]="docLink" target="_blank">
@@ -59,6 +61,23 @@
                 <mat-icon style="color: black">power_settings_new</mat-icon>
                 <span>Sign out</span>
               </button>
+            </mat-menu>
+            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarAboutMenu">
+              <mat-icon>info</mat-icon>
+            </button>
+            <mat-menu class="app-shell-toolbar-user-menu" #toolbarAboutMenu="matMenu">
+              <a class="app-shell-externallink" href="https://pensando.io" target="_blank">
+                <button mat-menu-item class="app-externallink-button">
+                  <mat-icon style="color: black">home</mat-icon>
+                  <span>Pensando Systems</span>
+                </button>
+              </a>
+              <a class="app-shell-externallink" href="https://support.pensando.io" target="_blank">
+                <button mat-menu-item class="app-externallink-button">
+                  <mat-icon style="color: black">face</mat-icon>
+                  <span>Support</span>
+                </button>
+              </a>
             </mat-menu>
             <!-- Currently hidden because no functionality to display in it -->
             <ng-container *ngIf="!isUINavigationBlocked">
@@ -152,8 +171,8 @@
               </app-bgfileupload>
             </div>
             <div fxFlex fxLayout="column"></div>
-            <div fxLayout="column" fxLayoutAlign="center end" (click)="versionOp.toggle($event)"
-                 style="cursor: pointer;">{{version?.status["build-version"]}}</div>
+            <div class="app-shell-cluster-version" fxLayout="column" fxLayoutAlign="center end"
+                 (click)="versionOp.toggle($event)">{{version?.status["build-version"]}}</div>
             <div fxFlex="20px" fxLayout="column"></div>
             <div fxFlex="200px" fxLayout="column" fxLayoutAlign="center end">{{clock | PrettyDate}}
             </div>
@@ -194,7 +213,8 @@
       <li *roleGuard="item.roleGuard">
         <ng-container *featureGuard="item.featureGuard">
           <a *ngIf="item.children == null" [routerLink]="item.link"
-             routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
+             routerLinkActive="app-sidenav-selected"
+             class="app-sidenav-item" [id]="item.label">
             <i
                [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
             <span class="app-l-side-nav-item-label">{{item.label}}</span>
@@ -221,8 +241,7 @@
 
 <ng-template #sideNavNotification let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
-    <app-alertlist *ngIf="alerts" [data]="alerts"
-                   (alertsClose)="onAlertsClose()"
+    <app-alertlist *ngIf="alerts" [data]="alerts" (alertsClose)="onAlertsClose()"
                    (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
   </div>
 </ng-template>

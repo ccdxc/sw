@@ -473,11 +473,14 @@ export class ControllerService {
     if (error.statusCode === 401) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials have expired. Please sign in again.', buttons);
       return;
-    } else if (error.statusCode === 403) {
+    }  else if (error.statusCode === 403) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your authorization is insufficient. Please check with your system administrator.');
       return;
+    } else if (error.statusCode === 413) { // VS-887 ResourecExhausted
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice encountered an internal error. Please check with your system administrator.');
+      return;
     } else if (error.statusCode >= 500) {
-      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice encountered an internal error. Some services may be temporarily unavailable.');
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice encountered an internal error. Some services may be temporarily unavailable. Please check with your system administrator.');
       return;
     }
 
