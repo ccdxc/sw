@@ -6,6 +6,7 @@ from random import sample
 from scapy.layers.l2 import Dot1Q
 import time
 import yaml
+from collections import OrderedDict
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -496,3 +497,34 @@ def MergeFilteredObjects(objs, selected_objs):
     elif topo.CachedObjs.use_selected_objs is True:
         objs.extend(selected_objs)
 
+def MergeDicts(objs1, objs2):
+    objs = OrderedDict()
+    for obj in objs1.values():
+        objs.update({obj.Id: obj})
+    for obj in objs2.values():
+        objs.update({obj.Id: obj})
+    return objs
+
+def getTunInfo(nh_type, id):
+    if nh_type == "tep":
+        tuns = Store.tunnels.GetAll()
+        for tun in tuns:
+            if tun.Id == id:
+                return (tun.EncapValue, str(tun.RemoteIPAddr))
+    elif nh_type == "nexthop":
+        return (None, None)
+    elif nh_type == "nhg":
+        return (None, None)
+    elif nh_type == "vpcpeer":
+        return (None, None)
+
+def IsIpInPrefix(ipaddr, prefix):
+    ip = ipaddress.ip_network(u'{}'.format(ipaddr))
+    pfx = ipaddress.ip_network(u'{}'.format(prefix))
+    return pfx.overlaps(ip)
+
+# For debug purposes
+def dump(obj):
+   for attr in dir(obj):
+       if hasattr( obj, attr ):
+           logger.info( "obj.%s = %s" % (attr, getattr(obj, attr)))

@@ -51,14 +51,17 @@ def __get_non_default_random_route(routes):
         return None
     elif numroutes == 1:
         route = None
-        if not utils.isDefaultRoute(routes[0]):
-            route = routes[0]
-        return route
+        if not utils.isDefaultRoute(list(routes)[0].ipaddr):
+            route = list(routes)[0]
+        if route:
+            return route.ipaddr
+        else:
+            return None
     while True:
-        route = random.choice(routes)
-        if not utils.isDefaultRoute(route):
+        route = random.choice(list(routes))
+        if not utils.isDefaultRoute(route.ipaddr):
             break
-    return route
+    return route.ipaddr
 
 def __get_host_from_pfx_impl(pfx, af):
     """
@@ -541,7 +544,7 @@ def __get_host_from_route(modargs, route, af):
     return str(host)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
-    route = __get_non_default_random_route(testcase.config.route.routes)
+    route = __get_non_default_random_route(testcase.config.route.routes.values())
     if args != None and args.addr == 'last':
         if route != None:
             return str(route.network_address + route.num_addresses - 1)

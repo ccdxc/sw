@@ -43,20 +43,24 @@ def __get_packet_template_from_policy_impl(rule, policy):
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
     return __get_packet_template_from_policy_impl(testcase.config.tc_rule, testcase.config.policy)
 
-def __get_non_default_random_route(routes):
+def __get_non_default_random_route(route):
+    routes = list(route.routes.values())
     numroutes = len(routes)
     if numroutes == 0:
         return None
     elif numroutes == 1:
         route = None
-        if not utils.isDefaultRoute(routes[0]):
+        if not utils.isDefaultRoute(routes[0].ipaddr):
             route = routes[0]
-        return route
+        if route:
+            return route.ipaddr
+        else:
+            return None
     while True:
         route = random.choice(routes)
-        if not utils.isDefaultRoute(route):
+        if not utils.isDefaultRoute(route.ipaddr):
             break
-    return route
+    return route.ipaddr
 
 def __get_host_from_pfx_impl(pfx, af):
     """
@@ -165,10 +169,36 @@ def GetUsableHostFromPolicy(testcase, packet, args=None):
     pfxpos = __get_pfx_position_selector(testcase.module.args)
     return __get_usable_host_from_rule(rule, policy, pfxpos)
 
+def __reset_tunnel(routetbl, addr):
+    if routetbl.PriorityType is True:
+        routes = routetbl.routes
+        min_priority = 65535
+        nh_type_res = None
+        result = None
+        for route in routes.values():
+            if route.Priority == 0: assert 0
+            if utils.IsIpInPrefix(addr, route.ipaddr): #TODO fix this
+                if route.Priority < min_priority:
+                    min_priority = route.Priority
+                    nh_type_res = route.NextHopType
+                    if nh_type_res == "tep":
+                        result = route.TunnelId
+                    elif nh_type_res == "nexthop":
+                        result = route.NexthopId
+                    elif nh_type_res == "nhg":
+                        result = route.NexthopGroupId
+                    elif nh_type_res == "vpcpeer":
+                        result = route.PeerVPCId
+        # use this for getting the nexthop info
+        [routetbl.TunEncap, routetbl.TunIP] = utils.getTunInfo(nh_type_res, result)
+
 def GetUsableHostFromRoute(testcase, packet, args=None):
-    route = __get_non_default_random_route(testcase.config.route.routes)
+    route = __get_non_default_random_route(testcase.config.route)
     pfxpos = __get_pfx_position_selector(testcase.module.args)
-    return __get_host_from_pfx(route, testcase.config.route.AddrFamily, pfxpos)
+    addr = __get_host_from_pfx(route, testcase.config.route.AddrFamily, pfxpos)
+    #reset the nexthop/tunnel values based on priority for this destination
+    __reset_tunnel(testcase.config.route, addr)
+    return addr
 
 def __get_random_port_in_range(beg=utils.L4PORT_MIN, end=utils.L4PORT_MAX):
     return random.randint(beg, end)

@@ -32,6 +32,7 @@ VnicIdAllocator = iter(irange(1,1024))
 InterfaceIdAllocator = iter(irange(1, 66))
 V4RouteTableIdAllocator = iter(irange(1,1024))
 V6RouteTableIdAllocator = iter(irange(10001,11024))
+RouteIdAllocator = iter(irange(1, 1024 * 1023))
 V4SecurityPolicyIdAllocator = iter(irange(1,2048))
 V6SecurityPolicyIdAllocator = iter(irange(10001,12048))
 SecurityPolicyIdAllocator = iter(irange(1,4*1024*1024))
@@ -364,3 +365,6 @@ def Init():
         InitNicMgrObjects()
     return
 
+def ResetRouteIdAllocator():
+    global RouteIdAllocator
+    RouteIdAllocator = iter(irange(1, 1024))

@@ -250,7 +250,10 @@ class MeterObjectClient(base.ConfigClientBase):
                 for rt_id, rt_obj in total_rt.items():
                     if rt_obj.RouteType != 'overlap':
                         # one rule for all routes in one route table
-                        prefixes = list(rt_obj.routes)
+                        pfxs = list(rt_obj.routes.values())
+                        prefixes = []
+                        for pfx in pfxs:
+                            prefixes.append(pfx.ipaddr)
                         ruleobj = MeterRuleObject(rule_type, base_priority, prefixes)
                         base_priority += 1
                         rules.append(ruleobj)
