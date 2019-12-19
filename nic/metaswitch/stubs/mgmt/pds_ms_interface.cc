@@ -19,7 +19,6 @@ populate_lim_l3_intf_cfg_spec ( pds::LimInterfaceCfgSpec& req, uint32_t ifindex)
     req.set_ipv6enabled (AMB_TRISTATE_TRUE);
     req.set_ipv6fwding (AMB_TRISTATE_TRUE);
     req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
-    req.set_vrfnamelen (0);
 }
 
 static void

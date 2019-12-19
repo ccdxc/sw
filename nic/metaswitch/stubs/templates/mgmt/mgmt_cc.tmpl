@@ -118,7 +118,7 @@
             v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
                   {{else}}
-                    {{if (eq $fieldOpt.SetKeyOidLenIndex "")}}
+                    {{if (eq $fieldOpt.FieldHasLen false)}}
             {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
             {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len, req.{{$fieldOpt.Name | ToLower}}());
@@ -322,7 +322,7 @@
                           {{if (eq $castFn "pdsa_nbb_get_long")}}
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
                           {{else}}
-                            {{if (eq $fieldOpt.GetKeyOidLenIndex "")}}
+                            {{if (eq $fieldOpt.FieldHasLen false)}}
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
                             {{else}}
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));

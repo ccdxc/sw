@@ -77,7 +77,7 @@ NBB_LONG pdsa_nbb_get_long(NBB_BYTE *byteVal);
 
 NBB_VOID
 pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field,
-                                       NBB_LONG &len,
+                                       NBB_ULONG &len,
                                        string in_str);
 
 NBB_VOID
@@ -88,7 +88,7 @@ pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
 
 string
 pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str,
-                                       NBB_LONG len);
+                                       NBB_ULONG len);
 
 NBB_VOID
 pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
@@ -107,7 +107,7 @@ pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid,
 
 string
 pdsa_get_string_in_byte_array(NBB_BYTE *val,
-                              NBB_LONG len);
+                              NBB_ULONG len);
 
 NBB_VOID
 pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid,

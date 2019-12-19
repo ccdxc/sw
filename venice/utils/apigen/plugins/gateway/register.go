@@ -633,6 +633,7 @@ type pdsaFieldOpt struct {
 	GetKeyOidLenIndex string
 	CppDataType       string
 	FieldLen          int
+	FieldHasLen       bool
 }
 
 type fieldMetricOptions struct {
@@ -733,6 +734,19 @@ func getFieldLenFromCam(cam *CamInfo, table string, field string) int {
 	return 0
 }
 
+func fieldHasCodeLengthName(cam *CamInfo, table string, field string) bool {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field && fieldInfo.CodeLengthName != "" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func getFieldIdxFromCam(cam *CamInfo, table string, field string) string {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
@@ -796,6 +810,10 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.GetKeyOidIndex = o.GetKeyOidIndex
 		ret.SetKeyOidLenIndex = o.SetKeyOidLenIndex
 		ret.GetKeyOidLenIndex = o.GetKeyOidLenIndex
+		ret.FieldHasLen = false
+		if ret.SetKeyOidLenIndex != "" || ret.GetKeyOidLenIndex != "" || fieldHasCodeLengthName(cam, table, o.Field) {
+			ret.FieldHasLen = true
+		}
 		ret.FieldLen = getFieldLenFromCam(cam, table, o.Field)
 		ret.IsKey = getFieldIsKeyFromCam(cam, table, o.Field)
 		ret.IsReadOnly = getFieldIsReadOnlyFromCam(cam, table, o.Field)
@@ -810,7 +828,7 @@ func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 		return "NBB_PUT_LONG"
 	}
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
-		if f.SetKeyOidLenIndex != "" {
+		if f.SetKeyOidLenIndex != "" || f.FieldHasLen == true {
 			return "pdsa_set_string_in_byte_array_with_len"
 		}
 		return "pdsa_set_string_in_byte_array"
@@ -823,7 +841,7 @@ func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 		return "pdsa_nbb_get_long"
 	}
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
-		if f.GetKeyOidLenIndex != "" {
+		if f.GetKeyOidLenIndex != "" || f.FieldHasLen == true {
 			return "pdsa_get_string_in_byte_array_with_len"
 		}
 		return "pdsa_get_string_in_byte_array"

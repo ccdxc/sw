@@ -116,7 +116,6 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     req.set_ipv6enabled (AMB_TRISTATE_TRUE);
     req.set_ipv6fwding (AMB_TRISTATE_TRUE);
     req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
-    req.set_vrfnamelen (vrf_name.length());
     req.set_vrfname (vrf_name);
 }
 
@@ -143,7 +142,6 @@ populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
     req.set_ipv6enabled (AMB_TRISTATE_FALSE);
     req.set_ipv6fwding (AMB_TRISTATE_FALSE);
     req.set_fwdingmode (AMB_LIM_FWD_MODE_L2);
-    req.set_vrfnamelen (0);
 }
 
 static void

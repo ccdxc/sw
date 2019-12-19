@@ -277,7 +277,7 @@ pdsa_nbb_get_long(NBB_BYTE *byteVal)
 }
 
 NBB_VOID
-pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_LONG &len, string in_str)
+pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_ULONG &len, string in_str)
 {
     len = in_str.length();
     NBB_MEMCPY(field, in_str.c_str(), len);
@@ -295,7 +295,7 @@ pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LO
 }
 
 string
-pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_LONG len)
+pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_ULONG len)
 {
     std::string ret(in_str, in_str + len);
     return ret;
@@ -327,7 +327,7 @@ pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKey
 }
 
 string
-pdsa_get_string_in_byte_array(NBB_BYTE *val, NBB_LONG len)
+pdsa_get_string_in_byte_array(NBB_BYTE *val, NBB_ULONG len)
 {
     std::string ret(val, val + len);
     return ret;
