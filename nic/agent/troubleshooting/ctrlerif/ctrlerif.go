@@ -122,10 +122,11 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 					time.Sleep(time.Second)
 					break loop
 				}
-				log.Infof("CtrlerIf: agent %s got mirror session watch eventlist: {%+v}", client.getAgentName(), evtList)
+				log.Infof("CtrlerIf: agent %s got %v mirror sessions", client.getAgentName(), len(evtList.MirrorSessionEvents))
 
-				func() {
-					for _, evt := range evtList.MirrorSessionEvents {
+				for _, evt := range evtList.MirrorSessionEvents {
+					func() {
+						log.Infof("CtrlerIf: agent %s got mirror session : {%+v}", client.getAgentName(), evt)
 						for iter := 0; iter < maxRetry; iter++ {
 							var err error
 
@@ -163,8 +164,8 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 
 						recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
 							strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), &evt.MirrorSession)
-					}
-				}()
+					}()
+				}
 
 			case <-time.After(syncInterval):
 				eventList, err := tsaRPCClient.ListMirrorSessions(ctx, &api.ObjectMeta{})
