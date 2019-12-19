@@ -27,7 +27,7 @@ import (
 
 var (
 	elasticImage        = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
-	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.13"
+	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.14"
 	elasticHost         = "127.0.0.1"
 
 	helpMsgOnce sync.Once

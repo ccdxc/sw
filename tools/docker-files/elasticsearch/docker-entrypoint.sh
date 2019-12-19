@@ -21,12 +21,12 @@ then
 else
     #
     # The standard recommendation is to give 50% of the available memory to Elasticsearch heap,
-    # while leaving the other 50% free. It won’t go unused; Lucene will happily gobble up whatever is left over.
+    # while leaving the other 50% free. It won't go unused; Lucene will happily gobble up whatever is left over.
     # Since there are other processes running on the venice nodes(citadel, etcd, etc), we are using this formula to
     # arrive at a reasonable heap size.
     # e.g. 32G -> 12G (es heap), 40G -> 15G, 64G -> 24G
     #
-    heap_size=$((3/8) * mem_avail_in_gb)
+    heap_size=$(( (mem_avail_in_gb/4) + (mem_avail_in_gb/8) ))
     if (( heap_size > 32 )); then
         # try to avoid crossing the 32 GB heap boundary. It wastes memory, reduces CPU performance,
         # and makes the GC struggle with large heaps.
