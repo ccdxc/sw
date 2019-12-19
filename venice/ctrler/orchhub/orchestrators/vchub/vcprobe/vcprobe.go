@@ -49,14 +49,15 @@ type vcInst struct {
 // This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
 	vcInst
-	client     *govmomi.Client
-	outbox     chan<- defs.Probe2StoreMsg
-	inbox      <-chan defs.Store2ProbeMsg
-	viewMgr    *view.Manager
-	tp         *tagsProbe
-	stateMgr   *statemgr.Statemgr
-	orchConfig *orchestration.Orchestrator
-	dvsMap     map[string]*PenDVS
+	client      *govmomi.Client
+	outbox      chan<- defs.Probe2StoreMsg
+	inbox       <-chan defs.Store2ProbeMsg
+	viewMgr     *view.Manager
+	tp          *tagsProbe
+	stateMgr    *statemgr.Statemgr
+	orchConfig  *orchestration.Orchestrator
+	dvsMap      map[string]*PenDVS
+	vcProbeLock sync.Mutex
 }
 
 // NewVCProbe returns a new instance of VCProbe
@@ -92,6 +93,7 @@ func (v *VCProbe) Start() error {
 	if v.cancel != nil {
 		return errors.New("Already started")
 	}
+	v.vcProbeLock.Lock()
 	v.ctx, v.cancel = context.WithCancel(context.Background())
 	v.wg.Add(1)
 	go v.storeListen()
@@ -100,26 +102,26 @@ func (v *VCProbe) Start() error {
 	// Connect and log in to vCenter
 	v.wg.Add(1)
 	go v.run()
+	v.vcProbeLock.Unlock()
 	return nil
 }
 
 // Stop stops the sessions
 func (v *VCProbe) Stop() {
 	v.Log.Info("Stopping vcprobe")
-	if v.watcherCancel != nil {
-		v.watcherCancel()
-		v.watcherWg.Wait()
-		v.watcherCancel = nil
-	}
+	v.vcProbeLock.Lock()
 	if v.cancel != nil {
 		v.cancel()
 		v.wg.Wait()
 		v.cancel = nil
 	}
+	v.watcherWg.Wait()
+	v.watcherCancel = nil
 	if v.client != nil {
 		v.client.Logout(v.ctx)
 		v.client = nil
 	}
+	v.vcProbeLock.Unlock()
 }
 
 // Run runs the probe
@@ -129,7 +131,11 @@ func (v *VCProbe) run() {
 	var c *govmomi.Client
 
 	for {
-		v.watcherCtx, v.watcherCancel = context.WithCancel(context.Background())
+		if v.ctx.Err() != nil {
+			return
+		}
+		// derive from ctx
+		v.watcherCtx, v.watcherCancel = context.WithCancel(v.ctx)
 		// Forever try to login until it succeeds
 		for {
 			o, err := v.stateMgr.Controller().Orchestrator().Find(&v.orchConfig.ObjectMeta)
@@ -201,13 +207,13 @@ func (v *VCProbe) run() {
 			}
 		}
 		// Logout, stop watchers and retry
-		if v.client != nil {
-			v.client.Logout(v.watcherCtx)
-		}
 		if v.watcherCancel != nil {
 			v.watcherCancel()
 		}
 		v.watcherWg.Wait()
+		if v.client != nil {
+			v.client.Logout(v.watcherCtx)
+		}
 		v.client = nil
 		v.watcherCancel = nil
 	}
