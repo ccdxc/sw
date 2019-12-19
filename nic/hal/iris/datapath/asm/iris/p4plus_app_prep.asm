@@ -8,6 +8,8 @@ struct phv_              p;
 
 %%
 
+// c6 : IP fragment?
+
 p4plus_app_prep:
   bbeq        k.control_metadata_same_if_check_failed, FALSE, p4plus_app_prep2
   seq         c1, k.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_RDMA
@@ -26,6 +28,7 @@ p4plus_app_prep2:
 
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
+  seq         c6, k.control_metadata_i2e_flags[P4_I2E_FLAGS_IP_FRAGMENT], TRUE
 
   seq         c3, k.inner_ethernet_valid, TRUE
   bcf         [c1|c2|c3], p4plus_app_classic_nic_tunneled
@@ -45,7 +48,7 @@ p4plus_app_classic_nic_native_ipv4_tcp:
   bcf         [!c1], p4plus_app_classic_nic_native_ipv4_udp
   seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6
+  or.!c6      r7, r7, r6
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
@@ -56,7 +59,7 @@ p4plus_app_classic_nic_native_ipv4_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv4
   seq         c7, k.control_metadata_checksum_results[csum_hdr_udp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6, 2
+  or.!c6      r7, r7, r6, 2
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
@@ -67,7 +70,7 @@ p4plus_app_classic_nic_native_ipv6_tcp:
   bcf         [!c1], p4plus_app_classic_nic_native_ipv6_udp
   seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
   cmov        r7, c7, 0x2, 0x1
-  phvwr       p.{p4_to_p4plus_classic_nic_csum_tcp_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.!c6   p.{p4_to_p4plus_classic_nic_csum_tcp_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
   phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_TCP
@@ -77,7 +80,7 @@ p4plus_app_classic_nic_native_ipv6_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv6
   seq         c7, k.control_metadata_checksum_results[csum_hdr_udp], TRUE
   cmov        r7, c7, 0x2, 0x1
-  phvwr       p.{p4_to_p4plus_classic_nic_csum_udp_bad,p4_to_p4plus_classic_nic_csum_udp_ok}, r7
+  phvwr.!c6   p.{p4_to_p4plus_classic_nic_csum_udp_bad,p4_to_p4plus_classic_nic_csum_udp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
   phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_UDP
@@ -98,7 +101,7 @@ p4plus_app_classic_nic_tunneled_ipv4_tcp:
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv4_udp
   seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6
+  or.!c6      r7, r7, r6
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
@@ -108,7 +111,7 @@ p4plus_app_classic_nic_tunneled_ipv4_udp:
   seq         c1, k.inner_udp_valid, TRUE
   seq         c7, k.control_metadata_checksum_results[csum_hdr_inner_udp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6, 2
+  or.!c6      r7, r7, r6, 2
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   bcf         [!c1], p4plus_app_classic_nic_ipv4
   phvwr.c1.e  p.{p4_to_p4plus_classic_nic_l4_sport, \
@@ -122,7 +125,7 @@ p4plus_app_classic_nic_tunneled_ipv6_tcp:
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv6_udp
   seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6
+  or.!c6      r7, r7, r6
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
@@ -133,7 +136,7 @@ p4plus_app_classic_nic_tunneled_ipv6_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv6
   seq         c7, k.control_metadata_checksum_results[csum_hdr_inner_udp], TRUE
   cmov        r6, c7, 0x2, 0x1
-  or          r7, r7, r6, 2
+  or.!c6      r7, r7, r6, 2
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}

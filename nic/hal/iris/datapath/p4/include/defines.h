@@ -342,3 +342,4 @@
 #define P4_I2E_FLAGS_TUNNEL_ORIGINATE   2
 #define P4_I2E_FLAGS_UPLINK             3
 #define P4_I2E_FLAGS_NIC_MODE           4
+#define P4_I2E_FLAGS_IP_FRAGMENT        5

@@ -168,26 +168,32 @@ action f_p4plus_app_classic_nic_prep() {
     if (inner_udp.valid == TRUE) {
         modify_field(p4_to_p4plus_classic_nic.l4_sport, inner_udp.srcPort);
         modify_field(p4_to_p4plus_classic_nic.l4_dport, inner_udp.dstPort);
-        modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
-                     ~(control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
-        modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
-                     (control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
+        if ((control_metadata.i2e_flags & (1 << P4_I2E_FLAGS_IP_FRAGMENT)) != 0) {
+            modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
+                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
+            modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
+                         (control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
+        }
     } else {
         if (udp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, udp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, udp.dstPort);
-            modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
-                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
-            modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
-                         (control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
+            if ((control_metadata.i2e_flags & (1 << P4_I2E_FLAGS_IP_FRAGMENT)) != 0) {
+                modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
+                             ~(control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
+                modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
+                             (control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
+            }
         }
         if (tcp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, tcp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, tcp.dstPort);
-            modify_field(p4_to_p4plus_classic_nic.csum_tcp_ok,
-                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
-            modify_field(p4_to_p4plus_classic_nic.csum_tcp_bad,
-                         (control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
+            if ((control_metadata.i2e_flags & (1 << P4_I2E_FLAGS_IP_FRAGMENT)) != 0) {
+                modify_field(p4_to_p4plus_classic_nic.csum_tcp_ok,
+                             ~(control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
+                modify_field(p4_to_p4plus_classic_nic.csum_tcp_bad,
+                             (control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
+            }
         }
     }
 }
