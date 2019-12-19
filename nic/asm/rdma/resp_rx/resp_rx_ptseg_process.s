@@ -16,7 +16,6 @@ struct resp_rx_s5_t0_k k;
 #define GLOBAL_FLAGS r6
 
 #define F_FIRST_PASS c7
-#define OVERRIDE_LIF_VLD c3
 #define DISABLE_QP c1
 #define IS_ATOMIC c4
 
@@ -73,7 +72,7 @@ transfer_loop:
     
     //STORAGE_USE_CASE
     crestore            [c2, c1], CAPRI_KEY_RANGE(IN_P, host_addr, override_lif_vld), 0x3 //BD Slot
-    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c2, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit3, override_lif_sbit4_ebit11))
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c2, DMA_BYTES, DMA_ADDR, c1, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit3, override_lif_sbit4_ebit11))
     
     add                 PAGE_OFFSET, r0, r0
     sub                 TRANSFER_BYTES, TRANSFER_BYTES, DMA_BYTES
