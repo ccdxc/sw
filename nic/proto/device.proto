@@ -35,6 +35,11 @@ enum PortAdminState {
   PORT_ADMIN_STATE_DISABLE  = 1;
 }
 
+enum MircoSegMode {
+ MICRO_SEG_DISABLE = 0;
+ MICRO_SEG_ENABLE  = 1;
+}
+
 //------------------------------------------------------------------------------
 // SystemSpec captures the system level global configuraiton
 // NOTE:
@@ -50,4 +55,5 @@ message SystemSpec {
   FeatureProfile     feature_profile    = 3 [(gogoproto.jsontag) = "feature-profile"]; // feature profile
   string             port_admin_state   = 4 [(gogoproto.jsontag) = "port-admin-state"];
   fixed64            mgmt_if_mac        = 5 [(gogoproto.jsontag) = "mgmt-if-mac"];
+  MircoSegMode       micro_seg_mode     = 6 [(gogoproto.jsontag) = "micro-seg-mode"];
 }

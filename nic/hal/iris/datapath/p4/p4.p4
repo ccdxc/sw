@@ -100,13 +100,13 @@ header_type control_metadata_t {
         clear_promiscuous_repl         : 1;
         i2e_flags                      : 8;
         flow_miss_ingress              : 1;  // workaround for predication
-        nic_mode_e                     : 1;  // workaround for predication
+        // nic_mode_e                     : 1;  // workaround for predication
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
         span_copy                      : 1;
-        nic_mode                       : 1;
-        registered_mac_launch          : 1;
-        registered_mac_nic_mode        : 1;
+        // nic_mode                       : 1;
+        // registered_mac_launch          : 1;
+        // registered_mac_nic_mode        : 1;
         registered_mac_miss            : 1;
         mode_switch_en                 : 1;
         skip_flow_lkp                  : 1;
@@ -130,6 +130,15 @@ header_type control_metadata_t {
         nacl_stats_idx                 : 9;
         clock_idx                      : 1;
         current_time_in_ns             : 64;
+        if_label_check_en              : 1;
+        if_label_check_fail_drop       : 1;
+        skip_flow_update               : 1;
+        mseg_bm_bc_repls               : 1;
+        mseg_bm_mc_repls               : 1;
+        flow_learn                     : 1;
+        src_if_label                   : 3;
+        uuc_fl_pe_sup_en               : 1;
+        ep_learn_en                    : 1;
     }
 }
 
@@ -190,7 +199,9 @@ header_type scratch_metadata_t {
         nacl_stats_packets         : 8;
 
         src_lif_check_en           : 1;
+        src_if_label               : 3;
         vlan_strip                 : 1;
+        tm_replicate_ptr           : 16;
 
         // flow hash metadata
         flow_hash1                 : 11;

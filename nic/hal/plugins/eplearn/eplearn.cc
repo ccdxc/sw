@@ -83,8 +83,9 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
     uint32_t cur_lif_id = 0;
     hal_handle_t ep_handle;
 
-    /* Lif update only for host originated packet */
-    if (!is_host_originated_packet(ctx)) {
+    /* Lif update only for host originated packet and not from CPU*/
+    if (!is_host_originated_packet(ctx) ||
+        (ctx.cpu_rxhdr() && ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU)) {
         return ret;
     }
 

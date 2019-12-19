@@ -186,7 +186,6 @@ AccelDev::AccelDev(devapi *dapi,
     }
 
     if (platform_is_hw(pd->platform_) &&
-        (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) &&
         (cmb_mem_size < ACCEL_DEV_SEQ_HBM_SIZE_MIN)) {
         NIC_LOG_ERR("{}: HBM aligned size {} is too small for {}",
                     DevNameGet(), cmb_mem_size, STORAGE_SEQ_HBM_HANDLE);

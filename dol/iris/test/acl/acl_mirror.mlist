@@ -4,7 +4,7 @@ feature:
     sub         : mirror
     package     : test.acl
     module      : acl
-    enable      : True
+    enable      : False
     ignore      : False
 
 modules:

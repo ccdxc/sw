@@ -181,6 +181,9 @@ public:
     GET_API(filter, Filter);
 
     GET_API(qos_class, QosClass);
+
+    Status micro_seg_update(MicroSegRequestMsg& req_msg,
+                            MicroSegResponseMsg& rsp_msg);
 };
 
 } // namespace iris

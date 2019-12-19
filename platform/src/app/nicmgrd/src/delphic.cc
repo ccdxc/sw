@@ -30,6 +30,7 @@ namespace nicmgr {
 port_status_handler_ptr_t g_port_status_handler;
 hal_status_handler_ptr_t g_hal_status_handler;
 shared_ptr<NicMgrService> g_nicmgr_svc;
+system_spec_handler_ptr_t g_system_spec_handler;
 
 // nicmgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
@@ -244,6 +245,57 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
     return error::OK();
 }
 
+system_spec_handler_ptr_t get_system_spec_handler (void) {
+    return g_system_spec_handler;
+}
+
+Status init_system_spec_handler(delphi::SdkPtr sdk)
+{
+    g_system_spec_handler = std::make_shared<system_spec_handler>(sdk);
+    delphi::objects::SystemSpec::Mount(sdk, delphi::ReadMode);
+    delphi::objects::SystemSpec::Watch(sdk, g_system_spec_handler);
+
+    return Status::OK;
+}
+
+error system_spec_handler::OnSystemSpecCreate(SystemSpecPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd system spec create");
+    update_system_spec(obj);
+    return error::OK();
+}
+
+error system_spec_handler::OnSystemSpecUpdate(SystemSpecPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd system spec update");
+    update_system_spec(obj);
+    return error::OK();
+}
+
+error system_spec_handler::OnSystemSpecDelete(SystemSpecPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd system spec delete");
+    return error::OK();
+}
+
+error system_spec_handler::update_system_spec(SystemSpecPtr obj)
+{
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    NIC_LOG_DEBUG("System spec update: micro_seg_en: {}", 
+                  obj->micro_seg_mode() == device::MICRO_SEG_ENABLE);
+    
+    devmgr->SystemSpecEventHandler(obj->micro_seg_mode() == 
+                                   device::MICRO_SEG_ENABLE);
+
+    return error::OK();
+}
+
+
+
 // get_hal_status_handler gets the port reactor object
 hal_status_handler_ptr_t get_hal_status_handler (void) {
     return g_hal_status_handler;
@@ -307,6 +359,9 @@ delphi_init (void)
 
     // init hal status handler
     init_hal_status_handler(sdk);
+
+    // init system handler
+    init_system_spec_handler(sdk);
 
     // init accel dev related handlers
     init_accel_objects(sdk);

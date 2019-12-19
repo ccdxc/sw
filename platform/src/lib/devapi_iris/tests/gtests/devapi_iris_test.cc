@@ -53,7 +53,7 @@ TEST_F(devapi_iris_test, test1)
     sdk_ret_t ret = SDK_RET_OK;
     devapi *dev_api = devapi_iris::factory();
 
-    dev_api->set_fwd_mode(sdk::platform::FWD_MODE_CLASSIC);
+    // dev_api->set_fwd_mode(sdk::platform::FWD_MODE_CLASSIC);
 
     // uplink
     dev_api->uplink_create(128, 1, false);
@@ -77,7 +77,8 @@ TEST_F(devapi_iris_test, test2)
 
     devapi *dev_api = devapi_iris::factory();
 
-    dev_api->set_fwd_mode(sdk::platform::FWD_MODE_SMART);
+    // dev_api->set_fwd_mode(sdk::platform::FWD_MODE_SMART);
+    dev_api->set_micro_seg_en(true);
 
     // uplink
     dev_api->uplink_create(128, 2, false);

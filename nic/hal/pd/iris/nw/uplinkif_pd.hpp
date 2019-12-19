@@ -106,6 +106,8 @@ hal_ret_t uplinkif_pd_cleanup(pd_uplinkif_t *upif_pd);
 hal_ret_t uplinkif_pd_depgm_output_mapping_tbl (pd_uplinkif_t *pd_upif);
 hal_ret_t uplinkif_pd_depgm_tm_register(pd_uplinkif_t *pd_upif);
 hal_ret_t uplinkif_pd_deprogram_hw (pd_uplinkif_t *pd_upif);
+uint32_t pd_uplinkif_pdif_label(pd_uplinkif_t *upif);
+uint32_t pd_uplinkif_if_label(if_t *hal_if);
 
 hal_ret_t pd_uplinkif_create(pd_if_create_args_t *args);
 hal_ret_t pd_uplinkif_update(pd_if_update_args_t *args);

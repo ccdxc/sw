@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "gen/proto/system.pb.h"
+#include "nic/hal/iris/delphi/delphic.hpp"
 
 namespace hal {
 
@@ -501,8 +502,8 @@ system_get (const SystemGetRequest *req, SystemResponse *rsp)
     pd::pd_func_args_t                  pd_func_args = {0};
     auto                                req_type = req->request();
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("Querying Drop Stats:");
+    // HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    // HAL_TRACE_DEBUG("Querying Drop Stats:");
 
 
     pd::pd_system_args_init(&pd_system_args);
@@ -705,6 +706,62 @@ feature_profile_get (FeatureProfileResponse *rsp)
     }
     rsp->set_api_status(types::API_STATUS_OK);
 
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+micro_seg_update(MicroSegUpdateRequest &req, 
+                 MicroSegUpdateResponse *rsp)
+{
+    proto_msg_dump(req);
+
+    if ((hal::g_hal_cfg.device_cfg.micro_seg_en && 
+        req.micro_seg_mode() == sys::MICRO_SEG_ENABLE) ||
+        (!hal::g_hal_cfg.device_cfg.micro_seg_en &&
+         req.micro_seg_mode() == sys::MICRO_SEG_DISABLE)) {
+        HAL_TRACE_DEBUG("No change in Micro segmentation mode: {}. No-op",
+                        MicroSegMode_Name(req.micro_seg_mode()));
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Micro segmentation mode change. {} -> {}",
+                    hal::g_hal_cfg.device_cfg.micro_seg_en ? 
+                    MicroSegMode_Name(sys::MICRO_SEG_ENABLE) : MicroSegMode_Name(sys::MICRO_SEG_DISABLE),
+                    MicroSegMode_Name(req.micro_seg_mode()));
+
+    // Send micro seg mode change to Nicmgr
+    hal::svc::micro_seg_mode_notify(req.micro_seg_mode());
+
+    hal::g_hal_cfg.device_cfg.micro_seg_en = 
+        (req.micro_seg_mode() == sys::MICRO_SEG_ENABLE) ? true : false;
+end:
+    rsp->set_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+micro_seg_status_update(MicroSegSpec &req, 
+                        MicroSegResponse *rsp)
+{
+    // TODO: Do we have to consider if HAL is done with cleanup.
+
+    auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
+        grpc::ServerWriter<EventResponse> *stream =
+            (grpc::ServerWriter<EventResponse> *)ctxt;
+        MicroSegSpec    *req  = (MicroSegSpec *)entry;
+        EventResponse   evtresponse;
+        MicroSegEvent   *event = evtresponse.mutable_micro_seg_event();
+
+        HAL_TRACE_DEBUG("Sending Micro-Segmentation status: {}:{} to agent",
+                        req->status(), MicroSegStatus_Name(req->status()));
+        evtresponse.set_event_id(::event::EVENT_ID_MICRO_SEG_STATE);
+        event->set_status(req->status());
+        stream->Write(evtresponse);
+        return true;
+    };
+    g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_MICRO_SEG_STATE, &req, walk_cb);
+
+    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

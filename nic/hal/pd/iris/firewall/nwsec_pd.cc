@@ -330,6 +330,11 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create,
         profile->tcp_nonsyn_noack_drop;
     data.action_u.l4_profile_l4_profile.tcp_normalize_mss =
         profile->tcp_normalize_mss;
+    data.action_u.l4_profile_l4_profile.policy_enf_cfg_en = profile->policy_enforce_en;
+    data.action_u.l4_profile_l4_profile.flow_learn_cfg_en = profile->flow_learn_en;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+        data.action_u.l4_profile_l4_profile.policy_enf_cfg_en = 1;
+    }
 
     if (create) {
         if (is_upgrade) {

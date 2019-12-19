@@ -84,7 +84,7 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
         phv->capri_p4_intrinsic_no_data = 1;
         phv->capri_intrinsic_lif = lif_id;
         phv->control_metadata_qid = 0;
-        phv->control_metadata_qtype = 0;
+        // phv->control_metadata_qtype = 0;
 
 	break;
     }

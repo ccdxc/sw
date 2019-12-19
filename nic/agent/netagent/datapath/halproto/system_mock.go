@@ -251,6 +251,42 @@ func (mr *MockSystemClientMockRecorder) FeatureProfileGet(ctx, in interface{}, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FeatureProfileGet", reflect.TypeOf((*MockSystemClient)(nil).FeatureProfileGet), varargs...)
 }
 
+// MicroSegUpdate mocks base method
+func (m *MockSystemClient) MicroSegUpdate(ctx context.Context, in *MicroSegUpdateRequestMsg, opts ...grpc.CallOption) (*MicroSegUpdateResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MicroSegUpdate", varargs...)
+	ret0, _ := ret[0].(*MicroSegUpdateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MicroSegUpdate indicates an expected call of MicroSegUpdate
+func (mr *MockSystemClientMockRecorder) MicroSegUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegUpdate", reflect.TypeOf((*MockSystemClient)(nil).MicroSegUpdate), varargs...)
+}
+
+// MicroSegStatusUpdate mocks base method
+func (m *MockSystemClient) MicroSegStatusUpdate(ctx context.Context, in *MicroSegRequestMsg, opts ...grpc.CallOption) (*MicroSegResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MicroSegStatusUpdate", varargs...)
+	ret0, _ := ret[0].(*MicroSegResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MicroSegStatusUpdate indicates an expected call of MicroSegStatusUpdate
+func (mr *MockSystemClientMockRecorder) MicroSegStatusUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegStatusUpdate", reflect.TypeOf((*MockSystemClient)(nil).MicroSegStatusUpdate), varargs...)
+}
+
 // MockSystemServer is a mock of SystemServer interface
 type MockSystemServer struct {
 	ctrl     *gomock.Controller
@@ -428,4 +464,30 @@ func (m *MockSystemServer) FeatureProfileGet(arg0 context.Context, arg1 *Empty) 
 // FeatureProfileGet indicates an expected call of FeatureProfileGet
 func (mr *MockSystemServerMockRecorder) FeatureProfileGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FeatureProfileGet", reflect.TypeOf((*MockSystemServer)(nil).FeatureProfileGet), arg0, arg1)
+}
+
+// MicroSegUpdate mocks base method
+func (m *MockSystemServer) MicroSegUpdate(arg0 context.Context, arg1 *MicroSegUpdateRequestMsg) (*MicroSegUpdateResponseMsg, error) {
+	ret := m.ctrl.Call(m, "MicroSegUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*MicroSegUpdateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MicroSegUpdate indicates an expected call of MicroSegUpdate
+func (mr *MockSystemServerMockRecorder) MicroSegUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegUpdate", reflect.TypeOf((*MockSystemServer)(nil).MicroSegUpdate), arg0, arg1)
+}
+
+// MicroSegStatusUpdate mocks base method
+func (m *MockSystemServer) MicroSegStatusUpdate(arg0 context.Context, arg1 *MicroSegRequestMsg) (*MicroSegResponseMsg, error) {
+	ret := m.ctrl.Call(m, "MicroSegStatusUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*MicroSegResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MicroSegStatusUpdate indicates an expected call of MicroSegStatusUpdate
+func (mr *MockSystemServerMockRecorder) MicroSegStatusUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegStatusUpdate", reflect.TypeOf((*MockSystemServer)(nil).MicroSegStatusUpdate), arg0, arg1)
 }

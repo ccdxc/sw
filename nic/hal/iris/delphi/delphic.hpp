@@ -8,9 +8,11 @@
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/iris/delphi/if_svc.hpp"
 #include "nic/hal/iris/upgrade/upgrade.hpp"
+#include "gen/proto/system.delphi.hpp"
 
 namespace dobj = delphi::objects;
 using hal::upgrade::upgrade_handler;
+using sys::MicroSegMode;
 
 namespace hal {
 namespace svc {
@@ -34,8 +36,10 @@ private:
 };
 std::shared_ptr<delphi_client> delphic(void);
 
+void micro_seg_mode_notify(MicroSegMode mode);
 }    // namespace svc
 }    // namespace hal
+
 
 #endif    // __DELPHIC_HPP__
 

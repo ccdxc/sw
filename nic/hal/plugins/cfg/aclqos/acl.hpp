@@ -131,6 +131,7 @@ typedef struct acl_internal_match_spec_s {
     drop_reason_codes_t drop_reasons;
     bool            no_drop;
     mac_addr_t      outer_mac_da;
+    bool            ep_learn_en;
 } __PACK__ acl_internal_match_spec_t;
 #endif
 

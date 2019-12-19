@@ -348,7 +348,9 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(tcp_half_open_session_limit) ||
         NWSEC_SPEC_CHECK(udp_active_session_limit) ||
         NWSEC_SPEC_CHECK(icmp_active_session_limit) ||
-        NWSEC_SPEC_CHECK(other_active_session_limit)) {
+        NWSEC_SPEC_CHECK(other_active_session_limit) ||
+        NWSEC_SPEC_CHECK(policy_enforce_en) ||
+        NWSEC_SPEC_CHECK(flow_learn_en)) {
                 app_ctxt->nwsec_changed = true;
     }
 
@@ -470,6 +472,8 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_normalize_mss);
 
     NWSEC_SPEC_ASSIGN(multicast_src_drop);
+    NWSEC_SPEC_ASSIGN(policy_enforce_en);
+    NWSEC_SPEC_ASSIGN(flow_learn_en);
 
     NWSEC_SPEC_ASSIGN(tcp_half_open_session_limit);
     NWSEC_SPEC_ASSIGN(udp_active_session_limit);
@@ -780,6 +784,8 @@ security_profile_spec_dump (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(udp_active_session_limit);
     NWSEC_SPEC_FIELD_PRINT(icmp_active_session_limit);
     NWSEC_SPEC_FIELD_PRINT(other_active_session_limit);
+    NWSEC_SPEC_FIELD_PRINT(policy_enforce_en);
+    NWSEC_SPEC_FIELD_PRINT(flow_learn_en);
     buf.write("\n");
 
     HAL_TRACE_DEBUG("{}", buf.c_str());

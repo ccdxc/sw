@@ -37,12 +37,14 @@ modules:
     - module:
         name    : ACL_NONIP_FLOW_MISS_SUP_REDIRECT
         spec    : acl_nonip_flow_miss_sup_redirect.testspec
+        enable  : False
         iterate:
             - id        : ACL_ETYPE_FLOW_MISS_ACTION_SUP_REDIRECT
 
     - module:
         name    : ACL_IP_FLOW_MISS_SUP_REDIRECT
         spec    : acl_ip_flow_miss_sup_redirect.testspec
+        enable  : False
         iterate:
             - id        : ACL_UDP_DPORT_FLOW_MISS_ACTION_SUP_REDIRECT
               flow      : filter://type=IPV4,proto=UDP

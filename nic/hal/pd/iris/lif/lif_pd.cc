@@ -451,6 +451,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
+#if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
         lif->type == types::LIF_TYPE_HOST_MANAGEMENT) {
         ret = pd_lif_pgm_host_mgmt(pd_lif);
@@ -461,6 +462,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
             goto end;
         }
     }
+#endif
 
 end:
     return ret;
@@ -508,12 +510,14 @@ lif_pd_deprogram_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
+#if 0
     ret = pd_lif_depgm_host_mgmt(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram NACL to prevent "
                       "non-classic traffic on host-mgmt. ret: {}", ret);
         goto end;
     }
+#endif
 
 end:
 
@@ -1359,6 +1363,7 @@ end:
     return ret;
 }
 
+#if 0
 hal_ret_t
 pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif)
 {
@@ -1420,6 +1425,7 @@ pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif)
     }
     return ret;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Program mirror session

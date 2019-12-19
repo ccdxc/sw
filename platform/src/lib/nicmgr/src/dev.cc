@@ -151,7 +151,8 @@ DevPcieEvHandler::reset(const int port,
 }
 
 DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                            sdk::platform::platform_type_t platform, EV_P)
+                             bool micro_seg_en,
+                             sdk::platform::platform_type_t platform, EV_P)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
@@ -171,6 +172,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
         this->loop = loop;
     }
     this->fwd_mode = fwd_mode;
+    this->micro_seg_en_ = micro_seg_en;
     this->config_file = config_file;
     this->dev_api = NULL;
     pd = PdClient::factory(platform, fwd_mode);
@@ -199,7 +201,8 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 }
 
 string
-DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
+DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode,
+                               bool *micro_seg_en)
 {
 #if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
     sdk::lib::device *device = NULL;
@@ -234,6 +237,10 @@ DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode)
         *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
         return string("/platform/etc/nicmgrd/device.json");
     }
+
+    // Determine micro-seg 
+    *micro_seg_en = (device->get_micro_seg_en() == 
+                     device::MICRO_SEG_ENABLE); 
 
 #endif
     return string("");
@@ -665,7 +672,8 @@ DeviceManager::HalEventHandler(bool status)
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
         // Instantiate HAL client
         dev_api = devapi_init();
-        dev_api->set_fwd_mode(fwd_mode);
+        dev_api->set_micro_seg_en(micro_seg_en_);
+        // dev_api->set_fwd_mode(fwd_mode);
         pd->update();
 
         // Create uplinks
@@ -721,6 +729,12 @@ DeviceManager::HalEventHandler(bool status)
         }
 #endif //IRIS
     }
+}
+
+void
+DeviceManager::SystemSpecEventHandler(bool micro_seg_en)
+{
+    dev_api->set_micro_seg_en(micro_seg_en);
 }
 
 void

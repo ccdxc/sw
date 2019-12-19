@@ -14,8 +14,8 @@ enics:
 segments:
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_DEFAULT
       count : 1
-    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_ENIC_NATIVE
-      count : 1
+#    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_ENIC_NATIVE
+#      count : 1
 
 sessions:
     unidest:

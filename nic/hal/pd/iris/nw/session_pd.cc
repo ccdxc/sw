@@ -348,6 +348,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     if (ret == HAL_RET_OK) {
         entry_exists = true;
     }
+    d.action_u.flow_info_flow_info.flow_only_policy = 1;
 
     if (role == FLOW_ROLE_INITIATOR) {
         flow_attrs = aug ? &session->iflow->assoc_flow->pgm_attrs :
@@ -403,11 +404,13 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
                                                  flow_attrs->export_id4;
         }
 
+#if 0
         d.action_u.flow_info_flow_info.expected_src_lif_check_en =
             flow_attrs->expected_src_lif_en;
         d.action_u.flow_info_flow_info.expected_src_lif =
             flow_attrs->expected_src_lif;
         d.action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
+#endif
         d.action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
         d.action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
@@ -431,7 +434,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
         // TBD: check class NIC mode and set this
         d.action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
         if (flow_attrs->qid_en) {
-            d.action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
+            // d.action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
             d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
         } else {
             d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
@@ -650,7 +653,6 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key,
     key.flow_lkp_metadata_lkp_vrf = flow_key->lkpvrf;
     key.flow_lkp_metadata_lkp_proto = flow_key->proto;
     key.flow_lkp_metadata_lkp_inst = lkp_inst;
-    key.flow_lkp_metadata_lkp_dir = flow_key->dir;
 
     return HAL_RET_OK;
 }
@@ -724,7 +726,6 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
     key.flow_lkp_metadata_lkp_vrf = flow_key->lkpvrf;
     key.flow_lkp_metadata_lkp_proto = flow_key->proto;
     key.flow_lkp_metadata_lkp_inst = lkp_inst;
-    key.flow_lkp_metadata_lkp_dir = flow_key->dir;
 
     key.flow_index = flow_pd->assoc_hw_id;
     key.export_en = export_en;

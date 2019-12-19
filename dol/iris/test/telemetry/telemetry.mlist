@@ -17,6 +17,7 @@ modules:
     - module:
         name    : TELEMETRY_R2R_L2_VLAN
         spec    : l2_r2r_vlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -35,6 +36,7 @@ modules:
     - module:
         name    : TELEMETRY_R2R_L2_VXLAN
         spec    : l2_r2r_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -52,6 +54,7 @@ modules:
     - module:
         name    : TELEMETRY_R2R_L2_NATIVE
         spec    : l2_r2r_native.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -69,6 +72,7 @@ modules:
     - module:
         name    : TELEMETRY_R2R_L3_VLAN
         spec    : l3_r2r_vlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -86,6 +90,7 @@ modules:
     - module:
         name    : TELEMETRY_R2R_L3_VXLAN
         spec    : l3_r2r_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -138,6 +143,7 @@ modules:
     - module:
         name    : TELEMETRY_L2R_L2_VXLAN
         spec    : l2_l2r_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -155,6 +161,7 @@ modules:
     - module:
         name    : TELEMETRY_L2R_L3_VLAN
         spec    : l3_l2r_vlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -172,6 +179,7 @@ modules:
     - module:
         name    : TELEMETRY_L2R_L3_NATIVE
         spec    : l3_l2r_native.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -189,6 +197,7 @@ modules:
     - module:
         name    : TELEMETRY_L2R_L3_VXLAN
         spec    : l3_l2r_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -208,6 +217,7 @@ modules:
     - module:
         name    : TELEMETRY_R2L_L2_VXLAN
         spec    : l2_r2l_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -225,6 +235,7 @@ modules:
     - module:
         name    : TELEMETRY_R2L_L3_VLAN
         spec    : l3_r2l_vlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG
@@ -242,6 +253,7 @@ modules:
     - module:
         name    : TELEMETRY_R2L_L3_VXLAN
         spec    : l3_r2l_vxlan.testspec
+        enable  : False
         iterate:
             - SPAN_UPLINK_PC_ING_EG
             - RSPAN_UPLINK_PC_ING_EG

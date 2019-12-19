@@ -175,22 +175,22 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Flags().Changed("oif-lists") {
-		// Print Header
-		multicastShowOifListHeader(cmd, args)
+		// // Print Header
+		// multicastShowOifListHeader(cmd, args)
 
-		// Get map of all ifs to if names
-		ifIDToStr := ifGetAllStr()
+		// // Get map of all ifs to if names
+		// ifIDToStr := ifGetAllStr()
 
-		// Print Entries
-		for _, resp := range respMsg.Response {
-			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-				continue
-			}
-			multicastShowOifList(resp.GetStatus().GetBcastLst(), ifIDToStr)
-			multicastShowOifList(resp.GetStatus().GetMcastLst(), ifIDToStr)
-			multicastShowOifList(resp.GetStatus().GetPromLst(), ifIDToStr)
-		}
+		// // Print Entries
+		// for _, resp := range respMsg.Response {
+		// 	if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		// 		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		// 		continue
+		// 	}
+		// 	multicastShowOifList(resp.GetStatus().GetBcastLst(), ifIDToStr)
+		// 	multicastShowOifList(resp.GetStatus().GetMcastLst(), ifIDToStr)
+		// 	multicastShowOifList(resp.GetStatus().GetPromLst(), ifIDToStr)
+		// }
 	} else {
 		// Print Header
 		l2segPdShowHeader(cmd, args)
@@ -289,8 +289,8 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID            Attach:      Attached L2segs\n")
 	hdrLine := strings.Repeat("-", 80)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-10s%-10s%-20s\n",
-		"Id", "Mode", "vrfId", "WireEncap", "B-M-P-SB-SM", "#EPs", "IFs", "PinUp", "Attach.")
+	fmt.Printf("%-8s%-5s%-6s%-10s%-40s%-5s%-10s%-10s%-20s\n",
+		"Id", "Mode", "vrfId", "WireEncap", "OIFLs", "#EPs", "IFs", "PinUp", "Attach.")
 	fmt.Println(hdrLine)
 }
 
@@ -300,7 +300,6 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	weStr := ""
 	// teStr := ""
 	encapType := ""
-	replIndices := ""
 
 	if len(ifList) > 0 {
 		for i := 0; i < len(ifList); i++ {
@@ -328,22 +327,51 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	// 		resp.GetSpec().GetTunnelEncap().GetEncapValue())
 	// }
 
-	replIndices = fmt.Sprintf("%d-%d-%d",
-		resp.GetStatus().GetBcastLst().GetId(),
-		resp.GetStatus().GetMcastLst().GetId(),
-		resp.GetStatus().GetPromLst().GetId())
+	// replIndices = fmt.Sprintf("%d-%d-%d",
+	// 	resp.GetStatus().GetBcastLst().GetId(),
+	// 	resp.GetStatus().GetMcastLst().GetId(),
+	// 	resp.GetStatus().GetPromLst().GetId())
 
-	if resp.GetStatus().GetSharedBcastLst() != nil {
-		replIndices += fmt.Sprintf("-%d",
-			resp.GetStatus().GetSharedBcastLst().GetId())
-	} else {
-		replIndices += "-N"
+	// if resp.GetStatus().GetSharedBcastLst() != nil {
+	// 	replIndices += fmt.Sprintf("-%d",
+	// 		resp.GetStatus().GetSharedBcastLst().GetId())
+	// } else {
+	// 	replIndices += "-N"
+	// }
+	// if resp.GetStatus().GetSharedMcastLst() != nil {
+	// 	replIndices += fmt.Sprintf("-%d",
+	// 		resp.GetStatus().GetSharedMcastLst().GetId())
+	// } else {
+	// 	replIndices += "-N"
+	// }
+
+	ifIdxStr := ifGetAllIdxStr()
+	oiflStr := ""
+	if resp.GetStatus().GetBaseOifl() != nil {
+		oiflStr += fmt.Sprintf("%d",
+			resp.GetStatus().GetBaseOifl().GetId())
 	}
-	if resp.GetStatus().GetSharedMcastLst() != nil {
-		replIndices += fmt.Sprintf("-%d",
-			resp.GetStatus().GetSharedMcastLst().GetId())
-	} else {
-		replIndices += "-N"
+	if resp.GetStatus().GetBaseOiflCust() != nil {
+		custOifls := resp.GetStatus().GetBaseOiflCust()
+		custOiflsSh := resp.GetStatus().GetBaseOiflCustShared()
+		oiflIdx := 0
+		for oiflIdx < len(custOifls) {
+			if custOiflsSh != nil {
+				oiflStr += fmt.Sprintf("%s:%d,sh:%d", ifIdxStr[uint32(oiflIdx)],
+					custOifls[oiflIdx].GetId(),
+					custOiflsSh[oiflIdx].GetId())
+			} else {
+				oiflStr += fmt.Sprintf("%s:%d", ifIdxStr[uint32(oiflIdx)],
+					custOifls[oiflIdx].GetId())
+			}
+			oiflStr += ";"
+			oiflIdx++
+		}
+		if len(oiflStr) > 0 {
+			oiflStr = oiflStr[:len(oiflStr)-1]
+		} else {
+			oiflStr += "-"
+		}
 	}
 
 	ifIDStr := "-"
@@ -351,13 +379,12 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		ifIDStr = fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
 	}
 
-	vrfTypeStr := "CL"
+	vrfTypeStr := "Mgmt"
 	vrfType, desUplink := vrfGetType(resp.GetSpec().GetVrfKeyHandle().GetVrfId())
 	if vrfType == halproto.VrfType_VRF_TYPE_CUSTOMER {
-		vrfTypeStr = "HP"
+		vrfTypeStr = "Cust"
 	}
 
-	ifIdxStr := ifGetAllIdxStr()
 	attachStr := ""
 	attachL2segs := resp.GetStatus().GetAttachedL2Segs()
 	attachIdx := 0
@@ -380,12 +407,12 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		attachStr += "-"
 	}
 
-	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-10s%-11s%-20s\n",
+	fmt.Printf("%-8d%-5s%-6d%-10s%-40s%-5d%-10s%-11s%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		vrfTypeStr,
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
 		weStr,
-		replIndices,
+		oiflStr,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr,
 		ifIDStr,

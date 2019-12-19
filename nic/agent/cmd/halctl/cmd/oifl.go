@@ -198,7 +198,9 @@ func oifListShowOneResp(oifList *halproto.OifList, ifIDToStr map[uint64]string) 
 		ifStr += ifIDToStr[oifList.GetOifs()[i].GetInterface().GetInterfaceId()]
 		ifStr += ","
 	}
-	ifStr = ifStr[:len(ifStr)-1]
+	if len(ifStr) > 0 {
+		ifStr = ifStr[:len(ifStr)-1]
+	}
 	fmt.Printf("%-6d%-5d%-6d%-30s\n",
 		oifList.GetId(),
 		oifList.GetAttachedListId(),

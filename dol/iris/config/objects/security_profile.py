@@ -25,7 +25,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
 
     def Init(self, spec):
         if spec.fields:
-            self.fields.Clone(spec.fields) 
+            self.fields.Clone(spec.fields)
         self.GID(spec.id)
         if GlobalOptions.hostpin:
             self.fields.ipsg_en = False
@@ -38,7 +38,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         return
 
     def Update(self):
-        logger.info("Updating SecurityProfile %s" % self.GID()) 
+        logger.info("Updating SecurityProfile %s" % self.GID())
         halapi.ConfigureSecurityProfiles([ self ], update = True)
         return
 
@@ -54,7 +54,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         fields = ["id"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        fields = self.fields.__dict__        
+        fields = self.fields.__dict__
         if not utils.CompareObjectFields(self.fields, other.fields, fields, lgh):
             return False
         return True
@@ -64,7 +64,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         logger.info("- Security Profile  : %s (id: %d)" %\
                        (self.GID(), self.id))
         return
-    
+
     def __getEnumValue(self, val):
         valstr = "NORM_ACTION_" + val
         return haldefs.nwsec.NormalizationAction.Value(valstr)
@@ -73,6 +73,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         return haldefs.nwsec.NormalizationAction.Name(val).split("_")[-1]
 
     def PrepareHALRequestSpec(self, req_spec):
+        logger.info("Populating sec prof id: %d" % self.id)
         req_spec.key_or_handle.profile_id = self.id
         req_spec.cnxn_tracking_en = self.fields.cnxn_tracking_en
         req_spec.ipsg_en = self.fields.ipsg_en
@@ -115,6 +116,8 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.tcp_invalid_flags_drop = self.fields.tcp_invalid_flags_drop
         req_spec.tcp_nonsyn_noack_drop = self.fields.tcp_nonsyn_noack_drop
         req_spec.tcp_normalize_mss = self.fields.tcp_normalize_mss
+        req_spec.flow_learn_en = self.fields.flow_learn_en
+        req_spec.policy_enforce_en = self.fields.policy_enforce_en
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -168,6 +171,8 @@ class SecurityProfileObject(base.ConfigObjectBase):
             self.fields.tcp_invalid_flags_drop = get_resp.spec.tcp_invalid_flags_drop
             self.fields.tcp_nonsyn_noack_drop = get_resp.spec.tcp_nonsyn_noack_drop
             self.fields.tcp_normalize_mss = get_resp.spec.tcp_normalize_mss
+            self.fields.flow_learn_en = get_resp.spec.flow_learn_en
+            self.fields.policy_enforce_en = get_resp.spec.policy_enforce_en
 
         return
 
@@ -190,10 +195,10 @@ class SecurityProfileObjectHelper:
         else:
             halapi.ConfigureSecurityProfiles(self.sps)
         return
-        
+
     def Generate(self, topospec):
         sps = getattr(topospec, 'security_profiles', None)
-        if sps is None: 
+        if sps is None:
             return
         spec = topospec.security_profiles.Get(Store)
         logger.info("Creating %d SecurityProfiles." % len(spec.profiles))

@@ -138,6 +138,8 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_normalize_mss;
 
     uint32_t              multicast_src_drop:1;
+    uint32_t              policy_enforce_en:1;
+    uint32_t              flow_learn_en:1;
 
     uint32_t              tcp_half_open_session_limit;
     uint32_t              udp_active_session_limit;

@@ -2,7 +2,7 @@
 #define INPUT_PROPERTIES_TABLE_SIZE                        8192
 #define INPUT_PROPERTIES_OTCAM_TABLE_SIZE                  1024
 #define INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE               1024
-#define VF_PROPERTIES_TABLE_SIZE                           1024
+#define VF_PROPERTIES_TABLE_SIZE                           16
 #define DECODE_ROCE_OPCODE_TABLE_SIZE                      256
 #define L4_PROFILE_TABLE_SIZE                              256
 #define FLOW_HASH_TABLE_SIZE                               2097152

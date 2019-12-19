@@ -28,6 +28,7 @@ DeviceManager *devmgr;
 pciemgr *pciemgr;
 static string config_file;
 fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
+bool g_micro_seg_en = false;
 sdk::platform::platform_type_t platform = platform_type_t::PLATFORM_TYPE_NONE;
 bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
@@ -106,7 +107,8 @@ loop(void)
 
     NIC_LOG_INFO("Upgrade mode: {}", fw_mode);
 
-    devmgr = new DeviceManager(config_file, fwd_mode, platform);
+    devmgr = new DeviceManager(config_file, fwd_mode, g_micro_seg_en, 
+                               platform);
     devmgr->SetUpgradeMode(fw_mode);
 
     if (platform_is_hw(platform))
@@ -139,7 +141,8 @@ int main(int argc, char *argv[])
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
-            config_file = DeviceManager::ParseDeviceConf(string(optarg), &fwd_mode);
+            config_file = DeviceManager::ParseDeviceConf(string(optarg), &fwd_mode,
+                                                         &g_micro_seg_en);
             break;
         case 's':
             // Ignore cmd line mode specification. Determines mode always from device.conf

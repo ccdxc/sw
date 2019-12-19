@@ -336,6 +336,25 @@ end:
     return ret;
 }
 
+if_t *
+lif_get_pinned_uplink (lif_t *lif)
+{
+    hal_handle_t        uplink_hdl = HAL_HANDLE_INVALID;
+    if_t                *uplink_if = NULL;
+
+    uplink_hdl = lif->pinned_uplink;
+
+    if (uplink_hdl != HAL_HANDLE_INVALID) {
+        uplink_if = find_if_by_handle(uplink_hdl);
+        if (!uplink_if) {
+            HAL_TRACE_ERR("Unable to find if for if_hdl {}", uplink_hdl);
+        }
+    } else {
+        HAL_TRACE_DEBUG("No pinned uplink for lif {}", lif->lif_id);
+    }
+    return uplink_if;
+}
+
 //----------------------------------------------------------------------------
 // Pinned IF for Enic IF in Classic Mode
 //----------------------------------------------------------------------------

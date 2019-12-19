@@ -71,7 +71,8 @@ table ipsg {
 control process_ipsg {
     // Moved ipsg_en into action as lookup is going through even if its disabled.
     // Looks like some issue in predicate tcam programming
-    if (control_metadata.nic_mode == NIC_MODE_SMART) {
-        apply(ipsg);
-    }
+    // if (control_metadata.nic_mode == NIC_MODE_SMART) {
+    //     apply(ipsg);
+    // }
+    apply(ipsg);
 }

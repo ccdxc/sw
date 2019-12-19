@@ -32,6 +32,9 @@ service System {
   rpc ClearPbStats(types.Empty) returns (types.Empty) {}
   rpc ForwardingModeGet(types.Empty) returns (ForwardingModeResponse) {}
   rpc FeatureProfileGet(types.Empty) returns (FeatureProfileResponse) {}
+  rpc MicroSegUpdate(MicroSegUpdateRequestMsg) returns (MicroSegUpdateResponseMsg) {}
+  // Nicmgr -> HAL micro seg status
+  rpc MicroSegStatusUpdate(MicroSegRequestMsg) returns (MicroSegResponseMsg) {}
 }
 
 enum ApiCounter {
@@ -424,4 +427,55 @@ message ForwardingModeResponse {
 message FeatureProfileResponse {
   types.ApiStatus api_status      = 1;
   FeatureProfile  feature_profile = 2;
+}
+
+enum MicroSegMode {
+  MICRO_SEG_DISABLE = 0;
+  MICRO_SEG_ENABLE  = 1;
+}
+
+enum MicroSegStatus {
+  MICRO_SEG_STATUS_NONE       = 0;
+  MICRO_SEG_STATUS_SUCCESS    = 1;
+  MICRO_SEG_STATUS_FAIL       = 2;
+}
+
+// Event from HAL -> Agent
+message MicroSegEvent {
+  MicroSegStatus status = 1;
+}
+
+// Spec from Nicmgr -> HAL
+message MicroSegSpec {
+  MicroSegMode micro_seg_mode   = 1;
+  MicroSegStatus status         = 2;
+}
+
+// MicroSeg Message Nicmgr -> HAL
+message MicroSegRequestMsg {
+    repeated MicroSegSpec request = 1;
+}
+
+message MicroSegResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  MicroSegStatus status       = 2;
+}
+message MicroSegResponseMsg {
+    repeated MicroSegResponse response = 1;
+}
+
+message MicroSegUpdateRequest {
+  MicroSegMode micro_seg_mode = 1;
+}
+
+message MicroSegUpdateRequestMsg {
+  repeated MicroSegUpdateRequest request = 1;
+}
+
+message MicroSegUpdateResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message MicroSegUpdateResponseMsg {
+  repeated MicroSegUpdateResponse response = 1;
 }

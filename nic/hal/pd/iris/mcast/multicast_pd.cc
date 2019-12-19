@@ -59,7 +59,7 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     // lkp_vrf
     l2seg = l2seg_lookup_by_handle(pi_mc_entry->key.l2seg_handle);
     SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-    key.flow_lkp_metadata_lkp_classic_vrf = 
+    key.flow_lkp_metadata_lkp_reg_mac_vrf = 
         ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
 
     // lkp_mac

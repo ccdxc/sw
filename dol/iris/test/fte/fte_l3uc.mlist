@@ -5,7 +5,7 @@ feature:
     package : test.networking
     module  : networking
     spec    : l3uc.testspec
-    enable  : True
+    enable  : False
     ignore  : False
 
 modules:

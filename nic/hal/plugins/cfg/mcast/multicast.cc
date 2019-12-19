@@ -215,6 +215,20 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
     ret = oif_list_create_block(&mc_entry->oif_list, HAL_MC_ENTRY_OIFL_BLOCK);
     SDK_ASSERT(ret == HAL_RET_OK);
 
+    // Always attaches to L2seg oifls. So no HI entries.
+#if 0
+    ret = oif_list_set_honor_ingress(mc_entry_mgmt_repls(mc_entry->oif_list));
+    SDK_ASSERT(ret == HAL_RET_OK);
+
+    ret = oif_list_set_honor_ingress(mc_entry_mseg_bm_repls(mc_entry->oif_list));
+    SDK_ASSERT(ret == HAL_RET_OK);
+
+    ret = oif_list_set_honor_ingress(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list));
+    SDK_ASSERT(ret == HAL_RET_OK);
+#endif
+
+
+#if 0
     if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_set_honor_ingress(mc_entry->oif_list);
         SDK_ASSERT(ret == HAL_RET_OK);
@@ -222,6 +236,7 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
         ret = oif_list_set_honor_ingress(mc_entry_shared_oifl(mc_entry));
         SDK_ASSERT(ret == HAL_RET_OK);
     }
+#endif
 
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -229,15 +244,38 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
         SDK_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
+
+        ret = oif_list_add_oif(mc_entry_mgmt_repls(mc_entry->oif_list), &oif);
+        SDK_ASSERT(ret == HAL_RET_OK);
+        ret = oif_list_add_oif(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list), &oif);
+        SDK_ASSERT(ret == HAL_RET_OK);
+#if 0
         ret = oif_list_add_oif(mc_entry->oif_list, &oif);
         SDK_ASSERT(ret == HAL_RET_OK);
 
         ret = oif_list_add_oif(mc_entry_shared_oifl(mc_entry), &oif);
         SDK_ASSERT(ret == HAL_RET_OK);
+#endif
     }
 
-    if (is_forwarding_mode_classic_nic() ||
-        l2seg_is_mgmt(l2seg)) {
+    if (l2seg_is_mgmt(l2seg)) {
+        /*
+         * 0: oifl[Reg. Repls] -> L2seg's flood_idx+1[ALL_MC]
+         * 1: oifl[Empty] -> L2seg's flood_idx + 4[Empty] -> Cust L2seg's flood_idx + 4[WLs]
+         * 2: oifl[Reg. Repls] -> L2seg's flood_idx + 7[ALL_MC] -> Cust L2seg's flood_idx + 7[WLs]
+         */
+        ret = oif_list_attach(mc_entry_mgmt_repls(mc_entry->oif_list), 
+                              l2seg_mc_mgmt_oifl(l2seg_base_oifl_id(l2seg, NULL)));
+        SDK_ASSERT(ret == HAL_RET_OK);
+        ret = oif_list_attach(mc_entry_mseg_bm_repls(mc_entry->oif_list), 
+                              l2seg_mc_mseg_bm_oifl(l2seg_base_oifl_id(l2seg, NULL)));
+        SDK_ASSERT(ret == HAL_RET_OK);
+        ret = oif_list_attach(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list), 
+                              l2seg_mc_mgmt_mseg_bm_oifl(l2seg_base_oifl_id(l2seg, NULL)));
+        SDK_ASSERT(ret == HAL_RET_OK);
+
+
+#if 0
         // Shared l2seg may not have attached yet, but all mcast repl. oiflists
         //  are attached to l2seg's ALL_MC which inturn will attach to
         //  customer l2seg's WLs
@@ -247,6 +285,7 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
         ret = oif_list_attach(mc_entry_shared_oifl(mc_entry), 
                               l2seg_get_shared_mcast_oif_list(l2seg));
         SDK_ASSERT(ret == HAL_RET_OK);
+#endif
     }
 
     return ret;
@@ -272,13 +311,22 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         goto end;
     }
 
-    if (is_forwarding_mode_classic_nic() ||
-        l2seg_is_mgmt(l2seg)) {
+    if (l2seg_is_mgmt(l2seg)) {
+
+        ret = oif_list_detach(mc_entry_mgmt_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+        ret = oif_list_detach(mc_entry_mseg_bm_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+        ret = oif_list_detach(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+
+#if 0
         ret = oif_list_detach(mc_entry->oif_list);
         SDK_ASSERT(ret == HAL_RET_OK);
 
         ret = oif_list_detach(mc_entry_shared_oifl(mc_entry));
         SDK_ASSERT(ret == HAL_RET_OK);
+#endif
     }
 
     // Now Delete the OIFs
@@ -288,6 +336,20 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         SDK_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
+
+        ret = oif_list_remove_oif(mc_entry_mgmt_repls(mc_entry->oif_list), &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{}, ret:{}",
+                          pi_if->hal_handle, l2seg->hal_handle, ret);
+        }
+
+        ret = oif_list_remove_oif(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list), &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{}, ret:{}",
+                          pi_if->hal_handle, l2seg->hal_handle, ret);
+        }
+
+#if 0
         ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{}, ret:{}",
@@ -299,8 +361,21 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
             HAL_TRACE_ERR("Del OIF failed! if-hndl:{}, l2seg-hndl:{}, ret:{}",
                           pi_if->hal_handle, l2seg->hal_handle, ret);
         }
+#endif
     }
 
+#if 0
+        ret = oif_list_clr_honor_ingress(mc_entry_mgmt_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+
+        ret = oif_list_clr_honor_ingress(mc_entry_mseg_bm_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+
+        ret = oif_list_clr_honor_ingress(mc_entry_mgmt_mseg_bm_repls(mc_entry->oif_list));
+        SDK_ASSERT(ret == HAL_RET_OK);
+#endif
+
+#if 0
     if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
         SDK_ASSERT(ret == HAL_RET_OK);
@@ -308,6 +383,7 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         ret = oif_list_clr_honor_ingress(mc_entry_shared_oifl(mc_entry));
         SDK_ASSERT(ret == HAL_RET_OK);
     }
+#endif
 
     // Delete the OIF List
 #if 0

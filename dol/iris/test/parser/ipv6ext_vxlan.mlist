@@ -4,7 +4,7 @@ feature:
     sub     : ipv6ext_vxlan
     package : test.parser
     module  : parser
-    enable  : True
+    enable  : False
     ignore  : False
     spec    : ip_vxlan.testspec
 

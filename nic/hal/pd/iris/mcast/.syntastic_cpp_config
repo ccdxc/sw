@@ -2,9 +2,8 @@
 -I ../../../../../nic/sdk/include
 -I ../../../../../nic/sdk
 -I ../../../../../nic/sdk/third-party/libev/include
--I ../../../../../nic/build/aarch64/iris/gen/proto
--I ../../../../../nic/build/aarch64/iris
 -I ../../../../../nic/build/x86_64/iris
+-I ../../../../../nic/build/aarch64/iris
 -I ../../../../hal/svc
 -I ../../../../hal/pd
 -I ../../../../build/iris/gen/datapath/p4/include

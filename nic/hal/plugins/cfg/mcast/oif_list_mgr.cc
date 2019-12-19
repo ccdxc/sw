@@ -111,7 +111,8 @@ static oif_db_t *find_oif_by_key(oif_list_t *oif_list, oif_t *oif)
         db_oif = dllist_entry(curr, oif_db_t, dllist_ctxt);
         if (db_oif->qid == oif->qid &&
             db_oif->purpose == oif->purpose &&
-            db_oif->if_hndl == oif->intf->hal_handle &&
+            (oif->intf ? db_oif->if_hndl == oif->intf->hal_handle :
+             db_oif->if_hndl == HAL_HANDLE_INVALID) &&
             db_oif->l2seg_hndl == oif->l2seg->hal_handle) {
             return db_oif;
         }
@@ -132,7 +133,8 @@ static hal_ret_t oif_add_to_db(oif_list_id_t list_id, oif_t *oif)
     db_oif = find_oif_by_key(oif_list, oif);
     if (db_oif) {
         HAL_TRACE_ERR("Oif intf {} l2seg {} qid {} purpose {} already exists",
-                      oif->intf->hal_handle, oif->l2seg->hal_handle,
+                      oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                      oif->l2seg->hal_handle,
                       oif->qid, oif->purpose);
         return HAL_RET_ENTRY_EXISTS;
     }
@@ -140,19 +142,21 @@ static hal_ret_t oif_add_to_db(oif_list_id_t list_id, oif_t *oif)
     db_oif = (oif_db_t *)g_hal_state->oif_slab()->alloc();
     if (db_oif == NULL) {
         HAL_TRACE_ERR("Failed to allocate intf {} l2seg {} qid {} purpose {} in DB",
-                      oif->intf->hal_handle, oif->l2seg->hal_handle,
+                      oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                      oif->l2seg->hal_handle,
                       oif->qid, oif->purpose);
         return HAL_RET_OOM;
     }
 
     db_oif->qid = oif->qid;
     db_oif->purpose = oif->purpose;
-    db_oif->if_hndl = oif->intf->hal_handle;
+    db_oif->if_hndl = oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID;
     db_oif->l2seg_hndl = oif->l2seg->hal_handle;
     sdk::lib::dllist_init(&db_oif->dllist_ctxt);
     sdk::lib::dllist_add(&oif_list->oifs, &db_oif->dllist_ctxt);
     HAL_TRACE_DEBUG("Added intf {} l2seg {} qid {} purpose {} from DB",
-                    oif->intf->hal_handle, oif->l2seg->hal_handle,
+                    oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                    oif->l2seg->hal_handle,
                     oif->qid, oif->purpose);
     return HAL_RET_OK;
 }
@@ -169,7 +173,8 @@ static hal_ret_t oif_remove_from_db(oif_list_id_t list_id, oif_t *oif)
     db_oif = find_oif_by_key(oif_list, oif);
     if (db_oif == NULL) {
         HAL_TRACE_ERR("Failed to find intf {} l2seg {} qid {} purpose {} in DB",
-                      oif->intf->hal_handle, oif->l2seg->hal_handle,
+                      oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                      oif->l2seg->hal_handle,
                       oif->qid, oif->purpose);
         HAL_TRACE_DEBUG("Current OifList {} has the following Oifs:", oif_list->id);
         dllist_ctxt_t  *curr = NULL;
@@ -186,7 +191,8 @@ static hal_ret_t oif_remove_from_db(oif_list_id_t list_id, oif_t *oif)
     hal::delay_delete_to_slab(HAL_SLAB_OIF, db_oif);
 
     HAL_TRACE_DEBUG("Removed intf {} l2seg {} qid {} purpose {} from DB",
-                    oif->intf->hal_handle, oif->l2seg->hal_handle,
+                    oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                    oif->l2seg->hal_handle,
                     oif->qid, oif->purpose);
     return HAL_RET_OK;
 }
@@ -399,7 +405,8 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list_id, oif_t *oif)
     }
 
     HAL_TRACE_DEBUG("Added intf {} l2seg {} qid {} purpose {} to list {}",
-                    oif->intf->hal_handle, oif->l2seg->hal_handle,
+                    oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                    oif->l2seg->hal_handle,
                     oif->qid, oif->purpose, list_id);
     return HAL_RET_OK;
 }
@@ -428,7 +435,8 @@ hal_ret_t oif_list_add_qp_oif(oif_list_id_t list_id, oif_t *oif)
     }
 
     HAL_TRACE_DEBUG("Added intf {} l2seg {} qid {} purpose {} to list {}",
-                    oif->intf->hal_handle, oif->l2seg->hal_handle,
+                    oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                    oif->l2seg->hal_handle,
                     oif->qid, oif->purpose, list_id);
     return HAL_RET_OK;
 }
@@ -456,7 +464,8 @@ hal_ret_t oif_list_remove_oif(oif_list_id_t list_id, oif_t *oif)
     }
 
     HAL_TRACE_DEBUG("Removed intf {} l2seg {} qid {} purpose {} from list {}",
-                    oif->intf->hal_handle, oif->l2seg->hal_handle,
+                    oif->intf ? oif->intf->hal_handle : HAL_HANDLE_INVALID,
+                    oif->l2seg->hal_handle,
                     oif->qid, oif->purpose, list_id);
     return HAL_RET_OK;
 }
@@ -535,6 +544,94 @@ hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list_id)
     return HAL_RET_OK;
 }
 
+hal_ret_t oif_list_copy_oifs (oif_list_id_t dst_oifl_id, oif_list_id_t src_oifl_id)
+{
+    oif_t oif;
+    oif_db_t *db_oif = NULL;
+    if_t *hal_if = NULL;
+    l2seg_t *l2seg = NULL;
+    dllist_ctxt_t *curr_node = NULL;
+    oif_list_t *src_oif_list = find_oif_list_by_key(src_oifl_id);
+    oif_list_t *dst_oif_list = find_oif_list_by_key(src_oifl_id);
+
+    if (src_oif_list == NULL || dst_oif_list == NULL) {
+        HAL_TRACE_ERR("Failed to find src {}, dst {}", src_oifl_id,
+                      dst_oifl_id);
+        return HAL_RET_ENTRY_NOT_FOUND;
+    }
+
+    dllist_for_each(curr_node, &src_oif_list->oifs) {
+        db_oif = dllist_entry(curr_node, oif_db_t, dllist_ctxt);
+        hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
+        l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+        oif.qid = db_oif->qid;
+        oif.purpose = db_oif->purpose;
+        oif_list_add_oif(dst_oifl_id, &oif);
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t oif_list_copy (oif_list_id_t dst_oifl_id, oif_list_id_t src_oifl_id)
+{
+    oif_t oif;
+    oif_db_t *db_oif = NULL;
+    if_t *hal_if = NULL;
+    l2seg_t *l2seg = NULL;
+    dllist_ctxt_t *curr_node = NULL;
+    oif_list_t *src_oif_list = find_oif_list_by_key(src_oifl_id);
+    oif_list_t *dst_oif_list = find_oif_list_by_key(src_oifl_id);
+
+    if (src_oif_list == NULL || dst_oif_list == NULL) {
+        HAL_TRACE_ERR("Failed to find src {}, dst {}", src_oifl_id,
+                      dst_oifl_id);
+        return HAL_RET_ENTRY_NOT_FOUND;
+    }
+
+    dst_oif_list->attached_to = src_oif_list->attached_to;
+    dst_oif_list->honor_ingress = src_oif_list->honor_ingress;
+
+    dllist_for_each(curr_node, &src_oif_list->oifs) {
+        db_oif = dllist_entry(curr_node, oif_db_t, dllist_ctxt);
+        hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
+        l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+        oif.qid = db_oif->qid;
+        oif.purpose = db_oif->purpose;
+        oif_list_add_oif(dst_oifl_id, &oif);
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t oif_list_remove_oifs (oif_list_id_t oifl_id)
+{
+    oif_t oif;
+    oif_db_t *db_oif = NULL;
+    dllist_ctxt_t    *curr, *next;
+    if_t *hal_if = NULL;
+    l2seg_t *l2seg = NULL;
+    oif_list_t *oif_list = find_oif_list_by_key(oifl_id);
+
+    if (oif_list == NULL) {
+        HAL_TRACE_ERR("Failed to find list {}", oifl_id);
+        return HAL_RET_ENTRY_NOT_FOUND;
+    }
+    dllist_for_each_safe(curr, next, &oif_list->oifs) {
+        db_oif = dllist_entry(curr, oif_db_t, dllist_ctxt);
+        hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
+        l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+        oif_list_remove_oif(oifl_id, &oif);
+    }
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
 {
     dllist_ctxt_t *curr_node = NULL;
@@ -559,10 +656,10 @@ hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
         if_t *hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
         l2seg_t *l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
         Oif   *oif_rsp = rsp->add_oifs();
-        SDK_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
+        SDK_ASSERT(db_oif && l2seg && oif_rsp);
         oif_rsp->set_q_id(db_oif->qid);
         oif_rsp->set_q_purpose(db_oif->purpose);
-        oif_rsp->mutable_interface()->set_interface_id(hal_if->if_id);
+        oif_rsp->mutable_interface()->set_interface_id(hal_if ? hal_if->if_id : 0);
         oif_rsp->mutable_l2segment()->set_segment_id(l2seg->seg_id);
     }
 
@@ -590,10 +687,10 @@ hal_ret_t oif_list_get(oif_list_t *oif_list, OifList *rsp)
         if_t *hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
         l2seg_t *l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
         Oif   *oif_rsp = rsp->add_oifs();
-        SDK_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
+        SDK_ASSERT(db_oif && l2seg && oif_rsp);
         oif_rsp->set_q_id(db_oif->qid);
         oif_rsp->set_q_purpose(db_oif->purpose);
-        oif_rsp->mutable_interface()->set_interface_id(hal_if->if_id);
+        oif_rsp->mutable_interface()->set_interface_id(hal_if ? hal_if->if_id : 0);
         oif_rsp->mutable_l2segment()->set_segment_id(l2seg->seg_id);
     }
 

@@ -15,6 +15,11 @@ using sys::SystemGetRequest;
 using sys::SystemResponse;
 using sys::FeatureProfileResponse;
 using sys::ForwardingModeResponse;
+using sys::MicroSegSpec;
+using sys::MicroSegResponse;
+using sys::MicroSegEvent;
+using sys::MicroSegUpdateRequest;
+using sys::MicroSegUpdateResponse;
 
 namespace hal {
 
@@ -27,6 +32,10 @@ hal_ret_t clear_egress_drop_stats(void);
 hal_ret_t upgrade_table_reset(void);
 hal_ret_t forwarding_mode_get(ForwardingModeResponse *rsp);
 hal_ret_t feature_profile_get(FeatureProfileResponse *rsp);
+hal_ret_t micro_seg_update(MicroSegUpdateRequest &req, 
+                           MicroSegUpdateResponse *rsp);
+hal_ret_t micro_seg_status_update(MicroSegSpec &req, 
+                                  MicroSegResponse *rsp);
 
 }    // namespace hal
 

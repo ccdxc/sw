@@ -229,11 +229,14 @@ sdk_ret_t
 devapi_lif::get_max_filters(uint32_t *ucast_filters,
                             uint32_t *mcast_filters)
 {
+    *ucast_filters = *mcast_filters = MAX_FILTERS;
+#if 0
     if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC) {
         *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
     } else {
         *ucast_filters = *mcast_filters = MAX_FILTERS_SMART;
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -1259,6 +1262,21 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     *req_ptr = req;
 }
 
+sdk_ret_t 
+devapi_lif::set_micro_seg_en(bool en)
+{
+    devapi_lif *lif= NULL;
+
+    for (auto it = lif_db_.cbegin(); it != lif_db_.cend(); it++) {
+        lif = (devapi_lif *)(it->second);
+        if (lif->is_host()) {
+            lif->remove_vlanfilters(true);
+        }
+    }
+
+    return SDK_RET_OK;
+}
+
 devapi_uplink *
 devapi_lif::get_uplink(void)
 {
@@ -1350,6 +1368,12 @@ devapi_lif::is_mnic(void)
 }
 
 bool
+devapi_lif::is_host(void)
+{
+    return (info_.type == sdk::platform::LIF_TYPE_HOST);
+}
+
+bool
 devapi_lif::is_hostmgmt(void)
 {
     return (info_.type == sdk::platform::LIF_TYPE_HOST_MGMT);
@@ -1380,7 +1404,9 @@ devapi_lif::is_classicfwd(vlan_t vlan)
     //   - ARM Internal Mgmt - All traffic
     //   - ARM Internal Data - Untag traffic
     //   - ARM OOB - All traffic
-    if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ||
+    //   TODO: This is causing vlans to be created in GS case.
+    // if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ||
+    if (!hal->get_micro_seg_en() || 
         (is_hostmgmt() || is_intmgmtmnic() ||
          is_oobmnic() || vlan == NATIVE_VLAN_ID)) {
         return true;

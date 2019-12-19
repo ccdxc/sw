@@ -29,7 +29,7 @@ void lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma);
 uint32_t lif_get_total_qcount (uint32_t hw_lif_id);
 qos_class_t *lif_get_rx_qos_class(lif_t *pi_lif);
 qos_class_t *lif_get_tx_qos_class(lif_t *pi_lif);
-
+if_t *lif_get_pinned_uplink(lif_t *lif);
 // Interface APIs
 intf::IfType intf_get_if_type(if_t *pi_if);
 uint32_t if_get_if_id(if_t *pi_if);

@@ -391,8 +391,7 @@ AdminQ::Poll(void *obj)
         ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
         NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns",
                       ts_diff.tv_sec, ts_diff.tv_nsec);
-        if (adminq->pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC
-            && ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
+        if (ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
             NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
         }
         NIC_HEADER_TRACE("AdminCmd End");

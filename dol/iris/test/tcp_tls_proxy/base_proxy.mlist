@@ -5,7 +5,7 @@ feature:
     sub         : proxy
     package     : test.tcp_tls_proxy
     module      : None
-    enable      : True
+    enable      : False
     rtl         : False
     ignore      : False
     runorder    : 10

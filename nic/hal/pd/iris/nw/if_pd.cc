@@ -399,12 +399,13 @@ hal_ret_t multicast_ip_to_mac(ip_addr_t *ip, mac_addr_t mac)
     return HAL_RET_OK;
 }
 
-hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
+hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg, lif_t *enic_lif,
                                               p4_replication_data_t *data)
 {
     hal_ret_t ret;
     uint8_t is_tagged;
     uint16_t vlan_id;
+    hal::lif_t *lif = NULL;
 
     // pi_if is supposed to be a pinned if. In smart switch mode, there may not
     // be a pinned interface for enic.
@@ -421,9 +422,13 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
     data->lport = if_get_lport_id(pi_if);
     switch (hal::intf_get_if_type(pi_if)) {
         case intf::IF_TYPE_ENIC: {
-            hal::lif_t *lif = if_get_lif(pi_if);
-            if (lif == NULL) {
-                return HAL_RET_LIF_NOT_FOUND;
+            if (enic_lif != NULL) {
+                lif = enic_lif;
+            } else {
+                lif = if_get_lif(pi_if);
+                if (lif == NULL) {
+                    return HAL_RET_LIF_NOT_FOUND;
+                }
             }
 
             ret = if_l2seg_get_encap(pi_if, pi_l2seg, &is_tagged, &vlan_id);
@@ -549,7 +554,8 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
             break;
         }
         default:
-            SDK_ASSERT(0);
+            HAL_TRACE_DEBUG("Unsupported encap type: {}", pi_l2seg->wire_encap.type);
+            // SDK_ASSERT(0);
     }
 
 end:

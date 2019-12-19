@@ -2,8 +2,8 @@
 /* Replica processing                                                        */
 /*****************************************************************************/
 action set_replica_rewrites() {
-    modify_field(control_metadata.nic_mode_e,
-                 control_metadata.i2e_flags >> P4_I2E_FLAGS_NIC_MODE);
+    // modify_field(control_metadata.nic_mode_e,
+    //              control_metadata.i2e_flags >> P4_I2E_FLAGS_NIC_MODE);
     modify_field(tunnel_metadata.tunnel_originate_egress,
                  tunnel_metadata.tunnel_originate);
     modify_field(tunnel_metadata.tunnel_terminate_egress,

@@ -3,7 +3,7 @@ feature:
     sub     : txrxl3
     package : test.eth
     module  : eth
-    enable  : True
+    enable  : False
     ignore  : False
     spec    : tx_rx_l3.testspec
     runorder: 15

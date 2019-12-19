@@ -116,11 +116,12 @@
 #define DROP_SRC_LIF_MISMATCH                   24
 #define DROP_VF_IP_LABEL_MISMATCH               25
 #define DROP_VF_BAD_RR_DST_IP                   26
+#define DROP_IF_LABEL_MISMATCH                  27
 #define DROP_MIN                                DROP_MALFORMED_PKT
 /*****************************************************************************/
 /* Note: After adding a new drop code, update the system.proto file as well. */
 /*****************************************************************************/
-#define DROP_MAX                                DROP_VF_BAD_RR_DST_IP
+#define DROP_MAX                                DROP_IF_LABEL_MISMATCH
 
 /*****************************************************************************/
 /* egress drop reasons - these are bit positions to be used in ASM           */
@@ -341,5 +342,5 @@
 #define P4_I2E_FLAGS_TUNNEL_TERMINATE   1
 #define P4_I2E_FLAGS_TUNNEL_ORIGINATE   2
 #define P4_I2E_FLAGS_UPLINK             3
-#define P4_I2E_FLAGS_NIC_MODE           4
-#define P4_I2E_FLAGS_IP_FRAGMENT        5
+// #define P4_I2E_FLAGS_NIC_MODE           4
+#define P4_I2E_FLAGS_IP_FRAGMENT        4

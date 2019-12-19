@@ -539,13 +539,21 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
                                 lif_t *lif, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    oif_t                       oif = {};
+    // oif_t                       oif = {};
 
     SDK_ASSERT(l2seg && hal_if && lif);
 
+#if 0
     oif.intf = hal_if;
     oif.l2seg = l2seg;
+#endif
 
+    ret = l2seg_update_oiflist_oif(l2seg, hal_if, add, false,
+                                  lif->packet_filters.receive_broadcast,
+                                  lif->packet_filters.receive_all_multicast,
+                                  lif->packet_filters.receive_promiscuous);
+
+#if 0
     if (add) {
         if (lif->packet_filters.receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
@@ -581,6 +589,7 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
             SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
+#endif
 
     return ret;
 }
@@ -596,6 +605,9 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
     oif.l2seg = l2seg;
 
     if (lif_upd->pkt_filter_bcast_changed) {
+        ret = l2seg_update_oiflist_oif(l2seg, hal_if, lif_upd->receive_broadcast, false,
+                                       true, false, false); 
+#if 0
         if (lif_upd->receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
@@ -607,9 +619,14 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
             ret = oif_list_remove_oif(l2seg_get_shared_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
+#endif
     }
 
     if (lif_upd->pkt_filter_allmc_changed) {
+        ret = l2seg_update_oiflist_oif(l2seg, hal_if, lif_upd->receive_all_multicast, 
+                                       false,
+                                       false, true, false); 
+#if 0
         if (lif_upd->receive_all_multicast) {
             ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
@@ -621,9 +638,14 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
             ret = oif_list_remove_oif(l2seg_get_shared_mcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
+#endif
     }
 
     if (lif_upd->pkt_filter_prom_changed) {
+        ret = l2seg_update_oiflist_oif(l2seg, hal_if, lif_upd->receive_promiscous, 
+                                       false,
+                                       false, false, true); 
+#if 0
         if (lif_upd->receive_promiscous) {
             ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
@@ -631,6 +653,7 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
             ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
+#endif
     }
 
     return ret;
@@ -664,9 +687,8 @@ if_update_classic_oif_lists(if_t *hal_if, lif_update_app_ctxt_t *lif_upd)
 }
 
 
-
 hal_ret_t
-if_update_oif_lists(if_t *hal_if, bool add)
+if_update_oif_lists (if_t *hal_if, bool add)
 {
     oif_t oif = {};
     hal_ret_t  ret = HAL_RET_OK;
@@ -688,13 +710,20 @@ if_update_oif_lists(if_t *hal_if, bool add)
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
 
+                ret = l2seg_update_oiflist_oif(l2seg, hal_if, add,
+                                               false, 
+                                               true,    // BC 
+                                               true,    // MC
+                                               false);  // Prom
+#if 0
                 // Add the new interface to the broadcast list of the associated
                 // l2seg.
                 if (add) {
-                    ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                    // ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
                 } else {
-                    ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                    // ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
                 }
+#endif
 
                 if (ret != HAL_RET_OK) {
                     HAL_TRACE_ERR("{} oif to oif_list failed, err : {}",
@@ -1722,7 +1751,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                 return ret;
             }
         }
-        // If lif changes on enic, we should trigger EP to reprogram ipsg entries.
+        // If lif changes on enic, we should trigger EP to reprogram ipsg entries & reg_mac entries.
         if (pd_if_args.lif_change && hal_if->if_type == intf::IF_TYPE_ENIC) {
             pd_ep_if_args.lif_change = pd_if_args.lif_change;
             pd_ep_if_args.new_lif = pd_if_args.new_lif;
@@ -1786,6 +1815,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    // Deprecated. Not support smart switch mode. 
+#if 0
     // Change Flood replication entry for change of native l2seg
     if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change &&
         hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
@@ -1841,6 +1872,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
             }
         }
     }
+#endif
 
 end:
     return ret;
@@ -2813,6 +2845,8 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto end;
     }
 
+    // Deprecated: smart switch is no longer supported
+#if 0
     // Add the uplink to the broadcast list of the l2seg
     if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;
@@ -2826,6 +2860,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
             goto end;
         }
     }
+#endif
 
 end:
 
@@ -2873,6 +2908,8 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto end;
     }
 
+    // Deprecated: smart switch is no longer supported
+#if 0
     // Del the uplink from the broadcast list of the l2seg
     if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;
@@ -2885,6 +2922,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
             goto end;
         }
     }
+#endif
 
     // Del Uplink in l2seg
     ret = l2seg_del_back_if(l2seg, hal_if);
@@ -3331,10 +3369,8 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
          * Case 3:
          *   Enic -> pinned_uplink (dynamically allocated. Only for DOL)
          */
-        HAL_TRACE_DEBUG("Host_pin: {}, allow_dyn_pin: {}",
-                        is_forwarding_mode_host_pinned(),
-                        g_hal_state->allow_dynamic_pinning());
-        if (is_forwarding_mode_host_pinned() && g_hal_state->allow_dynamic_pinning()) {
+        HAL_TRACE_DEBUG("allow_dyn_pin: {}", g_hal_state->allow_dynamic_pinning());
+        if (g_hal_state->allow_dynamic_pinning()) {
             if_t *uplink = NULL;
             // If either enic or lif doesnt have a pinned uplink, pick from uplinks.
             if_enicif_get_pinned_if(hal_if, &uplink);
@@ -5232,10 +5268,14 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     // Update uplink's oper status
     ctxt.hal_if->if_op_status = new_status;
 
+    // have to repin in all modes,
+    // for inp_prop cpu entry reprogram to drive right dst_lport
+#if 0
     // Only for hostpin, repin l2segs
     if (!is_forwarding_mode_host_pinned()) {
         goto end;
     }
+#endif
 
     // Walk through l2segs for this uplink
     ret = hal_if_repin_l2segs(ctxt.hal_if);
@@ -5255,6 +5295,8 @@ end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
     
+    // Deprecated as fwding info is not going to come from flow anymore
+#if 0
     // Repin ipfix flows only if you are in host pin mode
     if (ctxt.hal_if && is_forwarding_mode_host_pinned()) {
         // Repin ipfix flows
@@ -5263,6 +5305,7 @@ end:
             HAL_TRACE_ERR("Unable to repin ipfix sessions. ret: {}", ret);
         }
     }
+#endif
 
     return ret;
 }

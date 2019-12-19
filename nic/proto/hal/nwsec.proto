@@ -236,14 +236,17 @@ message SecurityProfileSpec {
   bool                         tcp_urg_flag_ptr_clear             = 95 [(gogoproto.moretags) = "venice:default=false"];
   // Can we have zero as default but when configured the range is between 576 - 9216 ?
   uint32                       tcp_normalize_mss                  = 96 [(gogoproto.moretags) = "range:0-9216, venice:default=0"];
-  bool                         multicast_src_drop                 = 101 [(gogoproto.moretags) = "venice:default=true"];
-
+  bool                         multicast_src_drop                 = 97 [(gogoproto.moretags) = "venice:default=true"];
 
   // Flood protection knobs
-  uint32                       tcp_half_open_session_limit        = 111 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       udp_active_session_limit           = 112 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       icmp_active_session_limit          = 113 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       other_active_session_limit         = 114 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       tcp_half_open_session_limit        = 98 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       udp_active_session_limit           = 99 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       icmp_active_session_limit          = 100 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       other_active_session_limit         = 101 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+
+  // Firewall knobs
+  bool                         policy_enforce_en                  = 102 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         flow_learn_en                      = 103 [(gogoproto.moretags) = "venice:default=false"];;
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG

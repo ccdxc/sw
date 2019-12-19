@@ -12,19 +12,26 @@ struct phv_          p;
 
 l4_profile:
   phvwr       p.l4_metadata_icmp_deprecated_msgs_drop, d.u.l4_profile_d.icmp_deprecated_msgs_drop
-  or          r1, d.u.l4_profile_d.ip_rsvd_flags_action, \
-                d.u.l4_profile_d.ip_normalization_en, 2
-  phvwr       p.{l4_metadata_ip_normalization_en, \
-                 l4_metadata_ip_rsvd_flags_action}, r1
+  // or          r1, d.u.l4_profile_d.ip_rsvd_flags_action, \
+  //               d.u.l4_profile_d.ip_normalization_en, 2
+  // phvwr       p.{l4_metadata_ip_normalization_en, \
+  //                l4_metadata_ip_rsvd_flags_action}, r1
+  phvwr       p.l4_metadata_ip_normalization_en, d.u.l4_profile_d.ip_normalization_en
+  phvwr       p.l4_metadata_ip_rsvd_flags_action, d.u.l4_profile_d.ip_rsvd_flags_action
 
-  or          r1, d.u.l4_profile_d.ip_invalid_len_action, d.u.l4_profile_d.ip_options_action, 2
-  or          r1, r1, d.u.l4_profile_d.ip_df_action, 4
-  or          r1, r1, d.u.l4_profile_d.ip_fragment_drop, 6
+  phvwr       p.l4_metadata_ip_fragment_drop, d.u.l4_profile_d.ip_fragment_drop
+  phvwr       p.l4_metadata_ip_df_action, d.u.l4_profile_d.ip_df_action
+  phvwr       p.l4_metadata_ip_options_action, d.u.l4_profile_d.ip_options_action
+  phvwr       p.l4_metadata_ip_invalid_len_action, d.u.l4_profile_d.ip_invalid_len_action
 
-  phvwr       p.{l4_metadata_ip_fragment_drop, \
-                 l4_metadata_ip_df_action, \
-                 l4_metadata_ip_options_action, \
-                 l4_metadata_ip_invalid_len_action}, r1
+  // or          r1, d.u.l4_profile_d.ip_invalid_len_action, d.u.l4_profile_d.ip_options_action, 2
+  // or          r1, r1, d.u.l4_profile_d.ip_df_action, 4
+  // or          r1, r1, d.u.l4_profile_d.ip_fragment_drop, 6
+
+  // phvwr       p.{l4_metadata_ip_fragment_drop, \
+  //                l4_metadata_ip_df_action, \
+  //                l4_metadata_ip_options_action, \
+  //                l4_metadata_ip_invalid_len_action}, r1
 
   seq         c1, k.tcp_valid, TRUE
   phvwr.c1    p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
@@ -86,6 +93,12 @@ l4_profile:
                 l4_metadata_tcp_split_handshake_drop}, \
                 d.{u.l4_profile_d.tcp_split_handshake_detect_en, \
                 u.l4_profile_d.tcp_split_handshake_drop}
+  phvwr       p.l4_metadata_flow_learn_cfg_en, d.u.l4_profile_d.flow_learn_cfg_en
+  phvwr       p.l4_metadata_policy_enf_cfg_en, d.u.l4_profile_d.policy_enf_cfg_en
+  phvwr       p.l4_metadata_ip_bm_mc_policy_enf_cfg_en, \
+                d.u.l4_profile_d.ip_bm_mc_policy_enf_cfg_en
+  phvwr       p.l4_metadata_uuc_fl_pe_sup_en, \
+                d.u.l4_profile_d.uuc_fl_pe_sup_en
 
   bbeq        k.p4plus_to_p4_valid, TRUE, f_p4plus_to_p4_1
   phvwrpair   p.l4_metadata_ip_ttl_change_detect_en, \

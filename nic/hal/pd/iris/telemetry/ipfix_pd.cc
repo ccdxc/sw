@@ -83,7 +83,6 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
 
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
         key.flow_lkp_metadata_lkp_inst = 0;
-        key.flow_lkp_metadata_lkp_dir = 0;
         key.flow_lkp_metadata_lkp_vrf = 0;
         memcpy(&key.flow_lkp_metadata_lkp_src, &sip, sizeof(sip));
         memcpy(&key.flow_lkp_metadata_lkp_dst, &dip, sizeof(dip));

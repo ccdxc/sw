@@ -16,6 +16,7 @@
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
+#include "nic/hal/pd/iris/nw/if_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -543,6 +544,16 @@ l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg)
                 }
                 l2seg_pd->inp_prop_tbl_idx[if_idx] = INVALID_INDEXER_INDEX;
                 l2seg_pd->inp_prop_tbl_idx_pri[if_idx] = INVALID_INDEXER_INDEX;
+
+                HAL_TRACE_DEBUG("l2seg mgmt:{} <-> cust:{}:if_id:{} is becoming detached. "
+                                "Repgm ENICs and EPs in mgmt", 
+                                shared_l2seg->seg_id, l2seg->seg_id,
+                                uplink_if->if_id);
+                ret = l2seg_repgm_mgmt_enics_eps(shared_l2seg, NULL);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to repgm enics and eps in "
+                                  "mgmt l2seg. err: {}", ret);
+                }
             }
         } else {
             vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
@@ -645,21 +656,25 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
                       ret);
     }
 
-    if (l2seg_is_mgmt(l2seg)) {
-        l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
-        if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
-            HAL_TRACE_DEBUG("l2seg {} is becoming detached. Delete EPs from reg_mac", 
-                            l2seg_cust->seg_id);
-            ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_REMOVE);
-        }
-    }
-
     // de-program member IFs
     ret = l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to deprogram ifs inp. prop. tbl. ret: {}",
                       ret);
     }
+
+    if (l2seg_is_mgmt(l2seg)) {
+        l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
+        if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
+            HAL_TRACE_DEBUG("l2seg {} is becoming detached. Delete EPs from reg_mac", 
+                            l2seg_cust->seg_id);
+#if 0
+            ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_REMOVE);
+#endif
+        }
+    } else {
+    }
+
 
 
     return ret;
@@ -797,10 +812,9 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     }
 #endif
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, NIC_MODE: {}, swm: {}",
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, swm: {}",
                     inp_prop.clear_promiscuous_repl,
-                    inp_prop.dst_lport, inp_prop.nic_mode,
-                    l2seg->single_wire_mgmt);
+                    inp_prop.dst_lport, l2seg->single_wire_mgmt);
 
 #if 0
     if ((is_forwarding_mode_host_pinned()) &&
@@ -923,6 +937,11 @@ pd_l2seg_update_pinned_uplink (pd_func_args_t *pd_func_args)
     pd_add_l2seg_uplink_args_t  up_args = {0};
     if_t *hal_if = NULL;
 
+    // Update cpu entry 
+    l2seg_pd_upd_cpu_inp_prop_tbl((pd_l2seg_t *)l2seg->pd);
+
+    // No need to change uplink entries as allow_flood is removed.
+#if 0
     for (const void *ptr : *l2seg->mbrif_list) {
         p_hdl_id = (hal_handle_t *)ptr;
         hal_if = find_if_by_handle(*p_hdl_id);
@@ -934,6 +953,7 @@ pd_l2seg_update_pinned_uplink (pd_func_args_t *pd_func_args)
             ret = l2seg_uplink_upd_input_properties_tbl(&up_args, 0, NULL, 0, NULL);
         }
     }
+#endif
     return ret;
 }
 
@@ -963,21 +983,6 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     memset(&data, 0, sizeof(data));
 
     HAL_TRACE_DEBUG("Programming Input Props table ...");
-
-#if 0
-    // Temporary change to use overflow tcam till we figure out on how
-    // to avoid using tunnel_vnid and tunnel_type as key in
-    // input_properties table for classic_nic mode.
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
-        key_mask = (input_properties_otcam_swkey_mask_t *)HAL_CALLOC(HAL_MEM_ALLOC_INP_PROP_KEY_MASK,
-                              sizeof(input_properties_otcam_swkey_mask_t));
-        key_mask->capri_intrinsic_lif_mask = 0xFFFF;
-        key_mask->vlan_tag_vid_mask = 0xFFFF;
-        key_mask->vlan_tag_valid_mask = 0xFF;
-        key_mask->entry_inactive_input_properties_mask = 0xFF;
-        direct_to_otcam = true;
-    }
-#endif
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
     is_native = is_l2seg_native(l2seg, hal_if);
@@ -1229,11 +1234,11 @@ l2seg_pd_repgm_mbr_ifs (block_list *agg_list, l2seg_t *l2seg,
         case intf::IF_TYPE_UPLINK_PC:
 
             // Skip for non-designated 
-            if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
-                l2seg->single_wire_mgmt) {
+            if (l2seg_is_mgmt(l2seg) && l2seg->single_wire_mgmt) {
                 vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
                 if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
-                    HAL_TRACE_DEBUG("Skipping for non-designated uplink: l2seg: {}, if: {}",
+                    HAL_TRACE_DEBUG("Skipping for non-designated uplink: "
+                                    "l2seg: {}, if: {}",
                                     l2seg->seg_id, hal_if->if_id);
                     continue;
                 }
@@ -1296,9 +1301,11 @@ end:
 hal_ret_t
 l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 {
-    l2seg_t     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
-    l2seg_t     *l2seg_cust = NULL;
-    hal_ret_t   ret;
+    hal_ret_t       ret;
+    l2seg_t         *l2seg = (l2seg_t *)l2seg_pd->l2seg;
+    l2seg_t         *l2seg_cust = NULL, *l2seg_mgmt = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+    if_t            *hal_if = NULL;
 
     // program Input properties Table for CPU TX traffic
     ret = l2seg_pd_pgm_inp_prop_tbl(l2seg_pd, is_upgrade);
@@ -1319,13 +1326,75 @@ l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     if (l2seg_is_mgmt(l2seg)) {
         l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
         if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
-            HAL_TRACE_DEBUG("l2seg {} is becoming attached. Creating EPs in reg_mac", 
-                            l2seg_cust->seg_id);
-            ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_INSERT);
+            HAL_TRACE_DEBUG("l2seg mgmt:{} <-> cust:{} is becoming attached. No-op", 
+                            l2seg->seg_id, l2seg_cust->seg_id);
+            // Cust. EPs are always programmed. No need to program 
+            // ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_INSERT);
+        }
+    } else {
+        // TOOD: Customer L2seg creation. 
+        // If there are mgmt attached l2segs:
+        //  - Reprogram mgmt EPs with customer l2seg's flow lkup id
+        //  - Reprogram mgmt ENIC's and Uplink's inp_props with 
+        //    - customer l2seg's flow lkup id
+        //    - if_label_check_en: 1, if_label_check_fail_drop = 0
+
+        // Mgmt l2seg
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            if (hal_if->if_type == intf::IF_TYPE_UPLINK) {
+                l2seg_mgmt = l2seg_pd_get_shared_mgmt_l2seg(l2seg, hal_if);
+                if (l2seg_mgmt) {
+                    HAL_TRACE_DEBUG("l2seg mgmt:{} <-> cust:{}:if_id:{} is becoming attached. "
+                                    "Repgm ENICs and EPs in mgmt", 
+                                    l2seg_mgmt->seg_id, l2seg->seg_id,
+                                    hal_if->if_id);
+                    l2seg_repgm_mgmt_enics_eps(l2seg_mgmt, l2seg);
+                }
+            }
         }
     }
 
 end:
+    return ret;
+}
+
+hal_ret_t
+l2seg_repgm_mgmt_enics_eps (l2seg_t *l2seg, l2seg_t *hp_l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL, *p_hdl = NULL;
+    if_t            *hal_if = NULL;
+    ep_t            *ep = NULL;
+    pd_ep_t         *pd_ep = NULL;
+    pd_enicif_t     *pd_enicif;
+
+    // walk-thru enics
+    for (const void *ptr : *l2seg->if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        // walk-thru eps
+        if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+            // Reprogram ENIC
+            pd_enicif = (pd_enicif_t *)hal_if->pd_if;
+            ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                                  ENICIF_UPD_FLAGS_NONE,
+                                                  0,
+                                                  l2seg,
+                                                  NULL, NULL, NULL, hp_l2seg,
+                                                  TABLE_OPER_UPDATE);
+
+
+            for (const void *ptr : *(hal_if->ep_list)) {
+                p_hdl = (hal_handle_t *)ptr;
+                ep = find_ep_by_handle(*p_hdl);
+                pd_ep = (pd_ep_t *)ep->pd;
+                pd_ep_pgm_registered_mac(pd_ep, NULL, hp_l2seg,
+                                         TABLE_OPER_UPDATE);
+            }
+        }
+    }
     return ret;
 }
 
@@ -1349,7 +1418,7 @@ l2seg_program_eps_reg_mac (l2seg_t *l2seg, table_oper_t oper)
                 ep = find_ep_by_handle(*p_hdl);
                 pd_ep = (pd_ep_t *)ep->pd;
                 if (oper == TABLE_OPER_INSERT) {
-                    pd_ep_pgm_registered_mac(pd_ep, oper);
+                    pd_ep_pgm_registered_mac(pd_ep, NULL, NULL, oper);
                 } else {
                     ep_pd_depgm_registered_mac(pd_ep);
                 }
@@ -1371,36 +1440,21 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata_t data          = { 0 };
     l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
-    nwsec_profile_t             *nwsec_prof   = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
-
     key.capri_intrinsic_lif = HAL_LIF_CPU;
-    inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
-
     key.vlan_tag_valid = 1;
     key.vlan_tag_vid   = l2seg_pd->cpu_l2seg_id;
 
-    inp_prop.vrf              = l2seg_pd->l2seg_fl_lkup_id;
-    inp_prop.l4_profile_idx   = nwsec_prof ?
-        nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
-    inp_prop.ipsg_enable      = 0;
-    inp_prop.src_lport        = 0;
-    inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)
-                                                           (l2seg_pd->l2seg));
-    inp_prop.flow_miss_idx    = l2seg_get_bcast_oif_list((l2seg_t*)
-                                                         (l2seg_pd->l2seg));
-    inp_prop.allow_flood      = 1;
+    ret = l2seg_cpu_inp_prop_form_data(l2seg_pd, data);
 
     if (is_upgrade) {
         // insert
         sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
                                               l2seg_pd->inp_prop_tbl_cpu_idx);
     } else {
-        // sdk_ret = sdk::SDK_RET_NO_RESOURCE;
         sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1414,6 +1468,79 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     }
 
 end:
+
+    return ret;
+}
+
+hal_ret_t
+l2seg_pd_upd_cpu_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
+{
+    sdk_ret_t                   sdk_ret;
+    hal_ret_t                   ret           = HAL_RET_OK;
+    sdk_hash                    *inp_prop_tbl = NULL;
+    input_properties_swkey_t    key           = { 0 };
+    input_properties_actiondata_t data          = { 0 };
+    l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    l2seg_cpu_inp_prop_form_data(l2seg_pd, data);
+
+    if (l2seg_pd->inp_prop_tbl_cpu_idx != INVALID_INDEXER_INDEX) {
+        sdk_ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_cpu_idx, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to program from cpu entry input properties "
+                          "for ret: {}", ret);
+        } else {
+            HAL_TRACE_DEBUG("Programmed from_cpu_entry input properties at:{}",
+                            l2seg_pd->inp_prop_tbl_cpu_idx);
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+l2seg_cpu_inp_prop_form_data (pd_l2seg_t *l2seg_pd,
+                              input_properties_actiondata_t &data)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    nwsec_profile_t             *nwsec_prof = NULL;
+    if_t                        *uplink_if = NULL;
+    p4_replication_data_t       rdata = { 0 };
+    l2seg_t                     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
+    hal_handle_t                if_hdl;
+
+    if_hdl = hal::l2seg_get_pinned_uplink(l2seg);
+    uplink_if = find_if_by_handle(if_hdl);
+
+    ret = if_l2seg_get_multicast_rewrite_data(uplink_if, l2seg, NULL, &rdata);
+    SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+
+    nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
+
+    inp_prop.dir                        = FLOW_DIR_FROM_DMA;
+    inp_prop.vrf                        = l2seg_pd->l2seg_fl_lkup_id;
+    inp_prop.l4_profile_idx             = nwsec_prof ?
+        nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+    inp_prop.ipsg_enable                = 0;
+    inp_prop.src_lport                  = 0;
+    inp_prop.mdest_flow_miss_action     = l2seg_get_bcast_fwd_policy((l2seg_t*)
+                                                            (l2seg_pd->l2seg));
+    inp_prop.flow_miss_idx              = l2seg_base_oifl_id(l2seg, uplink_if);
+    inp_prop.dst_lport                  = (uint16_t)rdata.lport;
+    inp_prop.src_if_label               = pd_uplinkif_if_label(uplink_if);
+    inp_prop.if_label_check_en          = 1;
+    inp_prop.if_label_check_fail_drop   = 0;
+    inp_prop.mseg_bm_bc_repls           = 1;
+    inp_prop.mseg_bm_mc_repls           = 1;
+    inp_prop.rewrite_index              = (uint16_t)rdata.rewrite_index;
+    inp_prop.tunnel_rewrite_index       = (uint16_t)rdata.tunnel_rewrite_index;
+    inp_prop.bounce_vnid                = (uint32_t)rdata.qid_or_vnid;
+    inp_prop.flow_learn                 = 1; // For IPFIX flows
+    inp_prop.uuc_fl_pe_sup_en           = 1; 
 
     return ret;
 }
@@ -1544,8 +1671,14 @@ end:
 hal_ret_t
 l2seg_pd_alloc_hwid (pd_l2seg_t *pd_l2seg)
 {
+    l2seg_t      *l2seg = NULL;
     pd_vrf_t     *ten_pd = NULL;
     hal_ret_t    ret = HAL_RET_OK;
+    hal_handle_t *p_hdl_id = NULL;
+    uint32_t     if_idx = 0;
+    if_t         *uplink_if;
+
+    l2seg = (l2seg_t *)pd_l2seg->l2seg;
 
     ten_pd = pd_l2seg_get_pd_vrf(pd_l2seg);
     SDK_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
@@ -1560,6 +1693,26 @@ l2seg_pd_alloc_hwid (pd_l2seg_t *pd_l2seg)
                     pd_l2seg->l2seg_hw_id,
                     ten_pd->vrf_hw_id, pd_l2seg->l2seg_fl_lkup_id);
 
+    if (l2seg_is_cust(l2seg)) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            uplink_if = find_if_by_handle(*p_hdl_id);
+            if_idx = uplink_if_get_idx(uplink_if);
+            ret = vrf_pd_alloc_l2seg_hw_id(ten_pd, 
+                                           (uint32_t *)&pd_l2seg->l2seg_hw_id_upl[if_idx]);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            pd_l2seg->l2seg_fl_lkup_id_upl[if_idx] = ten_pd->vrf_hw_id << HAL_PD_VRF_SHIFT |
+                pd_l2seg->l2seg_hw_id_upl[if_idx];
+            HAL_TRACE_DEBUG("HWIDs uplink: {} l2seg_hwid:{}, vrf_hwid:{}, "
+                            "l2seg_fl_lkup_id:{}",
+                            if_keyhandle_to_str(uplink_if), 
+                            pd_l2seg->l2seg_hw_id_upl[if_idx],
+                            ten_pd->vrf_hw_id, pd_l2seg->l2seg_fl_lkup_id_upl[if_idx]);
+        }
+    }
+
 end:
     return ret;
 }
@@ -1572,6 +1725,7 @@ l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t    ret = HAL_RET_OK;
     pd_vrf_t     *ten_pd = NULL;
+    l2seg_t      *l2seg = (l2seg_t *)l2seg_pd->l2seg;
 
     if (l2seg_pd->l2seg_hw_id != INVALID_INDEXER_INDEX) {
         ten_pd = pd_l2seg_get_pd_vrf(l2seg_pd);
@@ -1583,10 +1737,23 @@ l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
         }
 
         HAL_TRACE_DEBUG("Freed l2seg_hwid: {}", l2seg_pd->l2seg_hw_id);
+
+        if (l2seg_is_cust(l2seg)) {
+            for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
+                if (l2seg_pd->l2seg_hw_id_upl[i] != INVALID_INDEXER_INDEX) {
+                    ret = vrf_pd_free_l2seg_hw_id(ten_pd, 
+                                                  l2seg_pd->l2seg_hw_id_upl[i]);
+                    if (ret != HAL_RET_OK) {
+                        goto end;
+                    }
+                    HAL_TRACE_DEBUG("Freed l2seg_hwid: {}", 
+                                    l2seg_pd->l2seg_hw_id_upl[i]);
+                }
+            }
+        }
     }
 
 end:
-
     return ret;
 }
 
@@ -2024,12 +2191,15 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
     hp_l2seg_pd = hp_l2seg ? (pd_l2seg_t *)hp_l2seg->pd : NULL;
 
     if (cl_l2seg && hp_l2seg) {
-        inp_prop.nic_mode = NIC_MODE_SMART;
-        inp_prop.mode_switch_en = 1;
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
-        inp_prop.classic_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
+        inp_prop.reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(hp_l2seg);
-        inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(cl_l2seg);
+        inp_prop.flow_miss_idx = l2seg_base_oifl_id(cl_l2seg, NULL);
+        inp_prop.src_if_label = pd_uplinkif_if_label(hal_if);
+        inp_prop.if_label_check_en = 1;
+        inp_prop.if_label_check_fail_drop = 1;
+        inp_prop.mseg_bm_bc_repls = 1;
+        inp_prop.mseg_bm_mc_repls = 1;
         if (!(upd_flags & L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF)) {
             // no change, take from l2seg
             nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)hp_l2seg);
@@ -2041,17 +2211,23 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+#if 0
         if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
             inp_prop.allow_flood = 0;
         } else {
             inp_prop.allow_flood = 1;
         }
+#endif
     } else if (cl_l2seg) {
-        inp_prop.nic_mode = get_nic_mode(cl_l2seg);
         inp_prop.vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
-        inp_prop.classic_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
+        inp_prop.reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(cl_l2seg);
-        inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(cl_l2seg);
+        inp_prop.flow_miss_idx = l2seg_base_oifl_id(cl_l2seg, NULL);
+        inp_prop.src_if_label = pd_uplinkif_if_label(hal_if);
+        inp_prop.if_label_check_en = 0;
+        inp_prop.if_label_check_fail_drop = 0;
+        inp_prop.mseg_bm_bc_repls = 0;
+        inp_prop.mseg_bm_mc_repls = 0;
         if (!(upd_flags & L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF)) {
             // no change, take from l2seg
             nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)cl_l2seg);
@@ -2063,13 +2239,17 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
-        inp_prop.allow_flood = 1;
+        // inp_prop.allow_flood = 1;
     } else {
-        inp_prop.nic_mode = get_nic_mode(hp_l2seg);
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
-        inp_prop.classic_vrf = 0;
+        inp_prop.reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(hp_l2seg);
-        inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(hp_l2seg);
+        inp_prop.flow_miss_idx = l2seg_base_oifl_id(hp_l2seg, hal_if);
+        inp_prop.src_if_label = pd_uplinkif_if_label(hal_if);
+        inp_prop.if_label_check_en = 1;
+        inp_prop.if_label_check_fail_drop = 1;
+        inp_prop.mseg_bm_bc_repls = 1;
+        inp_prop.mseg_bm_mc_repls = 1;
         if (!(upd_flags & L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF)) {
             // no change, take from l2seg
             nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)hp_l2seg);
@@ -2081,11 +2261,13 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(hp_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+#if 0
         if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
             inp_prop.allow_flood = 0;
         } else {
             inp_prop.allow_flood = 1;
         }
+#endif
     }
     inp_prop.l4_profile_idx = nwsec_prof ?
         nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;

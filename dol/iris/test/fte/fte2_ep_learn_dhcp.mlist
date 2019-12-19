@@ -5,7 +5,7 @@ feature:
     package  : test.fte.eplearn
     module   : dhcp_learn
     runorder : 1
-    enable   : True
+    enable   : False
     ignore   : True
     rtl      : False
     args     :

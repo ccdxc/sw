@@ -90,21 +90,19 @@ message L2segmentStatusCpd {
 // L2SegmentStatus represents the current status of the L2 segment
 message L2SegmentStatus {
   option (delphi.update_event) = true;
-  delphi.ObjectMeta                 Meta                = 1;
+  delphi.ObjectMeta                 Meta                  = 1;
 
-  kh.L2SegmentKeyHandle             key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
-  uint32                            vrf_id              = 3;    // TODO REMOVE DOL ONLY - hw vrf id
-  multicast.OifList                 bcast_lst           = 4;  // Bcast replication list
-  multicast.OifList                 mcast_lst           = 5;  // Mcast replication list
-  multicast.OifList                 prom_lst            = 6;  // Prom replication list
-  multicast.OifList                 shared_bcast_lst    = 7;  // Shared Bcast replication list
-  multicast.OifList                 shared_mcast_lst    = 8;  // Shared Mcast replication list
-  repeated kh.L2SegmentKeyHandle    attached_l2segs     = 9;  // Attached L2segs 
+  kh.L2SegmentKeyHandle             key_or_handle         = 2 [(gogoproto.moretags) = "venice:key"];
+  uint32                            vrf_id                = 3;    // TODO REMOVE DOL ONLY - hw vrf id
+  repeated kh.L2SegmentKeyHandle    attached_l2segs       = 4;  // Attached L2segs 
+  multicast.OifList                 base_oifl             = 5; // Base oifl of L2seg
+  repeated multicast.OifList        base_oifl_cust        = 6; // Base oifl of customer l2seg per uplink 
+  repeated multicast.OifList        base_oifl_cust_shared = 7; // Base oifl of customer l2seg per uplink shared
 
   // TODO - add vNICs/uplinks this vlan is up on
   oneof l2seg_status {
-      L2segmentStatusEpd    epd_info                    = 10;    // L2seg oper state for enterprise pipeline
-      L2segmentStatusCpd    cpd_info                    = 11;    // L2seg oper state for cloud pipeline
+      L2segmentStatusEpd    epd_info                    = 8;    // L2seg oper state for enterprise pipeline
+      L2segmentStatusCpd    cpd_info                    = 9;    // L2seg oper state for cloud pipeline
   }
 }
 

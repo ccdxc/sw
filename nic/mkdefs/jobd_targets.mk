@@ -89,7 +89,8 @@ jobd/dol/firewall: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/pin
 jobd/dol/pin: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte,fte2,ftevxlan,hpvxlan,hostpin --hostpin --lite
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte2,hostpin --hostpin --lite
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte,fte2,ftevxlan,hpvxlan,hostpin --hostpin --lite
 
 .PHONY: jobd/dol/multicast
 jobd/dol/multicast: ${JOBD_PREREQS}
@@ -137,7 +138,7 @@ jobd/dol/app_redir: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/basetopo
 jobd/dol/basetopo: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo base --feature eth_base,nw_base,rdma_base,proxy_base --lite
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo base --feature eth_base,rdma_base --lite
 
 .PHONY: jobd/dol/swphv
 jobd/dol/swphv: ${JOBD_PREREQS}

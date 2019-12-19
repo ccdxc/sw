@@ -33,7 +33,7 @@ DryRunSanity up2up networking
 DryRunSanity vxlan vxlan
 DryRunSanity eth ipsg
 DryRunSanity firewall firewall
-DryRunSanity telemetry telemetry
+#DryRunSanity telemetry telemetry
 DryRunSanity admin admin
 DryRunSanity rdma rdma
 DryRunSanity eth dolut

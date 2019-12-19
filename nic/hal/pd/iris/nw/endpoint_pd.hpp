@@ -161,13 +161,22 @@ hal_ret_t ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep,
                                         bool is_upgrade,
                                         pd_ep_if_update_args_t *if_args,
                                         table_oper_t oper);
-hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper);
+hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, 
+                                   pd_ep_if_update_args_t *if_args, 
+                                   l2seg_t *attached_l2seg,
+                                   table_oper_t oper);
 hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
 
 hal_ret_t ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep,
                                           dllist_ctxt_t *pi_ep_list);
 hal_ret_t ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry);
 hal_ret_t ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list);
+hal_ret_t pd_ep_reg_mac_info(l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, 
+                             if_t *ep_if,
+                             if_t *uplink_if, lif_t *enic_lif, 
+                             registered_macs_swkey_t &key,
+                             registered_macs_otcam_swkey_mask_t &key_mask,
+                             registered_macs_actiondata_t &data);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_ENDPOINT_PD_HPP__

@@ -429,8 +429,12 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
     } else if (ret == HAL_RET_KEY_HANDLE_NOT_SPECIFIED) {
         HAL_TRACE_DEBUG("No nwsec prof passed, "
                         "using default security profile");
-        vrf->nwsec_profile_handle =
-                    g_hal_state->oper_db()->default_security_profile_hdl();
+        if (vrf_is_mgmt(vrf)) {
+            vrf->nwsec_profile_handle = HAL_HANDLE_INVALID /* L4_PROF_DEFAULT_ENTRY */;
+        } else {
+            vrf->nwsec_profile_handle =
+                g_hal_state->oper_db()->default_security_profile_hdl();
+        }
     } else {
         // either invalid key or handle
         HAL_TRACE_ERR("Security Profile not found handle invalid");
@@ -1668,6 +1672,17 @@ vrf_restore_cb (void *obj, uint32_t len)
     }
     vrf_restore_commit(vrf, vrf_info);
     return 0;    // TODO: fix me
+}
+
+bool
+vrf_is_mgmt (vrf_t *vrf) 
+{
+    if (vrf) {
+        return (vrf->vrf_type == types::VRF_TYPE_OOB_MANAGEMENT ||
+                vrf->vrf_type == types::VRF_TYPE_INTERNAL_MANAGEMENT ||
+                vrf->vrf_type == types::VRF_TYPE_INBAND_MANAGEMENT);
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------

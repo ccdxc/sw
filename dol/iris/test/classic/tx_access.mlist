@@ -8,6 +8,7 @@ feature:
     enable      : True
     ignore      : False
     runorder    : 10
+    enable      : False
 
 modules:
     - module:

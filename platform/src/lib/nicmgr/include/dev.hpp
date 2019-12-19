@@ -98,7 +98,8 @@ public:
  */
 class DeviceManager {
 public:
-    DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
+    DeviceManager(std::string config_file, fwd_mode_t fwd_mode, 
+                  bool micro_seg_en,
                   sdk::platform::platform_type_t platform, EV_P = NULL);
 
     int LoadConfig(std::string path);
@@ -115,12 +116,14 @@ public:
     void XcvrEventHandler(port_status_t *evd);
     void DelphiMountEventHandler(bool mounted);
     void DeviceResetEventHandler();
+    void SystemSpecEventHandler(bool micro_seg_en);
 
     void CreateUplinkVRFs();
     void SetHalClient(devapi *dev_api);
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
-    static string ParseDeviceConf(string input_arg, fwd_mode_t *fw_mode);
+    static string ParseDeviceConf(string input_arg, 
+                                  fwd_mode_t *fw_mode, bool *micro_seg_en);
     PdClient *GetPdClient(void) { return pd; }
     void SetUpgradeMode(UpgradeMode upg_mode) { upgrade_mode = upg_mode; };
     UpgradeMode GetUpgradeMode() { return upgrade_mode; };
@@ -151,6 +154,7 @@ private:
     UpgradeMode upgrade_mode;
     std::string config_file;
     fwd_mode_t fwd_mode;
+    bool micro_seg_en_;
     UpgradeState upg_state;
     std::vector <struct EthDevInfo *> eth_dev_info_list;
 

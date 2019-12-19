@@ -11,12 +11,14 @@ modules:
     - module:
         name    : ACL_NONIP_LOG
         spec    : acl_nonip_log.testspec
+        enable  : False
         iterate:
             - id        : ACL_ETYPE_ACTION_LOG
 
     - module:
         name    : ACL_IP_LOG
         spec    : acl_ip_log.testspec
+        enable  : False
         iterate:
             - id        : ACL_IPV4_DIP_ACTION_LOG
               flow      : filter://type=IPV4

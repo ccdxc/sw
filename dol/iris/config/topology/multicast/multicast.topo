@@ -9,59 +9,59 @@ uplink:
         mode    : TRUNK
         sriov   : True
         status  : UP
-    - entry:
-        id      : Uplink2
-        port    : 2
-        mode    : TRUNK
-        sriov   : True
-        status  : UP
-    - entry:
-        id      : Uplink3
-        port    : 3
-        mode    : PC_MEMBER
-        sriov   : False
-        status  : UP
-    - entry:
-        id      : Uplink4
-        port    : 4
-        mode    : PC_MEMBER
-        sriov   : False
-        status  : UP
-    - entry:
-        id      : Uplink6
-        port    : 6
-        mode    : PC_MEMBER
-        sriov   : False
-        status  : UP
-    - entry:
-        id      : Uplink7
-        port    : 7
-        mode    : PC_MEMBER
-        sriov   : False
-        status  : UP
-    - entry:
-        id      : Uplink8
-        port    : 8
-        mode    : PC_MEMBER
-        sriov   : False
-        status  : UP
-uplinkpc:
-    - entry:
-        id      : UplinkPc1
-        port    : 3
-        mode    : TRUNK
-        members :
-            - ref://store/objects/id=Uplink3
-            - ref://store/objects/id=Uplink4
-
-    - entry:
-        id      : UplinkPc2
-        port    : 6
-        mode    : TRUNK
-        members :
-            - ref://store/objects/id=Uplink6
-            - ref://store/objects/id=Uplink7
-            - ref://store/objects/id=Uplink8
+#    - entry:
+#        id      : Uplink2
+#        port    : 2
+#        mode    : TRUNK
+#        sriov   : True
+#        status  : UP
+#    - entry:
+#        id      : Uplink3
+#        port    : 3
+#        mode    : PC_MEMBER
+#        sriov   : False
+#        status  : UP
+#    - entry:
+#        id      : Uplink4
+#        port    : 4
+#        mode    : PC_MEMBER
+#        sriov   : False
+#        status  : UP
+#    - entry:
+#        id      : Uplink6
+#        port    : 6
+#        mode    : PC_MEMBER
+#        sriov   : False
+#        status  : UP
+#    - entry:
+#        id      : Uplink7
+#        port    : 7
+#        mode    : PC_MEMBER
+#        sriov   : False
+#        status  : UP
+#    - entry:
+#        id      : Uplink8
+#        port    : 8
+#        mode    : PC_MEMBER
+#        sriov   : False
+#        status  : UP
+uplinkpc: None
+#    - entry:
+#        id      : UplinkPc1
+#        port    : 3
+#        mode    : TRUNK
+#        members :
+#            - ref://store/objects/id=Uplink3
+#            - ref://store/objects/id=Uplink4
+#
+#    - entry:
+#        id      : UplinkPc2
+#        port    : 6
+#        mode    : TRUNK
+#        members :
+#            - ref://store/objects/id=Uplink6
+#            - ref://store/objects/id=Uplink7
+#            - ref://store/objects/id=Uplink8
 
 acls: ref://store/specs/id=ACL
 

@@ -96,6 +96,7 @@ message AclInternalSelector {
   bool                direction        = 7;    // Flow direction
   bool                from_cpu         = 8;    // Match if from cpu
   bool                no_drop          = 9;    // Match on no drop packets
+  bool                ep_learn_en      = 10;   // Match learn enable
 }
 
 // AclInternalActionInfo has action parameters for internal use only with 

@@ -9,8 +9,11 @@
 
 namespace iris {
 
+#define MAX_FILTERS 32
+#if 0
 #define MAX_FILTERS_CLASSIC 32
 #define MAX_FILTERS_SMART   4096
+#endif
 
 class devapi_enic;
 class devapi_l2seg;
@@ -64,6 +67,8 @@ public:
     static devapi_lif *factory(lif_info_t *info);
     static void destroy(devapi_lif *lif);
 
+    static sdk_ret_t set_micro_seg_en(bool en);
+
     sdk_ret_t add_mac(mac_t mac, bool re_add = false);
     sdk_ret_t del_mac(mac_t mac, bool update_db = true, bool add_failure = false);
 
@@ -114,6 +119,7 @@ public:
     bool is_oobmnic(void);
     bool is_intmgmtmnic(void);
     bool is_inbmgmtmnic(void);
+    bool is_host(void);
     bool is_hostmgmt(void);
     bool is_intmgmt(void);
     bool is_classicfwd(vlan_t vlan);

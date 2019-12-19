@@ -19,6 +19,7 @@ modules:
     - module:
         name    : MCAST_ACCESS
         spec    : tx_mc_access.testspec
+        enable  : False
         iterate :
             - flow      : filter://type=MAC,label=CLASSICL2MC
               segment   : filter://native=False
@@ -42,6 +43,7 @@ modules:
     - module:
         name    : MCAST_ACCESS_ALLMC
         spec    : tx_allmc_access.testspec
+        enable  : False
         iterate :
             - flow      : filter://type=MAC,label=CLASSIC_ALLMC
               segment   : filter://native=False

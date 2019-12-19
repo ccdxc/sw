@@ -290,4 +290,15 @@ HAL_GET_API(filter, Filter, endpoint);
 // Qos Calls
 HAL_GET_API(qos_class, QosClass, qos);
 
+
+Status
+hal_grpc::micro_seg_update(MicroSegRequestMsg& req_msg,
+                           MicroSegResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: Micro seg Update\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+
 } // namespace iris

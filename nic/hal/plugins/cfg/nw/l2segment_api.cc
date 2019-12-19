@@ -91,15 +91,12 @@ void *
 l2seg_get_pi_nwsec(l2seg_t *l2seg)
 {
     vrf_t            *pi_vrf = NULL;
-    nwsec_profile_t     *pi_nwsec = NULL;
+    nwsec_profile_t  *pi_nwsec = NULL;
 
     // Check if if is enicif
     pi_vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
     pi_nwsec = find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
-    if (!pi_nwsec) {
-        return NULL;
-    }
     return pi_nwsec;
 }
 
@@ -162,51 +159,6 @@ uint32_t
 l2seg_get_bcast_fwd_policy(l2seg_t *pi_l2seg)
 {
     return (uint32_t)pi_l2seg->bcast_fwd_policy;
-}
-
-// ----------------------------------------------------------------------------
-// Returns bcast_oif_list
-// ----------------------------------------------------------------------------
-oif_list_id_t
-l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg)
-{
-    return pi_l2seg->base_oif_list_id + HAL_BCAST_OIFLIST_OFFSET;
-}
-
-// ----------------------------------------------------------------------------
-// Returns mcast_oif_list
-// ----------------------------------------------------------------------------
-oif_list_id_t
-l2seg_get_mcast_oif_list(l2seg_t *pi_l2seg)
-{
-    return pi_l2seg->base_oif_list_id + HAL_MCAST_OIFLIST_OFFSET;
-}
-
-// ----------------------------------------------------------------------------
-// Returns prmsc_oif_list
-// ----------------------------------------------------------------------------
-oif_list_id_t
-l2seg_get_prmsc_oif_list(l2seg_t *pi_l2seg)
-{
-    return pi_l2seg->base_oif_list_id + HAL_PRMSC_OIFLIST_OFFSET;
-}
-
-// ----------------------------------------------------------------------------
-// Returns shared bcast_oif_list
-// ----------------------------------------------------------------------------
-oif_list_id_t
-l2seg_get_shared_bcast_oif_list(l2seg_t *pi_l2seg)
-{
-    return pi_l2seg->base_oif_list_id + HAL_SHARED_BCAST_OIFLIST_OFFSET;
-}
-
-// ----------------------------------------------------------------------------
-// Returns shared mcast_oif_list
-// ----------------------------------------------------------------------------
-oif_list_id_t
-l2seg_get_shared_mcast_oif_list(l2seg_t *pi_l2seg)
-{
-    return pi_l2seg->base_oif_list_id + HAL_SHARED_MCAST_OIFLIST_OFFSET;
 }
 
 // ----------------------------------------------------------------------------

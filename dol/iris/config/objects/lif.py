@@ -313,6 +313,7 @@ class LifObject(base.ConfigObjectBase):
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         req_spec.vlan_strip_en = self.vlan_strip_en
         req_spec.vlan_insert_en = self.vlan_insert_en
+        req_spec.pinned_uplink_if_key_handle.interface_id = 128
         if self.tx_qos_class:
             req_spec.tx_qos_class.qos_group = self.tx_qos_class.GroupEnum()
         if self.rx_qos_class:
@@ -342,7 +343,7 @@ class LifObject(base.ConfigObjectBase):
             for queue in queue_type.queues.GetAll():
                 qstate_spec = req_spec.lif_qstate.add()
                 queue.PrepareHALRequestSpec(qstate_spec)
-        
+
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.lif_handle
         if (self.c_lib):
@@ -377,7 +378,7 @@ class LifObject(base.ConfigObjectBase):
         return
 
     def ProcessHALGetResponse(self, req_spec, resp_spec):
-        logger.info("- GET LIF %s = %s" % (self.GID(), 
+        logger.info("- GET LIF %s = %s" % (self.GID(),
                     haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.get_resp = copy.deepcopy(resp_spec)
         return

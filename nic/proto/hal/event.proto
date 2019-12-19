@@ -8,6 +8,7 @@ syntax = "proto3";
 import "types.proto";
 import "interface.proto";
 import "port.proto";
+import "system.proto";
 package event;
 option go_package="halproto";
 
@@ -19,9 +20,10 @@ service Event {
 
 // events that HAL generates and app(s) can listen to
 enum EventId {
-  EVENT_ID_NONE           = 0;
-  EVENT_ID_PORT_STATE     = 1;
-  EVENT_ID_LIF_ADD_UPDATE = 2;
+  EVENT_ID_NONE            = 0;
+  EVENT_ID_PORT_STATE      = 1;
+  EVENT_ID_LIF_ADD_UPDATE  = 2;
+  EVENT_ID_MICRO_SEG_STATE = 3;
 }
 
 enum EventOp {
@@ -37,10 +39,11 @@ message EventRequest {
 }
 
 message EventResponse {
-  types.ApiStatus                 api_status = 1;    // API status code
-  EventId                         event_id   = 2;
+  types.ApiStatus                 api_status        = 1;    // API status code
+  EventId                         event_id          = 2;
   oneof event_info {
-      intf.LifGetResponse         lif_event  = 3;    // Lif Info
-      port.PortResponse           port_event = 4;    // Port Info
+      intf.LifGetResponse         lif_event         = 3;    // Lif Info
+      port.PortResponse           port_event        = 4;    // Port Info
+      sys.MicroSegEvent           micro_seg_event   = 5;    // Micro Seg Event
   }
 }

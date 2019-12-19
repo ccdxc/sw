@@ -144,8 +144,6 @@ SystemServiceImpl::ForwardingModeGet(ServerContext *context,
                                      const Empty *request,
                                      ForwardingModeResponse *rsp)
 {
-    HAL_TRACE_DEBUG("Rcvd Get Forwarding Mode");
-
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     hal::forwarding_mode_get(rsp);
     hal::hal_cfg_db_close();
@@ -166,3 +164,48 @@ SystemServiceImpl::FeatureProfileGet(ServerContext *context,
 
     return Status::OK;
 }
+
+Status 
+SystemServiceImpl::MicroSegUpdate(ServerContext *context,
+                                  const MicroSegUpdateRequestMsg *req,
+                                  MicroSegUpdateResponseMsg *rsp)
+{
+    uint32_t          i, nreqs = req->request_size();
+    MicroSegUpdateResponse *response;
+
+    HAL_TRACE_DEBUG("Rcvd Micro Segmentation update");
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::micro_seg_update(spec, response);
+    }
+    return Status::OK;
+}
+
+Status 
+SystemServiceImpl::MicroSegStatusUpdate(ServerContext *context,
+                                        const MicroSegRequestMsg *req,
+                                        MicroSegResponseMsg *rsp)
+{
+    uint32_t          i, nreqs = req->request_size();
+    MicroSegResponse  *response;
+
+    HAL_TRACE_DEBUG("Rcvd Micro Segmentation status update");
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::micro_seg_status_update(spec, response);
+    }
+    return Status::OK;
+}
+

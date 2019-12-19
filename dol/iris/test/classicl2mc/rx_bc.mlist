@@ -20,6 +20,7 @@ modules:
     - module:
         name    : BCAST_ACCESS
         spec    : rx_bc_access.testspec
+        enable  : False
         iterate :
             - flood : True
               flow  : filter://label=CLASSICL2BC

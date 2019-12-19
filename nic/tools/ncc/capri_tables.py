@@ -344,7 +344,7 @@ class capri_table:
 
     def num_actions(self):
         return len(self.action_data)
-    
+
     def ct_compute_phv_size(self, cflist):
         # compute the phv size based on phv bits to handle any unions/overlaps
         # sorted_cflist = sorted(cflist, key=lambda k: k.phv_bit) - by caller
@@ -833,7 +833,7 @@ class capri_table:
                     (self.gtm.d.name, self.p4_table.name, k[0].hfname))
                 continue
             valid_keys.append(k)
-        
+
         self.keys = valid_keys
         # fix k-i sizes based on unions
         key_cfs = [cf for cf,_,_ in self.keys]
@@ -849,7 +849,7 @@ class capri_table:
                     (self.gtm.d.name, self.p4_table.name, k.hfname))
                 continue
             valid_i.append(k)
-        
+
         self.input_fields = valid_i
         if self.i_size < 0:
             self.i_size = self.ct_compute_phv_size(self.input_fields)
@@ -912,7 +912,7 @@ class capri_table:
                     # (like hv bit) that appear at the front
                     # if index table has hv bits or other header fields that cannot be phv aligned,
                     # add padding at start only if end is byte aligned
-                    
+
                     start_pad = cs % 8
                     if (self.is_index_table() and ((ce % 8) == 0)) or \
                         (not self.is_index_table() and (start_pad < 4 and ((cs+cw)%8) == 0)):
@@ -2449,7 +2449,7 @@ class capri_table:
             one_km = True if k_start/max_kmB == k_end/max_kmB else False
             moved_bits = 0
             if one_km:
-                # list is reversred so that bytes get re-inserted in ascending order 
+                # list is reversred so that bytes get re-inserted in ascending order
                 ibytes_in_k.sort(reverse=True)
                 update_bit_loc = True if (fix_km_prof.bit_loc >= km_kstart and \
                                          fix_km_prof.bit_loc <= km_kend) \
@@ -2485,7 +2485,7 @@ class capri_table:
                         km1_i2k_bytes.append(b)
                     else:
                         ncc_assert(0)
-            
+
                 if len(km0_i2k_bytes) % 2:
                     # keep 1 byte in key so that start ofset stays on 2B alignment
                     use_byte = None
@@ -3155,7 +3155,7 @@ class capri_key_maker:
         # keep flit components of the combined profile.. these are needed while
         # sharing profiles across tables
         self.flit_km_profiles = OrderedDict() # {fid: profile}
-        # HACK: there is problem in sharing km which has overflow key 
+        # HACK: there is problem in sharing km which has overflow key
         self.has_overflow_key = False   # set it when overflow key is added
 
     def _merge(self, rhs, is_overflow_key_merge=False):
@@ -3856,8 +3856,8 @@ class capri_stage:
                         break
                 if km_id_used:
                     continue
-                # HACK: there is problem in sharing km which has overflow key 
-                # once overflow key is added to a key maker, need to check that overflow key 
+                # HACK: there is problem in sharing km which has overflow key
+                # once overflow key is added to a key maker, need to check that overflow key
                 # is not disturbed
                 if km.has_overflow_key or new_km.has_overflow_key:
                     continue
@@ -3890,7 +3890,7 @@ class capri_stage:
                         self.gtm.tm.logger.debug("km has overflow key and i1bytes - cannot share")
                         cannot_share = True
                         break
-                        
+
                     if cannot_share:
                         continue
 
@@ -3918,7 +3918,7 @@ class capri_stage:
                         self.gtm.tm.logger.debug("km has overflow key and i1bytes - cannot share")
                         cannot_share = True
                         break
-                        
+
                     if cannot_share:
                         continue
                 '''
@@ -5079,11 +5079,13 @@ class capri_gress_tm:
             self.tm.logger.debug("%s" % km_str)
 
     def init_tables(self, stage_tables):
+        self.tm.logger.debug("Initing tables: ...")
         action_id_size = self.tm.be.hw_model['match_action']['action_id_size']
         self.stage_tables = stage_tables
         stg = -1
         for stg_id, table_list in enumerate(stage_tables):
             stg += 1
+            self.tm.logger.debug("Initing stage %d: ..." % stg)
             if stg not in self.stages:
                 self.stages[stg] = capri_stage(self, stg_id)
                 self.stages[stg].p4_table_list = sorted(table_list, key=lambda k:k.name)

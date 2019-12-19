@@ -125,6 +125,7 @@ vrf_t *vrf_lookup_by_id(vrf_id_t tid);
 vrf_t *vrf_lookup_key_or_handle(const VrfKeyHandle& kh);
 const char *vrf_spec_keyhandle_to_str(const VrfKeyHandle& key_handle);
 const char *vrf_keyhandle_to_str(vrf_t *vrf);
+bool vrf_is_mgmt(vrf_t *vrf);
 
 
 hal_ret_t vrf_create(VrfSpec& spec, VrfResponse *rsp);

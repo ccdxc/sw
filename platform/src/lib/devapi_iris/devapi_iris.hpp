@@ -56,6 +56,9 @@ public:
     // Generic APIs
     sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
 
+    // Generic APIs
+    sdk_ret_t set_micro_seg_en(bool en);
+
     // Single Wire Management(SWM) APIs
     sdk_ret_t swm_enable(void);
     sdk_ret_t swm_disable(void);
@@ -118,9 +121,11 @@ private:
         SDK_SPINLOCK_DESTROY(&slock_);
     }
     sdk_ret_t init_(void);
+    sdk_ret_t micro_seg_halupdate_(bool en);
 
 private:
-    fwd_mode_t fwd_mode_;
+    // fwd_mode_t fwd_mode_;
+    bool mirco_seg_en_;
     sdk_spinlock_t slock_;
 
 };

@@ -89,6 +89,7 @@ hal_grpc::connect_hal(void)
     port_stub_ = port::Port::NewStub(channel);
     crypto_stub_ = internal::Internal::NewStub(channel);
     accel_rgroup_stub_ = accelRGroup::AccelRGroup::NewStub(channel);
+    sys_stub_ = sys::System::NewStub(channel);
 
     return SDK_RET_OK;
 }
@@ -108,9 +109,9 @@ hal_grpc::get_hal_grpc(void)
 
 #define SET_TIMEOUT()                                                       \
     uint8_t timeout = HAL_GRPC_API_TIMEOUT;                                 \
-    if (fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) {                     \
+    /*if (fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) {                   \
         timeout = HAL_GRPC_CLASSIC_API_TIMEOUT;                             \
-    }                                                                       \
+    } */                                                                    \
     std::chrono::system_clock::time_point deadline =                        \
         std::chrono::system_clock::now() + seconds(timeout);                \
     context.set_deadline(deadline);
@@ -162,6 +163,22 @@ hal_grpc::get_hal_grpc(void)
         status = pkg ## _stub_->obj_class ## Get(&context, req_msg, &rsp_msg);   \
         return status;                                                      \
     }
+
+//-----------------------------------------------------------------------------
+// System Update to HAL
+//-----------------------------------------------------------------------------
+Status
+hal_grpc::micro_seg_update(MicroSegRequestMsg& req_msg,
+                           MicroSegResponseMsg& rsp_msg)
+{
+    grpc::ClientContext         context;
+    grpc::Status                status;
+
+    SET_TIMEOUT();
+    status = sys_stub_->MicroSegStatusUpdate(&context, req_msg, &rsp_msg);
+
+    return status;
+}
 
 //-----------------------------------------------------------------------------
 // Vrf Create to HAL

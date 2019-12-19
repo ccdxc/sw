@@ -2,8 +2,9 @@
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
+#include "EGRESS_compute_checksum_k.h"
 
-struct compute_checksum_k k;
+struct compute_checksum_k_ k;
 struct compute_checksum_d d;
 struct phv_               p;
 

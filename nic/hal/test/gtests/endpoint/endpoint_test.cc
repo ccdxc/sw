@@ -92,6 +92,7 @@ TEST_F(endpoint_test, test1)
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1);
+    ten_spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -283,6 +284,7 @@ TEST_F(endpoint_test, test2)
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(2);
+    ten_spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -416,6 +418,7 @@ TEST_F(endpoint_test, test3)
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(3);
+    ten_spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
@@ -477,6 +480,7 @@ TEST_F(endpoint_test, test3)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
+    printf("EP Create ret: %d", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Disable ipsg on nwsec

@@ -77,7 +77,7 @@ nicmgr_if_init(void)
      * Interface with the Accel device directly
      */
     devmgr = new DeviceManager(FLAGS_nicmgr_config_file,
-                               sdk::platform::FWD_MODE_CLASSIC, platform_type_t::PLATFORM_TYPE_SIM);
+                               sdk::platform::FWD_MODE_CLASSIC, false, platform_type_t::PLATFORM_TYPE_SIM);
     devmgr->LoadConfig(FLAGS_nicmgr_config_file);
     devmgr->HalEventHandler(true);
     accel_dev = (AccelDev *)devmgr->GetDevice(DEVMGR_ACCEL_DEV_NAME);

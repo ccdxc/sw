@@ -20,10 +20,48 @@ namespace pd {
 #define L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF           0x1
 #define HAL_MAX_HW_L2SEGMENTS                       2048
 
+// Mgmt L2seg:
+// (A) - l2seg_fl_lkup_id
+// Customer L2seg:
+// (B) - l2seg_fl_lkup_id
+// (C) - l2seg_fl_lkup_id_upl
+//
+// Non-Shared Mgmt 
+// - Uplink: InProp: vrf: (A), mcast_vrf: (A) 
+// - Lif: InProp: vrf: (A), mcast_vrf: (A) 
+// - Reg_mac entries
+//   - (A)
+// Non-Shared Customer L2seg
+// - Uplink: InProp: vrf: (B), mcast_vrf: (B) 
+// - Lif: InPropMacVlan: vrf: (B), mcast_vrf: (B) 
+// - Reg_mac entries
+//   - Unicast
+//     - (B)
+//   - Multicast
+//     - N/A
+// - Flow entries
+//   - (B)
+// Shared Mgmt & Customer l2seg
+// - Uplink: InProp: vrf: (B), mcast_vrf: (A), if_lbl_check: drop
+// - Lif: InPropMacVlan: vrf: (B), mcast_vrf: (B) Mcast is never a hit
+//                       if_label_check_en:1, if_label_check_fail_drop = 0
+// - Lif: InProp: vrf: (B), mcast_vrf: (A), 
+//                if_lbl_check: make reg_mac miss and go out.
+// - Reg_mac
+//   - Unicast
+//     - (B)
+//   - Multicast
+//     - (A)
+// - Flow
+//   - (B)
+//
+
 // l2seg pd state
 typedef struct pd_l2seg_s {
     l2seg_hw_id_t   l2seg_hw_id;         // hw id for this segment
-    uint32_t        l2seg_fl_lkup_id;    // used in data plane as vrf
+    l2seg_hw_id_t   l2seg_hw_id_upl[HAL_MAX_UPLINK_IF_PCS];
+    uint32_t        l2seg_fl_lkup_id;    
+    uint32_t        l2seg_fl_lkup_id_upl[HAL_MAX_UPLINK_IF_PCS];// May be not needed
     uint32_t        cpu_l2seg_id;        // traffic from CPU
     // [Uplink ifpc_id] -> Input Properties(Hash Index).
     // If L2Seg is native on an uplink, it will have two entries.
@@ -74,6 +112,8 @@ l2seg_pd_init (pd_l2seg_t *l2seg_pd)
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
         l2seg_pd->inp_prop_tbl_idx[i]     = INVALID_INDEXER_INDEX;
         l2seg_pd->inp_prop_tbl_idx_pri[i] = INVALID_INDEXER_INDEX;
+        l2seg_pd->l2seg_hw_id_upl[i]      = INVALID_INDEXER_INDEX; 
+        l2seg_pd->l2seg_fl_lkup_id_upl[i] = INVALID_INDEXER_INDEX;
     }
 
     return l2seg_pd;
@@ -146,6 +186,10 @@ hal_ret_t l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
                                  if_t *prom_enic_if,
                                  input_properties_actiondata_t &data);
 hal_ret_t l2seg_program_eps_reg_mac(l2seg_t *l2seg, table_oper_t oper);
+hal_ret_t l2seg_pd_upd_cpu_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
+hal_ret_t l2seg_cpu_inp_prop_form_data(pd_l2seg_t *l2seg_pd,
+                                       input_properties_actiondata_t &data);
+hal_ret_t l2seg_repgm_mgmt_enics_eps(l2seg_t *l2seg, l2seg_t *hp_l2seg);
 }   // namespace pd
 }   // namespace hal
 

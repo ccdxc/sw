@@ -3,7 +3,7 @@ feature:
     sub     : rxl3
     package : test.eth
     module  : eth
-    enable  : True
+    enable  : False
     ignore  : False
     spec    : rx_l3.testspec
 

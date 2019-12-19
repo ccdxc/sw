@@ -46,11 +46,10 @@ key2str(void *key) {
         inet_ntop(AF_INET, swkey->flow_lkp_metadata_lkp_dst, dststr, INET_ADDRSTRLEN);
     }
 
-    snprintf(str, sizeof(str), "type=%lu,inst=%lu,dir=%lu,dst=%s,"
+    snprintf(str, sizeof(str), "type=%lu,inst=%lu,dst=%s,"
              "src=%s,dport=%lu,sport=%lu,proto=%lu,vrf=%lu",
              swkey->flow_lkp_metadata_lkp_type,
              swkey->flow_lkp_metadata_lkp_inst,
-             swkey->flow_lkp_metadata_lkp_dir,
              dststr, srcstr,
              swkey->flow_lkp_metadata_lkp_dport,
              swkey->flow_lkp_metadata_lkp_sport,

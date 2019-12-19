@@ -66,6 +66,9 @@ public:
     virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) {
         return SDK_RET_INVALID_OP;
     }
+    virtual sdk_ret_t set_micro_seg_en(bool en) {
+        return SDK_RET_INVALID_OP;
+    }
 
     // single wire management APIs
     virtual sdk_ret_t swm_enable(void) = 0;

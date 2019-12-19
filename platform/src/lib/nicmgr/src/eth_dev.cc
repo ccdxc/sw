@@ -971,8 +971,7 @@ devcmd_done:
     ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
     NIC_LOG_DEBUG("DevCmd Time taken: {}s.{}ns",
                   ts_diff.tv_sec, ts_diff.tv_nsec);
-    if (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC &&
-        ts_diff.tv_sec >= DEVCMD_TIMEOUT) {
+    if (ts_diff.tv_sec >= DEVCMD_TIMEOUT) {
         NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
     }
     NIC_HEADER_TRACE("Devcmd End");

@@ -464,6 +464,7 @@ func ifGetAllStr() map[uint64]string {
 		id := resp.GetSpec().GetKeyOrHandle().GetInterfaceId()
 		m[id] = ifRespToStr(resp)
 	}
+	m[0] = "DROP"
 
 	return m
 }

@@ -15,6 +15,14 @@ using sys::SystemResponse;
 using sys::ApiStatsResponse;
 using sys::FeatureProfileResponse;
 using sys::ForwardingModeResponse;
+using sys::MicroSegRequestMsg;
+using sys::MicroSegResponseMsg;
+using sys::MicroSegSpec;
+using sys::MicroSegResponse;
+using sys::MicroSegUpdateRequestMsg;
+using sys::MicroSegUpdateResponseMsg;
+using sys::MicroSegUpdateRequest;
+using sys::MicroSegUpdateResponse;
 using types::Empty;
 
 class SystemServiceImpl final : public System::Service {
@@ -55,6 +63,12 @@ public:
     Status FeatureProfileGet(ServerContext *context,
                              const Empty *request,
                              FeatureProfileResponse *rsp) override;
+    Status MicroSegStatusUpdate(ServerContext *context,
+                                const MicroSegRequestMsg *req,
+                                MicroSegResponseMsg *rsp) override;
+    Status MicroSegUpdate(ServerContext *context,
+                          const MicroSegUpdateRequestMsg *req,
+                          MicroSegUpdateResponseMsg *rsp) override;
 };
 #endif    // __SYSTEM_SVC_HPP__
 

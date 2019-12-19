@@ -19,13 +19,13 @@ ifeq ($(FWTYPE),gold)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	$(eval STRIP := )
-    ifeq ($(PIPELINE),$(filter $(PIPELINE),apollo artemis apulu))
+    ifeq ($(PIPELINE),$(filter $(PIPELINE),iris apollo artemis apulu))
 	    $(eval STRIP := --no-strip)
     endif
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
 	cd $(NICDIR) && $(NICDIR)/sdk/platform/mputrace/captrace.py gen_syms \
-		--pipeline $(PIPELINE)
+		--pipeline $(PIPELINE) 
 endif
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh

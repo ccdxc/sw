@@ -154,6 +154,7 @@ modules:
     - module:
         name    : IPV4_VXLAN
         spec    : tx_vxlan.testspec
+        enable  : False
         iterate:
             - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
@@ -162,6 +163,7 @@ modules:
     - module:
         name    : IPV6_VXLAN
         spec    : tx_vxlan.testspec
+        enable  : False
         iterate:
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
@@ -170,6 +172,7 @@ modules:
     - module:
         name    : ARP_RARP_VXLAN
         spec    : tx_vxlan_arp.testspec
+        enable  : False
         iterate :
             - type: ARP_REQ_UC
             - type: ARP_RESP
@@ -179,6 +182,7 @@ modules:
     - module:
         name    : NONIP_VXLAN
         spec    : tx_vxlan_nonip.testspec
+        enable  : False
         iterate :
             - segment: filter://native=False
               flow   : filter://label=NETWORKING

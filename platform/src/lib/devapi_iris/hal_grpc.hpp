@@ -18,6 +18,8 @@
 #include "gen/proto/port.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/accel_rgroup.grpc.pb.h"
+#include "gen/proto/system.grpc.pb.h"
+#include "gen/proto/device.grpc.pb.h"
 #include "hal_grpc.hpp"
 #include "include/sdk/base.hpp"
 #include "devapi_iris_types.hpp"
@@ -132,6 +134,10 @@ using internal::CryptoKeyCreateWithIdRequestMsg;
 using internal::CryptoKeyCreateWithIdResponseMsg;
 using internal::CryptoKeyUpdateRequestMsg;
 using internal::CryptoKeyUpdateResponseMsg;
+using sys::MicroSegRequestMsg;
+using sys::MicroSegResponseMsg;
+using sys::MicroSegSpec;
+using sys::MicroSegResponse;
 using std::chrono::seconds;
 
 namespace iris {
@@ -158,7 +164,8 @@ namespace iris {
 class hal_grpc {
 private:
     static hal_grpc *hal_;
-    fwd_mode_t fwd_mode_;
+    bool micro_seg_en_;
+    // fwd_mode_t fwd_mode_;
     // API stubs
     std::unique_ptr<vrf::Vrf::Stub> vrf_stub_;
     std::unique_ptr<intf::Interface::Stub> interface_stub_;
@@ -172,6 +179,7 @@ private:
     std::unique_ptr<port::Port::Stub> port_stub_;
     std::unique_ptr<internal::Internal::Stub> crypto_stub_;
     std::unique_ptr<accelRGroup::AccelRGroup::Stub> accel_rgroup_stub_;
+    std::unique_ptr<sys::System::Stub> sys_stub_;
     std::shared_ptr<grpc::Channel> channel;
 private:
     sdk_ret_t init_(void);
@@ -186,8 +194,17 @@ public:
     // Make GRPC connection to HAL
     sdk_ret_t connect_hal(void);
 
+#if 0
     void set_fwd_mode(fwd_mode_t fwd_mode) { fwd_mode_ = fwd_mode; }
     fwd_mode_t get_fwd_mode(void) { return fwd_mode_; }
+#endif
+
+    void set_micro_seg_en(bool en) { micro_seg_en_ = en; }
+    bool get_micro_seg_en(void) { return micro_seg_en_; }
+
+    // System APIs
+    Status micro_seg_update(MicroSegRequestMsg& req_msg,
+                            MicroSegResponseMsg& rsp_msg);
 
     // Vrf APIs
     Status vrf_create(VrfRequestMsg& req_msg,

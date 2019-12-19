@@ -46,3 +46,5 @@ fields:
     tcp_invalid_flags_drop: 0
     tcp_nonsyn_noack_drop: 0
     tcp_normalize_mss: 0
+    policy_enforce_en: 0
+    flow_learn_en: 0

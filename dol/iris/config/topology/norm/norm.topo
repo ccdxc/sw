@@ -10,12 +10,12 @@ uplink:
         sriov   : True
         status  : UP
 
-    - entry:
-        id      : Uplink2
-        port    : 2
-        mode    : TRUNK
-        sriov   : True
-        status  : UP
+#    - entry:
+#        id      : Uplink2
+#        port    : 2
+#        mode    : TRUNK
+#        sriov   : True
+#        status  : UP
 
 uplinkpc: None
 

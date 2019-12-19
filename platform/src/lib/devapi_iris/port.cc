@@ -221,10 +221,21 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
         goto end;
     }
 
+    // TODO: Introduce port profiles in device.conf and 
+    //       remvoe this micro-seg check.
+    //       In GS case we dont want to propogate the IF down on host
+    //       to physical port as we can lose venice connectivity.
+    //       So in this scenario we should not propogate the IF down.
+    if (hal->get_micro_seg_en()) {
+        NIC_FUNC_DEBUG("Not allowd in classic nic mode ... ignoring!");
+        return (SDK_RET_OK);
+    }
+#if 0
     if (hal->get_fwd_mode() != sdk::platform::FWD_MODE_CLASSIC) {
         NIC_FUNC_DEBUG("Not allowd in classic nic mode ... ignoring!");
         return (SDK_RET_OK);
     }
+#endif
 
     req = req_msg.add_request();
     req->CopyFrom(rsp.spec());

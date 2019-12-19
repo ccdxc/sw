@@ -83,15 +83,19 @@ hal_ret_t pd_oif_list_add_oif(pd_func_args_t *pd_func_args)
     pd_oif_list_add_oif_args_t *args = pd_func_args->pd_oif_list_add_oif;
     oif_list_id_t list = args->list;
     oif_t *oif = args->oif;
-    p4_replication_data_t data = {};
-    if_t *pi_if = oif->intf;
-    l2seg_t *pi_l2seg = oif->l2seg;
+    p4_replication_data_t data = {0};
+    if_t *pi_if = NULL;
+    l2seg_t *pi_l2seg = NULL;
 
-    SDK_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
-
-    ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, &data);
-    if (ret != HAL_RET_OK) {
-        return ret;
+    if (oif->intf == NULL) {
+        HAL_TRACE_DEBUG("Adding drop entry to replication list: {}", list);
+    } else {
+        pi_if = oif->intf;
+        pi_l2seg = oif->l2seg;
+        ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, NULL, &data);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
     HAL_TRACE_DEBUG("Replication data add: isTnl: {}; isQid: {}:: rw_idx: {}:: "
@@ -158,14 +162,18 @@ hal_ret_t pd_oif_list_remove_oif(pd_func_args_t *pd_func_args)
     oif_list_id_t list = args->list;
     oif_t *oif = args->oif;
     p4_replication_data_t data = {};
-    if_t *pi_if = oif->intf;
-    l2seg_t *pi_l2seg = oif->l2seg;
+    if_t *pi_if = NULL;
+    l2seg_t *pi_l2seg = NULL;
 
-    SDK_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
-
-    ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, &data);
-    if (ret != HAL_RET_OK) {
-        return ret;
+    if (oif->intf == NULL) {
+        HAL_TRACE_DEBUG("Removing drop entry to replication list: {}", list);
+    } else {
+        pi_if = oif->intf;
+        pi_l2seg = oif->l2seg;
+        ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, NULL, &data);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
     HAL_TRACE_DEBUG("Replication data del: isTnl: {}:: isQid: {}:: rw_idx: {}:: "

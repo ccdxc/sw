@@ -26,7 +26,7 @@ ipfix_flow_info:
     phvwr       p.ipfix_metadata_flow_role, d.u.flow_info_d.flow_role
 
     phvwr       p.ipfix_record_common_egress_interface, d.u.flow_info_d.dst_lport
-    phvwr       p.ipfix_record_common_egress_interface_type, d.u.flow_info_d.multicast_en
+    // phvwr       p.ipfix_record_common_egress_interface_type, d.u.flow_info_d.multicast_en
     phvwr       p.ipfix_record_common_start_timestamp, d.u.flow_info_d.start_timestamp
     phvwr       p.ipfix_record_ip_role, d.u.flow_info_d.flow_role
     phvwr       p.ipfix_record_ip_ttl, d.u.flow_info_d.flow_ttl

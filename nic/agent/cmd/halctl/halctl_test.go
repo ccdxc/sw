@@ -353,7 +353,7 @@ func (h *halCtlSuite) TestL2SegmentGet(c *C) {
 		resp, err = h.getL2Segments(l2SegGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get L2Segments")
-	AssertEquals(c, true, strings.Contains(resp, "1       CL"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "1       Mgmt"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 

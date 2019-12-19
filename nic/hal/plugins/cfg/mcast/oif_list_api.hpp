@@ -81,6 +81,11 @@ hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
 // Deletes the special node for ingress driven copy
 hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list);
 
+
+hal_ret_t oif_list_copy(oif_list_id_t dst_oifl_id, oif_list_id_t src_oifl_id);
+hal_ret_t oif_list_copy_oifs(oif_list_id_t dst_oifl_id, oif_list_id_t src_oifl_id);
+hal_ret_t oif_list_remove_oifs(oif_list_id_t oifl_id);
+
 void *oif_list_get_key_func(void *entry);
 uint32_t oif_list_key_size(void);
 

@@ -11,6 +11,7 @@ namespace lib {
 SDK_DEFINE_MAP(dev_forwarding_mode_t, DEV_FORWARDING_MODE)
 SDK_DEFINE_MAP(dev_feature_profile_t, DEV_FEATURE_PROFILE)
 SDK_DEFINE_MAP(dev_port_state_t, DEV_PORT_STATE)
+SDK_DEFINE_MAP(dev_micro_seg_t, DEV_MICRO_SEG)
 
 #define FORWARDING_MODE_KEY_STR "forwarding-mode"
 #define FEATURE_PROFILE_KEY_STR "feature-profile"
@@ -18,6 +19,7 @@ SDK_DEFINE_MAP(dev_port_state_t, DEV_PORT_STATE)
 #define MGMT_IF_MAC_STR "mgmt-if-mac"
 #define MGMT_VLAN_STR "mgmt-vlan"
 #define DEVICE_QOS_PROFILE_STR "profile.qos"
+#define MICRO_SEG_STR "micro-seg-mode"
 
 device *
 device::factory(std::string device_file)
@@ -205,6 +207,23 @@ device::populate_device(ptree &pt)
                     pt.get<std::string>(DEVICE_QOS_PROFILE_STR, "default");
             if (populate_qos_profile(qos_profile_name) != SDK_RET_OK) {
                 return SDK_RET_ERR;
+            }
+        }
+
+        if (it->first == MICRO_SEG_STR) {
+            if (is_integer_(it->second.get_value<std::string>())) {
+                device_db_.micro_seg_en = (dev_micro_seg_t)pt.get<int>(MICRO_SEG_STR);
+            } else {
+                std::string mseg_en = pt.get<std::string>(MICRO_SEG_STR);
+                if (DEV_MICRO_SEG_map.find(mseg_en) == DEV_MICRO_SEG_map.end()) {
+                    SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s",
+                                  MICRO_SEG_STR, mseg_en.c_str(),
+                                  DEV_MICRO_SEG_str(MICRO_SEG_DISABLE));
+
+                } else {
+                    device_db_.micro_seg_en =
+                        DEV_MICRO_SEG_map[pt.get<std::string>(MICRO_SEG_STR)];
+                }
             }
         }
     }

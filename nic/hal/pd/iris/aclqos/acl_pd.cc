@@ -210,8 +210,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
      * - Internal Mgmt. Traffic (Host <-> Naples)
      * - Snake test traffic
      */
+#if 0
     key.control_metadata_nic_mode = NIC_MODE_SMART;
     mask.control_metadata_nic_mode_mask = 0x1;
+#endif
 
     // Populate the data
     switch(as->action) {
@@ -489,6 +491,13 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
         key.control_metadata_from_cpu = ms->int_key.from_cpu;
         mask.control_metadata_from_cpu_mask = ms->int_mask.from_cpu;
     }
+
+    // Match ep_learn_en 
+    if (ms->int_mask.ep_learn_en) {
+        key.control_metadata_ep_learn_en = ms->int_key.ep_learn_en;
+        mask.control_metadata_ep_learn_en_mask = ms->int_mask.ep_learn_en;
+    }
+
 #endif
 
     acl_tbl = g_hal_state_pd->acl_table();

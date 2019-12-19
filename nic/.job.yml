@@ -123,14 +123,15 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-  dol/fte:
-    commands: ["make", "jobd/dol/fte"]
-    owners: ["email:lseshan@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+  # Unified Mode changes. No longer support Uplink -> Uplink
+  #dol/fte:
+  #  commands: ["make", "jobd/dol/fte"]
+  #  owners: ["email:lseshan@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
   dol/fte2:
     commands: ["make", "jobd/dol/fte2"]
     owners: ["email:lseshan@pensando.io"]
@@ -139,22 +140,24 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-  dol/ftevxlan:
-    commands: ["make", "jobd/dol/ftevxlan"]
-    owners: ["email:lseshan@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/norm:
-    commands: ["make", "jobd/dol/norm"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+  # Unified Mode changes. No longer support vxlan
+  #dol/ftevxlan:
+  #  commands: ["make", "jobd/dol/ftevxlan"]
+  #  owners: ["email:lseshan@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support Uplink -> Uplink
+  #dol/norm:
+  #  commands: ["make", "jobd/dol/norm"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
   dol/eth:
     commands: ["make", "jobd/dol/eth"]
     owners: ["email:bharat@pensando.io"]
@@ -171,46 +174,51 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-  dol/proxy:
-    commands: ["make", "jobd/dol/proxy"]
-    owners: ["email:raghava@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/ipsec:
-    commands: ["make", "jobd/dol/ipsec"]
-    owners: ["email:raghava@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/networking:
-    commands: ["make", "jobd/dol/networking"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/vxlan:
-    commands: ["make", "jobd/dol/vxlan"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/mplsudp:
-    commands: ["make", "jobd/dol/mplsudp"]
-    owners: ["email:vijasrin@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+  # Unified Mode changes. No longer support proxy
+  #dol/proxy:
+  #  commands: ["make", "jobd/dol/proxy"]
+  #  owners: ["email:raghava@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support ipsec
+  #dol/ipsec:
+  #  commands: ["make", "jobd/dol/ipsec"]
+  #  owners: ["email:raghava@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support Uplink -> Uplink
+  #dol/networking:
+  #  commands: ["make", "jobd/dol/networking"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support vxlan
+  #dol/vxlan:
+  #  commands: ["make", "jobd/dol/vxlan"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support mplsudp
+  #dol/mplsudp:
+  #  commands: ["make", "jobd/dol/mplsudp"]
+  #  owners: ["email:vijasrin@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
   # IPSG table is moved to stage 5 of ingress. The test cases are doing span from drop_stats table
   # in stage 5, which will not work as drop is being set in same stage 5.
   # dol/ipsg:
@@ -221,46 +229,50 @@ targets:
   #   feature:
   #   build-dependencies:
   #   - build-iris-x86
-  dol/firewall:
-    commands: ["make", "jobd/dol/firewall"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/pin:
-    commands: ["make", "jobd/dol/pin"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/multicast:
-    commands: ["make", "jobd/dol/multicast"]
-    owners: ["email:ajeer@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/pinl2mc:
-    commands: ["make", "jobd/dol/pinl2mc"]
-    owners: ["email:ajeer@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/l4lb:
-    commands: ["make", "jobd/dol/l4lb"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+  # Unified Mode changes. No longer support Uplink -> Uplink
+  #dol/firewall:
+  #  commands: ["make", "jobd/dol/firewall"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support hostpin
+  #dol/pin:
+  #  commands: ["make", "jobd/dol/pin"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support multicast 
+  #dol/multicast:
+  #  commands: ["make", "jobd/dol/multicast"]
+  #  owners: ["email:ajeer@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  #dol/pinl2mc:
+  #  commands: ["make", "jobd/dol/pinl2mc"]
+  #  owners: ["email:ajeer@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support l4lb
+  #dol/l4lb:
+  #  commands: ["make", "jobd/dol/l4lb"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
   #dol/dos:
     #commands: ["make", "jobd/dol/dos"]
     #owners: ["email:bharat@pensando.io"]
@@ -299,30 +311,33 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-  dol/telemetry:
-    commands: ["make", "jobd/dol/telemetry"]
-    owners: ["email:jcruz@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/p4pt:
-    commands: ["make", "jobd/dol/p4pt"]
-    owners: ["email:jainvipin@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  dol/app_redir:
-    commands: ["make", "jobd/dol/app_redir"]
-    owners: ["email:tuyenq@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+      # Unified Mode changes. No longer support Uplink -> Uplink
+  #dol/telemetry:
+  #  commands: ["make", "jobd/dol/telemetry"]
+  #  owners: ["email:jcruz@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support p4pt
+  #dol/p4pt:
+  #  commands: ["make", "jobd/dol/p4pt"]
+  #  owners: ["email:jainvipin@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  # Unified Mode changes. No longer support app redir
+  #dol/app_redir:
+  #  commands: ["make", "jobd/dol/app_redir"]
+  #  owners: ["email:tuyenq@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
   dol/basetopo:
     commands: ["make", "jobd/dol/basetopo"]
     owners: ["email:vikasd@pensando.io"]
@@ -341,14 +356,14 @@ targets:
     - build-iris-x86
 
   # ====================== GFT Tests ===========================
-  dol/gft:
-    commands: ["make", "PIPELINE=gft", "jobd/dol/gft"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-gft-x86
+  #dol/gft:
+  #  commands: ["make", "PIPELINE=gft", "jobd/dol/gft"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-gft-x86
   #dol/gft/rdma:
   #commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
   #  owners: ["email:ksmurty@pensando.io"]
@@ -375,38 +390,38 @@ targets:
     - build-gft-x86
 
   # ====================== MBT Tests ===========================
-  mbt/base:
-    commands: ["make", "jobd/mbt/base"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  mbt/networking:
-    commands: ["make", "jobd/mbt/networking"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  mbt/firewall:
-    commands: ["make", "jobd/mbt/firewall"]
-    owners: ["email:bharat@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
-  mbt/alg:
-    commands: ["make", "jobd/mbt/alg"]
-    owners: ["email:pavramas@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
+  #mbt/base:
+  #  commands: ["make", "jobd/mbt/base"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  #mbt/networking:
+  #  commands: ["make", "jobd/mbt/networking"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  #mbt/firewall:
+  #  commands: ["make", "jobd/mbt/firewall"]
+  #  owners: ["email:bharat@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
+  #mbt/alg:
+  #  commands: ["make", "jobd/mbt/alg"]
+  #  owners: ["email:pavramas@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-iris-x86
 
   # ====================== Make Infra Tests ===========================
   #make/sdk:

@@ -19,6 +19,7 @@ modules:
     - module:
         name    : MCAST_ACCESS
         spec    : rx_mc_access.testspec
+        enable  : False
         iterate :
             - flow      : filter://type=MAC,label=CLASSICL2MC
               segment   : filter://native=False

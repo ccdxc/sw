@@ -63,6 +63,7 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
         modify_field(control_metadata.dst_lport, dst_lport);
         modify_field(capri_intrinsic.tm_replicate_en, FALSE);
         modify_field(capri_intrinsic.tm_replicate_ptr, 0);
+        modify_field(capri_intrinsic.tm_cpu, FALSE);
     }
 }
 
@@ -77,7 +78,7 @@ table nacl {
     reads {
         entry_inactive.nacl                 : ternary;
         capri_intrinsic.lif                 : ternary;
-        control_metadata.nic_mode           : ternary;
+        // control_metadata.nic_mode           : ternary;
         control_metadata.from_cpu           : ternary;
         flow_lkp_metadata.lkp_dir           : ternary;
         flow_lkp_metadata.lkp_type          : ternary;
@@ -95,6 +96,7 @@ table nacl {
         l3_metadata.ip_option_seen          : ternary;
         l3_metadata.ip_frag                 : ternary;
         ethernet.dstAddr                    : ternary;
+        control_metadata.ep_learn_en        : ternary;
     }
     actions {
         nop;

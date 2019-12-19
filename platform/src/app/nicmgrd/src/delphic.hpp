@@ -12,6 +12,7 @@
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "gen/proto/port.delphi.hpp"
 #include "gen/proto/hal.delphi.hpp"
+#include "gen/proto/device.delphi.hpp"
 
 #include "sysmgr.hpp"
 #include "upgrade.hpp"
@@ -26,6 +27,7 @@ using grpc::Status;
 using delphi::error;
 using dobj::PortStatusPtr;
 using dobj::HalStatusPtr;
+using dobj::SystemSpecPtr;
 
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
@@ -67,6 +69,27 @@ typedef std::shared_ptr<port_status_handler> port_status_handler_ptr_t;
 
 // init_port_status_handler creates a port reactor
 Status init_port_status_handler(delphi::SdkPtr sdk);
+
+
+// System Spec Watcher
+class system_spec_handler : public dobj::SystemSpecReactor {
+public:
+    system_spec_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+
+    virtual error OnSystemSpecCreate(SystemSpecPtr obj);
+    virtual error OnSystemSpecUpdate(SystemSpecPtr obj);
+    virtual error OnSystemSpecDelete(SystemSpecPtr obj);
+
+    error update_system_spec(SystemSpecPtr obj);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<system_spec_handler> system_spec_handler_ptr_t;
+Status init_system_spec_handler(delphi::SdkPtr sdk);
+
 
 class hal_status_handler : public dobj::HalStatusReactor {
 public:

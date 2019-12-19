@@ -48,6 +48,15 @@ SDK_DEFINE_ENUM_TO_STR(dev_port_state_t, DEV_PORT_STATE)
 SDK_DEFINE_MAP_EXTERN(dev_port_state_t, DEV_PORT_STATE)
 // #undef DEV_PORT_STATE
 
+#define DEV_MICRO_SEG(ENTRY)                              \
+    ENTRY(MICRO_SEG_DISABLE,    0, "MICRO_SEG_DISABLE")   \
+    ENTRY(MICRO_SEG_ENABLE,     1, "MICRO_SEG_ENABLE")
+
+SDK_DEFINE_ENUM(dev_micro_seg_t, DEV_MICRO_SEG)
+SDK_DEFINE_ENUM_TO_STR(dev_micro_seg_t, DEV_MICRO_SEG)
+SDK_DEFINE_MAP_EXTERN(dev_micro_seg_t, DEV_MICRO_SEG)
+// #undef DEV_PORT_STATE
+
 typedef struct qos_profile_s {
     uint32_t jumbo_mtu;
     uint32_t num_uplink_qs;
@@ -71,6 +80,7 @@ typedef struct device_s {
     uint32_t               mgmt_vlan;              // vlan encap on uplinks for mgmt
     device_profile_t       device_profile;         // device config profile
     std::string            device_cfg_path;        // device config path
+    dev_micro_seg_t        micro_seg_en;
 } device_t;
 
 class device {
@@ -86,6 +96,7 @@ public:
     device_profile_t *device_profile(void) {
         return &device_db_.device_profile;
     }
+    bool get_micro_seg_en(void) { return device_db_.micro_seg_en; }
 
 private:
     device_t device_db_;    // device database

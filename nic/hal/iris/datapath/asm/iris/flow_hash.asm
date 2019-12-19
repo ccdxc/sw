@@ -11,7 +11,7 @@ struct phv_         p;
 %%
 
 flow_hash_info:
-  bbne        k.control_metadata_nic_mode, NIC_MODE_SMART, flow_hash_exit
+  // bbne        k.control_metadata_nic_mode, NIC_MODE_SMART, flow_hash_exit
   phvwr       p.rewrite_metadata_entropy_hash, r1
   or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, CPU_LKP_FLAGS_LKP_INST
   or          r7, r7, k.flow_lkp_metadata_lkp_dir, CPU_LKP_FLAGS_LKP_DIR
@@ -19,7 +19,19 @@ flow_hash_info:
   seq         c2, d.flow_hash_info_d.entry_valid, 1
   bcf         [c1&c2], flow_hash_hit
   seq         c1, r1[31:21], d.flow_hash_info_d.hash1
+  // or          r7,  d.flow_hash_info_d.hint1_sbit4_ebit17, \
+  //               d.flow_hash_info_d.hint1_sbit0_ebit3, 14
+  // or          r7, d.flow_hash_info_d.hash1_sbit7_ebit10, \
+  //                  d.flow_hash_info_d.hash1_sbit0_ebit6, 4
+  // seq         c1, r1[31:21], r7
   sne         c3, d.flow_hash_info_d.hint1, r0
+  // or          r7,  d.flow_hash_info_d.hint1_sbit4_ebit17, \
+  //               d.flow_hash_info_d.hint1_sbit0_ebit3, 14
+  // or          r7, d.flow_hash_info_d.hash1_sbit7_ebit10, \
+  //                  d.flow_hash_info_d.hash1_sbit0_ebit6, 4
+  // seq         c1, r1[31:21], r7
+  // sne         c3, d.flow_hash_info_d.hint1, r0
+  // sne         c3, r7, r0
   bcf         [c1&c2&c3], flow_hash_hint1
   seq         c1, r1[31:21], d.flow_hash_info_d.hash2
   sne         c3, d.flow_hash_info_d.hint2, r0

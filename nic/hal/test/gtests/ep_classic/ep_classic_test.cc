@@ -191,7 +191,7 @@ fill_registered_mac(uint32_t seed)
     reg_mac_tbl = hal::pd::g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
 
     while(1) {
-        key.flow_lkp_metadata_lkp_classic_vrf = rand();
+        key.flow_lkp_metadata_lkp_reg_mac_vrf = rand();
         for (int i = 0; i < 6; i++) {
             key.flow_lkp_metadata_lkp_dstMacAddr[i] = rand();
         }
@@ -228,7 +228,8 @@ TEST_F(endpoint_test, test1)
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
-    seed = 1548274278;
+    seed = 1575415500;
+    fill_registered_mac(seed);
     fill_registered_mac(seed);
 
     registered_macs_swkey_t         key;
@@ -237,7 +238,7 @@ TEST_F(endpoint_test, test1)
     uint32_t idx = 0;
     reg_mac_tbl = hal::pd::g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
 
-    key.flow_lkp_metadata_lkp_classic_vrf = 0x1001;
+    key.flow_lkp_metadata_lkp_reg_mac_vrf = 0x1001;
     key.flow_lkp_metadata_lkp_dstMacAddr[5] = 0x00;
     key.flow_lkp_metadata_lkp_dstMacAddr[4] = 0x01;
     key.flow_lkp_metadata_lkp_dstMacAddr[3] = 0xde;

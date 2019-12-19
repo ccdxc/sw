@@ -10,12 +10,16 @@ struct phv_       p;
 %%
 
 set_replica_rewrites:
+  // or          r1, k.tunnel_metadata_tunnel_originate[0], \
+  //               k.control_metadata_i2e_flags[P4_I2E_FLAGS_NIC_MODE], 1
+  // or          r1, r1, k.tunnel_metadata_tunnel_terminate[0], 2
+  // phvwr       p.{tunnel_metadata_tunnel_terminate_egress, \
+  //               control_metadata_nic_mode_e, \
+  //               tunnel_metadata_tunnel_originate_egress}, r1
   or          r1, k.tunnel_metadata_tunnel_originate[0], \
-                k.control_metadata_i2e_flags[P4_I2E_FLAGS_NIC_MODE], 1
-  or          r1, r1, k.tunnel_metadata_tunnel_terminate[0], 2
+                  k.tunnel_metadata_tunnel_terminate[0], 1
   phvwr       p.{tunnel_metadata_tunnel_terminate_egress, \
-                control_metadata_nic_mode_e, \
-                tunnel_metadata_tunnel_originate_egress}, r1
+                 tunnel_metadata_tunnel_originate_egress}, r1
   phvwr       p.control_metadata_src_tm_iq, k.capri_intrinsic_tm_iq
   phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU

@@ -13,6 +13,8 @@
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/utils/utils.hpp"
+#include "nic/hal/pd/iris/nw/if_pd.hpp"
+#include "nic/hal/pd/iris/p4pd_defaults.hpp"
 
 using namespace hal;
 
@@ -20,6 +22,8 @@ namespace hal {
 namespace pd {
 
 hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
+
+#define reg_mac data.action_u.registered_macs_registered_macs
 
 // ----------------------------------------------------------------------------
 // EP Create
@@ -110,14 +114,31 @@ pd_ep_if_update (pd_func_args_t *pd_func_args)
     nwsec_profile_t         *nwsec_profile;
 
     nwsec_profile = ep_get_pi_nwsec(ep);
-    if (if_upd_args->lif_change &&
-        nwsec_profile &&
-        nwsec_profile->ipsg_en) {
-        ret = ep_pd_pgm_ipsg_tbl(ep_pd,
-                                 false,
-                                 if_upd_args,
-                                 TABLE_OPER_UPDATE);
-
+    if (if_upd_args->lif_change) {
+        if(nwsec_profile &&
+           nwsec_profile->ipsg_en) {
+            ret = ep_pd_pgm_ipsg_tbl(ep_pd,
+                                     false,
+                                     if_upd_args,
+                                     TABLE_OPER_UPDATE);
+        }
+        if (if_upd_args->new_lif != NULL) {
+            // Update reg_mac entry
+            if (ep_pd->reg_mac_tbl_idx == INVALID_INDEXER_INDEX) { 
+                ret = pd_ep_pgm_registered_mac(ep_pd,
+                                               if_upd_args, NULL,
+                                               TABLE_OPER_INSERT);
+            } else {
+                ret = pd_ep_pgm_registered_mac(ep_pd,
+                                               if_upd_args, NULL,
+                                               TABLE_OPER_UPDATE);
+            }
+        } else {
+            ret = ep_pd_depgm_registered_mac(ep_pd);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
+            }
+        }
     }
 
     return ret;
@@ -569,6 +590,9 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
                                  TABLE_OPER_INSERT);
     }
 
+    ret = pd_ep_pgm_registered_mac(pd_ep, NULL, NULL, TABLE_OPER_INSERT);
+
+#if 0
     // Classic Mode:
     // - All EPs
     // Smart(hostpin)
@@ -585,6 +609,7 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
         is_ep_classic(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
+#endif
 
     return ret;
 }
@@ -879,7 +904,55 @@ pd_ep_ipsg_change (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
+pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, 
+                    if_t *ep_if, if_t *uplink_if, lif_t *enic_lif,
+                    registered_macs_swkey_t &key,
+                    registered_macs_otcam_swkey_mask_t &key_mask,
+                    registered_macs_actiondata_t &data)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    p4_replication_data_t repl_data = {};
+    pd_l2seg_t *cl_l2seg_pd, *hp_l2seg_pd;
+
+    cl_l2seg_pd = cl_l2seg ? (pd_l2seg_t *)cl_l2seg->pd : NULL;
+    hp_l2seg_pd = hp_l2seg ? (pd_l2seg_t *)hp_l2seg->pd : NULL;
+    if (cl_l2seg && hp_l2seg) {
+        key.flow_lkp_metadata_lkp_reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
+        reg_mac.multicast_en = 0;
+        reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
+        reg_mac.flow_learn = (ep_l2seg == hp_l2seg) ? 1 : 0;
+        if (ep_l2seg == cl_l2seg) {
+            // Pkts from Uplink destined to mgmt EPs, will have profile as 0, which will have all knobs off.
+            reg_mac.l4_profile_en = 1;
+            reg_mac.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
+        }
+    } else if (hp_l2seg) {
+        key.flow_lkp_metadata_lkp_reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
+        reg_mac.multicast_en = 0;
+        reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
+        reg_mac.flow_learn = 1;
+    } else {
+        key.flow_lkp_metadata_lkp_reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
+        reg_mac.multicast_en = 0;
+        reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
+        reg_mac.flow_learn = 0;
+    }
+
+    ret = if_l2seg_get_multicast_rewrite_data(ep_if, ep_l2seg, 
+                                              enic_lif, &repl_data);
+    if (repl_data.tunnel_rewrite_index != 0) {
+        reg_mac.tunnel_rewrite_en = 1;
+        reg_mac.tunnel_rewrite_index = repl_data.tunnel_rewrite_index;
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, 
+                         pd_ep_if_update_args_t *if_args,
+                         l2seg_t *attached_l2seg,
+                         table_oper_t oper)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
@@ -890,9 +963,12 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     ep_t                                *pi_ep = (ep_t *)pd_ep->pi_ep;
     l2seg_t                             *l2seg = NULL;
     mac_addr_t                          *mac = NULL;
-    if_t                                *pi_if = NULL;
+    if_t                                *pi_if = NULL, *uplink_if = NULL;
     uint32_t                            hash_idx = INVALID_INDEXER_INDEX;
     bool                                direct_to_otcam = false;
+    lif_t                               *lif = NULL;
+    uint32_t                            lif_id = 0;
+    l2seg_t                             *cl_l2seg = NULL, *hp_l2seg = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -901,8 +977,52 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
     SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
-    // lkp_vrf
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
+    pi_if = find_if_by_handle(pi_ep->if_handle);
+
+    if (hal::intf_get_if_type(pi_if) == intf::IF_TYPE_ENIC) {
+        if (if_args && if_args->lif_change) {
+            lif = if_args->new_lif;
+            uplink_if = lif_get_pinned_uplink(if_args->new_lif);
+        } else {
+            lif = if_get_lif(pi_if);
+            if_enicif_get_pinned_if(pi_if, &uplink_if);
+            if (!uplink_if) {
+                if (lif && (lif->type == types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT ||
+                            lif->type == types::LIF_TYPE_HOST_MANAGEMENT)) {
+                    // No uplink for internal mgmt lif. 
+                } else {
+                    HAL_TRACE_DEBUG("No EP => Lif mapping. Skipping reg_mac programming");
+                    goto end;
+                }
+            }
+        }
+        if (l2seg_is_cust(l2seg)) {
+            hp_l2seg = l2seg;
+            cl_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, uplink_if);
+        } else {
+            cl_l2seg = l2seg;
+            if (attached_l2seg) {
+                hp_l2seg = attached_l2seg;
+            } else {
+                hp_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, uplink_if);
+            }
+        }
+        pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, lif, 
+                           key, key_mask, data);
+    } else {
+        if (l2seg_is_cust(l2seg)) {
+            hp_l2seg = l2seg;
+        } else {
+            cl_l2seg = l2seg;
+        }
+        // only in gtests as there are no EPs on uplinks
+        pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, lif, 
+                           key, key_mask, data);
+    }
+
+#if 0
+    // lkp_vrf
     SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_classic_vrf = 
         ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
@@ -916,6 +1036,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     } else {
         data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_CLASSIC;
     }
+#endif
 
     // lkp_mac
     mac = ep_get_mac_addr(pi_ep);
@@ -923,7 +1044,6 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     memrev(key.flow_lkp_metadata_lkp_dstMacAddr, 6);
 
     // dst_lport
-    pi_if = find_if_by_handle(pi_ep->if_handle);
     data.action_id = REGISTERED_MACS_REGISTERED_MACS_ID;
     data.action_u.registered_macs_registered_macs.dst_lport =
         if_get_lport_id(pi_if);
@@ -934,7 +1054,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
                                       direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("classic: unable to program for ep:{}, ret: {}",
+            HAL_TRACE_ERR("unable to program for ep:{}, ret: {}",
                           ep_l2_key_to_str(pi_ep), ret);
             if (ret == HAL_RET_ENTRY_EXISTS) {
                 // If hash lib returns entry exists, return hw prog error. Otherwise
@@ -943,7 +1063,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
             }
             goto end;
         } else {
-            HAL_TRACE_DEBUG("classic: programmed for ep:{} at hash_idx:{}",
+            HAL_TRACE_DEBUG("programmed for ep:{} at hash_idx:{}",
                             ep_l2_key_to_str(pi_ep), hash_idx);
         }
 
@@ -954,11 +1074,11 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
         sdk_ret = reg_mac_tbl->update(hash_idx, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("classic: unable to reprogram for ep:{} at: {}",
+            HAL_TRACE_ERR("unable to reprogram for ep:{} at: {}",
                           ep_l2_key_to_str(pi_ep), hash_idx);
             goto end;
         } else {
-            HAL_TRACE_DEBUG("classic: reprogrammed for ep:{} at: {}",
+            HAL_TRACE_DEBUG("reprogrammed for ep:{} at: {}",
                             ep_l2_key_to_str(pi_ep), hash_idx);
         }
     }
@@ -1000,6 +1120,7 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
         HAL_TRACE_VERBOSE("classic: DeProgrammed at: {} ",
                           pd_ep->reg_mac_tbl_idx);
     }
+    pd_ep->reg_mac_tbl_idx = INVALID_INDEXER_INDEX;
 
 end:
     return ret;
@@ -1163,7 +1284,7 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
             SDK_ASSERT(0);
     }
 
-    return 0;
+    return INVALID_INDEXER_INDEX;
 }
 
 // ----------------------------------------------------------------------------

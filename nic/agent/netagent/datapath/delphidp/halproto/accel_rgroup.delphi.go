@@ -1249,6 +1249,15 @@ It has these top-level messages:
 	PMDStats
 	ForwardingModeResponse
 	FeatureProfileResponse
+	MicroSegEvent
+	MicroSegSpec
+	MicroSegRequestMsg
+	MicroSegResponse
+	MicroSegResponseMsg
+	MicroSegUpdateRequest
+	MicroSegUpdateRequestMsg
+	MicroSegUpdateResponse
+	MicroSegUpdateResponseMsg
 	TableIndexMetadata
 	TableTcamMetadata
 	TableHashMetadata

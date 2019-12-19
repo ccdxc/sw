@@ -13,6 +13,7 @@
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 #include "gen/proto/hal.delphi.hpp"
+#include "gen/proto/device.delphi.hpp"
 
 namespace hal {
 namespace svc {
@@ -20,6 +21,7 @@ namespace svc {
 using namespace std;
 using grpc::Status;
 using hal::upgrade::upgrade_handler;
+using delphi::objects::SystemSpec;
 
 shared_ptr<delphi_client>    g_delphic;
 
@@ -38,6 +40,9 @@ delphi_client_start (void *ctxt)
     Status ret = linkmgr::port_svc_init(sdk);
     SDK_ASSERT_TRACE_RETURN(ret.ok(), NULL,
                             "Port service initialization failure");
+
+    // mount system object for nicmgr
+    SystemSpec::Mount(sdk, delphi::ReadWriteMode);
 
     // register delphi client
     sdk->RegisterService(g_delphic);
@@ -139,6 +144,24 @@ set_hal_status (hal::hal_status_t hal_status)
         return;
     }
     set_hal_status(hal_status, g_delphic->sdk());
+}
+
+void
+micro_seg_mode_notify (MicroSegMode mode)
+{
+    delphi::SdkPtr        sdk = g_delphic ? g_delphic->sdk() : NULL;
+    dobj::SystemSpecPtr   spec;
+
+    if (!g_delphic) {
+        return;
+    }
+
+    HAL_TRACE_DEBUG("Notifying nicmgr about micro seg change. New mode: {}",
+                    MicroSegMode_Name(mode));
+    spec = std::make_shared<dobj::SystemSpec>();
+    spec->set_micro_seg_mode((mode == sys::MICRO_SEG_ENABLE) ? 
+                             device::MICRO_SEG_ENABLE : device::MICRO_SEG_DISABLE);
+    sdk->QueueUpdate(spec);
 }
 
 }    // namespace svc

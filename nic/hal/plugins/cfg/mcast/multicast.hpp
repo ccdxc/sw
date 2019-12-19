@@ -35,7 +35,7 @@ namespace hal {
 #define HAL_MAX_OIF_LISTS            65536
 #define HAL_MAX_MC_ENTRIES            2048
 #define HAL_MAX_OIF_PER_MC_ENTRY       256
-#define HAL_MC_ENTRY_OIFL_BLOCK          2
+#define HAL_MC_ENTRY_OIFL_BLOCK          3 // 0: Mgmt Repls, 1: MSeg/BM Repls, 2: Mgmt + MSeg/BM Repls
 
 typedef enum mc_key_type {
     MC_KEY_TYPE_NONE = 0,
@@ -167,10 +167,30 @@ void *mc_entry_get_key_func(void *entry);
 uint32_t mc_entry_key_size(void);
 mc_entry_t *mc_entry_lookup_key_or_handle(const MulticastEntryKeyHandle& kh);
 char *mc_key_to_string(mc_key_t *key);
+#if 0
 static inline oif_list_id_t 
 mc_entry_shared_oifl(mc_entry_t *mc_entry) 
 {
     return mc_entry->oif_list + 1;
+}
+#endif
+
+static inline oif_list_id_t
+mc_entry_mgmt_repls(oif_list_id_t base_oifl_id)
+{
+    return base_oifl_id;
+}
+
+static inline oif_list_id_t
+mc_entry_mseg_bm_repls(oif_list_id_t base_oifl_id)
+{
+    return base_oifl_id + 1;
+}
+
+static inline oif_list_id_t
+mc_entry_mgmt_mseg_bm_repls(oif_list_id_t base_oifl_id)
+{
+    return base_oifl_id + 2;
 }
 
 // SVC CRUD APIs

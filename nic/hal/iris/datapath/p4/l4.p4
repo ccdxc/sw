@@ -79,6 +79,13 @@ header_type l4_metadata_t {
         //                          We would need exceptions bits in flow too in addition to session state.
         ip_ttl_change_detect_en                  : 1;
 
+        // Configuration Knobs:
+        flow_learn_cfg_en                        : 1;  // Enable Flow Learning
+        policy_enf_cfg_en                        : 1;  // Enable Policy Enforcement
+        ip_bm_mc_policy_enf_cfg_en               : 1;  // Enable Policy Encforcement for MC & BC. 
+                                                       //   Valid only if policy_enf_cfg_en is enabled
+        uuc_fl_pe_sup_en                         : 1;
+
 
         // Other metadata
         // tcp_data_len: TCP Packet data length excluding options
@@ -134,7 +141,11 @@ action l4_profile(icmp_normalization_en,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
                   tcp_split_handshake_drop,
-                  tcp_normalize_mss) {
+                  tcp_normalize_mss,
+                  flow_learn_cfg_en,
+                  policy_enf_cfg_en,
+                  ip_bm_mc_policy_enf_cfg_en,
+                  uuc_fl_pe_sup_en) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
     modify_field(l4_metadata.ip_rsvd_flags_action, ip_rsvd_flags_action);
@@ -167,6 +178,10 @@ action l4_profile(icmp_normalization_en,
     modify_field(l4_metadata.tcp_split_handshake_drop, tcp_split_handshake_drop);
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
     modify_field(l4_metadata.tcp_normalize_mss, tcp_normalize_mss);
+    modify_field(l4_metadata.flow_learn_cfg_en, flow_learn_cfg_en);
+    modify_field(l4_metadata.policy_enf_cfg_en, policy_enf_cfg_en);
+    modify_field(l4_metadata.ip_bm_mc_policy_enf_cfg_en, ip_bm_mc_policy_enf_cfg_en);
+    modify_field(l4_metadata.uuc_fl_pe_sup_en, uuc_fl_pe_sup_en);
 
     if (icmp.valid == TRUE) {
         modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);

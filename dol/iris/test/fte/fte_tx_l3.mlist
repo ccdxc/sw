@@ -3,7 +3,7 @@ feature:
     sub     : txl3
     package : test.eth
     module  : eth
-    enable  : True
+    enable  : False
     ignore  : False
     spec    : tx_l3.testspec
 

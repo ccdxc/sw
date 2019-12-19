@@ -50,7 +50,6 @@ typedef struct eplearn_arp_cfg_s {
     bool     probe_enabled;
 } __PACK__ eplearn_arp_cfg_t;
 
-
 typedef struct eplearn_dhcp_cfg_s {
     bool        enabled;
     block_list *trusted_servers_list;
@@ -67,7 +66,6 @@ typedef struct eplearn_cfg_s {
     eplearn_dpkt_cfg_t   dpkt_cfg;
 } __PACK__  eplearn_cfg_t;
 
-
 typedef struct l2seg_s {
     sdk_spinlock_t        slock;                        // lock to protect this structure
     hal_handle_t          vrf_handle;                   // vrf's handle
@@ -82,11 +80,12 @@ typedef struct l2seg_s {
     // bool                  is_shared_inband_mgmt;        // vrf is cust or inband
     bool                  single_wire_mgmt;             // vrf is inband
     // bool                  single_wire_mgmt_cust;        // vrf is cust 
-    bool                  have_shared_oifls;            // have shared oifls
+    // bool                  have_shared_oifls;            // have shared oifls
     hal_handle_t          other_shared_mgmt_l2seg_hdl[HAL_MAX_UPLINKS];  
 
-
-    oif_list_id_t         base_oif_list_id;             // Base replication list id
+    oif_list_id_t         base_oifl_id;                 // Base replication list id
+    oif_list_id_t         base_cust_oifl_id[HAL_MAX_UPLINKS]; // Only for customer l2seg
+    oif_list_id_t         shared_cust_oifl_id[HAL_MAX_UPLINKS]; // only for attaching from classic l2seg
     hal_handle_t          pinned_uplink;                // pinned uplink
 
     // operational state of L2 segment
@@ -111,13 +110,21 @@ typedef struct l2seg_s {
 
 } __PACK__ l2seg_t;
 
-#define HAL_OIFLIST_BLOCK                   5
-#define HAL_BCAST_OIFLIST_OFFSET            0
-#define HAL_MCAST_OIFLIST_OFFSET            1
-#define HAL_PRMSC_OIFLIST_OFFSET            2
-#define HAL_SHARED_BCAST_OIFLIST_OFFSET     3
-#define HAL_SHARED_MCAST_OIFLIST_OFFSET     4
+#define HAL_OIFLIST_BLOCK                   9
+#define HAL_BC_MGMT_OIFL_OFFSET             0
+#define HAL_MC_MGMT_OIFL_OFFSET             1
+#define HAL_PR_MGMT_OIFL_OFFSET             2
+#define HAL_BC_MSEG_BM_OIFL_OFFSET          3
+#define HAL_MC_MSEG_BM_OIFL_OFFSET          4
+#define HAL_PR_MSEG_BM_OIFL_OFFSET          5
+#define HAL_BC_MGMT_MSEG_BM_OIFL_OFFSET     6
+#define HAL_MC_MGMT_MSEG_BM_OIFL_OFFSET     7
+#define HAL_PR_MGMT_MSEG_BM_OIFL_OFFSET     8
 
+#define HAL_SHARED_OIFLIST_BLOCK                   3
+#define HAL_SHARED_BC_MSEG_BM_OIFL_OFFSET          0
+#define HAL_SHARED_MC_MSEG_BM_OIFL_OFFSET          1
+#define HAL_SHARED_PR_MSEG_BM_OIFL_OFFSET          2
 
 // cb data structures
 typedef struct l2seg_create_app_ctxt_s {
@@ -222,7 +229,22 @@ hal_ret_t l2seg_select_pinned_uplink(l2seg_t *l2seg);
 hal_ret_t l2seg_handle_repin(l2seg_t *l2seg);
 hal_ret_t l2seg_attach_mgmt(l2seg_t *l2seg);
 hal_ret_t l2seg_detach_mgmt_oifls(l2seg_t *l2seg);
-void l2seg_print_attached_l2segs (l2seg_t *l2seg);
+void l2seg_print_attached_l2segs(l2seg_t *l2seg);
+hal_ret_t l2seg_oifl_set_hi(l2seg_t *l2seg, oif_list_id_t base_oifl_id);
+hal_ret_t l2seg_oifl_clear_hi(l2seg_t *l2seg, oif_list_id_t base_oifl_id);
+
+oif_list_id_t l2seg_bc_mgmt_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_mc_mgmt_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_pr_mgmt_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_bc_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_mc_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_pr_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_bc_mgmt_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_mc_mgmt_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_pr_mgmt_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_shared_bc_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_shared_mc_mseg_bm_oifl(oif_list_id_t id);
+oif_list_id_t l2seg_shared_pr_mseg_bm_oifl(oif_list_id_t id);
 
 }    // namespace hal
 

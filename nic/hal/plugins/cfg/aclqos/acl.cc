@@ -1003,6 +1003,9 @@ extract_match_spec (acl_match_spec_t *ms,
         goto end;
     }
 
+    ms->int_key.ep_learn_en = sel.internal_key().ep_learn_en();    
+    ms->int_mask.ep_learn_en = sel.internal_mask().ep_learn_en();    
+
 #ifdef ACL_DOL_TEST_ONLY
     // Key of internal fields for use only with DOL/testing infra
     // For production builds this needs to be removed

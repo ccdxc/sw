@@ -39,6 +39,7 @@ var (
 	tcpProxyCwndInitial uint32
 	tcpProxyCwndIdle    uint32
 	maxSession          uint64
+	isMicroSegEn        bool
 )
 
 var debugCmd = &cobra.Command{
@@ -191,6 +192,13 @@ var sessionCtrlDebugCmd = &cobra.Command{
 	Run:   sessionCtrlDebugCmdHandler,
 }
 
+var microSegCmd = &cobra.Command{
+	Use:   "mseg",
+	Short: "micro-segmentation [enable|disable]",
+	Long:  "micro-segmentation [enable|disable]",
+	Run:   microSegCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -204,6 +212,7 @@ func init() {
 	debugCmd.AddCommand(testDebugCmd)
 	debugCmd.AddCommand(memoryDebugCmd)
 	debugCmd.AddCommand(sessionCtrlDebugCmd)
+	debugCmd.AddCommand(microSegCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
@@ -257,6 +266,49 @@ func init() {
 
 	// debug transceiver --valid-check <enable|disable>
 	xcvrDebugCmd.Flags().StringVar(&xcvrValid, "valid-check", "enable", "Enable/Disable transceiver valid checks for links")
+
+	// debug micro-seg
+	microSegCmd.Flags().BoolVar(&isMicroSegEn, "enable", false, "Enable micro segmentation")
+}
+
+func microSegCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	en := halproto.MicroSegMode_MICRO_SEG_DISABLE
+	if isMicroSegEn == true {
+		en = halproto.MicroSegMode_MICRO_SEG_ENABLE
+	}
+
+	client := halproto.NewSystemClient(c)
+
+	req := &halproto.MicroSegUpdateRequest{
+		MicroSegMode: en,
+	}
+	updReqMsg := &halproto.MicroSegUpdateRequestMsg{
+		Request: []*halproto.MicroSegUpdateRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.MicroSegUpdate(context.Background(), updReqMsg)
+	if err != nil {
+		fmt.Printf("Micro Seg update failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+	}
+	fmt.Println("Success: Micro-Segmentation Update succeded.")
 }
 
 func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {

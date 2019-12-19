@@ -17,7 +17,7 @@ struct pd_if_s {
 
 hal_ret_t if_l2seg_get_encap_rewrite(if_t *pi_if, l2seg_t *pi_l2seg, uint32_t *encap_data,
                                      uint32_t *rewrite_idx, uint32_t *tnnl_rewrite_idx);
-hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
+hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg, lif_t *enic_lif, 
                                               p4_replication_data_t *data);
 
 }   // namespace pd

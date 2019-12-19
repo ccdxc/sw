@@ -10,6 +10,7 @@
 #include "port.hpp"
 #include "accel.hpp"
 #include "swm.hpp"
+#include "utils.hpp"
 
 namespace iris {
 
@@ -380,8 +381,73 @@ devapi_iris::qos_class_set_global_pause_type(uint8_t pause_type)
 sdk_ret_t
 devapi_iris::set_fwd_mode(fwd_mode_t fwd_mode)
 {
+#if 0
     fwd_mode_ = fwd_mode;
     hal_grpc::get_hal_grpc()->set_fwd_mode(fwd_mode);
+#endif
+    return SDK_RET_OK;
+}
+
+sdk_ret_t 
+devapi_iris::micro_seg_halupdate_(bool en)
+{
+    grpc::Status         status;
+    MicroSegRequestMsg req_msg;
+    MicroSegResponseMsg rsp_msg;
+    MicroSegSpec *req;
+    MicroSegResponse rsp;
+
+    req = req_msg.add_request();
+    req->set_micro_seg_mode(en ? sys::MICRO_SEG_ENABLE : 
+                            sys::MICRO_SEG_DISABLE);
+    req->set_status(sys::MICRO_SEG_STATUS_SUCCESS);
+
+    // VERIFY_HAL();
+    status = hal_grpc::get_hal_grpc()->micro_seg_update(req_msg, rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_LOG_DEBUG("Updated micro_seg mode: Mode: {}:{}, Status: {}:{}",
+                          req->micro_seg_mode(), 
+                          sys::MicroSegMode_Name(req->micro_seg_mode()), 
+                          req->status(), sys::MicroSegStatus_Name(req->status()));
+        } else {
+            NIC_LOG_DEBUG("Failed to update micro_seg mode: Mode: {}:{}, "
+                          "Status: {}:{}. err: {}",
+                          req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()), 
+                          req->status(), MicroSegStatus_Name(req->status()),
+                          rsp.api_status());
+        }
+    } else {
+        NIC_LOG_DEBUG("Failed to update micro_seg mode: Mode: {}:{}, "
+                      "Status: {}:{}. err: {}:{}",
+                      req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()), 
+                      req->status(), MicroSegStatus_Name(req->status()),
+                      status.error_code(), status.error_message());
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_iris::set_micro_seg_en(bool en)
+{
+    if (mirco_seg_en_ == en) {
+        NIC_LOG_DEBUG("No change in micro-seg: {}", en);
+        goto end;
+    }
+
+    // Remove Vlan filters on all Host LIFs
+    devapi_lif::set_micro_seg_en(en);
+
+    // Send micro seg update status to HAL
+    micro_seg_halupdate_(en);
+
+    mirco_seg_en_ = en;
+    if (hal_grpc::get_hal_grpc()) {
+        hal_grpc::get_hal_grpc()->set_micro_seg_en(en);
+    }
+end:
     return SDK_RET_OK;
 }
 

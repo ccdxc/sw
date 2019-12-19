@@ -219,10 +219,11 @@ TEST_F(enicif_test, test2)
     DeviceRequest               nic_req;
     DeviceResponseMsg           nic_rsp;
     uint64_t                    l2seg_hdls[11] = { 0 };
-    NetworkKeyHandle            *nkh = NULL;
+    // NetworkKeyHandle            *nkh = NULL;
     // slab_stats_t             *pre = NULL, *post = NULL;
     // bool                     is_leak = false;
 
+#if 0
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -242,6 +243,7 @@ TEST_F(enicif_test, test2)
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(2);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INBAND_MANAGEMENT);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -258,6 +260,7 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
+#endif
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -280,6 +283,15 @@ TEST_F(enicif_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t up_hdl1 = upif_rsp.mutable_status()->if_handle();
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INBAND_MANAGEMENT);
+    ten_spec.mutable_designated_uplink()->set_interface_id(UPLINK_IF_ID_OFFSET + 20);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
@@ -304,8 +316,8 @@ TEST_F(enicif_test, test2)
 #endif
 
     // Create l2segments
-    nkh = l2seg_spec.add_network_key_handle();
-    nkh->set_nw_handle(nw_hdl);
+    // nkh = l2seg_spec.add_network_key_handle();
+    // nkh->set_nw_handle(nw_hdl);
     for (int i = 1; i <= num_l2segs; i++) {
         // Create l2segment
         l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
@@ -815,12 +827,14 @@ TEST_F(enicif_test, test5)
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
+#if 0
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -838,6 +852,15 @@ TEST_F(enicif_test, test5)
     if_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(5);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INBAND_MANAGEMENT);
+    ten_spec.mutable_designated_uplink()->set_interface_id(UPLINK_IF_ID_OFFSET + 50);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1137,14 +1160,16 @@ TEST_F(enicif_test, test7)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    // hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
 
+#if 0
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(7);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1162,6 +1187,15 @@ TEST_F(enicif_test, test7)
     if_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(7);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INBAND_MANAGEMENT);
+    ten_spec.mutable_designated_uplink()->set_interface_id(UPLINK_IF_ID_OFFSET + 70);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1295,14 +1329,16 @@ TEST_F(enicif_test, test8)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    // hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
 
+#if 0
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(8);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1320,6 +1356,14 @@ TEST_F(enicif_test, test8)
     if_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(8);
+    ten_spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 

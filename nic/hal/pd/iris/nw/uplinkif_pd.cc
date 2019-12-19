@@ -614,6 +614,29 @@ pd_uplinkif_mem_free(pd_if_mem_free_args_t *args)
     return ret;
 }
 
+uint32_t
+pd_uplinkif_pdif_label (pd_uplinkif_t *upif)
+{
+    return upif->up_ifpc_id + 1;
+}
+
+uint32_t
+pd_uplinkif_if_label (if_t *hal_if)
+{
+    pd_uplinkif_t *uplinkif_pd = NULL;
+        
+    if (!hal_if) {
+        goto end;
+    }
+    uplinkif_pd = (pd_uplinkif_t *)hal_if->pd_if;
+
+    if (hal::intf_get_if_type(hal_if) == intf::IF_TYPE_UPLINK) {
+        return pd_uplinkif_pdif_label(uplinkif_pd);
+    }
+end:
+    return 0;
+}
+
 
 }    // namespace pd
 }    // namespace hal
