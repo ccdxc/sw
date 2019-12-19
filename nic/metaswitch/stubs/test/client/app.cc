@@ -71,6 +71,8 @@ static void create_l3_intf_proto_grpc () {
     Status              ret_status;
     pds_if_spec_t       pds_if = {0};
 
+    request.mutable_batchctxt()->set_batchcookie(1);
+
     pds_if.key.id = g_test_conf_.eth_if_index;
     pds_if.type = PDS_IF_TYPE_L3;
     pds_if.admin_state = PDS_IF_STATE_UP;
@@ -205,6 +207,8 @@ static void create_subnet_proto_grpc () {
     ClientContext   context;
     Status          ret_status;
 
+    request.mutable_batchctxt()->set_batchcookie(1);
+
     auto proto_spec = request.add_request();
     proto_spec->set_id(1);
     proto_spec->set_vpcid(1);
@@ -230,6 +234,8 @@ static void create_vpc_proto_grpc () {
     VPCResponse     response;
     ClientContext   context;
     Status          ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(1);

@@ -40,7 +40,7 @@ void
 api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     sdk_ret_t ret;
-    api_msg_t *api_msg = *(api_msg_t **)msg->data();
+    api_msg_t *api_msg = (api_msg_t *)msg->data();
 
     PDS_TRACE_DEBUG("Rcvd API batch msg");
     // basic validation
