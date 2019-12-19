@@ -50,7 +50,7 @@ func (swr *SyncWriter) Write(p []byte) (n int, err error) {
 		swr.msg.Data = p
 	}
 
-	log.Infof("Synced data from replica %d chunk %d len: %d", swr.msg.SrcReplicaID, swr.msg.ChunkID, sendLen)
+	log.Debugf("Synced data from replica %d chunk %d len: %d", swr.msg.SrcReplicaID, swr.msg.ChunkID, sendLen)
 
 	err = swr.wstream.Send(swr.msg)
 	if err != nil {
@@ -79,7 +79,7 @@ func NewSyncReader(data []byte, rstream tproto.DataNode_SyncDataServer) *SyncRea
 // Read reads next set of bytes from the grpc stream
 func (srd *SyncReader) Read(p []byte) (n int, err error) {
 	if srd.buf != nil {
-		log.Infof("Restoring chunk of len %d, available(%d)", len(srd.buf), len(p))
+		log.Debugf("Restoring chunk of len %d, available(%d)", len(srd.buf), len(p))
 		rdlen := len(srd.buf)
 		if len(p) < rdlen {
 			// copy partial data
@@ -101,7 +101,7 @@ func (srd *SyncReader) Read(p []byte) (n int, err error) {
 		return 0, err
 	}
 
-	log.Infof("Restoring %s Chunk %d on replica %d, len %d, available(%d)", req.ClusterType, req.ChunkID, req.DestReplicaID, len(req.Data), len(p))
+	log.Debugf("Restoring %s Chunk %d on replica %d, len %d, available(%d)", req.ClusterType, req.ChunkID, req.DestReplicaID, len(req.Data), len(p))
 
 	rdlen := len(req.Data)
 	if len(p) < rdlen {
