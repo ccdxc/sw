@@ -95,6 +95,9 @@ func (m *ALG) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *ALG) Defaults(ver string) bool {
 	var ret bool
+	if m.Dns != nil {
+		ret = m.Dns.Defaults(ver) || ret
+	}
 	for k := range m.Msrpc {
 		if m.Msrpc[k] != nil {
 			i := m.Msrpc[k]
@@ -207,7 +210,13 @@ func (m *Dns) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Dns) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.QueryResponseTimeout = "60s"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -304,6 +313,19 @@ func (m *ALG) References(tenant string, path string, resp map[string]apiintf.Ref
 
 func (m *ALG) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.Dns != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Dns"
+			if errs := m.Dns.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	for k, v := range m.Msrpc {
 		dlmtr := "."
 		if path == "" {
@@ -341,6 +363,10 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []e
 }
 
 func (m *ALG) Normalize() {
+
+	if m.Dns != nil {
+		m.Dns.Normalize()
+	}
 
 	for k, v := range m.Msrpc {
 		if v != nil {
@@ -501,6 +527,19 @@ func (m *Dns) References(tenant string, path string, resp map[string]apiintf.Ref
 
 func (m *Dns) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	if vs, ok := validatorMapApp["Dns"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapApp["Dns"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -619,6 +658,19 @@ func init() {
 
 		if err := validators.EmptyOr(validators.Duration, m.Timeout, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Timeout", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapApp["Dns"] = make(map[string][]func(string, interface{}) error)
+	validatorMapApp["Dns"]["all"] = append(validatorMapApp["Dns"]["all"], func(path string, i interface{}) error {
+		m := i.(*Dns)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if err := validators.Duration(m.QueryResponseTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"QueryResponseTimeout", err.Error())
 		}
 		return nil
 	})

@@ -13,7 +13,7 @@ export interface ISecurityDns {
     'drop-large-domain-name-packets'?: boolean;
     'drop-long-label-packets'?: boolean;
     'max-message-length'?: number;
-    'query-response-timeout'?: string;
+    'query-response-timeout': string;
 }
 
 
@@ -26,7 +26,8 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     'drop-long-label-packets': boolean = null;
     /** Maximum message length, default value is 512, maximum specified user value is 8129 */
     'max-message-length': number = null;
-    /** Timeout for DHCP Query, default 60s */
+    /** Timeout for DNS Query, default 60sshould be a valid time duration
+ */
     'query-response-timeout': string = null;
     public static propInfo: { [prop in keyof ISecurityDns]: PropInfoItem } = {
         'drop-multi-question-packets': {
@@ -50,8 +51,10 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
             type: 'number'
         },
         'query-response-timeout': {
-            description:  'Timeout for DHCP Query, default 60s',
-            required: false,
+            default: '60s',
+            description:  'Timeout for DNS Query, default 60sshould be a valid time duration ',
+            hint:  '2h',
+            required: true,
             type: 'string'
         },
     }
@@ -133,7 +136,7 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
                 'drop-large-domain-name-packets': CustomFormControl(new FormControl(this['drop-large-domain-name-packets']), SecurityDns.propInfo['drop-large-domain-name-packets']),
                 'drop-long-label-packets': CustomFormControl(new FormControl(this['drop-long-label-packets']), SecurityDns.propInfo['drop-long-label-packets']),
                 'max-message-length': CustomFormControl(new FormControl(this['max-message-length']), SecurityDns.propInfo['max-message-length']),
-                'query-response-timeout': CustomFormControl(new FormControl(this['query-response-timeout']), SecurityDns.propInfo['query-response-timeout']),
+                'query-response-timeout': CustomFormControl(new FormControl(this['query-response-timeout'], [required, ]), SecurityDns.propInfo['query-response-timeout']),
             });
         }
         return this._formGroup;

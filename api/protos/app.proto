@@ -60,8 +60,8 @@ message Dns {
     bool DropLongLabelPackets       = 3 [(gogoproto.jsontag) = "drop-long-label-packets,omitempty"];
     // Maximum message length, default value is 512, maximum specified user value is 8129
     uint32 MaxMessageLength         = 5 [(gogoproto.jsontag) = "max-message-length,omitempty"];
-    // Timeout for DHCP Query, default 60s
-    string QueryResponseTimeout     = 6 [(gogoproto.jsontag) = "query-response-timeout,omitempty"];
+    // Timeout for DNS Query, default 60s
+    string QueryResponseTimeout     = 6 [(gogoproto.jsontag) = "query-response-timeout,omitempty", (venice.default)="60s",  (venice.check) = "Duration(0,0)"];
 }
 
 // FTP ALG configuration

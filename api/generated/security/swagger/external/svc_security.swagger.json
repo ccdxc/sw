@@ -432,7 +432,7 @@
           },
           {
             "name": "dns.query-response-timeout",
-            "description": "Timeout for DHCP Query, default 60s.",
+            "description": "Timeout for DNS Query, default 60s. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2577,7 +2577,7 @@
           },
           {
             "name": "dns.query-response-timeout",
-            "description": "Timeout for DHCP Query, default 60s.",
+            "description": "Timeout for DNS Query, default 60s. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6463,6 +6463,9 @@
     },
     "securityDns": {
       "type": "object",
+      "required": [
+        "query-response-timeout"
+      ],
       "properties": {
         "drop-multi-question-packets": {
           "type": "boolean",
@@ -6486,7 +6489,10 @@
         },
         "query-response-timeout": {
           "type": "string",
-          "title": "Timeout for DHCP Query, default 60s"
+          "default": "60s",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
+          "title": "Timeout for DNS Query, default 60s"
         }
       },
       "title": "DNS ALG configuration"
