@@ -104,16 +104,22 @@ traverse_interrupts (intr_reg_t &reg)
     }
 
     for(int i=0; i < field_count; i++) {
-        if (reg.id == 35 || reg.id == 16) {
-            if (i >= 1 || i <=12) {
-                continue;
-            }
-        }
         field = &reg.fields[i];
 
         if (reg_type == INTR_REG_TYPE_SRC) {
             if (data & (1 << i)) {
                 field->count += 1;
+                switch (field->flags) {
+                    case INTR_FLAGS_IGNORE_ALL:
+                        continue;
+                    case INTR_FLAGS_IGNORE_ONCE:
+                        if (field->count == 1) {
+                            continue;
+                        }
+                    case INTR_FLAGS_NONE:
+                    default:
+                        break;
+                }
                 handle_interrupt(&reg, field);
             }
         }

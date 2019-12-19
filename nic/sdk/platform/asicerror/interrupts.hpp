@@ -22,6 +22,12 @@ typedef enum intr_sev_type_e {
     INTR_SEV_TYPE_INFO   = 3,
 } intr_sev_type_t;
 
+typedef enum intr_flags_type_e {
+    INTR_FLAGS_NONE = 0,
+    INTR_FLAGS_IGNORE_ONCE = 1,
+    INTR_FLAGS_IGNORE_ALL = 2,
+} intr_flags_type_t;
+
 struct intr_reg_t;
 struct intr_field_t {
     public :
@@ -30,6 +36,7 @@ struct intr_field_t {
         uint64_t id;
         intr_sev_type_t severity;
         const char *desc;
+        intr_flags_type_t flags;
         uint64_t count;
 };
 
