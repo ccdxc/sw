@@ -50,8 +50,8 @@ pds_state::init(void) {
     state_[PDS_STATE_NEXTHOP] = new nexthop_state();
     state_[PDS_STATE_NEXTHOP_GROUP] = new nexthop_group_state();
     state_[PDS_STATE_POLICER] = new policer_state();
-    //state_[PDS_STATE_NAT] = new nat_state();
-    //state_[PDS_STATE_DHCP] = new dhcp_state();
+    state_[PDS_STATE_NAT] = new nat_state();
+    state_[PDS_STATE_DHCP] = new dhcp_state();
     return SDK_RET_OK;
 }
 

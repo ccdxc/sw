@@ -20,6 +20,9 @@
 /// \defgroup PDS_DHCP DHCP API
 /// @{
 
+#define PDS_MAX_DHCP_RELAY        16
+#define PDS_MAX_DHCP_POLICY       128
+
 /// \brief DHCP relay spec
 typedef struct pds_dhcp_relay_spec_s {
     pds_dhcp_relay_key_t key;          ///< DHCP relay policy key

@@ -11,13 +11,15 @@
 #ifndef __INCLUDE_API_PDS_NAT_HPP__
 #define __INCLUDE_API_PDS_NAT_HPP__
 
-#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_NAT nat APIs
 /// @{
 
+#define PDS_MAX_NAT_PORT_BLOCK    (1024 << 4)
 /// \brief nat port block specification
 typedef struct pds_nat_port_block_spec_s {
     pds_nat_port_block_key_t key;            ///< NAT port block key

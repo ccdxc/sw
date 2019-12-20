@@ -109,8 +109,11 @@ private:
     /// NAT port block key
     pds_nat_port_block_key_t key_;
 
-    /// nat_port_block_state is friend of nat_port_block
-    friend class nat_port_block_state;
+    /// hash table context
+    ht_ctxt_t ht_ctxt_;
+
+    /// nat_state is friend of nat_port_block
+    friend class nat_state;
 } __PACK__;
 
 /// \@}    // end of PDS_NAT

@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/api_stooge.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
 
 namespace api {
@@ -108,6 +109,9 @@ private:
     /// DHCP relay entry key
     pds_dhcp_relay_key_t key_;
 
+    /// hash table context
+    ht_ctxt_t ht_ctxt_;
+
     /// dhcp_state is friend of dhcp_relay
     friend class dhcp_state;
 } __PACK__;
@@ -199,6 +203,9 @@ private:
 private:
     /// DHCP policy entry key
     pds_dhcp_policy_key_t key_;
+
+    /// hash table context
+    ht_ctxt_t ht_ctxt_;
 
     /// dhcp_state is friend of dhcp_relay
     friend class dhcp_state;

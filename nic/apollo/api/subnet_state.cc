@@ -16,7 +16,6 @@ using namespace sdk;
 namespace api {
 
 subnet_state::subnet_state() {
-    // TODO: need to tune multi-threading related params later
     subnet_ht_ =
         ht::factory(PDS_MAX_SUBNET >> 1, subnet_entry::subnet_key_func_get,
                     sizeof(pds_subnet_key_t));
