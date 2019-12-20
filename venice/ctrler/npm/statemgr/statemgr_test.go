@@ -1654,6 +1654,51 @@ func TestWorkloadUpdate(t *testing.T) {
 		return false, nil
 	}, "Endpoint not foud", "1ms", "1s")
 
+	// add IP address
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces[0].IpAddresses = []string{"1.2.3.4/32"}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
+		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "1.2.3.4/32") {
+			return true, nil
+		}
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		return false, nil
+	}, "Endpoint not foud", "1ms", "1s")
+
+	// update IP address
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces[0].IpAddresses = []string{"1.2.3.5/32"}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
+		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "1.2.3.5/32") {
+			return true, nil
+		}
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		return false, nil
+	}, "Endpoint not foud", "1ms", "1s")
+
+	// remove IP address
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces[0].IpAddresses = []string{}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
+		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "") {
+			return true, nil
+		}
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		return false, nil
+	}, "Endpoint not foud", "1ms", "1s")
+
 	// add new interface to workload
 	newIntf := workload.WorkloadIntfSpec{
 		MACAddress:   "0002.0406.0800",

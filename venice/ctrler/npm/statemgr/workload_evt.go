@@ -125,6 +125,25 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 		recreate = true
 	}
 
+	sliceEqual := func(X, Y []string) bool {
+		m := make(map[string]int)
+
+		for _, y := range Y {
+			m[y]++
+		}
+
+		for _, x := range X {
+			if m[x] > 0 {
+				m[x]--
+				continue
+			}
+			//not present or execess
+			return false
+		}
+
+		return len(m) == 0
+	}
+
 	// check interface params changed
 	if len(nwrk.Spec.Interfaces) != len(w.Spec.Interfaces) {
 		// number of interfaces changed, delete old ones
@@ -140,8 +159,14 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 				// useg vlan changed, delete old endpoint
 				recreate = true
 			}
+
 			if w.Spec.Interfaces[idx].MACAddress != intf.MACAddress {
 				// mac address changed, delete old endpoints
+				recreate = true
+			}
+
+			if !sliceEqual(w.Spec.Interfaces[idx].IpAddresses, intf.IpAddresses) {
+				// IP addresses changed
 				recreate = true
 			}
 		}
