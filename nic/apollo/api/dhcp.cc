@@ -10,9 +10,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/mem.hpp"
-#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/dhcp.hpp"
 #include "nic/apollo/api/pds_state.hpp"
