@@ -444,6 +444,28 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 	log.Infof("%d iterations at batch size %d writing points took %v ", numIterations, batchSize, time.Since(startTime).String())
 
 	// measure how long it takes to execute the query
+	AssertEventually(t, func() (bool, interface{}) {
+		for iter := 0; iter < batchSize; iter++ {
+			// execute a query
+			ch, err := ts.ExecuteQuery(fmt.Sprintf("SELECT * FROM cpu%d", iter), "db1")
+			if err != nil {
+				return false, err
+			}
+
+			rslt := ReadAllResults(ch)
+			if len(rslt) != 1 {
+				return false, fmt.Errorf("got invalid number of results")
+			}
+			if len(rslt[0].Series) != 1 {
+				return false, fmt.Errorf("got invalid number of series")
+			}
+			if len(rslt[0].Series[0].Values) != numIterations {
+				return false, fmt.Errorf("got invalid number of values")
+			}
+		}
+		return true, nil
+	}, "failed to query in replicas", "1s", "60s")
+
 	startTime = time.Now()
 	for iter := 0; iter < batchSize; iter++ {
 		// execute a query
@@ -456,7 +478,6 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 		Assert(t, len(rslt[0].Series[0].Values) == numIterations, "got invalid number of values", len(rslt[0].Series[0].Values))
 	}
 	log.Infof("%d iterations at batch size %d executing query took %v ", numIterations, batchSize, time.Since(startTime).String())
-
 }
 
 func TestRetentionPolicy(t *testing.T) {
