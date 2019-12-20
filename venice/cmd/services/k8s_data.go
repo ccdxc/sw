@@ -221,6 +221,7 @@ var k8sModules = map[string]protos.Module{
 				logVolume,
 				eventsVolume,
 			},
+			RestrictNodes: memoryHogIndicator,
 		},
 	},
 	globals.Npm: {
@@ -252,6 +253,7 @@ var k8sModules = map[string]protos.Module{
 				eventsVolume,
 				elasticClientCredsVolume,
 			},
+			RestrictNodes: memoryHogIndicator,
 		},
 	},
 	globals.ElasticSearch: {

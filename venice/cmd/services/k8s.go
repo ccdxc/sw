@@ -29,7 +29,8 @@ import (
 )
 
 var (
-	interval = time.Second * 30
+	interval           = time.Second * 30
+	memoryHogIndicator = "memory-hog"
 )
 
 const (
@@ -533,6 +534,26 @@ func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 							MatchExpressions: []v1.NodeSelectorRequirement{
 								{Key: "kubernetes.io/hostname", Operator: "In", Values: qnodes},
 							},
+						},
+					},
+				},
+			},
+		}
+	}
+	if module.Spec.RestrictNodes == memoryHogIndicator {
+		dConfig.Spec.Template.ObjectMeta.Labels[memoryHogIndicator] = "yes"
+		dConfig.Spec.Template.Spec.Affinity = &v1.Affinity{
+			PodAntiAffinity: &v1.PodAntiAffinity{
+				PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+					{
+						Weight: 1,
+						PodAffinityTerm: v1.PodAffinityTerm{
+							LabelSelector: &metav1.LabelSelector{
+								MatchExpressions: []metav1.LabelSelectorRequirement{
+									{Key: memoryHogIndicator, Operator: "In", Values: []string{"yes"}},
+								},
+							},
+							TopologyKey: "kubernetes.io/hostname",
 						},
 					},
 				},
