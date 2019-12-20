@@ -18,5 +18,6 @@ export const UrlMap: { [url: string]: string } = {
   '/admin/upgrade/rollouts': 'systemupgrade',
   '/admin/users': 'localuser',
   '/admin/techsupport': 'techsupport',
-  '/admin/snapshots': 'snapshots'
+  '/admin/snapshots': 'snapshots',
+  '/admin/certificate': 'updateservercertificate'
 }

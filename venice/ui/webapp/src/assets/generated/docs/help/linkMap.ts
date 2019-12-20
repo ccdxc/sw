@@ -14,6 +14,7 @@ export const HelpLinkMap: { [id: string]: string } = {
   "snapshots" : "/assets/generated/docs/help/snapshots.html",
   "systemupgrade" : "/assets/generated/docs/help/systemupgrade.html",
   "techsupport" : "/assets/generated/docs/help/techsupport.html",
+  "updateservercertificate" : "/assets/generated/docs/help/updateservercertificate.html",
   "localuser" : "/assets/generated/docs/help/usermanagement.html",
   "workload" : "/assets/generated/docs/help/workloads.html",
 }
