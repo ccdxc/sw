@@ -41,11 +41,6 @@ public:
         return SDK_RET_OK;
     }
 
-    /// \brief initialize the api object with given config
-    /// \param[in] api_ctxt transient state associated with this API
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
     /// \brief program config in the hardware during create operation
     /// Program all hardware tables relevant to this object except stage 0
     /// table(s), if any and also set the valid bit
