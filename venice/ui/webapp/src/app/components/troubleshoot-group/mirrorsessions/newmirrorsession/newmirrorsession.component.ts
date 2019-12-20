@@ -174,11 +174,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isMirrorsessionNameValid(this.existingObjects)]);
 
-    // set default packet size if packet size is null;
-    if (!this.newObject.$formGroup.get(['spec', 'packet-size']).value) {
-      this.newObject.$formGroup.get(['spec', 'packet-size']).setValue(1024);
-    }
-
     // due to currently backend does not support all drops, comment out next lines
     /*
     this.newObject.$formGroup.get(['spec', 'packet-filters']).setValidators([
