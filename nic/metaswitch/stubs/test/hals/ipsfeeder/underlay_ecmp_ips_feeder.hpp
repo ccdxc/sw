@@ -26,7 +26,7 @@ public:
 
     void cleanup(void) override {
         nbs_exit_shared_context(&saved_context);
-        NBB_DESTROY_THREAD_CONTEXT
+        NBB_DESTROY_STATIC_THREAD_CXT
     }
 
     void trigger_create(void) override {

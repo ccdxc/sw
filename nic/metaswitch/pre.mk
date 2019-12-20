@@ -9,7 +9,7 @@ MS_COMPILATION_SWITCH = \
 
 ifeq ($(ARCH),aarch64)
     GMK_TARGETOS = aarch64
-    MS_COMPILATION_SWITCH += LINUX_NBASE
+    MS_COMPILATION_SWITCH += LINUX_MT_NBASE
     MS_LIB_DIR += \
 	-Wl,-rpath,$(TOPDIR)/nic/third-party/libxml2/$(GMK_TARGETOS)/lib \
         -Wl,-rpath,$(TOPDIR)/nic/third-party/libz/$(GMK_TARGETOS)/lib \
@@ -17,7 +17,7 @@ ifeq ($(ARCH),aarch64)
         -Wl,-rpath,$(TOPDIR)/nic/third-party/libicuuc/$(GMK_TARGETOS)/lib
 else
     GMK_TARGETOS = x86_64
-    MS_COMPILATION_SWITCH += LINUX_NBASE
+    MS_COMPILATION_SWITCH += LINUX_MT_NBASE
 endif
 
 ifeq ($(MODE),debug)
