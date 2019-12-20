@@ -634,6 +634,7 @@ type pdsaFieldOpt struct {
 	CppDataType       string
 	FieldLen          int
 	FieldHasLen       bool
+	IgnoreIfEmpty     bool
 }
 
 type fieldMetricOptions struct {
@@ -810,6 +811,7 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.GetKeyOidIndex = o.GetKeyOidIndex
 		ret.SetKeyOidLenIndex = o.SetKeyOidLenIndex
 		ret.GetKeyOidLenIndex = o.GetKeyOidLenIndex
+		ret.IgnoreIfEmpty = o.IgnoreIfEmpty
 		ret.FieldHasLen = false
 		if ret.SetKeyOidLenIndex != "" || ret.GetKeyOidLenIndex != "" || fieldHasCodeLengthName(cam, table, o.Field) {
 			ret.FieldHasLen = true

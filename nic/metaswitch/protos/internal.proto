@@ -67,7 +67,7 @@ message LimInterfaceCfgSpec {
     uint32 IPv6Enabled  = 6 [(venice.pdsaFields) = {Field:"ipv6_enabled"}];
     uint32 IPv6Fwding   = 7 [(venice.pdsaFields) = {Field:"ipv6_forwarding"}];
     uint32 FwdingMode   = 8 [(venice.pdsaFields) = {Field:"forwarding_mode"}];
-    string VrfName      = 9 [(venice.pdsaFields) = {Field:"bind_vrf_name"}];
+    string VrfName      = 9 [(venice.pdsaFields) = {Field:"bind_vrf_name", IgnoreIfEmpty: true}];
 }
 
 message LimInterfaceAddrSpec {

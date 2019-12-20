@@ -26,6 +26,7 @@ message PdsaFields {
   string GetKeyOidFn       = 7;
   string SetKeyOidLenIndex = 8;
   string GetKeyOidLenIndex = 9;
+  bool   IgnoreIfEmpty     = 10;
 }
 
 // PDSA Option extensions applicable to Fields

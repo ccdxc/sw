@@ -107,26 +107,29 @@
         if (row_status != AMB_ROW_DESTROY) {
             NBB_TRC_FLOW ((NBB_FORMAT "Not destroying RM: fill in field {{$fieldOpt.Field}} in {{$struct}}"));
               {{end}}
+              {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
+            if (req.{{$fieldOpt.Name | ToLower}}() != "") {
+              {{end}}
               {{if not (eq $fieldOpt.Field "")}}
-            // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
+                // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
                 {{if (eq $fieldOpt.SetFieldFn "")}}
                   {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                   {{if (eq $castFn "")}}
                     {{if (eq .GetTypeName ".types.IPAddress")}}
-            pdsa_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
+                pdsa_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
-            v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
                   {{else}}
                     {{if (eq $fieldOpt.FieldHasLen false)}}
-            {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
-            {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len, req.{{$fieldOpt.Name | ToLower}}());
+                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len, req.{{$fieldOpt.Name | ToLower}}());
                     {{end}}
                   {{end}}
-            AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
+                AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
                 {{else}}
-            {{$fieldOpt.SetFieldFn}}(req, mib_msg);
+                {{$fieldOpt.SetFieldFn}}(req, mib_msg);
                 {{end}}
               {{else}}
                 {{if TypeIsMessage .}}
@@ -155,6 +158,9 @@
                     {{end}}
                   {{end}}
                 {{end}}
+              {{end}}
+              {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
+            }
               {{end}}
               {{if (eq $fieldOpt.IsKey false) }}
         }
