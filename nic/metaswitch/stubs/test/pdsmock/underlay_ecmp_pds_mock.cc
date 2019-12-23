@@ -25,9 +25,9 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
 
     test::api::nexthop_group_feeder nhgroup_feeder;
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
-                        input.pathset_id,    // ID
-                        PDS_MAX_NEXTHOP_GROUP,
-                        input.nexthops.size());            // Num Nexthops
+                        input.nexthops.size(), // Num Nexthops
+                        input.pathset_id,      // ID
+                        PDS_MAX_NEXTHOP_GROUP);
     int i = 0;
     for (auto& nh: input.nexthops) {
         nhgroup_feeder.spec.nexthops[i].l3_if.id  = pds_ms::ms_to_pds_ifindex(nh.l3_ifindex);

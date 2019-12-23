@@ -23,16 +23,13 @@ public:
 
     // Constructor
     nexthop_group_feeder() { };
-    nexthop_group_feeder(const nexthop_group_feeder& feeder) {
-        init(feeder.spec.type, feeder.spec.key.id, feeder.num_obj,
-             feeder.spec.num_nexthops);
-    }
+    nexthop_group_feeder(const nexthop_group_feeder& feeder);
 
     // Initialize feeder with the base set of values
-    void init(pds_nexthop_group_type_t type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
+    void init(pds_nexthop_group_type_t type,
+              uint8_t num_nexthops,
               pds_nexthop_group_id_t id = 1,
-              uint32_t num_obj = k_max_groups,
-              uint8_t num_nexthops = PDS_MAX_ECMP_NEXTHOP);
+              uint32_t num_obj = k_max_groups);
 
     // Iterate helper routines
     void iter_next(int width = 1);

@@ -316,7 +316,6 @@ nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
     }
     if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
         spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
-        // TODO - fetch nh spec from ecmp_data tunnel ids
     } else if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
         spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
         nh_base_hw_id = ecmp_data.ecmp_info.nexthop_base;
