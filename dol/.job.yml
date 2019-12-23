@@ -13,6 +13,13 @@ targets:
     area:
     sub-area:
     feature:
+  apulu/dol:
+    commands: [ "bash", "-c", "cd /sw/dol && ./sanity_apulu.sh" ]
+    owners: ["email:param@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
@@ -20,3 +27,5 @@ image:
   bind_dir: "/sw"
   work_dir: "/sw/dol"
 
+logfiles:
+  - /sw/nic/nic_sanity_logs.tar.gz

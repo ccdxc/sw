@@ -455,7 +455,6 @@ jobd/apulu/metaswitch_store_test: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apulu/vxlan
 jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking --dryrun
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking
 
 .PHONY: jobd/dol/apulu/rfc
