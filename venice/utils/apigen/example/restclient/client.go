@@ -14,6 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
+
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
@@ -31,6 +34,122 @@ type respOrder struct {
 	Err error
 }
 
+func makeMac(in int) string {
+	var b = make([]byte, 6)
+	b[5] = byte(in % 256)
+	b[4] = byte((in / 256) % 256)
+	b[3] = byte((in / (256 * 256)) % 256)
+	b[2] = byte((in / (256 * 256 * 256)) % 256)
+	return fmt.Sprintf("%02x%02x.%02x%02x.%02x%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+}
+
+func scaleWorkloads(instance string, del bool, hostCount, wlCount int) {
+
+	// Create Hosts
+	if hostCount > 512 {
+		fmt.Printf("max 512 hosts allowed\n")
+	}
+
+	if wlCount > 100*1024 {
+		fmt.Printf("max 100K hosts allowed\n")
+	}
+
+	restcl, err := apiclient.NewRestAPIClient(instance)
+	if err != nil {
+		log.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	userCred := &auth.PasswordCredential{
+		Username: "test",
+		Password: "Pensando0$",
+		Tenant:   globals.DefaultTenant,
+	}
+	ctx, err := testutils.NewLoggedInContext(context.Background(), instance, userCred)
+	if err != nil {
+		fmt.Printf("could not login (%s)\n", err)
+		return
+	}
+
+	if del {
+		fmt.Printf("+++++++ Starting delete of Workloads ++++\n")
+		wlist, err := restcl.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			fmt.Printf("failed to list workloads (%s)\n", err)
+			return
+		}
+		fmt.Printf("+++++++++ found %d workloads +++++++\n", len(wlist))
+		for _, w := range wlist {
+			if strings.HasPrefix(w.Name, "scaleWL-") {
+				_, err = restcl.WorkloadV1().Workload().Delete(ctx, &w.ObjectMeta)
+				if err != nil {
+					fmt.Printf("failed to delete workload [%v](%s)\n", w.Name, err)
+				}
+			}
+		}
+
+		fmt.Printf("+++++++ Starting delete of Hosts ++++\n")
+		hlist, err := restcl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			fmt.Printf("failed to list workloads (%s)\n", err)
+			return
+		}
+		fmt.Printf("+++++++++ found %d hosts +++++++\n", len(hlist))
+		for _, w := range wlist {
+			if strings.HasPrefix(w.Name, "scaleHost-") {
+				_, err = restcl.ClusterV1().Host().Delete(ctx, &w.ObjectMeta)
+				if err != nil {
+					fmt.Printf("failed to delete workload [%v](%s)\n", w.Name, err)
+				}
+			}
+		}
+	}
+
+	host := cluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name: fmt.Sprintf("scaleHost"),
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{},
+			},
+		},
+	}
+
+	for i := 0; i < hostCount; i++ {
+		host.Name = fmt.Sprintf("scaleHost-%d", i)
+		host.Spec.DSCs[0].MACAddress = makeMac(i)
+		_, err = restcl.ClusterV1().Host().Create(ctx, &host)
+		if err != nil {
+			fmt.Printf("unable to create host [%v](%s)\n", host.Name, err)
+			// return
+		}
+	}
+
+	wl := workload.Workload{
+		ObjectMeta: api.ObjectMeta{
+			Name:   fmt.Sprintf("scaleWL"),
+			Tenant: globals.DefaultTenant,
+		},
+		Spec: workload.WorkloadSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{},
+			},
+		},
+	}
+	for i := 0; i < wlCount; i++ {
+		wl.Name = fmt.Sprintf("scaleWL-%d", i)
+		wl.Spec.Interfaces[0].ExternalVlan = uint32((i % 4096) + 1)
+		wl.Spec.Interfaces[0].MicroSegVlan = uint32((i % 4096) + 100)
+		wl.Spec.Interfaces[0].MACAddress = makeMac(i)
+		wl.Spec.HostName = fmt.Sprintf("scaleHost-%d", i%hostCount)
+		_, err = restcl.WorkloadV1().Workload().Create(ctx, &wl)
+		if err != nil {
+			fmt.Printf("failed to create workload [%v](%v)\n", wl.Name, err)
+			// return
+		}
+	}
+
+}
 func delApps(instance string) {
 	restcl, err := apiclient.NewRestAPIClient(instance)
 	if err != nil {
@@ -382,11 +501,19 @@ func main() {
 		testCD      = flag.Bool("tl", false, "test Create delete loop")
 		tcount      = flag.Int("count", 100, "iteration count")
 		daps        = flag.Bool("dapps", true, "delapps")
+		scaleWl     = flag.Bool("wlscale", true, "Scale Workloads")
+		wlCount     = flag.Int("wlc", 10000, "Number of workloads")
+		hostCount   = flag.Int("hc", 100, "Number of Hosts")
 	)
 	flag.Parse()
 
+	if *scaleWl {
+		scaleWorkloads(*instance, true, *hostCount, *wlCount)
+		return
+	}
 	if *daps {
 		delApps(*instance)
+		return
 	}
 	if *testStaging {
 		testStagingFn(*instance)

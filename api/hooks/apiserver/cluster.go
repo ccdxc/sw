@@ -619,8 +619,10 @@ func (cl *clusterHooks) writeSnapshot(ctx context.Context, name string, client o
 	}
 	defer rdr.Close()
 
+	meta["Creation-Time"] = fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano))
+
 	// XXX-TODO(sanjayt): Add metadata
-	written, err := client.PutObject(ctx, name, rdr, nil)
+	written, err := client.PutObject(ctx, name, rdr, meta)
 	log.Infof("wrote [%d] bytes with error (%v)", written, err)
 	return rev, err
 }
@@ -777,20 +779,20 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		return nil
 	}
 
-	rollback := func() *api.Status {
+	rollback := func(rctx context.Context) *api.Status {
 		log.Infof("[config-restore] rollback called - getting to clean state")
 		var e1 error
 		if ov, ok := kvs.(apiintf.OverlayInterface); ok {
-			e1 = ov.ClearBuffer(ctx, nil)
+			e1 = ov.ClearBuffer(rctx, nil)
 		}
 		if e1 == nil {
-			delFromCache(pctx, kvs)
+			delFromCache(rctx, kvs)
 		}
 		log.Infof("[config-restore] attempting config rollback")
 		if e1 == nil {
-			e1 = apisrvcache.Rollback(pctx, backupRev, kvs)
+			e1 = apisrvcache.Rollback(rctx, backupRev, kvs)
 			if e1 == nil {
-				_, e1 = txn.Commit(pctx)
+				_, e1 = txn.Commit(rctx)
 			}
 		}
 		if e1 != nil {
@@ -858,18 +860,16 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 				IsTemporary: false,
 			}
 		}
-		obj.Clone(&rstat)
 	}
-
+	rstat.TypeMeta = obj.TypeMeta
+	rstat.Spec = obj.Spec
 	rstat.Status = cluster.SnapshotRestoreStatus{}
 	rstat.Status.Status = cluster.SnapshotRestoreStatus_Active.String()
 	rstat.Status.BackupSnapshotPath = backupName
 	ts, _ := types.TimestampProto(time.Now())
 	rstat.Status.StartTime = &api.Timestamp{Timestamp: *ts}
-	rstat.ObjectMeta.CreationTime = api.Timestamp{Timestamp: *ts}
 	rstat.ObjectMeta.ModTime = api.Timestamp{Timestamp: *ts}
 	rstat.SelfLink = rstat.MakeURI("configs", "v1", string(apiclient.GroupCluster))
-	rstat.UUID = uuid.NewV4().String()
 	rstat.Status.Status = cluster.SnapshotRestoreStatus_Active.String()
 	if found {
 		err = kvs.Update(dctx, rkey, &rstat)
@@ -884,6 +884,8 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 			}
 		}
 	} else {
+		rstat.ObjectMeta.CreationTime = api.Timestamp{Timestamp: *ts}
+		rstat.UUID = uuid.NewV4().String()
 		err = kvs.Create(dctx, rkey, &rstat)
 		if err != nil {
 			log.Errorf("[config-restore] failed to create restore object before applying snapshot(%s)", err)
@@ -898,13 +900,16 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	}
 
 	// Point of no return. Will need rollback.
-
+	// Dont let a cancel on the call context interrupt this go routing after this point.
+	npctx := apiutils.SetVar(context.Background(), apiutils.CtxKeyAPISrvLargeBuffer, true)
+	npctx = apiutils.SetVar(npctx, apiutils.CtxKeyAPISrvInitRestore, true)
+	ndctx := apiutils.SetVar(context.Background(), apiutils.CtxKeyPersistDirectKV, true)
 	// Commit the buffer so any errors can be captured here.
 	//  The txn is a surrogate for the Ov, commit
-	_, err = txn.Commit(pctx)
+	_, err = txn.Commit(npctx)
 	if err != nil || failCommit {
 		log.Errorf("[config-restore] commit failed (%s), attempting rollback", err)
-		status := rollback()
+		status := rollback(npctx)
 		if status != nil {
 			return rstat, false, status
 		}
@@ -920,7 +925,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	rstat.Status.Status = cluster.SnapshotRestoreStatus_Completed.String()
 	ts, _ = types.TimestampProto(time.Now())
 	rstat.Status.EndTime = &api.Timestamp{Timestamp: *ts}
-	err = kvs.Update(dctx, rkey, &rstat)
+	err = kvs.Update(ndctx, rkey, &rstat)
 	if err != nil {
 		return rstat, false, fmt.Errorf("could not update the Restore Object")
 	}

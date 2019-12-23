@@ -940,14 +940,18 @@ func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) erro
 		if ovObj.oper == operDelete {
 			return errors.New("not found")
 		}
-		ovObj.val.Clone(into)
-		if err == nil {
-			ver, err := c.versioner.GetVersion(cl.(runtime.Object))
+		if ovObj.val != nil {
+			_, err := ovObj.val.Clone(into)
 			if err == nil {
-				c.versioner.SetVersion(into, ver)
+				ver, err := c.versioner.GetVersion(cl.(runtime.Object))
+				if err == nil {
+					c.versioner.SetVersion(into, ver)
+				}
+				return nil
 			}
+		} else {
+			log.Errorf("Overlay Object was nil Oper[%v] key [%v]", ovObj.oper, ovObj.key)
 		}
-		return nil
 	}
 
 	return c.CacheInterface.Get(ctx, key, into)
@@ -1257,7 +1261,7 @@ func (c *overlay) ClearBuffer(ctx context.Context, action []apiintf.OverlayKey) 
 }
 
 // commitDirect is used to commit a largeBuffer without retries.
-func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, verVer int64, otxn kvstore.Txn) (resp kvstore.TxnResponse, retry bool, pCount, sCount int, err error) {
+func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, verVer int64, otxn kvstore.Txn, lb bool) (resp kvstore.TxnResponse, retry bool, pCount, sCount int, err error) {
 	// The Staging buffer could have more number of objects that are supported in a trasaction.
 	//  breakup the buffer into multiple trasaction if necessary. this API is only called if the cache
 	//  is locked so it is safe to break it into multiple trasactions.
@@ -1265,12 +1269,17 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 	if kv == nil {
 		return kvstore.TxnResponse{}, false, pCount, sCount, errors.New("no backend KV store connection")
 	}
+	log.Infof("performing commit with retries[%d] maxentries[%d] verVer[%d] largeBuffer[%v]", retries, maxEntries, verVer, lb)
 	ctxn := &cacheTxn{
 		Txn:    kv.NewTxn(),
 		parent: c.CacheInterface.(*cache),
 	}
 	applyComps := func(ctxn *cacheTxn) {
 		// Add all comparators
+		if lb {
+			// This is applied with the cache locked. Comparators ane not needed in this case
+			return
+		}
 		for _, cp := range c.comparators {
 			// Filter comparators before ading them
 			//  - comparator for version > 0 and overlay is creating the object.
@@ -1390,7 +1399,11 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 			ctxn.Delete(c.makeBufferKey(k))
 		}
 		if numTxnEntries >= maxEntries {
+			if !lb {
+				return kvstore.TxnResponse{}, false, pCount, sCount, errors.New("too many operations in transaction")
+			}
 			applyComps(ctxn)
+			c.preCommitComps = nil
 			resp, retry, err := commitTxn(ctxn)
 			if err != nil {
 				return resp, retry, pCount, sCount, err
@@ -1434,7 +1447,7 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 		pCount, sCount int
 	)
 	var resp kvstore.TxnResponse
-	retries, maxRetries, maxEntries := 0, 0, c.maxOvEntries*4
+	retries, maxRetries, maxEntries := 0, 0, c.maxOvEntries*2
 	lb := false
 	// Large Buffer handling takes care of usage of buffer during config restore operations and such where we still want use
 	//  a staging buffer to accumulate operations, but the number of operations may not fit into a KVStore trasaction.
@@ -1448,12 +1461,11 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 	maxRetries = maxConsistentUpdateRetries
 	if lb {
 		maxRetries = 1
-		maxEntries = 1024 * c.maxOvEntries
 	}
 	retry := false
 
 	for retries < maxRetries {
-		resp, retry, pCount, sCount, err = c.commitDirect(ctx, retries, maxEntries, verVer, otxn)
+		resp, retry, pCount, sCount, err = c.commitDirect(ctx, retries, maxEntries, verVer, otxn, lb)
 		retries++
 		if err != nil {
 			if retry {

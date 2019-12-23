@@ -33,6 +33,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/api/utils"
@@ -43,10 +44,12 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/objstore/memclient"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/workfarm"
 )
 
 // validateObjectSpec Expects non-pointers in expected and result.
@@ -3938,4 +3941,95 @@ func TestSaveRestoreOperation(t *testing.T) {
 	cust.Name = fmt.Sprintf("custOvOps-%d", 4000)
 	_, err = restcl.BookstoreV1().Customer().Get(ctx, &cust.ObjectMeta)
 	Assert(t, err != nil, "Should not get Customer object")
+
+	// Test Scale setup with 1000 hosts and 20k Workloads
+	makeMac := func(in int) string {
+		var b = make([]byte, 6)
+		b[5] = byte(in % 256)
+		b[4] = byte((in / 256) % 256)
+		b[3] = byte((in / (256 * 256)) % 256)
+		b[2] = byte((in / (256 * 256 * 256)) % 256)
+		return fmt.Sprintf("%02x%02x.%02x%02x.%02x%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+	}
+	numHosts := 1000
+	numWLs := 20000
+	HostCreateFunc := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+		host := cluster.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("scaleHost-%d", iter),
+			},
+			Spec: cluster.HostSpec{
+				DSCs: []cluster.DistributedServiceCardID{
+					{MACAddress: makeMac(iter)},
+				},
+			},
+		}
+		_, err := apicl.ClusterV1().Host().Create(ctx, &host)
+		if err != nil {
+			log.Errorf("failed to create Host [%v](%s)", host.Name, err)
+		}
+		return nil
+	}
+	wf := workfarm.New(20, time.Second*60, HostCreateFunc)
+	statsCh, err := wf.Run(ctx, numHosts, 0, time.Second*60, nil)
+	stats := <-statsCh
+	t.Logf("Host create stats [%v]", stats)
+
+	wlCreateFn := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+		wl := workload.Workload{
+			ObjectMeta: api.ObjectMeta{
+				Name:      fmt.Sprintf("scaleWL-%d", iter),
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			},
+			Spec: workload.WorkloadSpec{
+				HostName: fmt.Sprintf("scaleHost-%d", (iter % numHosts)),
+				Interfaces: []workload.WorkloadIntfSpec{
+					{
+						ExternalVlan: uint32((iter % 4000) + 1),
+						MicroSegVlan: uint32((iter % 4000) + 1),
+						MACAddress:   makeMac(iter),
+					},
+				},
+			},
+		}
+		_, err := apicl.WorkloadV1().Workload().Create(ctx, &wl)
+		if err != nil {
+			log.Errorf("failed to create Workload [%v](%s)", wl.Name, err)
+		}
+		return nil
+	}
+	wf1 := workfarm.New(20, time.Second*90, wlCreateFn)
+	statsCh, err = wf1.Run(ctx, numWLs, 0, time.Second*90, nil)
+	stats = <-statsCh
+	t.Logf("WL create stats [%v]", stats)
+
+	ss, err = restcl.ClusterV1().ConfigurationSnapshot().Save(ctx, &cluster.ConfigurationSnapshotRequest{})
+	AssertOk(t, err, "snapshot save should have succeeded")
+
+	scalePath2 := ss.Status.LastSnapshot.URI[strings.LastIndex(ss.Status.LastSnapshot.URI, "/")+1:]
+
+	// Restore to old config.
+	resReq.Spec.SnapshotPath = snapPath2
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	// Restore to scaled config
+	resReq.Spec.SnapshotPath = scalePath2
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	// Restore to same scaled config
+	resReq.Spec.SnapshotPath = scalePath2
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+
+	// Restore to old config.
+	resReq.Spec.SnapshotPath = snapPath2
+	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+	AssertOk(t, err, "restore should have succeeded")
+	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
 }
