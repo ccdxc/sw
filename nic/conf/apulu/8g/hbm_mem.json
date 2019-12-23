@@ -1,21 +1,30 @@
 {
+    "guideline": {
+        "_comment"  : "Regions are categorized to 'static','upgrade','opertbl' and 'cfgtbl'",
+        "_comment1" : "For non-disruptive sw upgrades, the static* should not be modified across releases",
+        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjascent",
+        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjascent"
+    },
     "regions": [
          {
             "_comment" : "cache coherent",
             "name": "cpu-dr",
             "size": "128K",
+            "kind": "static",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-pr",
             "size": "128K",
+            "kind": "static",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-descriptor",
             "size": "2048K",
+            "kind": "static",
             "cc": "true"
 
         },
@@ -23,95 +32,113 @@
             "_comment" : "cache coherent",
             "name": "cpu-page",
             "size": "32768K",
+            "kind": "static",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "arq-rx",
             "size": "256K",
+            "kind": "static",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "ascq",
             "size": "256K",
+            "kind": "static",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "asq",
             "size": "256K",
+            "kind": "static",
             "cc"     : "true"
         },
         {
             "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
             "name" : "unused cache coherent",
             "size" : "29696K",
+            "kind": "static",
             "cc"      : "true"
         },
         {
             "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
             "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
             "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
-             "name": "reserved_common",
+            "name": "reserved_common",
+            "kind": "static",
              "size": "64M"
         },
         {
             "name": "devcmd",
+            "kind": "static",
             "size": "32768K"
         },
         {
             "name": "nicmgrqstate_map",
             "size": "32768K",
+            "kind": "static",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgr",
+            "kind": "static",
             "size" : "32768K"
         },
         {
             "name": "fwupdate",
+            "kind": "static",
             "size": "128K"
         },
         {
             "name": "lif_stats",
             "size": "1024K",
             "reset": true,
+            "kind": "static",
             "cache": "p4plus-all"
         },
         {
             "name": "rss_indir_table",
             "size": "1024K",
+            "kind": "static",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "lif2qstate_map",
             "size": "4K",
+            "kind": "static",
             "cache": "p4plus-all"
-        },
-        {
-            "name": "p4_program",
-            "size": "1024K"
-        },
-        {
-            "name": "rxdma_program",
-            "size": "1024K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "txdma_program",
-            "size": "1024K",
-            "cache": "p4plus-txdma"
         },
         {
             "name": "rxdma_to_txdma_buf",
             "size": "10M",
+            "kind": "static",
             "_comment": "1K buffers of size 10K"
         },
         {
             "name": "rxdma_to_txdma_desc",
             "size": "128K",
+            "kind": "static",
             "_comment": "1K descriptors of size 128B"
+        },
+        {
+            "name": "p4_program",
+            "kind": "cfgtbl",
+            "size": "1024K"
+        },
+        {
+            "name": "rxdma_program",
+            "size": "1024K",
+            "kind": "cfgtbl",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size": "1024K",
+            "kind": "cfgtbl",
+            "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v4",
@@ -119,6 +146,7 @@
             "size": "18M",
             "block_size": "17472B",
             "max_elements": "1K",
+            "kind": "cfgtbl",
             "cache": "p4plus-txdma"
         },
         {
@@ -127,6 +155,7 @@
             "size": "37M",
             "block_size": "37440B",
             "max_elements": "1K",
+            "kind": "cfgtbl",
             "cache": "p4plus-txdma"
         },
         {
@@ -134,6 +163,7 @@
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",
             "block_size": "1B",
+            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
@@ -141,6 +171,7 @@
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",
             "block_size": "1B",
+            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
@@ -148,6 +179,7 @@
             "_comment": "dummy region - for tags use profile p2",
             "size": "1K",
             "block_size": "1B",
+            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
@@ -155,121 +187,142 @@
             "_comment": "dummy region - for tags use profile p2",
             "size": "1K",
             "block_size": "1B",
+            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
             "name": "sacl_egress_v4",
             "size": "264M",
             "block_size": "264K",
+            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_ingress_v4",
             "size": "264M",
             "block_size": "264K",
+            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_egress_v6",
             "size": "1K",
             "block_size": "1K",
+            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_ingress_v6",
             "size": "1K",
             "block_size": "1K",
+            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "vnic_info_rxdma",
             "size": "256K",
             "cache": "p4plus-rxdma",
+            "kind": "cfgtbl",
             "_comment": "4K * 64B"
         },
         {
             "name": "local_mapping",
             "size": "8M",
             "cache": "p4ig",
+            "kind": "cfgtbl",
             "_comment": "128K * 64B"
         },
         {
             "name": "local_mapping_ohash",
             "size": "1M",
             "cache": "p4ig",
+            "kind": "cfgtbl",
             "reset": true
         },
         {
             "name": "flow",
             "size": "128M",
             "cache": "p4ig",
+            "kind": "opertbl",
             "_comment": "2M * 64B"
         },
         {
             "name": "flow_ohash",
             "size": "16M",
             "cache": "p4ig",
+            "kind": "opertbl",
             "_comment": "256K * 64B"
         },
         {
             "name": "ipv4_flow",
             "size": "256M",
             "cache": "p4ig",
+            "kind": "opertbl",
             "_comment": "8M * 32B"
         },
         {
             "name": "ipv4_flow_ohash",
             "size": "32M",
             "cache": "p4ig",
+            "kind": "opertbl",
             "_comment": "1M * 32B"
         },
         {
             "name": "ip_mac_binding",
             "size": "512K",
             "cache": "p4ig",
+            "kind": "opertbl",
             "_comment": "32K * 16B"
         },
         {
             "name": "session",
             "size": "64M",
             "cache": "p4eg",
+            "kind": "opertbl",
             "_comment": "2M * 32B"
+        },
+        {
+            "name": "session_stats",
+            "size": "64M",
+            "kind": "opertbl",
+            "_comment": "2M * 16B * 2"
         },
         {
             "name": "mapping",
             "size": "256M",
             "cache": "p4eg",
+            "kind": "cfgtbl",
             "_comment": "4M * 64B"
         },
         {
             "name": "mapping_ohash",
             "size": "32M",
             "cache": "p4eg",
+            "kind": "cfgtbl",
             "_comment": "512K * 64B"
         },
         {
             "name": "nexthop",
             "size": "4M",
             "cache": "p4eg",
+            "kind": "cfgtbl",
             "_comment": "64K * 64B"
         },
         {
             "name": "nat",
             "size": "131072K",
             "cache": "p4eg",
+            "kind": "cfgtbl",
             "_comment": "TBD"
         },
         {
-            "name": "session_stats",
-            "size": "64M",
-            "_comment": "2M * 16B * 2"
-        },
-        {
             "name": "qos-hbm-fifo",
+            "kind": "cfgtbl",
             "size": "0K"
         },
         {
             "name": "tx-scheduler",
+            "kind": "cfgtbl",
             "size": "2048K"
         },
         {
@@ -278,12 +331,21 @@
             "_comment1": "key space = 1024 * 64 = 64K",
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
+            "kind": "cfgtbl",
             "size": "1088K"
         },
         {
             "name": "port_stats",
             "size": "17K",
+            "kind": "cfgtbl",
             "reset": true
+        },
+        {
+            "name": "for_upgrade",
+            "_comment" : "Reserved for upgrade for duplicating the tables",
+            "_comment1" : "Consider memory for new table addition also in future",
+            "kind": "upgrade",
+            "size": "0M"
         }
     ]
 }

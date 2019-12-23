@@ -33,6 +33,14 @@ namespace utils {
 #define MEM_REGION_RSS_INDIR_TABLE_NAME "rss_indir_table"
 #define MEM_REGION_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 
+
+typedef enum mpartition_region_kind_e {
+    MEM_REGION_KIND_CFGTBL,
+    MEM_REGION_KIND_OPERTBL,
+    MEM_REGION_KIND_STATIC,
+    MEM_REGION_KIND_UPGRADE
+} mpartition_region_kind_t;
+
 /**
  * @brief Memory mpartition region
  */
@@ -44,7 +52,9 @@ typedef struct mpartition_region_s {
     mem_addr_t      start_offset;   /**< Start address offset */
     cache_pipe_t    cache_pipe;     /**< Cached pipe */
     bool            reset;          /**< True to bzero this region during init */
-    bool            is_alias;       /**< True if alias for another region */
+    int32_t         alias_index;    /**< region index if alias for another region */
+    mpartition_region_kind_t kind;  /**< Region kind */
+    bool            upgrade_check_done; /**< For upgrade scenarios */
 } mpartition_region_t;
 
 class mpartition {
@@ -172,6 +182,24 @@ public:
      */
     int num_regions(void) { return num_regions_; }
 
+    /*
+     * @brief Dump the memory partition regions to a file
+     * Should be called when a bootup/upgrade is complete
+     * Otherwise it will overwrite the existing configuration
+     *
+     * @return SDK_RET_OK on success, failure code on error
+     */
+    sdk_ret_t dump_regions_info();
+    /*
+     * @brief Offsets the memory partition regions during upgrade
+     *
+     * @param[in] regions_fname output file generated using dump_region_info
+     * @param[in] oper_table_persist flag to indicate the operational table regions
+     *
+     * @return SDK_RET_OK on success, failure code on error
+     */
+    sdk_ret_t upg_regions(const char *regions_fname, bool oper_table_persist);
+
 private:
     static mpartition *instance_;
     mpartition_region_t *regions_;
@@ -235,7 +263,7 @@ is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
 static inline bool
 is_region_an_alias(mpartition_region_t *reg)
 {
-    return reg->is_alias;
+    return reg->alias_index >= 0;
 }
 
 }    // namespace utils

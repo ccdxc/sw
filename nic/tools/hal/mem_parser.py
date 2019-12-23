@@ -49,6 +49,7 @@ regular_region_key = 'regular'
 # key: cc_region_key,      value: list of cache coherent regions
 # key: regular_region_key, value: list of remaining regions
 cache_regions = {}
+MAX_CACHE_REGS_PER_REGION_TYPE = 8
 
 fd = sys.stdout
 pipeline = None
@@ -58,6 +59,124 @@ cache_size = 6 # in powers of 2
 cache_size_roundoff_mask = 0
 for i in range(cache_size):
     cache_size_roundoff_mask |= (1 << i)
+
+# region kind stats
+static_mem = 0
+upgrade_mem = 0
+cfgtbl_mem = 0
+opertbl_mem = 0
+kind_rgns = 0 # kind should be present in all regions
+static_off = 0 # break if static regions are not adjascent
+
+def parse_kind(e, off, size):
+    global static_mem, upgrade_mem, cfgtbl_mem, opertbl_mem, kind_rgns, static_off
+    if 'kind' in e:
+        kind_rgns = kind_rgns + 1
+        if e['kind'] == "static":
+            static_mem += size
+        elif e['kind'] == "upgrade":
+            upgrade_mem += size
+        elif e['kind'] == "opertbl":
+            opertbl_mem += size
+        elif e['kind'] == "cfgtbl":
+            cfgtbl_mem += size
+        else:
+            return -1
+    return 0
+
+# if key is present, append to existing value
+# else add the value as a list
+def cache_regions_add(key, region_id, region):
+    if not key in cache_regions:
+        cache_regions[key] = []
+    cache_regions[key].append({region_id:region})
+
+
+
+def validate_regions(data):
+    cc_region_id = 0
+    static_region_id = 0
+    oper_region_id = 0
+    region_id = 0
+    # as the number of cache address/size registers for P4 regions are fixed(8),
+    # regions of specific cache regions should be specified adjacent.
+    #
+    # hbm owners should consider this while specifiying the regions.
+    #
+    # for upgrade safe static/state should be extended to the bottom. so
+    # this cannot be mandated. only config tables can be sorted
+    for region in data['regions']:
+        region_id = region_id + 1
+        if cc_region_key in region and region[cc_region_key] == "true":
+            if cc_region_id == 0 : cc_region_id = region_id
+            if region_id != cc_region_id:
+                print "Warning - cc region %s not adjacent" %(region['name'])
+            cc_region_id = region_id + 1
+
+        if 'kind' in region and region['kind'] == "static":
+            if static_region_id == 0 : static_region_id = region_id
+            if region_id != static_region_id:
+                print "Warning - static region %s not adjacent" %(region['name'])
+            static_region_id = region_id + 1
+
+        if 'kind' in region and region['kind'] == "opertbl":
+            if oper_region_id == 0 : oper_region_id = region_id
+            if region_id != oper_region_id:
+                print "Warning - oper table %s not adjacent" %(region['name'])
+            oper_region_id = region_id + 1
+
+        if True:
+            # group all cache regions together
+            if 'cache' in region:
+                cache_pipe = region['cache']
+                if cache_pipe in cache_pipes:
+                    cache_regions_add(cache_pipe, region_id, region)
+                else:
+                    print "Invalid cache pipe speciciation : " + cache_pipe
+                    return -1
+                continue
+
+            # group all cache coherent regions
+            if cc_region_key in region and region[cc_region_key] == "true":
+                cache_regions_add(cc_region_key, region_id, region)
+                continue
+
+            # remaining regions
+            cache_regions_add(regular_region_key, region_id, region)
+
+    # list of region types to be generated in that order
+    region_types = [cc_region_key, regular_region_key]
+    region_types.extend(cache_pipes.keys())
+
+    # calculate the number of cache registers required for each region
+    # using region-id to check whether adjascent or not
+    num_regs = {}
+    for region_type in region_types:
+        num_regs[region_type] = 0
+        if region_type in cache_regions:
+            #print "%s" %(region_type)
+            rid = 0
+            num_regs[region_type] = 1
+            for v in cache_regions[region_type]:
+                for region_id in v:
+                    #print "id %u name %s" %(region_id, v[region_id]['name'])
+                    if rid == 0:rid = region_id
+                    if rid != region_id:
+                        num_regs[region_type] = num_regs[region_type] + 1
+                    rid = region_id + 1
+        print "Num regs for region %s is %u" %(region_type, num_regs[region_type])
+
+    # p4plus-all should be added to rxdma & txdma
+    num_regs['p4plus-txdma'] = num_regs['p4plus-txdma'] + num_regs['p4plus-all']
+    num_regs['p4plus-rxdma'] = num_regs['p4plus-rxdma'] + num_regs['p4plus-all']
+    for region_type in region_types:
+        if region_type == 'regular':
+            continue
+        if num_regs[region_type] > MAX_CACHE_REGS_PER_REGION_TYPE:
+            print "Num registers exceeded"
+            return -1
+    return 0
+
 
 def size_str_to_bytes(size_str):
     if "G" in size_str:
@@ -164,6 +283,11 @@ def parse_region(e, start_offset):
     else:
         bs = size_str_to_bytes(e['block_size'])
 
+    # parse kind
+    if parse_kind(e, start_offset, s) == -1:
+        print('Invalid kind specified for region %s', n)
+        return -1
+
     # Derive the basename for the macros
     nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
 
@@ -195,14 +319,6 @@ def parse_region(e, start_offset):
     return s
 
 
-# if key is present, append to existing value
-# else add the value as a list
-def cache_regions_add(key, region):
-    if key in cache_regions:
-        cache_regions[key].append(region)
-    else:
-        cache_regions[key] = [region]
-
 
 def parse_file():
 
@@ -213,39 +329,25 @@ def parse_file():
 
     if True:
         off = 0
+        if validate_regions(data) == -1:
+            return -1
         for region in data['regions']:
-            # group all cache regions together
-            if 'cache' in region:
-                cache_pipe = region['cache']
-                if cache_pipe in cache_pipes:
-                    cache_regions_add(cache_pipe, region)
-                else:
-                    print "Invalid cache pipe speciciation : " + cache_pipe
-                    return -1
-                continue
-
-            # group all cache coherent regions
-            if cc_region_key in region and region[cc_region_key] == "true":
-                cache_regions_add(cc_region_key, region)
-                continue
-
-            # remaining regions
-            cache_regions_add(regular_region_key, region)
-
-        # list of region types to be generated in that order
-        region_types = [cc_region_key, regular_region_key]
-        region_types.extend(cache_pipes.keys())
-
-        for region_type in region_types:
-            if region_type in cache_regions:
-                for region in cache_regions[region_type]:
-                    s = parse_region(region, off)
-                    if s == -1:
-                        return s
-                    off = long(off) + s
-                    idx += 1
+            s = parse_region(region, off)
+            if s == -1:
+                return s
+            off = long(off) + s
+            idx += 1
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
+    # Error, if table memories exceeds the upgrade reserved
+    if upgrade_mem and upgrade_mem < (cfgtbl_mem + opertbl_mem):
+        print('Insufficient memory for upgrade, required %ld configured %ld',
+                    cfgtbl_mem + opertbl_mem, upgrade_mem)
+        return -1
+    # Error, if kind is not specified for all regions (either all or none)
+    if kind_rgns and kind_rgns != idx:
+        print('Kind is not specified for some regions')
+        return -1
 
     # Total regions count
     print >> fd, "#define %-60s %d" %(name + "COUNT" , idx)
@@ -259,6 +361,17 @@ def parse_file():
         return -1
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
+    # memory splits
+    if upgrade_mem:
+        print >> fd, "\n#define %-60s %ld" %("CFGTBL_MEMORY_USED_IN_BYTES" , cfgtbl_mem)
+        print >> fd, "#define %-60s \"%s\"" %("CFGTBL_MEMORY_USED_IN_UNITS" , convert_size(cfgtbl_mem))
+        print >> fd, "#define %-60s %ld" %("OPERTBL_MEMORY_USED_IN_BYTES" , opertbl_mem)
+        print >> fd, "#define %-60s \"%s\"" %("OPERTBL_MEMORY_USED_IN_UNITS" , convert_size(opertbl_mem))
+        print >> fd, "#define %-60s %ld" %("STATIC_MEMORY_USED_IN_BYTES" , static_mem)
+        print >> fd, "#define %-60s \"%s\"" %("STATIC_MEMORY_USED_IN_UNITS" , convert_size(static_mem))
+        print >> fd, "#define %-60s %ld" %("UPGRADE_MEMORY_USED_IN_BYTES" , upgrade_mem)
+        print >> fd, "#define %-60s \"%s\"" %("UPGRADE_MEMORY_USED_IN_UNITS" , convert_size(upgrade_mem))
+        print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
     return 0
 
