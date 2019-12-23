@@ -116,6 +116,10 @@ export class MetricsUtility {
     functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
     sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
   ): Telemetry_queryMetricsQuerySpec {
+    const configService = Utility.getInstance().getUIConfigsService();
+    const metricsQuery = configService && configService.configFile.metricsQuery;
+    const startTimeLength = metricsQuery ? metricsQuery.startTimeLength : '24h';
+
     const timeSeriesQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
@@ -127,7 +131,9 @@ export class MetricsUtility {
       // Instead we leave blank and get all fields
       fields: fields != null ? fields : [],
       'sort-order': sortOrder,
-      'start-time': 'now() - 24h' as any,
+      // TODO: Temporarily setting "start-time-length" in config.json to shorter time period of 1h due to backend limiations under heavy load.
+      // Remove from config.json to revert back to 24h or revisit default value after backend DB optimizations.
+      'start-time': `now() - ${startTimeLength}` as any,
       // Round down so we don't pick up an incomplete bucket
       'end-time': Utility.roundDownTime(5).toISOString() as any,
     };

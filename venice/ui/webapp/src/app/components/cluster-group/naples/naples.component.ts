@@ -176,14 +176,17 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   postNgInit(): void {
     this.buildAdvSearchCols();
-    this.getWorkloads();
-    this.getNaples();
     this.getMetrics();
     this.provideCustomOptions();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/dscs' }]
     });
+    setTimeout(() => {
+      // delay initiating websocket watches until metrics polling begins
+      this.getWorkloads();
+      this.getNaples();
+    }, 2000);
   }
 
   buildAdvSearchCols() {
@@ -290,6 +293,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
         }
         this.searchObject['status.conditions'] = this.conditionNaplesMap;
+        this.tryGenCharts();
       },
       (error) => {
         this.tableLoading = false;
@@ -414,21 +418,19 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   private tryGenCharts() {
-    // Only require avg 5 min data and avg day data
-    // before we show the cards
-    if (MetricsUtility.resultHasData(this.avgData) &&
-      MetricsUtility.resultHasData(this.avgDayData)) {
       this.genCharts('CPUUsedPercent', this.cpuChartData);
       this.genCharts('MemUsedPercent', this.memChartData);
       this.genCharts('DiskUsedPercent', this.diskChartData);
-    } else {
-      MetricsUtility.setCardStatesNoData(this.heroCards);
-    }
   }
 
   private genCharts(fieldName: string, heroCard: HeroCardOptions) {
+    const timeSeriesDataLoaded = MetricsUtility.resultHasData(this.timeSeriesData);
+    const avgDataLoaded = MetricsUtility.resultHasData(this.avgData);
+    const avgDayDataLoaded = MetricsUtility.resultHasData(this.avgDayData);
+    const maxObjDataLoaded = MetricsUtility.resultHasData(this.maxObjData);
+
     // Time series graph
-    if (MetricsUtility.resultHasData(this.timeSeriesData)) {
+    if (timeSeriesDataLoaded) {
       const timeSeriesData = this.timeSeriesData;
 
       const data = MetricsUtility.transformToChartjsTimeSeries(timeSeriesData.series[0], fieldName);
@@ -436,18 +438,20 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
 
     // Current stat calculation - we take the last point
-    if (MetricsUtility.resultHasData(this.avgData)) {
+    if (avgDataLoaded) {
       const index = MetricsUtility.findFieldIndex(this.avgData.series[0].columns, fieldName);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
       heroCard.firstStat.numericValue = Math.round(this.avgData.series[0].values[0][index]);
     }
 
     // Avg
-    const avgDayData = this.avgDayData;
-    if (avgDayData.series[0].values.length !== 0) {
-      const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName);
-      heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
-      heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
+    if (avgDayDataLoaded) {
+      const avgDayData = this.avgDayData;
+      if (avgDayData.series[0].values.length !== 0) {
+        const index = MetricsUtility.findFieldIndex(this.avgDayData.series[0].columns, fieldName);
+        heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
+        heroCard.secondStat.numericValue = Math.round(avgDayData.series[0].values[0][index]);
+      }
     }
 
     // For determining arrow direction, we compare the current value to the average value
@@ -462,7 +466,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
 
     // Max naples
-    if (MetricsUtility.resultHasData(this.maxObjData)) {
+    if (maxObjDataLoaded) {
       const maxNaples = MetricsUtility.maxObjUtility(this.maxObjData, fieldName);
       if (maxNaples == null || maxNaples.max === -1) {
         heroCard.thirdStat.value = null;
@@ -487,7 +491,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       }
     }
 
-    if (heroCard.cardState !== CardStates.READY) {
+    // begin showing card when any of the metrics are available
+    if (heroCard.cardState !== CardStates.READY && (timeSeriesDataLoaded || avgDataLoaded || avgDayDataLoaded || maxObjDataLoaded)) {
       heroCard.cardState = CardStates.READY;
     }
   }

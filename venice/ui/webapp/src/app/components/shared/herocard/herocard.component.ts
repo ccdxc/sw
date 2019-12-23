@@ -1,11 +1,11 @@
-import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Animations } from '@app/animations';
-import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { OnChanges, SimpleChanges } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
 import { StatArrowDirection, CardStates } from '../basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { LineGraphStat, GraphPadding } from '../linegraph/linegraph.component';
+import { LinegraphComponent, LineGraphStat, GraphPadding } from '../linegraph/linegraph.component';
 import { Utility } from '@app/common/Utility';
 
 export interface Stat {
@@ -39,6 +39,8 @@ export interface HeroCardOptions {
   encapsulation: ViewEncapsulation.None
 })
 export class HerocardComponent implements OnInit, OnChanges {
+  @ViewChild('lineGraph') lineGraphComponent: LinegraphComponent;
+
   hasHover: boolean = false;
   cardStates = CardStates;
 
@@ -70,11 +72,21 @@ export class HerocardComponent implements OnInit, OnChanges {
     left: 15,
   };
 
+  prevLineGraphDataLength: number;
+
   constructor(private router: Router, protected uiconfigsService: UIConfigsService) { }
 
-  ngOnChanges(changes) {
+  ngOnChanges(changes: SimpleChanges) {
     if (this.cardState === CardStates.READY) {
       this.setupDataset();
+    }
+
+    if (changes && changes.lastUpdateTime) {
+      // whenever we refresh last updated time, make sure chart is updated with most recent datapoints
+      if (this.lineGraphComponent && this.lineData.data.length !== this.prevLineGraphDataLength) {
+        this.lineGraphComponent.setupCharts();
+      }
+      this.prevLineGraphDataLength = this.lineData.data.length;
     }
   }
 

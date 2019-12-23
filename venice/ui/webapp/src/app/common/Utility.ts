@@ -15,6 +15,7 @@ import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
+import { UIConfigsService } from '../services/uiconfigs.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { ClusterDistributedServiceCard, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
@@ -61,6 +62,7 @@ export class Utility {
 
   myControllerService: ControllerService;
   myLogService: LogService;
+  myUIConfigsService: UIConfigsService;
 
   private _maintenanceMode: boolean = false;
   private _currentRollout: RolloutRollout = null;
@@ -1876,6 +1878,14 @@ export class Utility {
 
   getLogService(): LogService {
     return this.myLogService;
+  }
+
+  setUIConfigsService(uIConfigsService: UIConfigsService) {
+    this.myUIConfigsService = uIConfigsService;
+  }
+
+  getUIConfigsService(): UIConfigsService {
+    return this.myUIConfigsService;
   }
 
   publishAJAXEnd(payload: any) {

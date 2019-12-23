@@ -31,6 +31,7 @@ export class AppComponent extends BaseComponent implements OnInit  {
   ngOnInit() {
     Utility.getInstance().setControllerService(this._controllerService);
     Utility.getInstance().setLogService(this._logService);
+    Utility.getInstance().setUIConfigsService(this.uiconfigsService);
   }
 
   /**

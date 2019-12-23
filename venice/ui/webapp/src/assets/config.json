@@ -23,5 +23,8 @@
       "g": 116,
       "b": 83
     }
+  },
+  "metricsQuery": {
+    "startTimeLength": "1h"
   }
 }

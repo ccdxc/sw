@@ -18,8 +18,13 @@ export enum Features {
   securitygroup = 'securitygroup'
 }
 
-interface UIConfig {
+interface MetricsQuery {
+  startTimeLength?: string;
+}
+
+export interface UIConfig {
   'enabled-features': Features[];
+  'metricsQuery'?: MetricsQuery;
 }
 
 interface PageRequirement {
@@ -37,7 +42,7 @@ const CONFIG_FILENAME = 'config.json';
 
 @Injectable()
 export class UIConfigsService {
-  configFile;
+  configFile: UIConfig;
 
   // For each url listed, we list object dependenies
   // For the required field, if any of the objects are disabled,

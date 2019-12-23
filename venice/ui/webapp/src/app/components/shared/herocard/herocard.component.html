@@ -71,7 +71,8 @@
       <div fxFlex="56px" fxLayout="row" class="herocard-south">
         <div [@fade] fxFlex="auto" fxLayout="row" fxLayoutAlign="center stretch"
              *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
-          <app-linegraph fxFlex="100%" [hideStats]="true"
+          <app-linegraph #lineGraph
+                         fxFlex="100%" [hideStats]="true"
                          fxLayout="row" [graphPadding]="graphPadding"
                          [highlightLastPointColor]="themeColor"
                          [showValueInTooltip]="true"
