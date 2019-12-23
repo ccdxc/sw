@@ -56,7 +56,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     { field: 'spec.collectors', header: 'collectors', sortable: false, width: 10 },
     { field: 'spec.interface-selector', header: 'Interface Selectors', sortable: false, width: 10 },
     { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 40 },
-    { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
+    // { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
   ];
 
   exportFilename: string = 'Venice-mirrorsessons';
