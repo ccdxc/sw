@@ -60,25 +60,13 @@ class VnicObject(base.ConfigObjectBase):
         # get num of policies [0-5] in rrob order if needed
         self.__numpolicy = resmgr.NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
-        self._derive_oper_info()
+        self.DeriveOperInfo()
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
         # Generate MAPPING configuration
         lmapping.client.GenerateObjects(self, spec)
 
-        return
-
-    def _derive_oper_info(self):
-        self.RxMirrorObjs = dict()
-        for rxmirrorid in self.RxMirror:
-            rxmirrorobj = mirror.client.GetMirrorObject(rxmirrorid)
-            self.RxMirrorObjs.update({rxmirrorid: rxmirrorobj})
-
-        self.TxMirrorObjs = dict()
-        for txmirrorid in self.TxMirror:
-            txmirrorobj = mirror.client.GetMirrorObject(txmirrorid)
-            self.TxMirrorObjs.update({txmirrorid: txmirrorobj})
         return
 
     def __repr__(self):
@@ -203,6 +191,33 @@ class VnicObject(base.ConfigObjectBase):
 
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
+
+    def GetDependees(self):
+        """
+        depender/dependent - vnic
+        dependee - meter, mirror & policy
+        """
+        dependees = [ ]
+        # TODO: Add meter & mirror
+        policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
+        policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
+        for policyid in policyids:
+            policyObj = policy.client.GetPolicyObject(policyid)
+            dependees.append(policyObj)
+        return dependees
+
+    def DeriveOperInfo(self):
+        self.RxMirrorObjs = dict()
+        for rxmirrorid in self.RxMirror:
+            rxmirrorobj = mirror.client.GetMirrorObject(rxmirrorid)
+            self.RxMirrorObjs.update({rxmirrorid: rxmirrorobj})
+
+        self.TxMirrorObjs = dict()
+        for txmirrorid in self.TxMirror:
+            txmirrorobj = mirror.client.GetMirrorObject(txmirrorid)
+            self.TxMirrorObjs.update({txmirrorid: txmirrorobj})
+        super().DeriveOperInfo()
+        return
 
 class VnicObjectClient(base.ConfigClientBase):
     def __init__(self):

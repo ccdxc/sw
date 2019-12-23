@@ -129,17 +129,25 @@ def ValidateObject(obj, resp, yaml=False):
     return ValidateGrpcValues(obj, resp)
 
 def ValidateCreate(obj, resps):
-    if IsDryRun(): return
+    if IsDryRun():
+        # assume creation was fine in case of dry run
+        obj.SetHwHabitant(True)
+        return
     for resp in resps:
         if ValidateGrpcResponse(resp):
             obj.SetHwHabitant(True)
         else:
-            logger.error("Creation/Restoration failed for %s" %(obj.__repr__()))
+            logger.error("Creation/Restoration failed for %s" % (obj))
             obj.Show()
     return
 
-def ValidateRead(obj, resps, expApiStatus=types_pb2.API_STATUS_OK):
+def ValidateRead(obj, resps):
     if IsDryRun(): return
+    # set the appropriate expected status
+    if obj.IsHwHabitant():
+        expApiStatus = types_pb2.API_STATUS_OK
+    else:
+        expApiStatus = types_pb2.API_STATUS_NOT_FOUND
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if ValidateGrpcResponse(resp):
@@ -151,13 +159,16 @@ def ValidateRead(obj, resps, expApiStatus=types_pb2.API_STATUS_OK):
     return True
 
 def ValidateDelete(obj, resps):
-    if IsDryRun(): return
+    if IsDryRun():
+        # assume deletion was fine in case of dry run
+        obj.SetHwHabitant(False)
+        return
     for resp in resps:
         for status in resp.ApiStatus:
             if status == types_pb2.API_STATUS_OK:
                 obj.SetHwHabitant(False)
             else:
-                logger.error("Deletion failed for %s" %(obj.__repr__()))
+                logger.error("Deletion failed for %s" % (obj))
                 obj.Show()
     return
 
@@ -169,48 +180,72 @@ def GetBatchCookie():
     obj = batchClient.Objects()
     return obj.GetBatchCookie()
 
-def CreateObject(obj, objType):
+def InformDependents(dependee, cbFn):
+    # TODO: FIXME after UPDATE is implemented
+    # otherwise, read validation will fail
+    return
+    # inform dependent objects
+    for objType, ObjList in dependee.Deps.items():
+        for depender in ObjList:
+            getattr(depender, cbFn)(dependee)
+    return
+
+def CreateObject(obj):
     if obj.IsHwHabitant():
-        logger.info("Already restored %s" %(obj.__repr__()))
+        logger.info("Already restored %s" % (obj))
         return
     batchClient = Store.GetBatchClient()
+    
     def RestoreObj(robj):
-        logger.info("Recreating object %s" %(robj.__repr__()))
+        logger.info("Recreating object %s" % (robj))
         batchClient.Start()
         cookie = GetBatchCookie()
         msg = robj.GetGrpcCreateMessage(cookie)
         resps = api.client.Create(robj.ObjType, [msg])
         ValidateCreate(robj, resps)
         batchClient.Commit()
+        InformDependents(robj, 'RestoreNotify')
+
     # create from top to bottom
     RestoreObj(obj);
-    for objdep in obj.Children:
-        CreateObject(objdep, objdep.ObjType)
+    for childObj in obj.Children:
+        CreateObject(childObj)
 
-def ReadObject(obj, objType, expRetCode):
+def ReadObject(obj):
     msg = obj.GetGrpcReadMessage()
-    resps = api.client.Get(objType, [msg])
-    return ValidateRead(obj, resps, expRetCode)
+    resps = api.client.Get(obj.ObjType, [msg])
+    return ValidateRead(obj, resps)
 
-def DeleteObject(obj, objType):
+def UpdateObject(obj):
+    logger.info("Updating object %s" % (obj))
+    batchClient = Store.GetBatchClient()
+    batchClient.Start()
+    cookie = GetBatchCookie()
+    msg = obj.GetGrpcUpdateMessage(cookie)
+    resps = api.client.Update(obj.ObjType, [msg])
+    batchClient.Commit()
+    ValidateUpdate(obj, resps)
+    return
+
+def DeleteObject(obj):
     if not obj.IsHwHabitant():
-        logger.info("Already deleted %s" %(obj.__repr__()))
+        logger.info("Already deleted %s" % (obj))
         return
     batchClient = Store.GetBatchClient()
+    
     def DelObj(dobj):
-        # inform dependend objects
-        for iobj, ident in dobj.Deps():
-            iobj.DeleteNotify(ident)
-        logger.info("Deleting object %s" %(dobj.__repr__()))
+        InformDependents(dobj, 'DeleteNotify')
+        logger.info("Deleting object %s" % (dobj))
         batchClient.Start()
         cookie = GetBatchCookie()
         msg = dobj.GetGrpcDeleteMessage(cookie)
         resps = api.client.Delete(dobj.ObjType, [msg])
         batchClient.Commit()
         ValidateDelete(dobj, resps)
+
     # Delete from bottom to top
-    for objdep in obj.Children:
-        DeleteObject(objdep, objdep.ObjType)
+    for childObj in obj.Children:
+        DeleteObject(childObj)
     # Delete the final
     DelObj(obj)
     return

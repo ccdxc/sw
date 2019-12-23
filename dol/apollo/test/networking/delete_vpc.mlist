@@ -3,6 +3,7 @@ feature:
     sub         : delete_vpc
     package     : test.networking
     module      : networking
+    runorder    : 60000
     enable      : False
     ignore      : True
 
@@ -19,7 +20,10 @@ modules:
 
     - module:
         name    : DEL_VPC
-        spec    : delete_vpc.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : vpc
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
@@ -29,7 +33,10 @@ modules:
 
     - module:
         name    : RESTORE_VPC
-        spec    : restore_vpc.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : vpc
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 

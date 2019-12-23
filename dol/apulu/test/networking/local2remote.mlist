@@ -6,7 +6,7 @@ feature:
     module      : networking
     runorder    : 100
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
     # L2 switching based on MAC filtering
@@ -21,6 +21,7 @@ modules:
     - module:
         name    : L2_IPV6_TCP_QTAG
         spec    : local2remote.testspec
+        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
@@ -33,6 +34,7 @@ modules:
     - module:
         name    : L3_IPV6_TCP_QTAG
         spec    : local2remote.testspec
+        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 

@@ -1,0 +1,68 @@
+feature:
+    id          : networking
+    sub         : delete_routetable
+    package     : test.networking
+    module      : networking
+    runorder    : 55000
+    enable      : True
+    ignore      : True
+
+modules:
+# specify all the filters that are used in the packet testcases that will follow
+    # workflow_start - caches all the following objects
+    - module:
+        name    : ROUTETABLE_WORKFLOW_START
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    # delete the routetable objects
+    - module:
+        name    : DEL_ROUTETABLE
+        spec    : cfg_object.testspec
+        args    :
+            - object    : routetable
+              operation : Delete
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    # mlists to run post routetable deletion
+    - module:
+        name    : IGW2Local_PostRouteTableDelete
+        mlist   : igw2local.mlist
+        ignore  : True
+
+    # restore the deleted routetable objects
+    - module:
+        name    : RESTORE_ROUTETABLE
+        spec    : cfg_object.testspec
+        args    :
+            - object    : routetable
+              operation : Create
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+
+    # mlists to run post routetable restore
+    - module:
+        name    : IGW2Local_PostRouteTableRestore
+        mlist   : igw2local.mlist
+        ignore  : True
+
+    # workflow_end - clear the cached objects
+    - module:
+        name    : ROUTETABLE_WORKFLOW_END
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING

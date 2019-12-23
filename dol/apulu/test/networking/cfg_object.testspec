@@ -1,6 +1,6 @@
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 4
+    maxlimits: 1
     # for vnic deletion, if maxlimits is > 1 the order of re-creation needs to
     # be from lowest to highest. Otherwise, vnics get a different hw_ids and
     # local mapping lookup fails
@@ -9,10 +9,10 @@ selectors:
 
 trigger:
     configs:
-        - object: ref://testcase/config/localmapping/VNIC
-          method: Delete
+        - object: callback://common/config/GetCfgObject
+          method: callback://common/config/GetCfgOperFn
 
 expect:
     configs:
-        - object: ref://testcase/config/localmapping/VNIC
-          method: ReadAfterDelete
+        - object: callback://common/config/GetCfgObject
+          method: Read

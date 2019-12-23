@@ -1,16 +1,17 @@
 feature:
     id          : networking
-    sub         : delete_vnic
+    sub         : delete_subnet
     package     : test.networking
     module      : networking
-    runorder    : 20000
+    runorder    : 55000
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
+    # workflow_start - caches all the following objects
     - module:
-        name    : VNIC_WORKFLOW_START
+        name    : SUBNET_WORKFLOW_START
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
@@ -18,34 +19,39 @@ modules:
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
+    # delete the subnet objects
     - module:
-        name    : DEL_VNIC
+        name    : DEL_SUBNET
         spec    : cfg_object.testspec
         args    :
-            - object    : vnic
+            - object    : subnet
               operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
+    # mlists to run post subnet deletion
     - module:
-        name    : IGW2LOCAL
+        name    : IGW2LOCAL_PostSubnetDelete
         mlist   : igw2local.mlist
 
+    # restore the deleted subnet objects
     - module:
-        name    : RESTORE_VNIC
+        name    : RESTORE_SUBNET
         spec    : cfg_object.testspec
         args    :
-            - object    : vnic
+            - object    : subnet
               operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
+    # mlists to run post subnet restore
     - module:
-        name    : IGW2LOCAL
+        name    : IGW2LOCAL_PostSubnetRestore
         mlist   : igw2local.mlist
 
+    # workflow_end - clear the cached objects
     - module:
-        name    : VNIC_WORKFLOW_END
+        name    : SUBNET_WORKFLOW_END
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING

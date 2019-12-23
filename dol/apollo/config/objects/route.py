@@ -264,11 +264,9 @@ class RouteObjectClient(base.ConfigClientBase):
             return None
         return v6tables.get(routetblid, None)
 
-    def GetRouteV4TableId(self, vpcid, robj, ident):
+    def GetRouteV4TableId(self, vpcid):
         if self.GetRouteV4Tables(vpcid):
-            obj = self.__v4iter[vpcid].rrnext()
-            obj.AddDependent(robj, ident)
-            return obj.RouteTblId
+            return self.__v4iter[vpcid].rrnext().RouteTblId
         return 0
 
     def GetRouteV6TableId(self, vpcid):

@@ -1,55 +1,59 @@
 feature:
     id          : networking
-    sub         : delete_vnic
+    sub         : delete_subnet
     package     : test.networking
     module      : networking
-    runorder    : 20000
+    runorder    : 55000
     enable      : True
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
+    # workflow_start - caches all the following objects
     - module:
-        name    : VNIC_WORKFLOW_START
+        name    : SUBNET_WORKFLOW_START
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # delete the subnet objects
     - module:
-        name    : DEL_VNIC
+        name    : DEL_SUBNET
         spec    : cfg_object.testspec
         args    :
-            - object    : vnic
+            - object    : subnet
               operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
-    # mlists to run post vnic deletion
+    # mlists to run post subnet deletion
     - module:
-        name    : Local2Remote_PostVnicDelete
+        name    : Local2Remote_PostSubnetDelete
         mlist   : local2remote.mlist
         ignore  : True
 
+    # restore the deleted subnet objects
     - module:
-        name    : RESTORE_VNIC
+        name    : RESTORE_SUBNET
         spec    : cfg_object.testspec
         args    :
-            - object    : vnic
+            - object    : subnet
               operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
-    # mlists to run post vnic restore
+    # mlists to run post subnet restore
     - module:
-        name    : Local2Remote_PostVnicRestore
+        name    : Local2Remote_PostSubnetRestore
         mlist   : local2remote.mlist
         ignore  : True
 
+    # workflow_end - clear the cached objects
     - module:
-        name    : VNIC_WORKFLOW_END
+        name    : SUBNET_WORKFLOW_END
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING

@@ -211,12 +211,20 @@ class DOLTestCase(TestCase):
         if not hasattr(spsn, "configs") or spsn.configs == None:
             return
         for spec_config_entry in spsn.configs:
-            if spec_config_entry.object == None:
+            cfg_obj = spec_config_entry.object
+            if cfg_obj == None:
                 continue
             tc_config = TestCaseTrigExpConfigObject()
-            tc_config.actual_object = spec_config_entry.object.Get(self)
+            if objects.IsCallback(cfg_obj):
+                tc_config.actual_object = cfg_obj.call(self)
+            else: # Its a reference
+                tc_config.actual_object = cfg_obj.Get(self)
             tc_config.original_object = copy.copy(tc_config.actual_object)
-            tc_config.method = getattr(spec_config_entry, "method", None)
+            cfg_method = getattr(spec_config_entry, "method", None)
+            if objects.IsCallback(cfg_method):
+                tc_config.method = cfg_method.call(self)
+            else:
+                tc_config.method = cfg_method
             tc_config.spec = getattr(spec_config_entry, "fields", None)
             tcsn.configs.append(tc_config)
    

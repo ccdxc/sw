@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+from collections import defaultdict
+
 from infra.common.logging import logger
 import infra.config.base as base
 
@@ -28,7 +30,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.HwHabitant = True
         self.ObjType = objtype
         self.Children = []
-        self.Deps = dict
+        self.Deps = defaultdict(list)
         return
 
     def __get_GrpcMsg(self, op):
@@ -45,8 +47,24 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def AddChild(self, child):
         self.Children.append(child);
 
-    def AddDependent(self, dep, ident):
-        self.Deps.update({ident: dep})
+    def GetDependees(self):
+        # returns the list of dependees
+        dependees = []
+        return dependees
+
+    def BuildDependency(self):
+        dependees = self.GetDependees()
+        for dependee in dependees:
+            # add ourself as an dependent to dependee
+            dependee.AddDependent(self)
+        return
+
+    def AddDependent(self, dep):
+        self.Deps[dep.ObjType].append(dep)
+
+    def DeriveOperInfo(self):
+        self.BuildDependency()
+        return
 
     def SetHwHabitant(self, value):
         self.HwHabitant = value
@@ -61,17 +79,17 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return True if (self.Origin == topo.OriginTypes.FIXED) else False
 
     def Create(self, spec=None):
-        utils.CreateObject(self, self.ObjType)
+        utils.CreateObject(self)
         return
 
-    def Read(self, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, self.ObjType, expRetCode)
+    def Read(self, spec=None):
+        return utils.ReadObject(self)
 
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+    def Update(self, spec=None):
+        return utils.UpdateObject(self)
 
     def Delete(self, spec=None):
-        utils.DeleteObject(self, self.ObjType)
+        utils.DeleteObject(self)
         return
 
     def ValidateSpec(self, spec):
@@ -123,6 +141,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def GetGrpcReadMessage(self):
         grpcmsg = self.__get_GrpcMsg(api.ApiOps.GET)
         self.PopulateKey(grpcmsg)
+        return grpcmsg
+
+    def GetGrpcUpdateMessage(self, cookie=0):
+        grpcmsg = self.__get_GrpcMsg(api.ApiOps.UPDATE)
+        self.__populate_BatchContext(grpcmsg, cookie)
+        self.PopulateSpec(grpcmsg)
         return grpcmsg
 
     def GetGrpcDeleteMessage(self, cookie=0):

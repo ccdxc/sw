@@ -86,7 +86,7 @@ session:
         expect:
             configs:
                 - object    : ref://testcase/config/route
-                  method    : ReadAfterDelete
+                  method    : Read
 
             packets:
                 - packet:

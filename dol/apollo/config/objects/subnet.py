@@ -41,7 +41,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
         self.VirtualRouterIPAddr = {}
         self.VirtualRouterMacAddr = None
-        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId, self, "V4RTID:" + str(self.SubnetId))
+        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
         self.IngV4SecurityPolicyIds = [policy.client.GetIngV4SecurityPolicyId(parent.VPCId)]
         self.IngV6SecurityPolicyIds = [policy.client.GetIngV6SecurityPolicyId(parent.VPCId)]
@@ -59,7 +59,7 @@ class SubnetObject(base.ConfigObjectBase):
 
         self.__set_vrouter_attributes()
         self.__fill_default_rules_in_policy()
-
+        self.DeriveOperInfo()
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -202,12 +202,47 @@ class SubnetObject(base.ConfigObjectBase):
                 return self.EgV6SecurityPolicyIds[0]
         return None
 
-    def DeleteNotify(self, ident):
-        logger.info("Delete notify %s ident %s" %(__repr__()), ident)
-        if not self.IsDeleted():
-            logger.info("Applying object modification")
-            # Need to assign new route table/policy based on ident
-            # Send a modify message to agent
+    def GetDependees(self):
+        """
+        depender/dependent - subnet
+        dependee - routetable, policy
+        """
+        dependees = [ self.V4RouteTable, self.V6RouteTable ]
+        policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
+        policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
+        for policyid in policyids:
+            policyObj = policy.client.GetPolicyObject(policyid)
+            dependees.append(policyObj)
+        return dependees
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        if cObj.ObjType == api.ObjectTypes.ROUTE:
+            logger.info(" - Update route table on %s " % self)
+            if 'IPV4' == cObj.AddrFamily:
+                self.V4RouteTableId = cObj.RouteTblId
+            elif 'IPV6' == cObj.AddrFamily:
+                self.V6RouteTableId = cObj.RouteTblId
+        # TODO: handle other objects & invoke update())
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        if dObj.ObjType == api.ObjectTypes.ROUTE:
+            logger.info(" - Update route table on %s " % self)
+            if self.V4RouteTableId == dObj.RouteTblId:
+                self.V4RouteTableId = 0
+            elif self.V6RouteTableId == dObj.RouteTblId:
+                self.V6RouteTableId = 0
+        # TODO: handle other objects
+        # Send a modify message to agent
+        return
 
 class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):

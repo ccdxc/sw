@@ -9,10 +9,10 @@ selectors:
 
 trigger:
     configs:
-        - object: ref://testcase/config/localmapping/VNIC/SUBNET/VPC
-          method: Delete
+        - object: callback://common/config/GetCfgObject
+          method: callback://common/config/GetCfgOperFn
 
 expect:
     configs:
-        - object: ref://testcase/config/localmapping/VNIC/SUBNET/VPC
-          method: ReadAfterDelete
+        - object: callback://common/config/GetCfgobject
+          method: Read

@@ -98,7 +98,7 @@ session:
         expect:
             configs:
                 - object    : ref://testcase/config/policy
-                  method    : ReadAfterDelete
+                  method    : Read
 
             packets:
                 - packet:

@@ -13,35 +13,44 @@ modules:
         name    : TUNNEL_WORKFLOW_START
         spec    : workflow.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
         name    : DEL_TUNNEL
-        spec    : delete_tunnel.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : tunnel
+              operation : Delete
         iterate :
-            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post tunnel deletion
     - module:
-        name    : LOCAL2IGW
-        mlist   : local2igw.mlist
+        name    : Local2Remote_PostTunnelDelete
+        mlist   : local2remote.mlist
         ignore  : True
 
     - module:
         name    : RESTORE_TUNNEL
-        spec    : restore_tunnel.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : tunnel
+              operation : Create
         iterate :
-            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post tunnel restore
     - module:
-        name    : LOCAL2IGW
-        mlist   : local2igw.mlist
+        name    : Local2Remote_PostTunnelRestore
+        mlist   : local2remote.mlist
         ignore  : True
 
     - module:
         name    : TUNNEL_WORKFLOW_END
         spec    : workflow.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

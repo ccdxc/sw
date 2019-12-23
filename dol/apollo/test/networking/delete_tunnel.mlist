@@ -3,6 +3,7 @@ feature:
     sub         : delete_tunnel
     package     : test.networking
     module      : networking
+    runorder    : 10000
     enable      : False
     ignore      : True
 
@@ -19,7 +20,10 @@ modules:
 
     - module:
         name    : DEL_TUNNEL
-        spec    : delete_tunnel.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : tunnel
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
@@ -29,7 +33,10 @@ modules:
 
     - module:
         name    : RESTORE_TUNNEL
-        spec    : restore_tunnel.testspec
+        spec    : cfg_object.testspec
+        args    :
+            - object    : tunnel
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=IGW,Label=NETWORKING
 
