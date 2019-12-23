@@ -496,10 +496,10 @@ ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
 }
 
 int
-ionic_db_page_num(struct ionic *ionic, int lif_id, int pid)
+ionic_db_page_num(struct ionic *ionic, int lif_index, int pid)
 {
 
-	return (lif_id * ionic->ident.dev.ndbpgs_per_lif + pid);
+	return (lif_index * ionic->ident.dev.ndbpgs_per_lif + pid);
 }
 
 int

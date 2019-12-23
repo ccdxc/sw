@@ -134,6 +134,14 @@ enum ionic_lif_state_flags {
 	IONIC_LIF_STATE_SIZE
 };
 
+struct ionic_lif_cfg {
+	int index;
+	enum ionic_api_prsn prsn;
+
+	void *priv;
+	void (*reset_cb)(void *priv);	/* TODO something with this */
+};
+
 struct ionic_qtype_info {
 	u8  version;
 	u8  supported;
@@ -198,9 +206,10 @@ struct ionic_lif {
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;
-	void *api_private;
-	void (*api_reset_cb)(void *api_private);
-	uint32_t api_private_cnt;
+
+	/* TODO: Make this a list if more than one slave is supported */
+	struct ionic_lif_cfg slave_lif_cfg;
+
 	struct dentry *dentry;
 };
 
@@ -252,6 +261,10 @@ void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
 		       union lif_identity *lif_ident);
 int ionic_lifs_size(struct ionic *ionic);
+
+int ionic_slave_alloc(struct ionic *ionic, enum ionic_api_prsn prsn);
+void ionic_slave_free(struct ionic *ionic, int index);
+
 int ionic_lif_rss_config(struct ionic_lif *lif, u16 types,
 			 const u8 *key, const u32 *indir);
 

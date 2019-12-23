@@ -469,6 +469,32 @@ ionic_open_or_stop(struct ionic_lif *lif)
 		ionic_stop(lif->netdev);
 }
 
+int
+ionic_slave_alloc(struct ionic *ionic, enum ionic_api_prsn prsn)
+{
+	int index;
+
+	/* slave index starts at 1, master_lif is 0 */
+	index = find_first_zero_bit(ionic->lifbits, ionic->nlifs);
+	if (index > ionic->nlifs)
+		return (-ENOSPC);
+
+	set_bit(index, ionic->lifbits);
+	if (prsn == IONIC_PRSN_ETH)
+		set_bit(index, ionic->ethbits);
+
+	return (index);
+}
+
+void
+ionic_slave_free(struct ionic *ionic, int index)
+{
+	if (index > ionic->nlifs)
+		return;
+	clear_bit(index, ionic->lifbits);
+	clear_bit(index, ionic->ethbits);
+}
+
 /******************* AdminQ ******************************/
 int
 ionic_adminq_clean(struct ionic_adminq* adminq, int limit)
@@ -2500,14 +2526,19 @@ err_out_free_lif:
 int
 ionic_lifs_alloc(struct ionic *ionic)
 {
-	int i, err;
+	int err;
 
 	INIT_LIST_HEAD(&ionic->lifs);
 
-	for (i = 0; i < ionic->ident.dev.nlifs; i++) {
-		err = ionic_lif_alloc(ionic, i);
-		if (err)
-			return (err);
+	/* only build the first lif, others are for dynamic macvlan or rdma */
+	set_bit(0, ionic->lifbits);
+	set_bit(0, ionic->ethbits);
+
+	err = ionic_lif_alloc(ionic, 0);
+	if (err) {
+		clear_bit(0, ionic->ethbits);
+		clear_bit(0, ionic->lifbits);
+		return (err);
 	}
 
 	return (0);
@@ -4411,11 +4442,11 @@ ionic_lif_identify(struct ionic *ionic)
 	return (0);
 }
 
+/* TODO: This function needs to be completely redesigned */
 int
 ionic_lifs_size(struct ionic *ionic)
 {
 	struct identity *ident = &ionic->ident;
-	int nlifs = ident->dev.nlifs;
 	int neqs = ident->lif.rdma.eq_qtype.qid_count;
 	int nnqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ];
 	int ntxqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ];
@@ -4423,6 +4454,8 @@ ionic_lifs_size(struct ionic *ionic)
 	/* Tx and Rx Qs are in pair. */
 	int err, nqs = min(ntxqs, nrxqs);
 	int nintrs, dev_nintrs = ident->dev.nintrs;
+
+	ionic->nlifs = le32_to_cpu(ident->dev.nlifs);
 
 	/* Use only one notifyQ. */
 	if (nnqs > 1) {
@@ -4450,7 +4483,7 @@ try_again:
 #endif
 
 	/* Interrupt is shared by transmit and receive. */
-	nintrs = nlifs * (nnqs + neqs + nqs + 1 /* adminq */);
+	nintrs = ionic->nlifs * (nnqs + neqs + nqs + 1 /* adminq */);
 	if (nintrs > dev_nintrs) {
 		goto try_fewer;
 	}
@@ -4478,7 +4511,7 @@ try_again:
 
 	dev_info(ionic->dev, "Lifs: %u, Intrs: %u/%u, NotifyQs: %u/%u, "
 		"TxQs: %u/%u, RxQs: %u/%u, EQs: %u/%u\n",
-		ident->dev.nlifs, nintrs, dev_nintrs,
+		ionic->nlifs, nintrs, dev_nintrs,
 		nnqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ],
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ],
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ],

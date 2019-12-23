@@ -26,6 +26,8 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
+struct ionic_lif;
+
 #include "ionic_dev.h"
 #include "ionic_api.h"
 #include "ionic_kpicompat.h"
@@ -184,10 +186,13 @@ struct ionic {
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
+	unsigned int nlifs;
 
 	/* QoS software config. */
 	struct ionic_qos_tc qos_tc[IONIC_QOS_CLASS_MAX];
 
+	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
+	DECLARE_BITMAP(ethbits, IONIC_LIFS_MAX);
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 };
 

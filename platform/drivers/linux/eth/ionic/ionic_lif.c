@@ -1029,7 +1029,7 @@ static int ionic_lif_addr_add(struct ionic_lif *lif, const u8 *addr)
 		struct ionic_lif *slave_lif;
 		unsigned long i;
 
-		for_each_lif(lif->ionic, i, slave_lif) {
+		for_each_eth_lif(lif->ionic, i, slave_lif) {
 			spin_lock_bh(&slave_lif->rx_filters.lock);
 			f = ionic_rx_filter_by_addr(slave_lif, addr);
 			spin_unlock_bh(&slave_lif->rx_filters.lock);
@@ -1924,7 +1924,7 @@ int ionic_open(struct net_device *netdev)
 	if (netif_carrier_ok(netdev))
 		netif_tx_wake_all_queues(netdev);
 
-	for_each_lif(lif->ionic, i, slif)
+	for_each_eth_lif(lif->ionic, i, slif)
 		if (!is_master_lif(slif))
 			ionic_lif_open(slif);
 
@@ -1967,7 +1967,7 @@ static void ionic_slaves_stop(struct ionic *ionic)
 	struct ionic_lif *lif;
 	unsigned long i;
 
-	for_each_lif(ionic, i, lif)
+	for_each_eth_lif(ionic, i, lif)
 		if (!is_master_lif(lif))
 			ionic_lif_stop(lif);
 }
@@ -1981,7 +1981,7 @@ int ionic_stop(struct net_device *netdev)
 	return ionic_lif_stop(lif);
 }
 
-static int ionic_slave_alloc(struct ionic *ionic)
+int ionic_slave_alloc(struct ionic *ionic, enum ionic_api_prsn prsn)
 {
 	int index;
 
@@ -1991,15 +1991,18 @@ static int ionic_slave_alloc(struct ionic *ionic)
 		return -ENOSPC;
 
 	set_bit(index, ionic->lifbits);
+	if (prsn == IONIC_PRSN_ETH)
+		set_bit(index, ionic->ethbits);
 
 	return index;
 }
 
-static void ionic_slave_free(struct ionic *ionic, int index)
+void ionic_slave_free(struct ionic *ionic, int index)
 {
 	if (index > ionic->nlifs)
 		return;
 	clear_bit(index, ionic->lifbits);
+	clear_bit(index, ionic->ethbits);
 }
 
 static void *ionic_dfwd_add_station(struct net_device *lower_dev,
@@ -2038,7 +2041,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		netdev_warn_once(lower_dev, "Only 1 queue used per slave LIF\n");
 
 	/* master_lif index is 0, slave index starts at 1 */
-	lif_index = ionic_slave_alloc(ionic);
+	lif_index = ionic_slave_alloc(ionic, IONIC_PRSN_ETH);
 	if (lif_index < 0) {
 		err = lif_index;
 		goto err_out_free_identify;
@@ -2610,8 +2613,9 @@ int ionic_lifs_alloc(struct ionic *ionic)
 
 	INIT_RADIX_TREE(&ionic->lifs, GFP_KERNEL);
 
-	/* only build the first lif, others are for dynamic macvlan offload */
+	/* only build the first lif, others are for dynamic macvlan or rdma */
 	set_bit(0, ionic->lifbits);
+	set_bit(0, ionic->ethbits);
 
 	lid = kzalloc(sizeof(*lid), GFP_KERNEL);
 	if (!lid)
@@ -2625,6 +2629,8 @@ int ionic_lifs_alloc(struct ionic *ionic)
 		ionic_lif_queue_identify(lif);
 	} else {
 		kfree(lid);
+		clear_bit(0, ionic->ethbits);
+		clear_bit(0, ionic->lifbits);
 	}
 
 	return PTR_ERR_OR_ZERO(lif);
@@ -2698,7 +2704,7 @@ void ionic_lifs_free(struct ionic *ionic)
 	struct ionic_lif *lif;
 	unsigned long i;
 
-	for_each_lif(ionic, i, lif)
+	for_each_eth_lif(ionic, i, lif)
 		ionic_lif_free(lif);
 }
 
@@ -2732,7 +2738,7 @@ void ionic_lifs_deinit(struct ionic *ionic)
 	struct ionic_lif *lif;
 	unsigned long i;
 
-	for_each_lif(ionic, i, lif)
+	for_each_eth_lif(ionic, i, lif)
 		ionic_lif_deinit(lif);
 }
 
@@ -2967,7 +2973,6 @@ static int ionic_lif_init_queues(struct ionic_lif *lif)
 
 	lif->rx_copybreak = rx_copybreak;
 
-	lif->api_private = NULL;
 	set_bit(IONIC_LIF_INITED, lif->state);
 	set_bit(IONIC_LIF_F_FW_READY, lif->state);
 
@@ -2989,7 +2994,7 @@ int ionic_lifs_init(struct ionic *ionic)
 	unsigned long i;
 	int err;
 
-	for_each_lif(ionic, i, lif) {
+	for_each_eth_lif(ionic, i, lif) {
 		err = ionic_lif_init(lif);
 		if (err)
 			return err;
@@ -3004,7 +3009,7 @@ int ionic_lifs_init_queues(struct ionic *ionic)
 	unsigned long i;
 	int err;
 
-	for_each_lif(ionic, i, lif) {
+	for_each_eth_lif(ionic, i, lif) {
 		err = ionic_lif_init_queues(lif);
 		if (err)
 			return err;

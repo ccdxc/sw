@@ -47,10 +47,9 @@
  * incompatible if compiled from different sources, or if some other driver
  * happens to be called "ionic".
  */
-#define IONIC_API_VERSION "6"
+#define IONIC_API_VERSION "7"
 
 struct sysctl_oid;
-struct ionic_lif;
 
 /** struct ionic_devinfo - device information. */
 struct ionic_devinfo {
@@ -60,51 +59,44 @@ struct ionic_devinfo {
 	char serial_num[IONIC_DEVINFO_SERIAL_BUFLEN + 1];
 };
 
-/** enum ionic_api_prsn - personalities that can be applied to the lif. */
+/** enum ionic_api_prsn - personalities that can be applied to a lif. */
 enum ionic_api_prsn {
+	IONIC_PRSN_NONE = 0,
+	IONIC_PRSN_ETH,
 	IONIC_PRSN_RDMA,
 };
 
-/** get_netdev_ionic_lif - Get the lif if the netdev is ionic.
+/** get_netdev_ionic_handle - Get a handle if the netdev is ionic.
  * @netdev:		Net device to check.
  * @api_version:	IONIC_API_VERSION.
  * @prsn:		Personality to apply.
  *
- * This will return the opaque struct ionic_lif if and only if the netdev
- * was created by the ionic driver, if the api version matches as described
- * above for IONIC_API_VERSION, and if the personality can be applied to
- * the lif.
+ * This returns an opaque handle if and only if the netdev was created
+ * by the ionic driver and the api version matches as described
+ * above for IONIC_API_VERSION.
  *
- * Return: Ionic lif if the netdev is a compatible ionic device.
+ * Return: Handle if the netdev is a compatible ionic device.
  */
-struct ionic_lif *get_netdev_ionic_lif(struct net_device *netdev,
-                      const char *api_version, enum ionic_api_prsn prsn);
+void *get_netdev_ionic_handle(struct net_device *netdev,
+          const char *api_version, enum ionic_api_prsn prsn);
 
-/* (BSD) get linuxkpi device from lif instead of ifnet */
-struct device *ionic_api_get_device(struct ionic_lif *lif);
-
-/* (BSD) stay registered through vnet changes */
-bool ionic_api_stay_registered(struct ionic_lif *lif);
-
-/** ionic_api_get_debugfs - Get the debugfs dir (if any) for the lif.
- * @lif:		Handle to lif.
+/** ionic_api_stay_registered - stay registered through net interface changes
+ * @handle:		Handle to lif.
  *
- * (BSD) this is oid of the lif in sysctl.
- *
- * Return: debugfs dir for the lif or NULL
+ * Return: true if the slave device should ignore net deregistration events
  */
-struct sysctl_oid *ionic_api_get_debugfs(struct ionic_lif *lif);
+bool ionic_api_stay_registered(void *handle);
 
 /** ionic_api_request_reset - request reset or disable the device or lif.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  *
  * The reset will be carried out asynchronously.  If it succeeds, then the
  * callback specified in ionic_api_set_private() will be called.
  */
-void ionic_api_request_reset(struct ionic_lif *lif);
+void ionic_api_request_reset(void *handle);
 
 /** ionic_api_get_private - Get private data associated with the lif.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @prsn:		Personality to which the private data applies.
  *
  * Get the private data of some kind.  The private data may be, for example, an
@@ -112,17 +104,13 @@ void ionic_api_request_reset(struct ionic_lif *lif);
  *
  * Return: private data or NULL.
  */
-void *ionic_api_get_private(struct ionic_lif *lif, enum ionic_api_prsn prsn);
+void *ionic_api_get_private(void *handle, enum ionic_api_prsn prsn);
 
-/** ionic_api_get_private - Set private data associated with the lif.
- * @lif:		Handle to lif.
+/** ionic_api_set_private - Set private data associated with the lif.
+ * @handle:		Handle to lif.
  * @priv:		Private data or NULL.
  * @reset_cb:		Callback if device has been disabled or reset.
  * @prsn:		Personality to which the private data applies.
- * @prsn_cnt:		When setting private data, returns the number of
- *			times since driver load that the personality has
- *			been set. Useful for tracking the number of resets
- *			performed on the personality.
  *
  * Set the private data of some kind.  The private data may be, for example, an
  * instance of an rdma device for this lif.
@@ -131,48 +119,71 @@ void *ionic_api_get_private(struct ionic_lif *lif, enum ionic_api_prsn prsn);
  *
  * Return: zero or negative error status.
  */
-int ionic_api_set_private(struct ionic_lif *lif, void *priv,
-        void (*reset_cb)(void *priv), enum ionic_api_prsn prsn,
-        uint32_t *prsn_cnt);
+int ionic_api_set_private(void *handle, void *priv,
+        void (*reset_cb)(void *priv), enum ionic_api_prsn prsn);
+
+/** ionic_api_clear_private - Clear private data associated with the lif.
+ * @handle:		Handle to lif.
+ */
+static inline void
+ionic_api_clear_private(void *handle)
+{
+	(void)ionic_api_set_private(handle, NULL, NULL, IONIC_PRSN_NONE);
+}
+
+/** ionic_api_get_device - Get the underlying device
+ * @handle:		Handle to lif.
+ *
+ * Return: pointer to underlying OS struct device associated with the lif
+ */
+struct device *ionic_api_get_device(void *handle);
 
 /** ionic_api_get_devinfo - Get device information.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  *
  * Return: pointer to device information.
  */
-const struct ionic_devinfo *ionic_api_get_devinfo(struct ionic_lif *lif);
+const struct ionic_devinfo *ionic_api_get_devinfo(void *handle);
+
+/** ionic_api_get_debug_ctx - Get the debug context (if any) for the lif.
+ * @handle:		Handle to lif.
+ *
+ * (BSD) this is oid of the lif in sysctl.
+ *
+ * Return: debug context for the lif or NULL
+ */
+struct sysctl_oid *ionic_api_get_debug_ctx(void *handle);
 
 /** ionic_api_get_identity - Get result of device identification.
- * @lif:		Handle to lif.
- * @lif_id:		This lif id.
+ * @handle:		Handle to lif.
+ * @lif_index:		This lif index.
  *
  * The dev member of the union is valid.
  *
  * Return: pointer to result of identification.
  */
-const union lif_identity *ionic_api_get_identity(struct ionic_lif *lif,
-			      int *lif_id);
+const union lif_identity *ionic_api_get_identity(void *handle, int *lif_index);
 
 /** ionic_api_get_intr - Reserve a device iterrupt index.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @irq:		OS interrupt number returned.
  *
  * Reserve an interrupt index, and indicate the irq number for that index.
  *
  * Return: interrupt index or negative error status.
  */
-int ionic_api_get_intr(struct ionic_lif *lif, int *irq);
+int ionic_api_get_intr(void *handle, int *irq);
 
 /** ionic_api_put_intr - Release a device interrupt index.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @intr:		Interrupt index.
  *
  * Mark the interrupt index unused, so that it can be reserved again.
  */
-void ionic_api_put_intr(struct ionic_lif *lif, int intr);
+void ionic_api_put_intr(void *handle, int intr);
 
 /** ionic_api_get_cmb - Reserve cmb pages.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @pgid:		First page index.
  * @pgaddr:		First page bus addr (contiguous).
  * @order:		Log base two number of pages (PAGE_SIZE).
@@ -181,20 +192,20 @@ void ionic_api_put_intr(struct ionic_lif *lif, int intr);
  *
  * Return: zero or negative error status.
  */
-int ionic_api_get_cmb(struct ionic_lif *lif, uint32_t *pgid,
-        phys_addr_t *pgaddr, int order);
+int ionic_api_get_cmb(void *handle, uint32_t *pgid, phys_addr_t *pgaddr,
+        int order);
 
 /** ionic_api_put_cmb - Release cmb pages.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @pgid:		First page index.
  * @order:		Log base two number of pages (PAGE_SIZE).
  *
  * Release cmb pages.
  */
-void ionic_api_put_cmb(struct ionic_lif *lif, uint32_t pgid, int order);
+void ionic_api_put_cmb(void *handle, uint32_t pgid, int order);
 
 /** ionic_api_kernel_dbpage - Get mapped dorbell page for use in kernel space.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @intr_ctrl:		Interrupt control registers.
  * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
@@ -205,12 +216,12 @@ void ionic_api_put_cmb(struct ionic_lif *lif, uint32_t pgid, int order);
  * kernel space for this lif.  For user space, use ionic_api_get_dbid to
  * allocate a doorbell id for exclusive use by a process.
  */
-void ionic_api_kernel_dbpage(struct ionic_lif *lif,
+void ionic_api_kernel_dbpage(void *handle,
          struct ionic_intr __iomem **intr_ctrl,
          uint32_t *dbid, uint64_t __iomem **dbpage);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @dbid:		Doorbell id.
  * @addr:		Phys address of doorbell page.
  *
@@ -220,16 +231,15 @@ void ionic_api_kernel_dbpage(struct ionic_lif *lif,
  *
  * Return: zero on success or negative error status.
  */
-int ionic_api_get_dbid(struct ionic_lif *lif, uint32_t *dbid,
-        phys_addr_t *addr);
+int ionic_api_get_dbid(void *handle, uint32_t *dbid, phys_addr_t *addr);
 
 /** ionic_api_put_dbid - Release a doorbell id.
- * @lif:		Handle to lif.
+ * @handle:		Handle to lif.
  * @dbid:		Doorbell id.
  *
  * Mark the doorbell id unused, so that it can be reserved again.
  */
-void ionic_api_put_dbid(struct ionic_lif *lif, int dbid);
+void ionic_api_put_dbid(void *handle, int dbid);
 
 /** ionic_admin_ctx - Admin command context.
  * @work:		Work completion wait queue element.
@@ -243,8 +253,8 @@ struct ionic_admin_ctx {
 };
 
 /** ionic_api_adminq_post - Post an admin command.
- * @lif:		Handle to lif.
- * @cmd_ctx:		Api admin command context.
+ * @handle:		Handle to lif.
+ * @cmd_ctx:		API admin command context.
  *
  * Post the command to an admin queue in the ethernet driver.  If this command
  * succeeds, then the command has been posted, but that does not indicate a
@@ -253,6 +263,6 @@ struct ionic_admin_ctx {
  *
  * Return: zero or negative error status.
  */
-int ionic_api_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx);
 
 #endif /* IONIC_API_H */

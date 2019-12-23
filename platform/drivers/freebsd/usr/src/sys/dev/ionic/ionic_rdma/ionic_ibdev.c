@@ -998,8 +998,9 @@ static int ionic_admin_busy_wait(struct ionic_admin_wr *wr)
 		if (completion_done(&wr->work))
 			return 0;
 
-		/* did not complete before timeout, do not continue waiting,
-		 * but initiate rdma lif reset and indicate error to caller.
+		/*
+		 * Did not complete before timeout: do not continue waiting,
+		 * but initiate RDMA LIF reset and indicate error to caller.
 		 */
 		if (try_i >= IONIC_ADMIN_BUSY_RETRY_COUNT) {
 			ionic_admin_timedout(aq);
@@ -1481,7 +1482,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	ctx->fallback = req.fallback > 1;
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
-		rc = ionic_api_get_dbid(dev->lif, &ctx->dbid, &db_phys);
+		rc = ionic_api_get_dbid(dev->handle, &ctx->dbid, &db_phys);
 		if (rc < 0) {
 			/* maybe allow fallback to kernel space */
 			ctx->fallback = req.fallback > 0;
@@ -1527,7 +1528,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	return &ctx->ibctx;
 
 err_resp:
-	ionic_api_put_dbid(dev->lif, ctx->dbid);
+	ionic_api_put_dbid(dev->handle, ctx->dbid);
 err_dbid:
 	kfree(ctx);
 err_ctx:
@@ -1544,7 +1545,7 @@ static int ionic_dealloc_ucontext(struct ib_ucontext *ibctx)
 	if (WARN_ON(!list_empty(&ctx->mmap_list)))
 		list_del(&ctx->mmap_list);
 
-	ionic_api_put_dbid(dev->lif, ctx->dbid);
+	ionic_api_put_dbid(dev->handle, ctx->dbid);
 	kfree(ctx);
 
 	return 0;
@@ -3162,7 +3163,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	struct ionic_sq_meta *meta;
 	u16 cqe_seq, cqe_idx;
-	uint32_t st_len;
+	u32 st_len;
 	int rc;
 
 	if (qp->sq_flush)
@@ -3724,7 +3725,7 @@ static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 	if (qp->sq_cmb_order >= ionic_sqcmb_order)
 		goto not_in_cmb;
 
-	rc = ionic_api_get_cmb(dev->lif, &qp->sq_cmb_pgid,
+	rc = ionic_api_get_cmb(dev->handle, &qp->sq_cmb_pgid,
 			       &qp->sq_cmb_addr, qp->sq_cmb_order);
 	if (rc)
 		goto not_in_cmb;
@@ -3745,7 +3746,7 @@ static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 	return;
 
 err_map:
-	ionic_api_put_cmb(dev->lif, qp->sq_cmb_pgid, qp->sq_cmb_order);
+	ionic_api_put_cmb(dev->handle, qp->sq_cmb_pgid, qp->sq_cmb_order);
 not_in_cmb:
 	qp->sq_is_cmb = false;
 	qp->sq_cmb_ptr = NULL;
@@ -3773,7 +3774,7 @@ static void ionic_qp_sq_destroy_cmb(struct ionic_ibdev *dev,
 		iounmap(qp->sq_cmb_ptr);
 	}
 
-	ionic_api_put_cmb(dev->lif, qp->sq_cmb_pgid, qp->sq_cmb_order);
+	ionic_api_put_cmb(dev->handle, qp->sq_cmb_pgid, qp->sq_cmb_order);
 }
 
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
@@ -3934,7 +3935,7 @@ static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
 	if (qp->rq_cmb_order >= ionic_rqcmb_order)
 		goto not_in_cmb;
 
-	rc = ionic_api_get_cmb(dev->lif, &qp->rq_cmb_pgid,
+	rc = ionic_api_get_cmb(dev->handle, &qp->rq_cmb_pgid,
 			       &qp->rq_cmb_addr, qp->rq_cmb_order);
 	if (rc)
 		goto not_in_cmb;
@@ -3955,7 +3956,7 @@ static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
 	return;
 
 err_map:
-	ionic_api_put_cmb(dev->lif, qp->rq_cmb_pgid, qp->rq_cmb_order);
+	ionic_api_put_cmb(dev->handle, qp->rq_cmb_pgid, qp->rq_cmb_order);
 not_in_cmb:
 	qp->rq_is_cmb = false;
 	qp->rq_cmb_ptr = NULL;
@@ -3983,7 +3984,7 @@ static void ionic_qp_rq_destroy_cmb(struct ionic_ibdev *dev,
 		iounmap(qp->rq_cmb_ptr);
 	}
 
-	ionic_api_put_cmb(dev->lif, qp->rq_cmb_pgid, qp->rq_cmb_order);
+	ionic_api_put_cmb(dev->handle, qp->rq_cmb_pgid, qp->rq_cmb_order);
 }
 
 static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
@@ -4928,8 +4929,8 @@ static int ionic_prep_common(struct ionic_qp *qp,
 			     struct ionic_sq_meta *meta,
 			     struct ionic_v1_wqe *wqe)
 {
-	int64_t signed_len;
-	uint32_t mval;
+	s64 signed_len;
+	u32 mval;
 
 	if (wr->send_flags & IB_SEND_INLINE) {
 		wqe->base.num_sge_key = 0;
@@ -6019,7 +6020,7 @@ static int ionic_rdma_devcmd(struct ionic_ibdev *dev,
 {
 	int rc;
 
-	rc = ionic_api_adminq_post(dev->lif, admin);
+	rc = ionic_api_adminq_post(dev->handle, admin);
 	if (rc)
 		goto err_cmd;
 
@@ -6036,7 +6037,7 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_reset = {
 			.opcode = CMD_OPCODE_RDMA_RESET_LIF,
-			.lif_index = cpu_to_le16(dev->lif_id),
+			.lif_index = cpu_to_le16(dev->lif_index),
 		},
 	};
 
@@ -6051,7 +6052,7 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_queue = {
 			.opcode = opcode,
-			.lif_index = cpu_to_le16(dev->lif_id),
+			.lif_index = cpu_to_le16(dev->lif_index),
 			.qid_ver = cpu_to_le32(qid),
 			.cid = cpu_to_le32(cid),
 			.dbid = cpu_to_le16(dev->dbid),
@@ -6088,7 +6089,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	eq->enable = false;
 	INIT_WORK(&eq->work, ionic_poll_eq_work);
 
-	rc = ionic_api_get_intr(dev->lif, &eq->irq);
+	rc = ionic_api_get_intr(dev->handle, &eq->irq);
 	if (rc < 0)
 		goto err_intr;
 
@@ -6100,7 +6101,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	eq->q.cons = true;
 
 	snprintf(eq->name, sizeof(eq->name), "%s-%d-%d",
-		 DRIVER_SHORTNAME, dev->lif_id, eq->eqid);
+		 DRIVER_SHORTNAME, dev->lif_index, eq->eqid);
 
 	ionic_intr_mask(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_SET);
 	ionic_intr_mask_assert(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_SET);
@@ -6129,7 +6130,7 @@ err_cmd:
 	flush_work(&eq->work);
 	free_irq(eq->irq, eq);
 err_irq:
-	ionic_api_put_intr(dev->lif, eq->intr);
+	ionic_api_put_intr(dev->handle, eq->intr);
 err_intr:
 	ionic_queue_destroy(&eq->q, dev->hwdev);
 err_q:
@@ -6148,7 +6149,7 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 	flush_work(&eq->work);
 	free_irq(eq->irq, eq);
 
-	ionic_api_put_intr(dev->lif, eq->intr);
+	ionic_api_put_intr(dev->handle, eq->intr);
 	ionic_queue_destroy(&eq->q, dev->hwdev);
 	kfree(eq);
 }
@@ -6405,7 +6406,7 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev, bool fatal_path)
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (unlikely(rc)) {
 		dev_err(&dev->ibdev.dev, "failed to reset rdma %d\n", rc);
-		ionic_api_request_reset(dev->lif);
+		ionic_api_request_reset(dev->handle);
 	} else {
 		ionic_kill_ibdev(dev, fatal_path);
 	}
@@ -6595,6 +6596,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_rdma_admin(dev);
 
+	ionic_api_clear_private(dev->handle);
+
 	contig_kfree(dev->stats, PAGE_SIZE);
 	contig_kfree(dev->stats_buf, PAGE_SIZE);
 	kfree(dev->stats_hdrs);
@@ -6615,19 +6618,19 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	dev_put(ndev);
 }
 
-static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
+static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 					      struct net_device *ndev)
 {
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	struct device *hwdev;
 	const union lif_identity *ident;
-	struct sysctl_oid *lif_dbgfs;
-	int rc, val, lif_id, version, i;
+	struct sysctl_oid *dbg_ctx;
+	int rc, val, lif_index, version, i;
 
 	dev_hold(ndev);
 
-	ident = ionic_api_get_identity(lif, &lif_id);
+	ident = ionic_api_get_identity(handle, &lif_index);
 
 	netdev_dbg(ndev, "rdma.version %d\n",
 		ident->rdma.version);
@@ -6678,7 +6681,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 	}
 
 	/* Ensure that our parent is a true PCI device */
-	hwdev = ionic_api_get_device(lif);
+	hwdev = ionic_api_get_device(handle);
 	if (!dev_is_pci(hwdev)) {
 		netdev_err(ndev,
 			   "ionic_rdma: Cannot bind to non-PCI device\n");
@@ -6695,12 +6698,12 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 	dev = to_ionic_ibdev(ibdev);
 	dev->hwdev = hwdev;
 	dev->ndev = ndev;
-	dev->lif = lif;
-	dev->lif_id = lif_id;
+	dev->handle = handle;
+	dev->lif_index = lif_index;
 	dev->ident = ident;
-	dev->info = ionic_api_get_devinfo(lif);
+	dev->info = ionic_api_get_devinfo(handle);
 
-	ionic_api_kernel_dbpage(lif, &dev->intr_ctrl,
+	ionic_api_kernel_dbpage(handle, &dev->intr_ctrl,
 				&dev->dbid, &dev->dbpage);
 
 	dev->rdma_version = version;
@@ -6818,11 +6821,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 	dev->inuse_qpid.next_id = 2;
 
 	if (ionic_dbg_enable)
-		lif_dbgfs = ionic_api_get_debugfs(lif);
+		dbg_ctx = ionic_api_get_debug_ctx(handle);
 	else
-		lif_dbgfs = NULL;
+		dbg_ctx = NULL;
 
-	ionic_dbg_add_dev(dev, lif_dbgfs);
+	ionic_dbg_add_dev(dev, dbg_ctx);
 
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (rc)
@@ -6960,6 +6963,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 	if (rc)
 		goto err_register;
 
+	rc = ionic_api_set_private(handle, dev, ionic_kill_ibdev_cb,
+				   IONIC_PRSN_RDMA);
+	if (rc)
+		goto err_api;
+
 	for (i = 0; i < ARRAY_SIZE(ionic_dev_attributes); i++) {
 		rc = device_create_file(&dev->ibdev.dev,
 					ionic_dev_attributes[i]);
@@ -6976,6 +6984,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct ionic_lif *lif,
 err_attrib:
 	while (i-- > 0)
 		device_remove_file(&dev->ibdev.dev, ionic_dev_attributes[i]);
+	ionic_api_clear_private(handle);
+err_api:
 	ib_unregister_device(&dev->ibdev);
 err_register:
 	ionic_kill_rdma_admin(dev, false);
@@ -7009,7 +7019,8 @@ struct ionic_netdev_work {
 	struct work_struct ws;
 	unsigned long event;
 	struct net_device *ndev;
-	struct ionic_lif *lif;
+	void *handle;
+	u32 reset_cnt;
 };
 
 static void ionic_netdev_work(struct work_struct *ws)
@@ -7018,9 +7029,8 @@ static void ionic_netdev_work(struct work_struct *ws)
 		container_of(ws, struct ionic_netdev_work, ws);
 	struct net_device *ndev = work->ndev;
 	struct ionic_ibdev *dev;
-	int rc;
 
-	dev = ionic_api_get_private(work->lif, IONIC_PRSN_RDMA);
+	dev = ionic_api_get_private(work->handle, IONIC_PRSN_RDMA);
 
 	switch (work->event) {
 	case NETDEV_REGISTER:
@@ -7034,22 +7044,15 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 		netdev_dbg(ndev, "register ibdev\n");
 
-		dev = ionic_create_ibdev(work->lif, ndev);
+		dev = ionic_create_ibdev(work->handle, ndev);
 		if (IS_ERR(dev)) {
 			netdev_dbg(ndev, "error register ibdev %d\n",
 				   (int)PTR_ERR(dev));
 			break;
 		}
 
-		rc = ionic_api_set_private(work->lif, dev, ionic_kill_ibdev_cb,
-					   IONIC_PRSN_RDMA, &dev->reset_cnt);
-		if (rc) {
-			netdev_dbg(ndev, "error set private %d\n", rc);
-			ionic_destroy_ibdev(dev);
-		} else {
-			dev_info(&dev->ibdev.dev, "registered\n");
-		}
-
+		dev->reset_cnt = work->reset_cnt;
+		dev_info(&dev->ibdev.dev, "registered\n");
 		break;
 
 	case NETDEV_UNREGISTER:
@@ -7060,17 +7063,15 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 		/* Avoid spurious unregisters caused by ethernet LIF reset */
 		if (!dev->reset_posted &&
-		    ionic_api_stay_registered(work->lif)) {
+		    ionic_api_stay_registered(work->handle)) {
 			netdev_dbg(ndev, "stay registered\n");
 			break;
 		}
 
 		netdev_dbg(ndev, "unregister ibdev\n");
-
-		ionic_api_set_private(work->lif, NULL, NULL,
-				      IONIC_PRSN_RDMA, NULL);
 		ionic_destroy_ibdev(dev);
 
+		netdev_dbg(ndev, "unregistered\n");
 		break;
 
 	case NETDEV_UP:
@@ -7112,13 +7113,14 @@ static void ionic_netdev_work(struct work_struct *ws)
 }
 
 static int ionic_netdev_event_post(struct net_device *ndev,
-				   unsigned long event)
+				   unsigned long event, u32 reset_cnt)
 {
 	struct ionic_netdev_work *work;
-	struct ionic_lif *lif;
+	void *handle;
 
-	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION, IONIC_PRSN_RDMA);
-	if (!lif) {
+	handle = get_netdev_ionic_handle(ndev, IONIC_API_VERSION,
+					 IONIC_PRSN_RDMA);
+	if (!handle) {
 		pr_devel("unrecognized netdev: %s\n", netdev_name(ndev));
 		return 0;
 	}
@@ -7135,7 +7137,10 @@ static int ionic_netdev_event_post(struct net_device *ndev,
 	INIT_WORK(&work->ws, ionic_netdev_work);
 	work->event = event;
 	work->ndev = ndev;
-	work->lif = lif;
+	work->handle = handle;
+
+	/* Preserve reset_cnt in work struct since ibdev will be freed */
+	work->reset_cnt = reset_cnt;
 
 	queue_work(ionic_dev_workq, &work->ws);
 
@@ -7150,7 +7155,7 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 
 	ndev = netdev_notifier_info_to_dev(ptr);
 
-	rc = ionic_netdev_event_post(ndev, event);
+	rc = ionic_netdev_event_post(ndev, event, 0);
 
 	return rc ? notifier_from_errno(rc) : NOTIFY_DONE;
 }
@@ -7186,15 +7191,17 @@ void ionic_ibdev_reset(struct ionic_ibdev *dev)
 	int rc;
 
 	dev->reset_posted = true;
+	dev->reset_cnt++;
 
-	rc = ionic_netdev_event_post(dev->ndev, NETDEV_UNREGISTER);
+	rc = ionic_netdev_event_post(dev->ndev, NETDEV_UNREGISTER, 0);
 	if (rc) {
 		dev_warn(&dev->ibdev.dev,
 			 "failed to post unregister event: %d\n", rc);
 		return;
 	}
 
-	rc = ionic_netdev_event_post(dev->ndev, NETDEV_REGISTER);
+	rc = ionic_netdev_event_post(dev->ndev, NETDEV_REGISTER,
+				     dev->reset_cnt);
 	if (rc)
 		dev_warn(&dev->ibdev.dev,
 			 "failed to post register event: %d\n", rc);
@@ -7241,8 +7248,6 @@ static void __exit ionic_exit_work(struct work_struct *ws)
 
 	list_for_each_entry_safe_reverse(dev, dev_next, &ionic_ibdev_list,
 					 driver_ent) {
-		ionic_api_set_private(dev->lif, NULL, NULL,
-				      IONIC_PRSN_RDMA, NULL);
 		ionic_destroy_ibdev(dev);
 	}
 }

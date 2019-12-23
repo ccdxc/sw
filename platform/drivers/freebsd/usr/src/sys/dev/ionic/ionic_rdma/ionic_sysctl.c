@@ -460,7 +460,7 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 
 	parent = SYSCTL_CHILDREN(oidp);
 
-	ionic_int(ctx, parent, &dev->lif_id, "lif_id", "LIF ID");
+	ionic_int(ctx, parent, &dev->lif_index, "lif_index", "LIF Index");
 	ionic_int(ctx, parent, &dev->dbid, "dbid", "Doorbell ID");
 	ionic_u16(ctx, parent, &dev->rdma_version, "rdma_version",
 		  "RDMA FW ABI");

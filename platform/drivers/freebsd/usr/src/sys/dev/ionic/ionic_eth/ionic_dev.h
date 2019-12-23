@@ -34,6 +34,7 @@
 
 #define IONIC_MIN_MTU	ETHER_MIN_LEN
 #define IONIC_MAX_MTU	(9216 - ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN - ETHER_CRC_LEN)
+#define IONIC_LIFS_MAX			1024
 
 #define IONIC_WDOG_HB_DEFAULT_MS	(10 * 1000) /* 10s */
 #define IONIC_WDOG_TX_DEFAULT_MS	(5  * 1000) /* 5s  */
@@ -240,7 +241,7 @@ void ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group);
 void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,
 	uint8_t type, uint8_t ver);
 
-int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid);
+int ionic_db_page_num(struct ionic *ionic, int lif_index, int pid);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 					unsigned long index);

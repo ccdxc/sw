@@ -132,7 +132,7 @@ define ionic_ibdev_print
 		$ibd->ibdev.name, $ibd
 	__indent
 	printf "net %s lif %d rev %1d %s\n",				\
-		$ibd->ndev->if_xname, $ibd->lif_id,			\
+		$ibd->ndev->if_xname, $ibd->lif_index,			\
 		$ibd->rdma_version, $ibd->ibdev.node_desc
 end
 document ionic_ibdev_print

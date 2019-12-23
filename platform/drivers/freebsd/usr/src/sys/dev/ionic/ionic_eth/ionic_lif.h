@@ -289,6 +289,14 @@ struct ionic_mc_addr {
 	bool present;
 };
 
+struct ionic_lif_cfg {
+	int index;
+	enum ionic_api_prsn prsn;
+
+	void *priv;
+	void (*reset_cb)(void *priv);	/* TODO something with this */
+};
+
 struct ionic_lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
@@ -352,9 +360,8 @@ struct ionic_lif {
 	unsigned int dbid_count;
 
 	bool stay_registered;
-	void *api_private;	/* For RoCE */
-	void (*api_reset_cb)(void *api_private);
-	uint32_t api_private_cnt;
+	/* TODO: Make this a list if more than one slave is supported */
+	struct ionic_lif_cfg slave_lif_cfg;
 
 	uint64_t spurious; /* Spurious interrupt counter in legacy mode. */
 
@@ -441,6 +448,9 @@ int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
 
+int ionic_slave_alloc(struct ionic *ionic, enum ionic_api_prsn prsn);
+void ionic_slave_free(struct ionic *ionic, int index);
+
 int ionic_txq_identify(struct ionic *ionic, uint8_t ver);
 
 int ionic_adminq_clean(struct ionic_adminq* adminq, int limit);
@@ -455,7 +465,7 @@ int ionic_set_hw_features(struct ionic_lif *lif, uint32_t features);
 
 int ionic_lif_rss_config(struct ionic_lif *lif, uint16_t types,
 	const uint8_t *key, const uint32_t *indir);
- 
+
 void ionic_rx_fill(struct ionic_rxque *rxq);
 int ionic_rx_clean(struct ionic_rxque *rxq, int rx_limit);
 void ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *buf,

@@ -28,9 +28,10 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 }
 
 VMK_ReturnStatus
-ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx)
 {
-	VMK_ReturnStatus status = VMK_OK;	
+	VMK_ReturnStatus status = VMK_OK;
+	struct lif *lif = handle;
 	struct queue *adminq = &lif->adminqcq->q;
 
 	vmk_SpinlockLock(lif->adminq_lock);

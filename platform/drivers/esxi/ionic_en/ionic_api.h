@@ -14,7 +14,7 @@
  *
  * Any interface changes to this interface must also change the version.
  */
-#define IONIC_API_VERSION "1"
+#define IONIC_API_VERSION "2"
 
 
 /** ionic_admin_ctx - Admin command context.
@@ -29,6 +29,6 @@ struct ionic_admin_ctx {
 };
 
 VMK_ReturnStatus
-ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
+ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx);
 
 #endif /* End of _IONIC_API_H_ */

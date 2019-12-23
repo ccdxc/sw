@@ -74,8 +74,8 @@ struct ionic_ibdev {
 	const struct ionic_devinfo	*info;
 	const union lif_identity	*ident;
 
-	struct ionic_lif	*lif;
-	int			lif_id;
+	void			*handle;
+	int			lif_index;
 
 	u32			dbid;
 	u64			__iomem *dbpage;

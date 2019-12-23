@@ -4,6 +4,8 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
+struct ionic_lif;
+
 #include <linux/radix-tree.h>
 
 #include "kcompat.h"
@@ -60,6 +62,7 @@ struct ionic {
 	unsigned int nlifs;
 	unsigned int neth_eqs;
 	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
+	DECLARE_BITMAP(ethbits, IONIC_LIFS_MAX);
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 #ifndef HAVE_PCI_IRQ_API
@@ -77,15 +80,15 @@ struct ionic {
 	int watchdog_period;
 };
 
-/* Since we have a bitmap of the allocated lifs, we can use
+/* Since we have a bitmap of the allocated eth lifs, we can use
  * that to look up each lif specifically, rather than digging
  * through the whole tree with radix_tree_for_each_slot
  */
-#define for_each_lif(_ion, _bit, _lif) \
-	for ((_bit) = find_first_bit((_ion)->lifbits, IONIC_LIFS_MAX),   \
+#define for_each_eth_lif(_ion, _bit, _lif) \
+	for ((_bit) = find_first_bit((_ion)->ethbits, IONIC_LIFS_MAX),   \
 		(_lif) = radix_tree_lookup(&(_ion)->lifs, (_bit));       \
 	     (_bit) < IONIC_LIFS_MAX;                                    \
-	     (_bit) = find_next_bit((_ion)->lifbits,                     \
+	     (_bit) = find_next_bit((_ion)->ethbits,                     \
 				    IONIC_LIFS_MAX, ((_bit) + 1)),       \
 		(_lif) = radix_tree_lookup(&(_ion)->lifs, (_bit)))
 

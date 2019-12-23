@@ -165,7 +165,7 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	struct ionic_ibdev *dev = s->private;
 	int i;
 
-	seq_printf(s, "lif_id:\t%d\n", dev->lif_id);
+	seq_printf(s, "lif_index:\t%d\n", dev->lif_index);
 	seq_printf(s, "dbid:\t%u\n", dev->dbid);
 
 	seq_printf(s, "rdma_version:\t%u\n", dev->rdma_version);
