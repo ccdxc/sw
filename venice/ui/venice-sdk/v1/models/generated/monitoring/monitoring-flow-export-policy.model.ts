@@ -45,7 +45,7 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the export policy.',
+            description:  `Status contains the current state of the export policy.`,
             required: false,
             type: 'object'
         },

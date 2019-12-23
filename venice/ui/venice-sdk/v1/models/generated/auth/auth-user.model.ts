@@ -42,12 +42,12 @@ export class AuthUser extends BaseModel implements IAuthUser {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the user.',
+            description:  `Spec contains the configuration of the user.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the role binding.',
+            description:  `Status contains the current state of the role binding.`,
             required: false,
             type: 'object'
         },

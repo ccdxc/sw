@@ -25,18 +25,18 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     'neighbors': Array<NetworkBGPNeighbor> = null;
     public static propInfo: { [prop in keyof INetworkBGPConfig]: PropInfoItem } = {
         'router-id': {
-            description:  'Router ID for the BGP Instance.',
+            description:  `Router ID for the BGP Instance.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'
         },
         'as-number': {
-            description:  'Local ASN for the BGP Instance.',
+            description:  `Local ASN for the BGP Instance.`,
             required: false,
             type: 'number'
         },
         'neighbors': {
-            description:  'List of all neighbors.',
+            description:  `List of all neighbors.`,
             required: false,
             type: 'object'
         },

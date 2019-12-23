@@ -42,12 +42,12 @@ export class OrchestrationOrchestrator extends BaseModel implements IOrchestrati
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the vcenter.',
+            description:  `Spec contains the configuration of the vcenter.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the cluster.',
+            description:  `Status contains the current state of the cluster.`,
             required: false,
             type: 'object'
         },

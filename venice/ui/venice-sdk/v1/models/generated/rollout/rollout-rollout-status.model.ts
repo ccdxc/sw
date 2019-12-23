@@ -44,17 +44,17 @@ The entries are group by parallelism based on the order-constraints and max-para
     'reason': string = null;
     public static propInfo: { [prop in keyof IRolloutRolloutStatus]: PropInfoItem } = {
         'controller-nodes-status': {
-            description:  'Rollout status of Controller Node',
+            description:  `Rollout status of Controller Node`,
             required: false,
             type: 'object'
         },
         'controller-services-status': {
-            description:  'Rollout status of Various Controller Services',
+            description:  `Rollout status of Various Controller Services`,
             required: false,
             type: 'object'
         },
         'dscs-status': {
-            description:  'Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.',
+            description:  `Rollout status of DistributedServiceCards in the cluster. Has entries for DistributedServiceCards on Controller nodes as well as workload nodes The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.`,
             required: false,
             type: 'object'
         },
@@ -65,27 +65,27 @@ The entries are group by parallelism based on the order-constraints and max-para
             type: 'string'
         },
         'completion-percent': {
-            description:  'Heuristic value of percentage completion of the rollout',
+            description:  `Heuristic value of percentage completion of the rollout`,
             required: false,
             type: 'number'
         },
         'start-time': {
-            description:  'Start time of Rollout',
+            description:  `Start time of Rollout`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  'End time of Rollout',
+            description:  `End time of Rollout`,
             required: false,
             type: 'Date'
         },
         'prev-version': {
-            description:  'Version of the cluster before the start of rollout',
+            description:  `Version of the cluster before the start of rollout`,
             required: false,
             type: 'string'
         },
         'reason': {
-            description:  'Details the reason for overall Failure or Suspend',
+            description:  `Details the reason for overall Failure or Suspend`,
             required: false,
             type: 'string'
         },

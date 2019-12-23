@@ -28,17 +28,17 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
         'phase': {
             enum: ClusterNodeStatus_phase_uihint,
             default: 'unknown',
-            description:  'Current lifecycle phase of the node.',
+            description:  `Current lifecycle phase of the node.`,
             required: true,
             type: 'string'
         },
         'quorum': {
-            description:  'Quorum node or not.',
+            description:  `Quorum node or not.`,
             required: false,
             type: 'boolean'
         },
         'conditions': {
-            description:  'List of current node conditions',
+            description:  `List of current node conditions`,
             required: false,
             type: 'object'
         },

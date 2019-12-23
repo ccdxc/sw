@@ -38,7 +38,7 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
             type: 'object'
         },
         'items': {
-            description:  'List of MirrorSession objects',
+            description:  `List of MirrorSession objects`,
             required: false,
             type: 'object'
         },

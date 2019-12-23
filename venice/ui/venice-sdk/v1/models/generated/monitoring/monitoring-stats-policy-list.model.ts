@@ -38,7 +38,7 @@ export class MonitoringStatsPolicyList extends BaseModel implements IMonitoringS
             type: 'object'
         },
         'items': {
-            description:  'List of StatsPolicy objects',
+            description:  `List of StatsPolicy objects`,
             required: false,
             type: 'object'
         },

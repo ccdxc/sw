@@ -24,17 +24,17 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     'id': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkStatus]: PropInfoItem } = {
         'workloads': {
-            description:  'List of all workloads in this network',
+            description:  `List of all workloads in this network`,
             required: false,
             type: 'Array<string>'
         },
         'allocated-ipv4-addrs': {
-            description:  'Allocated IPv4 addresses (bitmap)',
+            description:  `Allocated IPv4 addresses (bitmap)`,
             required: false,
             type: 'string'
         },
         'id': {
-            description:  'Handle is the internal Handle allocated to this network',
+            description:  `Handle is the internal Handle allocated to this network`,
             required: false,
             type: 'string'
         },

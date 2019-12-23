@@ -31,30 +31,30 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
     public static propInfo: { [prop in keyof INetworkBGPNeighbor]: PropInfoItem } = {
         'shutdown': {
-            description:  'Shutdown this neighbor session.',
+            description:  `Shutdown this neighbor session.`,
             required: false,
             type: 'boolean'
         },
         'ip-address': {
-            description:  'Neighbor IP Address.',
+            description:  `Neighbor IP Address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'
         },
         'remote-as': {
-            description:  'ASN the neighbor belongs to.',
+            description:  `ASN the neighbor belongs to.`,
             required: false,
             type: 'number'
         },
         'multi-hop': {
-            description:  'BGP Multihop configuration, 0 disables multihop.',
+            description:  `BGP Multihop configuration, 0 disables multihop.`,
             required: true,
             type: 'number'
         },
         'enable-address-families': {
             enum: NetworkBGPNeighbor_enable_address_families,
             default: 'ipv4-unicast',
-            description:  'Address families to enable on the neighbor.',
+            description:  `Address families to enable on the neighbor.`,
             required: true,
             type: 'Array<string>'
         },

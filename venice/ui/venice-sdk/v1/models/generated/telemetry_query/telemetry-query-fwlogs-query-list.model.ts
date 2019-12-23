@@ -25,17 +25,17 @@ export class Telemetry_queryFwlogsQueryList extends BaseModel implements ITeleme
     'queries': Array<Telemetry_queryFwlogsQuerySpec> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQueryList]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant for the request',
+            description:  `Tenant for the request`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace for the request',
+            description:  `Namespace for the request`,
             required: false,
             type: 'string'
         },
         'queries': {
-            description:  'List of queries to execute',
+            description:  `List of queries to execute`,
             required: false,
             type: 'object'
         },

@@ -35,27 +35,27 @@ export class ClusterDSCInfo extends BaseModel implements IClusterDSCInfo {
     'storage-info': ClusterStorageInfo = null;
     public static propInfo: { [prop in keyof IClusterDSCInfo]: PropInfoItem } = {
         'bios-info': {
-            description:  'BIOS details',
+            description:  `BIOS details`,
             required: false,
             type: 'object'
         },
         'os-info': {
-            description:  'OS details',
+            description:  `OS details`,
             required: false,
             type: 'object'
         },
         'cpu-info': {
-            description:  'CPU details',
+            description:  `CPU details`,
             required: false,
             type: 'object'
         },
         'memory-info': {
-            description:  'RAM/Memory details',
+            description:  `RAM/Memory details`,
             required: false,
             type: 'object'
         },
         'storage-info': {
-            description:  'Storage details',
+            description:  `Storage details`,
             required: false,
             type: 'object'
         },

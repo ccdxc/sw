@@ -42,12 +42,12 @@ export class NetworkIPAMPolicy extends BaseModel implements INetworkIPAMPolicy {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration for the IPAM service.',
+            description:  `Spec contains the configuration for the IPAM service.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the IPAM service.',
+            description:  `Status contains the current state of the IPAM service.`,
             required: false,
             type: 'object'
         },

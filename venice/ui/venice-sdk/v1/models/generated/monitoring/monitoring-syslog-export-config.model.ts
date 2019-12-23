@@ -24,12 +24,12 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
         'facility-override': {
             enum: MonitoringSyslogExportConfig_facility_override_uihint,
             default: 'user',
-            description:  'Override default facility with this in exported logs',
+            description:  `Override default facility with this in exported logs`,
             required: true,
             type: 'string'
         },
         'prefix': {
-            description:  'Add prefix in exported logs',
+            description:  `Add prefix in exported logs`,
             required: false,
             type: 'string'
         },

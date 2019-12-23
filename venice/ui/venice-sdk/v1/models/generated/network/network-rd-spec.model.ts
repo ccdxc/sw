@@ -34,27 +34,27 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
         'address-family': {
             enum: NetworkRDSpec_address_family,
             default: 'ipv4-unicast',
-            description:  'Address family where this config applies.',
+            description:  `Address family where this config applies.`,
             required: true,
             type: 'string'
         },
         'rd-auto': {
-            description:  'True indicates the system will generate the RD automatically.',
+            description:  `True indicates the system will generate the RD automatically.`,
             required: false,
             type: 'boolean'
         },
         'rd': {
-            description:  'If Import and Export RDs are not specified, RD is used uniformly as RD, and import and export route-targets.',
+            description:  `If Import and Export RDs are not specified, RD is used uniformly as RD, and import and export route-targets.`,
             required: false,
             type: 'object'
         },
         'rd-export': {
-            description:  'Route Targets to Export.',
+            description:  `Route Targets to Export.`,
             required: false,
             type: 'object'
         },
         'rd-import': {
-            description:  'Route Targets to Import.',
+            description:  `Route Targets to Import.`,
             required: false,
             type: 'object'
         },

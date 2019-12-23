@@ -31,22 +31,22 @@ Eg: x86_64 */
     'processor': string = null;
     public static propInfo: { [prop in keyof IClusterOsInfo]: PropInfoItem } = {
         'type': {
-            description:  'OS Name Eg: GNU/Linux',
+            description:  `OS Name Eg: GNU/Linux`,
             required: false,
             type: 'string'
         },
         'kernel-release': {
-            description:  'Kernel release Eg: 3.10.0-514.10.2.el7.x86_64',
+            description:  `Kernel release Eg: 3.10.0-514.10.2.el7.x86_64`,
             required: false,
             type: 'string'
         },
         'kernel-version': {
-            description:  'Kernel version Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017',
+            description:  `Kernel version Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017`,
             required: false,
             type: 'string'
         },
         'processor': {
-            description:  'Processor Info Eg: x86_64',
+            description:  `Processor Info Eg: x86_64`,
             required: false,
             type: 'string'
         },

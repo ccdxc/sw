@@ -38,7 +38,7 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
             type: 'object'
         },
         'items': {
-            description:  'List of Role objects',
+            description:  `List of Role objects`,
             required: false,
             type: 'object'
         },

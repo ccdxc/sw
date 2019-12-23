@@ -26,12 +26,12 @@ there are inconsistencies in the trust chain. */
         'validity': {
             enum: SecurityCertificateStatus_validity,
             default: 'unknown',
-            description:  'Status of the certificate: &quot;valid&quot;, &quot;invalid&quot;, &quot;expired&quot; &quot;invalid&quot; means that the signature of the certificate does not match or there are inconsistencies in the trust chain.',
+            description:  `Status of the certificate: "valid", "invalid", "expired" "invalid" means that the signature of the certificate does not match or there are inconsistencies in the trust chain.`,
             required: true,
             type: 'string'
         },
         'workloads': {
-            description:  'The workloads where this certificate has been deployed',
+            description:  `The workloads where this certificate has been deployed`,
             required: false,
             type: 'Array<string>'
         },

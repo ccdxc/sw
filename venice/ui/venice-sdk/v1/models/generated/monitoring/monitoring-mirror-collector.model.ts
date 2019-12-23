@@ -25,12 +25,12 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
             default: 'erspan',
-            description:  'Type of Collector',
+            description:  `Type of Collector`,
             required: true,
             type: 'string'
         },
         'export-config': {
-            description:  'When collector type is Venice, collector export information is not required',
+            description:  `When collector type is Venice, collector export information is not required`,
             required: false,
             type: 'object'
         },

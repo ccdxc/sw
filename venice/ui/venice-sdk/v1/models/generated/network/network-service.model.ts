@@ -42,12 +42,12 @@ export class NetworkService extends BaseModel implements INetworkService {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the Service.',
+            description:  `Spec contains the configuration of the Service.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Service.',
+            description:  `Status contains the current state of the Service.`,
             required: false,
             type: 'object'
         },

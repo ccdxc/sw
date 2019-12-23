@@ -42,12 +42,12 @@ export class SecurityTrafficEncryptionPolicy extends BaseModel implements ISecur
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the encryption policy.',
+            description:  `Spec contains the configuration of the encryption policy.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the encryption policy.',
+            description:  `Status contains the current state of the encryption policy.`,
             required: false,
             type: 'object'
         },

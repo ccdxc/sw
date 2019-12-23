@@ -38,7 +38,7 @@ export class MonitoringAlertDestinationList extends BaseModel implements IMonito
             type: 'object'
         },
         'items': {
-            description:  'List of AlertDestination objects',
+            description:  `List of AlertDestination objects`,
             required: false,
             type: 'object'
         },

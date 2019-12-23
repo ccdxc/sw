@@ -42,12 +42,12 @@ export class SecurityCertificate extends BaseModel implements ISecurityCertifica
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the certificate.',
+            description:  `Spec contains the configuration of the certificate.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the certificate.',
+            description:  `Status contains the current state of the certificate.`,
             required: false,
             type: 'object'
         },

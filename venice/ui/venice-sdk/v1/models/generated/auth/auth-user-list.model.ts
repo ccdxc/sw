@@ -38,7 +38,7 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
             type: 'object'
         },
         'items': {
-            description:  'List of User objects',
+            description:  `List of User objects`,
             required: false,
             type: 'object'
         },

@@ -38,7 +38,7 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
             type: 'object'
         },
         'items': {
-            description:  'List of AuthenticationPolicy objects',
+            description:  `List of AuthenticationPolicy objects`,
             required: false,
             type: 'object'
         },

@@ -53,7 +53,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             type: 'string'
         },
         'primary-mac': {
-            description:  'Should be a valid MAC address',
+            description:  `Should be a valid MAC address`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
@@ -71,7 +71,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             type: 'boolean'
         },
         'cluster-node': {
-            description:  'Set only if interface is on Venice Node.',
+            description:  `Set only if interface is on Venice Node.`,
             required: false,
             type: 'string'
         },

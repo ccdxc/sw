@@ -38,7 +38,7 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
             type: 'object'
         },
         'items': {
-            description:  'List of App objects',
+            description:  `List of App objects`,
             required: false,
             type: 'object'
         },

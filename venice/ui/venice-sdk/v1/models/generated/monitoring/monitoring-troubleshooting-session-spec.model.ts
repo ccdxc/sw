@@ -38,7 +38,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
             type: 'string'
         },
         'enable-mirroring': {
-            description:  'If packet capture is enabled, a mirror-session will be internally created',
+            description:  `If packet capture is enabled, a mirror-session will be internally created`,
             required: false,
             type: 'boolean'
         },

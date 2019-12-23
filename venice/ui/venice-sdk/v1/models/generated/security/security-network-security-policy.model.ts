@@ -42,12 +42,12 @@ export class SecurityNetworkSecurityPolicy extends BaseModel implements ISecurit
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the Network Security Policy.',
+            description:  `Spec contains the configuration of the Network Security Policy.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Network Security Policy.',
+            description:  `Status contains the current state of the Network Security Policy.`,
             required: false,
             type: 'object'
         },

@@ -45,7 +45,7 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the policy.',
+            description:  `Status contains the current state of the policy.`,
             required: false,
             type: 'object'
         },

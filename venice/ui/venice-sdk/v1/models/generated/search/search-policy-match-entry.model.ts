@@ -22,12 +22,12 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     'index': number = null;
     public static propInfo: { [prop in keyof ISearchPolicyMatchEntry]: PropInfoItem } = {
         'rule': {
-            description:  'Matching SGRule',
+            description:  `Matching SGRule`,
             required: false,
             type: 'object'
         },
         'index': {
-            description:  'Index of the matching SG rule',
+            description:  `Index of the matching SG rule`,
             required: false,
             type: 'number'
         },

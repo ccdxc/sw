@@ -38,7 +38,7 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
             type: 'object'
         },
         'items': {
-            description:  'List of SecurityGroup objects',
+            description:  `List of SecurityGroup objects`,
             required: false,
             type: 'object'
         },

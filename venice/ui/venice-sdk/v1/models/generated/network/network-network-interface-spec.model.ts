@@ -50,29 +50,29 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
         'admin-status': {
             enum: NetworkNetworkInterfaceSpec_admin_status,
             default: 'up',
-            description:  'Desired Admin state of the port',
+            description:  `Desired Admin state of the port`,
             required: true,
             type: 'string'
         },
         'speed': {
-            description:  'Intefaae speed',
+            description:  `Intefaae speed`,
             required: false,
             type: 'string'
         },
         'mtu': {
-            description:  'Mtu of the interface',
+            description:  `Mtu of the interface`,
             required: false,
             type: 'number'
         },
         'pause': {
-            description:  'Pause Spec',
+            description:  `Pause Spec`,
             required: false,
             type: 'object'
         },
         'type': {
             enum: NetworkNetworkInterfaceSpec_type,
             default: 'none',
-            description:  'Type specifies the type of interface',
+            description:  `Type specifies the type of interface`,
             required: true,
             type: 'string'
         },
@@ -81,7 +81,7 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
             type: 'string'
         },
         'attach-network': {
-            description:  'AttachNetwork associates the interface with a Network. This is only valid for HOST_PF type.',
+            description:  `AttachNetwork associates the interface with a Network. This is only valid for HOST_PF type.`,
             required: false,
             type: 'string'
         },
@@ -92,12 +92,12 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
             type: 'string'
         },
         'ip-config': {
-            description:  'Interface IP Configuration if any.',
+            description:  `Interface IP Configuration if any.`,
             required: false,
             type: 'object'
         },
         'mac-address': {
-            description:  'Override system allocated MAC addressshould be a valid MAC address',
+            description:  `Override system allocated MAC addressshould be a valid MAC address`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'

@@ -26,17 +26,17 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     'verbosity': number = null;
     public static propInfo: { [prop in keyof IMonitoringTechSupportRequestSpec]: PropInfoItem } = {
         'collection-selector': {
-            description:  'CollectionSelector is a Label selector for modules to collect',
+            description:  `CollectionSelector is a Label selector for modules to collect`,
             required: false,
             type: 'object'
         },
         'node-selector': {
-            description:  'NodeSelector is a label selector that selects nodes to collect tech support from',
+            description:  `NodeSelector is a label selector that selects nodes to collect tech support from`,
             required: false,
             type: 'object'
         },
         'verbosity': {
-            description:  'Verbosity defines the verbosity level',
+            description:  `Verbosity defines the verbosity level`,
             required: false,
             type: 'number'
         },

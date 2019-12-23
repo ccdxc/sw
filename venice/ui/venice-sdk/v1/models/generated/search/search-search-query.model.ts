@@ -34,28 +34,28 @@ The max category string length is 64 byteslength of string should be between 0 a
     'labels': LabelsSelector = null;
     public static propInfo: { [prop in keyof ISearchSearchQuery]: PropInfoItem } = {
         'texts': {
-            description:  'OR of Text-requirements to be matched, Exclude is not supported for Text search',
+            description:  `OR of Text-requirements to be matched, Exclude is not supported for Text search`,
             required: false,
             type: 'object'
         },
         'categories': {
-            description:  'OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 byteslength of string should be between 0 and 64',
+            description:  `OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 byteslength of string should be between 0 and 64`,
             required: false,
             type: 'Array<string>'
         },
         'kinds': {
-            description:  'OR of Kinds to be matched, AND and Exclude are not supported for this typeshould be a valid object Kind',
+            description:  `OR of Kinds to be matched, AND and Exclude are not supported for this typeshould be a valid object Kind`,
             hint:  'Network',
             required: false,
             type: 'Array<string>'
         },
         'fields': {
-            description:  'Field Selector is AND of field.Requirements',
+            description:  `Field Selector is AND of field.Requirements`,
             required: false,
             type: 'object'
         },
         'labels': {
-            description:  'Label Selector is AND of label.Requirememts',
+            description:  `Label Selector is AND of label.Requirememts`,
             required: false,
             type: 'object'
         },

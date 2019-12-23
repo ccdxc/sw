@@ -38,7 +38,7 @@ export class ClusterSnapshotRestoreList extends BaseModel implements IClusterSna
             type: 'object'
         },
         'items': {
-            description:  'List of SnapshotRestore objects',
+            description:  `List of SnapshotRestore objects`,
             required: false,
             type: 'object'
         },

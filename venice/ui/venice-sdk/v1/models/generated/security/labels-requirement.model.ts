@@ -27,19 +27,19 @@ one or more values. */
     'values': Array<string> = null;
     public static propInfo: { [prop in keyof ILabelsRequirement]: PropInfoItem } = {
         'key': {
-            description:  'The label key that the condition applies to.',
+            description:  `The label key that the condition applies to.`,
             required: false,
             type: 'string'
         },
         'operator': {
             enum: LabelsRequirement_operator_uihint,
             default: 'equals',
-            description:  'Condition checked for the key.',
+            description:  `Condition checked for the key.`,
             required: true,
             type: 'string'
         },
         'values': {
-            description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
+            description:  `Values contains one or more values corresponding to the label key. "equals" and "notEquals" operators need a single Value. "in" and "notIn" operators can have one or more values.`,
             required: false,
             type: 'Array<string>'
         },

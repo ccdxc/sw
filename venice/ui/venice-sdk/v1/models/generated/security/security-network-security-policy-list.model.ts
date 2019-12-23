@@ -38,7 +38,7 @@ export class SecurityNetworkSecurityPolicyList extends BaseModel implements ISec
             type: 'object'
         },
         'items': {
-            description:  'List of NetworkSecurityPolicy objects',
+            description:  `List of NetworkSecurityPolicy objects`,
             required: false,
             type: 'object'
         },

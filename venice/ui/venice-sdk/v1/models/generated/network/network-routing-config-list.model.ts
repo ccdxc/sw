@@ -38,7 +38,7 @@ export class NetworkRoutingConfigList extends BaseModel implements INetworkRouti
             type: 'object'
         },
         'items': {
-            description:  'List of RoutingConfig objects',
+            description:  `List of RoutingConfig objects`,
             required: false,
             type: 'object'
         },

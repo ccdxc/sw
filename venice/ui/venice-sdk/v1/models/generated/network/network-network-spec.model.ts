@@ -53,57 +53,57 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
         'type': {
             enum: NetworkNetworkSpec_type,
             default: 'bridged',
-            description:  'Type of network. (vlan/vxlan/routed etc)',
+            description:  `Type of network. (vlan/vxlan/routed etc)`,
             required: true,
             type: 'string'
         },
         'ipv4-subnet': {
-            description:  'IPv4 subnet CIDR',
+            description:  `IPv4 subnet CIDR`,
             required: false,
             type: 'string'
         },
         'ipv4-gateway': {
-            description:  'IPv4 gateway for this subnet',
+            description:  `IPv4 gateway for this subnet`,
             required: false,
             type: 'string'
         },
         'ipv6-subnet': {
-            description:  'IPv6 subnet CIDR',
+            description:  `IPv6 subnet CIDR`,
             required: false,
             type: 'string'
         },
         'ipv6-gateway': {
-            description:  'IPv6 gateway',
+            description:  `IPv6 gateway`,
             required: false,
             type: 'string'
         },
         'vlan-id': {
-            description:  'Vlan ID for the network',
+            description:  `Vlan ID for the network`,
             required: false,
             type: 'number'
         },
         'vxlan-vni': {
-            description:  'Vxlan VNI for the network',
+            description:  `Vxlan VNI for the network`,
             required: false,
             type: 'number'
         },
         'virtual-router': {
-            description:  'VirtualRouter specifies the VRF this network belongs to',
+            description:  `VirtualRouter specifies the VRF this network belongs to`,
             required: false,
             type: 'string'
         },
         'ipam-policy': {
-            description:  'Relay Configuration if any',
+            description:  `Relay Configuration if any`,
             required: false,
             type: 'string'
         },
         'route-imoport-export': {
-            description:  'RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.',
+            description:  `RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.`,
             required: false,
             type: 'object'
         },
         'orchestrators': {
-            description:  'If supplied, this network will only be applied to the orchestrators specified.',
+            description:  `If supplied, this network will only be applied to the orchestrators specified.`,
             required: false,
             type: 'object'
         },

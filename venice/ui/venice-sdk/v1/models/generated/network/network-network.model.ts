@@ -42,12 +42,12 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the network.',
+            description:  `Spec contains the configuration of the network.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the network.',
+            description:  `Status contains the current state of the network.`,
             required: false,
             type: 'object'
         },

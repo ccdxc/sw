@@ -59,76 +59,76 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     'time': Date = null;
     public static propInfo: { [prop in keyof ITelemetry_queryFwlog]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant',
+            description:  `Tenant`,
             required: false,
             type: 'string'
         },
         'source': {
-            description:  'Source IP,',
+            description:  `Source IP,`,
             required: false,
             type: 'string'
         },
         'destination': {
-            description:  'Destination IP',
+            description:  `Destination IP`,
             required: false,
             type: 'string'
         },
         'source-port': {
-            description:  'Source Port',
+            description:  `Source Port`,
             required: false,
             type: 'number'
         },
         'destination-port': {
-            description:  'Destination Port',
+            description:  `Destination Port`,
             required: false,
             type: 'number'
         },
         'protocol': {
-            description:  'Protocol,',
+            description:  `Protocol,`,
             required: false,
             type: 'string'
         },
         'action': {
             enum: Telemetry_queryFwlog_action_uihint,
             default: 'allow',
-            description:  'Action',
+            description:  `Action`,
             required: true,
             type: 'string'
         },
         'direction': {
             enum: Telemetry_queryFwlog_direction_uihint,
             default: 'from-host',
-            description:  'Flow Direction',
+            description:  `Flow Direction`,
             required: true,
             type: 'string'
         },
         'rule-id': {
-            description:  'Rule ID',
+            description:  `Rule ID`,
             required: false,
             type: 'string'
         },
         'session-id': {
-            description:  'Session ID',
+            description:  `Session ID`,
             required: false,
             type: 'string'
         },
         'session-state': {
-            description:  'Session state',
+            description:  `Session state`,
             required: false,
             type: 'string'
         },
         'policy-name': {
-            description:  'Policy name',
+            description:  `Policy name`,
             required: false,
             type: 'string'
         },
         'reporter-id': {
-            description:  'Reporter ID',
+            description:  `Reporter ID`,
             required: false,
             type: 'string'
         },
         'time': {
-            description:  'Time the log was created',
+            description:  `Time the log was created`,
             required: false,
             type: 'Date'
         },

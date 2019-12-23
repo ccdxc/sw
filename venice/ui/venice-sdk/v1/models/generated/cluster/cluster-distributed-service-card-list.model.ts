@@ -38,7 +38,7 @@ export class ClusterDistributedServiceCardList extends BaseModel implements IClu
             type: 'object'
         },
         'items': {
-            description:  'List of DistributedServiceCard objects',
+            description:  `List of DistributedServiceCard objects`,
             required: false,
             type: 'object'
         },

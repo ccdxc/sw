@@ -30,7 +30,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'local',
-            description:  'Order in which authenticators are applied. If an authenticator returns success, others are skipped',
+            description:  `Order in which authenticators are applied. If an authenticator returns success, others are skipped`,
             required: true,
             type: 'Array<string>'
         },

@@ -18,7 +18,7 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
     'email-list': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringEmailExport]: PropInfoItem } = {
         'email-list': {
-            description:  'TODO:  format, config, SMTP config',
+            description:  `TODO:  format, config, SMTP config`,
             required: false,
             type: 'Array<string>'
         },

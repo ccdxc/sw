@@ -42,39 +42,39 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         'severity': {
             enum: EventsEventAttributes_severity,
             default: 'info',
-            description:  'Severity represents the criticality level of an event',
+            description:  `Severity represents the criticality level of an event`,
             required: true,
             type: 'string'
         },
         'type': {
-            description:  'Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined',
+            description:  `Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined`,
             required: false,
             type: 'string'
         },
         'message': {
-            description:  'Message represents the human readable description of an event',
+            description:  `Message represents the human readable description of an event`,
             required: false,
             type: 'string'
         },
         'category': {
             enum: EventsEventAttributes_category,
             default: 'cluster',
-            description:  'Category represents the category of an event. e.g. Cluster/Network/Datapath',
+            description:  `Category represents the category of an event. e.g. Cluster/Network/Datapath`,
             required: true,
             type: 'string'
         },
         'object-ref': {
-            description:  'ObjectRef is the reference to the object associated with an event',
+            description:  `ObjectRef is the reference to the object associated with an event`,
             required: false,
             type: 'object'
         },
         'source': {
-            description:  'Source is the component and host/node which generated an event',
+            description:  `Source is the component and host/node which generated an event`,
             required: false,
             type: 'object'
         },
         'count': {
-            description:  'Number of occurrence of this event in the active interval',
+            description:  `Number of occurrence of this event in the active interval`,
             required: false,
             type: 'number'
         },

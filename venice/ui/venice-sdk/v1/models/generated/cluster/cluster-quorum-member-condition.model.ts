@@ -28,19 +28,19 @@ export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQ
         'type': {
             enum: ClusterQuorumMemberCondition_type_uihint,
             default: 'healthy',
-            description:  'Type indicates a certain node condition',
+            description:  `Type indicates a certain node condition`,
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterQuorumMemberCondition_status_uihint,
             default: 'unknown',
-            description:  'Condition Status',
+            description:  `Condition Status`,
             required: true,
             type: 'string'
         },
         'last-transition-time': {
-            description:  'The last time the condition transitioned',
+            description:  `The last time the condition transitioned`,
             required: false,
             type: 'Date'
         },

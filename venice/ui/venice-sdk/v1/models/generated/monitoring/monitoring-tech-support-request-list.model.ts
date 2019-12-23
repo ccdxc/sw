@@ -38,7 +38,7 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
             type: 'object'
         },
         'items': {
-            description:  'List of TechSupportRequest objects',
+            description:  `List of TechSupportRequest objects`,
             required: false,
             type: 'object'
         },

@@ -21,12 +21,12 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
     'code': string = null;
     public static propInfo: { [prop in keyof ISecurityIcmp]: PropInfoItem } = {
         'type': {
-            description:  'ICMP Type',
+            description:  `ICMP Type`,
             required: false,
             type: 'string'
         },
         'code': {
-            description:  'ICMP Code is sub-command for a given ICMP Type',
+            description:  `ICMP Code is sub-command for a given ICMP Type`,
             required: false,
             type: 'string'
         },

@@ -38,7 +38,7 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
             type: 'object'
         },
         'items': {
-            description:  'List of FlowExportPolicy objects',
+            description:  `List of FlowExportPolicy objects`,
             required: false,
             type: 'object'
         },

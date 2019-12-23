@@ -42,12 +42,12 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the Workload.',
+            description:  `Spec contains the configuration of the Workload.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Workload.',
+            description:  `Status contains the current state of the Workload.`,
             required: false,
             type: 'object'
         },

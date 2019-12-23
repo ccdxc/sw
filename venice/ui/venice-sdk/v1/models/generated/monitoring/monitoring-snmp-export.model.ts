@@ -20,7 +20,7 @@ SNMP trap destination(s) */
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
     public static propInfo: { [prop in keyof IMonitoringSNMPExport]: PropInfoItem } = {
         'snmp-trap-servers': {
-            description:  'TODO:  format, config SNMP trap destination(s)',
+            description:  `TODO:  format, config SNMP trap destination(s)`,
             required: false,
             type: 'object'
         },

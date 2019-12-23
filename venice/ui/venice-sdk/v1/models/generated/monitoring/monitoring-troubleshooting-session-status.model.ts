@@ -28,7 +28,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
             type: 'string'
         },
         'troubleshooting-results': {
-            description:  'Report is generated each time troubleshooting session is activated i.e time-window',
+            description:  `Report is generated each time troubleshooting session is activated i.e time-window`,
             required: false,
             type: 'object'
         },

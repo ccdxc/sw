@@ -34,22 +34,22 @@ syslog specific configuration */
         'format': {
             enum: MonitoringEventPolicySpec_format_uihint,
             default: 'syslog-bsd',
-            description:  'Event export format, SYSLOG_BSD default',
+            description:  `Event export format, SYSLOG_BSD default`,
             required: true,
             type: 'string'
         },
         'selector': {
-            description:  'Export events matched by the selector',
+            description:  `Export events matched by the selector`,
             required: false,
             type: 'object'
         },
         'targets': {
-            description:  'Export target ip/port/protocol',
+            description:  `Export target ip/port/protocol`,
             required: false,
             type: 'object'
         },
         'config': {
-            description:  'Once we support other formats, it should be one of the supported configs syslog specific configuration',
+            description:  `Once we support other formats, it should be one of the supported configs syslog specific configuration`,
             required: false,
             type: 'object'
         },

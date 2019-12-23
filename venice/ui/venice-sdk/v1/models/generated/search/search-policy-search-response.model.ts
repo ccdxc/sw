@@ -24,12 +24,12 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'match',
-            description:  'Status of firewall policy search',
+            description:  `Status of firewall policy search`,
             required: true,
             type: 'string'
         },
         'results': {
-            description:  'Result is Map of &lt;NetworkSecurityPolicy object name, PolicyMatch Entry&gt;.',
+            description:  `Result is Map of <NetworkSecurityPolicy object name, PolicyMatch Entry>.`,
             required: false,
             type: 'object'
         },

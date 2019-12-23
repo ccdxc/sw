@@ -43,46 +43,46 @@ means we use untagged-vlan for doing inband managementvalue should be between 0 
     'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardSpec]: PropInfoItem } = {
         'admit': {
-            description:  'Admit allows a DistributedServiceCard to join the cluster',
+            description:  `Admit allows a DistributedServiceCard to join the cluster`,
             required: false,
             type: 'boolean'
         },
         'id': {
-            description:  'ID is used as a user friendly identifier in logs/events',
+            description:  `ID is used as a user friendly identifier in logs/events`,
             required: false,
             type: 'string'
         },
         'ip-config': {
-            description:  'IPConfig defines the static IP configuration. If not specified, DHCP will be attempted',
+            description:  `IPConfig defines the static IP configuration. If not specified, DHCP will be attempted`,
             required: false,
             type: 'object'
         },
         'mgmt-mode': {
             enum: ClusterDistributedServiceCardSpec_mgmt_mode_uihint,
             default: 'host',
-            description:  'MgmtMode defines the management mode of the DistributedServiceCard',
+            description:  `MgmtMode defines the management mode of the DistributedServiceCard`,
             required: true,
             type: 'string'
         },
         'network-mode': {
             enum: ClusterDistributedServiceCardSpec_network_mode_uihint,
             default: 'oob',
-            description:  'MgmtMode defines the management mode of the DistributedServiceCard',
+            description:  `MgmtMode defines the management mode of the DistributedServiceCard`,
             required: true,
             type: 'string'
         },
         'mgmt-vlan': {
-            description:  'MgmtVlan defines the vlan to be used in network managed mode. The default of 0 means we use untagged-vlan for doing inband managementvalue should be between 0 and 4095',
+            description:  `MgmtVlan defines the vlan to be used in network managed mode. The default of 0 means we use untagged-vlan for doing inband managementvalue should be between 0 and 4095`,
             required: true,
             type: 'number'
         },
         'controllers': {
-            description:  'Controllers contains the list of remote controllers IP addresses or hostnames',
+            description:  `Controllers contains the list of remote controllers IP addresses or hostnames`,
             required: false,
             type: 'Array<string>'
         },
         'routing-config': {
-            description:  'RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.',
+            description:  `RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.`,
             required: false,
             type: 'string'
         },

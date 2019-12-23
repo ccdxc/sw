@@ -38,7 +38,7 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
             type: 'object'
         },
         'items': {
-            description:  'List of TroubleshootingSession objects',
+            description:  `List of TroubleshootingSession objects`,
             required: false,
             type: 'object'
         },

@@ -27,7 +27,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
             type: 'string'
         },
         'password': {
-            description:  'Password contains the authentication password.',
+            description:  `Password contains the authentication password.`,
             required: false,
             type: 'string'
         },

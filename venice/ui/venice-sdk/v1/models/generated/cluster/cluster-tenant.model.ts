@@ -42,12 +42,12 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the tenant.',
+            description:  `Spec contains the configuration of the tenant.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the tenant.',
+            description:  `Status contains the current state of the tenant.`,
             required: false,
             type: 'object'
         },

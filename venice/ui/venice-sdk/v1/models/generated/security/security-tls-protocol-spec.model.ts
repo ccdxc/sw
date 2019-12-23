@@ -22,12 +22,12 @@ default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 */
     'cipher-suite': string = null;
     public static propInfo: { [prop in keyof ISecurityTLSProtocolSpec]: PropInfoItem } = {
         'version': {
-            description:  'TLS version: only supported value at present is 1.2',
+            description:  `TLS version: only supported value at present is 1.2`,
             required: false,
             type: 'string'
         },
         'cipher-suite': {
-            description:  'The name of the cipher suite in IANA format default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384',
+            description:  `The name of the cipher suite in IANA format default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384`,
             required: false,
             type: 'string'
         },

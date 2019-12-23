@@ -38,7 +38,7 @@ export class ClusterVersionList extends BaseModel implements IClusterVersionList
             type: 'object'
         },
         'items': {
-            description:  'List of Version objects',
+            description:  `List of Version objects`,
             required: false,
             type: 'object'
         },

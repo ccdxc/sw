@@ -22,12 +22,12 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     public static propInfo: { [prop in keyof ITelemetry_queryPaginationSpec]: PropInfoItem } = {
         'offset': {
             default: parseInt('0'),
-            description:  'Offset specifies the starting point when using Countvalue should be at least 0',
+            description:  `Offset specifies the starting point when using Countvalue should be at least 0`,
             required: true,
             type: 'number'
         },
         'count': {
-            description:  'Count specifies the number of points to includevalue should be at least 1',
+            description:  `Count specifies the number of points to includevalue should be at least 1`,
             required: true,
             type: 'number'
         },

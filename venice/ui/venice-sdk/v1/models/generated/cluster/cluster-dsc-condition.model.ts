@@ -34,29 +34,29 @@ export class ClusterDSCCondition extends BaseModel implements IClusterDSCConditi
         'type': {
             enum: ClusterDSCCondition_type_uihint,
             default: 'healthy',
-            description:  'Type indicates a certain NIC condition',
+            description:  `Type indicates a certain NIC condition`,
             required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterDSCCondition_status_uihint,
             default: 'unknown',
-            description:  'Condition Status',
+            description:  `Condition Status`,
             required: true,
             type: 'string'
         },
         'last-transition-time': {
-            description:  'The last time the condition transitioned',
+            description:  `The last time the condition transitioned`,
             required: false,
             type: 'string'
         },
         'reason': {
-            description:  'The reason for the condition&#x27;s last transition',
+            description:  `The reason for the condition's last transition`,
             required: false,
             type: 'string'
         },
         'message': {
-            description:  'A detailed message indicating details about the transition.',
+            description:  `A detailed message indicating details about the transition.`,
             required: false,
             type: 'string'
         },

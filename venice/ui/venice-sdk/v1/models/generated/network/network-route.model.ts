@@ -24,19 +24,19 @@ export class NetworkRoute extends BaseModel implements INetworkRoute {
     'target-virtual-router': string = null;
     public static propInfo: { [prop in keyof INetworkRoute]: PropInfoItem } = {
         'prefix': {
-            description:  'Route Prefix for the route.',
+            description:  `Route Prefix for the route.`,
             hint:  '10.1.1.1/24, ff02::5/32 ',
             required: true,
             type: 'string'
         },
         'next-hop': {
-            description:  'NextHop for the route.',
+            description:  `NextHop for the route.`,
             hint:  '10.1.1.1/24, ff02::5/32 ',
             required: true,
             type: 'string'
         },
         'target-virtual-router': {
-            description:  'Target VirtualRouter instance',
+            description:  `Target VirtualRouter instance`,
             required: false,
             type: 'string'
         },

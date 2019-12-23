@@ -32,27 +32,27 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'quorum-status': ClusterQuorumStatus = null;
     public static propInfo: { [prop in keyof IClusterClusterStatus]: PropInfoItem } = {
         'leader': {
-            description:  'Leader contains the node name of the cluster leader.',
+            description:  `Leader contains the node name of the cluster leader.`,
             required: false,
             type: 'string'
         },
         'last-leader-transition-time': {
-            description:  'LastLeaderTransitionTime is when the leadership changed last time',
+            description:  `LastLeaderTransitionTime is when the leadership changed last time`,
             required: false,
             type: 'Date'
         },
         'auth-bootstrapped': {
-            description:  'AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth',
+            description:  `AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth`,
             required: false,
             type: 'boolean'
         },
         'conditions': {
-            description:  'List of current cluster conditions',
+            description:  `List of current cluster conditions`,
             required: false,
             type: 'object'
         },
         'quorum-status': {
-            description:  'Quorum represents the current state of the quorum, including registered members and health',
+            description:  `Quorum represents the current state of the quorum, including registered members and health`,
             required: false,
             type: 'object'
         },

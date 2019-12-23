@@ -38,7 +38,7 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
             type: 'object'
         },
         'items': {
-            description:  'List of Tenant objects',
+            description:  `List of Tenant objects`,
             required: false,
             type: 'object'
         },

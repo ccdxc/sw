@@ -38,7 +38,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
             type: 'object'
         },
         'items': {
-            description:  'List of FwlogPolicy objects',
+            description:  `List of FwlogPolicy objects`,
             required: false,
             type: 'object'
         },

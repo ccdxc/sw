@@ -21,12 +21,12 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     'endpoint': string = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadIntfStatus]: PropInfoItem } = {
         'ip-addresses': {
-            description:  'List of all IP addresses configured and discovered on a Workload Interface',
+            description:  `List of all IP addresses configured and discovered on a Workload Interface`,
             required: false,
             type: 'Array<string>'
         },
         'endpoint': {
-            description:  'Endpoint associated with this Workload interface',
+            description:  `Endpoint associated with this Workload interface`,
             required: false,
             type: 'string'
         },

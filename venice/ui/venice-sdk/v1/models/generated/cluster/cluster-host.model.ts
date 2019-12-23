@@ -42,12 +42,12 @@ export class ClusterHost extends BaseModel implements IClusterHost {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the host.',
+            description:  `Spec contains the configuration of the host.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the host.',
+            description:  `Status contains the current state of the host.`,
             required: false,
             type: 'object'
         },

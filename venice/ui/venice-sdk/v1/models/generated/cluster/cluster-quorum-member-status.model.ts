@@ -31,27 +31,27 @@ export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuor
     'conditions': Array<ClusterQuorumMemberCondition> = null;
     public static propInfo: { [prop in keyof IClusterQuorumMemberStatus]: PropInfoItem } = {
         'id': {
-            description:  'A unique identifier for this quorum member',
+            description:  `A unique identifier for this quorum member`,
             required: false,
             type: 'string'
         },
         'name': {
-            description:  'The name of the quorum member, matching the node name',
+            description:  `The name of the quorum member, matching the node name`,
             required: false,
             type: 'string'
         },
         'status': {
-            description:  '&quot;Started&quot; if the member succesfully joined the quorum, &quot;Unstarted&quot; otherwise',
+            description:  `"Started" if the member succesfully joined the quorum, "Unstarted" otherwise`,
             required: false,
             type: 'string'
         },
         'term': {
-            description:  'The last election term this member has participated in',
+            description:  `The last election term this member has participated in`,
             required: false,
             type: 'string'
         },
         'conditions': {
-            description:  'Conditions reported by the quorum member',
+            description:  `Conditions reported by the quorum member`,
             required: false,
             type: 'object'
         },

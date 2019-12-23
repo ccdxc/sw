@@ -38,7 +38,7 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
             type: 'object'
         },
         'items': {
-            description:  'List of Host objects',
+            description:  `List of Host objects`,
             required: false,
             type: 'object'
         },

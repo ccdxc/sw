@@ -38,7 +38,7 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
             type: 'object'
         },
         'items': {
-            description:  'List of Endpoint objects',
+            description:  `List of Endpoint objects`,
             required: false,
             type: 'object'
         },

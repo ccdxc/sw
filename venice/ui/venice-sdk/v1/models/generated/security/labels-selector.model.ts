@@ -19,7 +19,7 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     'requirements': Array<LabelsRequirement> = null;
     public static propInfo: { [prop in keyof ILabelsSelector]: PropInfoItem } = {
         'requirements': {
-            description:  'Requirements are ANDed.',
+            description:  `Requirements are ANDed.`,
             required: false,
             type: 'object'
         },

@@ -24,12 +24,12 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
         'type': {
             enum: ClusterMemInfo_type,
             default: 'unknown',
-            description:  'Type',
+            description:  `Type`,
             required: true,
             type: 'string'
         },
         'size': {
-            description:  'Memory size in bytes, eg: 274760318976',
+            description:  `Memory size in bytes, eg: 274760318976`,
             required: false,
             type: 'string'
         },

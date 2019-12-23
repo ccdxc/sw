@@ -23,12 +23,12 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
     'evpn-config': NetworkEVPNConfig = null;
     public static propInfo: { [prop in keyof INetworkRoutingConfigSpec]: PropInfoItem } = {
         'bgp-config': {
-            description:  'Configuration for the BGP instance.',
+            description:  `Configuration for the BGP instance.`,
             required: false,
             type: 'object'
         },
         'evpn-config': {
-            description:  'EVPN related configuration.',
+            description:  `EVPN related configuration.`,
             required: false,
             type: 'object'
         },

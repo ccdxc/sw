@@ -40,39 +40,39 @@ cli-tags: id=to-ip */
     'to-security-groups': Array<string> = null;
     public static propInfo: { [prop in keyof ISecuritySGRule]: PropInfoItem } = {
         'apps': {
-            description:  'List of apps objects to which the rule applies to',
+            description:  `List of apps objects to which the rule applies to`,
             required: false,
             type: 'Array<string>'
         },
         'proto-ports': {
-            description:  'List of (protocol, ports) pairs to which the rule applies to, in addition to apps',
+            description:  `List of (protocol, ports) pairs to which the rule applies to, in addition to apps`,
             required: false,
             type: 'object'
         },
         'action': {
             enum: SecuritySGRule_action_uihint,
             default: 'permit',
-            description:  'SGRule action, either PERMIT, DENY or REJECT',
+            description:  `SGRule action, either PERMIT, DENY or REJECT`,
             required: true,
             type: 'string'
         },
         'from-ip-addresses': {
-            description:  'Inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id&#x3D;from-ip',
+            description:  `Inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id=from-ip`,
             required: false,
             type: 'Array<string>'
         },
         'to-ip-addresses': {
-            description:  'Outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id&#x3D;to-ip',
+            description:  `Outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id=to-ip`,
             required: false,
             type: 'Array<string>'
         },
         'from-security-groups': {
-            description:  'Inbound rule from a given security group',
+            description:  `Inbound rule from a given security group`,
             required: false,
             type: 'Array<string>'
         },
         'to-security-groups': {
-            description:  'Outbound rule from a given security group',
+            description:  `Outbound rule from a given security group`,
             required: false,
             type: 'Array<string>'
         },

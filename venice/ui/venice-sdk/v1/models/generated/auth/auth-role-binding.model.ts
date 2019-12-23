@@ -42,12 +42,12 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the role binding.',
+            description:  `Spec contains the configuration of the role binding.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the role binding.',
+            description:  `Status contains the current state of the role binding.`,
             required: false,
             type: 'object'
         },

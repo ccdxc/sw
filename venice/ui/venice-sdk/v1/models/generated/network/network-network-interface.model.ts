@@ -39,17 +39,17 @@ export class NetworkNetworkInterface extends BaseModel implements INetworkNetwor
             type: 'string'
         },
         'meta': {
-            description:  'Object name is Serial-Number of the SmartNIC',
+            description:  `Object name is Serial-Number of the SmartNIC`,
             required: false,
             type: 'object'
         },
         'spec': {
-            description:  'NetworkInterfaceSpec contains the configuration of the network adapter.',
+            description:  `NetworkInterfaceSpec contains the configuration of the network adapter.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'NetworkInterfaceStatus contains the current state of the network adapter.',
+            description:  `NetworkInterfaceStatus contains the current state of the network adapter.`,
             required: false,
             type: 'object'
         },

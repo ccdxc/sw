@@ -21,12 +21,12 @@ export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectSt
     'digest': string = null;
     public static propInfo: { [prop in keyof IObjstoreObjectStatus]: PropInfoItem } = {
         'size': {
-            description:  'Size is the total size of the object',
+            description:  `Size is the total size of the object`,
             required: false,
             type: 'string'
         },
         'digest': {
-            description:  'Digest is a hash digest of the object content.',
+            description:  `Digest is a hash digest of the object content.`,
             required: false,
             type: 'string'
         },

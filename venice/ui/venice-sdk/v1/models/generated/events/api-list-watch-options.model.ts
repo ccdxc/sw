@@ -58,17 +58,17 @@ results returned would be in the range [from ... from+max-results-1] */
     'sort-order': ApiListWatchOptions_sort_order = null;
     public static propInfo: { [prop in keyof IApiListWatchOptions]: PropInfoItem } = {
         'name': {
-            description:  'Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64`,
             required: false,
             type: 'string'
         },
         'tenant': {
-            description:  'Must be alpha-numericslength of string should be between 1 and 48',
+            description:  `Must be alpha-numericslength of string should be between 1 and 48`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64`,
             required: false,
             type: 'string'
         },
@@ -101,34 +101,34 @@ results returned would be in the range [from ... from+max-results-1] */
             type: 'string'
         },
         'label-selector': {
-            description:  'LabelSelector to select on labels in list or watch results.',
+            description:  `LabelSelector to select on labels in list or watch results.`,
             required: false,
             type: 'string'
         },
         'field-selector': {
-            description:  'FieldSelector to select on field values in list or watch results',
+            description:  `FieldSelector to select on field values in list or watch results`,
             required: false,
             type: 'string'
         },
         'field-change-selector': {
-            description:  'FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.',
+            description:  `FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.`,
             required: false,
             type: 'Array<string>'
         },
         'from': {
-            description:  'From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]',
+            description:  `From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]`,
             required: false,
             type: 'number'
         },
         'max-results': {
-            description:  'Max. number of events to be fetched for the request.',
+            description:  `Max. number of events to be fetched for the request.`,
             required: false,
             type: 'number'
         },
         'sort-order': {
             enum: ApiListWatchOptions_sort_order_uihint,
             default: 'none',
-            description:  'Order to sort List results in.',
+            description:  `Order to sort List results in.`,
             required: true,
             type: 'string'
         },

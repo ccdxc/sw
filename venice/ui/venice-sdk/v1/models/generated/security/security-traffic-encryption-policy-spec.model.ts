@@ -29,22 +29,22 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     'key-rotation-interval-secs': number = null;
     public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicySpec]: PropInfoItem } = {
         'mode': {
-            description:  'Possible values: TLS, IPsec',
+            description:  `Possible values: TLS, IPsec`,
             required: false,
             type: 'string'
         },
         'tls': {
-            description:  'TLS Parameters for workload-to-workload connections',
+            description:  `TLS Parameters for workload-to-workload connections`,
             required: false,
             type: 'object'
         },
         'ipsec': {
-            description:  'IPsec Parameters for node-to-node connections',
+            description:  `IPsec Parameters for node-to-node connections`,
             required: false,
             type: 'object'
         },
         'key-rotation-interval-secs': {
-            description:  'How often the keys should be rotated, in seconds',
+            description:  `How often the keys should be rotated, in seconds`,
             required: false,
             type: 'number'
         },

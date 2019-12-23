@@ -47,42 +47,42 @@ All these requirements must be cleared to auto-resolve an alert. */
         'severity': {
             enum: MonitoringAlertStatus_severity,
             default: 'info',
-            description:  'Severity of an alert',
+            description:  `Severity of an alert`,
             required: true,
             type: 'string'
         },
         'source': {
-            description:  'Alert source or origin',
+            description:  `Alert source or origin`,
             required: false,
             type: 'object'
         },
         'event-uri': {
-            description:  'Event that triggered the alert',
+            description:  `Event that triggered the alert`,
             required: false,
             type: 'string'
         },
         'object-ref': {
-            description:  'Affected object',
+            description:  `Affected object`,
             required: false,
             type: 'object'
         },
         'message': {
-            description:  'Message from the alert rule that triggered the alert',
+            description:  `Message from the alert rule that triggered the alert`,
             required: false,
             type: 'string'
         },
         'reason': {
-            description:  'Captures all the requirements from the alert policy rule with matched value. All these requirements must be cleared to auto-resolve an alert.',
+            description:  `Captures all the requirements from the alert policy rule with matched value. All these requirements must be cleared to auto-resolve an alert.`,
             required: false,
             type: 'object'
         },
         'acknowledged': {
-            description:  'Username and time at which the alert was acknowledged',
+            description:  `Username and time at which the alert was acknowledged`,
             required: false,
             type: 'object'
         },
         'resolved': {
-            description:  'Username and time at which the alert was resolved',
+            description:  `Username and time at which the alert was resolved`,
             required: false,
             type: 'object'
         },

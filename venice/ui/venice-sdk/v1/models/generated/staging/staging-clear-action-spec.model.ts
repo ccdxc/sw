@@ -19,7 +19,7 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
     'items': Array<StagingItemId> = null;
     public static propInfo: { [prop in keyof IStagingClearActionSpec]: PropInfoItem } = {
         'items': {
-            description:  'Empty Items indicates everyting in the buffer',
+            description:  `Empty Items indicates everyting in the buffer`,
             required: false,
             type: 'object'
         },

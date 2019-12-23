@@ -65,77 +65,77 @@ JWS compact serialization format in this map. Data in this map will not be signe
         'stage': {
             enum: AuditEventAttributes_stage,
             default: 'requestauthorization',
-            description:  'Request handling stage at which audit log was generated',
+            description:  `Request handling stage at which audit log was generated`,
             required: true,
             type: 'string'
         },
         'level': {
             enum: AuditEventAttributes_level,
             default: 'basic',
-            description:  'Level to control amount of audit information logged',
+            description:  `Level to control amount of audit information logged`,
             required: true,
             type: 'string'
         },
         'user': {
-            description:  'User who initiated an action on the referred object (resource) User role and group is part of user status. User object in login response will be logged in ResponseObject field.',
+            description:  `User who initiated an action on the referred object (resource) User role and group is part of user status. User object in login response will be logged in ResponseObject field.`,
             required: false,
             type: 'object'
         },
         'client-ips': {
-            description:  'IP addresses of client and intermediate proxies from where API request was made',
+            description:  `IP addresses of client and intermediate proxies from where API request was made`,
             required: false,
             type: 'Array<string>'
         },
         'resource': {
-            description:  'ObjectRef is the reference to the object on which action was performed',
+            description:  `ObjectRef is the reference to the object on which action was performed`,
             required: false,
             type: 'object'
         },
         'action': {
-            description:  'Action that was requested/performed on the referred object. For non API server resources, it is the http method',
+            description:  `Action that was requested/performed on the referred object. For non API server resources, it is the http method`,
             required: false,
             type: 'string'
         },
         'outcome': {
             enum: AuditEventAttributes_outcome,
             default: 'success',
-            description:  'Outcome represents the outcome of action on resource',
+            description:  `Outcome represents the outcome of action on resource`,
             required: true,
             type: 'string'
         },
         'request-uri': {
-            description:  'RequestURI is the request URI as sent by the clientshould be a valid URI',
+            description:  `RequestURI is the request URI as sent by the clientshould be a valid URI`,
             hint:  'https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x',
             required: true,
             type: 'string'
         },
         'request-object': {
-            description:  'Object from the request in JSON format',
+            description:  `Object from the request in JSON format`,
             required: false,
             type: 'string'
         },
         'response-object': {
-            description:  'Object from the response in JSON format to be sent to the client',
+            description:  `Object from the response in JSON format to be sent to the client`,
             required: false,
             type: 'string'
         },
         'gateway-node': {
-            description:  'Name of the venice node where action was observed',
+            description:  `Name of the venice node where action was observed`,
             required: false,
             type: 'string'
         },
         'gateway-ip': {
-            description:  'IP address of API Gateway where action was observed',
+            description:  `IP address of API Gateway where action was observed`,
             required: false,
             type: 'string'
         },
         'service-name': {
-            description:  'Name of service that handled the request and performed the requested operation for ex: search, events etc',
+            description:  `Name of service that handled the request and performed the requested operation for ex: search, events etc`,
             required: false,
             type: 'string'
         },
         'data': {
-            description:  'Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed.',
+            description:  `Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed.`,
             required: false,
             type: 'object'
         },

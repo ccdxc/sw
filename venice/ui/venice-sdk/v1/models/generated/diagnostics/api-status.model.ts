@@ -41,22 +41,22 @@ export class ApiStatus extends BaseModel implements IApiStatus {
             type: 'string'
         },
         'result': {
-            description:  'Result contains the status of the operation, success or failure.',
+            description:  `Result contains the status of the operation, success or failure.`,
             required: false,
             type: 'object'
         },
         'message': {
-            description:  'Message contains human readable form of the error.',
+            description:  `Message contains human readable form of the error.`,
             required: false,
             type: 'Array<string>'
         },
         'code': {
-            description:  'Code is the HTTP status code.',
+            description:  `Code is the HTTP status code.`,
             required: false,
             type: 'number'
         },
         'object-ref': {
-            description:  'Reference to the object (optional) for which this status is being sent.',
+            description:  `Reference to the object (optional) for which this status is being sent.`,
             required: false,
             type: 'object'
         },

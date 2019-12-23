@@ -38,7 +38,7 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
             type: 'object'
         },
         'items': {
-            description:  'List of RoleBinding objects',
+            description:  `List of RoleBinding objects`,
             required: false,
             type: 'object'
         },

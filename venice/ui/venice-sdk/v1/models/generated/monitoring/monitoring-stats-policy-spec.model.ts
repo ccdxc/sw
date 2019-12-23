@@ -29,14 +29,14 @@ Default is 168hshould be a valid time duration
     public static propInfo: { [prop in keyof IMonitoringStatsPolicySpec]: PropInfoItem } = {
         'retention-time': {
             default: '48h',
-            description:  'RetentionTime defines for how long to keep the stats data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. &#x27;24hrs&#x27;, &#x27;72hours&#x27;, &#x27;4days&#x27;, &#x27;6d&#x27;, &#x27;2months&#x27;, &#x27;4mo&#x27;, &#x27;1yr&#x27; Default is 48h.',
+            description:  `RetentionTime defines for how long to keep the stats data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr' Default is 48h.`,
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'downsample-retention-time': {
             default: '168h',
-            description:  'DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. &#x27;24hrs&#x27;, &#x27;72hours&#x27;, &#x27;4days&#x27;, &#x27;6d&#x27;, &#x27;2months&#x27;, &#x27;4mo&#x27;, &#x27;1yr&#x27; Default is 168hshould be a valid time duration ',
+            description:  `DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr' Default is 168hshould be a valid time duration `,
             hint:  '2h',
             required: true,
             type: 'string'

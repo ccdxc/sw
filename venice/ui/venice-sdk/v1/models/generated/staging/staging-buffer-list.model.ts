@@ -38,7 +38,7 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
             type: 'object'
         },
         'items': {
-            description:  'List of Buffer objects',
+            description:  `List of Buffer objects`,
             required: false,
             type: 'object'
         },

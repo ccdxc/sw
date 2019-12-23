@@ -44,7 +44,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
             type: 'object'
         },
         'uri': {
-            description:  'Length of string should be between 2 and 512',
+            description:  `Length of string should be between 2 and 512`,
             required: false,
             type: 'string'
         },

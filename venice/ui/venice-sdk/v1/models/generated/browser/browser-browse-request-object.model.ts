@@ -29,25 +29,25 @@ export class BrowserBrowseRequestObject extends BaseModel implements IBrowserBro
     'count-only': boolean = null;
     public static propInfo: { [prop in keyof IBrowserBrowseRequestObject]: PropInfoItem } = {
         'uri': {
-            description:  'URI is the root node from where to querylength of string should be between 2 and 512',
+            description:  `URI is the root node from where to querylength of string should be between 2 and 512`,
             required: true,
             type: 'string'
         },
         'query-type': {
             enum: BrowserBrowseRequestObject_query_type,
             default: 'dependencies',
-            description:  'QueryType is the direction of the query',
+            description:  `QueryType is the direction of the query`,
             required: true,
             type: 'string'
         },
         'max-depth': {
             default: parseInt('1'),
-            description:  'Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations  0 means to maximum depth.',
+            description:  `Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations  0 means to maximum depth.`,
             required: false,
             type: 'number'
         },
         'count-only': {
-            description:  'When CountOnly is set the response only contains counts and not the actual objects.',
+            description:  `When CountOnly is set the response only contains counts and not the actual objects.`,
             required: false,
             type: 'boolean'
         },

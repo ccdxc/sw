@@ -21,12 +21,12 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
     'homing-host-addr': string = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointSpec]: PropInfoItem } = {
         'node-uuid': {
-            description:  'The DSC Name or MAC where the endpoint should reside',
+            description:  `The DSC Name or MAC where the endpoint should reside`,
             required: false,
             type: 'string'
         },
         'homing-host-addr': {
-            description:  'IP of the DSC where this endpoint exists',
+            description:  `IP of the DSC where this endpoint exists`,
             required: false,
             type: 'string'
         },

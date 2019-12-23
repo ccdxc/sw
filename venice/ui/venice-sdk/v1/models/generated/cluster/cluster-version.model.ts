@@ -42,12 +42,12 @@ export class ClusterVersion extends BaseModel implements IClusterVersion {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the cluster.',
+            description:  `Spec contains the configuration of the cluster.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Version.',
+            description:  `Status contains the current state of the Version.`,
             required: false,
             type: 'object'
         },

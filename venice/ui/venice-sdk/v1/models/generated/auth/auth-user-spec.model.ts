@@ -30,12 +30,12 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
             type: 'string'
         },
         'email': {
-            description:  'Must be a valid email',
+            description:  `Must be a valid email`,
             required: false,
             type: 'string'
         },
         'password': {
-            description:  'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from &quot;~!@#$%^&amp;*()_+&#x60;-&#x3D;{}|[]\\:\&quot;&lt;&gt;?,./&quot;',
+            description:  `Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+'-={}|[]\\:\"<>?,./"`,
             required: false,
             type: 'string'
         },

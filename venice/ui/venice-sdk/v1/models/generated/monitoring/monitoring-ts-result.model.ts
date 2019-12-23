@@ -21,7 +21,7 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     'report-url': string = null;
     public static propInfo: { [prop in keyof IMonitoringTsResult]: PropInfoItem } = {
         'time-window': {
-            description:  'Time window for which the information was collected',
+            description:  `Time window for which the information was collected`,
             required: false,
             type: 'object'
         },

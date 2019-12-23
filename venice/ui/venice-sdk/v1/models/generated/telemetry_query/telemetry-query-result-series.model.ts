@@ -28,22 +28,22 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
     'values': Array<ApiInterfaceSlice> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryResultSeries]: PropInfoItem } = {
         'name': {
-            description:  'Name of the series',
+            description:  `Name of the series`,
             required: false,
             type: 'string'
         },
         'tags': {
-            description:  'Tags are the TSDB tags in the query response',
+            description:  `Tags are the TSDB tags in the query response`,
             required: false,
             type: 'object'
         },
         'columns': {
-            description:  'Columns list all available fields in tsdb',
+            description:  `Columns list all available fields in tsdb`,
             required: false,
             type: 'Array<string>'
         },
         'values': {
-            description:  'Values contain field values received frpm tsdb, it is in the form of [][]interface{}',
+            description:  `Values contain field values received frpm tsdb, it is in the form of [][]interface{}`,
             required: false,
             type: 'object'
         },

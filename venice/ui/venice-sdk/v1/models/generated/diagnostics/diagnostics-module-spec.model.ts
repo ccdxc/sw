@@ -27,17 +27,17 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
         'log-level': {
             enum: DiagnosticsModuleSpec_log_level,
             default: 'info',
-            description:  'LogLevel is the logging level of this module. Default is Info.',
+            description:  `LogLevel is the logging level of this module. Default is Info.`,
             required: true,
             type: 'string'
         },
         'enable-trace': {
-            description:  'EnableTrace enables traces for a module. Default is false.',
+            description:  `EnableTrace enables traces for a module. Default is false.`,
             required: false,
             type: 'boolean'
         },
         'args': {
-            description:  'Args are command line arguments passed to the module',
+            description:  `Args are command line arguments passed to the module`,
             required: false,
             type: 'Array<string>'
         },

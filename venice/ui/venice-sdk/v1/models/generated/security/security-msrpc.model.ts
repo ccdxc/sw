@@ -22,12 +22,12 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     'timeout': string = null;
     public static propInfo: { [prop in keyof ISecurityMsrpc]: PropInfoItem } = {
         'program-uuid': {
-            description:  'MSRPC Program identifier',
+            description:  `MSRPC Program identifier`,
             required: false,
             type: 'string'
         },
         'timeout': {
-            description:  'Timeout for this program idshould be a valid time duration ',
+            description:  `Timeout for this program idshould be a valid time duration `,
             hint:  '2h',
             required: true,
             type: 'string'

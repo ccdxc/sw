@@ -21,13 +21,13 @@ export class NetworkDHCPServer extends BaseModel implements INetworkDHCPServer {
     'virtual-router': string = null;
     public static propInfo: { [prop in keyof INetworkDHCPServer]: PropInfoItem } = {
         'ip-address': {
-            description:  'IP Address of the server.',
+            description:  `IP Address of the server.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'
         },
         'virtual-router': {
-            description:  'Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached.',
+            description:  `Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached.`,
             required: false,
             type: 'string'
         },

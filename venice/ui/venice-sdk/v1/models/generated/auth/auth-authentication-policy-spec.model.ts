@@ -29,13 +29,13 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". */
             type: 'object'
         },
         'secret': {
-            description:  'Secret used to sign JWT token',
+            description:  `Secret used to sign JWT token`,
             required: false,
             type: 'string'
         },
         'token-expiry': {
             default: '144h',
-            description:  'TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as &quot;300ms&quot; or &quot;2h45m&quot;. Valid time units are &quot;ns&quot;, &quot;us&quot; (or &quot;µs&quot;), &quot;ms&quot;, &quot;s&quot;, &quot;m&quot;, &quot;h&quot;.',
+            description:  `TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`,
             hint:  '2h',
             required: true,
             type: 'string'

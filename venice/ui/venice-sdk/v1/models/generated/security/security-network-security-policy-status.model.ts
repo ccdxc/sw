@@ -22,7 +22,7 @@ export class SecurityNetworkSecurityPolicyStatus extends BaseModel implements IS
     'rule-status': Array<SecuritySGRuleStatus> = null;
     public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicyStatus]: PropInfoItem } = {
         'propagation-status': {
-            description:  'The status of the configuration propagation to the Naples',
+            description:  `The status of the configuration propagation to the Naples`,
             required: false,
             type: 'object'
         },

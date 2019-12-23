@@ -38,7 +38,7 @@ export class ClusterConfigurationSnapshotList extends BaseModel implements IClus
             type: 'object'
         },
         'items': {
-            description:  'List of ConfigurationSnapshot objects',
+            description:  `List of ConfigurationSnapshot objects`,
             required: false,
             type: 'object'
         },

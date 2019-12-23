@@ -42,12 +42,12 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the Endpoint.',
+            description:  `Spec contains the configuration of the Endpoint.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Endpoint.',
+            description:  `Status contains the current state of the Endpoint.`,
             required: false,
             type: 'object'
         },

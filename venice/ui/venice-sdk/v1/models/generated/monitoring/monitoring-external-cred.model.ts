@@ -44,37 +44,37 @@ TBD: need to add (venice.secret) = "true" support for this */
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
             default: 'none',
-            description:  'AuthType is the authentication type used in this config',
+            description:  `AuthType is the authentication type used in this config`,
             required: true,
             type: 'string'
         },
         'username': {
-            description:  'UserName is the login id to be used towards the external entity',
+            description:  `UserName is the login id to be used towards the external entity`,
             required: false,
             type: 'string'
         },
         'password': {
-            description:  'Password is one time specified, not visibile on read operations Only valid when UserName is defined TBD: need to add (venice.secret) &#x3D; &quot;true&quot; support for this',
+            description:  `Password is one time specified, not visibile on read operations Only valid when UserName is defined TBD: need to add (venice.secret) = "true" support for this`,
             required: false,
             type: 'string'
         },
         'bearer-token': {
-            description:  'External entity supports bearer tokens for authentication and authorization Token refresh is not supported using OAuth2 TBD: need to add (venice.secret) &#x3D; &quot;true&quot; support for this',
+            description:  `External entity supports bearer tokens for authentication and authorization Token refresh is not supported using OAuth2 TBD: need to add (venice.secret) = "true" support for this`,
             required: false,
             type: 'string'
         },
         'cert-data': {
-            description:  'CertData holds PEM-encoded bytes (typically read from a client certificate file).',
+            description:  `CertData holds PEM-encoded bytes (typically read from a client certificate file).`,
             required: false,
             type: 'string'
         },
         'key-data': {
-            description:  'KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) &#x3D; &quot;true&quot; support for this',
+            description:  `KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = "true" support for this`,
             required: false,
             type: 'string'
         },
         'ca-data': {
-            description:  'CaData holds PEM-encoded bytes (typically read from a root certificates bundle).',
+            description:  `CaData holds PEM-encoded bytes (typically read from a root certificates bundle).`,
             required: false,
             type: 'string'
         },

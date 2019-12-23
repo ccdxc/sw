@@ -18,7 +18,7 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
     'destination': string = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorExportConfig]: PropInfoItem } = {
         'destination': {
-            description:  'IP address of the collector/entity to which the data is to be exportedshould be a valid v4 or v6 IP address',
+            description:  `IP address of the collector/entity to which the data is to be exportedshould be a valid v4 or v6 IP address`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'

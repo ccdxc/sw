@@ -22,12 +22,12 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     'alert-policy-id': string = null;
     public static propInfo: { [prop in keyof IMonitoringAlertReason]: PropInfoItem } = {
         'matched-requirements': {
-            description:  'List of requirements from the alert policy with it&#x27;s matched value',
+            description:  `List of requirements from the alert policy with it's matched value`,
             required: false,
             type: 'object'
         },
         'alert-policy-id': {
-            description:  'Alert Policy ID that matched',
+            description:  `Alert Policy ID that matched`,
             required: false,
             type: 'string'
         },

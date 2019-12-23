@@ -38,7 +38,7 @@ export class ClusterNodeList extends BaseModel implements IClusterNodeList {
             type: 'object'
         },
         'items': {
-            description:  'List of Node objects',
+            description:  `List of Node objects`,
             required: false,
             type: 'object'
         },

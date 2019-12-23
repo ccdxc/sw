@@ -38,7 +38,7 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
             type: 'object'
         },
         'items': {
-            description:  'List of Network objects',
+            description:  `List of Network objects`,
             required: false,
             type: 'object'
         },

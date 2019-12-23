@@ -36,20 +36,20 @@ The value is specified as a string format, '1m', '10m'should be a valid time dur
     'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop in keyof IMonitoringFlowExportPolicySpec]: PropInfoItem } = {
         'vrf-name': {
-            description:  'VrfName specifies the name of the VRF that the current flow export Policy belongs to',
+            description:  `VrfName specifies the name of the VRF that the current flow export Policy belongs to`,
             required: false,
             type: 'string'
         },
         'interval': {
             default: '10s',
-            description:  'Interval defines how often to push the records to an external collector The value is specified as a string format, &#x27;10s&#x27;, &#x27;20m&#x27;should be a valid time duration between 1s and 24h0m0s',
+            description:  `Interval defines how often to push the records to an external collector The value is specified as a string format, '10s', '20m'should be a valid time duration between 1s and 24h0m0s`,
             hint:  '2h',
             required: true,
             type: 'string'
         },
         'template-interval': {
             default: '5m',
-            description:  'TemplateInterval defines how often to send ipfix templates to an external collector The value is specified as a string format, &#x27;1m&#x27;, &#x27;10m&#x27;should be a valid time duration between 1m0s and 30m0s',
+            description:  `TemplateInterval defines how often to send ipfix templates to an external collector The value is specified as a string format, '1m', '10m'should be a valid time duration between 1m0s and 30m0s`,
             hint:  '2h',
             required: true,
             type: 'string'
@@ -65,7 +65,7 @@ The value is specified as a string format, '1m', '10m'should be a valid time dur
             type: 'object'
         },
         'exports': {
-            description:  'Export contains export parameters.',
+            description:  `Export contains export parameters.`,
             required: false,
             type: 'object'
         },

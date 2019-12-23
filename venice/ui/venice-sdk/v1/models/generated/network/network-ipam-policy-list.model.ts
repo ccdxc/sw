@@ -38,7 +38,7 @@ export class NetworkIPAMPolicyList extends BaseModel implements INetworkIPAMPoli
             type: 'object'
         },
         'items': {
-            description:  'List of IPAMPolicy objects',
+            description:  `List of IPAMPolicy objects`,
             required: false,
             type: 'object'
         },

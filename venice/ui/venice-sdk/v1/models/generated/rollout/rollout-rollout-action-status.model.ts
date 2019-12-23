@@ -36,22 +36,22 @@ export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRol
             type: 'string'
         },
         'completion-percent': {
-            description:  'Heuristic value of percentage completion of the rollout',
+            description:  `Heuristic value of percentage completion of the rollout`,
             required: false,
             type: 'number'
         },
         'start-time': {
-            description:  'Start time of Rollout',
+            description:  `Start time of Rollout`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  'End time of Rollout',
+            description:  `End time of Rollout`,
             required: false,
             type: 'Date'
         },
         'prev-version': {
-            description:  'Version of the cluster before the start of rollout',
+            description:  `Version of the cluster before the start of rollout`,
             required: false,
             type: 'string'
         },

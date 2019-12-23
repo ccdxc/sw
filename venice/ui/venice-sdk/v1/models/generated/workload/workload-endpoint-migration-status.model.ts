@@ -21,7 +21,7 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
         'status': {
             enum: WorkloadEndpointMigrationStatus_status_uihint,
             default: 'none',
-            description:  'Status of migration',
+            description:  `Status of migration`,
             required: true,
             type: 'string'
         },

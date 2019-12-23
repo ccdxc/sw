@@ -62,7 +62,7 @@ Empty will include all fields, must contain at least one non-tag fieldmust start
             type: 'string'
         },
         'name': {
-            description:  'Name is the name of the API object.',
+            description:  `Name is the name of the API object.`,
             required: false,
             type: 'string'
         },
@@ -71,47 +71,47 @@ Empty will include all fields, must contain at least one non-tag fieldmust start
             type: 'object'
         },
         'fields': {
-            description:  'Fields select the metric fields to be included in the result Empty will include all fields, must contain at least one non-tag fieldmust start and end with alpha numeric and can have alphanumeric, -, _, .',
+            description:  `Fields select the metric fields to be included in the result Empty will include all fields, must contain at least one non-tag fieldmust start and end with alpha numeric and can have alphanumeric, -, _, .`,
             required: false,
             type: 'Array<string>'
         },
         'function': {
             enum: Telemetry_queryMetricsQuerySpec_function,
             default: 'none',
-            description:  'Functions specify an operation function to be applied, example mean()/max()',
+            description:  `Functions specify an operation function to be applied, example mean()/max()`,
             required: true,
             type: 'string'
         },
         'start-time': {
-            description:  'StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z',
+            description:  `StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  'EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z',
+            description:  `EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z`,
             required: false,
             type: 'Date'
         },
         'group-by-time': {
-            description:  'GroupbyTime groups series based on the interval specifiedshould be a valid time duration ',
+            description:  `GroupbyTime groups series based on the interval specifiedshould be a valid time duration `,
             hint:  '2h',
             required: false,
             type: 'string'
         },
         'group-by-field': {
-            description:  'GroupbyField groups series based on the field specifiedmust start and end with alpha numeric and can have alphanumeric, -, _, .',
+            description:  `GroupbyField groups series based on the field specifiedmust start and end with alpha numeric and can have alphanumeric, -, _, .`,
             required: false,
             type: 'string'
         },
         'pagination': {
-            description:  'PaginationSpec specifies the number of series to include',
+            description:  `PaginationSpec specifies the number of series to include`,
             required: false,
             type: 'object'
         },
         'sort-order': {
             enum: Telemetry_queryMetricsQuerySpec_sort_order,
             default: 'ascending',
-            description:  'SortOrder specifies time ordering of results',
+            description:  `SortOrder specifies time ordering of results`,
             required: true,
             type: 'string'
         },

@@ -38,7 +38,7 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
             type: 'object'
         },
         'items': {
-            description:  'List of Workload objects',
+            description:  `List of Workload objects`,
             required: false,
             type: 'object'
         },

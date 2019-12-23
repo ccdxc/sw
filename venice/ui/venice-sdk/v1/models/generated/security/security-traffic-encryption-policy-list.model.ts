@@ -38,7 +38,7 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
             type: 'object'
         },
         'items': {
-            description:  'List of TrafficEncryptionPolicy objects',
+            description:  `List of TrafficEncryptionPolicy objects`,
             required: false,
             type: 'object'
         },

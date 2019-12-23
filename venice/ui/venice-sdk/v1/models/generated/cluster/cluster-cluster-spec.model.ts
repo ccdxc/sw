@@ -38,32 +38,32 @@ into the cluster. */
     'key': string = null;
     public static propInfo: { [prop in keyof IClusterClusterSpec]: PropInfoItem } = {
         'quorum-nodes': {
-            description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
+            description:  `QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.`,
             required: false,
             type: 'Array<string>'
         },
         'virtual-ip': {
-            description:  'VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.',
+            description:  `VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.`,
             required: false,
             type: 'string'
         },
         'ntp-servers': {
-            description:  'NTPServers contains the list of NTP servers for the cluster.',
+            description:  `NTPServers contains the list of NTP servers for the cluster.`,
             required: false,
             type: 'Array<string>'
         },
         'auto-admit-dscs': {
-            description:  'AutoAdmitDSCs when enabled auto-admits DSCs that are validated into Venice Cluster. When it is disabled, DSCs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
+            description:  `AutoAdmitDSCs when enabled auto-admits DSCs that are validated into Venice Cluster. When it is disabled, DSCs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.`,
             required: false,
             type: 'boolean'
         },
         'certs': {
-            description:  'Certs is the pem encoded certificate bundle used for API Gateway TLS',
+            description:  `Certs is the pem encoded certificate bundle used for API Gateway TLS`,
             required: false,
             type: 'string'
         },
         'key': {
-            description:  'Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA',
+            description:  `Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA`,
             required: false,
             type: 'string'
         },

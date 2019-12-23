@@ -38,7 +38,7 @@ export class SecurityFirewallProfileList extends BaseModel implements ISecurityF
             type: 'object'
         },
         'items': {
-            description:  'List of FirewallProfile objects',
+            description:  `List of FirewallProfile objects`,
             required: false,
             type: 'object'
         },

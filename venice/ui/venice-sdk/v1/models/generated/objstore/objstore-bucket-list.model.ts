@@ -38,7 +38,7 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
             type: 'object'
         },
         'items': {
-            description:  'List of Bucket objects',
+            description:  `List of Bucket objects`,
             required: false,
             type: 'object'
         },

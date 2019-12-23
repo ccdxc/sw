@@ -38,7 +38,7 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
             type: 'object'
         },
         'items': {
-            description:  'List of Rollout objects',
+            description:  `List of Rollout objects`,
             required: false,
             type: 'object'
         },

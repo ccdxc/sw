@@ -42,12 +42,12 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains configuration of authentication mechanisms.',
+            description:  `Spec contains configuration of authentication mechanisms.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the authentication policy.',
+            description:  `Status contains the current state of the authentication policy.`,
             required: false,
             type: 'object'
         },

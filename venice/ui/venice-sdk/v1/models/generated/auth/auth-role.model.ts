@@ -42,12 +42,12 @@ export class AuthRole extends BaseModel implements IAuthRole {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the role.',
+            description:  `Spec contains the configuration of the role.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the role.',
+            description:  `Status contains the current state of the role.`,
             required: false,
             type: 'object'
         },

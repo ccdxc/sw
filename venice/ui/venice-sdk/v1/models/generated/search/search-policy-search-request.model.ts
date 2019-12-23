@@ -53,53 +53,53 @@ eg: 20.1.1.1, any */
     public static propInfo: { [prop in keyof ISearchPolicySearchRequest]: PropInfoItem } = {
         'tenant': {
             default: 'default',
-            description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. The default tenant is &quot;default&quot;. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
+            description:  `Tenant Name, to perform query within a Tenant's scope. The default tenant is "default". In the backend this field gets auto-filled & validated by apigw-hook based on user login context.`,
             required: false,
             type: 'string'
         },
         'namespace': {
             default: 'default',
-            description:  'Namespace is optional. If provided policy-search will be limited to the specified namespace.',
+            description:  `Namespace is optional. If provided policy-search will be limited to the specified namespace.`,
             required: false,
             type: 'string'
         },
         'sg-policy': {
-            description:  'NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.',
+            description:  `NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.`,
             required: false,
             type: 'string'
         },
         'app': {
-            description:  'App specification,  predefined apps and alg config',
+            description:  `App specification,  predefined apps and alg config`,
             required: false,
             type: 'string'
         },
         'protocol': {
-            description:  'Protocol eg: tcp, udp, icmp',
+            description:  `Protocol eg: tcp, udp, icmp`,
             required: false,
             type: 'string'
         },
         'port': {
-            description:  'TCP or UDP Port number',
+            description:  `TCP or UDP Port number`,
             required: false,
             type: 'string'
         },
         'from-ip-address': {
-            description:  'Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any',
+            description:  `Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any`,
             required: false,
             type: 'string'
         },
         'to-ip-address': {
-            description:  'Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any',
+            description:  `Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any`,
             required: false,
             type: 'string'
         },
         'from-security-group': {
-            description:  'Inbound security group',
+            description:  `Inbound security group`,
             required: false,
             type: 'string'
         },
         'to-security-group': {
-            description:  'Outbound security group',
+            description:  `Outbound security group`,
             required: false,
             type: 'string'
         },

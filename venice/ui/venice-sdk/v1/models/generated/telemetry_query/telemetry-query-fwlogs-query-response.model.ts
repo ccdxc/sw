@@ -24,12 +24,12 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     'results': Array<Telemetry_queryFwlogsQueryResult> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQueryResponse]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant for the request',
+            description:  `Tenant for the request`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace for the request',
+            description:  `Namespace for the request`,
             required: false,
             type: 'string'
         },

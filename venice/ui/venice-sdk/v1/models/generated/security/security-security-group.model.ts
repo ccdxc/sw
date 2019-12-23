@@ -42,12 +42,12 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the security group.',
+            description:  `Spec contains the configuration of the security group.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the security group.',
+            description:  `Status contains the current state of the security group.`,
             required: false,
             type: 'object'
         },

@@ -38,7 +38,7 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
             type: 'object'
         },
         'items': {
-            description:  'List of AlertPolicy objects',
+            description:  `List of AlertPolicy objects`,
             required: false,
             type: 'object'
         },

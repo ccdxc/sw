@@ -38,7 +38,7 @@ export class MonitoringEventPolicyList extends BaseModel implements IMonitoringE
             type: 'object'
         },
         'items': {
-            description:  'List of EventPolicy objects',
+            description:  `List of EventPolicy objects`,
             required: false,
             type: 'object'
         },

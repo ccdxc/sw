@@ -35,13 +35,13 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     'privacy-config': MonitoringPrivacyConfig = null;
     public static propInfo: { [prop in keyof IMonitoringSNMPTrapServer]: PropInfoItem } = {
         'host': {
-            description:  'Host where the trap needs to be sent.',
+            description:  `Host where the trap needs to be sent.`,
             required: false,
             type: 'string'
         },
         'port': {
             default: '162',
-            description:  'Port on the Host where the trap needs to be sent, default is 162.',
+            description:  `Port on the Host where the trap needs to be sent, default is 162.`,
             required: false,
             type: 'string'
         },
@@ -52,17 +52,17 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
             type: 'string'
         },
         'community-or-user': {
-            description:  'CommunityOrUser contains community string for v2c, user for v3.',
+            description:  `CommunityOrUser contains community string for v2c, user for v3.`,
             required: false,
             type: 'string'
         },
         'auth-config': {
-            description:  'AuthConfig contains the configuration for authentication, valid only for v3.',
+            description:  `AuthConfig contains the configuration for authentication, valid only for v3.`,
             required: false,
             type: 'object'
         },
         'privacy-config': {
-            description:  'PrivacyConfig contains the configuration for encryption, valid only for v3.',
+            description:  `PrivacyConfig contains the configuration for encryption, valid only for v3.`,
             required: false,
             type: 'object'
         },

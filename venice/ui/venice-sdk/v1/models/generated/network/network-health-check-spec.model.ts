@@ -30,27 +30,27 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     'declare-healthy-count': number = null;
     public static propInfo: { [prop in keyof INetworkHealthCheckSpec]: PropInfoItem } = {
         'interval': {
-            description:  'Health check interval',
+            description:  `Health check interval`,
             required: false,
             type: 'number'
         },
         'probes-per-interval': {
-            description:  '# of probes per interval',
+            description:  `# of probes per interval`,
             required: false,
             type: 'number'
         },
         'probe-port-or-url': {
-            description:  'Probe URL',
+            description:  `Probe URL`,
             required: false,
             type: 'string'
         },
         'max-timeouts': {
-            description:  'Timeout for declaring backend down',
+            description:  `Timeout for declaring backend down`,
             required: false,
             type: 'number'
         },
         'declare-healthy-count': {
-            description:  '# of successful probes before we declare the backend back up',
+            description:  `# of successful probes before we declare the backend back up`,
             required: false,
             type: 'number'
         },

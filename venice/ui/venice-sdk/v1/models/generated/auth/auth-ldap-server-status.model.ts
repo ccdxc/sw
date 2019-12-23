@@ -37,32 +37,32 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
         'result': {
             enum: AuthLdapServerStatus_result,
             default: 'connect-success',
-            description:  'Result indicates if ldap check was successful',
+            description:  `Result indicates if ldap check was successful`,
             required: true,
             type: 'string'
         },
         'message': {
-            description:  'Message contains error message in case of failed check or a success message',
+            description:  `Message contains error message in case of failed check or a success message`,
             required: false,
             type: 'string'
         },
         'server': {
-            description:  'LdapServer contains the ldap server configuration that was checked',
+            description:  `LdapServer contains the ldap server configuration that was checked`,
             required: false,
             type: 'object'
         },
         'base-dn': {
-            description:  'The LDAP base DN to be used in a user search.',
+            description:  `The LDAP base DN to be used in a user search.`,
             required: false,
             type: 'string'
         },
         'bind-dn': {
-            description:  'The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.',
+            description:  `The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.`,
             required: false,
             type: 'string'
         },
         'bind-password': {
-            description:  'The password for the LDAP database account specified in the Root DN field.',
+            description:  `The password for the LDAP database account specified in the Root DN field.`,
             required: false,
             type: 'string'
         },

@@ -23,12 +23,12 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadStatus]: PropInfoItem } = {
         'propagation-status': {
-            description:  'The status of the configuration propagation to the Naples',
+            description:  `The status of the configuration propagation to the Naples`,
             required: false,
             type: 'object'
         },
         'interfaces': {
-            description:  'Status of all interfaces in the Workload identified by Primary MAC',
+            description:  `Status of all interfaces in the Workload identified by Primary MAC`,
             required: false,
             type: 'object'
         },

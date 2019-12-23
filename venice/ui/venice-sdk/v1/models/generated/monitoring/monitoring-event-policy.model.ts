@@ -42,12 +42,12 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of an event policy.',
+            description:  `Spec contains the configuration of an event policy.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of an event policy.',
+            description:  `Status contains the current state of an event policy.`,
             required: false,
             type: 'object'
         },

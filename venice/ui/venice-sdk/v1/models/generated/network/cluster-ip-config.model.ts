@@ -24,17 +24,17 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     'dns-servers': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterIPConfig]: PropInfoItem } = {
         'ip-address': {
-            description:  'IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format',
+            description:  `IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format`,
             required: false,
             type: 'string'
         },
         'default-gw': {
-            description:  'DefaultGW contains the default gateway&#x27;s IP address',
+            description:  `DefaultGW contains the default gateway's IP address`,
             required: false,
             type: 'string'
         },
         'dns-servers': {
-            description:  'DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard',
+            description:  `DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard`,
             required: false,
             type: 'Array<string>'
         },

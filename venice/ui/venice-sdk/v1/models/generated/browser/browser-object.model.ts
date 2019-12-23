@@ -48,24 +48,24 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
             type: 'object'
         },
         'uri': {
-            description:  'URI is the Browser URI for this object',
+            description:  `URI is the Browser URI for this object`,
             required: false,
             type: 'string'
         },
         'reverse': {
-            description:  'Reverse is the view from the object looking back in the reverse direction of the dependency tree',
+            description:  `Reverse is the view from the object looking back in the reverse direction of the dependency tree`,
             required: false,
             type: 'string'
         },
         'query-type': {
             enum: BrowserObject_query_type,
             default: 'dependencies',
-            description:  'QueryType specifies the direction of the relations in Links',
+            description:  `QueryType specifies the direction of the relations in Links`,
             required: true,
             type: 'string'
         },
         'links': {
-            description:  'Links points to the relations of the object. The key for the map is the path to the filed which   is causing the relation.',
+            description:  `Links points to the relations of the object. The key for the map is the path to the filed which   is causing the relation.`,
             required: false,
             type: 'object'
         },

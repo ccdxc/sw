@@ -38,7 +38,7 @@ export class OrchestrationOrchestratorList extends BaseModel implements IOrchest
             type: 'object'
         },
         'items': {
-            description:  'List of Orchestrator objects',
+            description:  `List of Orchestrator objects`,
             required: false,
             type: 'object'
         },

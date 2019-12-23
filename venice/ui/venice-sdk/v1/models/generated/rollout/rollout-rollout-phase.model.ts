@@ -38,40 +38,40 @@ This does not include the pre-check which can happen way before the actual rollo
     'num-retries': number = null;
     public static propInfo: { [prop in keyof IRolloutRolloutPhase]: PropInfoItem } = {
         'name': {
-            description:  'Name of the Node, Service or DistributedServiceCard',
+            description:  `Name of the Node, Service or DistributedServiceCard`,
             required: false,
             type: 'string'
         },
         'phase': {
             enum: RolloutRolloutPhase_phase_uihint,
             default: 'pre-check',
-            description:  'Phase indicates a certain rollout phase/condition',
+            description:  `Phase indicates a certain rollout phase/condition`,
             required: true,
             type: 'string'
         },
         'start-time': {
-            description:  'The time of starting the rollout for this node/service.  This does not include the pre-check which can happen way before the actual rollout.',
+            description:  `The time of starting the rollout for this node/service.  This does not include the pre-check which can happen way before the actual rollout.`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  'Time at which rollout completed for this node/service',
+            description:  `Time at which rollout completed for this node/service`,
             required: false,
             type: 'Date'
         },
         'reason': {
-            description:  'The reason for the Phase last transition, if any',
+            description:  `The reason for the Phase last transition, if any`,
             required: false,
             type: 'string'
         },
         'message': {
-            description:  'A detailed message indicating details about the transition.',
+            description:  `A detailed message indicating details about the transition.`,
             required: false,
             type: 'string'
         },
         'num-retries': {
             default: parseInt('0'),
-            description:  'Number of retries rollout performed.',
+            description:  `Number of retries rollout performed.`,
             required: false,
             type: 'number'
         },

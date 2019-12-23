@@ -41,7 +41,7 @@ e.g. requirement - CPU;Gt;90 could have a matching value 96 */
             type: 'Array<string>'
         },
         'observed-value': {
-            description:  'The value at which the requirement was met. same as Requirement.value for operator &#x60;Equals&#x60; but could vary for other operators e.g. requirement - CPU;Gt;90 could have a matching value 96',
+            description:  `The value at which the requirement was met. same as Requirement.value for operator 'Equals' but could vary for other operators e.g. requirement - CPU;Gt;90 could have a matching value 96`,
             required: false,
             type: 'string'
         },

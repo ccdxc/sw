@@ -21,12 +21,12 @@ export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrches
     'namespace': string = null;
     public static propInfo: { [prop in keyof INetworkOrchestratorInfo]: PropInfoItem } = {
         'orchestrator-name': {
-            description:  'Name of Orchestrator object to which this network should be applied to',
+            description:  `Name of Orchestrator object to which this network should be applied to`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace in the orchestrator in which this network should be created in.',
+            description:  `Namespace in the orchestrator in which this network should be created in.`,
             required: false,
             type: 'string'
         },

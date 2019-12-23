@@ -33,27 +33,27 @@ Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe */
     'percent-life-used-B': number = null;
     public static propInfo: { [prop in keyof IClusterStorageDeviceInfo]: PropInfoItem } = {
         'serial-num': {
-            description:  'Serial Number',
+            description:  `Serial Number`,
             required: false,
             type: 'string'
         },
         'type': {
-            description:  'Storage Type (TBD for Naples) Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe',
+            description:  `Storage Type (TBD for Naples) Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe`,
             required: false,
             type: 'string'
         },
         'vendor': {
-            description:  'Vendor info',
+            description:  `Vendor info`,
             required: false,
             type: 'string'
         },
         'capacity': {
-            description:  'Capacity in bytes',
+            description:  `Capacity in bytes`,
             required: false,
             type: 'string'
         },
         'percent-life-used-A': {
-            description:  'Used life in percentage',
+            description:  `Used life in percentage`,
             required: false,
             type: 'number'
         },

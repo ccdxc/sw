@@ -24,17 +24,17 @@ export class TokenauthNodeTokenRequest extends BaseModel implements ITokenauthNo
     'validity-end': Date = null;
     public static propInfo: { [prop in keyof ITokenauthNodeTokenRequest]: PropInfoItem } = {
         'audience': {
-            description:  'Audience represents a list of nodes the token is valid for. &quot;*&quot; indicates all nodes',
+            description:  `Audience represents a list of nodes the token is valid for. "*" indicates all nodes`,
             required: false,
             type: 'Array<string>'
         },
         'validity-start': {
-            description:  'ValidityStart indicates the time at which the token becomes valid',
+            description:  `ValidityStart indicates the time at which the token becomes valid`,
             required: false,
             type: 'Date'
         },
         'validity-end': {
-            description:  'ValidityEnd indicates the time at which the token becomes invalid',
+            description:  `ValidityEnd indicates the time at which the token becomes invalid`,
             required: false,
             type: 'Date'
         },

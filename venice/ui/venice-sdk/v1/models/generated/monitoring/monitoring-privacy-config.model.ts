@@ -27,7 +27,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
             type: 'string'
         },
         'password': {
-            description:  'Password contains the privacy password.',
+            description:  `Password contains the privacy password.`,
             required: false,
             type: 'string'
         },

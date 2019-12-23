@@ -38,7 +38,7 @@ export class AuthUserPreferenceList extends BaseModel implements IAuthUserPrefer
             type: 'object'
         },
         'items': {
-            description:  'List of UserPreference objects',
+            description:  `List of UserPreference objects`,
             required: false,
             type: 'object'
         },

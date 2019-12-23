@@ -18,7 +18,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     'resource-version': string = null;
     public static propInfo: { [prop in keyof IApiListMeta]: PropInfoItem } = {
         'resource-version': {
-            description:  'Resource version of object store at the time of list generation.',
+            description:  `Resource version of object store at the time of list generation.`,
             required: false,
             type: 'string'
         },

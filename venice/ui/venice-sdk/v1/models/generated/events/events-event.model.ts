@@ -51,7 +51,7 @@ TODO: Should there be a predefined list of labels or keep it free form ? */
             type: 'string'
         },
         'meta': {
-            description:  'ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?',
+            description:  `ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?`,
             required: false,
             type: 'object'
         },

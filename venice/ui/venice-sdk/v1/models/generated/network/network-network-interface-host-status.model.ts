@@ -21,12 +21,12 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
     'device-id': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceHostStatus]: PropInfoItem } = {
         'host-ifname': {
-            description:  'Interface name seen by the host driver.',
+            description:  `Interface name seen by the host driver.`,
             required: false,
             type: 'string'
         },
         'device-id': {
-            description:  'PCIE Device ID.',
+            description:  `PCIE Device ID.`,
             required: false,
             type: 'string'
         },

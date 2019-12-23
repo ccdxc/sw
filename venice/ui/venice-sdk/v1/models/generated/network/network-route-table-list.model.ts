@@ -38,7 +38,7 @@ export class NetworkRouteTableList extends BaseModel implements INetworkRouteTab
             type: 'object'
         },
         'items': {
-            description:  'List of RouteTable objects',
+            description:  `List of RouteTable objects`,
             required: false,
             type: 'object'
         },

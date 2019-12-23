@@ -27,17 +27,17 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
         'type': {
             enum: NetworkRouteDistinguisher_type,
             default: 'type0',
-            description:  'RD Type as in rfc4364.',
+            description:  `RD Type as in rfc4364.`,
             required: true,
             type: 'string'
         },
         'admin-value': {
-            description:  'Administrator subfield of Value. Length depends on Type.',
+            description:  `Administrator subfield of Value. Length depends on Type.`,
             required: false,
             type: 'number'
         },
         'assigned-value': {
-            description:  'Assigned subfield of Value. Length depends on Type.',
+            description:  `Assigned subfield of Value. Length depends on Type.`,
             required: false,
             type: 'number'
         },

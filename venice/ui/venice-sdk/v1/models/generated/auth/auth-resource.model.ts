@@ -30,27 +30,27 @@ export class AuthResource extends BaseModel implements IAuthResource {
     'name': string = null;
     public static propInfo: { [prop in keyof IAuthResource]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant to which the resource belongs',
+            description:  `Tenant to which the resource belongs`,
             required: false,
             type: 'string'
         },
         'group': {
-            description:  'Group of resource to which access is desired',
+            description:  `Group of resource to which access is desired`,
             required: false,
             type: 'string'
         },
         'kind': {
-            description:  'Kind of resource to which access is desired',
+            description:  `Kind of resource to which access is desired`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace of resource within which access to a resource is desired',
+            description:  `Namespace of resource within which access to a resource is desired`,
             required: false,
             type: 'string'
         },
         'name': {
-            description:  'Name of a specific resource to which access is desired',
+            description:  `Name of a specific resource to which access is desired`,
             required: false,
             type: 'string'
         },

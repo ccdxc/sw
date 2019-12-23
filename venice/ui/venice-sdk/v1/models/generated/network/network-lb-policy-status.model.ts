@@ -18,7 +18,7 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     'type': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkLbPolicyStatus]: PropInfoItem } = {
         'type': {
-            description:  'List of service objects referring this lb-policy',
+            description:  `List of service objects referring this lb-policy`,
             required: false,
             type: 'Array<string>'
         },

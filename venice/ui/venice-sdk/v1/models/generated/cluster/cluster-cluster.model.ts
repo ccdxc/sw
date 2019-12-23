@@ -42,12 +42,12 @@ export class ClusterCluster extends BaseModel implements IClusterCluster {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the cluster.',
+            description:  `Spec contains the configuration of the cluster.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the cluster.',
+            description:  `Status contains the current state of the cluster.`,
             required: false,
             type: 'object'
         },

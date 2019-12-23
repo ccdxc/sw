@@ -30,17 +30,17 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     'syslog-export': MonitoringSyslogExport = null;
     public static propInfo: { [prop in keyof IMonitoringAlertDestinationSpec]: PropInfoItem } = {
         'selector': {
-            description:  'Export alerts matched by the selector',
+            description:  `Export alerts matched by the selector`,
             required: false,
             type: 'object'
         },
         'email-export': {
-            description:  'Email notification',
+            description:  `Email notification`,
             required: false,
             type: 'object'
         },
         'snmp-export': {
-            description:  'SNMP trap destination(s)',
+            description:  `SNMP trap destination(s)`,
             required: false,
             type: 'object'
         },

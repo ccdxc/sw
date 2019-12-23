@@ -42,12 +42,12 @@ export class NetworkRouteTable extends BaseModel implements INetworkRouteTable {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the Route Table.',
+            description:  `Spec contains the configuration of the Route Table.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the Route Table.',
+            description:  `Status contains the current state of the Route Table.`,
             required: false,
             type: 'object'
         },

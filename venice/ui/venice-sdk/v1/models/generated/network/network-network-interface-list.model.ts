@@ -38,7 +38,7 @@ export class NetworkNetworkInterfaceList extends BaseModel implements INetworkNe
             type: 'object'
         },
         'items': {
-            description:  'List of NetworkInterface objects',
+            description:  `List of NetworkInterface objects`,
             required: false,
             type: 'object'
         },

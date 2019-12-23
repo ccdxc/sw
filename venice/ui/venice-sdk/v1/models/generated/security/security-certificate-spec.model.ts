@@ -36,24 +36,24 @@ other than decoding them for informational purposes. */
     'trust-chain': string = null;
     public static propInfo: { [prop in keyof ISecurityCertificateSpec]: PropInfoItem } = {
         'description': {
-            description:  'Description of the purpose of this certificate',
+            description:  `Description of the purpose of this certificate`,
             required: false,
             type: 'string'
         },
         'usages': {
             enum: SecurityCertificateSpec_usages,
             default: 'server',
-            description:  'Usage can be &quot;client&quot;, &quot;server&quot; or &quot;trust-root&quot; in any combination. A &quot;server&quot; certificate is used by a server to authenticate itself to the client A &quot;client&quot; certificate is used by a client to authenticate itself to a server A &quot;trust-root&quot; certificate is self-signed and is only used to validate certificates presented by peers. &quot;client&quot; and &quot;server&quot; certificates are always accompanied by a private key, whereas &quot;trust-root&quot;-only certificates are not.',
+            description:  `Usage can be "client", "server" or "trust-root" in any combination. A "server" certificate is used by a server to authenticate itself to the client A "client" certificate is used by a client to authenticate itself to a server A "trust-root" certificate is self-signed and is only used to validate certificates presented by peers. "client" and "server" certificates are always accompanied by a private key, whereas "trust-root"-only certificates are not.`,
             required: true,
             type: 'Array<string>'
         },
         'body': {
-            description:  'Body of the certificate in PEM encoding',
+            description:  `Body of the certificate in PEM encoding`,
             required: false,
             type: 'string'
         },
         'trust-chain': {
-            description:  'Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes.',
+            description:  `Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes.`,
             required: false,
             type: 'string'
         },

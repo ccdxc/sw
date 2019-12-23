@@ -40,24 +40,24 @@ client certificate as long as it is valid  (not expired and with a valid trust c
     'tls-server-allowed-peer-id': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkTLSServerPolicySpec]: PropInfoItem } = {
         'tls-server-certificates': {
-            description:  'List of names of certificates to present to clients. The certificates &quot;usage&quot; field must contain &quot;server&quot;. If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list.',
+            description:  `List of names of certificates to present to clients. The certificates "usage" field must contain "server". If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list.`,
             required: false,
             type: 'Array<string>'
         },
         'client-authentication': {
             enum: NetworkTLSServerPolicySpec_client_authentication,
             default: 'mandatory',
-            description:  'Client authentication &quot;None&quot; means that server does not request and will not validate a client certificate. &quot;Mandatory&quot; means that server requests and validates client certificate. &quot;Optional&quot; means that server requests client certificate but proceeds even if client does not present it. Default is &quot;Mandatory&quot;.',
+            description:  `Client authentication "None" means that server does not request and will not validate a client certificate. "Mandatory" means that server requests and validates client certificate. "Optional" means that server requests client certificate but proceeds even if client does not present it. Default is "Mandatory".`,
             required: true,
             type: 'string'
         },
         'tls-server-trust-roots': {
-            description:  'The list of root certificates used to validate a trust chain presented by client. If the list is empty, all roots certificates in the tenant scope are considered.',
+            description:  `The list of root certificates used to validate a trust chain presented by client. If the list is empty, all roots certificates in the tenant scope are considered.`,
             required: false,
             type: 'Array<string>'
         },
         'tls-server-allowed-peer-id': {
-            description:  'Valid DNS names or IP addresses that must appear in the client certificate SubjAltName or Common Name (if SAN is not specified). If client auth is enabled and AllowedPeerId is not specified, server accepts any client certificate as long as it is valid  (not expired and with a valid trust chain).',
+            description:  `Valid DNS names or IP addresses that must appear in the client certificate SubjAltName or Common Name (if SAN is not specified). If client auth is enabled and AllowedPeerId is not specified, server accepts any client certificate as long as it is valid  (not expired and with a valid trust chain).`,
             required: false,
             type: 'Array<string>'
         },

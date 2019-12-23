@@ -39,17 +39,17 @@ export class ClusterDistributedServiceCard extends BaseModel implements ICluster
             type: 'string'
         },
         'meta': {
-            description:  'Object name is Serial-Number of the DistributedServiceCard',
+            description:  `Object name is Serial-Number of the DistributedServiceCard`,
             required: false,
             type: 'object'
         },
         'spec': {
-            description:  'DistributedServiceCardSpec contains the configuration of the network adapter.',
+            description:  `DistributedServiceCardSpec contains the configuration of the network adapter.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'DistributedServiceCardStatus contains the current state of the network adapter.',
+            description:  `DistributedServiceCardStatus contains the current state of the network adapter.`,
             required: false,
             type: 'object'
         },

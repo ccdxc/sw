@@ -28,22 +28,22 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     'health-check': NetworkHealthCheckSpec = null;
     public static propInfo: { [prop in keyof INetworkLbPolicySpec]: PropInfoItem } = {
         'type': {
-            description:  'Load balancing type',
+            description:  `Load balancing type`,
             required: false,
             type: 'string'
         },
         'algorithm': {
-            description:  'Load balancing algorithm',
+            description:  `Load balancing algorithm`,
             required: false,
             type: 'string'
         },
         'session-affinity': {
-            description:  'Session affinity',
+            description:  `Session affinity`,
             required: false,
             type: 'string'
         },
         'health-check': {
-            description:  'Health check policy',
+            description:  `Health check policy`,
             required: false,
             type: 'object'
         },

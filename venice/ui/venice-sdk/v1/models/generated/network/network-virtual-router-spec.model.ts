@@ -38,22 +38,22 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
             type: 'string'
         },
         'router-mac-address': {
-            description:  'Default Router MAC Address to use for this Virtual Router.',
+            description:  `Default Router MAC Address to use for this Virtual Router.`,
             required: false,
             type: 'string'
         },
         'vxlan-vni': {
-            description:  'VxlAN VNI for the Virtual Router.',
+            description:  `VxlAN VNI for the Virtual Router.`,
             required: false,
             type: 'number'
         },
         'route-import-export': {
-            description:  'RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.',
+            description:  `RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.`,
             required: false,
             type: 'object'
         },
         'default-ipam-policy': {
-            description:  'Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.',
+            description:  `Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.`,
             required: false,
             type: 'object'
         },

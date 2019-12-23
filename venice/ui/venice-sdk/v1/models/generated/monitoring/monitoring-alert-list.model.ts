@@ -38,7 +38,7 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
             type: 'object'
         },
         'items': {
-            description:  'List of Alert objects',
+            description:  `List of Alert objects`,
             required: false,
             type: 'object'
         },

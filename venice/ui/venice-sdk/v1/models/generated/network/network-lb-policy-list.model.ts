@@ -38,7 +38,7 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
             type: 'object'
         },
         'items': {
-            description:  'List of LbPolicy objects',
+            description:  `List of LbPolicy objects`,
             required: false,
             type: 'object'
         },

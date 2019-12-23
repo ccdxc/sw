@@ -38,7 +38,7 @@ export class NetworkVirtualRouterList extends BaseModel implements INetworkVirtu
             type: 'object'
         },
         'items': {
-            description:  'List of VirtualRouter objects',
+            description:  `List of VirtualRouter objects`,
             required: false,
             type: 'object'
         },

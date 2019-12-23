@@ -38,7 +38,7 @@ export class DiagnosticsModuleList extends BaseModel implements IDiagnosticsModu
             type: 'object'
         },
         'items': {
-            description:  'List of Module objects',
+            description:  `List of Module objects`,
             required: false,
             type: 'object'
         },

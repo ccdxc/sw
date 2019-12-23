@@ -21,12 +21,12 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     'Policies': Array<string> = null;
     public static propInfo: { [prop in keyof ISecuritySecurityGroupStatus]: PropInfoItem } = {
         'workloads': {
-            description:  'List of workloads that are part of this security group',
+            description:  `List of workloads that are part of this security group`,
             required: false,
             type: 'Array<string>'
         },
         'Policies': {
-            description:  'List of all policies attached to this security group',
+            description:  `List of all policies attached to this security group`,
             required: false,
             type: 'Array<string>'
         },

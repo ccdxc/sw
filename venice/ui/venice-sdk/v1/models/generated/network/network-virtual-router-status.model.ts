@@ -23,7 +23,7 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
     'rd': NetworkRouteDistinguisher = null;
     public static propInfo: { [prop in keyof INetworkVirtualRouterStatus]: PropInfoItem } = {
         'id': {
-            description:  'Handle allocated in the system.',
+            description:  `Handle allocated in the system.`,
             required: false,
             type: 'string'
         },

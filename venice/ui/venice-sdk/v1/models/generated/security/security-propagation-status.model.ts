@@ -33,32 +33,32 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
     'pending-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof ISecurityPropagationStatus]: PropInfoItem } = {
         'generation-id': {
-            description:  'The Generation ID this status is for',
+            description:  `The Generation ID this status is for`,
             required: false,
             type: 'string'
         },
         'updated': {
-            description:  'The number of Naples that this version has already been pushed to',
+            description:  `The number of Naples that this version has already been pushed to`,
             required: false,
             type: 'number'
         },
         'pending': {
-            description:  'Number of Naples pending. If this is 0 it can be assumed that everything is up to date.',
+            description:  `Number of Naples pending. If this is 0 it can be assumed that everything is up to date.`,
             required: false,
             type: 'number'
         },
         'min-version': {
-            description:  'The Version running on the slowest Naples',
+            description:  `The Version running on the slowest Naples`,
             required: false,
             type: 'string'
         },
         'status': {
-            description:  'Textual description of propagation status',
+            description:  `Textual description of propagation status`,
             required: false,
             type: 'string'
         },
         'pending-dscs': {
-            description:  'List of smartnics where propagation did not complete',
+            description:  `List of smartnics where propagation did not complete`,
             required: false,
             type: 'Array<string>'
         },

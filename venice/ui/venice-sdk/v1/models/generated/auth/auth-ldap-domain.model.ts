@@ -35,32 +35,32 @@ export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
     'tag': string = null;
     public static propInfo: { [prop in keyof IAuthLdapDomain]: PropInfoItem } = {
         'base-dn': {
-            description:  'The LDAP base DN to be used in a user search.',
+            description:  `The LDAP base DN to be used in a user search.`,
             required: false,
             type: 'string'
         },
         'bind-dn': {
-            description:  'The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.',
+            description:  `The bind DN is the string that Venice uses to log in to the LDAP server. Venice uses this account to validate the remote user attempting to log in. The base DN is the container name and path in the LDAPserver where Venice searches for the remote user account. This is where the password is validated. This contains the user authorization and assigned RBAC roles for use on Venice. Venice requests the attribute from theLDAP server.`,
             required: false,
             type: 'string'
         },
         'bind-password': {
-            description:  'The password for the LDAP database account specified in the Root DN field.',
+            description:  `The password for the LDAP database account specified in the Root DN field.`,
             required: false,
             type: 'string'
         },
         'attribute-mapping': {
-            description:  'Defines how attributes in the LDAP directory are mapped to user properties',
+            description:  `Defines how attributes in the LDAP directory are mapped to user properties`,
             required: false,
             type: 'object'
         },
         'servers': {
-            description:  'Servers is a list that lets you configure multiple LDAP servers for high availability',
+            description:  `Servers is a list that lets you configure multiple LDAP servers for high availability`,
             required: false,
             type: 'object'
         },
         'tag': {
-            description:  'Tag to group domains for authentication',
+            description:  `Tag to group domains for authentication`,
             required: false,
             type: 'string'
         },

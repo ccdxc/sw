@@ -42,12 +42,12 @@ export class NetworkLbPolicy extends BaseModel implements INetworkLbPolicy {
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the LbPolicy.',
+            description:  `Spec contains the configuration of the LbPolicy.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the LbPolicy.',
+            description:  `Status contains the current state of the LbPolicy.`,
             required: false,
             type: 'object'
         },

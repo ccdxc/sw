@@ -42,12 +42,12 @@ export class NetworkRoutingConfig extends BaseModel implements INetworkRoutingCo
             type: 'object'
         },
         'spec': {
-            description:  'Spec contains the configuration of the RoutingConfig.',
+            description:  `Spec contains the configuration of the RoutingConfig.`,
             required: false,
             type: 'object'
         },
         'status': {
-            description:  'Status contains the current state of the RoutingConfig.',
+            description:  `Status contains the current state of the RoutingConfig.`,
             required: false,
             type: 'object'
         },

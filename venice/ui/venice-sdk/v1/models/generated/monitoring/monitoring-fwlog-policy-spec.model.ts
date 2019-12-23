@@ -36,31 +36,31 @@ fwlog severity is set to "Informational" */
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop in keyof IMonitoringFwlogPolicySpec]: PropInfoItem } = {
         'vrf-name': {
-            description:  'VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to',
+            description:  `VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to`,
             required: false,
             type: 'string'
         },
         'targets': {
-            description:  'Target contains ip/port/protocol',
+            description:  `Target contains ip/port/protocol`,
             required: false,
             type: 'object'
         },
         'format': {
             enum: MonitoringFwlogPolicySpec_format_uihint,
             default: 'syslog-bsd',
-            description:  'Fwlog format, SYSLOG_BSD default',
+            description:  `Fwlog format, SYSLOG_BSD default`,
             required: true,
             type: 'string'
         },
         'filter': {
             enum: MonitoringFwlogPolicySpec_filter_uihint,
             default: 'all',
-            description:  'Filter firewall logs, FWLOG_ALL default',
+            description:  `Filter firewall logs, FWLOG_ALL default`,
             required: true,
             type: 'Array<string>'
         },
         'config': {
-            description:  'Configuration to use for syslog format default facility is set to &quot;local4&quot;, can be overridden with FacilityOverride fwlog severity is set to &quot;Informational&quot;',
+            description:  `Configuration to use for syslog format default facility is set to "local4", can be overridden with FacilityOverride fwlog severity is set to "Informational"`,
             required: false,
             type: 'object'
         },

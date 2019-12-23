@@ -18,7 +18,7 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterNodeSpec]: PropInfoItem } = {
         'routing-config': {
-            description:  'RoutingConfig the routing configuration',
+            description:  `RoutingConfig the routing configuration`,
             required: false,
             type: 'string'
         },

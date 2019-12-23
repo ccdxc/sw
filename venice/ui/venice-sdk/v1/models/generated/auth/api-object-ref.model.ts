@@ -30,27 +30,27 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     'uri': string = null;
     public static propInfo: { [prop in keyof IApiObjectRef]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant of the object.',
+            description:  `Tenant of the object.`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace of the object, for scoped objects.',
+            description:  `Namespace of the object, for scoped objects.`,
             required: false,
             type: 'string'
         },
         'kind': {
-            description:  'Kind represents the type of the API object.',
+            description:  `Kind represents the type of the API object.`,
             required: false,
             type: 'string'
         },
         'name': {
-            description:  'Name of the object, unique within a Namespace for scoped objects.',
+            description:  `Name of the object, unique within a Namespace for scoped objects.`,
             required: false,
             type: 'string'
         },
         'uri': {
-            description:  'URI is a link to accessing the referenced object.',
+            description:  `URI is a link to accessing the referenced object.`,
             required: false,
             type: 'string'
         },

@@ -21,12 +21,12 @@ export class DiagnosticsServicePort extends BaseModel implements IDiagnosticsSer
     'port': number = null;
     public static propInfo: { [prop in keyof IDiagnosticsServicePort]: PropInfoItem } = {
         'name': {
-            description:  'Name is the name of the port',
+            description:  `Name is the name of the port`,
             required: false,
             type: 'string'
         },
         'port': {
-            description:  'Port is port number',
+            description:  `Port is port number`,
             required: false,
             type: 'number'
         },

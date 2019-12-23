@@ -21,12 +21,12 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     'stop-time': Date = null;
     public static propInfo: { [prop in keyof IMonitoringTimeWindow]: PropInfoItem } = {
         'start-time': {
-            description:  'Start/Stop Time - when start time is not specified, it implies start NOW.',
+            description:  `Start/Stop Time - when start time is not specified, it implies start NOW.`,
             required: false,
             type: 'Date'
         },
         'stop-time': {
-            description:  'Stop time - when not specified, default will be used',
+            description:  `Stop time - when not specified, default will be used`,
             required: false,
             type: 'Date'
         },

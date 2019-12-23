@@ -61,58 +61,58 @@ state. Note : Whitelist mode is not supported yet. */
         'admission-phase': {
             enum: ClusterDistributedServiceCardStatus_admission_phase_uihint,
             default: 'unknown',
-            description:  'Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+            description:  `Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.`,
             required: true,
             type: 'string'
         },
         'conditions': {
-            description:  'List of current NIC conditions',
+            description:  `List of current NIC conditions`,
             required: false,
             type: 'object'
         },
         'serial-num': {
-            description:  'Serial number',
+            description:  `Serial number`,
             required: false,
             type: 'string'
         },
         'primary-mac': {
-            description:  'PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCardshould be a valid MAC address',
+            description:  `PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCardshould be a valid MAC address`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },
         'ip-config': {
-            description:  'IPConfig is the ip address related configuration obtained from DHCP',
+            description:  `IPConfig is the ip address related configuration obtained from DHCP`,
             required: false,
             type: 'object'
         },
         'system-info': {
-            description:  'Distributed service card system info',
+            description:  `Distributed service card system info`,
             required: false,
             type: 'object'
         },
         'interfaces': {
-            description:  'Network Interfaces',
+            description:  `Network Interfaces`,
             required: false,
             type: 'Array<string>'
         },
         'DSCVersion': {
-            description:  'DSC Version',
+            description:  `DSC Version`,
             required: false,
             type: 'string'
         },
         'DSCSku': {
-            description:  'DSC SKU',
+            description:  `DSC SKU`,
             required: false,
             type: 'string'
         },
         'host': {
-            description:  'The name of the host this DistributedServiceCard is plugged into',
+            description:  `The name of the host this DistributedServiceCard is plugged into`,
             required: false,
             type: 'string'
         },
         'adm-phase-reason': {
-            description:  'The reason why the DistributedServiceCard is not in ADMITTED state',
+            description:  `The reason why the DistributedServiceCard is not in ADMITTED state`,
             required: false,
             type: 'string'
         },

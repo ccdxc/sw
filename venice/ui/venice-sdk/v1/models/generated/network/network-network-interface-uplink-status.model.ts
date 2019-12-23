@@ -21,7 +21,7 @@ export class NetworkNetworkInterfaceUplinkStatus extends BaseModel implements IN
     'transceiver-status': NetworkTransceiverStatus = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceUplinkStatus]: PropInfoItem } = {
         'link-speed': {
-            description:  'LinkSpeed auto-negotiated',
+            description:  `LinkSpeed auto-negotiated`,
             required: false,
             type: 'string'
         },

@@ -38,7 +38,7 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
             type: 'object'
         },
         'items': {
-            description:  'List of Certificate objects',
+            description:  `List of Certificate objects`,
             required: false,
             type: 'object'
         },
