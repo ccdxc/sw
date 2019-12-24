@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal
  e2e-freebsd-bm:
    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite classic"]
-   owners: ["email:ci-stastus@pensando.io"]
+   owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
