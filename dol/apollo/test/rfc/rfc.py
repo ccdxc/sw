@@ -40,6 +40,6 @@ def TestCaseStepTeardown(tc, step):
 def TestCaseVerify(tc):
     if hasattr(tc.pvtdata, 'flow_verify_vpp') and tc.pvtdata.flow_verify_vpp:
         pkt = tc.packets.db["IN_PKT"].GetScapyPacket();
-        vnic=tc.config.localmapping.VNIC.VnicId-1
+        vnic=tc.config.localmapping.VNIC.Status.GetHwId()
         return vpp.CheckFlowExists(pkt, lkp_id=vnic)
     return True

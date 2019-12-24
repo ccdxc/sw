@@ -4,6 +4,7 @@ feature:
     sub         : v4_overlap
     package     : test.lpm
     module      : lpm
+    runorder    : 11000
     enable      : True
     ignore      : True
 

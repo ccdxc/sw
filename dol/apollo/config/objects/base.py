@@ -17,7 +17,7 @@ class StatusObjectBase(base.StatusObjectBase):
     def __init__(self, objtype):
         super().__init__()
         self.ObjType = objtype
-        self.HwId = None
+        self.HwId = -1
         return
 
     def GetHwId(self):
@@ -29,6 +29,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Origin = topo.OriginTypes.FIXED
         self.HwHabitant = True
         self.ObjType = objtype
+        self.Parent = None
         self.Children = []
         self.Deps = defaultdict(list)
         return
@@ -45,7 +46,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return
 
     def AddChild(self, child):
-        self.Children.append(child);
+        child.Parent = self
+        self.Children.append(child)
 
     def GetDependees(self):
         # returns the list of dependees

@@ -26,12 +26,18 @@ import vpc_pb2 as vpc_pb2
 class VpcStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VPC)
-        self.HwId = None
         return
 
     def Update(self, status):
         self.HwId = status.HwId
         return
+
+    def __repr__(self):
+        return "HwID:%d" % (self.HwId)
+
+    def Show(self):
+        logger.info("- VPC status object:")
+        logger.info("  - %s" % repr(self))
 
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, spec, index, maxcount):
@@ -122,7 +128,10 @@ class VpcObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("VPC Object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- Prefix:%s" %self.IPPrefix)
+        logger.info("- Prefix:%s" % self.IPPrefix)
+        logger.info("- Vnid:%s|VRMac:%s" %\
+                    (self.Vnid, self.VirtualRouterMACAddr))
+        self.Status.Show()
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):

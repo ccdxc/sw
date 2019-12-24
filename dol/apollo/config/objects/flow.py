@@ -51,6 +51,7 @@ class FlowMapObject(base.ConfigObjectBase):
         #TODO: Handle host mode
         obj.hostport = Store.GetHostPort()
         obj.switchport = Store.GetSwitchPort()
+        utils.DumpTestcaseConfig(obj)
         return
 
     def __repr__(self):

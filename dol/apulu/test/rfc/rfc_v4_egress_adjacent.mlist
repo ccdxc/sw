@@ -4,6 +4,7 @@ feature:
     sub         : ipv4_egress_adjacent
     package     : test.rfc
     module      : rfc
+    runorder    : 11000
     enable      : True
     ignore      : True
 

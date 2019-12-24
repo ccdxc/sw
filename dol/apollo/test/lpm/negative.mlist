@@ -4,6 +4,7 @@ feature:
     sub         : negative
     package     : test.lpm
     module      : lpm
+    runorder    : 30000
     enable      : True
     ignore      : False
 

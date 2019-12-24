@@ -249,9 +249,7 @@ class PolicyObject(base.ConfigObjectBase):
             obj.tc_rule = self.__get_non_default_random_rule()
         else:
             obj.tc_rule = self.__get_random_rule()
-        logger.info("Selected rule for testcase ", obj.tc_rule)
-        if obj.tc_rule:
-            obj.tc_rule.Show()
+        utils.DumpTestcaseConfig(obj)
         return
 
 class PolicyObjectClient(base.ConfigClientBase):

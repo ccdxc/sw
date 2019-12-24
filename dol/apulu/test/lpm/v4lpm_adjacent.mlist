@@ -4,6 +4,7 @@ feature:
     sub         : v4_adjacent
     package     : test.lpm
     module      : lpm
+    runorder    : 10000
     enable      : True
     ignore      : True
 

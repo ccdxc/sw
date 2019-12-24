@@ -4,6 +4,7 @@ feature:
     sub         : ipv4_egress_disjoint
     package     : test.rfc
     module      : rfc
+    runorder    : 10000
     enable      : True
     ignore      : True
 

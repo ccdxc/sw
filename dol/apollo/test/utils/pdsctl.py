@@ -21,9 +21,11 @@ def __get_pdsctl_path():
 
 def __execute_pdsctl(cmd):
     retval = True
+    output = ""
     try:
-        op = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        output = op.stdout.read().decode('utf-8', 'ignore')
+        if not utils.IsDryRun():
+            op = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            output = op.stdout.read().decode('utf-8', 'ignore')
         # pdsctl does not exit with non-zero code in case of failure
         # so check for "rpc error" in output and fix retval
         if 'rpc error' in output:

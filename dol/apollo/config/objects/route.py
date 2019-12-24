@@ -194,6 +194,7 @@ class RouteTableObject(base.ConfigObjectBase):
         obj.switchport = Store.GetSwitchPort()
         obj.devicecfg = Store.GetDevice()
         obj.vpc = self.VPC
+        utils.DumpTestcaseConfig(obj)
         return
 
 class RouteObjectClient(base.ConfigClientBase):

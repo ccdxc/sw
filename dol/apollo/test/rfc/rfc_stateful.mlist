@@ -4,6 +4,7 @@ feature:
     sub         : stateful_ipv4
     package     : test.rfc
     module      : rfc
+    runorder    : 50000
     enable      : True
     ignore      : True
 

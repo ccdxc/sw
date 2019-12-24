@@ -563,3 +563,25 @@ def dump(obj):
    for attr in dir(obj):
        if hasattr( obj, attr ):
            logger.info( "obj.%s = %s" % (attr, getattr(obj, attr)))
+
+def DumpObject(obj):
+    parentObj = getattr(obj, 'Parent', None)
+    if parentObj:
+        DumpObject(parentObj)
+        return
+    logger.info(" === Selected %s === " % (obj.ObjType.name))
+    obj.Show()
+    return
+
+def DumpTestcaseConfig(obj):
+    tcAttrs = [ 'route', 'tunnel', 'policy', 'localmapping', 'remotemapping']
+    logger.info("========== Testcase config start ==========")
+    for attr in tcAttrs:
+        cfgObj = getattr(obj, attr, None)
+        if cfgObj: DumpObject(cfgObj)
+    cfgObj = getattr(obj, 'tc_rule', None)
+    if cfgObj:
+        logger.info(" === Selected Policy rule ===")
+        cfgObj.Show()
+    logger.info("========== Testcase config end ==========")
+    return

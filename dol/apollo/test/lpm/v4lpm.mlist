@@ -4,6 +4,7 @@ feature:
     sub         : ipv4
     package     : test.lpm
     module      : lpm
+    runorder    : 10000
     enable      : True
     ignore      : False
 

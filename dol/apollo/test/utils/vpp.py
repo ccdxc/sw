@@ -16,9 +16,11 @@ def __get_vppctl_path():
 
 def ExecuteVPPCommand(command):
     vppctl=__get_vppctl_path()
+    retval = True
+    output = ""
     try:
-        output=str(subprocess.check_output([vppctl, command], stderr=subprocess.STDOUT))
-        retval=True
+        if not utils.IsDryRun():
+            output=str(subprocess.check_output([vppctl, command], stderr=subprocess.STDOUT))
     except subprocess.CalledProcessError as e:
         output="Command execution failed."
         retval=False
@@ -55,13 +57,13 @@ def CheckFlowExists(pkt, lkp_id, check_rflow=True):
     command = FrameFlowDumpCommand(ip_src, ip_dst, ip_proto,\
                                     sport, dport, lkp_id)
     ret, output = ExecuteVPPCommand(command)
-    if utils.IsDryRun() != True and ret == False or "Entry not found" in output:
+    if ret == False or "Entry not found" in output:
         return False
     if check_rflow == False:
         return True
     command = FrameFlowDumpCommand(ip_dst, ip_src, ip_proto,\
                                     dport, sport, lkp_id)
     ret, output = ExecuteVPPCommand(command)
-    if utils.IsDryRun() != True and ret == False or "Entry not found" in output:
+    if ret == False or "Entry not found" in output:
         return False
     return True

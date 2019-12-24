@@ -4,6 +4,7 @@ feature:
     sub         : negative_v6
     package     : test.rfc
     module      : rfc
+    runorder    : 40000
     enable      : True
     ignore      : True
 

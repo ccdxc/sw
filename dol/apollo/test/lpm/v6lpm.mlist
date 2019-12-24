@@ -4,6 +4,7 @@ feature:
     sub         : ipv6
     package     : test.lpm
     module      : lpm
+    runorder    : 20000
     enable      : True
     ignore      : False
 

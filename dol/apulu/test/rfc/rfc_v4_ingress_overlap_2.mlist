@@ -4,6 +4,7 @@ feature:
     sub         : ipv4_ingress_overlap_2
     package     : test.rfc
     module      : rfc
+    runorder    : 23000
     enable      : True
     ignore      : True
 

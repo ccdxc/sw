@@ -27,6 +27,13 @@ class VnicStatus(base.StatusObjectBase):
         self.HwId = status.HwId
         return
 
+    def __repr__(self):
+        return "HwID:%d" % (self.HwId)
+
+    def Show(self):
+        logger.info("- VNIC status object:")
+        logger.info("  - %s" % repr(self))
+
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC)
@@ -82,13 +89,14 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         if self.HostIf:
-            logger.info("- HostInterface:", self.HostIf.Ifname)
+            logger.info("- HostInterface:%s|%s", self.HostIf.Ifname, self.HostIf.lif.GID())
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
             logger.info("- Ing V6 Policies:", self.IngV6SecurityPolicyIds)
             logger.info("- Egr V4 Policies:", self.EgV4SecurityPolicyIds)
             logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
+        self.Status.Show()
         return
 
     def PopulateKey(self, grpcmsg):

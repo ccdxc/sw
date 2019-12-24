@@ -21,12 +21,18 @@ import subnet_pb2 as subnet_pb2
 class SubnetStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.SUBNET)
-        self.HwId = None
         return
 
     def Update(self, status):
         self.HwId = status.HwId
         return
+
+    def __repr__(self):
+        return "HwID:%d" % (self.HwId)
+
+    def Show(self):
+        logger.info("- SUBNET status object:")
+        logger.info("  - %s" % repr(self))
 
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
@@ -83,6 +89,7 @@ class SubnetObject(base.ConfigObjectBase):
                     (self.IngV4SecurityPolicyIds[0], self.IngV6SecurityPolicyIds[0], self.EgV4SecurityPolicyIds[0], self.EgV6SecurityPolicyIds[0]))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
+        self.Status.Show()
         return
 
     def __fill_default_rules_in_policy(self):

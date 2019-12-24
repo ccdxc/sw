@@ -6,6 +6,7 @@ feature:
     sub         : ipv4
     package     : test.rfc
     module      : rfc
+    runorder    : 10000
     enable      : True
     ignore      : False
 

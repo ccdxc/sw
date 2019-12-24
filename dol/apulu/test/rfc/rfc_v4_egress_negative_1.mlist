@@ -4,6 +4,7 @@ feature:
     sub         : ipv4_egress_negative_1
     package     : test.rfc
     module      : rfc
+    runorder    : 51000
     enable      : True
     ignore      : True
 

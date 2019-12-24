@@ -4,6 +4,7 @@ feature:
     sub         : v4_full_overlap
     package     : test.lpm
     module      : lpm
+    runorder    : 12000
     enable      : True
     ignore      : True
 

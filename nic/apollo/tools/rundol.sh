@@ -42,6 +42,7 @@ trap finish EXIT
 function setup () {
     # remove stale files from older runs
     rm -f ${NICDIR}/*log* ${NICDIR}/core* $NICDIR/out.sh
+    rm -f $NICDIR/conf/gen/dol_agentcfg.json
 }
 setup
 
