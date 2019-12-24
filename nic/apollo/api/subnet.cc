@@ -104,7 +104,7 @@ subnet_entry::free(subnet_entry *subnet) {
 
 sdk_ret_t
 subnet_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret = sdk::SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:

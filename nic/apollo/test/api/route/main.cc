@@ -477,18 +477,18 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     // as hal should not catch this and will only assert
     // trigger - test max v4 route tables with MAX+1 routes
     batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
         first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV4, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
+        IP_AF_IPV4, k_max_route_per_tbl+1) == SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
 
     // trigger - test max v6 route tables with MAX+1 routes
     batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
         first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
+        IP_AF_IPV6, k_max_route_per_tbl+1) == SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
 #endif
 }

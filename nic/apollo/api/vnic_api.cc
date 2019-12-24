@@ -20,10 +20,10 @@ static inline sdk_ret_t
 pds_vnic_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                      pds_vnic_key_t *key, pds_vnic_spec_t *spec)
 {
-    sdk::sdk_ret_t rv;
+    sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
@@ -54,7 +54,7 @@ pds_vnic_create (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
     return pds_vnic_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_vnic_read (_In_ pds_vnic_key_t *key, _Out_ pds_vnic_info_t *info)
 {
     vnic_entry *entry;

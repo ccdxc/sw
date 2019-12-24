@@ -62,11 +62,11 @@ typedef struct pds_init_params_s {
 /// \brief initialize routine
 /// \param[in] params init time parameters
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk::sdk_ret_t pds_init(pds_init_params_t *params);
+sdk_ret_t pds_init(pds_init_params_t *params);
 
 /// \brief uninitialize routine
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk::sdk_ret_t pds_teardown(void);
+sdk_ret_t pds_teardown(void);
 
 /// @}
 

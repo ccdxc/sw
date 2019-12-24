@@ -12,12 +12,12 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using pds::DHCPSvc;
-using pds::DHCPRelayAgentRequest;
-using pds::DHCPRelayAgentResponse;
-using pds::DHCPRelayAgentDeleteRequest;
-using pds::DHCPRelayAgentDeleteResponse;
-using pds::DHCPRelayAgentGetRequest;
-using pds::DHCPRelayAgentGetResponse;
+using pds::DHCPRelayRequest;
+using pds::DHCPRelayResponse;
+using pds::DHCPRelayDeleteRequest;
+using pds::DHCPRelayDeleteResponse;
+using pds::DHCPRelayGetRequest;
+using pds::DHCPRelayGetResponse;
 using pds::DHCPPolicyRequest;
 using pds::DHCPPolicyResponse;
 using pds::DHCPPolicyDeleteRequest;
@@ -27,18 +27,18 @@ using pds::DHCPPolicyGetResponse;
 
 class DHCPSvcImpl final : public DHCPSvc::Service {
 public:
-    Status DHCPRelayAgentCreate(ServerContext *context,
-                                const pds::DHCPRelayAgentRequest *req,
-                                pds::DHCPRelayAgentResponse *rsp) override;
-    Status DHCPRelayAgentUpdate(ServerContext *context,
-                                const pds::DHCPRelayAgentRequest *req,
-                                pds::DHCPRelayAgentResponse *rsp) override;
-    Status DHCPRelayAgentGet(ServerContext *context,
-                             const pds::DHCPRelayAgentGetRequest *req,
-                             pds::DHCPRelayAgentGetResponse *rsp) override;
-    Status DHCPRelayAgentDelete(ServerContext *context,
-                                const pds::DHCPRelayAgentDeleteRequest *proto_req,
-                                pds::DHCPRelayAgentDeleteResponse *proto_rsp) override;
+    Status DHCPRelayCreate(ServerContext *context,
+                           const pds::DHCPRelayRequest *req,
+                           pds::DHCPRelayResponse *rsp) override;
+    Status DHCPRelayUpdate(ServerContext *context,
+                           const pds::DHCPRelayRequest *req,
+                           pds::DHCPRelayResponse *rsp) override;
+    Status DHCPRelayGet(ServerContext *context,
+                        const pds::DHCPRelayGetRequest *req,
+                        pds::DHCPRelayGetResponse *rsp) override;
+    Status DHCPRelayDelete(ServerContext *context,
+                           const pds::DHCPRelayDeleteRequest *proto_req,
+                           pds::DHCPRelayDeleteResponse *proto_rsp) override;
     Status DHCPPolicyCreate(ServerContext *context,
                             const pds::DHCPPolicyRequest *req,
                             pds::DHCPPolicyResponse *rsp) override;

@@ -61,7 +61,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
             SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
             api_spec->rules = NULL;
         }
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -133,7 +133,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
             SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
             api_spec->rules = NULL;
         }
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }

@@ -203,7 +203,7 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
         ret = pds_device_read(&info);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return Status::OK;
     }
     pds_device_api_spec_to_proto(

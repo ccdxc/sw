@@ -43,7 +43,7 @@ PolicerSvcImpl::PolicerCreate(ServerContext *context,
         pds_policer_proto_to_api_spec(&api_spec, request);
         if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_policer_create(&api_spec, bctxt);
-            if (ret != sdk::SDK_RET_OK) {
+            if (ret != SDK_RET_OK) {
                 goto end;
             }
         }
@@ -87,7 +87,7 @@ PolicerSvcImpl::PolicerUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, policer creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, policer update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -100,7 +100,7 @@ PolicerSvcImpl::PolicerUpdate(ServerContext *context,
         pds_policer_proto_to_api_spec(&api_spec, request);
         if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_policer_update(&api_spec, bctxt);
-            if (ret != sdk::SDK_RET_OK) {
+            if (ret != SDK_RET_OK) {
                 goto end;
             }
         }
@@ -145,7 +145,7 @@ PolicerSvcImpl::PolicerDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, policer creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, policer deletion failed");
             return Status::CANCELLED;
         }
         batched_internally = true;
@@ -198,7 +198,7 @@ PolicerSvcImpl::PolicerGet(ServerContext *context,
         key.id = proto_req->id(i);
         ret = pds_policer_read(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             break;
         }
         pds_policer_api_info_to_proto(&info, proto_rsp);

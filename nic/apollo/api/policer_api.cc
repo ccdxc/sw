@@ -17,14 +17,14 @@
 #include "nic/apollo/api/policer.hpp"
 #include "nic/apollo/api/policer_state.hpp"
 
-static sdk::sdk_ret_t
+static sdk_ret_t
 pds_policer_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_policer_key_t *key, pds_policer_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK)
         return rv;
 
     // allocate API context
@@ -40,19 +40,19 @@ pds_policer_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     return SDK_RET_OOM;
 }
 
-static inline sdk::sdk_ret_t
+static inline sdk_ret_t
 pds_policer_stats_fill (pds_policer_stats_t *stats, policer_entry *entry)
 {
     return SDK_RET_INVALID_OP;
 }
 
-static inline sdk::sdk_ret_t
+static inline sdk_ret_t
 pds_policer_status_fill (pds_policer_status_t *status, policer_entry *entry)
 {
     return SDK_RET_INVALID_OP;
 }
 
-static inline sdk::sdk_ret_t
+static inline sdk_ret_t
 pds_policer_spec_fill (pds_policer_spec_t *spec, policer_entry *entry)
 {
     return SDK_RET_INVALID_OP;
@@ -68,13 +68,13 @@ pds_policer_entry_find (pds_policer_key_t *key)
 // policer API entry point implementation
 //----------------------------------------------------------------------------
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_policer_create (_In_ pds_policer_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policer_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_policer_read (_In_ pds_policer_key_t *key, _Out_ pds_policer_info_t *info)
 {
     policer_entry *entry;
@@ -111,7 +111,7 @@ pds_policer_info_from_entry (void *entry, void *ctxt)
     return false;
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_policer_read_all (policer_read_cb_t cb, void *ctxt)
 {
     pds_policer_read_args_t args = {0};
@@ -122,13 +122,13 @@ pds_policer_read_all (policer_read_cb_t cb, void *ctxt)
     return policer_db()->walk(pds_policer_info_from_entry, &args);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_policer_update (_In_ pds_policer_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policer_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_policer_delete (_In_ pds_policer_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policer_api_handle(bctxt, API_OP_DELETE, key, NULL);

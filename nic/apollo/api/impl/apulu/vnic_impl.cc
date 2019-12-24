@@ -601,7 +601,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

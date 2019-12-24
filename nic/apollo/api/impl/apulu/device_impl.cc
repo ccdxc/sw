@@ -192,7 +192,7 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     }
     spec->bridging_en = device_info.p4i_device_info.l2_enabled;
     spec->learning_en = device_info.p4i_device_info.learn_enabled;
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 uint32_t
@@ -270,7 +270,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats[0]);
     dinfo->stats.egr_drop_stats_count =
         fill_egr_drop_stats_(&dinfo->stats.egr_drop_stats[0]);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /// \@}

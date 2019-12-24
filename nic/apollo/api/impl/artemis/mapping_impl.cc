@@ -685,7 +685,7 @@ sdk_ret_t
 mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
                           api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

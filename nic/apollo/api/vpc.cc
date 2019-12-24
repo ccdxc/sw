@@ -157,7 +157,7 @@ sdk_ret_t
 vpc_entry::nuke_resources_(void) {
     if (hw_id_ == 0xFFFF) {
         // resources not yet allocated
-        return sdk::SDK_RET_OK;
+        return SDK_RET_OK;
     }
 
     if (impl_) {

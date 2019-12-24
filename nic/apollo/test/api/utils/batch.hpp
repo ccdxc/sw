@@ -44,12 +44,12 @@ batch_commit (pds_batch_ctxt_t bctxt)
 {
 #ifdef AGENT_MODE
     if (!agent_mode()) {
-        ASSERT_TRUE(pds_batch_commit(bctxt) == sdk::SDK_RET_OK);
+        ASSERT_TRUE(pds_batch_commit(bctxt) == SDK_RET_OK);
     } else {
-        ASSERT_TRUE(batch_commit_grpc(bctxt) == sdk::SDK_RET_OK);
+        ASSERT_TRUE(batch_commit_grpc(bctxt) == SDK_RET_OK);
     }
 #else
-    ASSERT_TRUE(pds_batch_commit(bctxt) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit(bctxt) == SDK_RET_OK);
 #endif
 }
 
@@ -58,12 +58,12 @@ batch_commit_fail (pds_batch_ctxt_t bctxt)
 {
 #ifdef AGENT_MODE
     if (!agent_mode()) {
-        ASSERT_TRUE(pds_batch_commit(bctxt) != sdk::SDK_RET_OK);
+        ASSERT_TRUE(pds_batch_commit(bctxt) != SDK_RET_OK);
     } else {
-        ASSERT_TRUE(batch_commit_grpc(bctxt) != sdk::SDK_RET_OK);
+        ASSERT_TRUE(batch_commit_grpc(bctxt) != SDK_RET_OK);
     }
 #else
-    ASSERT_TRUE(pds_batch_commit(bctxt) != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit(bctxt) != SDK_RET_OK);
 #endif
 }
 

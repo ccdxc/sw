@@ -36,7 +36,7 @@ inline void workflow_b1(feeder_T& feeder) {
     many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+    many_read<feeder_T>(feeder, SDK_RET_OK);
 
     bctxt = batch_start();
     many_delete<feeder_T>(bctxt, feeder);
@@ -56,13 +56,13 @@ inline void workflow_b2(feeder_T& feeder, feeder_T& feeder1A) {
     many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+    many_read<feeder_T>(feeder, SDK_RET_OK);
 
     bctxt = batch_start();
     many_update<feeder_T>(bctxt, feeder1A);
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1A, sdk::SDK_RET_OK);
+    many_read<feeder_T>(feeder1A, SDK_RET_OK);
 
     // cleanup
     bctxt = batch_start();
@@ -101,7 +101,7 @@ inline void workflow_2(feeder_T& feeder) {
     many_create<feeder_T>(bctxt, feeder);
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_OK);
+    many_read<feeder_T>(feeder, SDK_RET_OK);
 
     // cleanup
     bctxt = batch_start();

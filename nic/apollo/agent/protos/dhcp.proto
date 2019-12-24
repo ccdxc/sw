@@ -12,19 +12,19 @@ import "meta/meta.proto";
 import "types.proto";
 
 service DHCPSvc {
-  rpc DHCPRelayAgentCreate (DHCPRelayAgentRequest) returns (DHCPRelayAgentResponse) {}
-  rpc DHCPRelayAgentUpdate (DHCPRelayAgentRequest) returns (DHCPRelayAgentResponse) {}
-  rpc DHCPRelayAgentGet (DHCPRelayAgentGetRequest) returns (DHCPRelayAgentGetResponse) {}
-  rpc DHCPRelayAgentDelete (DHCPRelayAgentDeleteRequest) returns (DHCPRelayAgentDeleteResponse) {}
+  rpc DHCPRelayCreate (DHCPRelayRequest) returns (DHCPRelayResponse) {}
+  rpc DHCPRelayUpdate (DHCPRelayRequest) returns (DHCPRelayResponse) {}
+  rpc DHCPRelayGet (DHCPRelayGetRequest) returns (DHCPRelayGetResponse) {}
+  rpc DHCPRelayDelete (DHCPRelayDeleteRequest) returns (DHCPRelayDeleteResponse) {}
   rpc DHCPPolicyCreate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
   rpc DHCPPolicyUpdate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
   rpc DHCPPolicyGet (DHCPPolicyGetRequest) returns (DHCPPolicyGetResponse) {}
   rpc DHCPPolicyDelete (DHCPPolicyDeleteRequest) returns (DHCPPolicyDeleteResponse) {}
 }
 
-// DHCPRelayAgentSpec captures DHCP relay agent configuration
-message DHCPRelayAgentSpec {
-  // unique key/identifier of DHCP relay agent
+// DHCPRelaySpec captures DHCP relay configuration
+message DHCPRelaySpec {
+  // unique key/identifier of DHCP relay policy
   uint32          Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // VPC where DHCP server is present in
   uint32          VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
@@ -35,66 +35,66 @@ message DHCPRelayAgentSpec {
   types.IPAddress AgentIP  = 4;
 }
 
-// operational status of a DHCP relay agent, if any
-message DHCPRelayAgentStatus {
+// operational status of a DHCP relay policy, if any
+message DHCPRelayStatus {
 }
 
-// stats for a DHCP relay agent, if any
-message DHCPRelayAgentStats {
+// stats for a DHCP relay policy, if any
+message DHCPRelayStats {
 }
 
-// DHCP relay agent object
-message DHCPRelayAgent {
-  meta.TypeMeta        TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta         ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  DHCPRelayAgentSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  DHCPRelayAgentStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  DHCPRelayAgentStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+// DHCP relay object
+message DHCPRelay {
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  DHCPRelaySpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  DHCPRelayStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  DHCPRelayStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
-// DHCP relay agent create and update request
-message DHCPRelayAgentRequest {
+// DHCP relay create and update request
+message DHCPRelayRequest {
   // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt             BatchCtxt = 1;
+  types.BatchCtxt        BatchCtxt = 1;
   // batched requests
-  repeated DHCPRelayAgentSpec Request   = 2;
+  repeated DHCPRelaySpec Request   = 2;
 }
 
-// DHCP relay agent create and update response
-message DHCPRelayAgentResponse {
-  types.ApiStatus               ApiStatus = 1;
+// DHCP relay create and update response
+message DHCPRelayResponse {
+  types.ApiStatus          ApiStatus = 1;
   // batched response
-  repeated DHCPRelayAgentStatus Response  = 2;
+  repeated DHCPRelayStatus Response  = 2;
 }
 
-// DHCP relay agent get request
-message DHCPRelayAgentGetRequest {
-  // id of the DHCP relay agent policy being queried
+// DHCP relay get request
+message DHCPRelayGetRequest {
+  // id of the DHCP relay policy being queried
   repeated uint32 Id = 1;
 }
 
-// DHCP relay agent get response
-message DHCPRelayAgentGetResponse {
+// DHCP relay get response
+message DHCPRelayGetResponse {
   // API status code
-  types.ApiStatus         ApiStatus = 1;
-  repeated DHCPRelayAgent Response  = 2;
+  types.ApiStatus    ApiStatus = 1;
+  repeated DHCPRelay Response  = 2;
 }
 
-// DHCP relay agent delete request
-message DHCPRelayAgentDeleteRequest {
+// DHCP relay delete request
+message DHCPRelayDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  // id of the DHCP relay agent policy being deleted
+  // id of the DHCP relay policy being deleted
   repeated uint32 Id        = 2;
 }
 
-// DHCP relay agent delete response
-message DHCPRelayAgentDeleteResponse {
+// DHCP relay delete response
+message DHCPRelayDeleteResponse {
   // API status code
   repeated types.ApiStatus ApiStatus = 1;
 }
 
-// DHCPPolicySpec captures the DHCP configuration per subnet
+// DHCPPolicySpec captures the DHCP suppression configuration per subnet
 message DHCPPolicySpec {
   // unique key/identifier of the DHCP policy
   uint32          Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];

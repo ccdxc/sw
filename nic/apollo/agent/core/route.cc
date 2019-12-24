@@ -48,7 +48,7 @@ route_table_create (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_route_table_create(spec, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_route_table_create(spec, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }
@@ -98,7 +98,7 @@ route_table_update (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_route_table_update(spec, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_route_table_update(spec, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }
@@ -121,7 +121,7 @@ route_table_delete (pds_route_table_key_t *key, pds_batch_ctxt_t bctxt)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_route_table_delete(key, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_route_table_delete(key, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }

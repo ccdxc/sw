@@ -41,14 +41,14 @@ tep_create (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_create(spec, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_create(spec, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }
-    if (agent_state::state()->add_to_tep_db(key, spec) != sdk::SDK_RET_OK) {
+    if (agent_state::state()->add_to_tep_db(key, spec) != SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -60,16 +60,16 @@ tep_update (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_update(spec, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_update(spec, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }
     if (agent_state::state()->del_from_tep_db(key) == false) {
     }
-    if (agent_state::state()->add_to_tep_db(key, spec) != sdk::SDK_RET_OK) {
+    if (agent_state::state()->add_to_tep_db(key, spec) != SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -83,14 +83,14 @@ tep_delete (uint32_t key, pds_batch_ctxt_t bctxt)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
-        if ((ret = pds_tep_delete(&spec->key, bctxt)) != sdk::SDK_RET_OK) {
+        if ((ret = pds_tep_delete(&spec->key, bctxt)) != SDK_RET_OK) {
             return ret;
         }
     }
     if (agent_state::state()->del_from_tep_db(key) == false) {
         return sdk::SDK_RET_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

@@ -504,14 +504,14 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
 
     rv = fill_spec_(&tep_info->spec);
-    if (unlikely(rv != sdk::SDK_RET_OK)) {
+    if (unlikely(rv != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read from h/w for TEP %s",
                       api_obj->key2str().c_str());
         return rv;
     }
 
     fill_status_(&tep_info->status);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /// \@}

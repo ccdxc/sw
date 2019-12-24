@@ -169,7 +169,7 @@ sdk_ret_t
 mirror_session::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                 api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 h/w programming for mapping , so nothing to activate
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

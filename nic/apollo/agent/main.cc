@@ -26,6 +26,8 @@
 #include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/svc/policer.hpp"
+#include "nic/apollo/agent/svc/dhcp.hpp"
+#include "nic/apollo/agent/svc/nat.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
@@ -71,6 +73,8 @@ svc_reg (void)
     NhSvcImpl             nh_svc;
     SvcImpl               svc;
     PolicerSvcImpl        policer_svc;
+    //DHCPSvcImpl           dhcp_svc;
+    //NatSvcImpl            nat_svc;
     BGPSvcImpl            bgp_svc;
     EvpnSvcImpl           evpn_svc;
     StaticRouteSvcImpl    staticroute_svc;
@@ -105,6 +109,8 @@ svc_reg (void)
     server_builder->RegisterService(&nh_svc);
     server_builder->RegisterService(&svc);
     server_builder->RegisterService(&policer_svc);
+    //server_builder->RegisterService(&dhcp_svc);
+    //server_builder->RegisterService(&nat_svc);
     server_builder->RegisterService(&bgp_svc);
     server_builder->RegisterService(&evpn_svc);
     server_builder->RegisterService(&staticroute_svc);

@@ -420,7 +420,7 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
     spec->svc_port = nat_data.nat_action.port;
     memcpy(&spec->backend_provider_ip, &key->backend_ip, sizeof(ip_addr_t));
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

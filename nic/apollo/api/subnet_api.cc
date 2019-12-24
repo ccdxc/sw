@@ -17,14 +17,14 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 
-static sdk::sdk_ret_t
+static sdk_ret_t
 pds_subnet_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_subnet_key_t *key, pds_subnet_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
@@ -51,13 +51,13 @@ pds_subnet_entry_find (pds_subnet_key_t *key)
 // Subnet API entry point implementation
 //----------------------------------------------------------------------------
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_subnet_create (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_subnet_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_subnet_read (_In_ pds_subnet_key_t *key, _Out_ pds_subnet_info_t *info)
 {
     subnet_entry *entry;
@@ -73,13 +73,13 @@ pds_subnet_read (_In_ pds_subnet_key_t *key, _Out_ pds_subnet_info_t *info)
     return entry->read(info);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_subnet_update (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_subnet_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_subnet_delete (_In_ pds_subnet_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_subnet_api_handle(bctxt, API_OP_DELETE, key, NULL);

@@ -211,7 +211,7 @@ tep_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     //if (nh_id_ != 0xFFFF) {
     //    nexthop_impl_db()->nh_tbl()->remove(nh_id_);
     //}
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -297,7 +297,7 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     }
     fill_spec_(&nh_data, &tep_data, &tep_info->spec);
     fill_status_(&tep_data, &tep_info->status);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /// \@}

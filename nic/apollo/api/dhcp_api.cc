@@ -22,7 +22,7 @@ pds_dhcp_relay_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
@@ -47,7 +47,7 @@ pds_dhcp_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
@@ -86,6 +86,12 @@ pds_dhcp_relay_read (_In_ pds_dhcp_relay_key_t *key,
 }
 
 sdk_ret_t
+pds_dhcp_relay_read_all (dhcp_relay_read_cb_t cb, void *ctxt)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 pds_dhcp_relay_update (_In_ pds_dhcp_relay_spec_t *spec,
                        _In_ pds_batch_ctxt_t bctxt)
 {
@@ -113,6 +119,12 @@ pds_dhcp_policy_read (_In_ pds_dhcp_policy_key_t *key,
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_dhcp_policy_read_all (dhcp_policy_read_cb_t cb, void *ctxt)
+{
     return SDK_RET_INVALID_OP;
 }
 

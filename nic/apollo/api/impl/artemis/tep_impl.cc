@@ -340,7 +340,7 @@ tep_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -383,14 +383,14 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_tep_info_t *tep_info = (pds_tep_info_t *)info;
 
     rv = fill_spec_(&tep_info->spec);
-    if (unlikely(rv != sdk::SDK_RET_OK)) {
+    if (unlikely(rv != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read hardware table for TEP %s",
                       api_obj->key2str().c_str());
         return rv;
     }
 
     fill_status_(&tep_info->status);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /// \@}

@@ -118,7 +118,7 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
 
     memset(&port_info, 0, sizeof(port_info));
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex, ret);
         return ret;
     }
@@ -273,7 +273,7 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     memset(&port_info, 0, sizeof(port_info));
     port_info.stats_data = stats_data;
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->key(), ret);
         return false;
     }

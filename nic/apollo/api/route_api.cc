@@ -54,7 +54,7 @@ pds_route_table_create (_In_ pds_route_table_spec_t *spec,
     return pds_route_table_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-sdk::sdk_ret_t
+sdk_ret_t
 pds_route_table_read (_In_ pds_route_table_key_t *key,
                       _Out_ pds_route_table_info_t *info)
 {

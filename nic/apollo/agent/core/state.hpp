@@ -26,19 +26,19 @@ using sdk::lib::slab;
 
 namespace core {
 
-typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*vpc_peer_walk_cb_t)(pds_vpc_peer_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*meter_walk_cb_t)(pds_meter_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*tag_walk_cb_t)(pds_tag_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*policy_walk_cb_t)(pds_policy_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*nh_group_walk_cb_t)(pds_nexthop_group_spec_t *spec, void *ctxt);
-typedef sdk::sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
+typedef sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*vpc_peer_walk_cb_t)(pds_vpc_peer_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*meter_walk_cb_t)(pds_meter_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*tag_walk_cb_t)(pds_tag_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*policy_walk_cb_t)(pds_policy_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*nh_group_walk_cb_t)(pds_nexthop_group_spec_t *spec, void *ctxt);
+typedef sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
                                                    void *ctxt);
 
 typedef slab *slab_ptr_t;

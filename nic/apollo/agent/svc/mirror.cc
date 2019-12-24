@@ -55,7 +55,7 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
             goto end;
         }
         ret = core::mirror_session_create(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -123,7 +123,7 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
             goto end;
         }
         ret = core::mirror_session_update(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -217,7 +217,7 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
         key.id = proto_req->id(i);
         ret = core::mirror_session_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             break;
         }
         auto response = proto_rsp->add_response();

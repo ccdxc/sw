@@ -338,14 +338,14 @@ policer_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_policer_info_t *policer = (pds_policer_info_t *)info;
 
     rv = fill_spec_(&policer->spec);
-    if (rv != sdk::SDK_RET_OK) {
+    if (rv != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read policer %s table entry",
                       api_obj->key2str().c_str());
         return rv;
     }
     fill_status_(&policer->status);
     fill_stats_(&policer->stats);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 #undef vnic_policer_tx_info

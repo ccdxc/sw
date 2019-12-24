@@ -427,7 +427,7 @@ subnet_impl::fill_spec_(pds_subnet_spec_t *spec) {
     //SDK_ASSERT(vni_data.vni_info.bd_id == hw_id_);
     //SDK_ASSERT(!memcmp(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN));
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

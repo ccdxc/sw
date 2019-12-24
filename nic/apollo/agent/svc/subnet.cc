@@ -52,7 +52,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         pds_subnet_proto_to_api_spec(api_spec, request);
         hooks::subnet_create(api_spec);
         ret = core::subnet_create(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -115,7 +115,7 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
         key.id = request.id();
         pds_subnet_proto_to_api_spec(api_spec, request);
         ret = core::subnet_update(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -211,7 +211,7 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         key.id = proto_req->id(i);
         ret = core::subnet_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             break;
         }
         auto response = proto_rsp->add_response();

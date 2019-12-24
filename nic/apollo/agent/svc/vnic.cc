@@ -54,7 +54,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
             goto end;
         }
         ret = core::vnic_create(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -121,7 +121,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
             goto end;
         }
         ret = core::vnic_update(&key, api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }

@@ -43,7 +43,7 @@ BatchSvcImpl::BatchCommit(ServerContext *context,
                           const types::BatchCtxt *ctxt,
                           Empty *proto_status) {
     if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
-        if (pds_batch_commit(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
+        if (pds_batch_commit(ctxt->batchcookie()) == SDK_RET_OK) {
             return Status::OK;
         }
     }
@@ -55,7 +55,7 @@ BatchSvcImpl::BatchAbort(ServerContext *context,
                          const types::BatchCtxt *ctxt,
                          Empty *proto_status) {
     if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
-        if (pds_batch_destroy(ctxt->batchcookie()) == sdk::SDK_RET_OK) {
+        if (pds_batch_destroy(ctxt->batchcookie()) == SDK_RET_OK) {
             return Status::OK;
         }
     }

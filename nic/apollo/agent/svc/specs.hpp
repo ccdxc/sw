@@ -97,7 +97,7 @@ ippfx_proto_spec_to_api_spec (ip_prefix_t *ip_pfx,
     } else {
         ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -121,7 +121,7 @@ ippfx_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
         memcpy(&ip_range->ip_lo.v6_addr, &lo_addr.addr.v6_addr, sizeof(ipv6_addr_t));
         memcpy(&ip_range->ip_hi.v6_addr, &hi_addr.addr.v6_addr, sizeof(ipv6_addr_t));
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -135,7 +135,7 @@ ipsubnet_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
         return ippfx_proto_spec_to_ipvx_range(ip_range,
                                               in_ipsubnet.ipv6subnet());
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -147,7 +147,7 @@ ipv6pfx_proto_spec_to_ippfx_api_spec (ip_prefix_t *ip_pfx,
     }
     memcpy(ip_pfx->addr.addr.v6_addr.addr8, in_ippfx.addr().c_str(),
            IP6_ADDR8_LEN);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -161,7 +161,7 @@ ipv4pfx_proto_spec_to_ippfx_api_spec (ipv4_prefix_t *ip_pfx,
     } else {
         ip_pfx->v4_addr = in_ippfx.addr().v4addr();
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -172,7 +172,7 @@ ipv4pfx_proto_spec_to_api_spec (ipv4_prefix_t *ip_pfx,
         return SDK_RET_INVALID_ARG;
     }
     ip_pfx->v4_addr = in_ippfx.addr();
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -194,7 +194,7 @@ iprange_proto_spec_to_api_spec (ipvx_range_t *ip_range,
     } else {
         return SDK_RET_INVALID_ARG;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------
@@ -239,7 +239,7 @@ ippfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
 {
     out_ippfx->set_len(in_ippfx->len);
     ipaddr_api_spec_to_proto_spec(out_ippfx->mutable_addr(), &in_ippfx->addr);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -253,7 +253,7 @@ ippfx_api_spec_to_subnet_proto_spec (types::IPSubnet *out_subnet,
         ippfx_api_spec_to_proto_spec(out_subnet->mutable_ipv6subnet(),
                                      in_ippfx);
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -264,7 +264,7 @@ ippfx_api_spec_to_ipv6pfx_proto_spec (types::IPv6Prefix *out_ippfx,
     out_ippfx->set_addr(
                    std::string((const char *)&in_ippfx->addr.addr.v6_addr.addr8,
                                IP6_ADDR8_LEN));
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -275,7 +275,7 @@ ipv4pfx_api_spec_to_ippfx_proto_spec (types::IPPrefix *out_ippfx,
     out_ippfx->set_len(in_ippfx->len);
     out_addr->set_af(types::IP_AF_INET);
     out_addr->set_v4addr(in_ippfx->v4_addr);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -284,7 +284,7 @@ ipv4pfx_api_spec_to_proto_spec (types::IPv4Prefix *out_ippfx,
 {
     out_ippfx->set_len(in_ippfx->len);
     out_ippfx->set_addr(in_ippfx->v4_addr);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -313,7 +313,7 @@ iprange_api_spec_to_proto_spec (types::AddressRange *out_iprange,
     default:
         return SDK_RET_INVALID_ARG;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -396,7 +396,7 @@ static inline types::ApiStatus
 sdk_ret_to_api_status (sdk_ret_t ret)
 {
     switch (ret) {
-    case sdk::SDK_RET_OK:
+    case SDK_RET_OK:
         return types::ApiStatus::API_STATUS_OK;
 
     case sdk::SDK_RET_OOM:
@@ -2243,7 +2243,7 @@ pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
 
 static inline sdk_ret_t
 pds_dhcp_relay_proto_to_api_spec (pds_dhcp_relay_spec_t *api_spec,
-                                  const pds::DHCPRelayAgentSpec &proto_spec)
+                                  const pds::DHCPRelaySpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
     api_spec->vpc.id = proto_spec.vpcid();
@@ -2253,7 +2253,7 @@ pds_dhcp_relay_proto_to_api_spec (pds_dhcp_relay_spec_t *api_spec,
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
+pds_dhcp_relay_api_spec_to_proto (pds::DHCPRelaySpec *proto_spec,
                                   const pds_dhcp_relay_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
@@ -2266,14 +2266,14 @@ pds_dhcp_relay_api_spec_to_proto (pds::DHCPRelayAgentSpec *proto_spec,
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_api_status_to_proto (pds::DHCPRelayAgentStatus *proto_status,
+pds_dhcp_relay_api_status_to_proto (pds::DHCPRelayStatus *proto_status,
                                     const pds_dhcp_relay_status_t *api_status)
 {
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-pds_dhcp_relay_api_stats_to_proto (pds::DHCPRelayAgentStats *proto_stats,
+pds_dhcp_relay_api_stats_to_proto (pds::DHCPRelayStats *proto_stats,
                                    const pds_dhcp_relay_stats_t *api_stats)
 {
     return SDK_RET_OK;
@@ -2284,15 +2284,51 @@ static inline void
 pds_dhcp_relay_api_info_to_proto (const pds_dhcp_relay_info_t *api_info,
                                   void *ctxt)
 {
-    pds::DHCPRelayAgentGetResponse *proto_rsp =(pds::DHCPRelayAgentGetResponse *)ctxt;
+    pds::DHCPRelayGetResponse *proto_rsp = (pds::DHCPRelayGetResponse *)ctxt;
     auto dhcp = proto_rsp->add_response();
-    pds::DHCPRelayAgentSpec *proto_spec = dhcp->mutable_spec();
-    pds::DHCPRelayAgentStatus *proto_status = dhcp->mutable_status();
-    pds::DHCPRelayAgentStats *proto_stats = dhcp->mutable_stats();
+    pds::DHCPRelaySpec *proto_spec = dhcp->mutable_spec();
+    pds::DHCPRelayStatus *proto_status = dhcp->mutable_status();
+    pds::DHCPRelayStats *proto_stats = dhcp->mutable_stats();
 
     pds_dhcp_relay_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_dhcp_relay_api_status_to_proto(proto_status, &api_info->status);
     pds_dhcp_relay_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_dhcp_policy_proto_to_api_spec (pds_dhcp_policy_spec_t *api_spec,
+                                   const pds::DHCPPolicySpec &proto_spec)
+{
+    SDK_ASSERT_RETURN(FALSE, SDK_RET_ERR);
+}
+
+static inline sdk_ret_t
+pds_dhcp_policy_api_spec_to_proto (pds::DHCPPolicySpec *proto_spec,
+                                  const pds_dhcp_policy_spec_t *api_spec)
+{
+    SDK_ASSERT_RETURN(FALSE, SDK_RET_ERR);
+}
+
+static inline sdk_ret_t
+pds_dhcp_policy_api_status_to_proto (pds::DHCPPolicyStatus *proto_status,
+                                    const pds_dhcp_policy_status_t *api_status)
+{
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_dhcp_policy_api_stats_to_proto (pds::DHCPPolicyStats *proto_stats,
+                                   const pds_dhcp_policy_stats_t *api_stats)
+{
+    return SDK_RET_OK;
+}
+
+// populate proto buf from route table API info
+static inline void
+pds_dhcp_policy_api_info_to_proto (const pds_dhcp_policy_info_t *api_info,
+                                  void *ctxt)
+{
+    SDK_ASSERT(FALSE);
 }
 
 static inline sdk_ret_t

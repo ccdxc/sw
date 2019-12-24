@@ -235,7 +235,7 @@ nexthop_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_nexthop_info_t *nh_info = (pds_nexthop_info_t *)info;
 
     rv = fill_spec_(&nh_info->spec);
-    if (unlikely(rv != sdk::SDK_RET_OK)) {
+    if (unlikely(rv != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read NEXTHOP %s table entry",
                       api_obj->key2str().c_str());
         return rv;

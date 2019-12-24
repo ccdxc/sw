@@ -294,7 +294,7 @@ vnic_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     //    need to be invalidated, the table pointing to this will
     //    have latest epoch set with valid bit set to FALSE in
     //    activate_hw() stage
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

@@ -74,57 +74,75 @@ typedef struct pds_dhcp_policy_info_s {
 } __PACK__ pds_dhcp_policy_info_t;
 
 /// \brief create DHCP relay policy
-/// \param[in] spec DHCP relay policy configuration
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] spec     DHCP relay policy configuration
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_relay_create(pds_dhcp_relay_spec_t *spec,
                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief read DHCP relay policy
-/// \param[in] key DHCP relay policy key
-/// \param[out] info DHCP relay information
+/// \param[in] key      DHCP relay policy key
+/// \param[out] info    DHCP relay information
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_relay_read(pds_dhcp_relay_key_t *key,
                               pds_dhcp_relay_info_t *info);
 
+typedef void (*dhcp_relay_read_cb_t)(const pds_dhcp_relay_info_t *info,
+                                     void *ctxt);
+
+/// \brief      read all DHCP relay policies
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_dhcp_relay_read_all(dhcp_relay_read_cb_t cb, void *ctxt);
+
 /// \brief update DHCP relay policy
-/// \param[in] spec DHCP relay configuration
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] spec     DHCP relay configuration
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_relay_update(pds_dhcp_relay_spec_t *spec,
                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief delete DHCP relay policy
-/// \param[in] key unique key of the DHCP relay policy
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] key      unique key of the DHCP relay policy
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_relay_delete(pds_dhcp_relay_key_t *key,
                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief create DHCP policy
-/// \param[in] spec DHCP policy configuration
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] spec     DHCP policy configuration
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_policy_create(pds_dhcp_policy_spec_t *spec,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief read DHCP policy
-/// \param[in] key DHCP policy key
-/// \param[out] info DHCP policy information
+/// \param[in]  key     DHCP policy key
+/// \param[out] info    DHCP policy information
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_policy_read(pds_dhcp_policy_key_t *key,
                                pds_dhcp_policy_info_t *info);
 
+typedef void (*dhcp_policy_read_cb_t)(const pds_dhcp_policy_info_t *info,
+                                      void *ctxt);
+
+/// \brief      read all DHCP policies
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_dhcp_policy_read_all(dhcp_policy_read_cb_t cb, void *ctxt);
+
 /// \brief update DHCP policy
-/// \param[in] spec DHCP policy configuration
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] spec     DHCP policy configuration
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_policy_update(pds_dhcp_policy_spec_t *spec,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief delete DHCP policy
-/// \param[in] key DHCP policy key
-/// \param[in] bctxt batch context if API is invoked in a batch
+/// \param[in] key      DHCP policy key
+/// \param[in] bctxt    batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_dhcp_policy_delete(pds_dhcp_policy_key_t *key,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);

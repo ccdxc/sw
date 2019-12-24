@@ -125,7 +125,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         fill_ing_drop_stats_(&dinfo->stats.ing_drop_stats[0]);
     dinfo->stats.egr_drop_stats_count =
         fill_egr_drop_stats_(&dinfo->stats.egr_drop_stats[0]);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

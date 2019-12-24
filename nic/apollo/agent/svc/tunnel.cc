@@ -50,7 +50,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
         pds_tep_proto_to_api_spec(api_spec, request);
         hooks::tunnel_create(api_spec);
         ret = core::tep_create(request.id(), api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -112,7 +112,7 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
         auto request = proto_req->request(i);
         pds_tep_proto_to_api_spec(api_spec, request);
         ret = core::tep_update(request.id(), api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto end;
         }
     }
@@ -203,7 +203,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
     for (int i = 0; i < proto_req->id_size(); i++) {
         ret = core::tep_get(proto_req->id(i), &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             break;
         }
         auto response = proto_rsp->add_response();

@@ -53,7 +53,7 @@ IfSvcImpl::InterfaceCreate(ServerContext *context,
             goto end;
         }
         ret = core::interface_create(api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }
@@ -117,7 +117,7 @@ IfSvcImpl::InterfaceUpdate(ServerContext *context,
             goto end;
         }
         ret = core::interface_update(api_spec, bctxt);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             core::agent_state::state()->if_slab()->free(api_spec);
             goto end;
         }

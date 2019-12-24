@@ -310,7 +310,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     if (spec->type == PDS_IF_TYPE_UPLINK) {
         if_info->status.uplink_status.lif_id = hw_id_;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of IF_IMPL_IMPL

@@ -197,7 +197,7 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         PDS_TRACE_ERR("Failed to update VPC table at index %u", vpc->hw_id());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

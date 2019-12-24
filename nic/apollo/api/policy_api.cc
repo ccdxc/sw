@@ -25,7 +25,7 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
     }
 
