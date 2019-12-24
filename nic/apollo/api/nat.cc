@@ -10,7 +10,9 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/nat.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -62,6 +64,22 @@ nat_port_block::free(nat_port_block *port_block) {
 sdk_ret_t
 nat_port_block::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->nat_port_block_spec.key.id;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+nat_port_block::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->type = PDS_MSG_TYPE_CFG;
+    msg->id = PDS_CFG_MSG_ID_NAT_PORT_BLOCK;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.nat_port_block.key =
+            obj_ctxt->api_params->nat_port_block_key;
+    } else {
+        msg->cfg_msg.nat_port_block.spec =
+            obj_ctxt->api_params->nat_port_block_spec;
+    }
     return SDK_RET_OK;
 }
 
