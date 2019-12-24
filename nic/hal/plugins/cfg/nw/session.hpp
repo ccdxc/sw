@@ -535,6 +535,12 @@ typedef struct session_stats_ {
     uint64_t    num_icmp_error_sent;       // no. of ICMP errors sent as a result of SFW Reject
     uint64_t    num_cxnsetup_timeout;      // no. of sessions that timed out at connection setup
     uint64_t    num_session_create_err;    // no. of session create errors
+    uint64_t    tcp_half_open_sessions;    // no. of Half Open TCP sessions
+    uint64_t    other_active_sessions;     // no. of active sessions other than TCP/UDP/ICMP
+    uint64_t    tcp_session_drop_count;    // no. of dropped TCP sessions exceeding the TCP half open session limit
+    uint64_t    udp_session_drop_count;    // no. of dropped UDP sessions exceeding the UDP session limit
+    uint64_t    icmp_session_drop_count;   // no. of dropped ICMP sessions exceeding the ICMP session limit
+    uint64_t    other_session_drop_count;  // no. of dropped sessions exceeding the other active session limit
 } __PACK__ session_stats_t;
 
 typedef struct session_get_ {

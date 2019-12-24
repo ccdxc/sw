@@ -1383,7 +1383,6 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
 {
     hal_ret_t                         ret = HAL_RET_OK;
     nwsec::SecurityProfileSpec        *spec;
-    nwsec::SecurityProfileStats       *stats;
     pd::pd_nwsec_profile_get_args_t   args   = {0};
     pd::pd_func_args_t                pd_func_args = {0};
 
@@ -1465,17 +1464,6 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
 
     // fill operational state of this profile
     rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);
-
-    // fill in the stats of this profile
-    stats = rsp->mutable_stats();
-    stats->set_tcp_half_open_session_count(0);
-    stats->set_udp_active_session_count(0);
-    stats->set_icmp_active_session_count(0);
-    stats->set_other_active_session_count(0);
-    stats->set_tcp_session_drop_count(0);
-    stats->set_udp_session_drop_count(0);
-    stats->set_icmp_session_drop_count(0);
-    stats->set_other_session_drop_count(0);
 
     HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_SUCCESS);
 

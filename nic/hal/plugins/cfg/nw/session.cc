@@ -3907,6 +3907,12 @@ system_session_summary_get(SystemResponse *rsp)
         session_summary.num_icmp_error_sent += HAL_SESSION_STATS_PTR(fte)->num_icmp_error_sent;
         session_summary.num_cxnsetup_timeout += HAL_SESSION_STATS_PTR(fte)->num_cxnsetup_timeout;
         session_summary.num_session_create_err += HAL_SESSION_STATS_PTR(fte)->num_session_create_err;
+        session_summary.tcp_half_open_sessions += HAL_SESSION_STATS_PTR(fte)->tcp_half_open_sessions;
+        session_summary.other_active_sessions += HAL_SESSION_STATS_PTR(fte)->other_active_sessions;
+        session_summary.tcp_session_drop_count += HAL_SESSION_STATS_PTR(fte)->tcp_session_drop_count;
+        session_summary.udp_session_drop_count += HAL_SESSION_STATS_PTR(fte)->udp_session_drop_count;
+        session_summary.icmp_session_drop_count += HAL_SESSION_STATS_PTR(fte)->icmp_session_drop_count;
+        session_summary.other_session_drop_count += HAL_SESSION_STATS_PTR(fte)->other_session_drop_count;
     }
 
     session_stats = rsp->mutable_stats()->mutable_session_stats();
@@ -3921,6 +3927,12 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_num_icmp_error_sent(session_summary.num_icmp_error_sent);
     session_stats->set_num_connection_timeout_sessions(session_summary.num_cxnsetup_timeout);
     session_stats->set_num_session_create_errors(session_summary.num_session_create_err);
+    session_stats->set_tcp_half_open_sessions(session_summary.tcp_half_open_sessions);
+    session_stats->set_other_active_sessions(session_summary.other_active_sessions);
+    session_stats->set_tcp_session_drop_count(session_summary.tcp_session_drop_count);
+    session_stats->set_udp_session_drop_count(session_summary.udp_session_drop_count);
+    session_stats->set_icmp_session_drop_count(session_summary.icmp_session_drop_count);
+    session_stats->set_other_session_drop_count(session_summary.other_session_drop_count);
 
     return HAL_RET_OK;
 }

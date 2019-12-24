@@ -348,9 +348,15 @@ message SessionSummaryStats {
   uint64      drop_sessions            = 8;
   uint64      aged_sessions            = 9;
   uint64      num_tcp_reset_sent       = 10;        // Number of TCP resets sent as part of SFW reject
-  uint64      num_icmp_error_sent      = 11;       // Number of ICMP errors sent as part of SFW reject
-  uint64      num_connection_timeout_sessions = 12;// Number of TCP sessions that timedout before going to established state
+  uint64      num_icmp_error_sent      = 11;        // Number of ICMP errors sent as part of SFW reject
+  uint64      num_connection_timeout_sessions = 12; // Number of TCP sessions that timedout before going to established state
   uint64      num_session_create_errors = 13;       // # of session create errors
+  uint64      tcp_half_open_sessions    = 14;       // Number of active TCP half open sessions
+  uint64      other_active_sessions     = 15;       // Number of active sessions other than TCP/UDP/ICMP
+  uint64      tcp_session_drop_count    = 16;       // Number of dropped TCP sessions that exceeded the limit
+  uint64      udp_session_drop_count    = 17;       // Number of dropped UDP sessions that exceeded the limit
+  uint64      icmp_session_drop_count   = 18;       // Number of dropped ICMP sessions that exceeded the limit
+  uint64      other_session_drop_count  = 19;       // Number of other dropped sessions that exceeded the limit
 }
 
 message QCtr {

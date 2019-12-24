@@ -333,14 +333,6 @@ message SecurityProfileGetRequestMsg {
 
 // SecurityProfileStats is the statistics object for each SecurityProfile profile
 message SecurityProfileStats {
-  uint32     tcp_half_open_session_count      = 1; // Number of active TCP half open sessions
-  uint32     udp_active_session_count         = 2; // Number of active UDP sessions
-  uint32     icmp_active_session_count        = 3; // Number of active ICMP sessions
-  uint32     other_active_session_count       = 4; // Number of active session other than TCP/UDP/ICMP
-  uint32     tcp_session_drop_count           = 5; // Number of dropped TCP sessions that exceeded the limit
-  uint32     udp_session_drop_count           = 6; // Number of dropped UDP sessions that exceeded the limit
-  uint32     icmp_session_drop_count          = 7; // Number of dropped ICMP sessions that exceeded the limit
-  uint32     other_session_drop_count         = 8; // Number of other dropped sessions that exceeded the limit
 }
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
