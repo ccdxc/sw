@@ -13,6 +13,18 @@ targets:
     area:
     sub-area:
     feature:
+  apollo/dol:
+    commands: [ "bash", "-c", "cd /sw/dol && ./sanity_apollo.sh" ]
+    owners: ["email:param@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  artemis/dol:
+    commands: [ "bash", "-c", "cd /sw/dol && ./sanity_artemis.sh" ]
+    owners: ["email:param@pensando.io"]
+    area:
+    sub-area:
+    feature:
   apulu/dol:
     commands: [ "bash", "-c", "cd /sw/dol && ./sanity_apulu.sh" ]
     owners: ["email:param@pensando.io"]
