@@ -276,14 +276,15 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	if (ionic->neth_eqs) {
 		err = ionic_eqs_alloc(ionic);
 		if (err) {
-			dev_err(dev, "Cannot allocate EQs: %d, aborting\n", err);
-			goto err_out_deinit_lifs;
-		}
-
-		err = ionic_eqs_init(ionic);
-		if (err) {
-			dev_err(dev, "Cannot init EQs: %d, aborting\n", err);
-			goto err_out_free_eqs;
+			dev_err(dev, "Cannot allocate EQs: %d\n", err);
+			ionic->neth_eqs = 0;
+		} else {
+			err = ionic_eqs_init(ionic);
+			if (err) {
+				dev_err(dev, "Cannot init EQs: %d\n", err);
+				ionic_eqs_free(ionic);
+				ionic->neth_eqs = 0;
+			}
 		}
 	}
 
@@ -309,7 +310,6 @@ err_out_deinit_eqs:
 	ionic_eqs_deinit(ionic);
 err_out_free_eqs:
 	ionic_eqs_free(ionic);
-err_out_deinit_lifs:
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
 	ionic_lifs_free(ionic);

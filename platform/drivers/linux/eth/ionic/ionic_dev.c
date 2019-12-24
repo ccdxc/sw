@@ -762,30 +762,26 @@ int ionic_eq_init(struct ionic_eq *eq)
 			.cq_ring_base = cpu_to_le64(eq->ring[1].base_pa),
 		},
 	};
-	u8 bits;
 	int err;
 
 	q_ident = (union q_identity *)&ionic->idev.dev_cmd_regs->data;
 
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_queue_identify(&ionic->idev, IONIC_LIF_TYPE_CLASSIC,
-				     IONIC_QTYPE_NOTIFYQ, 0);
+				     IONIC_QTYPE_EQ, 0);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
-	bits = q_ident->supported;
+	cmd.q_init.ver = q_ident->version;
 	mutex_unlock(&ionic->dev_cmd_lock);
 
-	if (err == IONIC_RC_ENOSUPP) {
+	if (err == -EINVAL) {
 		dev_err(ionic->dev, "eq init failed, not supported\n");
+		return err;
+	} else if (err == -EIO) {
+		dev_err(ionic->dev, "q_ident eq failed, not supported on older FW\n");
 		return err;
 	} else if (err) {
 		dev_warn(ionic->dev, "eq version type request failed %d, defaulting to %d\n",
 			 err, cmd.q_init.ver);
-	} else {
-		int top = fls(bits);
-
-		if (top)
-			top--;
-		cmd.q_init.ver = top;
 	}
 
 	ionic_intr_mask(ionic->idev.intr_ctrl, eq->intr.index,

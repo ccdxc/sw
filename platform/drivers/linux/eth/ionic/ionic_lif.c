@@ -44,7 +44,7 @@ static int ionic_lif_init_queues(struct ionic_lif *lif);
 static int ionic_lif_set_netdev_info(struct ionic_lif *lif);
 static void ionic_lif_deinit(struct ionic_lif *lif);
 static void ionic_lif_free(struct ionic_lif *lif);
-static int ionic_lif_queue_identify(struct ionic_lif *lif);
+static void ionic_lif_queue_identify(struct ionic_lif *lif);
 
 static void ionic_lif_deferred_work(struct work_struct *work)
 {
@@ -3113,7 +3113,7 @@ void ionic_lifs_unregister(struct ionic *ionic)
 		unregister_netdev(ionic->master_lif->netdev);
 }
 
-static int ionic_lif_queue_identify(struct ionic_lif *lif)
+static void ionic_lif_queue_identify(struct ionic_lif *lif)
 {
 	struct ionic *ionic = lif->ionic;
 	union q_identity *q_ident;
@@ -3159,10 +3159,13 @@ static int ionic_lif_queue_identify(struct ionic_lif *lif)
 		if (err == -EINVAL) {
 			dev_err(ionic->dev, "qtype %d not supported\n", qtype);
 			continue;
+		} else if (err == -EIO) {
+			dev_err(ionic->dev, "q_ident failed, not supported on older FW\n");
+			return;
 		} else if (err) {
 			dev_err(ionic->dev, "q_ident failed, qtype %d: %d\n",
 				qtype, err);
-			return err;
+			return;
 		}
 
 		dev_dbg(ionic->dev, " qtype[%d].version = %d\n",
@@ -3216,8 +3219,6 @@ static int ionic_lif_queue_identify(struct ionic_lif *lif)
 		lif->qtype_info[IONIC_QTYPE_TXQ].features &= ~IONIC_QIDENT_F_EQ;
 		ionic->neth_eqs = 0;
 	}
-
-	return 0;
 }
 
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
