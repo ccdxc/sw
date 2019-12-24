@@ -1,4 +1,5 @@
 // const URL = "10.7.100.108:10001"  // Rohan's
+
 // const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.7.100.76:10001"; // Titus
 // const URL = "10.7.100.75:10001"  // For CalSoftInc
@@ -19,7 +20,9 @@
 // const URL =  "192.168.78.243"
 // const URL =  "192.168.129.42";  // many NICS
 // const URL =  "192.168.76.201"
-const URL =  "192.168.76.198"
+// const URL =  "192.168.76.201"
+// const URL =  "192.168.76.198"
+
 
 const PROXY_CONFIG =
   {

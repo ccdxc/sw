@@ -514,7 +514,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    */
   getDistributedServiceCards(field = this.tableContainer.sortField,
     order = this.tableContainer.sortOrder) {
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxSearchRecords);
+    let searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'DistributedServiceCard', true, this.maxSearchRecords);
+    // VS-1008, we customize searchRequest.
+    searchSearchRequest = this.customizeSearchRequest(searchSearchRequest);
     const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
     if (localSearchResult.err) {
       this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
@@ -532,6 +534,38 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
         }
     }
+  }
+
+  /**
+   * Per VS-1008, we want to change
+   * status.DSCVersion → status.DSCVersion.keyword
+   * spec.id → spec.id.keyword
+   */
+  // "fields": {
+  //   "requirements": [
+  //     {
+  //       "key": "meta.name",  <-- change this per VS-1008
+  //       "operator": "notIn",
+  //       "values": [
+  //         "hw",
+  //         "u1"
+  //       ]
+  //     }
+  //   ]
+  // }
+  customizeSearchRequest(searchSearchRequest: SearchSearchRequest): SearchSearchRequest {
+     const requirements =  (searchSearchRequest.query.fields && searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : null;
+     for (let i = 0; requirements && i < requirements.length; i++) {
+        const requirement = requirements[i];
+        const key = requirement.key;
+        if ( key === 'spec.id') {
+          requirement.key = 'spec.id.keyword';
+        }
+        if ( key === 'status.DSCVersion') {
+          requirement.key = 'status.DSCVersion.keyword';
+        }
+     }
+     return searchSearchRequest;
   }
 
   /**
