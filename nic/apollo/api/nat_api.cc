@@ -61,6 +61,12 @@ pds_nat_port_block_read (_In_ pds_nat_port_block_key_t *key,
 }
 
 sdk_ret_t
+pds_nat_port_block_read_all (nat_port_block_read_cb_t cb, void *ctxt)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 pds_nat_port_block_update (_In_ pds_nat_port_block_spec_t *spec,
                            _In_ pds_batch_ctxt_t bctxt)
 {

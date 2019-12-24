@@ -33,7 +33,8 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, meter policy "
+                          "creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -105,7 +106,8 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mirror policy update "
+                          "failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -176,7 +178,8 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mirror policy delete "
+                          "failed");
             return Status::CANCELLED;
         }
         batched_internally = true;

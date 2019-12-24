@@ -24,12 +24,12 @@ public:
     Status NatPortBlockCreate(ServerContext *context,
                               const pds::NatPortBlockRequest *req,
                               pds::NatPortBlockResponse *rsp) override;
-    Status NatPortBlockPolicyGet(ServerContext *context,
-                                 const pds::NatPortBlockGetRequest *req,
-                                 pds::NatPortBlockGetResponse *rsp) override;
     Status NatPortBlockDelete(ServerContext *context,
                               const pds::NatPortBlockDeleteRequest *proto_req,
                               pds::NatPortBlockDeleteResponse *proto_rsp) override;
+    Status NatPortBlockGet(ServerContext *context,
+                           const pds::NatPortBlockGetRequest *req,
+                           pds::NatPortBlockGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_NAT_HPP__

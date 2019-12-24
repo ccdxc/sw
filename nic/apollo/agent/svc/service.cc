@@ -33,7 +33,8 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, service mapping "
+                          "creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -100,7 +101,8 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, service mapping "
+                          "update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -165,7 +167,8 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, service mapping "
+                          "delete failed");
             return Status::CANCELLED;
         }
         batched_internally = true;

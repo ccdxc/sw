@@ -148,7 +148,8 @@ DHCPSvcImpl::DHCPRelayDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, DHCP relay delete "
+                          "failed");
             return Status::CANCELLED;
         }
         batched_internally = true;
@@ -350,7 +351,8 @@ DHCPSvcImpl::DHCPPolicyDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, DHCP policy "
+                          "deletion failed");
             return Status::CANCELLED;
         }
         batched_internally = true;

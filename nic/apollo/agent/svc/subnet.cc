@@ -33,7 +33,8 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet creation "
+                          "failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -97,7 +98,7 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -159,7 +160,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, subnet creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, subnet delete failed");
             return Status::CANCELLED;
         }
         batched_internally = true;

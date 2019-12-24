@@ -2383,9 +2383,10 @@ pds_nat_port_block_api_stats_to_proto (pds::NatPortBlockStats *proto_stats,
 // populate proto buf from route table API info
 static inline void
 pds_nat_port_block_api_info_to_proto (const pds_nat_port_block_info_t *api_info,
-                                        void *ctxt)
+                                      void *ctxt)
 {
-    pds::NatPortBlockGetResponse *proto_rsp = (pds::NatPortBlockGetResponse *)ctxt;
+    pds::NatPortBlockGetResponse *proto_rsp =
+        (pds::NatPortBlockGetResponse *)ctxt;
     auto dhcp = proto_rsp->add_response();
     pds::NatPortBlockSpec *proto_spec = dhcp->mutable_spec();
     pds::NatPortBlockStatus *proto_status = dhcp->mutable_status();

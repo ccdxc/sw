@@ -33,7 +33,8 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, route table "
+                          "creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -105,7 +106,8 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, route table "
+                          "update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -175,7 +177,8 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, route table "
+                          "delete failed");
             return Status::CANCELLED;
         }
         batched_internally = true;
@@ -230,7 +233,8 @@ RouteSvcImpl::RouteTableGet(ServerContext *context,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::route_table_get_all(pds_route_table_api_info_to_proto, proto_rsp);
+        ret = core::route_table_get_all(pds_route_table_api_info_to_proto,
+                                        proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
