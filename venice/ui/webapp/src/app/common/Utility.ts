@@ -1545,7 +1545,7 @@ export class Utility {
             } else {
               retValue = false;
             }
-          } else if (obj[key] != null && (obj.getPropInfo == null || obj.getPropInfo(key) == null || obj[key] !== obj.getPropInfo(key).default)) {
+          } else if (obj[key] != null) {
             retValue = false;
           }
         }

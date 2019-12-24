@@ -6,6 +6,7 @@ import { NewsecurityappComponent } from './newsecurityapp/newsecurityapp.compone
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
@@ -31,6 +32,7 @@ describe('SecurityappsComponent', () => {
         RouterTestingModule,
         NoopAnimationsModule,
         HttpClientTestingModule,
+        WidgetsModule,
         SharedModule,
         PrimengModule,
         FormsModule,

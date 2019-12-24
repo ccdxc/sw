@@ -91,7 +91,7 @@
         <input class=newsecurityapp-input fxFlex="nogrow"
                spellcheck="false" placeholder="Enter ..." pInputText
                (change)="onProtocolChange($event, securityForm.get(['spec','proto-ports',index]))"
-               formControlName="protocol">
+               appErrorTooltip formControlName="protocol">
       </div>
       <div fxFlex="30px"></div>
       <div fxFlex="45px" fxLayout="row">
@@ -112,7 +112,7 @@
             <span fxFlex="nogrow"
                   (click)="addProtoTarget()">+ ADD</span>
             <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
-                      *ngIf="protoandports.length > 1 && !first"
+                      *ngIf="protoandports.length > 1"
                       (click)="removeProtoTarget(index)">delete</mat-icon>
           </div>
         </div>
@@ -144,16 +144,16 @@
               <div class="newsecurityapp-text-margin">Type:</div>
               <div fxFlex="34px"></div>
               <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     spellcheck="false" type="text" pInputText placeholder="Enter .."
-                     formControlName="type" style="margin-left:5px;">
+                     type="number" min="0" max="255" placeholder="Enter .." spellcheck="false"
+                     appErrorTooltip formControlName="type" pInputText style="margin-left:5px;">
             </div>
             <div fxFlex="70px"></div>
             <div fxFlex>
               <div class="newsecurityapp-text-margin">Code:</div>
               <div fxFlex="34px"></div>
               <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     spellcheck="false" type="text" pInputText placeholder="Enter..."
-                     formControlName="code">
+                     type="number" min="0" max="18" placeholder="Enter..." spellcheck="false"
+                     appErrorTooltip pInputText formControlName="code">
             </div>
           </div>
 
@@ -195,7 +195,7 @@
               <div class="newsecurityapp-text-margin newsecurityapp-message-length">Max Message
                 Length: </div>
               <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
-                     fxFlex="nogrow"
+                     fxFlex="nogrow" appErrorTooltip
                      spellcheck="false" placeholder="Enter length" type="number"
                      formControlName="max-message-length" pInputText>
               <div fxFlex="30px"></div>
@@ -266,7 +266,7 @@
             <span fxFlex="nogrow"
                   (click)="addSunRPCTarget()">+ ADD</span>
             <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                      *ngIf="sunRPCTargets.length > 1 && !first"
+                      *ngIf="sunRPCTargets.length > 1"
                       (click)="removeSunRPCTarget(index)">delete</mat-icon>
           </div>
         </div>
@@ -309,7 +309,7 @@
             <span fxFlex="nogrow"
                   (click)="addMSRPCTarget()">+ ADD</span>
             <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                      *ngIf="msRPCTargets.length > 1 && !first"
+                      *ngIf="msRPCTargets.length > 1"
                       (click)="removeMSRPCTarget(index)">delete</mat-icon>
           </div>
         </div>

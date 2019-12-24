@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
@@ -18,6 +19,7 @@ import { NewsecurityappComponent} from './newsecurityapp/newsecurityapp.componen
 
     PrimengModule,
     MaterialdesignModule,
+    WidgetsModule,
     SharedModule,
     FlexLayoutModule,
     FormsModule,
