@@ -8,15 +8,14 @@
 /// WARNING: this must be a C file, not C++
 //----------------------------------------------------------------------------
 
-#ifndef __CORE_MSG_HPP__
-#define __CORE_MSG_HPP__
+#ifndef __CORE_MSG_H__
+#define __CORE_MSG_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "nic/apollo/framework/api.h"
-#include "nic/apollo/framework/api.hpp"
 
 /// IPC endpoints
 /// IPC endpoints internal to PDS agent/HAL use their unique thread ids as their
@@ -35,6 +34,7 @@ typedef enum pds_ipc_id_s {
 /// message types
 typedef enum pds_msg_type_s {
     PDS_MSG_TYPE_NONE,
+    PDS_MSG_TYPE_BATCH,    ///< batch of below messages
     PDS_MSG_TYPE_CFG,      ///< config type message
     PDS_MSG_TYPE_CMD,      ///< any CLI commands
     PDS_MSG_TYPE_EVENT,    ///< event type message
@@ -64,51 +64,8 @@ typedef enum pds_msg_id_s {
     PDS_MSG_ID_MAX,
 } pds_msg_id_t;
 
-/// vnic configuration
-typedef struct pds_vnic_cfg_msg_s {
-} pds_vnic_cfg_msg_t;
-
-/// subnet configuration
-typedef struct pds_subnet_cfg_msg_s {
-} pds_subnet_cfg_msg_t;
-
-/// DHCP proxy configuration
-typedef struct pds_dhcp_proxy_cfg_msg_s {
-} pds_dhcp_proxy_cfg_msg_t;
-
-/// DHCP relay configuration
-typedef struct pds_dhcp_relay_cfg_msg_s {
-} pds_dhcp_relay_cfg_msg_t;
-
-/// NAT port block configuration
-typedef struct pds_nat_port_block_cfg_msg_s {
-} pds_nat_port_block_cfg_msg_t;
-
-/// configuration message sent or received
-typedef struct pds_cfg_msg_s {
-    /// API operation
-    api_op_t op;
-    /// API object id
-    obj_id_t obj_id;
-    /// msg contents
-    union {
-        pds_vnic_cfg_msg_t vnic;
-        pds_subnet_cfg_msg_t subnet;
-        pds_dhcp_proxy_cfg_msg_t dhcp_proxy;
-        pds_dhcp_relay_cfg_msg_t dhcp_relay;
-        pds_nat_port_block_cfg_msg_t nat_port_block;
-    };
-} pds_cfg_msg_t;
-
-/// top level PDS message structure for all types of messages
-typedef struct pds_msg_s {
-    pds_msg_type_t type;       ///< type of the message
-    pds_msg_id_t   id;         ///< unique id of the msg
-    uint8_t        data[0];    ///< msg type + id specific data
-} pds_msg_t;
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif    // __CORE_MSG_HPP__
+#endif    // __CORE_MSG_H__

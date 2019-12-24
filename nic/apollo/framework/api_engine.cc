@@ -134,9 +134,9 @@ api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
 
 sdk_ret_t
 api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
-    sdk_ret_t     ret;
-    api_obj_ctxt_t    *obj_ctxt;
-    api_base      *api_obj;
+    sdk_ret_t ret;
+    api_base *api_obj;
+    api_obj_ctxt_t *obj_ctxt;
 
     api_obj = api_base::find_obj(api_ctxt);
     if (api_obj == NULL) {
@@ -336,9 +336,9 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
-    sdk_ret_t     ret;
-    api_obj_ctxt_t    *obj_ctxt;
-    api_base      *api_obj;
+    sdk_ret_t ret;
+    api_base *api_obj;
+    api_obj_ctxt_t *obj_ctxt;
 
     api_obj = api_base::find_obj(api_ctxt);
     if (api_obj == nullptr) {
@@ -526,17 +526,37 @@ api_engine::reserve_resources_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::resource_reservation_stage_(void)
 {
-    sdk_ret_t    ret;
+    sdk_ret_t ret;
+    api_obj_ctxt_t *obj_ctxt;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
+    batch_ctxt_.num_msgs = 0;
     // walk over all the dirty objects and reserve resources, if needed
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dol.begin();
          it != batch_ctxt_.dol.end(); ++it) {
-        ret = reserve_resources_(*it, batch_ctxt_.dom[*it]);
+        obj_ctxt = batch_ctxt_.dom[*it];
+        ret = reserve_resources_(*it, obj_ctxt);
         if (ret != SDK_RET_OK) {
             goto error;
+        }
+        // if this API msg needs to relayed to other components as well,
+        // count it so we can allocate resources for all them in one shot
+        if ((obj_ctxt->api_op != API_OP_NONE) &&
+            api_base::circulate(obj_ctxt->obj_id)) {
+            batch_ctxt_.num_msgs++;
+        }
+    }
+    // if some of these APIs need to be shipped to other components, allocate
+    // memory for the necessary messages
+    if (batch_ctxt_.num_msgs) {
+        batch_ctxt_.pds_msgs =
+            (pds_msg_list_t *)core::pds_msg_list_alloc(batch_ctxt_.num_msgs);
+        if (batch_ctxt_.pds_msgs == NULL) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
+                          batch_ctxt_.num_msgs);
+            ret = SDK_RET_OOM;
         }
     }
     return SDK_RET_OK;
@@ -562,19 +582,31 @@ api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::obj_dependency_computation_stage_(void)
 {
-    sdk_ret_t    ret;
+    uint32_t i;
+    sdk_ret_t ret;
+    api_base *api_obj;
+    api_obj_ctxt_t *obj_ctxt;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_RESERVE_RESOURCES),
                       sdk::SDK_RET_INVALID_ARG);
     // walk over all the dirty objects and make a list of objects that are
-    // effected because of each dirty object
+    // affected because of each dirty object
     batch_ctxt_.stage = API_BATCH_STAGE_OBJ_DEPENDENCY;
     for (auto it = batch_ctxt_.dol.begin();
          it != batch_ctxt_.dol.end(); ++it) {
-        ret = add_deps_(*it, batch_ctxt_.dom[*it]);
+        api_obj = *it;
+        obj_ctxt = batch_ctxt_.dom[*it];
+        ret = add_deps_(api_obj, obj_ctxt);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
             goto error;
+        }
+        // if this object needs to be circulated, add it to the msg list
+        i = 0;
+        if ((obj_ctxt->api_op != API_OP_NONE) &&
+            api_base::circulate(obj_ctxt->obj_id)) {
+            api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
+                                  obj_ctxt);
         }
     }
     PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
@@ -988,18 +1020,7 @@ api_engine::batch_abort_(void) {
         PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
         return ret;
     }
-
-    // clear all batch related info
-    PDS_TRACE_INFO("Clearing dirty object list, map (%u, %u)",
-                   batch_ctxt_.dol.size(),
-                   batch_ctxt_.dom.size());
-    batch_ctxt_.dom.clear();
-    batch_ctxt_.dol.clear();
-    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
-
-    // reset epoch and stage information
-    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
-    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+    batch_ctxt_.clear();
     return SDK_RET_OK;
 }
 
@@ -1051,6 +1072,7 @@ api_engine::batch_commit(batch_info_t *batch) {
     }
     PDS_TRACE_INFO("Dependency object list size %u, map size %u",
                    batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
+    PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
 
     // walk over the dirty object list, performe the de-duped operation on
     // each object including allocating resources and h/w programming (with the
@@ -1083,24 +1105,15 @@ api_engine::batch_commit(batch_info_t *batch) {
         return ret;
     }
 
-    PDS_TRACE_INFO("Clearing dirty object list, map (%u, %u)",
-                   batch_ctxt_.dol.size(), batch_ctxt_.dom.size());
-    SDK_ASSERT(batch_ctxt_.dol.size() == 0);
-    SDK_ASSERT(batch_ctxt_.dom.size() == 0);
-    SDK_ASSERT(batch_ctxt_.aol.size() == 0);
-    SDK_ASSERT(batch_ctxt_.aom.size() == 0);
-    batch_ctxt_.dom.clear();
-    batch_ctxt_.dol.clear();
-    batch_ctxt_.aom.clear();
-    batch_ctxt_.aol.clear();
-    PDS_TRACE_VERBOSE("Finished clearing dirty object map/list ...");
-
     // update the epoch to current epoch
     PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",
                    g_current_epoch_, batch_ctxt_.epoch);
     g_current_epoch_ = batch_ctxt_.epoch;
-    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
-    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+    SDK_ASSERT(batch_ctxt_.dol.size() == 0);
+    SDK_ASSERT(batch_ctxt_.dom.size() == 0);
+    SDK_ASSERT(batch_ctxt_.aol.size() == 0);
+    SDK_ASSERT(batch_ctxt_.aom.size() == 0);
+    batch_ctxt_.clear();
     return SDK_RET_OK;
 
 error:

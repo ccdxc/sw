@@ -11,7 +11,7 @@ MODULE_INCS     = $(TOPDIR)/nic/metaswitch/stubs/hals \
 MODULE_FLAGS    = $(addprefix -D,$(MS_COMPILATION_SWITCH))
 MODULE_SOLIBS   = shmmgr pdsacommon pdsahals pdstestapiutils \
                   pdsapimock pdsamgmt pdsastubs ipsfeeder model_client \
-				  thread logger slab
+                  thread logger slab
 MODULE_DEFS     = -DPDS_MOCKAPI
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = rt dl $(MS_LD_LIBS)

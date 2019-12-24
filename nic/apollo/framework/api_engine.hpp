@@ -19,6 +19,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/msg.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -65,7 +66,7 @@ struct api_obj_ctxt_s {
         void        *cb_ctxt;
         uint64_t    upd_bmap;
     };
-    uint8_t rsvd_rscs:1;          ///< true if resource reservation stage is done
+    uint8_t rsvd_rscs:1;          ///< true after resource reservation stage
     uint8_t hw_dirty:1;           ///< true if hw entries are updated,
                                   ///< but not yet activated
 
@@ -116,10 +117,30 @@ typedef struct api_batch_ctxt_s {
     // route changes can happen for same vnic in two different API calls but in
     // same batch and we need to activate them in one write (not one after
     // another)
-    dirty_obj_map_t         dom;    ///< dirty object map
-    dirty_obj_list_t        dol;    ///< dirty object list
-    dep_obj_map_t           aom;    ///< affected/dependent object map
-    dep_obj_list_t          aol;    ///< affected/dependent object list
+    dirty_obj_map_t         dom;             ///< dirty object map
+    dirty_obj_list_t        dol;             ///< dirty object list
+    dep_obj_map_t           aom;             ///< affected/dependent object map
+    dep_obj_list_t          aol;             ///< affected/dependent object list
+    uint32_t                num_msgs;        ///< no. of IPC messages to be sent
+    pds_msg_list_t          *pds_msgs;       ///< list of msgs to be relayed
+
+    void init(void) {
+    }
+
+    void clear(void) {
+        epoch = PDS_EPOCH_INVALID;
+        stage = API_BATCH_STAGE_NONE;
+        api_ctxts = NULL;
+        dom.clear();
+        dol.clear();
+        aom.clear();
+        aol.clear();
+        num_msgs = 0;
+        if (pds_msgs) {
+            core::pds_msg_list_free(pds_msgs);
+            pds_msgs = NULL;
+        }
+    }
 } api_batch_ctxt_t;
 
 /// \brief API counters maintained by API engine

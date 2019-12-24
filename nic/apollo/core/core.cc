@@ -15,11 +15,11 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/framework/api_thread.hpp"
-#include "nic/apollo/nicmgr/nicmgr.hpp"
-#include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
+#include "nic/apollo/nicmgr/nicmgr.hpp"
+#include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/learn/learn.hpp"
 
 using boost::property_tree::ptree;
@@ -33,7 +33,7 @@ namespace core {
 thread *g_thread_store[PDS_THREAD_ID_MAX];
 
 thread *
-thread_get(uint32_t thread_id) {
+thread_get (uint32_t thread_id) {
     if (thread_id >= PDS_THREAD_ID_MAX) {
         return NULL;
     }

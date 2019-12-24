@@ -47,7 +47,6 @@ sdk::lib::thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,
                               pds_state *state);
 sdk_ret_t parse_pipeline_config(string pipeline, pds_state *state);
-
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 sdk_ret_t sig_init(int signal, sig_handler_t sig_handler);
 sdk_ret_t schedule_timers(pds_state *state, sdk::lib::twheel_cb_t sysmon_cb);

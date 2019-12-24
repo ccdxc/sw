@@ -26,6 +26,9 @@ pds_epoch_t get_current_epoch(void);
 
 }    // namespace api
 
+typedef struct pds_msg_s pds_msg_t;
+typedef struct pds_msg_list_s pds_msg_list_t;
+
 using api::api_ctxt_t;
 using api::api_obj_ctxt_t;
 using api::api_params_t;

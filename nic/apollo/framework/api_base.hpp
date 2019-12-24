@@ -184,6 +184,10 @@ public:
     /// \brief delete the object from corresponding internal db(s)
     virtual sdk_ret_t del_from_db(void) { return SDK_RET_INVALID_OP; }
 
+    sdk_ret_t populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_INVALID_OP;
+    }
+
     ///< \brief enqueue the object for delayed destruction
     virtual sdk_ret_t delay_delete(void) { return SDK_RET_INVALID_OP; }
 
@@ -255,9 +259,9 @@ protected:
     virtual ~api_base(){};
 
 protected:
-    uint8_t in_dol_:1;      ///< true if object is in the dirty list
-    uint8_t in_aol_:1;      ///< true if object is in affected object list
-    uint8_t rsvd_rsc_:1;    ///< true if resources are reserved
+    uint8_t in_dol_:1;       ///< true if object is in the dirty list
+    uint8_t in_aol_:1;       ///< true if object is in affected object list
+    uint8_t rsvd_rsc_:1;     ///< true if resources are reserved
 } __PACK__;
 
 /// \brief    find and return cloned version of the given object
