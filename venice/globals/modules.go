@@ -34,4 +34,5 @@ const (
 	Tmagent               = "pen-tmagent"
 	Rollout               = "pen-rollout"
 	CitadelQuery          = "pen-citadel-query"
+	Persues               = "pen-persues"
 )
