@@ -53,8 +53,10 @@ typedef enum pds_msg_id_s {
     PDS_CFG_MSG_ID_VNIC,
     /// subnet related configuration
     PDS_CFG_MSG_ID_SUBNET,
-    /// DHCP poliy configuration
-    PDS_CFG_MSG_ID_DHCP,
+    /// DHCP (suppresion) policy configuration
+    PDS_CFG_MSG_ID_DHCP_POLICY,
+    /// DHCP relay configuration
+    PDS_CFG_MSG_ID_DHCP_RELAY,
     /// NAT port block configuration
     PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
 

@@ -10,7 +10,9 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/dhcp.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -62,6 +64,20 @@ dhcp_relay::free(dhcp_relay *relay) {
 sdk_ret_t
 dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->dhcp_relay_spec.key.id;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_relay::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->type = PDS_MSG_TYPE_CFG;
+    msg->id = PDS_CFG_MSG_ID_DHCP_RELAY;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_DHCP_RELAY;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.dhcp_relay.key = obj_ctxt->api_params->dhcp_relay_key;
+    } else {
+        msg->cfg_msg.dhcp_relay.spec = obj_ctxt->api_params->dhcp_relay_spec;
+    }
     return SDK_RET_OK;
 }
 
@@ -146,6 +162,20 @@ dhcp_policy::free(dhcp_policy *policy) {
 sdk_ret_t
 dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->dhcp_policy_spec.key.id;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->type = PDS_MSG_TYPE_CFG;
+    msg->id = PDS_CFG_MSG_ID_DHCP_POLICY;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_DHCP_POLICY;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.dhcp_policy.key = obj_ctxt->api_params->dhcp_policy_key;
+    } else {
+        msg->cfg_msg.dhcp_policy.spec = obj_ctxt->api_params->dhcp_policy_spec;
+    }
     return SDK_RET_OK;
 }
 
