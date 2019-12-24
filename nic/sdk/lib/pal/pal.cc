@@ -9,7 +9,7 @@ namespace sdk {
 namespace lib {
 
 pal_info_t   gl_pal_info;
-static bool pal_init_done = false;
+static bool g_pal_init_done = false;
 
 static pal_ret_t
 pal_init_cfg (platform_type_t platform_type)
@@ -22,51 +22,70 @@ pal_init_cfg (platform_type_t platform_type)
 pal_ret_t
 pal_init (platform_type_t platform_type)
 {
+    pal_ret_t rv;
+
     // on multithreaded app only the master thread init is considered
-    if (pal_init_done) {
+    if (g_pal_init_done) {
         return PAL_RET_OK;
     }
 
-    if(pal_init_cfg(platform_type) != PAL_RET_OK) {
-	return PAL_RET_NOK;
+    if (pal_init_cfg(platform_type) != PAL_RET_OK) {
+        return PAL_RET_NOK;
     }
 
     switch(platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        return pal_hw_init();
+        rv = pal_hw_init();
+        break;
 
     case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_ZEBU:
         SDK_TRACE_DEBUG("Initializing PAL in SIM mode");
-        return pal_init_sim();
+        rv = pal_init_sim();
+        break;
 
     case platform_type_t::PLATFORM_TYPE_MOCK:
         SDK_TRACE_DEBUG("Initializing PAL in MOCK mode");
-        return pal_mock_init();
+        rv = pal_mock_init();
+        break;
 
     default:
+        rv = PAL_RET_NOK;
         break;
     }
 
-    pal_init_done = true;
+    if (unlikely(rv != PAL_RET_OK)) {
+        SDK_TRACE_ERR("Failed to initialize PAL for platform type %d, err %d",
+                      platform_type, rv);
+        return rv;
+    }
+    g_pal_init_done = true;
     return PAL_RET_OK;
 }
 
 pal_ret_t
 pal_teardown (platform_type_t platform_type)
 {
+    pal_ret_t rv;
 
-    switch(platform_type) {
+    switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_SIM:
         SDK_TRACE_DEBUG("Teardown PAL in SIM mode");
-        return pal_teardown_sim();
+        rv = pal_teardown_sim();
+        break;
 
     default:
+        rv = PAL_RET_NOK;
         break;
     }
 
-    pal_init_done = false;
+    if (unlikely(rv != PAL_RET_OK)) {
+        SDK_TRACE_ERR("Failed to teardown PAL for platform type %d, err %d",
+                      platform_type, rv);
+        return rv;
+    }
+    g_pal_init_done = false;
     return PAL_RET_OK;
 }
 
