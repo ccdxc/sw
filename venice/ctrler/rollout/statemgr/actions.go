@@ -73,7 +73,7 @@ func verifyAdmittedDSCState(dscState *SmartNICState, ros *RolloutState, op proto
 		// not retry: skip DSC and set phase
 		if numRetries == 0 {
 			//this is counted as successful rollout so set the status
-			ros.setSmartNICPhase(dscState.Name, "", "Skipped DSC from upgrade: DSC running same version", phase)
+			ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC running same version", phase)
 		} else {
 			//retry mode and same version, no need to to setPhase
 			log.Infof("SKIPDSC: Retry mode and running same version nothing to do.")
@@ -86,8 +86,8 @@ func verifyAdmittedDSCState(dscState *SmartNICState, ros *RolloutState, op proto
 		if condition.Type == cluster.NodeCondition_HEALTHY.String() && condition.Status == cluster.ConditionStatus_UNKNOWN.String() {
 			//setting the phase to FAIL so that rollout retry counter is incremented
 			//roFSM is not triggered for skipped DSC so set the failed counter
-			atomic.AddUint32(&ros.numFailuresSeen, 1)
-			ros.setSmartNICPhase(dscState.Name, "", "Skipped DSC from upgrade: DSC Unreachable", roproto.RolloutPhase_FAIL)
+			atomic.AddUint32(&ros.numSkipped, 1)
+			ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC Unreachable", roproto.RolloutPhase_FAIL)
 			return false
 		}
 	}
@@ -576,8 +576,6 @@ func (ros *RolloutState) issueDSCOpLinear(snStates []*SmartNICState, op protos.D
 			snStatusList[sn.Name] != opStatusSuccess) {
 			//A new node may have joined or become active or failed precheck. skip it
 			log.Infof("Status not found for %v. Or pre-check not done on this node earlier or precheck failed.", sn.Name)
-			//count pre-upgrade failures/skipped/nodes joined in the middle of rollout, as failure.
-			atomic.AddUint32(&ros.numFailuresSeen, 1)
 			continue
 		}
 		log.Infof("Adding %s to work %v", sn.Name, sn)
@@ -617,8 +615,6 @@ func (ros *RolloutState) issueDSCOpExponential(snStates []*SmartNICState, op pro
 				snStatusList[snStates[curIndex].Name] != opStatusSuccess) {
 				log.Infof("Status not found for %v. Or pre-check not done on this node earlier.", snStates[curIndex].Name)
 				curIndex++
-				//count pre-upgrade failures/skipped/nodes joined in the middle of rollout, as failure.
-				atomic.AddUint32(&ros.numFailuresSeen, 1)
 				continue
 			}
 			log.Debugf("Adding %s to work %v", snStates[curIndex].Name, snStates[curIndex])

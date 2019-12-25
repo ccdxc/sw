@@ -463,8 +463,8 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 
 		numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
 		numSkipped := atomic.LoadUint32(&ros.numSkipped)
-		log.Infof("Rollout numFailures %d numSkipped %d", numFailures, numSkipped)
-		if numFailures == 0 && numSkipped == 0 {
+		log.Infof("Rollout numFailures %d numSkipped %d numPreUpgradeFailures %d", numFailures, numSkipped, ros.numPreUpgradeFailures)
+		if numFailures == 0 && numSkipped == 0 && ros.numPreUpgradeFailures == 0 {
 			ros.eventChan <- fsmEvSuccess
 		} else {
 			ros.eventChan <- fsmEvFail
