@@ -11,6 +11,12 @@ export PERSISTENT_LOG_DIR=$NIC_DIR/
 #export CAPRI_MOCK_MODE=1
 #export CAPRI_MOCK_MEMORY_MODE=1
 export ZMQ_SOC_DIR=${NIC_DIR}
+
+#Huge-pages for DPDK
+echo 2048 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+mkdir -p /dev/hugepages
+mount -t hugetlbfs nodev /dev/hugepages
+
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 BUILD_DIR=$NIC_DIR/build/x86_64/athena
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov

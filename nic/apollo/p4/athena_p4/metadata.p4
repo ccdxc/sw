@@ -18,6 +18,8 @@ header_type key_metadata_t {
         proto               : 8;
         dport               : 16;
         sport               : 16;
+        ipv4_src            : 32;
+        ipv4_dst            : 32;
         tcp_flags           : 6;
         ingress_port        : 1;
     }
@@ -30,6 +32,7 @@ header_type control_metadata_t {
         direction                           : 1;
         parse_tcp_option_error              : 1;
         flow_miss                           : 1;
+        launch_v4                           : 1; // Dummy - never set
         p4plus_app_id                       : 8;
         config1_epoch                       : 32;
         config1_idx                         : 16;

@@ -17,9 +17,6 @@
 #elif IRIS
 #include "ftlv6_structs_iris.hpp"
 #include "ftlv4_structs_iris.hpp"
-#elif defined(ATHENA)
-#include "ftlv6_structs_athena.hpp"
-#include "ftlv4_structs_athena.hpp"
 #else
 #error FTL is not suppored on IRIS pipeline (Yet!!).
 #endif

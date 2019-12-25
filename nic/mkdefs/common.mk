@@ -294,6 +294,7 @@ export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
 
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
+export NIC_FTL_LIBS           := ftlv4 ftlv6
 
 # ==========================================================================
 #                        Apollo Specific Defs
@@ -338,7 +339,7 @@ phoebus_DEFS    := -DPHOEBUS
 gft16_DEFS      := -DGFT16
 hello_DEFS      := -DHELLO
 
-export PIPLINES_8G := apollo artemis apulu
+export PIPLINES_8G := apollo artemis apulu athena
 export PIPELINES_ALL := iris gft apollo artemis apulu l2switch elektra phoebus gft16 hello athena
 
 # ==========================================================================

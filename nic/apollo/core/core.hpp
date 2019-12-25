@@ -27,6 +27,7 @@ enum {
     PDS_THREAD_ID_NICMGR     = 4,
     PDS_THREAD_ID_PCIEMGR    = 5,
     PDS_THREAD_ID_LEARN      = 6,
+    PDS_THREAD_ID_FTE        = 7,
     PDS_THREAD_ID_MAX        = 32
 };
 
@@ -41,6 +42,7 @@ sdk_ret_t spawn_nicmgr_thread(pds_state *state);
 sdk_ret_t spawn_pciemgr_thread(pds_state *state);
 sdk_ret_t spawn_api_thread(pds_state *state);
 sdk_ret_t spawn_learn_thread(pds_state *state);
+sdk_ret_t spawn_fte_thread(pds_state *state);
 bool is_nicmgr_ready(void);
 void threads_stop(void);
 sdk::lib::thread *thread_get(uint32_t thread_id);

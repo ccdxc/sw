@@ -7,20 +7,700 @@
 /// This file contains FTE core functionality
 ///
 //----------------------------------------------------------------------------
+#include <cstring>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <sys/types.h>
+#include <sys/queue.h>
+#include <netinet/in.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <errno.h>
+#include <getopt.h>
+#include <signal.h>
+#include <stdbool.h>
+
+#include <rte_common.h>
+#include <rte_log.h>
+#include <rte_malloc.h>
+#include <rte_memory.h>
+#include <rte_memcpy.h>
+#include <rte_eal.h>
+#include <rte_launch.h>
+#include <rte_atomic.h>
+#include <rte_cycles.h>
+#include <rte_prefetch.h>
+#include <rte_lcore.h>
+#include <rte_per_lcore.h>
+#include <rte_branch_prediction.h>
+#include <rte_interrupts.h>
+#include <rte_random.h>
+#include <rte_debug.h>
+#include <rte_ether.h>
+#include <rte_ethdev.h>
+#include <rte_mempool.h>
+#include <rte_mbuf.h>
+#include <rte_ip.h>
+#include <rte_udp.h>
 
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/fte/fte.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
+#include "nic/utils/ftl/ftlv4.hpp"
+#include "nic/utils/ftl/ftlv6.hpp"
+
+#ifdef APOLLO
+#include "nic/apollo/p4/include/defines.h"
+#include "gen/p4gen/apollo/include/p4pd.h"
+#define FTE_CPU_FLAGS_DIRECTION APOLLO_CPU_FLAGS_DIRECTION
+#elif ARTEMIS
+#include "nic/apollo/p4/include/artemis_defines.h"
+#include "gen/p4gen/artemis/include/p4pd.h"
+#define FTE_CPU_FLAGS_DIRECTION ARTEMIS_CPU_FLAGS_DIRECTION
+#elif ATHENA
+#include "nic/apollo/p4/include/athena_defines.h"
+#include "gen/p4gen/athena/include/p4pd.h"
+//#define FTE_CPU_FLAGS_DIRECTION ATHENA_CPU_FLAGS_DIRECTION
+#elif APULU
+#include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/apulu/include/p4pd.h"
+//#define FTE_CPU_FLAGS_DIRECTION APULU_CPU_FLAGS_DIRECTION
+#endif
 
 namespace fte {
+
+char const * g_eal_args[] = {"fte", "-l", "2,3", "--vdev=net_ionic0"};
+#define RTE_LOGTYPE_FTE RTE_LOGTYPE_USER1
+#define NELEMS(_a) (sizeof(_a)/sizeof(_a[0]))
+
+#define MAX_RX_QUEUE_PER_LCORE 16
+#define MAX_TX_QUEUE_PER_PORT 16
+
+#define FTE_PID 0 // Default PORTID
+#define FTE_QID 0 // Default QueueID
+#define FTE_MAX_CORES 1 // Max Cores
+#define FTE_MAX_TXDSCR 1024 // Max TX Descriptors
+#define FTE_MAX_RXDSCR 1024 // Max RX Descriptors
+#define FTE_PKT_BATCH_SIZE 32 // Packet Batch Size
+#define FTE_MEMPOOL_SIZE 256
+#define FTE_PREFETCH_NLINES 7
+/* Global State */
+typedef struct gls_s {
+    struct rte_mempool* mbfpool;
+    uint16_t ntxdscr;
+    uint16_t nrxdscr;
+    uint32_t nmbfs;
+    struct rte_eth_dev_tx_buffer* txbf;
+    stats_t stats;
+    uint64_t ftlstats[sdk::SDK_RET_MAX];
+} __rte_cache_aligned gls_t;
+gls_t gls = { NULL, FTE_MAX_TXDSCR, FTE_MAX_RXDSCR };
+
+/* FTL */
+#define FTE_MAX_NUM_CORES 4
+#define FTE_MAX_BURST_SIZE 64
+/* Session ID is 23 bits and ID 0 is reserved, so Max sessions are (8 * 1024 * 1024) - 2. */
+#define FTE_MAX_SESSION_INDEX (8388606)
+#define FTE_FLOW_SESSION_POOL_COUNT_MAX 256
+
+typedef struct fte_flow_params_s {
+    union {
+        ftlv4_entry_t entry4;
+        ftlv6_entry_t entry6;
+    };
+    uint32_t hash;
+} fte_flow_params_t;
+
+typedef struct fte_flow_hw_ctx_s {
+    uint8_t dummy;
+} fte_flow_hw_ctx_t;
+
+typedef struct fte_flow_session_id_thr_local_pool_s {
+    int16_t         pool_count;
+    uint32_t        session_ids[FTE_FLOW_SESSION_POOL_COUNT_MAX];
+} fte_flow_session_id_thr_local_pool_t;
+
+typedef struct fte_flow_main_s {
+    uint64_t no_cores;
+    volatile uint32_t flow_prog_lock;
+    ftlv4 *table4[FTE_MAX_NUM_CORES];
+    ftlv6 *table6[FTE_MAX_NUM_CORES];
+    fte_flow_params_t ip4_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
+    fte_flow_params_t ip6_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
+    fte_flow_hw_ctx_t session_index_pool[FTE_MAX_SESSION_INDEX];
+    fte_flow_session_id_thr_local_pool_t session_id_thr_local_pool[FTE_MAX_NUM_CORES];
+} fte_flow_main_t;
+
+fte_flow_main_t fte_fm;
+
+typedef char* (*key2str_t)(void *key);
+typedef char* (*appdata2str_t)(void *data);
+
+uint32_t dump_src_ip, dump_dst_ip;
+uint16_t dump_sport, dump_dport;
+uint8_t dump_protocol;
+
+static char *
+fte_flow4_key2str (void *key)
+{
+    static char str[256];
+    flow_swkey_t *k = (flow_swkey_t *)key;
+    char srcstr[INET_ADDRSTRLEN + 1];
+    char dststr[INET_ADDRSTRLEN + 1];
+
+    inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
+    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u",
+            srcstr, dststr, k->key_metadata_dport, k->key_metadata_sport,
+            k->key_metadata_proto);
+    return str;
+}
+
+static char *
+fte_flow6_key2str (void *key)
+{
+    static char str[256];
+    flow_swkey_t *k = (flow_swkey_t *)key;
+    char srcstr[INET6_ADDRSTRLEN + 1];
+    char dststr[INET6_ADDRSTRLEN + 1];
+
+    inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
+    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u",
+            srcstr, dststr, k->key_metadata_dport, k->key_metadata_sport,
+            k->key_metadata_proto);
+    return str;
+}
+
+static char *
+fte_flow_appdata2str (void *appdata)
+{
+    static char str[512];
+    flow_appdata_t *d = (flow_appdata_t *)appdata;
+#ifdef ATHENA
+    sprintf(str, "session_index:%d ", d->session_index);
+#elif APULU
+    sprintf(str, "session_id:%d flow_role:%d",
+            d->session_id, d->flow_role);
+#else
+    sprintf(str, "session_index:%d flow_role:%d",
+            d->session_index, d->flow_role);
+#endif
+    return str;
+}
+
+void fte_ftlv4_set_session_index(ftlv4_entry_t *entry, uint32_t session)
+{
+#ifndef APULU
+    entry->set_session_index(session);
+#else
+    entry->set_session_id(session);
+#endif
+}
+
+void fte_ftlv4_set_key(ftlv4_entry_t *entry,
+             uint32_t sip,
+             uint32_t dip,
+             uint8_t ip_proto,
+             uint16_t src_port,
+             uint16_t dst_port,
+             uint16_t lookup_id)
+{
+    PDS_TRACE_DEBUG("\nFTE KEY: sip:0x%x dip:0x%x prot:%d sport:%u dport:%u \n\n", sip,
+			dip, ip_proto, src_port, dst_port);
+    entry->set_key_metadata_ipv4_src(sip);
+    entry->set_key_metadata_ipv4_dst(dip);
+    entry->set_key_metadata_proto(ip_proto);
+    entry->set_key_metadata_sport(src_port);
+    entry->set_key_metadata_dport(dst_port);
+}
+
+void
+fte_ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
+                    uint8_t ip_proto, uint16_t sport,
+                    uint16_t dport, uint16_t lookup_id,
+                    char *buf, int max_len)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    ftlv4_entry_t entry;
+
+    entry.clear();
+    fte_ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
+    params.entry = &entry;
+
+    ret = obj->get(&params);
+    if (ret != SDK_RET_OK) {
+	PDS_TRACE_DEBUG("\nFTE GET FAILED..\n");
+	return;
+    }
+    entry.tostr(buf, max_len);
+    return;
+}
+
+ftlv4 *
+fte_ftlv4_create(void *key2str,
+             void *appdata2str,
+             uint32_t thread_id)
+{
+    sdk_table_factory_params_t factory_params = {0};
+
+    // In case of Athena, its Unified Table for both v4 and v6
+#ifndef ATHENA
+    factory_params.table_id = P4TBL_ID_IPV4_FLOW;
+#else
+    factory_params.table_id = P4TBL_ID_FLOW;
+#endif
+
+    factory_params.num_hints = 2;
+    factory_params.max_recircs = 8;
+    factory_params.key2str = (key2str_t) (key2str);
+    factory_params.appdata2str = (appdata2str_t) (appdata2str);
+    factory_params.thread_id = thread_id;
+
+    return ftlv4::factory(&factory_params);
+}
+
+
+ftlv6 *
+fte_ftlv6_create(void *key2str,
+             void *appdata2str,
+             uint32_t thread_id)
+{
+    sdk_table_factory_params_t factory_params = {0};
+
+    factory_params.table_id = P4TBL_ID_FLOW;
+    factory_params.num_hints = 4;
+    factory_params.max_recircs = 8;
+    factory_params.key2str = (key2str_t) (key2str);
+    factory_params.appdata2str = (appdata2str_t) (appdata2str);
+    factory_params.thread_id = thread_id;
+
+    return ftlv6::factory(&factory_params);
+}
+
+int
+fte_ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
+{
+    sdk_table_api_params_t params = {0};
+
+#if 0
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+#endif
+
+    if (hash) {
+        params.hash_32b = hash;
+        params.hash_valid = 1;
+    }
+    params.entry = entry;
+    if (SDK_RET_OK != obj->insert(&params)) {
+        return -1;
+    }
+    return 0;
+}
+
+void
+fte_ftl_init(void)
+{
+    int i;
+
+    memset(&fte_fm, 0, sizeof(fte_flow_main_t));
+
+    for (i = 0; i < FTE_MAX_NUM_CORES; i++) {
+        fte_fm.table4[i] = fte_ftlv4_create((void *) fte_flow4_key2str,
+                                     (void *) fte_flow_appdata2str,
+                                     i);
+
+        fte_fm.table6[i] = fte_ftlv6_create((void *) fte_flow6_key2str,
+                                     (void *) fte_flow_appdata2str,
+                                     i);
+
+        fte_fm.session_id_thr_local_pool[i].pool_count = -1;
+    	PDS_TRACE_DEBUG("\n\nfte_ftl_init done for core#:%d \n\n", i);
+    }
+
+    return;    	
+}
+
+#define IP_PROTOCOL_TCP 0x06
+#define IP_PROTOCOL_UDP 0x11
+
+void
+fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
+                               fte_flow_params_t *local_params0,
+                               uint32_t session_id,
+                               uint8_t is_ip4)
+{
+    struct udp_hdr *udp0;
+
+    if (is_ip4) {
+        struct ipv4_hdr *ip40;
+        ftlv4_entry_t *local_entry = &local_params0->entry4;
+        uint32_t src_ip, dst_ip;
+        uint16_t sport, dport;
+        uint8_t protocol;
+	int i;
+	char *pkt;
+
+        fte_ftlv4_set_session_index(local_entry, session_id);
+
+        ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, 35 /* APOLLO_P4_TO_ARM_HDR_SZ + L2_HDR_OFFSET */);
+
+	pkt = (char *)ip40;
+	PDS_TRACE_DEBUG("\n");
+	for (i = 0; i < 5; i++) {
+		PDS_TRACE_DEBUG("PKT: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x ",
+			pkt[0], pkt[1], pkt[2], pkt[3], pkt[4], pkt[5], pkt[6], pkt[7], pkt[8], pkt[9]);
+		pkt += 10; 
+	}
+	PDS_TRACE_DEBUG("\n");
+
+        src_ip = rte_be_to_cpu_32(ip40->src_addr);
+        dst_ip = rte_be_to_cpu_32(ip40->dst_addr);
+        protocol = ip40->next_proto_id;
+
+        if ((ip40->next_proto_id == IP_PROTOCOL_TCP)
+                || (ip40->next_proto_id == IP_PROTOCOL_UDP)) {
+            udp0 = (struct udp_hdr *) (((uint8_t *) ip40) +
+					((ip40->version_ihl & IPV4_HDR_IHL_MASK) * 
+					IPV4_IHL_MULTIPLIER));
+            sport = rte_be_to_cpu_16(udp0->src_port);
+            dport = rte_be_to_cpu_16(udp0->dst_port);
+        } else {
+            sport = dport =0;
+        }
+        fte_ftlv4_set_key(local_entry, src_ip, dst_ip,
+                      protocol, sport, dport, 0 /* TODO: lkp_id */);
+
+	/*TODO: To be reomved. Debug purpose */
+	dump_src_ip = src_ip;
+	dump_dst_ip = dst_ip;
+	dump_protocol = protocol;
+	dump_sport = sport;
+	dump_dport = dport;
+	}
+#if 0
+    else {
+        ip6_header_t *ip60;
+        ftlv6_entry_t *local_entry = &local_params0->entry6;
+        ftlv6_entry_t *remote_entry = &remote_params0->entry6;
+        u8 *src_ip, *dst_ip;
+        u16 sport, dport;
+        u8 protocol;
+        u16 lkp_id;
+
+        ftlv6_set_session_index(local_entry, session_id);
+        ftlv6_set_session_index(remote_entry, session_id);
+        ftlv6_set_epoch(local_entry, 0xff);
+        ftlv6_set_epoch(remote_entry, 0xff);
+
+        ip60 = vlib_buffer_get_current(p0);
+
+        src_ip = ip60->src_address.as_u8;
+        dst_ip = ip60->dst_address.as_u8;
+        protocol = ip60->protocol;
+        lkp_id = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+
+        if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP)
+                || (ip60->protocol == IP_PROTOCOL_UDP)))) {
+            udp0 = (udp_header_t *) (((u8 *) ip60) +
+                    (vnet_buffer (p0)->l4_hdr_offset -
+                            vnet_buffer (p0)->l3_hdr_offset));
+            sport = clib_net_to_host_u16(udp0->src_port);
+            dport = clib_net_to_host_u16(udp0->dst_port);
+        } else {
+            sport = dport =0;
+        }
+        ftlv6_set_key(local_entry, src_ip, dst_ip,
+                      protocol, sport, dport, lkp_id, 0);
+        ftlv6_set_key(remote_entry, dst_ip, src_ip,
+                      protocol, dport, sport, lkp_id, 0);
+        pds_flow_extract_nexthop_info((void *)local_entry,
+                                      (void *)remote_entry, p0, 0);
+    }
+#endif
+    local_params0->hash = 0; /* TODO: vnet_buffer (p0)->pds_data.flow_hash; */
+    return;
+}
+
+void
+fte_flow_program_hw_ipv4(fte_flow_params_t *key, unsigned int lcore_id)
+{
+    int ret;
+    ftlv4 *table = fte_fm.table4[lcore_id];
+
+    /* ret = fte_ftlv4_insert(table, &key[lcore_id].entry4, key[lcore_id].hash); */
+    ret = fte_ftlv4_insert(table, &key->entry4, key->hash);
+
+    if (0 != ret)
+    	PDS_TRACE_DEBUG("\nFTE fte_ftlv4_insert failed.. \n\n");
+
+    PDS_TRACE_DEBUG("\nFTE fte_ftlv4_insert passed.. \n\n");
+    return;
+}
+
+void
+fte_flow_dump()
+{
+    char buf[1024];
+
+    fte_ftlv4_dump_hw_entry(fte_fm.table4[0], dump_src_ip, dump_dst_ip,
+    		dump_protocol, dump_sport, dump_dport, 0, buf, 1024);
+
+    PDS_TRACE_DEBUG("\nFTE DUMP:%s \n", buf);
+
+    return;
+}
+
+void
+fte_flow_prog_ipv4(struct rte_mbuf *m)
+{
+    uint32_t session_id; 
+    unsigned int lcore_id;
+    fte_flow_params_t *params;
+
+
+    lcore_id = rte_lcore_id();
+    params = fte_fm.ip4_flow_params[lcore_id];
+
+    session_id = 1; /* TODO: Use appropriate APIs to retrieve session_id */
+
+    fte_flow_extract_prog_args_x1(m, params, session_id, 1);
+
+    fte_flow_program_hw_ipv4(params, lcore_id);
+
+    fte_flow_dump();
+
+    return;    
+}
+
+static void
+_process(struct rte_mbuf *m)
+{
+    //gls.ftlstats[ret]++;
+
+    fte_flow_prog_ipv4(m);
+
+    int numtx = rte_eth_tx_buffer(FTE_PID, FTE_QID, gls.txbf, m);
+    if (numtx) {
+        gls.stats.tx += numtx;
+    }
+    //rte_pktmbuf_free(m);
+}
+
+/* main processing loop */
+static void
+fte_rx_loop(void)
+{
+    struct rte_mbuf *pkts_burst[FTE_PKT_BATCH_SIZE];
+    int numrx, numtx;
+
+    PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u \n", rte_lcore_id());
+    while (1) {
+        numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);
+        if (!numrx) {
+            continue;
+        }
+
+    	PDS_TRACE_DEBUG("\n\nFTE receives %d packets.. \n\n", numrx);
+        gls.stats.rx += numrx;
+        for (int i = 0; i < numrx; i++) {
+            auto m = pkts_burst[i];
+            if ((i+1) < numrx) {
+                auto m2 = pkts_burst[i+1];
+                uint8_t *d2 = rte_pktmbuf_mtod(m2, uint8_t*);
+                for (int i = 0; i < FTE_PREFETCH_NLINES; i++) {
+                    rte_prefetch0(d2+i*64);
+                }
+            }
+            _process(m);
+        }
+//#ifndef FTE_REINJECT_DISABLE 
+        numtx = rte_eth_tx_buffer_flush(0, 0, gls.txbf);
+        if (numtx) {
+            gls.stats.tx += numtx; /* TODO: Duplicate increment?? Check _process as well. */
+        }
+//#endif
+    }
+}
+
+static int
+fte_launch_one_lcore(__attribute__((unused)) void *dummy)
+{
+    fte_rx_loop();
+    return 0;
+}
+
+static void
+_init_gls() 
+{
+    uint16_t nports = 0;
+    uint32_t nmbfs = 0;
+
+    nports = rte_eth_dev_count_avail();
+    if (nports == 0) {
+        rte_exit(EXIT_FAILURE, "No Ethernet ports - bye\n");
+    }
+
+    nmbfs = nports * (FTE_MAX_RXDSCR + FTE_MAX_TXDSCR + FTE_PKT_BATCH_SIZE +
+                      FTE_MAX_CORES * FTE_MEMPOOL_SIZE);
+    gls.nmbfs = RTE_MAX(nmbfs, 8192U);
+
+    /* create the mbuf pool */
+    gls.mbfpool = rte_pktmbuf_pool_create("mbuf_pool", gls.nmbfs, FTE_MEMPOOL_SIZE,
+                                          0, RTE_MBUF_DEFAULT_BUF_SIZE,
+                                          rte_socket_id());
+    if (gls.mbfpool == NULL) {
+        rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
+    }
+
+    return;
+}
+
+void
+_init_port(uint16_t portid) {
+    int ret = 0;
+    struct rte_eth_rxconf rxq_conf;
+    struct rte_eth_txconf txq_conf;
+    struct rte_eth_conf local_port_conf = {0};
+    struct rte_eth_dev_info dev_info;
+
+    /* init port */
+    printf("Initializing port %u... \n", portid);
+    rte_eth_dev_info_get(portid, &dev_info);
+    if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MBUF_FAST_FREE) {
+        local_port_conf.txmode.offloads |= DEV_TX_OFFLOAD_MBUF_FAST_FREE;
+    }
+    ret = rte_eth_dev_configure(portid, 1, 1, &local_port_conf);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
+                 ret, portid);
+    }
+
+    ret = rte_eth_dev_adjust_nb_rx_tx_desc(portid, &gls.nrxdscr, &gls.ntxdscr);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "Descriptors updated failed: err=%d, port=%u\n",
+                 ret, FTE_PID);
+    }
+
+    /* init one RX queue */
+    rxq_conf = dev_info.default_rxconf;
+    rxq_conf.offloads = local_port_conf.rxmode.offloads;
+    ret = rte_eth_rx_queue_setup(portid, 0, gls.nrxdscr,
+                                 rte_eth_dev_socket_id(portid),
+                                 &rxq_conf, gls.mbfpool);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
+                 ret, portid);
+    }
+
+    txq_conf = dev_info.default_txconf;
+    txq_conf.offloads = local_port_conf.txmode.offloads;
+    ret = rte_eth_tx_queue_setup(portid, 0, gls.ntxdscr,
+                                 rte_eth_dev_socket_id(portid),
+                                 &txq_conf);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "rte_eth_tx_queue_setup:err=%d, port=%u\n",
+                 ret, portid);
+    }
+
+    return;
+}
+
+static void
+_init_txbf(uint16_t portid) {
+    int ret = 0;
+
+    /* Initialize TX buffers */
+    gls.txbf = (rte_eth_dev_tx_buffer*)rte_zmalloc_socket("tx_buffer",
+                                  RTE_ETH_TX_BUFFER_SIZE(FTE_PKT_BATCH_SIZE), 0,
+                                  rte_eth_dev_socket_id(portid));
+    if (gls.txbf == NULL) {
+        rte_exit(EXIT_FAILURE, "Cannot allocate buffer for tx on port %u\n",
+                portid);
+    }
+
+    rte_eth_tx_buffer_init(gls.txbf, FTE_PKT_BATCH_SIZE);
+
+    ret = rte_eth_tx_buffer_set_err_callback(gls.txbf,
+                                rte_eth_tx_buffer_count_callback,
+                                &gls.stats.drop);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE,
+                 "Cannot set error callback for tx buffer on port %u\n",
+                 portid);
+    }
+
+    return;
+}
+
+int
+fte_main()
+{
+    int ret;
+    unsigned lcore_id;
+    /* init EAL */
+    ret = rte_eal_init(NELEMS(g_eal_args), (char**)g_eal_args);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
+    }
+
+    /* Initialize Global State */
+    _init_gls();
+
+    /* Configure Port */
+    _init_port(FTE_PID);
+
+    /* Initialize TX Buffer */
+    _init_txbf(FTE_PID);
+
+    /* Start device */
+    ret = rte_eth_dev_start(FTE_PID);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "rte_eth_dev_start:err=%d, port=%u\n",
+                 ret, FTE_PID);
+    }
+    rte_eth_promiscuous_enable(FTE_PID);
+
+    ret = 0;
+    /* launch per-lcore init on every lcore */
+    rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, CALL_MASTER);
+    RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+        if (rte_eal_wait_lcore(lcore_id) < 0) {
+            ret = -1;
+            break;
+        }
+    }
+
+    printf("Closing port %d...\n", FTE_PID);
+    rte_eth_dev_stop(FTE_PID);
+    rte_eth_dev_close(FTE_PID);
+    return ret;
+}
 
 void *
 fte_thread_start (void *ctxt)
 {
     SDK_THREAD_INIT(ctxt);
+
+    sleep(10);
+    
+    fte_ftl_init();
     PDS_TRACE_DEBUG("FTE entering forever loop ...");
-    while (1);
+
+    fte_main();
+
     return NULL;
 }
 
-}    // namespace fte
+} // namespace fte

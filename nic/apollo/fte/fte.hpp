@@ -13,6 +13,12 @@
 
 namespace fte {
 
+struct stats_t {
+    uint64_t tx;
+    uint64_t rx;
+    uint64_t drop;
+};
+
 void *fte_thread_start(void *ctxt);
 
 }    // namespace fte

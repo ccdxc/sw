@@ -29,7 +29,7 @@ gencrc32 (bool nextindex, bool nexthint)
 void
 fill_entry (uint32_t index, ftlv6_entry_t *entry)
 {
-    entry->key_metadata_proto = 17;
+    entry->set_key_metadata_proto(17);
     entry->key_metadata_sport = index;
     entry->key_metadata_dport = index;
 

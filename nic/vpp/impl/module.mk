@@ -13,8 +13,8 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl               \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri              \
                   sdkplatformutils sdkxcvrdriver sdkasicpd                  \
                   rfc_${PIPELINE} pdsrfc                                    \
-                  bm_allocator sdklinkmgr sdklinkmgrcsr ftlv6 ftlv4 utils   \
-                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS} 
+                  bm_allocator sdklinkmgr sdklinkmgrcsr  utils              \
+                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS}
 MODULE_LDLIBS   = ${SDK_THIRDPARTY_CAPRI_LDLIBS}                            \
                   ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} dl              \
                   ${SDK_THIRD_PARTY_VPP_LIBS} AAPL

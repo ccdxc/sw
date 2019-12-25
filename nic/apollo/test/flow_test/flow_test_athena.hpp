@@ -17,12 +17,13 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
-#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
 using sdk::table::ftlv6;
@@ -157,7 +158,6 @@ typedef struct cfg_params_s {
 class flow_test {
 private:
     ftlv6 *v6table;
-    ftlv4 *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
     uint32_t nexthop_group_index;
@@ -255,16 +255,6 @@ private:
         return v6table->insert(&params);
     }
 
-    sdk_ret_t insert_(ftlv4_entry_t *v4entry) {
-        memset(&params, 0, sizeof(params));
-        params.entry = v4entry;
-        if (with_hash) {
-            params.hash_valid = true;
-            params.hash_32b = hash++;
-        }
-        return v4table->insert(&params);
-    }
-
     sdk_ret_t remove_(ftlv6_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
@@ -283,15 +273,7 @@ public:
         v6table = ftlv6::factory(&factory_params);
         assert(v6table);
 
-        memset(&factory_params, 0, sizeof(factory_params));
-        factory_params.table_id = P4TBL_ID_IPV4_FLOW;
-        factory_params.num_hints = 2;
-        factory_params.max_recircs = 8;
-        factory_params.key2str = NULL;
-        factory_params.appdata2str = NULL;
-        factory_params.entry_trace_en = false;
-        v4table = ftlv4::factory(&factory_params);
-        assert(v4table);
+        // Unified V4 and V6 tables on Master, so just need to init only one table (above)
 
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
@@ -343,7 +325,6 @@ public:
 
     ~flow_test() {
         ftlv6::destroy(v6table);
-        ftlv4::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
@@ -564,11 +545,6 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t get_v4flow_stats(sdk_table_api_stats_t *api_stats,
-                               sdk_table_stats_t *table_stats) {
-        return v4table->stats_get(api_stats, table_stats);
-    }
-
     sdk_ret_t get_v6flow_stats(sdk_table_api_stats_t *api_stats,
                                sdk_table_stats_t *table_stats) {
         return v6table->stats_get(api_stats, table_stats);
@@ -680,7 +656,6 @@ public:
     }
 
     sdk_ret_t clear_flows() {
-       v4table->clear(true, true);
        v6table->clear(true, true);
        return SDK_RET_OK;
     }

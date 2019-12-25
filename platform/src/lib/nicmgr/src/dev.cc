@@ -204,7 +204,7 @@ string
 DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode,
                                bool *micro_seg_en)
 {
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU)
+#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
     sdk::lib::device *device = NULL;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     sdk::lib::dev_feature_profile_t feature_profile;

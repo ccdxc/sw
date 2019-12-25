@@ -503,11 +503,19 @@ public:
     }
 
     void clear_hints(void) {
-        __pad_to_512b = 0;
 //::        # TODO use setters
 //::        for data_field in reversed(data_fields_list):
+//::            field_name = data_field.name()
+//::            field_width = data_field.width()
+//::            if field_name == '__pad_to_512b':
+//::                if field_width > get_field_bit_unit():
+//::                    arr_len = get_bit_arr_length(field_width)
+        memset(${field_name}, 0, ${arr_len});
+//::                else:
+        ${field_name} = 0;
+//::                #endif
+//::            #endif
 //::            if data_field.is_hash_hint_field():
-//::                field_name = data_field.name()
         ${field_name} = 0;
 //::            #endif
 //::        #endfor
