@@ -75,6 +75,31 @@ type OrderHandler interface {
 	GetOrderWatchOptions() *api.ListWatchOptions
 }
 
+// OnOrderCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrderCreate(obj *Order) error {
+	log.Info("OnOrderCreate is not implemented")
+	return nil
+}
+
+// OnOrderUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrderUpdate(oldObj *Order, newObj *bookstore.Order) error {
+	log.Info("OnOrderUpdate is not implemented")
+	return nil
+}
+
+// OnOrderDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrderDelete(obj *Order) error {
+	log.Info("OnOrderDelete is not implemented")
+	return nil
+}
+
+// GetOrderWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetOrderWatchOptions() *api.ListWatchOptions {
+	log.Info("GetOrderWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleOrderEvent handles Order events from watcher
 func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type BookHandler interface {
 	OnBookUpdate(oldObj *Book, newObj *bookstore.Book) error
 	OnBookDelete(obj *Book) error
 	GetBookWatchOptions() *api.ListWatchOptions
+}
+
+// OnBookCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBookCreate(obj *Book) error {
+	log.Info("OnBookCreate is not implemented")
+	return nil
+}
+
+// OnBookUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBookUpdate(oldObj *Book, newObj *bookstore.Book) error {
+	log.Info("OnBookUpdate is not implemented")
+	return nil
+}
+
+// OnBookDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBookDelete(obj *Book) error {
+	log.Info("OnBookDelete is not implemented")
+	return nil
+}
+
+// GetBookWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetBookWatchOptions() *api.ListWatchOptions {
+	log.Info("GetBookWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleBookEvent handles Book events from watcher
@@ -1593,6 +1643,31 @@ type PublisherHandler interface {
 	GetPublisherWatchOptions() *api.ListWatchOptions
 }
 
+// OnPublisherCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnPublisherCreate(obj *Publisher) error {
+	log.Info("OnPublisherCreate is not implemented")
+	return nil
+}
+
+// OnPublisherUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnPublisherUpdate(oldObj *Publisher, newObj *bookstore.Publisher) error {
+	log.Info("OnPublisherUpdate is not implemented")
+	return nil
+}
+
+// OnPublisherDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnPublisherDelete(obj *Publisher) error {
+	log.Info("OnPublisherDelete is not implemented")
+	return nil
+}
+
+// GetPublisherWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetPublisherWatchOptions() *api.ListWatchOptions {
+	log.Info("GetPublisherWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handlePublisherEvent handles Publisher events from watcher
 func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 
@@ -2350,6 +2425,31 @@ type StoreHandler interface {
 	OnStoreUpdate(oldObj *Store, newObj *bookstore.Store) error
 	OnStoreDelete(obj *Store) error
 	GetStoreWatchOptions() *api.ListWatchOptions
+}
+
+// OnStoreCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStoreCreate(obj *Store) error {
+	log.Info("OnStoreCreate is not implemented")
+	return nil
+}
+
+// OnStoreUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStoreUpdate(oldObj *Store, newObj *bookstore.Store) error {
+	log.Info("OnStoreUpdate is not implemented")
+	return nil
+}
+
+// OnStoreDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStoreDelete(obj *Store) error {
+	log.Info("OnStoreDelete is not implemented")
+	return nil
+}
+
+// GetStoreWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetStoreWatchOptions() *api.ListWatchOptions {
+	log.Info("GetStoreWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleStoreEvent handles Store events from watcher
@@ -3111,6 +3211,31 @@ type CouponHandler interface {
 	GetCouponWatchOptions() *api.ListWatchOptions
 }
 
+// OnCouponCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCouponCreate(obj *Coupon) error {
+	log.Info("OnCouponCreate is not implemented")
+	return nil
+}
+
+// OnCouponUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCouponUpdate(oldObj *Coupon, newObj *bookstore.Coupon) error {
+	log.Info("OnCouponUpdate is not implemented")
+	return nil
+}
+
+// OnCouponDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCouponDelete(obj *Coupon) error {
+	log.Info("OnCouponDelete is not implemented")
+	return nil
+}
+
+// GetCouponWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetCouponWatchOptions() *api.ListWatchOptions {
+	log.Info("GetCouponWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleCouponEvent handles Coupon events from watcher
 func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 
@@ -3868,6 +3993,31 @@ type CustomerHandler interface {
 	OnCustomerUpdate(oldObj *Customer, newObj *bookstore.Customer) error
 	OnCustomerDelete(obj *Customer) error
 	GetCustomerWatchOptions() *api.ListWatchOptions
+}
+
+// OnCustomerCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCustomerCreate(obj *Customer) error {
+	log.Info("OnCustomerCreate is not implemented")
+	return nil
+}
+
+// OnCustomerUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCustomerUpdate(oldObj *Customer, newObj *bookstore.Customer) error {
+	log.Info("OnCustomerUpdate is not implemented")
+	return nil
+}
+
+// OnCustomerDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCustomerDelete(obj *Customer) error {
+	log.Info("OnCustomerDelete is not implemented")
+	return nil
+}
+
+// GetCustomerWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetCustomerWatchOptions() *api.ListWatchOptions {
+	log.Info("GetCustomerWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleCustomerEvent handles Customer events from watcher

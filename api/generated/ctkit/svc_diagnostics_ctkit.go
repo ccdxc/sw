@@ -75,6 +75,31 @@ type ModuleHandler interface {
 	GetModuleWatchOptions() *api.ListWatchOptions
 }
 
+// OnModuleCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnModuleCreate(obj *Module) error {
+	log.Info("OnModuleCreate is not implemented")
+	return nil
+}
+
+// OnModuleUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnModuleUpdate(oldObj *Module, newObj *diagnostics.Module) error {
+	log.Info("OnModuleUpdate is not implemented")
+	return nil
+}
+
+// OnModuleDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnModuleDelete(obj *Module) error {
+	log.Info("OnModuleDelete is not implemented")
+	return nil
+}
+
+// GetModuleWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetModuleWatchOptions() *api.ListWatchOptions {
+	log.Info("GetModuleWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleModuleEvent handles Module events from watcher
 func (ct *ctrlerCtx) handleModuleEvent(evt *kvstore.WatchEvent) error {
 

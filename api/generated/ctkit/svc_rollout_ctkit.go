@@ -75,6 +75,31 @@ type RolloutHandler interface {
 	GetRolloutWatchOptions() *api.ListWatchOptions
 }
 
+// OnRolloutCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutCreate(obj *Rollout) error {
+	log.Info("OnRolloutCreate is not implemented")
+	return nil
+}
+
+// OnRolloutUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutUpdate(oldObj *Rollout, newObj *rollout.Rollout) error {
+	log.Info("OnRolloutUpdate is not implemented")
+	return nil
+}
+
+// OnRolloutDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutDelete(obj *Rollout) error {
+	log.Info("OnRolloutDelete is not implemented")
+	return nil
+}
+
+// GetRolloutWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRolloutWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRolloutWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleRolloutEvent handles Rollout events from watcher
 func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type RolloutActionHandler interface {
 	OnRolloutActionUpdate(oldObj *RolloutAction, newObj *rollout.RolloutAction) error
 	OnRolloutActionDelete(obj *RolloutAction) error
 	GetRolloutActionWatchOptions() *api.ListWatchOptions
+}
+
+// OnRolloutActionCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutActionCreate(obj *RolloutAction) error {
+	log.Info("OnRolloutActionCreate is not implemented")
+	return nil
+}
+
+// OnRolloutActionUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutActionUpdate(oldObj *RolloutAction, newObj *rollout.RolloutAction) error {
+	log.Info("OnRolloutActionUpdate is not implemented")
+	return nil
+}
+
+// OnRolloutActionDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutActionDelete(obj *RolloutAction) error {
+	log.Info("OnRolloutActionDelete is not implemented")
+	return nil
+}
+
+// GetRolloutActionWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRolloutActionWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRolloutActionWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleRolloutActionEvent handles RolloutAction events from watcher

@@ -75,6 +75,31 @@ type EventPolicyHandler interface {
 	GetEventPolicyWatchOptions() *api.ListWatchOptions
 }
 
+// OnEventPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEventPolicyCreate(obj *EventPolicy) error {
+	log.Info("OnEventPolicyCreate is not implemented")
+	return nil
+}
+
+// OnEventPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEventPolicyUpdate(oldObj *EventPolicy, newObj *monitoring.EventPolicy) error {
+	log.Info("OnEventPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnEventPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEventPolicyDelete(obj *EventPolicy) error {
+	log.Info("OnEventPolicyDelete is not implemented")
+	return nil
+}
+
+// GetEventPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetEventPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetEventPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleEventPolicyEvent handles EventPolicy events from watcher
 func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type StatsPolicyHandler interface {
 	OnStatsPolicyUpdate(oldObj *StatsPolicy, newObj *monitoring.StatsPolicy) error
 	OnStatsPolicyDelete(obj *StatsPolicy) error
 	GetStatsPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnStatsPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStatsPolicyCreate(obj *StatsPolicy) error {
+	log.Info("OnStatsPolicyCreate is not implemented")
+	return nil
+}
+
+// OnStatsPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStatsPolicyUpdate(oldObj *StatsPolicy, newObj *monitoring.StatsPolicy) error {
+	log.Info("OnStatsPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnStatsPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStatsPolicyDelete(obj *StatsPolicy) error {
+	log.Info("OnStatsPolicyDelete is not implemented")
+	return nil
+}
+
+// GetStatsPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetStatsPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetStatsPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleStatsPolicyEvent handles StatsPolicy events from watcher
@@ -1593,6 +1643,31 @@ type FwlogPolicyHandler interface {
 	GetFwlogPolicyWatchOptions() *api.ListWatchOptions
 }
 
+// OnFwlogPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFwlogPolicyCreate(obj *FwlogPolicy) error {
+	log.Info("OnFwlogPolicyCreate is not implemented")
+	return nil
+}
+
+// OnFwlogPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFwlogPolicyUpdate(oldObj *FwlogPolicy, newObj *monitoring.FwlogPolicy) error {
+	log.Info("OnFwlogPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnFwlogPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFwlogPolicyDelete(obj *FwlogPolicy) error {
+	log.Info("OnFwlogPolicyDelete is not implemented")
+	return nil
+}
+
+// GetFwlogPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetFwlogPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetFwlogPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleFwlogPolicyEvent handles FwlogPolicy events from watcher
 func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 
@@ -2350,6 +2425,31 @@ type FlowExportPolicyHandler interface {
 	OnFlowExportPolicyUpdate(oldObj *FlowExportPolicy, newObj *monitoring.FlowExportPolicy) error
 	OnFlowExportPolicyDelete(obj *FlowExportPolicy) error
 	GetFlowExportPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnFlowExportPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFlowExportPolicyCreate(obj *FlowExportPolicy) error {
+	log.Info("OnFlowExportPolicyCreate is not implemented")
+	return nil
+}
+
+// OnFlowExportPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFlowExportPolicyUpdate(oldObj *FlowExportPolicy, newObj *monitoring.FlowExportPolicy) error {
+	log.Info("OnFlowExportPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnFlowExportPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFlowExportPolicyDelete(obj *FlowExportPolicy) error {
+	log.Info("OnFlowExportPolicyDelete is not implemented")
+	return nil
+}
+
+// GetFlowExportPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetFlowExportPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetFlowExportPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleFlowExportPolicyEvent handles FlowExportPolicy events from watcher
@@ -3111,6 +3211,31 @@ type AlertHandler interface {
 	GetAlertWatchOptions() *api.ListWatchOptions
 }
 
+// OnAlertCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertCreate(obj *Alert) error {
+	log.Info("OnAlertCreate is not implemented")
+	return nil
+}
+
+// OnAlertUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertUpdate(oldObj *Alert, newObj *monitoring.Alert) error {
+	log.Info("OnAlertUpdate is not implemented")
+	return nil
+}
+
+// OnAlertDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertDelete(obj *Alert) error {
+	log.Info("OnAlertDelete is not implemented")
+	return nil
+}
+
+// GetAlertWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetAlertWatchOptions() *api.ListWatchOptions {
+	log.Info("GetAlertWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleAlertEvent handles Alert events from watcher
 func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 
@@ -3868,6 +3993,31 @@ type AlertPolicyHandler interface {
 	OnAlertPolicyUpdate(oldObj *AlertPolicy, newObj *monitoring.AlertPolicy) error
 	OnAlertPolicyDelete(obj *AlertPolicy) error
 	GetAlertPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnAlertPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertPolicyCreate(obj *AlertPolicy) error {
+	log.Info("OnAlertPolicyCreate is not implemented")
+	return nil
+}
+
+// OnAlertPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertPolicyUpdate(oldObj *AlertPolicy, newObj *monitoring.AlertPolicy) error {
+	log.Info("OnAlertPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnAlertPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertPolicyDelete(obj *AlertPolicy) error {
+	log.Info("OnAlertPolicyDelete is not implemented")
+	return nil
+}
+
+// GetAlertPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetAlertPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetAlertPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleAlertPolicyEvent handles AlertPolicy events from watcher
@@ -4629,6 +4779,31 @@ type AlertDestinationHandler interface {
 	GetAlertDestinationWatchOptions() *api.ListWatchOptions
 }
 
+// OnAlertDestinationCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertDestinationCreate(obj *AlertDestination) error {
+	log.Info("OnAlertDestinationCreate is not implemented")
+	return nil
+}
+
+// OnAlertDestinationUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertDestinationUpdate(oldObj *AlertDestination, newObj *monitoring.AlertDestination) error {
+	log.Info("OnAlertDestinationUpdate is not implemented")
+	return nil
+}
+
+// OnAlertDestinationDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertDestinationDelete(obj *AlertDestination) error {
+	log.Info("OnAlertDestinationDelete is not implemented")
+	return nil
+}
+
+// GetAlertDestinationWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetAlertDestinationWatchOptions() *api.ListWatchOptions {
+	log.Info("GetAlertDestinationWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleAlertDestinationEvent handles AlertDestination events from watcher
 func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error {
 
@@ -5386,6 +5561,31 @@ type MirrorSessionHandler interface {
 	OnMirrorSessionUpdate(oldObj *MirrorSession, newObj *monitoring.MirrorSession) error
 	OnMirrorSessionDelete(obj *MirrorSession) error
 	GetMirrorSessionWatchOptions() *api.ListWatchOptions
+}
+
+// OnMirrorSessionCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnMirrorSessionCreate(obj *MirrorSession) error {
+	log.Info("OnMirrorSessionCreate is not implemented")
+	return nil
+}
+
+// OnMirrorSessionUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnMirrorSessionUpdate(oldObj *MirrorSession, newObj *monitoring.MirrorSession) error {
+	log.Info("OnMirrorSessionUpdate is not implemented")
+	return nil
+}
+
+// OnMirrorSessionDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnMirrorSessionDelete(obj *MirrorSession) error {
+	log.Info("OnMirrorSessionDelete is not implemented")
+	return nil
+}
+
+// GetMirrorSessionWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetMirrorSessionWatchOptions() *api.ListWatchOptions {
+	log.Info("GetMirrorSessionWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleMirrorSessionEvent handles MirrorSession events from watcher
@@ -6147,6 +6347,31 @@ type TroubleshootingSessionHandler interface {
 	GetTroubleshootingSessionWatchOptions() *api.ListWatchOptions
 }
 
+// OnTroubleshootingSessionCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTroubleshootingSessionCreate(obj *TroubleshootingSession) error {
+	log.Info("OnTroubleshootingSessionCreate is not implemented")
+	return nil
+}
+
+// OnTroubleshootingSessionUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTroubleshootingSessionUpdate(oldObj *TroubleshootingSession, newObj *monitoring.TroubleshootingSession) error {
+	log.Info("OnTroubleshootingSessionUpdate is not implemented")
+	return nil
+}
+
+// OnTroubleshootingSessionDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTroubleshootingSessionDelete(obj *TroubleshootingSession) error {
+	log.Info("OnTroubleshootingSessionDelete is not implemented")
+	return nil
+}
+
+// GetTroubleshootingSessionWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetTroubleshootingSessionWatchOptions() *api.ListWatchOptions {
+	log.Info("GetTroubleshootingSessionWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleTroubleshootingSessionEvent handles TroubleshootingSession events from watcher
 func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) error {
 
@@ -6904,6 +7129,31 @@ type TechSupportRequestHandler interface {
 	OnTechSupportRequestUpdate(oldObj *TechSupportRequest, newObj *monitoring.TechSupportRequest) error
 	OnTechSupportRequestDelete(obj *TechSupportRequest) error
 	GetTechSupportRequestWatchOptions() *api.ListWatchOptions
+}
+
+// OnTechSupportRequestCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTechSupportRequestCreate(obj *TechSupportRequest) error {
+	log.Info("OnTechSupportRequestCreate is not implemented")
+	return nil
+}
+
+// OnTechSupportRequestUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTechSupportRequestUpdate(oldObj *TechSupportRequest, newObj *monitoring.TechSupportRequest) error {
+	log.Info("OnTechSupportRequestUpdate is not implemented")
+	return nil
+}
+
+// OnTechSupportRequestDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTechSupportRequestDelete(obj *TechSupportRequest) error {
+	log.Info("OnTechSupportRequestDelete is not implemented")
+	return nil
+}
+
+// GetTechSupportRequestWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetTechSupportRequestWatchOptions() *api.ListWatchOptions {
+	log.Info("GetTechSupportRequestWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleTechSupportRequestEvent handles TechSupportRequest events from watcher

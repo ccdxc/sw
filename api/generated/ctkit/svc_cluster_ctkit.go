@@ -75,6 +75,31 @@ type ClusterHandler interface {
 	GetClusterWatchOptions() *api.ListWatchOptions
 }
 
+// OnClusterCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnClusterCreate(obj *Cluster) error {
+	log.Info("OnClusterCreate is not implemented")
+	return nil
+}
+
+// OnClusterUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnClusterUpdate(oldObj *Cluster, newObj *cluster.Cluster) error {
+	log.Info("OnClusterUpdate is not implemented")
+	return nil
+}
+
+// OnClusterDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnClusterDelete(obj *Cluster) error {
+	log.Info("OnClusterDelete is not implemented")
+	return nil
+}
+
+// GetClusterWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetClusterWatchOptions() *api.ListWatchOptions {
+	log.Info("GetClusterWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleClusterEvent handles Cluster events from watcher
 func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type NodeHandler interface {
 	OnNodeUpdate(oldObj *Node, newObj *cluster.Node) error
 	OnNodeDelete(obj *Node) error
 	GetNodeWatchOptions() *api.ListWatchOptions
+}
+
+// OnNodeCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNodeCreate(obj *Node) error {
+	log.Info("OnNodeCreate is not implemented")
+	return nil
+}
+
+// OnNodeUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNodeUpdate(oldObj *Node, newObj *cluster.Node) error {
+	log.Info("OnNodeUpdate is not implemented")
+	return nil
+}
+
+// OnNodeDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNodeDelete(obj *Node) error {
+	log.Info("OnNodeDelete is not implemented")
+	return nil
+}
+
+// GetNodeWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetNodeWatchOptions() *api.ListWatchOptions {
+	log.Info("GetNodeWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleNodeEvent handles Node events from watcher
@@ -1593,6 +1643,31 @@ type HostHandler interface {
 	GetHostWatchOptions() *api.ListWatchOptions
 }
 
+// OnHostCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnHostCreate(obj *Host) error {
+	log.Info("OnHostCreate is not implemented")
+	return nil
+}
+
+// OnHostUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnHostUpdate(oldObj *Host, newObj *cluster.Host) error {
+	log.Info("OnHostUpdate is not implemented")
+	return nil
+}
+
+// OnHostDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnHostDelete(obj *Host) error {
+	log.Info("OnHostDelete is not implemented")
+	return nil
+}
+
+// GetHostWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetHostWatchOptions() *api.ListWatchOptions {
+	log.Info("GetHostWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleHostEvent handles Host events from watcher
 func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 
@@ -2350,6 +2425,31 @@ type DistributedServiceCardHandler interface {
 	OnDistributedServiceCardUpdate(oldObj *DistributedServiceCard, newObj *cluster.DistributedServiceCard) error
 	OnDistributedServiceCardDelete(obj *DistributedServiceCard) error
 	GetDistributedServiceCardWatchOptions() *api.ListWatchOptions
+}
+
+// OnDistributedServiceCardCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnDistributedServiceCardCreate(obj *DistributedServiceCard) error {
+	log.Info("OnDistributedServiceCardCreate is not implemented")
+	return nil
+}
+
+// OnDistributedServiceCardUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnDistributedServiceCardUpdate(oldObj *DistributedServiceCard, newObj *cluster.DistributedServiceCard) error {
+	log.Info("OnDistributedServiceCardUpdate is not implemented")
+	return nil
+}
+
+// OnDistributedServiceCardDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnDistributedServiceCardDelete(obj *DistributedServiceCard) error {
+	log.Info("OnDistributedServiceCardDelete is not implemented")
+	return nil
+}
+
+// GetDistributedServiceCardWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetDistributedServiceCardWatchOptions() *api.ListWatchOptions {
+	log.Info("GetDistributedServiceCardWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleDistributedServiceCardEvent handles DistributedServiceCard events from watcher
@@ -3111,6 +3211,31 @@ type TenantHandler interface {
 	GetTenantWatchOptions() *api.ListWatchOptions
 }
 
+// OnTenantCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTenantCreate(obj *Tenant) error {
+	log.Info("OnTenantCreate is not implemented")
+	return nil
+}
+
+// OnTenantUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTenantUpdate(oldObj *Tenant, newObj *cluster.Tenant) error {
+	log.Info("OnTenantUpdate is not implemented")
+	return nil
+}
+
+// OnTenantDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTenantDelete(obj *Tenant) error {
+	log.Info("OnTenantDelete is not implemented")
+	return nil
+}
+
+// GetTenantWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetTenantWatchOptions() *api.ListWatchOptions {
+	log.Info("GetTenantWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleTenantEvent handles Tenant events from watcher
 func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 
@@ -3868,6 +3993,31 @@ type VersionHandler interface {
 	OnVersionUpdate(oldObj *Version, newObj *cluster.Version) error
 	OnVersionDelete(obj *Version) error
 	GetVersionWatchOptions() *api.ListWatchOptions
+}
+
+// OnVersionCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVersionCreate(obj *Version) error {
+	log.Info("OnVersionCreate is not implemented")
+	return nil
+}
+
+// OnVersionUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVersionUpdate(oldObj *Version, newObj *cluster.Version) error {
+	log.Info("OnVersionUpdate is not implemented")
+	return nil
+}
+
+// OnVersionDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVersionDelete(obj *Version) error {
+	log.Info("OnVersionDelete is not implemented")
+	return nil
+}
+
+// GetVersionWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetVersionWatchOptions() *api.ListWatchOptions {
+	log.Info("GetVersionWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleVersionEvent handles Version events from watcher
@@ -4629,6 +4779,31 @@ type ConfigurationSnapshotHandler interface {
 	GetConfigurationSnapshotWatchOptions() *api.ListWatchOptions
 }
 
+// OnConfigurationSnapshotCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnConfigurationSnapshotCreate(obj *ConfigurationSnapshot) error {
+	log.Info("OnConfigurationSnapshotCreate is not implemented")
+	return nil
+}
+
+// OnConfigurationSnapshotUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnConfigurationSnapshotUpdate(oldObj *ConfigurationSnapshot, newObj *cluster.ConfigurationSnapshot) error {
+	log.Info("OnConfigurationSnapshotUpdate is not implemented")
+	return nil
+}
+
+// OnConfigurationSnapshotDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnConfigurationSnapshotDelete(obj *ConfigurationSnapshot) error {
+	log.Info("OnConfigurationSnapshotDelete is not implemented")
+	return nil
+}
+
+// GetConfigurationSnapshotWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetConfigurationSnapshotWatchOptions() *api.ListWatchOptions {
+	log.Info("GetConfigurationSnapshotWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleConfigurationSnapshotEvent handles ConfigurationSnapshot events from watcher
 func (ct *ctrlerCtx) handleConfigurationSnapshotEvent(evt *kvstore.WatchEvent) error {
 
@@ -5386,6 +5561,31 @@ type SnapshotRestoreHandler interface {
 	OnSnapshotRestoreUpdate(oldObj *SnapshotRestore, newObj *cluster.SnapshotRestore) error
 	OnSnapshotRestoreDelete(obj *SnapshotRestore) error
 	GetSnapshotRestoreWatchOptions() *api.ListWatchOptions
+}
+
+// OnSnapshotRestoreCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSnapshotRestoreCreate(obj *SnapshotRestore) error {
+	log.Info("OnSnapshotRestoreCreate is not implemented")
+	return nil
+}
+
+// OnSnapshotRestoreUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSnapshotRestoreUpdate(oldObj *SnapshotRestore, newObj *cluster.SnapshotRestore) error {
+	log.Info("OnSnapshotRestoreUpdate is not implemented")
+	return nil
+}
+
+// OnSnapshotRestoreDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSnapshotRestoreDelete(obj *SnapshotRestore) error {
+	log.Info("OnSnapshotRestoreDelete is not implemented")
+	return nil
+}
+
+// GetSnapshotRestoreWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetSnapshotRestoreWatchOptions() *api.ListWatchOptions {
+	log.Info("GetSnapshotRestoreWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleSnapshotRestoreEvent handles SnapshotRestore events from watcher

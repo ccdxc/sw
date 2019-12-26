@@ -115,6 +115,10 @@ func (ks *kindStore) DeleteObject(key string) error {
 	return nil
 }
 
+// dummy struc to implement the defaul reactors
+type CtrlDefReactor struct {
+}
+
 type ctrlerCtx struct {
 	sync.Mutex                                      // lock for the controller
 	name        string                              // controller name
@@ -199,12 +203,15 @@ type Controller interface {
 }
 
 // NewController creates a new instance of controler
-func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, resolver resolver.Interface, logger log.Logger, resolveObjects bool) (Controller, error) {
+func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, resolver resolver.Interface, logger log.Logger, resolveObjects bool) (Controller, CtrlDefReactor, error) {
 	keyTags := map[string]string{"node": "venice", "module": name, "kind": "CtkitStats"}
 	tsdbObj, err := tsdb.NewObj("CtkitStats", keyTags, nil, nil)
+
+	defReactor := CtrlDefReactor{}
+
 	if err != nil {
 		log.Errorf("unable to create tsdb object, keys %+v", keyTags)
-		return nil, err
+		return nil, defReactor, err
 	}
 
 	// create controller context
@@ -231,7 +238,8 @@ func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, r
 	if rpcServer != nil {
 		diag.RegisterService(rpcServer.GrpcServer, ctrl.diagSvc)
 	}
-	return &ctrl, nil
+
+	return &ctrl, defReactor, nil
 }
 
 func (ct *ctrlerCtx) GetObjectStore(kind string) apiintf.ObjectStore {

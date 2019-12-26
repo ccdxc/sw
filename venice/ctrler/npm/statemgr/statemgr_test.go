@@ -2558,7 +2558,7 @@ func TestVirtualRouterCreateDelete(t *testing.T) {
 func TestIPAMPolicyCreateDelete(t *testing.T) {
 	name := "testPolicy"
 	// create network state manager
-	stateMgr, err := newStatemgr()
+	stateMgr, err := newStatemgr1()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2577,8 +2577,9 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating IPAMPolicy")
 
 	// verify we can find the IPAMPolicy
+
 	AssertEventually(t, func() (bool, interface{}) {
-		obj, err = stateMgr.FindIPAMPolicy("default", "default", name)
+		obj, err = smgrIPAM.FindIPAMPolicy("default", "default", name)
 		if err == nil {
 			return true, nil
 		}
@@ -2588,15 +2589,17 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 	AssertEquals(t, obj.IPAMPolicy.Spec.DHCPRelay.Servers[0].IPAddress, policy.Spec.DHCPRelay.Servers[0].IPAddress, "IPAMPolicy params did not match")
 
 	// update the IPAMPolicy
-	version, _ := strconv.Atoi(obj.IPAMPolicy.GenerationID)
+	//version, _ := strconv.Atoi(obj.IPAMPolicy.GenerationID)
+	version := 1
 	policy.GenerationID = strconv.Itoa(version + 1)
 	policy.Spec.DHCPRelay.Servers[0].IPAddress = "101.1.1.1"
 	err = stateMgr.ctrler.IPAMPolicy().Update(policy)
 	AssertOk(t, err, "Error updating IPAMPolicy")
 
 	// verify update went through
+
 	AssertEventually(t, func() (bool, interface{}) {
-		obj, err = stateMgr.FindIPAMPolicy("default", "default", name)
+		obj, err = smgrIPAM.FindIPAMPolicy("default", "default", name)
 		if err == nil {
 			return true, nil
 		}
@@ -2610,9 +2613,8 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error deleting IPAMPolicy")
 
 	// verify the IPAMPolicy is deleted
-	_, err = stateMgr.FindIPAMPolicy("default", "default", name)
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := stateMgr.FindIPAMPolicy("default", "default", name)
+		_, err := smgrIPAM.FindIPAMPolicy("default", "default", name)
 		if err != nil {
 			return true, nil
 		}

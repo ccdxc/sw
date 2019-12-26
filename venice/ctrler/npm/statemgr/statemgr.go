@@ -25,6 +25,10 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+var singletonStatemgr Statemgr
+var once sync.Once
+var featuremgrs map[string]FeatureStateMgr
+
 // maxUpdateChannelSize is the size of the update pending channel
 const maxUpdateChannelSize = 16384
 
@@ -49,12 +53,145 @@ type Topics struct {
 // Statemgr is the object state manager
 type Statemgr struct {
 	sync.Mutex
-	mbus                 *nimbus.MbusServer     // nimbus server
-	periodicUpdaterQueue chan updatable         // queue for periodically writing items back to apiserver
-	ctrler               ctkit.Controller       // controller instance
-	topics               Topics                 // message bus topics
-	networkLocks         map[string]*sync.Mutex // lock for performing network operation
-	logger               log.Logger
+	mbus                          *nimbus.MbusServer     // nimbus server
+	periodicUpdaterQueue          chan updatable         // queue for periodically writing items back to apiserver
+	ctrler                        ctkit.Controller       // controller instance
+	topics                        Topics                 // message bus topics
+	networkLocks                  map[string]*sync.Mutex // lock for performing network operation
+	logger                        log.Logger
+	ModuleReactor                 ctkit.ModuleHandler
+	TenantReactor                 ctkit.TenantHandler
+	SecurityGroupReactor          ctkit.SecurityGroupHandler
+	AppReactor                    ctkit.AppHandler
+	VirtualRouterReactor          ctkit.VirtualRouterHandler
+	NetworkReactor                ctkit.NetworkHandler
+	FirewallProfileReactor        ctkit.FirewallProfileHandler
+	DistributedServiceCardReactor ctkit.DistributedServiceCardHandler
+	HostReactor                   ctkit.HostHandler
+	EndpointReactor               ctkit.EndpointHandler
+	NetworkSecurityPolicyReactor  ctkit.NetworkSecurityPolicyHandler
+	WorkloadReactor               ctkit.WorkloadHandler
+	NetworkInterfaceReactor       ctkit.NetworkInterfaceHandler
+	IPAMPolicyReactor             ctkit.IPAMPolicyHandler
+
+	SecurityProfileStatusReactor       nimbus.SecurityProfileStatusReactor
+	AppStatusReactor                   nimbus.AppStatusReactor
+	NetworkStatusReactor               nimbus.NetworkStatusReactor
+	NetworkInterfaceStatusReactor      nimbus.InterfaceStatusReactor
+	EndpointStatusReactor              nimbus.EndpointStatusReactor
+	NetworkSecurityPolicyStatusReactor nimbus.NetworkSecurityPolicyStatusReactor
+	IPAMPolicyStatusReactor            nimbus.IPAMPolicyStatusReactor
+	AggregateStatusReactor             nimbus.AggStatusReactor
+}
+
+// SetSecurityProfileStatusReactor sets the SecurityProfileStatusReactor
+func (sm *Statemgr) SetSecurityProfileStatusReactor(handler nimbus.SecurityProfileStatusReactor) {
+	sm.SecurityProfileStatusReactor = handler
+}
+
+// SetNetworkInterfaceStatusReactor sets the InterfaceStatusReactor
+func (sm *Statemgr) SetNetworkInterfaceStatusReactor(handler nimbus.InterfaceStatusReactor) {
+	sm.NetworkInterfaceStatusReactor = handler
+}
+
+// SetAppStatusReactor sets the AppStatusReactor
+func (sm *Statemgr) SetAppStatusReactor(handler nimbus.AppStatusReactor) {
+	sm.AppStatusReactor = handler
+}
+
+// SetNetworkStatusReactor sets the NetworkStatusReactor
+func (sm *Statemgr) SetNetworkStatusReactor(handler nimbus.NetworkStatusReactor) {
+	sm.NetworkStatusReactor = handler
+}
+
+// SetAggregateStatusReactor sets the AggregateStatusReactor
+func (sm *Statemgr) SetAggregateStatusReactor(handler nimbus.AggStatusReactor) {
+	sm.AggregateStatusReactor = handler
+}
+
+// SetIPAMPolicyStatusReactor sets the IPAMPolicyStatusReactor
+func (sm *Statemgr) SetIPAMPolicyStatusReactor(handler nimbus.IPAMPolicyStatusReactor) {
+	sm.IPAMPolicyStatusReactor = handler
+}
+
+// SetNetworkSecurityPolicyStatusReactor sets the NetworkSecurityPolicyStatusReactor
+func (sm *Statemgr) SetNetworkSecurityPolicyStatusReactor(handler nimbus.NetworkSecurityPolicyStatusReactor) {
+	sm.NetworkSecurityPolicyStatusReactor = handler
+}
+
+// SetEndpointStatusReactor sets the EndpointStatusReactor
+func (sm *Statemgr) SetEndpointStatusReactor(handler nimbus.EndpointStatusReactor) {
+	sm.EndpointStatusReactor = handler
+}
+
+// SetIPAMPolicyReactor sets the IPAMPolicy reactor
+func (sm *Statemgr) SetIPAMPolicyReactor(handler ctkit.IPAMPolicyHandler) {
+	sm.IPAMPolicyReactor = handler
+}
+
+// SetModuleReactor sets the Module reactor
+func (sm *Statemgr) SetModuleReactor(handler ctkit.ModuleHandler) {
+	sm.ModuleReactor = handler
+}
+
+// SetTenantReactor sets the Tenant reactor
+func (sm *Statemgr) SetTenantReactor(handler ctkit.TenantHandler) {
+	sm.TenantReactor = handler
+}
+
+// SetSecurityGroupReactor sets the SecurityGroup reactor
+func (sm *Statemgr) SetSecurityGroupReactor(handler ctkit.SecurityGroupHandler) {
+	sm.SecurityGroupReactor = handler
+}
+
+// SetAppReactor sets the App reactor
+func (sm *Statemgr) SetAppReactor(handler ctkit.AppHandler) {
+	sm.AppReactor = handler
+}
+
+// SetVirtualRouterReactor sets the VirtualRouter reactor
+func (sm *Statemgr) SetVirtualRouterReactor(handler ctkit.VirtualRouterHandler) {
+	sm.VirtualRouterReactor = handler
+}
+
+// SetNetworkReactor sets the Network reactor
+func (sm *Statemgr) SetNetworkReactor(handler ctkit.NetworkHandler) {
+	sm.NetworkReactor = handler
+}
+
+// SetFirewallProfileReactor sets the FirewallProfile reactor
+func (sm *Statemgr) SetFirewallProfileReactor(handler ctkit.FirewallProfileHandler) {
+	sm.FirewallProfileReactor = handler
+}
+
+// SetDistributedServiceCardReactor sets the DistributedServiceCard reactor
+func (sm *Statemgr) SetDistributedServiceCardReactor(handler ctkit.DistributedServiceCardHandler) {
+	sm.DistributedServiceCardReactor = handler
+}
+
+// SetHostReactor sets the Host reactor
+func (sm *Statemgr) SetHostReactor(handler ctkit.HostHandler) {
+	sm.HostReactor = handler
+}
+
+// SetEndpointReactor sets the Endpoint reactor
+func (sm *Statemgr) SetEndpointReactor(handler ctkit.EndpointHandler) {
+	sm.EndpointReactor = handler
+}
+
+// SetNetworkSecurityPolicyReactor sets the NetworkSecurity reactor
+func (sm *Statemgr) SetNetworkSecurityPolicyReactor(handler ctkit.NetworkSecurityPolicyHandler) {
+	sm.NetworkSecurityPolicyReactor = handler
+}
+
+// SetWorkloadReactor sets the Workload reactor
+func (sm *Statemgr) SetWorkloadReactor(handler ctkit.WorkloadHandler) {
+	sm.WorkloadReactor = handler
+}
+
+// SetNetworkInterfaceReactor sets the NetworkInterface reactor
+func (sm *Statemgr) SetNetworkInterfaceReactor(handler ctkit.NetworkInterfaceHandler) {
+	sm.NetworkInterfaceReactor = handler
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
@@ -110,31 +247,103 @@ func (sm *Statemgr) Stop() error {
 	return sm.ctrler.Stop()
 }
 
-// NewStatemgr creates a new state manager object
-func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, options ...Option) (*Statemgr, error) {
-	// create new statemgr instance
-	statemgr := &Statemgr{
-		mbus:         mserver,
+func initStatemgr() {
+	singletonStatemgr = Statemgr{
 		networkLocks: make(map[string]*sync.Mutex),
-		logger:       logger,
 	}
+	featuremgrs = make(map[string]FeatureStateMgr)
+}
+
+// MustGetStatemgr returns a singleton statemgr
+func MustGetStatemgr() *Statemgr {
+	once.Do(initStatemgr)
+	return &singletonStatemgr
+}
+
+// Register is statemgr implemention of the interface
+func (sm *Statemgr) Register(name string, svc FeatureStateMgr) {
+	featuremgrs[name] = svc
+
+}
+
+// AddObject adds object to memDb
+func (sm *Statemgr) AddObject(obj memdb.Object) error {
+	return sm.mbus.AddObject(obj)
+}
+
+// UpdateObject adds object to memDb
+func (sm *Statemgr) UpdateObject(obj memdb.Object) error {
+	return sm.mbus.UpdateObject(obj)
+}
+
+// DeleteObject adds object to memDb
+func (sm *Statemgr) DeleteObject(obj memdb.Object) error {
+	return sm.mbus.DeleteObject(obj)
+}
+
+func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
+
+	sm.SetModuleReactor(reactor)
+
+	sm.SetTenantReactor(reactor)
+
+	sm.SetSecurityGroupReactor(reactor)
+
+	sm.SetAppReactor(reactor)
+
+	sm.SetVirtualRouterReactor(reactor)
+
+	sm.SetNetworkReactor(reactor)
+
+	sm.SetFirewallProfileReactor(reactor)
+
+	sm.SetDistributedServiceCardReactor(reactor)
+
+	sm.SetHostReactor(reactor)
+
+	sm.SetEndpointReactor(reactor)
+
+	sm.SetNetworkSecurityPolicyReactor(reactor)
+
+	sm.SetWorkloadReactor(reactor)
+
+	sm.SetNetworkInterfaceReactor(reactor)
+
+	sm.SetIPAMPolicyReactor(reactor)
+
+}
+
+// Run calls the feature statemgr callbacks and eastablishes the Watches
+func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, flags uint32, options ...Option) error {
+
+	sm.mbus = mserver
+
+	sm.logger = logger
 
 	// create controller instance
 	// disable object resolution
-	ctrler, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger, false)
+	ctrler, defReactor, err := ctkit.NewController(globals.Npm, rpcServer, apisrvURL, rslvr, logger, false)
 	if err != nil {
 		logger.Fatalf("Error creating controller. Err: %v", err)
 	}
-	statemgr.ctrler = ctrler
+	sm.ctrler = ctrler
 
 	for _, o := range options {
-		o(statemgr)
+		o(sm)
 	}
 
 	// newPeriodicUpdater creates a new go subroutines
 	// Given that objects returned by `NewStatemgr` should live for the duration
 	// of the process, we don't have to worry about leaked go subroutines
-	statemgr.periodicUpdaterQueue = newPeriodicUpdater()
+	sm.periodicUpdaterQueue = newPeriodicUpdater()
+
+	// init the watch reactors
+	sm.setDefaultReactors(defReactor)
+
+	for name, svc := range featuremgrs {
+		logger.Info("svc", name, "complete registration")
+		svc.CompleteRegistration(flags)
+	}
 
 	// start all object watches
 	// there is a specific order we do these watches to meet dependency requirements
@@ -142,61 +351,62 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	// 2. endpoints before workload
 	// 3. smartnics before hosts
 	// 4. security-groups before sgpolicies
-	err = ctrler.Module().Watch(statemgr)
+	err = ctrler.Module().Watch(sm.ModuleReactor)
 	if err != nil {
 		logger.Fatalf("Error watching module object")
 	}
-	err = ctrler.Tenant().Watch(statemgr)
+	err = ctrler.Tenant().Watch(sm.TenantReactor)
 	if err != nil {
 		logger.Fatalf("Error watching sg policy")
 	}
 
-	err = ctrler.SecurityGroup().Watch(statemgr)
+	err = ctrler.SecurityGroup().Watch(sm.SecurityGroupReactor)
 	if err != nil {
 		logger.Fatalf("Error watching security group")
 	}
-	err = ctrler.App().Watch(statemgr)
+	err = ctrler.App().Watch(sm.AppReactor)
 	if err != nil {
 		logger.Fatalf("Error watching app")
 	}
 
-	err = ctrler.VirtualRouter().Watch(statemgr)
+	err = ctrler.VirtualRouter().Watch(sm.VirtualRouterReactor)
 	if err != nil {
 		logger.Fatalf("Error watching virtual router")
 	}
-	err = ctrler.Network().Watch(statemgr)
+	err = ctrler.Network().Watch(sm.NetworkReactor)
 	if err != nil {
 		logger.Fatalf("Error watching network")
 	}
-	err = ctrler.FirewallProfile().Watch(statemgr)
+	err = ctrler.FirewallProfile().Watch(sm.FirewallProfileReactor)
 	if err != nil {
 		logger.Fatalf("Error watching firewall profile")
 	}
-	err = ctrler.DistributedServiceCard().Watch(statemgr)
+	err = ctrler.DistributedServiceCard().Watch(sm.DistributedServiceCardReactor)
 	if err != nil {
 		logger.Fatalf("Error watching smartnic")
 	}
-	err = ctrler.Host().Watch(statemgr)
+	err = ctrler.Host().Watch(sm.HostReactor)
 	if err != nil {
 		logger.Fatalf("Error watching host")
 	}
-	err = ctrler.Endpoint().Watch(statemgr)
+	err = ctrler.Endpoint().Watch(sm.EndpointReactor)
 	if err != nil {
 		logger.Fatalf("Error watching endpoint")
 	}
-	err = ctrler.NetworkSecurityPolicy().Watch(statemgr)
+	err = ctrler.NetworkSecurityPolicy().Watch(sm.NetworkSecurityPolicyReactor)
 	if err != nil {
 		logger.Fatalf("Error watching sg policy")
 	}
-	err = ctrler.Workload().Watch(statemgr)
+	err = ctrler.Workload().Watch(sm.WorkloadReactor)
 	if err != nil {
 		logger.Fatalf("Error watching workloads")
 	}
-	err = ctrler.NetworkInterface().Watch(statemgr)
+	err = ctrler.NetworkInterface().Watch(sm.NetworkInterfaceReactor)
 	if err != nil {
 		logger.Fatalf("Error watching network-interface")
 	}
-	err = ctrler.IPAMPolicy().Watch(statemgr)
+
+	err = ctrler.IPAMPolicy().Watch(sm.IPAMPolicyReactor)
 	if err != nil {
 		logger.Fatalf("Error watching ipam-policy")
 	}
@@ -207,53 +417,52 @@ func NewStatemgr(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.I
 	//statemgr.RemoveStaleEndpoints()
 
 	// create all topics on the message bus
-	statemgr.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, statemgr)
+	sm.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, sm.EndpointStatusReactor)
 	if err != nil {
 		logger.Errorf("Error starting endpoint RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.AppTopic, err = nimbus.AddAppTopic(mserver, nil)
+	sm.topics.AppTopic, err = nimbus.AddAppTopic(mserver, sm.AppStatusReactor)
 	if err != nil {
 		logger.Errorf("Error starting App RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, statemgr)
+	sm.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, sm.SecurityProfileStatusReactor)
 	if err != nil {
 		logger.Errorf("Error starting SecurityProfile RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.NetworkSecurityPolicyTopic, err = nimbus.AddNetworkSecurityPolicyTopic(mserver, statemgr)
+	sm.topics.NetworkSecurityPolicyTopic, err = nimbus.AddNetworkSecurityPolicyTopic(mserver, sm.NetworkSecurityPolicyStatusReactor)
 	if err != nil {
 		logger.Errorf("Error starting SG policy RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.NetworkTopic, err = nimbus.AddNetworkTopic(mserver, nil)
+	sm.topics.NetworkTopic, err = nimbus.AddNetworkTopic(mserver, sm.NetworkStatusReactor)
 	if err != nil {
 		logger.Errorf("Error starting network RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.NetworkInterfaceTopic, err = nimbus.AddInterfaceTopic(mserver, statemgr)
+	sm.topics.NetworkInterfaceTopic, err = nimbus.AddInterfaceTopic(mserver, sm.NetworkInterfaceStatusReactor)
 	if err != nil {
 		log.Errorf("Error starting network interface RPC server")
-		return nil, err
+		return err
 	}
-	statemgr.topics.IPAMPolicyTopic, err = nimbus.AddIPAMPolicyTopic(mserver, nil)
+	sm.topics.IPAMPolicyTopic, err = nimbus.AddIPAMPolicyTopic(mserver, sm.IPAMPolicyStatusReactor)
 	if err != nil {
 		log.Errorf("Error starting network interface RPC server: %v", err)
-		return nil, err
+		return err
 	}
 
-	statemgr.topics.AggregateTopic, err = nimbus.AddAggregateTopic(mserver, statemgr)
+	sm.topics.AggregateTopic, err = nimbus.AddAggregateTopic(mserver, sm.AggregateStatusReactor)
 	if err != nil {
 		log.Errorf("Error starting Aggregate RPC server")
-		return nil, err
+		return err
 	}
 
-	return statemgr, nil
+	return err
 }
 
 // runPeriodicUpdater runs periodic and write objects back
-
 func runPeriodicUpdater(queue chan updatable) {
 	ticker := time.NewTicker(1 * time.Second)
 	pending := make(map[string]updatable)

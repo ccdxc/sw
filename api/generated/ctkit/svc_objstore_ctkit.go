@@ -75,6 +75,31 @@ type BucketHandler interface {
 	GetBucketWatchOptions() *api.ListWatchOptions
 }
 
+// OnBucketCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBucketCreate(obj *Bucket) error {
+	log.Info("OnBucketCreate is not implemented")
+	return nil
+}
+
+// OnBucketUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBucketUpdate(oldObj *Bucket, newObj *objstore.Bucket) error {
+	log.Info("OnBucketUpdate is not implemented")
+	return nil
+}
+
+// OnBucketDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBucketDelete(obj *Bucket) error {
+	log.Info("OnBucketDelete is not implemented")
+	return nil
+}
+
+// GetBucketWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetBucketWatchOptions() *api.ListWatchOptions {
+	log.Info("GetBucketWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleBucketEvent handles Bucket events from watcher
 func (ct *ctrlerCtx) handleBucketEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type ObjectHandler interface {
 	OnObjectUpdate(oldObj *Object, newObj *objstore.Object) error
 	OnObjectDelete(obj *Object) error
 	GetObjectWatchOptions() *api.ListWatchOptions
+}
+
+// OnObjectCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnObjectCreate(obj *Object) error {
+	log.Info("OnObjectCreate is not implemented")
+	return nil
+}
+
+// OnObjectUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnObjectUpdate(oldObj *Object, newObj *objstore.Object) error {
+	log.Info("OnObjectUpdate is not implemented")
+	return nil
+}
+
+// OnObjectDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnObjectDelete(obj *Object) error {
+	log.Info("OnObjectDelete is not implemented")
+	return nil
+}
+
+// GetObjectWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetObjectWatchOptions() *api.ListWatchOptions {
+	log.Info("GetObjectWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleObjectEvent handles Object events from watcher

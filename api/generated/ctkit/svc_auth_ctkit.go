@@ -75,6 +75,31 @@ type UserHandler interface {
 	GetUserWatchOptions() *api.ListWatchOptions
 }
 
+// OnUserCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserCreate(obj *User) error {
+	log.Info("OnUserCreate is not implemented")
+	return nil
+}
+
+// OnUserUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserUpdate(oldObj *User, newObj *auth.User) error {
+	log.Info("OnUserUpdate is not implemented")
+	return nil
+}
+
+// OnUserDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserDelete(obj *User) error {
+	log.Info("OnUserDelete is not implemented")
+	return nil
+}
+
+// GetUserWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetUserWatchOptions() *api.ListWatchOptions {
+	log.Info("GetUserWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleUserEvent handles User events from watcher
 func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type AuthenticationPolicyHandler interface {
 	OnAuthenticationPolicyUpdate(oldObj *AuthenticationPolicy, newObj *auth.AuthenticationPolicy) error
 	OnAuthenticationPolicyDelete(obj *AuthenticationPolicy) error
 	GetAuthenticationPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnAuthenticationPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAuthenticationPolicyCreate(obj *AuthenticationPolicy) error {
+	log.Info("OnAuthenticationPolicyCreate is not implemented")
+	return nil
+}
+
+// OnAuthenticationPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAuthenticationPolicyUpdate(oldObj *AuthenticationPolicy, newObj *auth.AuthenticationPolicy) error {
+	log.Info("OnAuthenticationPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnAuthenticationPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAuthenticationPolicyDelete(obj *AuthenticationPolicy) error {
+	log.Info("OnAuthenticationPolicyDelete is not implemented")
+	return nil
+}
+
+// GetAuthenticationPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetAuthenticationPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetAuthenticationPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleAuthenticationPolicyEvent handles AuthenticationPolicy events from watcher
@@ -1593,6 +1643,31 @@ type RoleHandler interface {
 	GetRoleWatchOptions() *api.ListWatchOptions
 }
 
+// OnRoleCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleCreate(obj *Role) error {
+	log.Info("OnRoleCreate is not implemented")
+	return nil
+}
+
+// OnRoleUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleUpdate(oldObj *Role, newObj *auth.Role) error {
+	log.Info("OnRoleUpdate is not implemented")
+	return nil
+}
+
+// OnRoleDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleDelete(obj *Role) error {
+	log.Info("OnRoleDelete is not implemented")
+	return nil
+}
+
+// GetRoleWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRoleWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRoleWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleRoleEvent handles Role events from watcher
 func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 
@@ -2352,6 +2427,31 @@ type RoleBindingHandler interface {
 	GetRoleBindingWatchOptions() *api.ListWatchOptions
 }
 
+// OnRoleBindingCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleBindingCreate(obj *RoleBinding) error {
+	log.Info("OnRoleBindingCreate is not implemented")
+	return nil
+}
+
+// OnRoleBindingUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleBindingUpdate(oldObj *RoleBinding, newObj *auth.RoleBinding) error {
+	log.Info("OnRoleBindingUpdate is not implemented")
+	return nil
+}
+
+// OnRoleBindingDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleBindingDelete(obj *RoleBinding) error {
+	log.Info("OnRoleBindingDelete is not implemented")
+	return nil
+}
+
+// GetRoleBindingWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRoleBindingWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRoleBindingWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleRoleBindingEvent handles RoleBinding events from watcher
 func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 
@@ -3109,6 +3209,31 @@ type UserPreferenceHandler interface {
 	OnUserPreferenceUpdate(oldObj *UserPreference, newObj *auth.UserPreference) error
 	OnUserPreferenceDelete(obj *UserPreference) error
 	GetUserPreferenceWatchOptions() *api.ListWatchOptions
+}
+
+// OnUserPreferenceCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserPreferenceCreate(obj *UserPreference) error {
+	log.Info("OnUserPreferenceCreate is not implemented")
+	return nil
+}
+
+// OnUserPreferenceUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserPreferenceUpdate(oldObj *UserPreference, newObj *auth.UserPreference) error {
+	log.Info("OnUserPreferenceUpdate is not implemented")
+	return nil
+}
+
+// OnUserPreferenceDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserPreferenceDelete(obj *UserPreference) error {
+	log.Info("OnUserPreferenceDelete is not implemented")
+	return nil
+}
+
+// GetUserPreferenceWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetUserPreferenceWatchOptions() *api.ListWatchOptions {
+	log.Info("GetUserPreferenceWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleUserPreferenceEvent handles UserPreference events from watcher

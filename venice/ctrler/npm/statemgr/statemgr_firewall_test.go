@@ -25,7 +25,23 @@ func newStatemgr() (*Statemgr, error) {
 	msrv := nimbus.NewMbusServer("npm-test", nil)
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")))
+	stateMgr := MustGetStatemgr()
+	err := stateMgr.Run(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")), 0)
+	if err != nil {
+		log.Errorf("Could not create network manager. Err: %v", err)
+		return nil, err
+	}
+
+	return stateMgr, nil
+}
+
+func newStatemgr1() (*Statemgr, error) {
+	// create nimbus server
+	msrv := nimbus.NewMbusServer("npm-test", nil)
+
+	// create network state manager
+	stateMgr := MustGetStatemgr()
+	err := stateMgr.Run(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")), 0x1)
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err
@@ -49,7 +65,8 @@ func newStatemgrWithMserver(grpcServer *rpckit.RPCServer) (*Statemgr, error) {
 	msrv := nimbus.NewMbusServer("npm-test", grpcServer)
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")))
+	stateMgr := MustGetStatemgr()
+	err := stateMgr.Run(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")), 0)
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err

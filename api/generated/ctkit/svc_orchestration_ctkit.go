@@ -75,6 +75,31 @@ type OrchestratorHandler interface {
 	GetOrchestratorWatchOptions() *api.ListWatchOptions
 }
 
+// OnOrchestratorCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrchestratorCreate(obj *Orchestrator) error {
+	log.Info("OnOrchestratorCreate is not implemented")
+	return nil
+}
+
+// OnOrchestratorUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrchestratorUpdate(oldObj *Orchestrator, newObj *orchestration.Orchestrator) error {
+	log.Info("OnOrchestratorUpdate is not implemented")
+	return nil
+}
+
+// OnOrchestratorDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrchestratorDelete(obj *Orchestrator) error {
+	log.Info("OnOrchestratorDelete is not implemented")
+	return nil
+}
+
+// GetOrchestratorWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetOrchestratorWatchOptions() *api.ListWatchOptions {
+	log.Info("GetOrchestratorWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleOrchestratorEvent handles Orchestrator events from watcher
 func (ct *ctrlerCtx) handleOrchestratorEvent(evt *kvstore.WatchEvent) error {
 

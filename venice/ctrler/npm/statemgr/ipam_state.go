@@ -16,11 +16,34 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+var smgrIPAM *SmIPAM
+
+// SmIPAM is object statemgr for IPAM object
+type SmIPAM struct {
+	sm *Statemgr
+}
+
+// CompleteRegistration is the callback function statemgr calls after init is done
+func (sma *SmIPAM) CompleteRegistration(flags uint32) {
+	if flags&0x1 == 0 {
+		return
+	}
+	sma.sm.SetIPAMPolicyReactor(smgrIPAM)
+}
+
+func init() {
+	mgr := MustGetStatemgr()
+	smgrIPAM = &SmIPAM{
+		sm: mgr,
+	}
+
+	mgr.Register("statemgripam", smgrIPAM)
+}
+
 // IPAMState is a wrapper for ipam policy object
 type IPAMState struct {
 	sync.Mutex
 	IPAMPolicy *ctkit.IPAMPolicy `json:"-"` // IPAMPolicy object
-	stateMgr   *Statemgr         // pointer to the network manager
 }
 
 // IPAMPolicyStateFromObj converts from memdb object to IPAMPoliocy state
@@ -33,17 +56,17 @@ func IPAMPolicyStateFromObj(obj runtime.Object) (*IPAMState, error) {
 			state := policy.HandlerCtx.(*IPAMState)
 			return state, nil
 		default:
-			return nil, ErrIncorrectObjectType
+			return nil, errors.New("incorrect object type")
 		}
 	default:
-		return nil, ErrIncorrectObjectType
+		return nil, errors.New("incorrect object type")
 	}
 }
 
 // FindIPAMPolicy finds IPAM policy by name
-func (sm *Statemgr) FindIPAMPolicy(tenant, ns, name string) (*IPAMState, error) {
-	// find the object
-	obj, err := sm.FindObject("IPAMPolicy", tenant, ns, name)
+func (sma *SmIPAM) FindIPAMPolicy(tenant, ns, name string) (*IPAMState, error) {
+	// find it in db
+	obj, err := sma.sm.FindObject("IPAMPolicy", tenant, ns, name)
 	if err != nil {
 		return nil, err
 	}
@@ -52,16 +75,25 @@ func (sm *Statemgr) FindIPAMPolicy(tenant, ns, name string) (*IPAMState, error) 
 }
 
 //GetIPAMPolicyWatchOptions gets options
-func (sm *Statemgr) GetIPAMPolicyWatchOptions() *api.ListWatchOptions {
+func (sma *SmIPAM) GetIPAMPolicyWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
 	return &opts
 }
 
 func convertIPAMPolicy(ipam *IPAMState) *netproto.IPAMPolicy {
 	server := &netproto.DHCPServer{}
+
+	meta := api.ObjectMeta{
+		Tenant:          ipam.IPAMPolicy.Tenant,
+		Namespace:       ipam.IPAMPolicy.Namespace,
+		Name:            ipam.IPAMPolicy.Name,
+		GenerationID:    ipam.IPAMPolicy.GenerationID,
+		ResourceVersion: ipam.IPAMPolicy.ResourceVersion,
+	}
+
 	obj := &netproto.IPAMPolicy{
 		TypeMeta:   ipam.IPAMPolicy.TypeMeta,
-		ObjectMeta: agentObjectMeta(ipam.IPAMPolicy.ObjectMeta),
+		ObjectMeta: meta,
 	}
 
 	obj.Spec = netproto.IPAMPolicySpec{}
@@ -78,34 +110,33 @@ func convertIPAMPolicy(ipam *IPAMState) *netproto.IPAMPolicy {
 }
 
 // NewIPAMPolicyState creates a new IPAMState
-func NewIPAMPolicyState(policy *ctkit.IPAMPolicy, sm *Statemgr) (*IPAMState, error) {
+func NewIPAMPolicyState(policy *ctkit.IPAMPolicy, sma *SmIPAM) (*IPAMState, error) {
 	ipam := &IPAMState{
 		IPAMPolicy: policy,
-		stateMgr:   sm,
 	}
 	policy.HandlerCtx = ipam
 	return ipam, nil
 }
 
 // OnIPAMPolicyCreate creates local network state based on watch event
-func (sm *Statemgr) OnIPAMPolicyCreate(obj *ctkit.IPAMPolicy) error {
+func (sma *SmIPAM) OnIPAMPolicyCreate(obj *ctkit.IPAMPolicy) error {
 	log.Info("OnIPAMPolicyCreate: received: ", obj.Spec)
 
 	// create new network state
-	ipam, err := NewIPAMPolicyState(obj, sm)
+	ipam, err := NewIPAMPolicyState(obj, sma)
 	if err != nil {
 		log.Errorf("Error creating IPAM policy state. Err: %v", err)
 		return err
 	}
 
 	// store it in local DB
-	sm.mbus.AddObject(convertIPAMPolicy(ipam))
+	sma.sm.AddObject(convertIPAMPolicy(ipam))
 
 	return nil
 }
 
 // OnIPAMPolicyUpdate handles IPAMPolicy update
-func (sm *Statemgr) OnIPAMPolicyUpdate(oldpolicy *ctkit.IPAMPolicy, newpolicy *network.IPAMPolicy) error {
+func (sma *SmIPAM) OnIPAMPolicyUpdate(oldpolicy *ctkit.IPAMPolicy, newpolicy *network.IPAMPolicy) error {
 	log.Info("OnIPAMPolicyUpdate: received: ", oldpolicy.Spec, newpolicy.Spec)
 
 	// see if anything changed
@@ -127,7 +158,7 @@ func (sm *Statemgr) OnIPAMPolicyUpdate(oldpolicy *ctkit.IPAMPolicy, newpolicy *n
 	}
 
 	// store it in local DB
-	err = sm.mbus.UpdateObject(convertIPAMPolicy(policy))
+	err = sma.sm.UpdateObject(convertIPAMPolicy(policy))
 	if err != nil {
 		log.Errorf("Error storing the IPAM policy in memdb. Err: %v", err)
 		return err
@@ -137,10 +168,10 @@ func (sm *Statemgr) OnIPAMPolicyUpdate(oldpolicy *ctkit.IPAMPolicy, newpolicy *n
 }
 
 // OnIPAMPolicyDelete deletes the IPAMPolicy
-func (sm *Statemgr) OnIPAMPolicyDelete(obj *ctkit.IPAMPolicy) error {
+func (sma *SmIPAM) OnIPAMPolicyDelete(obj *ctkit.IPAMPolicy) error {
 	log.Info("OnIPAMPolicyDelete: received: ", obj.Spec)
 
-	policy, err := sm.FindIPAMPolicy(obj.Tenant, obj.Namespace, obj.Name)
+	policy, err := sma.FindIPAMPolicy(obj.Tenant, obj.Namespace, obj.Name)
 
 	if err != nil {
 		log.Error("FindIPAMPolicy returned an error: ", err, "for: ", obj.Tenant, obj.Namespace, obj.Name)
@@ -148,5 +179,5 @@ func (sm *Statemgr) OnIPAMPolicyDelete(obj *ctkit.IPAMPolicy) error {
 	}
 
 	// delete it from the DB
-	return sm.mbus.DeleteObject(convertIPAMPolicy(policy))
+	return sma.sm.DeleteObject(convertIPAMPolicy(policy))
 }

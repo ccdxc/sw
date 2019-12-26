@@ -78,6 +78,32 @@ type {{.}}Handler interface {
 	Get{{.}}WatchOptions() *api.ListWatchOptions
 }
 
+// On{{.}}Create is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) On{{.}}Create(obj *{{.}}) error {
+	log.Info("On{{.}}Create is not implemented")
+	return nil
+}
+
+// On{{.}}Update is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) On{{.}}Update(oldObj *{{.}}, newObj *{{$pkgname}}.{{.}}) error {
+	log.Info("On{{.}}Update is not implemented")
+	return nil
+}
+
+// On{{.}}Delete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) On{{.}}Delete(obj *{{.}}) error {
+	log.Info("On{{.}}Delete is not implemented")
+	return nil
+}
+
+// Get{{.}}WatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) Get{{.}}WatchOptions() *api.ListWatchOptions {
+	log.Info("Get{{.}}WatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
+
 // handle{{.}}Event handles {{.}} events from watcher
 func (ct *ctrlerCtx) handle{{.}}Event(evt *kvstore.WatchEvent) error {
 

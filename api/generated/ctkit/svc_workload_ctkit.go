@@ -75,6 +75,31 @@ type EndpointHandler interface {
 	GetEndpointWatchOptions() *api.ListWatchOptions
 }
 
+// OnEndpointCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEndpointCreate(obj *Endpoint) error {
+	log.Info("OnEndpointCreate is not implemented")
+	return nil
+}
+
+// OnEndpointUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEndpointUpdate(oldObj *Endpoint, newObj *workload.Endpoint) error {
+	log.Info("OnEndpointUpdate is not implemented")
+	return nil
+}
+
+// OnEndpointDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEndpointDelete(obj *Endpoint) error {
+	log.Info("OnEndpointDelete is not implemented")
+	return nil
+}
+
+// GetEndpointWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetEndpointWatchOptions() *api.ListWatchOptions {
+	log.Info("GetEndpointWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleEndpointEvent handles Endpoint events from watcher
 func (ct *ctrlerCtx) handleEndpointEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type WorkloadHandler interface {
 	OnWorkloadUpdate(oldObj *Workload, newObj *workload.Workload) error
 	OnWorkloadDelete(obj *Workload) error
 	GetWorkloadWatchOptions() *api.ListWatchOptions
+}
+
+// OnWorkloadCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnWorkloadCreate(obj *Workload) error {
+	log.Info("OnWorkloadCreate is not implemented")
+	return nil
+}
+
+// OnWorkloadUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnWorkloadUpdate(oldObj *Workload, newObj *workload.Workload) error {
+	log.Info("OnWorkloadUpdate is not implemented")
+	return nil
+}
+
+// OnWorkloadDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnWorkloadDelete(obj *Workload) error {
+	log.Info("OnWorkloadDelete is not implemented")
+	return nil
+}
+
+// GetWorkloadWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetWorkloadWatchOptions() *api.ListWatchOptions {
+	log.Info("GetWorkloadWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleWorkloadEvent handles Workload events from watcher

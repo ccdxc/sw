@@ -75,6 +75,31 @@ type SecurityGroupHandler interface {
 	GetSecurityGroupWatchOptions() *api.ListWatchOptions
 }
 
+// OnSecurityGroupCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSecurityGroupCreate(obj *SecurityGroup) error {
+	log.Info("OnSecurityGroupCreate is not implemented")
+	return nil
+}
+
+// OnSecurityGroupUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSecurityGroupUpdate(oldObj *SecurityGroup, newObj *security.SecurityGroup) error {
+	log.Info("OnSecurityGroupUpdate is not implemented")
+	return nil
+}
+
+// OnSecurityGroupDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSecurityGroupDelete(obj *SecurityGroup) error {
+	log.Info("OnSecurityGroupDelete is not implemented")
+	return nil
+}
+
+// GetSecurityGroupWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetSecurityGroupWatchOptions() *api.ListWatchOptions {
+	log.Info("GetSecurityGroupWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleSecurityGroupEvent handles SecurityGroup events from watcher
 func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type NetworkSecurityPolicyHandler interface {
 	OnNetworkSecurityPolicyUpdate(oldObj *NetworkSecurityPolicy, newObj *security.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyDelete(obj *NetworkSecurityPolicy) error
 	GetNetworkSecurityPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnNetworkSecurityPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkSecurityPolicyCreate(obj *NetworkSecurityPolicy) error {
+	log.Info("OnNetworkSecurityPolicyCreate is not implemented")
+	return nil
+}
+
+// OnNetworkSecurityPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkSecurityPolicyUpdate(oldObj *NetworkSecurityPolicy, newObj *security.NetworkSecurityPolicy) error {
+	log.Info("OnNetworkSecurityPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnNetworkSecurityPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkSecurityPolicyDelete(obj *NetworkSecurityPolicy) error {
+	log.Info("OnNetworkSecurityPolicyDelete is not implemented")
+	return nil
+}
+
+// GetNetworkSecurityPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetNetworkSecurityPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetNetworkSecurityPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleNetworkSecurityPolicyEvent handles NetworkSecurityPolicy events from watcher
@@ -1593,6 +1643,31 @@ type AppHandler interface {
 	GetAppWatchOptions() *api.ListWatchOptions
 }
 
+// OnAppCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAppCreate(obj *App) error {
+	log.Info("OnAppCreate is not implemented")
+	return nil
+}
+
+// OnAppUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAppUpdate(oldObj *App, newObj *security.App) error {
+	log.Info("OnAppUpdate is not implemented")
+	return nil
+}
+
+// OnAppDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAppDelete(obj *App) error {
+	log.Info("OnAppDelete is not implemented")
+	return nil
+}
+
+// GetAppWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetAppWatchOptions() *api.ListWatchOptions {
+	log.Info("GetAppWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleAppEvent handles App events from watcher
 func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 
@@ -2350,6 +2425,31 @@ type FirewallProfileHandler interface {
 	OnFirewallProfileUpdate(oldObj *FirewallProfile, newObj *security.FirewallProfile) error
 	OnFirewallProfileDelete(obj *FirewallProfile) error
 	GetFirewallProfileWatchOptions() *api.ListWatchOptions
+}
+
+// OnFirewallProfileCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFirewallProfileCreate(obj *FirewallProfile) error {
+	log.Info("OnFirewallProfileCreate is not implemented")
+	return nil
+}
+
+// OnFirewallProfileUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFirewallProfileUpdate(oldObj *FirewallProfile, newObj *security.FirewallProfile) error {
+	log.Info("OnFirewallProfileUpdate is not implemented")
+	return nil
+}
+
+// OnFirewallProfileDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFirewallProfileDelete(obj *FirewallProfile) error {
+	log.Info("OnFirewallProfileDelete is not implemented")
+	return nil
+}
+
+// GetFirewallProfileWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetFirewallProfileWatchOptions() *api.ListWatchOptions {
+	log.Info("GetFirewallProfileWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleFirewallProfileEvent handles FirewallProfile events from watcher
@@ -3111,6 +3211,31 @@ type CertificateHandler interface {
 	GetCertificateWatchOptions() *api.ListWatchOptions
 }
 
+// OnCertificateCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCertificateCreate(obj *Certificate) error {
+	log.Info("OnCertificateCreate is not implemented")
+	return nil
+}
+
+// OnCertificateUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCertificateUpdate(oldObj *Certificate, newObj *security.Certificate) error {
+	log.Info("OnCertificateUpdate is not implemented")
+	return nil
+}
+
+// OnCertificateDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCertificateDelete(obj *Certificate) error {
+	log.Info("OnCertificateDelete is not implemented")
+	return nil
+}
+
+// GetCertificateWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetCertificateWatchOptions() *api.ListWatchOptions {
+	log.Info("GetCertificateWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleCertificateEvent handles Certificate events from watcher
 func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 
@@ -3868,6 +3993,31 @@ type TrafficEncryptionPolicyHandler interface {
 	OnTrafficEncryptionPolicyUpdate(oldObj *TrafficEncryptionPolicy, newObj *security.TrafficEncryptionPolicy) error
 	OnTrafficEncryptionPolicyDelete(obj *TrafficEncryptionPolicy) error
 	GetTrafficEncryptionPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnTrafficEncryptionPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTrafficEncryptionPolicyCreate(obj *TrafficEncryptionPolicy) error {
+	log.Info("OnTrafficEncryptionPolicyCreate is not implemented")
+	return nil
+}
+
+// OnTrafficEncryptionPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTrafficEncryptionPolicyUpdate(oldObj *TrafficEncryptionPolicy, newObj *security.TrafficEncryptionPolicy) error {
+	log.Info("OnTrafficEncryptionPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnTrafficEncryptionPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTrafficEncryptionPolicyDelete(obj *TrafficEncryptionPolicy) error {
+	log.Info("OnTrafficEncryptionPolicyDelete is not implemented")
+	return nil
+}
+
+// GetTrafficEncryptionPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetTrafficEncryptionPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetTrafficEncryptionPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleTrafficEncryptionPolicyEvent handles TrafficEncryptionPolicy events from watcher

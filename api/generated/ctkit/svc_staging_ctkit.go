@@ -75,6 +75,31 @@ type BufferHandler interface {
 	GetBufferWatchOptions() *api.ListWatchOptions
 }
 
+// OnBufferCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBufferCreate(obj *Buffer) error {
+	log.Info("OnBufferCreate is not implemented")
+	return nil
+}
+
+// OnBufferUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBufferUpdate(oldObj *Buffer, newObj *staging.Buffer) error {
+	log.Info("OnBufferUpdate is not implemented")
+	return nil
+}
+
+// OnBufferDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBufferDelete(obj *Buffer) error {
+	log.Info("OnBufferDelete is not implemented")
+	return nil
+}
+
+// GetBufferWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetBufferWatchOptions() *api.ListWatchOptions {
+	log.Info("GetBufferWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleBufferEvent handles Buffer events from watcher
 func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 

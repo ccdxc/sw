@@ -75,6 +75,31 @@ type NetworkHandler interface {
 	GetNetworkWatchOptions() *api.ListWatchOptions
 }
 
+// OnNetworkCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkCreate(obj *Network) error {
+	log.Info("OnNetworkCreate is not implemented")
+	return nil
+}
+
+// OnNetworkUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkUpdate(oldObj *Network, newObj *network.Network) error {
+	log.Info("OnNetworkUpdate is not implemented")
+	return nil
+}
+
+// OnNetworkDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkDelete(obj *Network) error {
+	log.Info("OnNetworkDelete is not implemented")
+	return nil
+}
+
+// GetNetworkWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetNetworkWatchOptions() *api.ListWatchOptions {
+	log.Info("GetNetworkWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleNetworkEvent handles Network events from watcher
 func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 
@@ -832,6 +857,31 @@ type ServiceHandler interface {
 	OnServiceUpdate(oldObj *Service, newObj *network.Service) error
 	OnServiceDelete(obj *Service) error
 	GetServiceWatchOptions() *api.ListWatchOptions
+}
+
+// OnServiceCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnServiceCreate(obj *Service) error {
+	log.Info("OnServiceCreate is not implemented")
+	return nil
+}
+
+// OnServiceUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnServiceUpdate(oldObj *Service, newObj *network.Service) error {
+	log.Info("OnServiceUpdate is not implemented")
+	return nil
+}
+
+// OnServiceDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnServiceDelete(obj *Service) error {
+	log.Info("OnServiceDelete is not implemented")
+	return nil
+}
+
+// GetServiceWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetServiceWatchOptions() *api.ListWatchOptions {
+	log.Info("GetServiceWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleServiceEvent handles Service events from watcher
@@ -1593,6 +1643,31 @@ type LbPolicyHandler interface {
 	GetLbPolicyWatchOptions() *api.ListWatchOptions
 }
 
+// OnLbPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLbPolicyCreate(obj *LbPolicy) error {
+	log.Info("OnLbPolicyCreate is not implemented")
+	return nil
+}
+
+// OnLbPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLbPolicyUpdate(oldObj *LbPolicy, newObj *network.LbPolicy) error {
+	log.Info("OnLbPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnLbPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLbPolicyDelete(obj *LbPolicy) error {
+	log.Info("OnLbPolicyDelete is not implemented")
+	return nil
+}
+
+// GetLbPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetLbPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetLbPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleLbPolicyEvent handles LbPolicy events from watcher
 func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 
@@ -2350,6 +2425,31 @@ type VirtualRouterHandler interface {
 	OnVirtualRouterUpdate(oldObj *VirtualRouter, newObj *network.VirtualRouter) error
 	OnVirtualRouterDelete(obj *VirtualRouter) error
 	GetVirtualRouterWatchOptions() *api.ListWatchOptions
+}
+
+// OnVirtualRouterCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVirtualRouterCreate(obj *VirtualRouter) error {
+	log.Info("OnVirtualRouterCreate is not implemented")
+	return nil
+}
+
+// OnVirtualRouterUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVirtualRouterUpdate(oldObj *VirtualRouter, newObj *network.VirtualRouter) error {
+	log.Info("OnVirtualRouterUpdate is not implemented")
+	return nil
+}
+
+// OnVirtualRouterDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVirtualRouterDelete(obj *VirtualRouter) error {
+	log.Info("OnVirtualRouterDelete is not implemented")
+	return nil
+}
+
+// GetVirtualRouterWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetVirtualRouterWatchOptions() *api.ListWatchOptions {
+	log.Info("GetVirtualRouterWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleVirtualRouterEvent handles VirtualRouter events from watcher
@@ -3111,6 +3211,31 @@ type NetworkInterfaceHandler interface {
 	GetNetworkInterfaceWatchOptions() *api.ListWatchOptions
 }
 
+// OnNetworkInterfaceCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkInterfaceCreate(obj *NetworkInterface) error {
+	log.Info("OnNetworkInterfaceCreate is not implemented")
+	return nil
+}
+
+// OnNetworkInterfaceUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkInterfaceUpdate(oldObj *NetworkInterface, newObj *network.NetworkInterface) error {
+	log.Info("OnNetworkInterfaceUpdate is not implemented")
+	return nil
+}
+
+// OnNetworkInterfaceDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkInterfaceDelete(obj *NetworkInterface) error {
+	log.Info("OnNetworkInterfaceDelete is not implemented")
+	return nil
+}
+
+// GetNetworkInterfaceWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetNetworkInterfaceWatchOptions() *api.ListWatchOptions {
+	log.Info("GetNetworkInterfaceWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleNetworkInterfaceEvent handles NetworkInterface events from watcher
 func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error {
 
@@ -3868,6 +3993,31 @@ type IPAMPolicyHandler interface {
 	OnIPAMPolicyUpdate(oldObj *IPAMPolicy, newObj *network.IPAMPolicy) error
 	OnIPAMPolicyDelete(obj *IPAMPolicy) error
 	GetIPAMPolicyWatchOptions() *api.ListWatchOptions
+}
+
+// OnIPAMPolicyCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnIPAMPolicyCreate(obj *IPAMPolicy) error {
+	log.Info("OnIPAMPolicyCreate is not implemented")
+	return nil
+}
+
+// OnIPAMPolicyUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnIPAMPolicyUpdate(oldObj *IPAMPolicy, newObj *network.IPAMPolicy) error {
+	log.Info("OnIPAMPolicyUpdate is not implemented")
+	return nil
+}
+
+// OnIPAMPolicyDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnIPAMPolicyDelete(obj *IPAMPolicy) error {
+	log.Info("OnIPAMPolicyDelete is not implemented")
+	return nil
+}
+
+// GetIPAMPolicyWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetIPAMPolicyWatchOptions() *api.ListWatchOptions {
+	log.Info("GetIPAMPolicyWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleIPAMPolicyEvent handles IPAMPolicy events from watcher
@@ -4629,6 +4779,31 @@ type RoutingConfigHandler interface {
 	GetRoutingConfigWatchOptions() *api.ListWatchOptions
 }
 
+// OnRoutingConfigCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoutingConfigCreate(obj *RoutingConfig) error {
+	log.Info("OnRoutingConfigCreate is not implemented")
+	return nil
+}
+
+// OnRoutingConfigUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoutingConfigUpdate(oldObj *RoutingConfig, newObj *network.RoutingConfig) error {
+	log.Info("OnRoutingConfigUpdate is not implemented")
+	return nil
+}
+
+// OnRoutingConfigDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoutingConfigDelete(obj *RoutingConfig) error {
+	log.Info("OnRoutingConfigDelete is not implemented")
+	return nil
+}
+
+// GetRoutingConfigWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRoutingConfigWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRoutingConfigWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleRoutingConfigEvent handles RoutingConfig events from watcher
 func (ct *ctrlerCtx) handleRoutingConfigEvent(evt *kvstore.WatchEvent) error {
 
@@ -5386,6 +5561,31 @@ type RouteTableHandler interface {
 	OnRouteTableUpdate(oldObj *RouteTable, newObj *network.RouteTable) error
 	OnRouteTableDelete(obj *RouteTable) error
 	GetRouteTableWatchOptions() *api.ListWatchOptions
+}
+
+// OnRouteTableCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRouteTableCreate(obj *RouteTable) error {
+	log.Info("OnRouteTableCreate is not implemented")
+	return nil
+}
+
+// OnRouteTableUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRouteTableUpdate(oldObj *RouteTable, newObj *network.RouteTable) error {
+	log.Info("OnRouteTableUpdate is not implemented")
+	return nil
+}
+
+// OnRouteTableDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRouteTableDelete(obj *RouteTable) error {
+	log.Info("OnRouteTableDelete is not implemented")
+	return nil
+}
+
+// GetRouteTableWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetRouteTableWatchOptions() *api.ListWatchOptions {
+	log.Info("GetRouteTableWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
 }
 
 // handleRouteTableEvent handles RouteTable events from watcher
