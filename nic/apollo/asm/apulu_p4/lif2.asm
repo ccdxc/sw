@@ -13,6 +13,7 @@ lif_info:
     phvwr           p.capri_intrinsic_lif, k.arm_to_p4i_lif
     phvwr           p.control_metadata_rx_packet, d.lif_info_d.direction
     phvwr           p.p4i_i2e_rx_packet, d.lif_info_d.direction
+    phvwr           p.control_metadata_learn_enabled, d.lif_info_d.learn_enabled
     phvwr           p.control_metadata_lif_type, d.lif_info_d.lif_type
     phvwr           p.vnic_metadata_vnic_id, d.lif_info_d.vnic_id
     phvwr           p.vnic_metadata_bd_id, d.lif_info_d.bd_id

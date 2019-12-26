@@ -40,11 +40,9 @@ p4i_recirc_done:
     seq.c3          c3, k.ipv6_1_dstAddr[63:0], \
                         d.p4i_device_info_d.device_ipv6_addr[63:0]
     andcf           c1, [c2 | c3]
-    phvwr.c1        p.control_metadata_to_device_ip, TRUE
     phvwr.e         p.control_metadata_l2_enabled, \
                         d.p4i_device_info_d.l2_enabled
-    phvwr.f         p.control_metadata_learn_enabled, \
-                        d.p4i_device_info_d.learn_enabled
+    phvwr.c1        p.control_metadata_to_device_ip, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -12,8 +12,7 @@ action p4i_recirc() {
 }
 
 action p4i_device_info(device_mac_addr1, device_mac_addr2,
-                       device_ipv4_addr, device_ipv6_addr,
-                       l2_enabled, learn_enabled) {
+                       device_ipv4_addr, device_ipv6_addr, l2_enabled) {
     modify_field(scratch_metadata.mac, device_mac_addr1);
     modify_field(scratch_metadata.mac, device_mac_addr2);
     modify_field(scratch_metadata.ipv4_addr, device_ipv4_addr);
@@ -26,7 +25,6 @@ action p4i_device_info(device_mac_addr1, device_mac_addr2,
         modify_field(control_metadata.to_device_ip, TRUE);
     }
     modify_field(control_metadata.l2_enabled, l2_enabled);
-    modify_field(control_metadata.learn_enabled, learn_enabled);
 
     p4i_recirc();
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,

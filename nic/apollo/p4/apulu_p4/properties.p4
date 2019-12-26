@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* LIF info                                                                   */
 /******************************************************************************/
-action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id,
+action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, learn_enabled,
                 pinned_nexthop_type, pinned_nexthop_id) {
     modify_field(control_metadata.rx_packet, lif_type);
     modify_field(p4i_i2e.rx_packet, direction);
@@ -11,6 +11,7 @@ action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id,
     modify_field(vnic_metadata.vpc_id, vpc_id);
     modify_field(p4i_i2e.nexthop_type, pinned_nexthop_type);
     modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
+    modify_field(control_metadata.learn_enabled, learn_enabled);
 }
 
 @pragma stage 0

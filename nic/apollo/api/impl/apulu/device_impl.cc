@@ -119,9 +119,6 @@ device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         if (spec->bridging_en) {
             p4i_device_info_data.p4i_device_info.l2_enabled = TRUE;
         }
-        if (spec->learning_en) {
-            p4i_device_info_data.p4i_device_info.learn_enabled = TRUE;
-        }
         // program the P4I_DEVICE_INFO table
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                            NULL, NULL, &p4i_device_info_data);
@@ -191,7 +188,6 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
                          IP6_ADDR8_LEN);
     }
     spec->bridging_en = device_info.p4i_device_info.l2_enabled;
-    spec->learning_en = device_info.p4i_device_info.learn_enabled;
     return SDK_RET_OK;
 }
 
