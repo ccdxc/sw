@@ -2,7 +2,6 @@ package datapath
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -66,9 +65,6 @@ func (hd *Datapath) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPol
 			},
 		},
 	}
-
-	b, _ := json.Marshal(sgPolicyReqMsg)
-	log.Infof("Create SG Policy: %s", string(b))
 
 	log.Infof("Sending NetworkSecurityPolicy Create to datapath: %+v", sgPolicyReqMsg.Request[0].KeyOrHandle)
 
@@ -170,8 +166,6 @@ func (hd *Datapath) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPol
 			},
 		},
 	}
-	b, _ := json.Marshal(sgPolicyUpdateReqMsg)
-	log.Infof("Update SG Policy: %s", string(b))
 	log.Infof("Sending NetworkSecurityPolicy Update to datapath: %+v", sgPolicyUpdateReqMsg.Request[0].KeyOrHandle)
 
 	if hd.Kind == "hal" {

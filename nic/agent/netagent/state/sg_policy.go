@@ -218,7 +218,6 @@ func (na *Nagent) ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy 
 // UpdateNetworkSecurityPolicy updates a security group policy
 func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy) error {
 	// find the corresponding namespace
-	log.Infof("Got SG Policy Update: %v", sgp)
 	_, err := na.FindNamespace(sgp.ObjectMeta)
 	if err != nil {
 		return err
@@ -228,8 +227,6 @@ func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 		log.Errorf("NetworkSecurityPolicy %v not found", sgp.ObjectMeta)
 		return err
 	}
-
-	log.Infof("Existing SG Policy: %v", existingSgp)
 
 	// check if policy contents are same
 	if proto.Equal(&existingSgp.Spec, &sgp.Spec) {
@@ -245,8 +242,6 @@ func (na *Nagent) UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 
 // performNetworkSecurityPolicyUpdate
 func (na *Nagent) performNetworkSecurityPolicyUpdate(sgp *netproto.NetworkSecurityPolicy) error {
-	log.Infof("Updating SG Policy: %v", sgp)
-
 	var ruleIDAppLUT sync.Map
 
 	// find the corresponding vrf for the sg policy
@@ -286,7 +281,6 @@ func (na *Nagent) performNetworkSecurityPolicyUpdate(sgp *netproto.NetworkSecuri
 		return err
 	}
 
-	log.Infof("Saving SG Policy: %v", sgp)
 	err = na.saveNetworkSecurityPolicy(sgp)
 	return err
 }
