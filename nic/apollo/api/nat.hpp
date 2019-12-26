@@ -51,6 +51,14 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(nat_port_block *port_block);
 
+    /// \brief    build object given its key from the (sw and/or hw state we
+    ///           have) and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    NAT port block instance corresponding to the key
+    static nat_port_block *build(pds_nat_port_block_key_t *key);
+
     /// \brief          initialize NAT port block entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error

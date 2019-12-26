@@ -582,7 +582,7 @@ api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::obj_dependency_computation_stage_(void)
 {
-    uint32_t i;
+    uint32_t i = 0;
     sdk_ret_t ret;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
@@ -602,11 +602,11 @@ api_engine::obj_dependency_computation_stage_(void)
             goto error;
         }
         // if this object needs to be circulated, add it to the msg list
-        i = 0;
         if ((obj_ctxt->api_op != API_OP_NONE) &&
             api_base::circulate(obj_ctxt->obj_id)) {
             api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
                                   obj_ctxt);
+            i++;
         }
     }
     PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);

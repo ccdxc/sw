@@ -51,6 +51,14 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(dhcp_relay *relay);
 
+    /// \brief    build object given its key from the (sw and/or hw state we
+    ///           have) and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    DHCP relay object instance corresponding to the key
+    static dhcp_relay *build(pds_dhcp_relay_key_t *key);
+
     /// \brief          initialize DHCP relay entry entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -153,6 +161,14 @@ public:
     /// \param[in] policy    DHCP policy entry to be freed
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(dhcp_policy *policy);
+
+    /// \brief    build object given its key from the (sw and/or hw state we
+    ///           have) and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    DHCP policy object instance corresponding to the key
+    static dhcp_policy *build(pds_dhcp_policy_key_t *key);
 
     /// \brief          initialize DHCP policy entry entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration

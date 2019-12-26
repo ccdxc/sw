@@ -51,6 +51,14 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(security_profile *profile);
 
+    /// \brief    build object given its key from the (sw and/or hw state we
+    ///           have) and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    NAT port block instance corresponding to the key
+    static security_profile *build(pds_security_profile_key_t *key);
+
     /// \brief          initialize security profile entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error

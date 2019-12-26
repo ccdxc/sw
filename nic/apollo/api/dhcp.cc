@@ -61,6 +61,18 @@ dhcp_relay::free(dhcp_relay *relay) {
     return SDK_RET_OK;
 }
 
+dhcp_relay *
+dhcp_relay::build(pds_dhcp_relay_key_t *key) {
+    dhcp_relay *relay;
+
+    relay = dhcp_db()->alloc_relay();
+    if (relay) {
+        new (relay) dhcp_relay();
+        memcpy(&relay->key_, key, sizeof(*key));
+    }
+    return relay;
+}
+
 sdk_ret_t
 dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->dhcp_relay_spec.key.id;
@@ -157,6 +169,18 @@ dhcp_policy::free(dhcp_policy *policy) {
     policy->~dhcp_policy();
     dhcp_db()->free(policy);
     return SDK_RET_OK;
+}
+
+dhcp_policy *
+dhcp_policy::build(pds_dhcp_policy_key_t *key) {
+    dhcp_policy *policy;
+
+    policy = dhcp_db()->alloc_policy();
+    if (policy) {
+        new (policy) dhcp_policy();
+        memcpy(&policy->key_, key, sizeof(*key));
+    }
+    return policy;
 }
 
 sdk_ret_t

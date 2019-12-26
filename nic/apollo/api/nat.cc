@@ -61,6 +61,18 @@ nat_port_block::free(nat_port_block *port_block) {
     return SDK_RET_OK;
 }
 
+nat_port_block *
+nat_port_block::build(pds_nat_port_block_key_t *key) {
+    nat_port_block *port_block;
+
+    port_block = nat_db()->alloc();
+    if (port_block) {
+        new (port_block) nat_port_block();
+        memcpy(&port_block->key_, key, sizeof(*key));
+    }
+    return port_block;
+}
+
 sdk_ret_t
 nat_port_block::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->nat_port_block_spec.key.id;
