@@ -88,7 +88,8 @@ private:
 };
 
 static inline mapping_entry *
-mapping_find (void) {
+mapping_find (void)
+{
     return (mapping_entry *)api_base::find_obj(OBJ_ID_MAPPING, NULL);
 }
 

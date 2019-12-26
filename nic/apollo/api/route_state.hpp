@@ -81,7 +81,8 @@ private:
 };
 
 static inline route_table *
-route_table_find (pds_route_table_key_t *key) {
+route_table_find (pds_route_table_key_t *key)
+{
     return (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE, key);
 }
 

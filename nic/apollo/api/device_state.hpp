@@ -75,7 +75,8 @@ private:
 };
 
 static inline device_entry *
-device_find (void) {
+device_find (void)
+{
     return (device_entry *)api_base::find_obj(OBJ_ID_DEVICE, NULL);
 }
 

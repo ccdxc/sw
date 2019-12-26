@@ -79,7 +79,8 @@ private:
 };
 
 static inline tag_entry *
-tag_find (void) {
+tag_find (void)
+{
     return (tag_entry *)api_base::find_obj(OBJ_ID_TAG, NULL);
 }
 

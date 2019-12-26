@@ -73,7 +73,8 @@ private:
 };
 
 static inline meter_entry *
-meter_find (void) {
+meter_find (void)
+{
     return (meter_entry *)api_base::find_obj(OBJ_ID_METER, NULL);
 }
 

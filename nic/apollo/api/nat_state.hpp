@@ -74,7 +74,8 @@ private:
 };
 
 static inline nat_port_block *
-nat_port_block_find (pds_nat_port_block_key_t *key) {
+nat_port_block_find (pds_nat_port_block_key_t *key)
+{
     return (nat_port_block *)api_base::find_obj(OBJ_ID_NAT_PORT_BLOCK, key);
 }
 

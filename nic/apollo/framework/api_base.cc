@@ -122,6 +122,36 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return vpc_peer_entry::build(&api_ctxt->api_params->vpc_peer_spec.key);
 
+    case OBJ_ID_NAT_PORT_BLOCK:
+        // NAT port block is a stateless object, so we need to build it on the
+        // fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return nat_port_block::build(&api_ctxt->api_params->nat_port_block_key);
+        }
+        return nat_port_block::build(&api_ctxt->api_params->nat_port_block_spec.key);
+
+    case OBJ_ID_DHCP_RELAY:
+        // DHCP relay is a stateless object, so we need to build it on the fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return dhcp_relay::build(&api_ctxt->api_params->dhcp_relay_key);
+        }
+        return dhcp_relay::build(&api_ctxt->api_params->dhcp_relay_spec.key);
+
+    case OBJ_ID_DHCP_POLICY:
+        // DHCP policy is a stateless object, so we need to build it on the fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return dhcp_policy::build(&api_ctxt->api_params->dhcp_policy_key);
+        }
+        return dhcp_policy::build(&api_ctxt->api_params->dhcp_policy_spec.key);
+
+    case OBJ_ID_SECURITY_PROFILE:
+        // security profile is a stateless object, so we need to build it on
+        // the fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return security_profile::build(&api_ctxt->api_params->security_profile_key);
+        }
+        return security_profile::build(&api_ctxt->api_params->security_profile_spec.key);
+
     default:
         break;
     }
@@ -145,6 +175,22 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_VPC_PEER:
         vpc_peer_entry::soft_delete((vpc_peer_entry *)api_obj);
+        break;
+
+    case OBJ_ID_NAT_PORT_BLOCK:
+        nat_port_block::soft_delete((nat_port_block *)api_obj);
+        break;
+
+    case OBJ_ID_DHCP_RELAY:
+        dhcp_relay::soft_delete((dhcp_relay *)api_obj);
+        break;
+
+    case OBJ_ID_DHCP_POLICY:
+        dhcp_policy::soft_delete((dhcp_policy *)api_obj);
+        break;
+
+    case OBJ_ID_SECURITY_PROFILE:
+        security_profile::soft_delete((security_profile *)api_obj);
         break;
 
     default:
@@ -447,7 +493,6 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_SVC_MAPPING:
     case OBJ_ID_VPC_PEER:
-        // TODO: revisit the following objs
     case OBJ_ID_NAT_PORT_BLOCK:
     case OBJ_ID_DHCP_RELAY:
     case OBJ_ID_DHCP_POLICY:

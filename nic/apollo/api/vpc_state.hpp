@@ -76,7 +76,8 @@ private:
 };
 
 static inline vpc_entry *
-vpc_find (pds_vpc_key_t *key) {
+vpc_find (pds_vpc_key_t *key)
+{
     return (vpc_entry *)api_base::find_obj(OBJ_ID_VPC, key);
 }
 

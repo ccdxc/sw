@@ -79,7 +79,8 @@ private:
 };
 
 static inline policer_entry *
-policer_find (void) {
+policer_find (void)
+{
     return (policer_entry *)api_base::find_obj(OBJ_ID_POLICER, NULL);
 }
 

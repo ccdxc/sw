@@ -87,7 +87,8 @@ private:
 };
 
 static inline svc_mapping *
-svc_mapping_find (void) {
+svc_mapping_find (void)
+{
     return (svc_mapping *)api_base::find_obj(OBJ_ID_SVC_MAPPING, NULL);
 }
 

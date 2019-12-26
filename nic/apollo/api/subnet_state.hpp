@@ -77,7 +77,8 @@ private:
 };
 
 static inline subnet_entry *
-subnet_find (pds_subnet_key_t *key) {
+subnet_find (pds_subnet_key_t *key)
+{
     return (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, key);
 }
 

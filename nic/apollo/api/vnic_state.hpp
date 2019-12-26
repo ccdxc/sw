@@ -102,7 +102,8 @@ private:
 };
 
 static inline vnic_entry *
-vnic_find (void) {
+vnic_find (void)
+{
     return (vnic_entry *)api_base::find_obj(OBJ_ID_VNIC, NULL);
 }
 

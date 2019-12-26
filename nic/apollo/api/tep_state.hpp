@@ -81,7 +81,8 @@ private:
 };
 
 static inline tep_entry *
-tep_find (void) {
+tep_find (void)
+{
     return (tep_entry *)api_base::find_obj(OBJ_ID_TEP, NULL);
 }
 
