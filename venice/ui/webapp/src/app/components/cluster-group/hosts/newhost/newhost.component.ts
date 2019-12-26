@@ -10,7 +10,7 @@ import { ClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluste
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { required, patternValidator } from '@sdk/v1/utils/validators';
-import { FormGroup, FormArray, ValidatorFn } from '@angular/forms';
+import { FormGroup, FormArray, ValidatorFn, AbstractControl } from '@angular/forms';
 import { IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { TableCol } from '@app/components/shared/tableviewedit';
@@ -55,6 +55,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   @Input() notAdmittedCount: number = 0;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
+  createButtonTooltip: string = '';
   newHostForm: FormGroup;
   smartNICIDs: any;
   smartNICIDOptions: string[] = [];
@@ -216,6 +217,10 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
         && this.newHostForm.get(['spec', 'dscs', 0, this.radioValue]).valid) {
         return true;
       }
+      if (!this.newHostForm.get(['spec', 'dscs', 0, 'mac-address']).valid) {
+        this.createButtonTooltip = NewhostComponent.MACADDRESS_MESSAGE;
+        return false;
+      }
     }
     return false;
   }
@@ -239,6 +244,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
         {
           cssClass: 'global-button-primary host-button host-button-SAVE',
           text: 'CREATE HOSTS',
+          genTooltip: () => this.getTooltip(),
           callback: () => { this.saveObjects(); },
           computeClass: () => this.computeButtonClass()
         },
@@ -378,4 +384,18 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.saveBatchMode();
     }
   }
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
+  }
+  getTooltip() {
+    return this.createButtonTooltip;
+  }
+  getFieldTooltip() {
+    if (Utility.isEmpty(this.newHostForm.get(['spec', 'dscs', 0, this.radioValue]).value)) {
+     return `${this.radioValue} field is empty`;
+  }
+  if (!this.newHostForm.get(['spec', 'dscs', 0, 'mac-address']).valid) {
+    return NewhostComponent.MACADDRESS_MESSAGE;
+  }
+}
 }

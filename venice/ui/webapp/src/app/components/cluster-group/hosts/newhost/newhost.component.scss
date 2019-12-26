@@ -2,6 +2,7 @@
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
 
 .newhost-container {
   background: white;
@@ -12,14 +13,13 @@ $vertical-gutter: 5px;
 }
 
 .newhost-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  height: 20px !important;
+  height: 30px !important;
 }
 
 .newhost-NAPLES-name,
 .newhost-mac-address {
-  margin: $vertical-gutter $horizontal-gutter;
   height: 30px !important;
+  width: 225px;
 }
 
 .newhost-input {
@@ -78,25 +78,31 @@ $vertical-gutter: 5px;
 }
 
 .newhost-buttoncontainer {
-  margin-top: 1.5 * $vertical-gutter;
+
+  .newhost-save,
+  .newhost-cancel {
+    font-size: 16px;
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  }
 }
+
 
 .newhost-NAPLESName-text,
 .newhost-Macaddress-text {
   margin-top: 2*$vertical-gutter;
   margin-left: 7*$horizontal-gutter;
   height: 30px;
+  width: 85px;
   @include primary-font();
-}
-
-.newhost-NAPLES-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  height: 30px !important;
 }
 
 .newhost-radio-button-row {
   margin: $vertical-gutter $horizontal-gutter;
   @include global-mat-radio(12px);
+  margin-left: 6px;
 }
 
 .newhost-save,
@@ -120,4 +126,75 @@ $vertical-gutter: 5px;
 
 .newhost-batchadd-table {
   height: 100%
+}
+
+fieldset {
+  border: 1px solid $dary-grey;
+  padding: 5px;
+  margin-bottom: 10px;
+
+  legend {
+    padding: 0 2px;
+    @include primary-font(15px);
+    color: #676763;
+    margin-bottom: 0px;
+  }
+}
+
+.newhost-content {
+  .newhost-name {
+    width: 250px;
+  }
+}
+
+.newhost-dsc-container {
+  margin-left: 10px;
+}
+
+.newhost-attach-radio {
+  position: relative;
+  bottom: 7px;
+
+  .mat-radio-label-content {
+    font-family: "Fira Sans Condensed";
+    @include primary-font(14px);
+    font-weight: 400;
+    color: #676763;
+    padding-top: 2px;
+  }
+}
+
+.newhost-input-row {
+  margin-bottom: 14px;
+  height: 25px
+}
+
+.newhost-rule-app legend {
+  width: 85px;
+}
+
+.newhost-radio-container {
+  height: 5px;
+  margin-top: 14px;
+}
+
+.newhost-general-box {
+  :first-child {
+    height: 30px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .ui-multiselect-label-container {
+    height: 25px;
+  }
+}
+
+.newhost-sub-container {
+  min-width: 250px;
+  margin-top: 6px
+}
+
+.newhost-general-box {
+  width: 250px;
 }

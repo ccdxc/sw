@@ -1,8 +1,8 @@
 <div fxFlex="auto" style="padding: 0px 10px;" fxLayout="column">
   <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newhost-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
-         fxLayoutAlign="start stretch" class="newhost-content">
+    <div fxFlex fxLayout="row"
+         fxLayoutAlign="center" class="newhost-content">
       <div *ngIf="isInline || notAdmittedCount==0">
         <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
       </div>
@@ -16,22 +16,23 @@
     </div>
   </div>
 </div>
-
 <ng-template #singleMode>
   <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
     <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newhost-row">
-      <div fxFlex="nogrow" class="newhost-text">NAME:</div>
-      <input fxFlex="300px" formControlName="name" class="newhost-name" appErrorTooltip
-             spellcheck="false" type="text" pInputText placeholder="Unique Host Name...">
+      <span [ngClass]="{
+                'newhost-general-box': true,
+                'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+              }">
+        <input fxFlex="nogrow" formControlName="name" class="newhost-name" appErrorTooltip
+               spellcheck="false" type="text"
+               pInputText appFloatLabel="Name...">
+      </span>
     </div>
-    <div fxFlex="25px"></div>
-
     <div formGroupName="spec">
       <div formArrayName="dscs">
         <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
              *ngFor="let smartNICID of smartNICIDs; let index = index; let first = first"
              [formGroupName]="index">
-          <div fxFlex="nogrow" class="newhost-text">ADD DSC BY:</div>
           <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
           </ng-container>
         </div>
@@ -68,10 +69,15 @@
       <div fxFlex="none" fxLayoutAlign="start start">
         <div [formGroup]="getFormGroup(rowData)">
           <div formGroupName="meta">
-            <input fxFlex="300px" formControlName="name" appErrorTooltip
-                   class="newhost-name"
-                   matspellcheck="false" type="text" pInputText
-                   placeholder="Unique Host Name...">
+            <span [ngClass]="{
+                      'newhost-general-box': true,
+                      'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+                    }">
+              <input fxFlex="nogrow" formControlName="name" appErrorTooltip class="newhost-name"
+                     matspellcheck="false"
+                     appFloatLabel="Unique Host Name..." type="text" pInputText>
+            </span>
+
           </div>
         </div>
       </div>
@@ -80,62 +86,72 @@
 </ng-template>
 
 <ng-template #editButtonContainer>
-  <div class="newhost-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
-       fxLayoutAlign="start start">
-    <div fxFlex="nogrow">
-      <button [disabled]="!isFormValid()" (click)="saveObject()"
-              class="global-button-primary newhost-save">SAVE</button>
-    </div>
-    <div fxFlex="nogrow">
-      <button (click)="cancelObject()"
-              class="global-button-neutral newhost-cancel">CANCEL</button>
+  <div class="newhost-buttoncontainer" fxLayout="row">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div fxFlex="nogrow" [matTooltip]="getFieldTooltip()">
+        <button [disabled]="!isFormValid()" (click)="saveObject()"
+                class="global-button-primary newhost-save">SAVE</button>
+      </div>
+      <div fxFlex="nogrow">
+        <button (click)="cancelObject()"
+                class="global-button-neutral newhost-cancel">CANCEL</button>
+      </div>
     </div>
   </div>
 </ng-template>
 
 <ng-template #newHostCreation let-index="index">
+  <div fxFlex="none" class="newhost-sub-container">
+    <fieldset class="newhost-rule-app">
+      <legend>
+        ADD DSC BY:
+      </legend>
+      <div fxflex="nogrow" fxLayout="column" class="newhost-sNI-choose"
+           [formGroup]="newHostForm.get(['spec','dscs', index])">
+        <div class="newhost-radio-container">
 
-  <div fxflex="nogrow" fxlayout="column" class="newhost-sNI-choose"
-       [formGroup]="newHostForm.get(['spec','dscs', index])">
-    <div class="newhost-radio-button-row">
+          <mat-radio-group fxFlex="nogrow" class="newhost-attach-radio" fxLayout="start center"
+                           fxLayoutAlign="start center" fxLayoutGap="10px"
+                           (change)="onRadioButtonChange($event)" [value]="radioValue">
 
-      <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-                       fxLayoutGap="10px" (change)="onRadioButtonChange($event)"
-                       [value]="radioValue">
+            <mat-radio-button fxFlex="nogrow" color="primary" fxLayoutAlign="start center"
+                              [disableRipple]="true"
+                              class="" *ngFor="let smartNICIDOption of smartNICIDOptions"
+                              [value]="smartNICIDOption">
+              {{smartNICIDOption}}
+            </mat-radio-button>
 
-        <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class=""
-                          *ngFor="let smartNICIDOption of smartNICIDOptions"
-                          [value]="smartNICIDOption">
-          {{smartNICIDOption}}
-        </mat-radio-button>
+          </mat-radio-group>
 
-      </mat-radio-group>
-
-    </div>
-
-    <div fxFlex="auto" fxLayout="row" [ngSwitch]="radioValue">
-
-      <ng-container *ngSwitchCase="'id'">
-        <div fxFlex="nogrow" fxLayout="row" class="newhost-input-row">
-          <div fxFlex="nogrow" class="newhost-NAPLESName-text">DSC NAME:</div>
-
-          <input fxFlex="300px" class="newhost-NAPLES-name" formControlName="id" appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Enter ID...">
         </div>
-      </ng-container>
+        <div [ngSwitch]="radioValue">
+          <ng-container *ngSwitchCase="'id'">
+            <div class="newhost-input-row">
+              <span [ngClass]="{
+                            'newhost-general-box': true,
+                            'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'dscs', 0, 'id']))
+                          }">
+                <input fxFlex="nogrow" class="newhost-NAPLES-name" formControlName="id"
+                       appErrorTooltip spellcheck="false"
+                       type="text" pInputText>
+              </span>
+            </div>
+          </ng-container>
 
-      <ng-container *ngSwitchCase="'mac-address'">
-        <div fxFlex="nogrow" fxLayout="row" class="newhost-input-row">
-          <div fxFlex="nogrow" class="newhost-Macaddress-text">MAC-ADDRESS:</div>
-
-          <input fxFlex="300px" class="newhost-mac-address" formControlName="mac-address"
-                 appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Enter Mac-Address...">
+          <ng-container *ngSwitchCase="'mac-address'">
+            <div class="newhost-input-row">
+              <span [ngClass]="{
+                          'newhost-general-box': true,
+                          'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'dscs', 0, 'mac-address']))
+                        }">
+                <input fxFlex="nogrow" class="newhost-mac-address" formControlName="mac-address"
+                       appErrorTooltip spellcheck="false"
+                       type="text" pInputText>
+              </span>
+            </div>
+          </ng-container>
         </div>
-      </ng-container>
-
-      <ng-container *ngSwitchCase="''">
-      </ng-container>
-    </div>
+      </div>
+    </fieldset>
   </div>
 </ng-template>

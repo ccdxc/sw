@@ -8,6 +8,7 @@ import {HostsRoutingModule} from '@components/cluster-group/hosts/hosts.route';
 import {SharedModule} from '@components/shared/shared.module';
 import {HostsComponent} from '@components/cluster-group/hosts//hosts.component';
 import { NewhostComponent } from './newhost/newhost.component';
+import { WidgetsModule } from 'web-app-framework';
 
 @NgModule(
   {
@@ -19,7 +20,7 @@ import { NewhostComponent } from './newhost/newhost.component';
       PrimengModule,
       FlexLayoutModule,
       MaterialdesignModule,
-
+      WidgetsModule,
       HostsRoutingModule,
       SharedModule
     ],
