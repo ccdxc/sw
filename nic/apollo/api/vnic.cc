@@ -12,9 +12,11 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/msg.h"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
+#include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
@@ -169,6 +171,21 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
                           spec->host_ifindex, spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->type = PDS_MSG_TYPE_CFG;
+    msg->id = PDS_CFG_MSG_ID_VNIC;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_VNIC;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.vnic.key = obj_ctxt->api_params->vnic_key;
+    } else {
+        msg->cfg_msg.vnic.spec = obj_ctxt->api_params->vnic_spec;
+        impl_->populate_msg(msg, this, obj_ctxt);
     }
     return SDK_RET_OK;
 }

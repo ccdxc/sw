@@ -13,6 +13,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
+#include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
@@ -143,6 +144,13 @@ subnet_impl::nuke_resources(api_base *api_obj) {
                                        VNI_VNI_INFO_ID, vni_hdl_);
         return vpc_impl_db()->vni_tbl()->remove(&tparams);
     }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
+                          api_obj_ctxt_t *obj_ctxt) {
+    msg->cfg_msg.subnet.status.hw_id = hw_id_;
     return SDK_RET_OK;
 }
 

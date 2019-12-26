@@ -15,6 +15,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
+#include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
@@ -268,6 +269,13 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
+                        api_obj_ctxt_t *obj_ctxt) {
+    msg->cfg_msg.vnic.status.hw_id = hw_id_;
     return SDK_RET_OK;
 }
 
