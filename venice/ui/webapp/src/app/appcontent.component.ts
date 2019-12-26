@@ -95,6 +95,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
   clock: any; // VS-838 build a UTC clock in Venice-UI
   clocktimer: any = null;
+  hourDifference: number | string;
 
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
@@ -151,6 +152,12 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
     this.clocktimer = setInterval(() => {
       this.clock = new Date();
+      this.hourDifference = (this.clock.getTimezoneOffset()) / 60;
+      if (this.hourDifference > 0) {
+        this.hourDifference = -(this.hourDifference);
+      } else {
+        this.hourDifference = '+' + -(this.hourDifference);
+      }
     }, 1000);
   }
 
@@ -570,7 +577,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
       }
     } else {
       // Code should not got into this block.
-      console.error( this.getClassName() + '.onRolloutComplete() this.currentRollout ', this.currentRollout );
+      console.error(this.getClassName() + '.onRolloutComplete() this.currentRollout ', this.currentRollout);
       this._controllerService.invokeInfoToaster('Rollout', msg + ' Page will reload in 5 seconds.');
       setTimeout(() => {
         window.location.reload();

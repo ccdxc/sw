@@ -1,4 +1,4 @@
-@import 'src/global-mixins';
+@import "src/global-mixins";
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
@@ -16,7 +16,7 @@ $vertical-gutter: 5px;
 
 .newrollout-addneworder {
   font-size: 16px;
-  width: 100px
+  width: 100px;
 }
 
 .newrollout-addneworder-clear {
@@ -29,6 +29,37 @@ $vertical-gutter: 5px;
   &:hover {
     background: white;
   }
+
+  .newrollout-flex-container {
+    display: flex;
+    justify-content: center;
+    flex-flow: row wrap;
+    flex-direction: row;
+
+    app-orderedlist {
+      width: calc(50%) -20px;
+      min-width: 550px;
+      max-width: 750px;
+      margin: 10px;
+    }
+
+    .newrollout-child:first-child {
+      padding: 0 30px 0 30px;
+      flex-direction: column;
+    }
+
+    .newrollout-child:not(:first-child) {
+      padding: 20px 0px 30px 0px;
+    }
+  }
+
+  .newRollout-NodeType-container {
+    display: flex;
+    justify-content: flex-start;
+    flex-flow: row wrap;
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .newrollout-order-matchcount {
@@ -39,7 +70,7 @@ $vertical-gutter: 5px;
   font-weight: 500;
   padding-left: 5px;
   padding-right: 5px;
-  @include primary-font(18px, #FFFFFF);
+  @include primary-font(18px, #ffffff);
 }
 
 .newrollout-order-header {
@@ -56,7 +87,7 @@ $vertical-gutter: 5px;
 .newrollout-content {
   background: white;
   min-height: 180px;
-  margin-top: 4* $vertical-gutter;
+  margin-top: 4 * $vertical-gutter;
   @include primary-font();
 }
 
@@ -65,16 +96,13 @@ $vertical-gutter: 5px;
 }
 
 .newrollout-row {
-  margin: 0px $horizontal-gutter;
-}
-
-.newrollout-toggle {
-  margin: 10px;
-  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+  .newrollout-input-padding {
+    margin-top: 20px !important;
+    align-items: baseline;
+  }
 }
 
 .newrollout-input-common {
-  margin: $vertical-gutter $horizontal-gutter;
   height: 30px !important;
 }
 
@@ -92,15 +120,6 @@ $vertical-gutter: 5px;
 
 .newrollout-buttoncontainer {
   margin-top: 1.5 * $vertical-gutter;
-}
-
-.newrollout-version-desc,
-.newrollout-text {
-  margin-top: 2 * $vertical-gutter;
-  height: 30px;
-  margin-right: 10px;
-  margin-left: 10px;
-  min-width: 150px; // set minimum label width. 
 }
 
 .newrollout-version-desc {
@@ -144,7 +163,7 @@ $vertical-gutter: 5px;
 }
 
 .newrollout-toggle {
-  margin: 10px;
+  margin: 0 10px 10px 0;
   @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
 }
 
@@ -155,10 +174,6 @@ $vertical-gutter: 5px;
 
 .newrollout-edit-button {
   width: 100px;
-}
-
-.newrollout-calendar {
-  margin-left: 10px;
 }
 
 .newrollout-calendar>input.ui-inputtext {
@@ -173,10 +188,6 @@ $vertical-gutter: 5px;
 .newrollout-dropdown-div {
   position: relative;
   height: 25px;
-}
-
-.newrollout-select-button-div {
-  margin: 0px 0px 10px 20px;
 }
 
 .newrollout-select-button-div .ui-selectbutton .ui-button.ui-state-active {
@@ -210,4 +221,55 @@ $vertical-gutter: 5px;
 
 .newrollout .newrollout-schedulenow-text.ui-label-disabled {
   opacity: 0.5;
+}
+
+.newrollout-general-box,
+.newrollout-collector-box {
+  align-items: center;
+
+  :first-child {
+    height: 30px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .ui-calendar-button {
+    position: relative;
+
+    .pi-calendar:before {
+      position: relative;
+      left: -5px;
+    }
+  }
+
+  .ui-calendar-inputbox {
+    input {
+      width: calc(100% - 28px) !important;
+    }
+  }
+
+  .ui-multiselect-label-container {
+    height: 25px;
+  }
+}
+
+.upgrade-dsc {
+  padding: 30px 30px 20px 30px;
+
+  .newrollout-selectors {
+    legend {
+      width: 70px;
+    }
+  }
+
+  fieldset {
+    border: 1px solid #a9a9a9;
+    padding: 5px;
+
+    legend {
+      padding: 0 2px;
+      font-size: 14px;
+      color: #676763;
+    }
+  }
 }

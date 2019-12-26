@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormArray, ValidatorFn, FormGroup } from '@angular/forms';
+import { FormArray, ValidatorFn, FormGroup, AbstractControl } from '@angular/forms';
 import { BaseComponent } from '@components/base/base.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ControllerService } from '@app/services/controller.service';
@@ -128,6 +128,11 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     protected cd: ChangeDetectorRef,
   ) {
     super(controllerService);
+  }
+
+
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
   }
 
   getClassName(): string {

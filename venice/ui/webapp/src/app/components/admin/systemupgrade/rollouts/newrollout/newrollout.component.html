@@ -1,168 +1,36 @@
-<div [style.width]="'100%'" fxLayout="column" class="newrollout">
-  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newrollout-container">
-    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
-         fxLayoutAlign="start stretch"
-         class="newrollout-content">
-      <div fxFlex="auto" fxLayout="column">
-        <div fxFlex="auto" class="newrollout-select-button-div" fxLayout="row">
-          <p-selectButton [options]="rolloutNicNodeTypes" [(ngModel)]="selectedRolloutNicNodeTypes"
-                          (onChange)="onNicNodeTypeChange($event)">
-          </p-selectButton>
-        </div>
-        <div fxFlex="auto" fxLayout="column" [formGroup]="newRollout.$formGroup">
-          <div fxFlex="nogrow" fxLayout="row" class="newrollout-row" formGroupName="meta">
-            <!-- meta row-->
-            <div fxFlex="nogrow" class="newrollout-text">Name *:</div>
-            <input fxFlex="300px" formControlName="name" appErrorTooltip
-                   class="newrollout-input-common"
-                   matspellcheck="false" type="text" pInputText
-                   placeholder="Unique Rollout Name...">
-          </div>
-          <ng-container *ngTemplateOutlet="divider"></ng-container>
-          <div fxFlex="noshrink" fxLayout="row" class="newrollout-row" formGroupName="spec">
-            <!-- spec row-->
-            <div fxFlex fxLayout="column">
-              <div fxFlex="auto" fxLayout="row">
-                <div fxFlex="nogrow" class="newrollout-text">Version *:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="300px" appErrorTooltip
-                            formControlName="version"
-                            styleClass="newrollout-font, newrollout-input-common"
-                            [options]="rolloutImageOptions"
-                            placeholder="version" (onChange)="onVersionChange($event)">
-                  <ng-template let-version pTemplate="item">
-                    <div class="ui-helper-clearfix newrollout-dropdown-div">
-                      <div class="newrollout-dropdown-label">{{version.label}} -
-                        {{version.model.Description}}</div>
-                    </div>
-                  </ng-template>
-                </p-dropdown>
-                <div class="newrollout-version-desc">{{versiondescription}}</div>
-              </div>
-              <div fxFlex></div>
-              <div fxFlex="auto" fxLayout="row">
-                <!--  <div fxFlex="nogrow" class="newrollout-text">Duration:</div>
-                <input fxFlex="200px" formControlName="duration" appErrorTooltip class="newrollout-input-common"
-                  matspellcheck="false" type="text" pInputText placeholder="Until completion"> -->
-                <div fxFlex="nogrow" class="newrollout-text">Start Time *:</div>
-                <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
-                            formControlName="scheduled-start-time"
-                            appendTo="body" [showIcon]="true" [minDate]="minDate"
-                            styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
-                </p-calendar>
-                <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
-                            [value]="rolloutNowcheck"
-                            label="Schedule Now" labelStyleClass="newrollout-schedulenow-text"
-                            [matTooltip]="'When unchecked, rollout will run until finish.'"
-                            (onChange)="onRolloutNowChange($event)"></p-checkbox>
-              </div>
-              <div fxFlex="auto" fxLayout="row">
-                <div fxFlex="nogrow" class="newrollout-text">End Time:</div>
-                <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
-                            formControlName="scheduled-end-time"
-                            appendTo="body" [showIcon]="true" [minDate]="minDate"
-                            styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
-                </p-calendar>
-                <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
-                            [value]="rolloutDurationcheck" #checkboxSetDuration
-                            label="Specify rollout duration"
-                            labelStyleClass="newrollout-schedulenow-text"
-                            (onChange)="onRolloutDurationCheckChange($event)"></p-checkbox>
-              </div>
-              <div fxFlex></div>
-              <div fxFlex="auto" fxLayout="row">
-                <div fxFlex="nogrow" class="newrollout-text">Strategy:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
-                            formControlName="strategy"
-                            styleClass="newrollout-font, newrollout-input-common"
-                            [options]="strategyOptions"></p-dropdown>
-                <div fxFlex="nogrow" class="newrollout-text  newrollout-text-upgradetype">Upgrade
-                  Type:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
-                            formControlName="upgrade-type"
-                            styleClass="newrollout-font, newrollout-input-common"
-                            [options]="upgradetypeOptions"></p-dropdown>
+<div class="newrollout-container">
+  <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start stretch" class="newrollout-content">
+    <div fxFlex="auto" fxLayout="column">
+      <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
 
-              </div>
+      <div class="newrollout-flex-container" [formGroup]="newRollout.$formGroup">
 
-              <ng-container *ngTemplateOutlet="divider"></ng-container>
-
-
-              <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row"
-                   *ngIf="isToShowNicDiv()">
-                <div fxFlex="nogrow" class="newrollout-text">Max DSC In Parallel:</div>
-                <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip
-                       class="newrollout-input-common"
-                       matspellcheck="false" type="number" pInputText
-                       placeholder="Max DSC to upgrade" min='1' max='10'>
-              </div>
-              <div fxFlex></div>
-              <div fxFlex="auto" fxLayout="column" class="newrollout-nic-div"
-                   *ngIf="isToShowNicDiv()">
-
-                <div fxFlex="auto" class="newrollout-maxnic-div" fxLayout="row">
-                  <div fxFlex="nogrow" class="newrollout-text">Max Allowed DSCs Failure :</div>
-                  <input fxFlex="200px" formControlName="max-nic-failures-before-abort"
-                         appErrorTooltip
-                         class="newrollout-input-common" matspellcheck="false" type="number"
-                         pInputText (change)="onMaxAllowDSCFailureChange($event)"
-                         placeholder="Max DSC Failures Allowed." min='1' max='2000'>
-                  <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
-                              formControlName="retry"
-                              label="Retry for failed DSCs"
-                              [matTooltip]="'To enable, set Max Allowed DSCs Failure greater than 0. '"
-                              labelStyleClass="newrollout-schedulenow-text"
-                              (onChange)="onRolloutDSCRetryChange($event)"></p-checkbox>
-
-                </div>
-
-                <div fxFlex></div>
-                <div *ngIf="enableUpgradeByLabel()" fxFlex="auto"
-                     class="newrollout-NicConstraints-div" fxLayout="row">
-                  <mat-slide-toggle formControlName="dsc-must-match-constraint" fxFlex='30px'
-                                    class="newrollout-toggle newrollout-fieldtitle"
-                                    (change)="onNICsConstraintsChange($event)">
-                  </mat-slide-toggle>
-                  <div fxFlex="nogrow" class="newrollout-text">Upgrade DSCs by labels</div>
-                </div>
-                <div *ngIf="!enableUpgradeByLabel()" fxFlex="auto"
-                     class="newrollout-NicConstraints-div" fxLayout="row">
-                  <div fxFlex="nogrow" class="newrollout-text">Cannot upgrade DSCs by labels. No
-                    DSCs with labels found.</div>
-                </div>
-                <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="column"
-                     *ngIf="isToShowNicOrderDiv()"
-                     formArrayName="order-constraints">
-                  <app-orderedlist [dataArray]="orders" (itemClick)="toggleOrderState($event)"
-                                   [template]="orderTemplate" (orderChange)="onOrderChange()">
-                  </app-orderedlist>
-                  <!-- #linespace -->
-                  <div fxFlex="10px"></div>
-                  <button (click)="addOrder()"
-                          class="global-button-primary newrollout-addneworder newrollout-addneworder-clear">Add
-                    Order</button>
-                  <div fxFlex="10px"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="newrollout-child">
+          <ng-container *ngTemplateOutlet="rolloutNicNodeType"></ng-container>
+          <ng-container *ngTemplateOutlet="meta;context:{newRolloutForm: newRollout.$formGroup}">
+          </ng-container>
+          <ng-container *ngTemplateOutlet="spec;context:{newRolloutForm: newRollout.$formGroup}">
+          </ng-container>
         </div>
 
-      </div>
-      <div *ngIf="isInline" class="newrollout-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
-           fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <span (click)="updateRollout()"
-                class="global-button-primary newrollout-edit-button newrollout-save">SAVE</span>
-        </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelRollout()"
-                class="global-button-neutral newrollout-edit-button  newrollout-cancel">CANCEL</span>
+        <div class="newrollout-child">
+          <ng-container
+                        *ngTemplateOutlet="upgradeDsc;context:{newRolloutForm: newRollout.$formGroup}">
+          </ng-container>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<ng-template #rolloutNicNodeType>
+  <div class="newrollout-select-button-div">
+    <p-selectButton [options]="rolloutNicNodeTypes" [(ngModel)]="selectedRolloutNicNodeTypes"
+                    (onChange)="onNicNodeTypeChange($event)">
+    </p-selectButton>
+  </div>
+</ng-template>
 
 <ng-template #divider>
   <div fxFlex="20px" fxLayout="row">
@@ -220,6 +88,199 @@
                       [enableMultiSelectAll]="true"
                       (repeaterValues)="repeaterValueChange(index)">
         </app-repeater>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #meta let-newRolloutForm="newRolloutForm">
+  <div fxFlex="none" fxLayout="column" class="newrollout-row"
+       [formGroup]="newRolloutForm.get('meta')">
+    <div fxLayout="row" class="newrollout-input-padding">
+      <span [ngClass]="{
+          'newrollout-general-box': true,
+          'requiredField': isFieldEmpty(newRollout.$formGroup.get(['meta', 'name']))
+          }">
+        <input fxFlex="300px" [formControl]="newRollout.$formGroup.get(['meta', 'name'])"
+               appErrorTooltip
+               class="newrollout-input-common"
+               matspellcheck="false" type="text" pInputText
+               appFloatLabel="Unique Rollout Name">
+      </span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #spec let-newRolloutForm='newRolloutForm'>
+  <div fxFlex="none" fxLayout="column" class="newrollout-row"
+       [formGroup]="newRolloutForm.get('spec')">
+
+    <div fxLayout="row" class="newrollout-input-padding">
+      <span [ngClass]="{ 'newrollout-general-box': true,
+        'requiredField': isFieldEmpty(newRollout.$formGroup.get(['spec', 'version']))
+            }">
+      </span>
+      <span>
+        <p-dropdown fxFlex="300px" class="newrollout-dropdown" appErrorTooltip
+                    [formControl]="newRollout.$formGroup.get(['spec', 'version'])"
+                    styleClass="newrollout-font, newrollout-input-common"
+                    [options]="rolloutImageOptions"
+                    appFloatLabel="version" (onChange)="onVersionChange($event)">
+          <ng-template let-version pTemplate="item">
+            <div class="ui-helper-clearfix newrollout-dropdown-div">
+              <div class="newrollout-dropdown-label">{{version.label}} -
+                {{version.model.Description}}</div>
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </span>
+      <div class="newrollout-version-desc">{{ versiondescription }}</div>
+    </div>
+
+    <div fxLayout="row" class="newrollout-input-padding">
+      <span [ngClass]="{
+          'newrollout-general-box': true,
+          'requiredField': isFieldEmpty(newRollout.$formGroup.get(['spec', 'scheduled-start-time']))
+          }">
+      </span>
+      <span>
+        <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
+                    [formControl]="newRollout.$formGroup.get(['spec', 'scheduled-start-time'])"
+                    appendTo="body" [showIcon]="true" [minDate]="minDate"
+                    appFloatLabel="Start Time (UTC)"
+                    value="newRollout.$formGroup.get(['spec', 'scheduled-start-time']) | PrettyDate"
+                    dateFormat='mm/dd/yy'
+                    styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
+        </p-calendar>
+      </span>
+
+      <span>{{ newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value | PrettyDate }}</span>
+      <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                  [value]="rolloutNowcheck"
+                  label="Schedule Now" labelStyleClass="newrollout-schedulenow-text"
+                  [matTooltip]="'When unchecked, rollout will run until finish.'"
+                  (onChange)="onRolloutNowChange($event)"></p-checkbox>
+    </div>
+
+
+    <div fxLayout="row" class="newrollout-input-padding">
+      <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
+                  [formControl]="newRollout.$formGroup.get(['spec', 'scheduled-end-time'])"
+                  appendTo="body" [showIcon]="true" [minDate]="minDate"
+                  appFloatLabel="End Time (UTC)"
+                  styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
+      </p-calendar>
+      <span>{{ newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value | PrettyDate }}</span>
+      <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                  [value]="rolloutDurationcheck" #checkboxSetDuration
+                  label="Specify rollout duration"
+                  labelStyleClass="newrollout-schedulenow-text"
+                  (onChange)="onRolloutDurationCheckChange($event)"></p-checkbox>
+    </div>
+
+    <div fxFlex></div>
+
+    <div fxLayout="row" class="newrollout-input-padding">
+      <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
+                  [formControl]="newRollout.$formGroup.get(['spec', 'strategy'])"
+                  styleClass="newrollout-font, newrollout-input-common"
+                  appFloatLabel="Strategy"
+                  [options]="strategyOptions"></p-dropdown>
+    </div>
+
+    <div fxLayout="row" class="newrollout-input-padding">
+      <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
+                  [formControl]="newRollout.$formGroup.get(['spec', 'upgrade-type'])"
+                  styleClass="newrollout-font, newrollout-input-common"
+                  appFloatLabel="Upgrade Type"
+                  [options]="upgradetypeOptions"></p-dropdown>
+    </div>
+
+    <div fxLayout="row" class="newrollout-input-padding" *ngIf="isToShowNicDiv()">
+      <input fxFlex="200px" [formControl]="newRollout.$formGroup.get(['spec', 'max-parallel'])"
+             appErrorTooltip
+             class="newrollout-input-common"
+             matspellcheck="false" type="number" pInputText
+             appFloatLabel="Max DSC to upgrade" min='1' max='10'>
+    </div>
+
+    <div fxFlex></div>
+
+    <div fxLayout="column" class="newrollout-nic-div" *ngIf="isToShowNicDiv()">
+
+      <div fxFlex="auto" class="newrollout-maxnic-div newrollout-input-padding" fxLayout="row">
+        <input fxFlex="200px"
+               [formControl]="newRollout.$formGroup.get(['spec', 'max-nic-failures-before-abort'])"
+               appErrorTooltip
+               class="newrollout-input-common" matspellcheck="false" type="number"
+               pInputText (change)="onMaxAllowDSCFailureChange($event)"
+               appFloatLabel="Max DSC Failures Allowed." min='1' max='2000'>
+        <p-checkbox binary="true" styleClass="newrollout-schedulenow-checkbox"
+                    [formControl]="newRollout.$formGroup.get(['spec', 'retry'])"
+                    label="Retry for failed DSCs"
+                    [matTooltip]="'To enable, set Max Allowed DSCs Failure greater than 0. '"
+                    labelStyleClass="newrollout-schedulenow-text"
+                    (onChange)="onRolloutDSCRetryChange($event)"></p-checkbox>
+
+      </div>
+
+      <div fxFlex></div>
+    </div>
+
+    <div fxLayout="row" *ngIf="!enableUpgradeByLabel()"
+         class="newrollout-NicConstraints-div newrollout-input-padding">
+      <div fxFlex="nogrow" class="newrollout-text">Cannot upgrade DSCs by labels. No
+        DSCs with labels found.</div>
+    </div>
+
+    <div fxLayout="row" class="newrollout-input-padding" *ngIf="enableUpgradeByLabel()"
+         class="newrollout-NicConstraints-div newrollout-input-padding">
+      <mat-slide-toggle
+                        [formControl]="newRollout.$formGroup.get(['spec', 'dsc-must-match-constraint'])"
+                        fxFlex='30px'
+                        class="newrollout-toggle newrollout-fieldtitle"
+                        (change)="onNICsConstraintsChange($event)">
+      </mat-slide-toggle>
+      <div fxFlex="nogrow" class="newrollout-text">Upgrade DSCs by labels</div>
+    </div>
+
+  </div>
+</ng-template>
+
+<ng-template #upgradeDsc let-newRolloutForm='newRolloutForm'>
+  <div fxFlex="none" fxLayout="column" class="newrollout-row upgrade-dsc"
+       *ngIf="isToShowNicOrderDiv()">
+    <fieldset class="newrollout-selectors">
+      <legend>DSCs labels </legend>
+      <div [formGroup]="newRolloutForm.get('spec')">
+        <div fxFlex="auto"
+             class="newrollout-NicOrder-div" fxLayout="column"
+             formArrayName="order-constraints">
+
+          <app-orderedlist [dataArray]="orders" (itemClick)="toggleOrderState($event)"
+                           [template]="orderTemplate" (orderChange)="onOrderChange()">
+          </app-orderedlist>
+          <div fxFlex="10px"></div>
+          <button (click)="addOrder()"
+                  class="global-button-primary newrollout-addneworder newrollout-addneworder-clear">Add
+            Order</button>
+          <div fxFlex="10px"></div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+</ng-template>
+
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="newrollout-buttoncontainer" fxFlex="nogrow" fxLayoutAlign="none end">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div fxFlex="nogrow">
+        <span (click)="updateRollout()"
+              class="global-button-primary newrollout-edit-button newrollout-save">SAVE</span>
+      </div>
+      <div fxFlex="nogrow">
+        <span (click)="cancelRollout()"
+              class="global-button-neutral newrollout-edit-button  newrollout-cancel">CANCEL</span>
       </div>
     </div>
   </div>

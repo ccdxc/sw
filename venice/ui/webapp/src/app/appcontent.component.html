@@ -174,7 +174,8 @@
             <div class="app-shell-cluster-version" fxLayout="column" fxLayoutAlign="center end"
                  (click)="versionOp.toggle($event)">{{version?.status["build-version"]}}</div>
             <div fxFlex="20px" fxLayout="column"></div>
-            <div fxFlex="200px" fxLayout="column" fxLayoutAlign="center end">{{clock | PrettyDate}}
+            <div fxLayout="column" fxLayoutAlign="center end">
+              {{ clock | PrettyDate }} ({{hourDifference}}h)
             </div>
           </div>
         </div>
