@@ -144,6 +144,7 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		jobStatus = monitoring.TechSupportJobStatus_Failed.String()
 		// At least 1 job failed, so the request as a whole failed.
 		tsr.Status.Status = monitoring.TechSupportJobStatus_Failed.String()
+		tsr.Status.Reason = statemgr.GetTechsupportErrorMessage(tsr)
 
 	default:
 		log.Errorf("Unknown jobStatus %v", result.Status)

@@ -74,7 +74,7 @@ var typesMapTechsupport = map[string]*api.Struct{
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"names":            api.CLIInfo{Path: "Spec.NodeSelector.Names", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"reason":           api.CLIInfo{Path: "Status.DSCResults[].Reason", Skip: false, Insert: "", Help: ""},
+			"reason":           api.CLIInfo{Path: "Status.Reason", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"status":           api.CLIInfo{Path: "Status.DSCResults[].Status", Skip: false, Insert: "", Help: ""},
@@ -112,6 +112,8 @@ var typesMapTechsupport = map[string]*api.Struct{
 			"ControllerNodeResults": api.Field{Name: "ControllerNodeResults", CLITag: api.CLIInfo{ID: "ctrlr-node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ctrlr-node-results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
 
 			"DSCResults": api.Field{Name: "DSCResults", CLITag: api.CLIInfo{ID: "dsc-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
+
+			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.TechSupportRequestStatus.ControllerNodeResultsEntry": &api.Struct{

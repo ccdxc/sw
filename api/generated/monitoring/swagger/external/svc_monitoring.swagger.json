@@ -5010,6 +5010,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -14978,6 +14984,9 @@
           "additionalProperties": {
             "$ref": "#/definitions/monitoringTechSupportNodeResult"
           }
+        },
+        "reason": {
+          "type": "string"
         }
       }
     },

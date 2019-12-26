@@ -48,6 +48,7 @@ message TechSupportRequestStatus {
   string Status = 2 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(TechSupportJobStatus)"];
   map<string, TechSupportNodeResult> ControllerNodeResults = 3 [(gogoproto.jsontag) = "ctrlr-node-results,omitempty"];
   map<string, TechSupportNodeResult> DSCResults = 4 [(gogoproto.jsontag) = "dsc-results,omitempty"];
+  string        Reason    = 5 [(gogoproto.jsontag) = "reason,omitempty"];
 }
 
 message TechSupportRequest {

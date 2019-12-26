@@ -191,6 +191,8 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		state.Lock()
 		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.DSCResults)) {
 			tsr.Status.Status = monitoring.TechSupportJobStatus_TimeOut.String()
+			log.Infof("Techsupport timed out Reason is being set")
+			tsr.Status.Reason = GetTechsupportErrorMessage(tsr)
 			sm.writer.WriteTechSupportRequest(tsr)
 		}
 		state.Unlock()
@@ -229,6 +231,36 @@ func (sm *Statemgr) getNodesAndAdmittedSmartNICs(tsr *monitoring.TechSupportRequ
 	}
 
 	return names
+}
+
+// GetTechsupportErrorMessage for the techsupport request
+func GetTechsupportErrorMessage(tsr *monitoring.TechSupportRequest) string {
+	log.Infof("Get techsupport Error message called")
+	errMsg := "Failed or Timedout: "
+
+	for name, node := range tsr.Status.ControllerNodeResults {
+		if node.Status == monitoring.TechSupportJobStatus_TimeOut.String() || node.Status == monitoring.TechSupportJobStatus_Failed.String() {
+			errMsg = fmt.Sprintf("%s %s ", errMsg, name)
+		}
+	}
+
+	for name, node := range tsr.Status.DSCResults {
+		if node.Status == monitoring.TechSupportJobStatus_TimeOut.String() || node.Status == monitoring.TechSupportJobStatus_Failed.String() {
+			errMsg = fmt.Sprintf("%s %s ", errMsg, name)
+		}
+	}
+
+	errMsg = fmt.Sprintf("%sNo response: ", errMsg)
+	for _, node := range tsr.Spec.NodeSelector.Names {
+		_, inNodeResults := tsr.Status.ControllerNodeResults[node]
+		_, inDSCResults := tsr.Status.DSCResults[node]
+
+		if !inNodeResults && !inDSCResults {
+			errMsg = fmt.Sprintf("%s %s ", errMsg, node)
+		}
+	}
+
+	return errMsg
 }
 
 // handleTechSupportEvent is the handler invoked by stateMgr when it receives TechSupport object

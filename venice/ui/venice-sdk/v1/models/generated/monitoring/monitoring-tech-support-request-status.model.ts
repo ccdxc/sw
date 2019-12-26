@@ -14,6 +14,7 @@ export interface IMonitoringTechSupportRequestStatus {
     'status': MonitoringTechSupportRequestStatus_status;
     'ctrlr-node-results'?: object;
     'dsc-results'?: object;
+    'reason'?: string;
 }
 
 
@@ -22,6 +23,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     'status': MonitoringTechSupportRequestStatus_status = null;
     'ctrlr-node-results': object = null;
     'dsc-results': object = null;
+    'reason': string = null;
     public static propInfo: { [prop in keyof IMonitoringTechSupportRequestStatus]: PropInfoItem } = {
         'instance-id': {
             required: false,
@@ -40,6 +42,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         'dsc-results': {
             required: false,
             type: 'object'
+        },
+        'reason': {
+            required: false,
+            type: 'string'
         },
     }
 
@@ -102,6 +108,13 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         } else {
             this['dsc-results'] = null
         }
+        if (values && values['reason'] != null) {
+            this['reason'] = values['reason'];
+        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('reason')) {
+            this['reason'] = MonitoringTechSupportRequestStatus.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -113,6 +126,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
                 'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]), MonitoringTechSupportRequestStatus.propInfo['status']),
                 'ctrlr-node-results': CustomFormControl(new FormControl(this['ctrlr-node-results']), MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results']),
                 'dsc-results': CustomFormControl(new FormControl(this['dsc-results']), MonitoringTechSupportRequestStatus.propInfo['dsc-results']),
+                'reason': CustomFormControl(new FormControl(this['reason']), MonitoringTechSupportRequestStatus.propInfo['reason']),
             });
         }
         return this._formGroup;
@@ -128,6 +142,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
             this._formGroup.controls['status'].setValue(this['status']);
             this._formGroup.controls['ctrlr-node-results'].setValue(this['ctrlr-node-results']);
             this._formGroup.controls['dsc-results'].setValue(this['dsc-results']);
+            this._formGroup.controls['reason'].setValue(this['reason']);
         }
     }
 }
