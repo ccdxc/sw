@@ -73,6 +73,13 @@ nat_port_block::build(pds_nat_port_block_key_t *key) {
     return port_block;
 }
 
+void
+nat_port_block::soft_delete(nat_port_block *port_block) {
+    port_block->del_from_db();
+    port_block->~nat_port_block();
+    nat_db()->free(port_block);
+}
+
 sdk_ret_t
 nat_port_block::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->nat_port_block_spec.key.id;

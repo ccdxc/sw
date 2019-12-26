@@ -56,13 +56,14 @@ public:
     ///           stateless objects to be operated on by framework during DELETE
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
-    /// \return    NAT port block instance corresponding to the key
+    /// \return    service mapping instance corresponding to the key or NULL if
+    ///            entry is not found
     static svc_mapping *build(pds_svc_mapping_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
-    ///          remove resources from h/w, which can't be done during ADD/UPD
-    ///          etc. operations esp. when object is constructed on the fly
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
     /// \param[in] mapping     service mapping to be freed
     static void soft_delete(svc_mapping *mapping);
 

@@ -73,6 +73,13 @@ dhcp_relay::build(pds_dhcp_relay_key_t *key) {
     return relay;
 }
 
+void
+dhcp_relay::soft_delete(dhcp_relay *relay) {
+    relay->del_from_db();
+    relay->~dhcp_relay();
+    dhcp_db()->free(relay);
+}
+
 sdk_ret_t
 dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
     key_.id = api_ctxt->api_params->dhcp_relay_spec.key.id;
@@ -181,6 +188,13 @@ dhcp_policy::build(pds_dhcp_policy_key_t *key) {
         memcpy(&policy->key_, key, sizeof(*key));
     }
     return policy;
+}
+
+void
+dhcp_policy::soft_delete(dhcp_policy *policy) {
+    policy->del_from_db();
+    policy->~dhcp_policy();
+    dhcp_db()->free(policy);
 }
 
 sdk_ret_t

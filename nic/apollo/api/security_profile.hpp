@@ -59,6 +59,13 @@ public:
     /// \return    NAT port block instance corresponding to the key
     static security_profile *build(pds_security_profile_key_t *key);
 
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] profile    security profile instance to be freed
+    static void soft_delete(security_profile *profile);
+
     /// \brief          initialize security profile entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error

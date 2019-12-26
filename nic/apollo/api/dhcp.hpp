@@ -59,6 +59,13 @@ public:
     /// \return    DHCP relay object instance corresponding to the key
     static dhcp_relay *build(pds_dhcp_relay_key_t *key);
 
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] relay    DHCP relay instance to be freed
+    static void soft_delete(dhcp_relay *relay);
+
     /// \brief          initialize DHCP relay entry entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -169,6 +176,13 @@ public:
     /// \param[in] key    key of object instance of interest
     /// \return    DHCP policy object instance corresponding to the key
     static dhcp_policy *build(pds_dhcp_policy_key_t *key);
+
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] policy    DHCP policy instance to be freed
+    static void soft_delete(dhcp_policy *policy);
 
     /// \brief          initialize DHCP policy entry entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration

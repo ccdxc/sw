@@ -59,6 +59,13 @@ public:
     /// \return    NAT port block instance corresponding to the key
     static nat_port_block *build(pds_nat_port_block_key_t *key);
 
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] port_block    NAT port block instance to be freed
+    static void soft_delete(nat_port_block *port_block);
+
     /// \brief          initialize NAT port block entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error

@@ -56,6 +56,8 @@ public:
     ///           stateless objects to be operated on by framework during DELETE
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
+    /// \return    mirror session instance corresponding to the key or NULL if
+    ///            entry is not found
     static mirror_session *build(pds_mirror_session_key_t *key);
 
     ///

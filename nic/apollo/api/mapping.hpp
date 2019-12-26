@@ -27,11 +27,12 @@ typedef struct pds_mapping_spec_s {
         union {
             pds_tep_key_t tep;                // TEP address for this mapping
                                               // 1. device IP for local vnic
-                                              // 2. remote TEP for remote vnic if
-                                              //    provider IP is not valid
+                                              // 2. remote TEP for remote vnic
+                                              //    if provider IP is not valid
             pds_nexthop_group_key_t nh_group; // nexthop group mapping is behind
-            pds_nexthop_key_t nexthop;        // nexthop (used in case traffic is
-                                              // going out natively without encap)
+            pds_nexthop_key_t nexthop;        // nexthop (used in case traffic
+                                              // is going out natively without
+                                              // encap)
         };
         // information specific to local IP mappings
         struct {
@@ -101,6 +102,8 @@ public:
      *           stateless objects to be operated on by framework during DELETE
      *           or UPDATE operations)
      * @param[in] key    key of object instance of interest
+     * @return    mapping instace corresponding to the key or NULL if entry is
+     *            not found
      */
     static mapping_entry *build(pds_mapping_key_t *key);
 
