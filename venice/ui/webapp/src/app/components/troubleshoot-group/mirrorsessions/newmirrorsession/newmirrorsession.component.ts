@@ -213,11 +213,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
 
   isFormValid(): boolean {
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['spec', 'packet-filters']).value)) {
-      this.createButtonTooltip = 'Error: Packet Filters field is empty.';
-      return false;
-    }
-
+    // vs-1021 packet-filters can be empty
     // due to currently backend does not support all drops, comment out next lines
     /*
     if (!this.newObject.$formGroup.get(['spec', 'packet-filters']).valid) {
@@ -364,6 +360,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   addCollector() {
     const collectors = this.newObject.$formGroup.get(['spec', 'collectors']) as FormArray;
     const newCollector = new MonitoringMirrorCollector().$formGroup;
+    newCollector.get(['export-config', 'destination']).setValidators([
+      newCollector.get(['export-config', 'destination']).validator, IPUtility.isValidIPValidator]);
     collectors.insert(collectors.length, newCollector);
   }
 
