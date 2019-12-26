@@ -176,6 +176,7 @@ class RouteTableObject(base.ConfigObjectBase):
                 rtspec.Priority = route.Priority
                 self.PopulateNh(rtspec, route)
             else:
+                #TODO move to per route populate nh eventually
                 self.PopulateNh(rtspec, self)
         return
 

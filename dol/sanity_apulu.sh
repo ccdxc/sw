@@ -22,6 +22,9 @@ DryRunSanity rfc_negative_2 rfc SUB="ipv4_egress_negative_2,ipv4_ingress_negativ
 DryRunSanity lpm_adjacent lpm SUB="v4_adjacent"
 DryRunSanity lpm_overlap lpm SUB="v4_overlap"
 DryRunSanity lpm_full_overlap lpm SUB="v4_full_overlap"
+DryRunSanity lpm_adjacent_priority lpm SUB="v4_adjacent"
+DryRunSanity lpm_overlap_priority lpm SUB="v4_overlap"
+DryRunSanity lpm_full_overlap_priority lpm SUB="v4_full_overlap"
 
 # end of script
 clean_exit
