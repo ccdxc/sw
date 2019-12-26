@@ -46,16 +46,16 @@ typedef struct pds_dhcp_relay_info_s {
     pds_dhcp_relay_stats_t stats;          ///< statistics
 } __PACK__ pds_dhcp_relay_info_t;
 
-#define PDS_MAX_DOMAIN_NAME_LEN     (128)
 /// \brief DHCP policy spec
 typedef struct pds_dhcp_policy_spec_s {
-    pds_dhcp_policy_key_t key;                                   ///< policy key
-    ip_addr_t             server_ip;                             ///< server ip
-    uint32_t              mtu;                                   ///< MTU specified to clients
-    ip_addr_t             gw_ip;                                 ///< gateway ip
-    ip_addr_t             dns_server_ip;                         ///< DNS server ip
-    ip_addr_t             ntp_server_ip;                         ///< NTP server ip
-    char                  domain_name[PDS_MAX_DOMAIN_NAME_LEN];  ///< domain name
+    pds_dhcp_policy_key_t key;                                       ///< policy key
+    ip_addr_t             server_ip;                                 ///< server ip
+    uint32_t              mtu;                                       ///< MTU specified to clients
+    ip_addr_t             gateway_ip;                                ///< gateway ip
+    ip_addr_t             dns_server_ip;                             ///< DNS server ip
+    ip_addr_t             ntp_server_ip;                             ///< NTP server ip
+    char                  domain_name[PDS_MAX_DOMAIN_NAME_LEN + 1];  ///< domain name
+    uint32_t              lease_timeout;                             ///< DHCP lease timeout
 } __PACK__ pds_dhcp_policy_spec_t;
 
 /// \brief DHCP policy status

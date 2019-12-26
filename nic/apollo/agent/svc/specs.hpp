@@ -1031,8 +1031,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
         api_spec->hostname[0] = '\0';
     } else {
         strncpy(api_spec->hostname, proto_spec.hostname().c_str(),
-                PDS_MAX_HOST_NAME);
-         api_spec->hostname[PDS_MAX_HOST_NAME] = '\0';
+                PDS_MAX_HOST_NAME_LEN);
+         api_spec->hostname[PDS_MAX_HOST_NAME_LEN] = '\0';
     }
     api_spec->vpc.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
@@ -2299,14 +2299,43 @@ static inline sdk_ret_t
 pds_dhcp_policy_proto_to_api_spec (pds_dhcp_policy_spec_t *api_spec,
                                    const pds::DHCPPolicySpec &proto_spec)
 {
-    SDK_ASSERT_RETURN(FALSE, SDK_RET_ERR);
+    api_spec->key.id = proto_spec.id();
+    ipaddr_proto_spec_to_api_spec(&api_spec->server_ip, proto_spec.serverip());
+    api_spec->mtu = proto_spec.mtu();
+    ipaddr_proto_spec_to_api_spec(&api_spec->gateway_ip,
+                                  proto_spec.gatewayip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->dns_server_ip,
+                                  proto_spec.dnsserverip());
+    ipaddr_proto_spec_to_api_spec(&api_spec->ntp_server_ip,
+                                  proto_spec.ntpserverip());
+    if (proto_spec.domainname().empty()) {
+        api_spec->domain_name[0] = '\0';
+    } else {
+        strncpy(api_spec->domain_name, proto_spec.domainname().c_str(),
+                PDS_MAX_DOMAIN_NAME_LEN);
+        api_spec->domain_name[PDS_MAX_DOMAIN_NAME_LEN] = '\0';
+    }
+    api_spec->lease_timeout = proto_spec.leasetimeout();
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
 pds_dhcp_policy_api_spec_to_proto (pds::DHCPPolicySpec *proto_spec,
                                   const pds_dhcp_policy_spec_t *api_spec)
 {
-    SDK_ASSERT_RETURN(FALSE, SDK_RET_ERR);
+    proto_spec->set_id(api_spec->key.id);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_serverip(),
+                                  &api_spec->server_ip);
+    proto_spec->set_mtu(api_spec->mtu);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_gatewayip(),
+                                  &api_spec->gateway_ip);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_dnsserverip(),
+                                  &api_spec->dns_server_ip);
+    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_ntpserverip(),
+                                  &api_spec->ntp_server_ip);
+    proto_spec->set_domainname(api_spec->domain_name);
+    proto_spec->set_leasetimeout(api_spec->lease_timeout);
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -2328,7 +2357,15 @@ static inline void
 pds_dhcp_policy_api_info_to_proto (const pds_dhcp_policy_info_t *api_info,
                                   void *ctxt)
 {
-    SDK_ASSERT(FALSE);
+    pds::DHCPPolicyGetResponse *proto_rsp = (pds::DHCPPolicyGetResponse *)ctxt;
+    auto dhcp = proto_rsp->add_response();
+    pds::DHCPPolicySpec *proto_spec = dhcp->mutable_spec();
+    pds::DHCPPolicyStatus *proto_status = dhcp->mutable_status();
+    pds::DHCPPolicyStats *proto_stats = dhcp->mutable_stats();
+
+    pds_dhcp_policy_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_dhcp_policy_api_status_to_proto(proto_status, &api_info->status);
+    pds_dhcp_policy_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
 static inline sdk_ret_t
