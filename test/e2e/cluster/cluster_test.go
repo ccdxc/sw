@@ -130,7 +130,7 @@ var _ = Describe("cluster tests", func() {
 				By(fmt.Sprintf("after: %v", serviceListAfter.String()))
 				serviceListAfter.Items = xformList(serviceListAfter.Items)
 				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
-			}, 20, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver and CMD NIC updates should be same after leader change")
+			}, 30, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver and CMD NIC updates should be same after leader change")
 
 			validateCluster()
 
@@ -285,7 +285,7 @@ func validateCluster() {
 			}
 		}
 		return ""
-	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
+	}, 30, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
 	By(fmt.Sprintf("ts: %s Cluster Health check", time.Now().String()))
 
