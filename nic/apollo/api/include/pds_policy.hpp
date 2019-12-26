@@ -190,20 +190,20 @@ sdk_ret_t pds_policy_delete(pds_policy_key_t *key,
 
 /// \brief security profile spec
 typedef struct pds_security_profile_spec_s {
-    pds_security_profile_id_t id;                    ///< id
-    bool                      conn_track_en;         ///< connection tracking enabled
-    rule_action_data_t        default_action;        ///< action and related information
-    uint32_t                  tcp_idle_timeout;      ///< TCP idle timeout
-    uint32_t                  udp_idle_timeout;      ///< UDP idle timeout
-    uint32_t                  icmp_idle_timeout;     ///< ICMP idle timeout
-    uint32_t                  other_idle_timeout;    ///< other idle timeout
-    uint32_t                  tcp_syn_timeout;       ///< TCP syn timeout
-    uint32_t                  tcp_halfclose_timeout; ///< TCP half close timeout
-    uint32_t                  tcp_close_timeout;     ///< TCP close timeout
-    uint32_t                  tcp_drop_timeout;      ///< TCP drop timeout
-    uint32_t                  udp_drop_timeout;      ///< UDP drop timeout
-    uint32_t                  icmp_drop_timeout;     ///< ICMP drop timeout
-    uint32_t                  other_drop_timeout;    ///< other drop timeout
+    pds_security_profile_key_t key;                    ///< id
+    bool                       conn_track_en;         ///< connection tracking enabled
+    rule_action_data_t         default_action;        ///< action and related information
+    uint32_t                   tcp_idle_timeout;      ///< TCP idle timeout
+    uint32_t                   udp_idle_timeout;      ///< UDP idle timeout
+    uint32_t                   icmp_idle_timeout;     ///< ICMP idle timeout
+    uint32_t                   other_idle_timeout;    ///< other idle timeout
+    uint32_t                   tcp_syn_timeout;       ///< TCP syn timeout
+    uint32_t                   tcp_halfclose_timeout; ///< TCP half close timeout
+    uint32_t                   tcp_close_timeout;     ///< TCP close timeout
+    uint32_t                   tcp_drop_timeout;      ///< TCP drop timeout
+    uint32_t                   udp_drop_timeout;      ///< UDP drop timeout
+    uint32_t                   icmp_drop_timeout;     ///< ICMP drop timeout
+    uint32_t                   other_drop_timeout;    ///< other drop timeout
 } pds_security_profile_spec_t;
 
 /// \brief security profile status

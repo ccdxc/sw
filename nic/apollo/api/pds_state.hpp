@@ -33,6 +33,7 @@
 #include "nic/apollo/api/policer_state.hpp"
 #include "nic/apollo/api/nat_state.hpp"
 #include "nic/apollo/api/dhcp_state.hpp"
+#include "nic/apollo/api/security_profile.hpp"
 
 using std::string;
 

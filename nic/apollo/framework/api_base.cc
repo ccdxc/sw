@@ -69,6 +69,18 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_POLICER:
         return policer_entry::factory(&api_ctxt->api_params->policer_spec);
 
+    case OBJ_ID_NAT_PORT_BLOCK:
+        return nat_port_block::factory(&api_ctxt->api_params->nat_port_block_spec);
+
+    case OBJ_ID_DHCP_RELAY:
+        return dhcp_relay::factory(&api_ctxt->api_params->dhcp_relay_spec);
+
+    case OBJ_ID_DHCP_POLICY:
+        return dhcp_policy::factory(&api_ctxt->api_params->dhcp_policy_spec);
+
+    case OBJ_ID_SECURITY_PROFILE:
+        return security_profile::factory(&api_ctxt->api_params->security_profile_spec);
+
     default:
         break;
     }
@@ -192,6 +204,21 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
     case OBJ_ID_NEXTHOP_GROUP:
         return nexthop_group::free((nexthop_group *)api_obj);
 
+    case OBJ_ID_POLICER:
+        return policer_entry::free((policer_entry *)api_obj);
+
+    case OBJ_ID_NAT_PORT_BLOCK:
+        return nat_port_block::free((nat_port_block *)api_obj);
+
+    case OBJ_ID_DHCP_RELAY:
+        return dhcp_relay::free((dhcp_relay *)api_obj);
+
+    case OBJ_ID_DHCP_POLICY:
+        return dhcp_policy::free((dhcp_policy *)api_obj);
+
+    case OBJ_ID_SECURITY_PROFILE:
+        return security_profile::free((security_profile *)api_obj);
+
     default:
         break;
     }
@@ -282,6 +309,30 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         }
         return policer_db()->find(&api_ctxt->api_params->policer_spec.key);
 
+    case OBJ_ID_NAT_PORT_BLOCK:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return nat_db()->find(&api_ctxt->api_params->nat_port_block_key);
+        }
+        return nat_db()->find(&api_ctxt->api_params->nat_port_block_spec.key);
+
+    case OBJ_ID_DHCP_RELAY:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return dhcp_db()->find(&api_ctxt->api_params->dhcp_relay_key);
+        }
+        return dhcp_db()->find(&api_ctxt->api_params->dhcp_relay_spec.key);
+
+    case OBJ_ID_DHCP_POLICY:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_key);
+        }
+        return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_spec.key);
+
+    case OBJ_ID_SECURITY_PROFILE:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return policy_db()->find(&api_ctxt->api_params->security_profile_key);
+        }
+        return policy_db()->find(&api_ctxt->api_params->security_profile_spec.key);
+
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_VPC_PEER:
         return NULL;
@@ -362,6 +413,22 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         api_obj = policer_db()->find((pds_policer_key_t *)key);
         break;
 
+    case OBJ_ID_NAT_PORT_BLOCK:
+        api_obj = nat_db()->find((pds_nat_port_block_key_t *)key);
+        break;
+
+    case OBJ_ID_DHCP_RELAY:
+        api_obj = dhcp_db()->find((pds_dhcp_relay_key_t *)key);
+        break;
+
+    case OBJ_ID_DHCP_POLICY:
+        api_obj = dhcp_db()->find((pds_dhcp_policy_key_t *)key);
+        break;
+
+    case OBJ_ID_SECURITY_PROFILE:
+        api_obj = policy_db()->find((pds_security_profile_key_t *)key);
+        break;
+
     default:
         PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
         break;
@@ -380,6 +447,11 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_SVC_MAPPING:
     case OBJ_ID_VPC_PEER:
+        // TODO: revisit the following objs
+    case OBJ_ID_NAT_PORT_BLOCK:
+    case OBJ_ID_DHCP_RELAY:
+    case OBJ_ID_DHCP_POLICY:
+    case OBJ_ID_SECURITY_PROFILE:
         return true;
 
     default:
@@ -396,6 +468,7 @@ api_base::circulate(obj_id_t obj_id) {
     case OBJ_ID_NAT_PORT_BLOCK:
     case OBJ_ID_DHCP_RELAY:
     case OBJ_ID_DHCP_POLICY:
+    case OBJ_ID_SECURITY_PROFILE:
         return true;
     default:
         break;

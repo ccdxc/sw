@@ -82,3 +82,62 @@ pds_policy_delete (_In_ pds_policy_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policy_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }
+
+//----------------------------------------------------------------------------
+// Security Profile API entry point implementation
+//----------------------------------------------------------------------------
+
+static sdk_ret_t
+pds_security_profile_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
+                                 pds_security_profile_key_t *key,
+                                 pds_security_profile_spec_t *spec)
+{
+    sdk_ret_t rv;
+    api_ctxt_t *api_ctxt;
+
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
+        return rv;
+    }
+
+    api_ctxt = api::api_ctxt_alloc(OBJ_ID_SECURITY_PROFILE, op);
+    if (likely(api_ctxt != NULL)) {
+        if (op == API_OP_DELETE) {
+            api_ctxt->api_params->security_profile_key = *key;
+        } else {
+            api_ctxt->api_params->security_profile_spec = *spec;
+        }
+        return process_api(bctxt, api_ctxt);
+    }
+    return SDK_RET_OOM;
+}
+
+sdk_ret_t
+pds_security_profile_create (_In_ pds_security_profile_spec_t *spec,
+                             _In_ pds_batch_ctxt_t bctxt)
+{
+    return pds_security_profile_api_handle(bctxt, API_OP_CREATE, NULL, spec);
+}
+
+sdk_ret_t
+pds_security_profile_read (_In_ pds_security_profile_key_t *key,
+                           _Out_ pds_security_profile_info_t *info)
+{
+    if (key == NULL || info == NULL) {
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_security_profile_update (_In_ pds_security_profile_spec_t *spec,
+                             _In_ pds_batch_ctxt_t bctxt)
+{
+    return pds_security_profile_api_handle(bctxt, API_OP_UPDATE, NULL, spec);
+}
+
+sdk_ret_t
+pds_security_profile_delete (_In_ pds_security_profile_key_t *key,
+                             _In_ pds_batch_ctxt_t bctxt)
+{
+    return pds_security_profile_api_handle(bctxt, API_OP_DELETE, key, NULL);
+}

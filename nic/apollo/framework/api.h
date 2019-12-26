@@ -26,29 +26,30 @@ typedef enum api_op_e {
 
 /// \brief Object identifiers
 typedef enum obj_id_e {
-    OBJ_ID_NONE,           ///< None
-    OBJ_ID_BATCH,          ///< batch
-    OBJ_ID_DEVICE,         ///< device
-    OBJ_ID_PORT,           ///< port
-    OBJ_ID_IF,             ///< interface
-    OBJ_ID_VPC,            ///< vpc
-    OBJ_ID_SUBNET,         ///< subnet
-    OBJ_ID_TEP,            ///< TEP
-    OBJ_ID_VNIC,           ///< vNIC
-    OBJ_ID_MAPPING,        ///< mapping
-    OBJ_ID_ROUTE_TABLE,    ///< route table
-    OBJ_ID_POLICY,         ///< policy
-    OBJ_ID_MIRROR_SESSION, ///< mirror session
-    OBJ_ID_METER,          ///< meter
-    OBJ_ID_TAG,            ///< (service) tag
-    OBJ_ID_SVC_MAPPING,    ///< service mapping
-    OBJ_ID_VPC_PEER,       ///< vpc peer
-    OBJ_ID_NEXTHOP,        ///< nexthop
-    OBJ_ID_NEXTHOP_GROUP,  ///< nexthop group
-    OBJ_ID_POLICER,        ///< policer
-    OBJ_ID_NAT_PORT_BLOCK, ///< NAT port block
-    OBJ_ID_DHCP_RELAY,     ///< DHCP relay
-    OBJ_ID_DHCP_POLICY,    ///< DHCP suppression
+    OBJ_ID_NONE,                ///< None
+    OBJ_ID_BATCH,               ///< batch
+    OBJ_ID_DEVICE,              ///< device
+    OBJ_ID_PORT,                ///< port
+    OBJ_ID_IF,                  ///< interface
+    OBJ_ID_VPC,                 ///< vpc
+    OBJ_ID_SUBNET,              ///< subnet
+    OBJ_ID_TEP,                 ///< TEP
+    OBJ_ID_VNIC,                ///< vNIC
+    OBJ_ID_MAPPING,             ///< mapping
+    OBJ_ID_ROUTE_TABLE,         ///< route table
+    OBJ_ID_POLICY,              ///< policy
+    OBJ_ID_MIRROR_SESSION,      ///< mirror session
+    OBJ_ID_METER,               ///< meter
+    OBJ_ID_TAG,                 ///< (service) tag
+    OBJ_ID_SVC_MAPPING,         ///< service mapping
+    OBJ_ID_VPC_PEER,            ///< vpc peer
+    OBJ_ID_NEXTHOP,             ///< nexthop
+    OBJ_ID_NEXTHOP_GROUP,       ///< nexthop group
+    OBJ_ID_POLICER,             ///< policer
+    OBJ_ID_NAT_PORT_BLOCK,      ///< NAT port block
+    OBJ_ID_DHCP_RELAY,          ///< DHCP relay
+    OBJ_ID_DHCP_POLICY,         ///< DHCP suppression
+    OBJ_ID_SECURITY_PROFILE,    ///< Security profile
     OBJ_ID_MAX,
 } obj_id_t;
 

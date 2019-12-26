@@ -270,5 +270,10 @@ typedef struct pds_vpc_peer_key_s {
     pds_vpc_peer_id_t id;    ///< VPC peer id
 } __PACK__ pds_vpc_peer_key_t;
 
+/// \brief    security profile key
+typedef struct pds_security_profile_key_s {
+    pds_security_profile_id_t id;    ///< security profile id
+} __PACK__ pds_security_profile_key_t;
+
 /// @}
 #endif    // __INCLUDE_API_PDS_HPP__

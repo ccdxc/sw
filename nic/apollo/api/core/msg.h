@@ -17,6 +17,7 @@
 #include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,14 @@ typedef struct pds_subnet_cfg_msg_s {
     pds_subnet_status_t status;
 } pds_subnet_cfg_msg_t;
 
+/// NAT port block configuration
+typedef struct pds_nat_port_block_cfg_msg_s {
+    union {
+        pds_nat_port_block_key_t key;
+        pds_nat_port_block_spec_t spec;
+    };
+} pds_nat_port_block_cfg_msg_t;
+
 /// DHCP policy configuration
 typedef struct pds_dhcp_policy_cfg_msg_s {
     union {
@@ -56,13 +65,12 @@ typedef struct pds_dhcp_relay_cfg_msg_s {
     };
 } pds_dhcp_relay_cfg_msg_t;
 
-/// NAT port block configuration
-typedef struct pds_nat_port_block_cfg_msg_s {
+typedef struct pds_security_profile_cfg_msg_s {
     union {
-        pds_nat_port_block_key_t key;
-        pds_nat_port_block_spec_t spec;
+        pds_security_profile_key_t key;
+        pds_security_profile_spec_t spec;
     };
-} pds_nat_port_block_cfg_msg_t;
+} pds_security_profile_cfg_msg_t;
 
 /// configuration message sent or received
 typedef struct pds_cfg_msg_s {
@@ -74,9 +82,10 @@ typedef struct pds_cfg_msg_s {
     union {
         pds_vnic_cfg_msg_t vnic;
         pds_subnet_cfg_msg_t subnet;
+        pds_nat_port_block_cfg_msg_t nat_port_block;
         pds_dhcp_relay_cfg_msg_t dhcp_relay;
         pds_dhcp_policy_cfg_msg_t dhcp_policy;
-        pds_nat_port_block_cfg_msg_t nat_port_block;
+        pds_security_profile_cfg_msg_t security_profile;
     };
 } pds_cfg_msg_t;
 

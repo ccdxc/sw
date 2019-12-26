@@ -1979,7 +1979,7 @@ static inline sdk_ret_t
 pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
                                         const pds::SecurityProfileSpec &proto_spec)
 {
-    api_spec->id = proto_spec.id();
+    api_spec->key.id = proto_spec.id();
     api_spec->conn_track_en = proto_spec.conntracken();
     api_spec->default_action.fw_action.action =
             pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
@@ -2006,7 +2006,7 @@ pds_security_profile_api_spec_to_proto (pds::SecurityProfileSpec *proto_spec,
         return;
     }
 
-    proto_spec->set_id(api_spec->id);
+    proto_spec->set_id(api_spec->key.id);
     proto_spec->set_conntracken(api_spec->conn_track_en);
     proto_spec->set_defaultfwaction(
             pds_rule_action_to_proto_action((rule_action_data_t *)&api_spec->default_action));

@@ -104,12 +104,14 @@ private:
 };
 
 static inline dhcp_relay *
-dhcp_relay_find (pds_dhcp_relay_key_t *key) {
+dhcp_relay_find (pds_dhcp_relay_key_t *key)
+{
     return (dhcp_relay *)api_base::find_obj(OBJ_ID_DHCP_RELAY, key);
 }
 
 static inline dhcp_policy *
-dhcp_policy_find (pds_dhcp_policy_key_t *key) {
+dhcp_policy_find (pds_dhcp_policy_key_t *key)
+{
     return (dhcp_policy *)api_base::find_obj(OBJ_ID_DHCP_POLICY, key);
 }
 

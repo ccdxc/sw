@@ -77,6 +77,8 @@ union api_params_u {
     pds_dhcp_relay_spec_t        dhcp_relay_spec;
     pds_dhcp_policy_key_t        dhcp_policy_key;
     pds_dhcp_policy_spec_t       dhcp_policy_spec;
+    pds_security_profile_key_t   security_profile_key;
+    pds_security_profile_spec_t  security_profile_spec;
 };
 
 slab *api_params_slab(void);

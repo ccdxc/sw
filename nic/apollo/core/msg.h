@@ -53,12 +53,14 @@ typedef enum pds_msg_id_s {
     PDS_CFG_MSG_ID_VNIC,
     /// subnet related configuration
     PDS_CFG_MSG_ID_SUBNET,
+    /// NAT port block configuration
+    PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
     /// DHCP (suppresion) policy configuration
     PDS_CFG_MSG_ID_DHCP_POLICY,
     /// DHCP relay configuration
     PDS_CFG_MSG_ID_DHCP_RELAY,
-    /// NAT port block configuration
-    PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
+    /// security profile configuration
+    PDS_CFG_MSG_ID_SECURITY_PROFILE,
 
     // TODO: should we punt event/alerts to shm directly
     PDS_CMD_MSG_ID_NONE,
