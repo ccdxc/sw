@@ -1644,34 +1644,6 @@ func TestAggQuery(t *testing.T) {
 				_, err = dnclient.PointsWrite(context.Background(), &req)
 				AssertOk(t, err, "Error writing points")
 				log.Infof("wrote points in shard: %d replica: %d node: %v", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
-
-				// query back
-				qreq := tproto.QueryReq{
-					ClusterType: meta.ClusterTypeTstore,
-					ReplicaID:   repl.ReplicaID,
-					ShardID:     repl.ShardID,
-					Database:    "db0",
-					TxnID:       uint64(repl.ReplicaID + 1),
-					Query:       "SELECT * FROM cpu",
-				}
-
-				resp, err := dnclient.ExecuteQuery(context.Background(), &qreq)
-				AssertOk(t, err, "query failed")
-
-				Assert(t, len(resp.Result) == 1, "invalid number of results %+v", resp.Result)
-
-				for _, rs := range resp.Result {
-					rslt := query.Result{}
-					err := rslt.UnmarshalJSON(rs.Data)
-					AssertOk(t, err, "failed to unmarshal query response")
-
-					Assert(t, len(rslt.Series) == 1, "invalid number of series %+v", rslt)
-
-					for _, s := range rslt.Series {
-						Assert(t, len(s.Columns) == 5, "invalid number of columns %+v", s.Columns)
-						Assert(t, len(s.Values) == 1, "invalid number of values %+v", s.Values)
-					}
-				}
 			}
 		}
 	}
@@ -1738,6 +1710,51 @@ func TestAggQuery(t *testing.T) {
 						}
 					}
 				}
+
+				// query back
+				qreq := tproto.QueryReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db0",
+					TxnID:       uint64(repl.ReplicaID + 1),
+					Query:       "SELECT * FROM cpu",
+				}
+
+				AssertEventually(t, func() (bool, interface{}) {
+					resp, err = dnclient.ExecuteQuery(context.Background(), &qreq)
+					if err != nil {
+						return false, err
+					}
+
+					if len(resp.Result) != 1 {
+						return false, fmt.Errorf("invalid number of results %+v", resp.Result)
+					}
+
+					for _, rs := range resp.Result {
+						rslt := query.Result{}
+						err := rslt.UnmarshalJSON(rs.Data)
+
+						if err != nil {
+							return false, err
+						}
+
+						if len(rslt.Series) != 1 {
+							return false, fmt.Errorf("invalid number of series %+v", rslt)
+						}
+
+						for _, s := range rslt.Series {
+							if len(s.Columns) != 5 {
+								return false, fmt.Errorf("invalid number of columns %+v", s.Columns)
+							}
+
+							if len(s.Values) != 1 {
+								return false, fmt.Errorf("invalid number of values %+v", s.Values)
+							}
+						}
+					}
+					return true, nil
+				}, "failed to query in replicas", "1s", "60s")
 			}
 		}
 		return true, nil
