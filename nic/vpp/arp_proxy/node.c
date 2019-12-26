@@ -74,7 +74,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
         clib_memcpy(&arp->ip4_over_ethernet[0].mac,
                     vr_mac, ETH_ADDR_LEN);
         arp_proxy_next_node_fill(*next_idx, nexts, counter,
-                                 ARP_PROXY_NEXT_INTF_OUT,
+                                 ARP_PROXY_NEXT_EXIT,
                                  ARP_PROXY_COUNTER_REPLY_SUCCESS);
         (*next_idx)++;
         if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
@@ -90,7 +90,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
 
 error:
     arp_proxy_next_node_fill(*next_idx, nexts, counter,
-                             ARP_PROXY_NEXT_DROP,
+                             ARP_PROXY_NEXT_EXIT,
                              ARP_PROXY_COUNTER_REPLY_FAILED);
     (*next_idx)++;
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
@@ -179,6 +179,7 @@ VLIB_REGISTER_NODE (arp_proxy_node) = {
 static clib_error_t *
 arp_proxy_init (vlib_main_t * vm)
 {
+    pds_arp_proxy_pipeline_init();
     pds_mapping_table_init();
     return 0;
 }
@@ -186,4 +187,88 @@ arp_proxy_init (vlib_main_t * vm)
 VLIB_INIT_FUNCTION (arp_proxy_init) =
 {
     .runs_after = VLIB_INITS("pds_infra_init"),
+};
+
+vlib_node_registration_t exit_node;
+
+always_inline void
+arp_proxy_exit_internal_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
+                            u16* next0, u16 *next1, u32 *counter)
+{
+    // TODO add the header to p4
+    *next0 = *next1 = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+    counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 2;
+}
+
+always_inline void
+arp_proxy_exit_internal_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
+{
+    // TODO add the header to p4
+    *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+    counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 1;
+}
+
+static uword
+arp_proxy_exit (vlib_main_t * vm,
+                vlib_node_runtime_t * node,
+                vlib_frame_t * from_frame)
+{
+    u32 counter[ARP_PROXY_COUNTER_LAST] = {0};
+
+    PDS_PACKET_LOOP_START {
+
+        PDS_PACKET_DUAL_LOOP_START (WRITE, WRITE) {
+            arp_proxy_exit_internal_x2(PDS_PACKET_BUFFER(0),
+                                       PDS_PACKET_BUFFER(1),
+                                       PDS_PACKET_NEXT_NODE_PTR(0),
+                                       PDS_PACKET_NEXT_NODE_PTR(1),
+                                       counter);
+        } PDS_PACKET_DUAL_LOOP_END;
+        PDS_PACKET_SINGLE_LOOP_START {
+            arp_proxy_exit_internal_x1(PDS_PACKET_BUFFER(0),
+                                       PDS_PACKET_NEXT_NODE_PTR(0),
+                                       counter);
+        } PDS_PACKET_SINGLE_LOOP_END;
+
+    } PDS_PACKET_LOOP_END;
+
+#define _(n, s) \
+    vlib_node_increment_counter (vm, node->node_index,           \
+            ARP_PROXY_COUNTER_##n,                               \
+            counter[ARP_PROXY_COUNTER_##n]);
+    foreach_arp_proxy_counter
+#undef _
+
+    return from_frame->n_vectors;
+}
+
+static u8 *
+arp_proxy_exit_trace (u8 * s, va_list * args)
+{
+    return format(0, "Not Implemented");
+}
+
+static char * arp_proxy_exit_error_strings[] = {
+#define _(n,s) s,
+    foreach_arp_proxy_exit_counter
+#undef _
+};
+
+VLIB_REGISTER_NODE (exit_node) = {
+    .function = arp_proxy_exit,
+    .name = "pds-arp-proxy-exit",
+    /* Takes a vector of packets. */
+    .vector_size = sizeof (u32),
+
+    .n_errors = ARP_PROXY_COUNTER_LAST,
+    .error_strings = arp_proxy_exit_error_strings,
+
+    .n_next_nodes = ARP_PROXY_EXIT_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [ARP_PROXY_EXIT_NEXT_##s] = n,
+    foreach_arp_proxy_exit_next
+#undef _
+    },
+
+    .format_trace = arp_proxy_exit_trace,
 };
