@@ -48,6 +48,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   createButtonTooltip: string = '';
   minDate: Date = new Date();
+  defaultDate: Date = null;
 
   labelData: RepeaterData[] = [];
   labelOutput: any;
@@ -104,6 +105,12 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   postNgInit(): void {
     this.getSecurityApps();
 
+    // change the hour seconds to 0 and 0 to avoid confusion of local vs utc
+    // seems backend has iisue, seconds can not be 0, otherwise the schdedule
+    // time will become null on the backend.
+    this.defaultDate = new Date();
+    Utility.clearHourMinuteSecond(this.defaultDate);
+
     // currently backend does not support any drop packets
     // UI temporarily drop those choices.
     // once they are supported, pls uncomment out the next lines
@@ -126,8 +133,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       // conver date from staring to Date Object
       const dateValue = this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).value;
       if (dateValue) {
-        this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).setValue(
-          new Date(dateValue));
+        // need to convert utc time to local time to show it on browser
+        const localDate = new Date(dateValue);
+        localDate.setTime(localDate.getTime() + this.minDate.getTimezoneOffset() * 60000);
+        this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).setValue(localDate);
       }
 
       // process interface selectors
@@ -287,6 +296,15 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   getObjectValues() {
     const currValue: IMonitoringMirrorSession = this.newObject.getFormGroupValues();
+    if (currValue.spec['start-condition'] && currValue.spec['start-condition']['schedule-time']) {
+      const scheduleTime: Date = currValue.spec['start-condition']['schedule-time'];
+      // whatever showed on browser is actually local time, we have do magic to conver it
+      // to real utc time to send to the backend
+      scheduleTime.setTime(scheduleTime.getTime() - scheduleTime.getTimezoneOffset() * 60000);
+      // set seconds to 30 is because backend issue.
+      // if the seconds are 0, the schedule time will become 0
+      scheduleTime.setSeconds(30);
+    }
     currValue.spec['match-rules'] = this.rules.map(r => {
       return r.data.rule.getFormGroupValues();
     });

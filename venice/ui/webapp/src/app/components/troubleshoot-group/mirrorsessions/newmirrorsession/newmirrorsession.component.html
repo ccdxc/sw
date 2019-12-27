@@ -51,8 +51,8 @@
     <span [formGroup]="newObject.$formGroup.get(['spec', 'start-condition'])"
           class="newmirrorsession-general-box">
       <p-calendar [showTime]="true" hourFormat="24" formControlName="schedule-time"
-                  appFloatLabel="Schedule" class="ui-calendar-inputbox"
-                  appendTo="body" [showIcon]="true" [minDate]="minDate">
+                  appFloatLabel="Schedule (UTC)" class="ui-calendar-inputbox"
+                  appendTo="body" [showIcon]="true" [minDate]="minDate" [defaultDate]="defaultDate">
       </p-calendar>
     </span>
   </div>
