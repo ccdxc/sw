@@ -95,13 +95,15 @@ gls_t gls = { NULL, FTE_MAX_TXDSCR, FTE_MAX_RXDSCR };
 #define FTE_MAX_SESSION_INDEX (8388606)
 #define FTE_FLOW_SESSION_POOL_COUNT_MAX 256
 
-typedef struct fte_flow_params_s {
-    union {
-        ftlv4_entry_t entry4;
-        ftlv6_entry_t entry6;
-    };
+typedef struct fte_v4flow_params_s {
+    ipv4_flow_hash_entry_t entry;
     uint32_t hash;
-} fte_flow_params_t;
+} fte_v4flow_params_t;
+
+typedef struct fte_v6flow_params_s {
+    flow_hash_entry_t entry;
+    uint32_t hash;
+} fte_v6flow_params_t;
 
 typedef struct fte_flow_hw_ctx_s {
     uint8_t dummy;
@@ -115,10 +117,10 @@ typedef struct fte_flow_session_id_thr_local_pool_s {
 typedef struct fte_flow_main_s {
     uint64_t no_cores;
     volatile uint32_t flow_prog_lock;
-    ftlv4 *table4[FTE_MAX_NUM_CORES];
-    ftlv6 *table6[FTE_MAX_NUM_CORES];
-    fte_flow_params_t ip4_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
-    fte_flow_params_t ip6_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
+    FtlBaseTable *table4[FTE_MAX_NUM_CORES];
+    FtlBaseTable *table6[FTE_MAX_NUM_CORES];
+    fte_v4flow_params_t ip4_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
+    fte_v6flow_params_t ip6_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
     fte_flow_hw_ctx_t session_index_pool[FTE_MAX_SESSION_INDEX];
     fte_flow_session_id_thr_local_pool_t session_id_thr_local_pool[FTE_MAX_NUM_CORES];
 } fte_flow_main_t;
@@ -135,7 +137,7 @@ uint16_t dump_sport, dump_dport;
 uint8_t dump_protocol;
 
 static void
-fte_ftlv4_set_key (ftlv4_entry_t *entry, uint32_t sip, uint32_t dip,
+fte_ftlv4_set_key (ipv4_flow_hash_entry_t *entry, uint32_t sip, uint32_t dip,
                    uint8_t ip_proto, uint16_t src_port, uint16_t dst_port,
                    uint16_t lookup_id)
 {
@@ -149,13 +151,13 @@ fte_ftlv4_set_key (ftlv4_entry_t *entry, uint32_t sip, uint32_t dip,
 }
 
 static void
-fte_ftlv4_dump_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
+fte_ftlv4_dump_hw_entry (FtlBaseTable *obj, uint32_t src, uint32_t dst,
                          uint8_t ip_proto, uint16_t sport, uint16_t dport,
                          uint16_t lookup_id, char *buf, int max_len)
 {
     sdk_ret_t ret;
     sdk_table_api_params_t params = {0};
-    ftlv4_entry_t entry;
+    ipv4_flow_hash_entry_t entry;
 
     entry.clear();
     fte_ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
@@ -170,7 +172,7 @@ fte_ftlv4_dump_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
     return;
 }
 
-static ftlv4 *
+static FtlBaseTable *
 fte_ftlv4_create (void *key2str, void *appdata2str, uint32_t thread_id)
 {
     sdk_table_factory_params_t factory_params = {0};
@@ -185,11 +187,11 @@ fte_ftlv4_create (void *key2str, void *appdata2str, uint32_t thread_id)
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return ftlv4::factory(&factory_params);
+    return FtlBaseTable::factory(&factory_params);
 }
 
 
-static ftlv6 *
+static FtlBaseTable *
 fte_ftlv6_create (void *key2str, void *appdata2str, uint32_t thread_id)
 {
     sdk_table_factory_params_t factory_params = {0};
@@ -201,11 +203,12 @@ fte_ftlv6_create (void *key2str, void *appdata2str, uint32_t thread_id)
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return ftlv6::factory(&factory_params);
+    return FtlBaseTable::factory(&factory_params);
 }
 
 static int
-fte_ftlv4_insert (ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
+fte_ftlv4_insert (FtlBaseTable *obj, ipv4_flow_hash_entry_t *entry,
+                  uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -251,7 +254,7 @@ fte_ftl_init (void)
 
 static void
 fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
-                               fte_flow_params_t *local_params0,
+                               fte_v4flow_params_t *local_params0,
                                uint32_t session_id,
                                uint8_t is_ip4)
 {
@@ -259,7 +262,7 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
 
     if (is_ip4) {
         struct ipv4_hdr *ip40;
-        ftlv4_entry_t *local_entry = &local_params0->entry4;
+        ipv4_flow_hash_entry_t *local_entry = &local_params0->entry;
         uint32_t src_ip, dst_ip;
         uint16_t sport, dport;
         uint8_t protocol;
@@ -296,8 +299,8 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
 #if 0
     else {
         ip6_header_t *ip60;
-        ftlv6_entry_t *local_entry = &local_params0->entry6;
-        ftlv6_entry_t *remote_entry = &remote_params0->entry6;
+        flow_hash_entry_t *local_entry = &local_params0->entry6;
+        flow_hash_entry_t *remote_entry = &remote_params0->entry6;
         u8 *src_ip, *dst_ip;
         u16 sport, dport;
         u8 protocol;
@@ -339,12 +342,12 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
 }
 
 static void
-fte_flow_program_hw_ipv4 (fte_flow_params_t *key, unsigned int lcore_id)
+fte_flow_program_hw_ipv4 (fte_v4flow_params_t *key, unsigned int lcore_id)
 {
     int ret;
-    ftlv4 *table = g_fte_fm.table4[lcore_id];
+    FtlBaseTable *table = g_fte_fm.table4[lcore_id];
 
-    ret = fte_ftlv4_insert(table, &key->entry4, key->hash);
+    ret = fte_ftlv4_insert(table, &key->entry, key->hash);
 
     if (0 != ret) {
     	PDS_TRACE_DEBUG("\nFTE fte_ftlv4_insert failed.. \n\n");
@@ -373,7 +376,7 @@ fte_flow_prog_ipv4 (struct rte_mbuf *m)
 {
     uint32_t session_id; 
     unsigned int lcore_id;
-    fte_flow_params_t *params;
+    fte_v4flow_params_t *params;
 
     lcore_id = rte_lcore_id();
     params = g_fte_fm.ip4_flow_params[lcore_id];

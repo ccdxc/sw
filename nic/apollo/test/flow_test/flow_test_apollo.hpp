@@ -26,8 +26,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-using sdk::table::ftlv6;
-using sdk::table::ftlv4;
+using sdk::table::FtlBaseTable;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -68,7 +67,7 @@ flow_appdata2str(void *appdata) {
 }
 
 static void
-dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
+dump_flow_entry(flow_hash_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 ipv6_addr_t v6_addr_dip) {
     return;
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
@@ -93,7 +92,7 @@ dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
 }
 
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
+dump_flow_entry(ipv4_flow_hash_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 ipv4_addr_t v4_addr_dip) {
     return;
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
@@ -157,8 +156,8 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    ftlv6 *v6table;
-    ftlv4 *v4table;
+    FtlBaseTable *v6table;
+    FtlBaseTable *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
     uint32_t nexthop_group_index;
@@ -169,8 +168,8 @@ private:
     uint16_t dport;
     sdk_table_api_params_t params;
     sdk_table_factory_params_t factory_params;
-    ftlv6_entry_t v6entry;
-    ftlv4_entry_t v4entry;
+    flow_hash_entry_t v6entry;
+    ipv4_flow_hash_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
@@ -246,27 +245,29 @@ private:
     }
 
 
-    sdk_ret_t insert_(ftlv6_entry_t *v6entry) {
+    sdk_ret_t insert_(flow_hash_entry_t *v6entry) {
         memset(&params, 0, sizeof(params));
         params.entry = v6entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = flow_hash_entry_t::entry_size();
         return v6table->insert(&params);
     }
 
-    sdk_ret_t insert_(ftlv4_entry_t *v4entry) {
+    sdk_ret_t insert_(ipv4_flow_hash_entry_t *v4entry) {
         memset(&params, 0, sizeof(params));
         params.entry = v4entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         return v4table->insert(&params);
     }
 
-    sdk_ret_t remove_(ftlv6_entry_t *key) {
+    sdk_ret_t remove_(flow_hash_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
         return v6table->remove(&params);
@@ -281,7 +282,8 @@ public:
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
-        v6table = ftlv6::factory(&factory_params);
+        factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
+        v6table = FtlBaseTable::factory(&factory_params);
         assert(v6table);
 
         memset(&factory_params, 0, sizeof(factory_params));
@@ -291,7 +293,8 @@ public:
         factory_params.key2str = NULL;
         factory_params.appdata2str = NULL;
         factory_params.entry_trace_en = false;
-        v4table = ftlv4::factory(&factory_params);
+        factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
+        v4table = FtlBaseTable::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -343,8 +346,8 @@ public:
     }
 
     ~flow_test() {
-        ftlv6::destroy(v6table);
-        ftlv4::destroy(v4table);
+        FtlBaseTable::destroy(v6table);
+        FtlBaseTable::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
@@ -464,7 +467,7 @@ public:
     sdk_ret_t create_flow(uint32_t vpc, ipv6_addr_t v6_addr_sip,
                           ipv6_addr_t v6_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
-        memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+        v6entry.clear();
         v6entry.key_metadata_ktype = 2;
         v6entry.key_metadata_lkp_id = vpc - 1;
         v6entry.key_metadata_sport = sport;
@@ -491,7 +494,7 @@ public:
     sdk_ret_t create_flow(uint32_t vpc, ipv4_addr_t v4_addr_sip,
                           ipv4_addr_t v4_addr_dip, uint8_t proto,
                           uint16_t sport, uint16_t dport) {
-        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+        v4entry.clear();
         v4entry.key_metadata_lkp_id = vpc - 1;
         v4entry.key_metadata_sport = sport;
         v4entry.key_metadata_dport = dport;

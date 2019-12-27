@@ -22,8 +22,8 @@
 #define WITH_HASH true
 #define WITHOUT_HASH false
 
-using sdk::table::ftlv6;
-using sdk::table::ftlv4;
+using sdk::table::FtlBaseTable;
+using sdk::table::FtlBaseTable;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -33,8 +33,8 @@ using sdk::table::sdk_table_factory_params_t;
 
 class FtlGtestBase: public ::testing::Test {
 protected:
-    ftlv6 *v6table;
-    ftlv4 *v4table;
+    FtlBaseTable *v6table;
+    FtlBaseTable *v4table;
     uint32_t num_insert;
     uint32_t num_remove;
     uint32_t num_update;
@@ -63,12 +63,12 @@ protected:
         
         params.table_id = FTL_TBLID_IPV6;
         params.num_hints = 4;
-        v6table = ftlv6::factory(&params);
+        v6table = FtlBaseTable::factory(&params);
         assert(v6table);
 
         params.table_id = FTL_TBLID_IPV4;
         params.num_hints = 2;
-        v4table = ftlv4::factory(&params);
+        v4table = FtlBaseTable::factory(&params);
         assert(v4table);
 
         num_insert = 0;
@@ -85,8 +85,8 @@ protected:
     }
     virtual void TearDown() {
         ValidateStats();
-        ftlv6::destroy(v6table);
-        ftlv4::destroy(v4table);
+        FtlBaseTable::destroy(v6table);
+        FtlBaseTable::destroy(v4table);
         reset_cache();
         ftl_mock_cleanup();
         SDK_TRACE_VERBOSE("============== TEARDOWN : %s.%s ===============",
@@ -161,7 +161,7 @@ protected:
             auto rs = get_(params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
             assert(params->handle.valid());
-            if (memcmp(params->entry, params2->entry, sizeof(ftlv6_entry_t))) {
+            if (memcmp(params->entry, params2->entry, flow_hash_entry_t::entry_size())) {
                 return sdk::SDK_RET_ENTRY_NOT_FOUND;
             }
         }
@@ -199,7 +199,7 @@ protected:
     static void
     IterateCallback(sdk_table_api_params_t *params) {
         static char buff[512];
-        ((ftlv6_entry_t *)params->entry)->tostr(buff, 512);
+        ((flow_hash_entry_t *)params->entry)->tostr(buff, 512);
         SDK_TRACE_VERBOSE("Handle[%s] Entry[%s]",
                           params->handle.tostr(), buff);
         return;

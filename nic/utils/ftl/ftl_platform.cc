@@ -7,44 +7,54 @@
 #include <cinttypes>
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_includes.hpp"
+
 namespace sdk {
 namespace table {
-namespace FTL_MAKE_AFTYPE(internal) {
+namespace internal {
+
+static inline uint64_t
+get_va (Apictx *ctx) {
+    uint64_t baseva = ctx->level ? ctx->props->stable_base_mem_va
+                             : ctx->props->ptable_base_mem_va;
+    return baseva + (ctx->entry_size * ctx->table_index);
+}
+
+static inline uint64_t
+get_pa (Apictx *ctx) {
+    uint64_t basepa = ctx->level ? ctx->props->stable_base_mem_pa
+                             : ctx->props->ptable_base_mem_pa;
+    return basepa + (ctx->entry_size * ctx->table_index);
+}
 
 sdk_ret_t
-memrd(FTL_MAKE_AFTYPE(apictx) *ctx) {
+memrd(Apictx *ctx) {
     if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
-        auto baseva = ctx->level ? ctx->props->stable_base_mem_va
-                                 : ctx->props->ptable_base_mem_va;
-        auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)baseva;
-        FTL_MAKE_AFTYPE(memcpy)(&ctx->entry, baseentry + ctx->table_index);
+        ftl_memcpy(get_sw_entry_pointer(ctx->entry),
+                   (uint8_t *)get_va(ctx),
+                   ctx->entry_size);
+        // FTL_TRACE_ERR("Read from :0x%llx", get_va(ctx));
     } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
-        auto basepa = ctx->level ? ctx->props->stable_base_mem_pa
-                                 : ctx->props->ptable_base_mem_pa;
-        auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)basepa;
-        pal_mem_read((uint64_t)(baseentry + ctx->table_index),
-                     (uint8_t*)&ctx->entry, sizeof(FTL_MAKE_AFTYPE(entry_t)));
+        pal_mem_read(get_pa(ctx),
+                     (uint8_t*)get_sw_entry_pointer(ctx->entry),
+                     ctx->entry_size);
     }
-    FTL_MAKE_AFTYPE(swizzle)(&ctx->entry);
+    base_table_entry_swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    FTL_MAKE_AFTYPE(swizzle)(&ctx->entry);
+memwr(Apictx *ctx) {
+    base_table_entry_swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
     if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
-        auto baseva = ctx->level ? ctx->props->stable_base_mem_va
-                                 : ctx->props->ptable_base_mem_va;
-        auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)baseva;
-        FTL_MAKE_AFTYPE(memcpy)(baseentry + ctx->table_index, &ctx->entry);
-        //FTL_TRACE_ERR("Wrote to :0x%llx", baseentry + ctx->table_index);
+        ftl_memcpy((uint8_t *)get_va(ctx),
+                   get_sw_entry_pointer(ctx->entry),
+                   ctx->entry_size);
+        // FTL_TRACE_ERR("Wrote to :0x%llx", get_va(ctx));
     } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
-        auto basepa = ctx->level ? ctx->props->stable_base_mem_pa
-                                 : ctx->props->ptable_base_mem_pa;
-        auto baseentry = (FTL_MAKE_AFTYPE(entry_t) *)basepa;
-        pal_mem_write((uint64_t)(baseentry + ctx->table_index),
-                      (uint8_t*)&ctx->entry, sizeof(FTL_MAKE_AFTYPE(entry_t)));
-        //FTL_TRACE_ERR("Wrote to :0x%llx", baseentry + ctx->table_index);
+        pal_mem_write(get_pa(ctx),
+                      (uint8_t*)get_sw_entry_pointer(ctx->entry),
+                      ctx->entry_size);
+        // FTL_TRACE_ERR("Wrote to :0x%llx", get_pa(ctx));
     }
 
 #ifndef SIM
@@ -54,7 +64,7 @@ memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
     // factory call ?
     auto basepa = ctx->level ? ctx->props->stable_base_mem_pa :
                                ctx->props->ptable_base_mem_pa;
-    auto size = ctx->table_index * sizeof(FTL_MAKE_AFTYPE(entry_t));
+    auto size = ctx->table_index * ctx->entry_size;
     capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, size, 1, basepa);
 #endif
 
@@ -62,21 +72,22 @@ memwr(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries) {
-    memset((void*)memva, 0, sizeof(FTL_MAKE_AFTYPE(entry_t))*num_entries);
+memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries,
+       uint32_t entry_size) {
+    memset((void*)memva, 0, entry_size * num_entries);
 
     PAL_barrier();
 
     for (uint32_t i = 0; i < num_entries; i++) {
         capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS,
-                                               (i * sizeof(FTL_MAKE_AFTYPE(entry_t))),
+                                               (i * entry_size),
                                                1, mempa);
     }
 
     return SDK_RET_OK;
 }
 
-} // namespace FTL_MAKE_AFTYPE(internal)
+} // namespace internal
 } // namespace table
 } // namespace sdk
 

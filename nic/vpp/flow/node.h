@@ -142,14 +142,6 @@ typedef struct session_prog_trace_s {
     u8  data[64];
 } session_prog_trace_t;
 
-typedef struct pds_flow_params_s {
-    union {
-        ftlv4_entry_t entry4;
-        ftlv6_entry_t entry6;
-    };
-    u32 hash;
-} pds_flow_params_t;
-
 typedef struct pds_flow_hw_ctx_s {
     u8 dummy;
 } pds_flow_hw_ctx_t;
@@ -166,8 +158,6 @@ typedef struct pds_flow_main_s {
     volatile u32 *flow_prog_lock;
     ftlv4 **table4;
     ftlv6 **table6;
-    pds_flow_params_t **ip4_flow_params;
-    pds_flow_params_t **ip6_flow_params;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     u16 *nh_flags;

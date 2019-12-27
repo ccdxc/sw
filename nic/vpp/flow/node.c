@@ -462,31 +462,20 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
 
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
-                               pds_flow_params_t *params_arr,
-                               int *size, u32 session_id,
+                               u32 session_id,
                                u8 is_ip4)
 {
-    pds_flow_params_t   *local_params0 = params_arr + (*size),
-                        *remote_params0 = local_params0 + 1;
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
 
-    *size = *size + 2;
     vnet_buffer(p0)->pds_data.ses_id = session_id;
 
     if (is_ip4) {
         ip4_header_t *ip40;
-        ftlv4_entry_t *local_entry = &local_params0->entry4;
-        ftlv4_entry_t *remote_entry = &remote_params0->entry4;
         u32 src_ip, dst_ip;
         u16 sport, dport, r_sport, r_dport;
         u8 protocol;
         u16 lkp_id;
-
-        ftlv4_set_session_index(local_entry, session_id);
-        ftlv4_set_session_index(remote_entry, session_id);
-        ftlv4_set_epoch(local_entry, 0xff);
-        ftlv4_set_epoch(remote_entry, 0xff);
 
         ip40 = vlib_buffer_get_current(p0);
 
@@ -518,25 +507,25 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         } else {
             sport = dport = r_sport = r_dport = 0;
         }
-        ftlv4_set_key(local_entry, src_ip, dst_ip,
-                      protocol, sport, dport, lkp_id);
-        ftlv4_set_key(remote_entry, dst_ip, src_ip,
-                      protocol, r_sport, r_dport, lkp_id);
-        pds_flow_extract_nexthop_info((void *)local_entry,
-                                      (void *)remote_entry, p0, 1);
+        ftlv4_cache_set_key(src_ip, dst_ip,
+                            protocol, sport, dport, lkp_id);
+        ftlv4_cache_set_session_index(session_id);
+        ftlv4_cache_set_epoch( 0xff);
+        pds_flow_extract_nexthop_info(p0, 1);
+        ftlv4_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
+        ftlv4_cache_advance_count(1);
+        ftlv4_cache_set_key(dst_ip, src_ip,
+                            protocol, r_sport, r_dport, lkp_id);
+        ftlv4_cache_set_session_index(session_id);
+        ftlv4_cache_set_epoch(0xff);
+        ftlv4_cache_set_hash(0);
+        ftlv4_cache_advance_count(1);
     } else {
         ip6_header_t *ip60;
-        ftlv6_entry_t *local_entry = &local_params0->entry6;
-        ftlv6_entry_t *remote_entry = &remote_params0->entry6;
         u8 *src_ip, *dst_ip;
         u16 sport, dport, r_sport, r_dport;
         u8 protocol;
         u16 lkp_id;
-
-        ftlv6_set_session_index(local_entry, session_id);
-        ftlv6_set_session_index(remote_entry, session_id);
-        ftlv6_set_epoch(local_entry, 0xff);
-        ftlv6_set_epoch(remote_entry, 0xff);
  
         ip60 = vlib_buffer_get_current(p0);
 
@@ -568,32 +557,34 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         } else {
             sport = dport = r_sport = r_dport = 0;
         }
-        ftlv6_set_key(local_entry, src_ip, dst_ip,
-                      protocol, sport, dport, lkp_id, 0);
-        ftlv6_set_key(remote_entry, dst_ip, src_ip,
-                      protocol, r_sport, r_dport, lkp_id, 0);
-        pds_flow_extract_nexthop_info((void *)local_entry,
-                                      (void *)remote_entry, p0, 0);
+        ftlv6_cache_set_key(src_ip, dst_ip,
+                      protocol, sport, dport, lkp_id);
+        ftlv6_cache_set_session_index(session_id);
+        ftlv6_cache_set_epoch(0xff);
+        pds_flow_extract_nexthop_info(p0, 0);
+        ftlv6_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
+        ftlv6_cache_advance_count(1);
+        ftlv6_cache_set_key(dst_ip, src_ip,
+                            protocol, r_sport, r_dport, lkp_id);
+        ftlv6_cache_set_session_index(session_id);
+        ftlv6_cache_set_epoch(0xff);
+        ftlv6_cache_set_hash(0);
+        ftlv6_cache_advance_count(1);
     }
-    local_params0->hash = vnet_buffer (p0)->pds_data.flow_hash;
-    remote_params0->hash = 0;
     return;
 }
 
 always_inline void
-pds_flow_program_hw_ip4 (pds_flow_params_t *key,
-                         int size, u16 *next, u32 *counter)
+pds_flow_program_hw_ip4 (u16 *next, u32 *counter)
 {
-    int i;
+    int i, size = ftlv4_cache_get_count();
     ftlv4 *table = pds_flow_prog_get_table4();
 
     for (i = 0; i < size; i++) {
-        uint32_t session_id = ftlv4_get_session_id(&key[i].entry4);
+        uint32_t session_id = ftlv4_cache_get_session_index(i);
 
         if (PREDICT_TRUE(session_id > 0) &&
-            PREDICT_TRUE(0 == ftlv4_insert(table,
-                                           &key[i].entry4,
-                                           key[i].hash))) {
+            PREDICT_TRUE(0 == ftlv4_cache_program_index(table, i))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
             next[i/2] = pds_flow_prog_get_next_node();
         } else {
@@ -605,9 +596,7 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
             if (i % 2) {
                 /* Remove last entry as local flow succeeded
                  * but remote entry failed */
-                if (PREDICT_FALSE(0 != ftlv4_remove(table,
-                                                    &key[i-1].entry4,
-                                                    key[i-1].hash))) {
+                if (PREDICT_FALSE(0 != ftlv4_cache_delete_index(table, i-1))) {
                     counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
                 }
             } else {
@@ -619,19 +608,16 @@ pds_flow_program_hw_ip4 (pds_flow_params_t *key,
 }
 
 always_inline void
-pds_flow_program_hw_ip6 (pds_flow_params_t *key,
-                         int size, u16 *next, u32 *counter)
+pds_flow_program_hw_ip6 (u16 *next, u32 *counter)
 {
-    int i;
+    int i, size = ftlv6_cache_get_count();
     ftlv6 *table = pds_flow_prog_get_table6();
 
     for (i = 0; i < size; i++) {
-        uint32_t session_id = ftlv6_get_session_id(&key[i].entry6);
+        uint32_t session_id = ftlv6_cache_get_session_index(i);
 
         if (PREDICT_TRUE(session_id > 0) &&
-            PREDICT_TRUE(0 == ftlv6_insert(table,
-                                           &key[i].entry6,
-                                           key[i].hash))) {
+            PREDICT_TRUE(0 == ftlv6_cache_program_index(table, i))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
             next[i/2] = pds_flow_prog_get_next_node();
         } else {
@@ -643,9 +629,7 @@ pds_flow_program_hw_ip6 (pds_flow_params_t *key,
             if (i % 2) {
                 /* Remove last entry as local flow succeeded
                  * but remote entry failed */
-                if (PREDICT_FALSE(0 != ftlv6_remove(table,
-                                                    &key[i-1].entry6,
-                                                    key[i-1].hash))) {
+                if (PREDICT_FALSE(0 != ftlv6_cache_delete_index(table, i-1))) {
                     counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
                 }
             } else {
@@ -661,30 +645,26 @@ pds_flow_prog (vlib_main_t * vm,
                vlib_node_runtime_t * node,
                vlib_frame_t * from_frame, u8 is_ip4)
 {
-    pds_flow_main_t *fm = &pds_flow_main;
-    int thread_id = node->thread_index;
-    int size = 0;
-    pds_flow_params_t *params =
-            is_ip4 ? fm->ip4_flow_params[thread_id] :
-                     fm->ip6_flow_params[thread_id];
     u32 counter[FLOW_PROG_COUNTER_LAST] = {0};
 
+    if (is_ip4) {
+        ftlv4_cache_batch_init();
+    } else {
+        ftlv6_cache_batch_init();
+    }
     PDS_PACKET_LOOP_START {
         PDS_PACKET_DUAL_LOOP_START(LOAD, LOAD) {
             u32 session_id0 = 0, session_id1 = 0;
             int offset0, offset1;
             vlib_buffer_t *b0, *b1;
 
-            CLIB_PREFETCH (params + size,
-                           (2 * sizeof(pds_flow_params_t)), WRITE);
-
             b0 = PDS_PACKET_BUFFER(0);
             b1 = PDS_PACKET_BUFFER(1);
 
             pds_session_id_alloc2(&session_id0, &session_id1);
-            pds_flow_extract_prog_args_x1(b0, params, &size,
+            pds_flow_extract_prog_args_x1(b0,
                                           session_id0, is_ip4);
-            pds_flow_extract_prog_args_x1(b1, params, &size,
+            pds_flow_extract_prog_args_x1(b1, 
                                           session_id1, is_ip4);
             offset0 = pds_flow_prog_get_next_offset(b0);
             offset1 = pds_flow_prog_get_next_offset(b1);
@@ -700,7 +680,7 @@ pds_flow_prog (vlib_main_t * vm,
             b0 = PDS_PACKET_BUFFER(0);
 
             session_id0 = pds_session_id_alloc();
-            pds_flow_extract_prog_args_x1(b0, params, &size,
+            pds_flow_extract_prog_args_x1(b0, 
                                           session_id0, is_ip4);
             offset0 = pds_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
@@ -708,12 +688,10 @@ pds_flow_prog (vlib_main_t * vm,
     } PDS_PACKET_LOOP_END_NO_ENQUEUE;
 
     if (is_ip4) {
-        pds_flow_program_hw_ip4(params, size,
-                                PDS_PACKET_NEXT_NODE_ARR,
+        pds_flow_program_hw_ip4(PDS_PACKET_NEXT_NODE_ARR,
                                 counter);
     } else {
-        pds_flow_program_hw_ip6(params, size,
-                                PDS_PACKET_NEXT_NODE_ARR,
+        pds_flow_program_hw_ip6(PDS_PACKET_NEXT_NODE_ARR,
                                 counter);
     }
     vlib_buffer_enqueue_to_next(vm, node,
@@ -999,19 +977,11 @@ static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    int no_of_threads = fm->no_threads = vec_len (vlib_worker_threads);
+    int no_of_threads = fm->no_threads = vec_len(vlib_worker_threads);
     int i;
 
     fm->max_sessions = pds_session_get_max();
     pool_init_fixed(fm->session_index_pool, fm->max_sessions);
-    vec_validate_aligned(fm->ip4_flow_params, no_of_threads - 1,
-                         CLIB_CACHE_LINE_BYTES);
-    clib_memset(fm->ip4_flow_params, 0,
-                (sizeof(pds_flow_params_t *) * no_of_threads));
-    vec_validate_aligned(fm->ip6_flow_params, no_of_threads - 1,
-                         CLIB_CACHE_LINE_BYTES);
-    clib_memset(fm->ip6_flow_params, 0,
-                (sizeof(pds_flow_params_t *) * no_of_threads));
     vec_validate_aligned(fm->table4, no_of_threads - 1,
                          CLIB_CACHE_LINE_BYTES);
     vec_validate_aligned(fm->table6, no_of_threads - 1,
@@ -1031,12 +1001,6 @@ pds_flow_init (vlib_main_t * vm)
     clib_atomic_release (fm->flow_prog_lock);
 
     for (i = 0; i < no_of_threads; i++) {
-        vec_validate(fm->ip4_flow_params[i], (MAX_FLOWS_PER_FRAME - 1));
-        vec_validate(fm->ip6_flow_params[i], (MAX_FLOWS_PER_FRAME - 1));
-
-        clib_memset(fm->ip4_flow_params[i], 0, sizeof(pds_flow_params_t));
-        clib_memset(fm->ip6_flow_params[i], 0, sizeof(pds_flow_params_t));
-
         fm->table4[i] = ftlv4_create((void *) pds_flow4_key2str,
                                      (void *) pds_flow_appdata2str,
                                      i);

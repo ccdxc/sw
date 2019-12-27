@@ -700,7 +700,7 @@ flows_init (void)
     key.key_metadata_sport = g_sport1;
     key.key_metadata_dport = g_dport1;
     flow_hash_info->entry_valid = 1;
-    flow_hash_info->session_id = g_session_id1;
+    flow_hash_info->session_index = g_session_id1;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
@@ -714,7 +714,7 @@ flows_init (void)
     key.key_metadata_sport = g_dport1;
     key.key_metadata_dport = g_sport1;
     flow_hash_info->entry_valid = 1;
-    flow_hash_info->session_id = g_session_id1;
+    flow_hash_info->session_index = g_session_id1;
     flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
@@ -728,7 +728,7 @@ flows_init (void)
     key.key_metadata_sport = g_sport1;
     key.key_metadata_dport = g_dport1;
     flow_hash_info->entry_valid = 1;
-    flow_hash_info->session_id = g_session_id4;
+    flow_hash_info->session_index = g_session_id4;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
@@ -742,7 +742,7 @@ flows_init (void)
     key.key_metadata_sport = g_sport1;
     key.key_metadata_dport = g_dport1;
     flow_hash_info->entry_valid = 1;
-    flow_hash_info->session_id = g_session_id4;
+    flow_hash_info->session_index = g_session_id4;
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);

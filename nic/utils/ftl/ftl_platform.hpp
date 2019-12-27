@@ -1,13 +1,17 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+#ifndef __FTL_PLATFORM_HPP__
+#define __FTL_PLATFORM_HPP__
+
 namespace sdk {
 namespace table {
-namespace FTL_MAKE_AFTYPE(internal) {
+namespace internal {
 
-sdk_ret_t memrd(FTL_MAKE_AFTYPE(apictx) *ctx);
-sdk_ret_t memwr(FTL_MAKE_AFTYPE(apictx) *ctx);
-sdk_ret_t memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries);
+sdk_ret_t memrd(Apictx *ctx);
+sdk_ret_t memwr(Apictx *ctx);
+sdk_ret_t memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries,
+                 uint32_t entry_size);
 
 #ifdef USE_ARM64_SIMD
 #define SWAP_PAIR_8B(input, offset_a, offset_b, scratch_a, scratch_b)       \
@@ -38,8 +42,14 @@ _swizzle32(uint8_t *entry)
     return;
 }
 
-#define ftlv6_swizzle(_e) _swizzle64((uint8_t*)(_e))
-#define ftlv4_swizzle(_e) _swizzle32((uint8_t*)(_e))
+static inline void
+base_table_entry_swizzle(void *e, uint32_t entry_size) {
+    if (entry_size == 32) {
+        _swizzle32((uint8_t *)e);
+    } else {
+        _swizzle64((uint8_t *)e);
+    }
+}
 
 #else
 
@@ -55,8 +65,8 @@ _swizzle(uint8_t *entry, uint8_t size) {
 }
 
 static inline void
-FTL_MAKE_AFTYPE(swizzle)(FTL_MAKE_AFTYPE(entry_t)* e) {
-    _swizzle((uint8_t*)e, sizeof(*e));
+base_table_entry_swizzle(void *e, uint32_t entry_size) {
+    _swizzle((uint8_t*)e, entry_size);
 }
 
 #endif // USE_ARM64_SIMD
@@ -88,6 +98,18 @@ ftlv4_memcpy(void* d, void* s) {
     _copy32(dst, src);
 }
 
-} // namespace FTL_MAKE_AFTYPE(internal)
+static inline void
+ftl_memcpy(void *d, void *s, uint32_t entry_size)
+{
+    if (entry_size == 32) {
+        ftlv4_memcpy(d, s);
+    } else {
+        ftlv6_memcpy(d, s);
+    }
+}
+
+} // namespace internal
 } // namespace table
 } // namespace sdk
+
+#endif  // __FTL_PLATFORM_HPP__

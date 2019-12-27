@@ -14,6 +14,9 @@
 #ifndef __FTL_H__
 #define __FTL_H__
 
+#include "include/sdk/base_table_entry.hpp"
+#include "nic/sdk/include/sdk/mem.hpp"
+
 //::
 //::     k_d_action_data_json = {}
 //::     k_d_action_data_json['INGRESS_KD'] = {}
@@ -29,6 +32,8 @@
 //::            # Overflow table will use KI and KD of regular table.
 //::            continue
 //::        #endif
+//::
+//::     ########## K + I fields ##########
 //::
 //::        key_fields_list = []
 //::        key_fields_dict = {}
@@ -102,9 +107,8 @@
 //::
 //::        #endif # if k+i len > 0
 //::
+//::     ########## K + D fields ##########
 //::
-//::        data_fields_list = []
-//::        data_fields_dict = {}
 //::        k_d_action_data_json['INGRESS_KD'][table] = {}
 //::        _start_kd_bit = 0
 //::        if len(pddict['tables'][table]['actions']) > 1:
@@ -113,6 +117,8 @@
 //::            #endif
 //::        #endif
 //::        for action in pddict['tables'][table]['actions']:
+//::            data_fields_list = []
+//::            data_fields_dict = {}
 //::            pad_to_512 = 0
 //::            (actionname, actionflddict, _) = action
 //::            kd_size = 0
@@ -408,93 +414,179 @@
 //::                    _kdbit += pad_to_512
 //::                #endif
 //::
-//::            #endif
-//::        k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
-//::        #endfor
-//::
-//::
-//::        if is_table_pad_256(table):
-//::            struct_name = 'ftlv4'
-//::        else:
-//::            struct_name = 'ftlv6'
-//::        #endif
-//::        struct_full_name = struct_name + '_entry_t'
+//::                # construct the struct names
+//::                struct_name = actionname
+//::                struct_full_name = struct_name + '_entry_t'
 
+//::
+//::                ######################################
+//::                # KEY STRUCT
+//::                ######################################
+//::
+//::                if is_table_gen_key(table):
 struct __attribute__((__packed__)) ${struct_name}_key_entry_t {
-//::        for key_field in reversed(key_fields_list):
-//::            ftl_field_str = ftl_process_field(key_field)
+//::                    for key_field in reversed(key_fields_list):
+//::                        ftl_field_str = ftl_process_field(key_field)
     ${ftl_field_str}
-//::        #endfor
+//::                    #endfor
 };
+//::                #endif
 
-struct __attribute__((__packed__)) ${struct_full_name} {
-//::        for data_field in reversed(data_fields_list):
-//::            # TODO remove once key is expanded for Apollo
-//::            if data_field.name() == '__pad_key_bits':
-//::                for key_field in reversed(key_fields_list):
-//::                    ftl_field_str = ftl_process_field(key_field)
+//::                ######################################
+//::                # DATA STRUCT
+//::                ######################################
+//::
+struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
+//::                for data_field in reversed(data_fields_list):
+//::                    # TODO remove once key is expanded for Apollo
+//::                    if data_field.name() == '__pad_key_bits':
+//::                        for key_field in reversed(key_fields_list):
+//::                            ftl_field_str = ftl_process_field(key_field)
     ${ftl_field_str}
+//::                        #endfor
+//::                    else:
+//::                        ftl_field_str = ftl_process_field(data_field)
+    ${ftl_field_str}
+//::                    #endif
 //::                #endfor
-//::            else:
-//::                ftl_field_str = ftl_process_field(data_field)
-    ${ftl_field_str}
-//::            #endif
-//::        #endfor
 
 #ifdef __cplusplus
 
 public:
-    void copy_key(${struct_name}_entry_t *s) {
-//::        for key_field in reversed(key_fields_list):
-//::            field_name = key_field.name()
-//::            field_width = key_field.width()
-//::            field_set_str_list = key_field.set_field_str('s->' + field_name, False)
-//::            for field_set_str in field_set_str_list:
-        ${field_set_str}
-//::            #endfor
-//::        #endfor
-    }
+//::                ######################################
+//::                # DATA METHODS
+//::                ######################################
+//::
+    void copy_data(void *_s) {
+        ${struct_full_name} *s = (${struct_full_name} *)_s;
 
-    void copy_data(${struct_full_name} *s) {
-//::        for data_field in reversed(data_fields_list):
-//::            # skip over key fields if part of data fields
-//::            if find_field(data_field, key_fields_list):
-//::                continue
-//::            #endif
-//::            field_name = data_field.name()
-//::            field_width = data_field.width()
-//::            # skip over non-user data
-//::            if data_field.is_key_appdata_field():
-//::                field_set_str_list = data_field.set_field_str('s->' + field_name, False)
-//::                for field_set_str in field_set_str_list:
+//::                for data_field in reversed(data_fields_list):
+//::                    # skip over key fields if part of data fields
+//::                    if find_field(data_field, key_fields_list):
+//::                        continue
+//::                    #endif
+//::                    field_name = data_field.name()
+//::                    field_width = data_field.width()
+//::                    # skip over non-user data
+//::                    if data_field.is_key_appdata_field():
+//::                        field_set_str_list = data_field.set_field_str('s->' + field_name, False)
+//::                        for field_set_str in field_set_str_list:
         ${field_set_str}
+//::                        #endfor
+//::                    #endif
 //::                #endfor
-//::            #endif
-//::        #endfor
-    }
-
-    void copy_key_data(${struct_full_name} *s) {
-        copy_key(s);
-        copy_data(s);
-    }
-
-    void build_key(${struct_full_name} *s) {
-        copy_key(s);
-        clear_data();
-        clear_hints();
-        entry_valid = 0;
-    }
-
-    void clear_key(void) {
-        ${struct_full_name} s;
-        memset(&s, 0, sizeof(s));
-        copy_key(&s);
     }
 
     void clear_data(void) {
-        ${struct_full_name} s;
-        memset(&s, 0, sizeof(s));
-        copy_data(&s);
+//::                for data_field in reversed(data_fields_list):
+//::                    # skip over key fields if part of data fields
+//::                    if find_field(data_field, key_fields_list):
+//::                        continue
+//::                    #endif
+//::                    field_name = data_field.name()
+//::                    field_width = data_field.width()
+//::                    # skip over non-user data
+//::                    if data_field.is_key_appdata_field():
+//::                        field_set_str_list = data_field.set_field_str('0', False)
+//::                        for field_set_str in field_set_str_list:
+        ${field_set_str}
+//::                        #endfor
+//::                    #endif
+//::                #endfor
+    }
+
+    int data2str(char *buff, uint32_t len) {
+//::                format_list, args_list = ftl_field_print(data_fields_list)
+        return snprintf(buff, len, "data: "
+//::                if len(format_list) == 1:
+//::                    format_str = format_list[0]
+//::                else:
+//::                    format_str = ', '.join(map(lambda format: format, format_list))
+//::                #endif
+                 "${format_str}",
+//::                if len(args_list) == 1:
+//::                    args = args_list[0]
+//::                else:
+//::                    args = ', '.join(map(lambda arg: arg, args_list))
+//::                #endif
+                 ${args});
+    }
+
+//::                ######################################
+//::                # KEY METHODS
+//::                ######################################
+//::
+//::                if is_table_gen_key(table):
+    void copy_key(${struct_name}_entry_t *s) {
+//::                    for key_field in reversed(key_fields_list):
+//::                        field_name = key_field.name()
+//::                        field_width = key_field.width()
+//::                        field_set_str_list = key_field.set_field_str('s->' + field_name, False)
+//::                        for field_set_str in field_set_str_list:
+        ${field_set_str}
+//::                        #endfor
+//::                    #endfor
+    }
+
+    uint8_t get_entry_valid (void) {
+        return entry_valid;
+    }
+
+    void set_entry_valid (uint8_t _entry_valid) {
+        base_table_entry_t::entry_valid = entry_valid = _entry_valid;
+    }
+
+    void build_key(void *_s) {
+        ${struct_full_name} *s = (${struct_full_name} *)_s;
+
+        copy_key(s);
+        clear_data();
+        clear_hints();
+        set_entry_valid(0);
+    }
+
+    static uint32_t entry_size(void) {
+        return sizeof(${struct_full_name}) - sizeof(base_table_entry_t);
+    }
+
+    static base_table_entry_t *alloc(uint32_t size = 0) {
+        void *mem;
+        uint32_t _size;
+
+        if (size == 0) {
+            _size = sizeof(${struct_full_name});
+        } else {
+            _size = size;
+        }
+
+        mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_FTL, _size);
+        if (mem == NULL) {
+            return NULL;
+        }
+
+        return new (mem) ${struct_full_name}();
+    }
+
+    base_table_entry_t *construct(uint32_t size = 0) {
+        return alloc(size);
+    }
+
+    void clear_key(void) {
+//::                    for key_field in reversed(key_fields_list):
+//::                        field_name = key_field.name()
+//::                        field_width = key_field.width()
+//::                        field_set_str_list = key_field.set_field_str('0', False)
+//::                        for field_set_str in field_set_str_list:
+        ${field_set_str}
+//::                        #endfor
+//::                    #endfor
+    }
+
+    void copy_key_data(void *_s) {
+        ${struct_full_name} *s = (${struct_full_name} *)_s;
+
+        copy_key(s);
+        copy_data(s);
     }
 
     void clear_key_data(void) {
@@ -502,121 +594,142 @@ public:
         clear_data();
     }
 
-    void clear_hints(void) {
-//::        # TODO use setters
-//::        for data_field in reversed(data_fields_list):
-//::            field_name = data_field.name()
-//::            field_width = data_field.width()
-//::            if field_name == '__pad_to_512b':
-//::                if field_width > get_field_bit_unit():
-//::                    arr_len = get_bit_arr_length(field_width)
-        memset(${field_name}, 0, ${arr_len});
-//::                else:
-        ${field_name} = 0;
-//::                #endif
-//::            #endif
-//::            if data_field.is_hash_hint_field():
-        ${field_name} = 0;
-//::            #endif
-//::        #endfor
-    }
+    bool compare_key(void *_s) {
+        ${struct_full_name} *s = (${struct_full_name} *)_s;
 
-    void clear(void) {
-        clear_key();
-        clear_data();
-        clear_hints();
-    }
-
-    bool compare_key(${struct_full_name} *s) {
-//::        for key_field in reversed(key_fields_list):
-//::            field_width = key_field.width()
-//::            field_name = key_field.name()
-//::            if field_width > get_field_bit_unit():
-//::                arr_len = get_bit_arr_length(field_width)
+//::                    for key_field in reversed(key_fields_list):
+//::                        field_width = key_field.width()
+//::                        field_name = key_field.name()
+//::                        if field_width > get_field_bit_unit():
+//::                            arr_len = get_bit_arr_length(field_width)
         if (memcmp(${field_name}, s->${field_name}, ${arr_len})) return false;
-//::            else:
+//::                        else:
         if (${field_name} != s->${field_name}) return false;
-//::            #endif
-//::        #endfor
+//::                        #endif
+//::                    #endfor
         return true;
     }
 
-//::        hint_field_size = 0
-//::        hash_field_size = 0
+    int key2str(char *buff, uint32_t len) {
+//::                    format_list, args_list = ftl_field_print(key_fields_list)
+        return snprintf(buff, len, "key: "
+//::                    if len(format_list) == 1:
+//::                        format_str = format_list[0]
+//::                    else:
+//::                        format_str = ', '.join(map(lambda format: format, format_list))
+//::                    #endif
+                 "${format_str}",
+//::                    if len(args_list) == 1:
+//::                        args = args_list[0]
+//::                    else:
+//::                        args = ', '.join(map(lambda arg: arg, args_list))
+//::                    #endif
+                 ${args});
+    }
+//::                # if is_table_gen_key end
+//::                #endif
+//::
+//::                ######################################
+//::                # HASH/HINT METHODS
+//::                ######################################
+//::
+//::                if is_table_gen_hints(table):
+
+    void clear_hints(void) {
+//::                    # TODO use setters
+//::                    for data_field in reversed(data_fields_list):
+//::                        field_name = data_field.name()
+//::                        field_width = data_field.width()
+//::                        if field_name == '__pad_to_512b':
+//::                            if field_width > get_field_bit_unit():
+//::                                arr_len = get_bit_arr_length(field_width)
+        memset(${field_name}, 0, ${arr_len});
+//::                            else:
+        ${field_name} = 0;
+//::                            #endif
+//::                        #endif
+//::                        if data_field.is_hash_hint_field():
+        ${field_name} = 0;
+//::                        #endif
+//::                    #endfor
+    }
+
+//::                    hint_field_size = 0
+//::                    hash_field_size = 0
     void set_hint_hash(uint32_t slot, uint32_t hint, uint32_t hash) {
         assert(slot);
         switch(slot) {
-//::        hash_field_cnt = ftl_hash_field_cnt()
-//::        for hash_field in range(1, hash_field_cnt):
-//::            fields = get_hash_hint_fields_db(hash_field)
-//::            if fields is None:
-//::                continue
-//::            #endif
+//::                    hash_field_cnt = ftl_hash_field_cnt()
+//::                    for hash_field in range(1, hash_field_cnt):
+//::                        fields = get_hash_hint_fields_db(hash_field)
+//::                        if fields is None:
+//::                            continue
+//::                        #endif
             case ${hash_field}:
-//::            split_field_dict = {}
-//::            for field in fields:
-//::                if field.is_field_split():
-//::                    split_field_name = field.split_name()
-//::                    # ignore if method is already generated
-//::                    if split_field_name in split_field_dict:
-//::                        continue
-//::                    #endif
-//::                    split_field_dict[split_field_name] = 1
-//::                #endif
-//::                if field.is_hash_field():
-//::                    if field.width() > hash_field_size:
-//::                        hash_field_size = field.width()
-//::                    #endif
-//::                    field_set_str_list = field.set_field_str('hash')
-//::                else:
-//::                    if field.width() > hint_field_size:
-//::                        hint_field_size = field.width()
-//::                    #endif
-//::                    field_set_str_list = field.set_field_str('hint')
-//::                #endif
-//::                for field_set_str in field_set_str_list:
+//::                        split_field_dict = {}
+//::                        for field in fields:
+//::                            if field.is_field_split():
+//::                                split_field_name = field.split_name()
+//::                                # ignore if method is already generated
+//::                                if split_field_name in split_field_dict:
+//::                                    continue
+//::                                #endif
+//::                                split_field_dict[split_field_name] = 1
+//::                            #endif
+//::                            if field.is_hash_field():
+//::                                if field.width() > hash_field_size:
+//::                                    hash_field_size = field.width()
+//::                                #endif
+//::                                field_set_str_list = field.set_field_str('hash')
+//::                            else:
+//::                                if field.width() > hint_field_size:
+//::                                    hint_field_size = field.width()
+//::                                #endif
+//::                                field_set_str_list = field.set_field_str('hint')
+//::                            #endif
+//::                            for field_set_str in field_set_str_list:
                 ${field_set_str}
-//::                #endfor
-//::            #endfor
+//::                            #endfor
+//::                        #endfor
                 break;
-//::        #endfor
+//::                    #endfor
             default: more_hints = hint; more_hashes = hash; break;
         }
     }
 
-//::        _hash_field_size = next_pow_2(hash_field_size)
-//::        _hint_field_size = next_pow_2(hint_field_size)
-    void get_hint_hash(uint32_t slot, uint${_hint_field_size}_t &hint, uint${_hash_field_size}_t &hash) {
+//::                    _hash_field_size = next_pow_2(hash_field_size)
+//::                    _hint_field_size = next_pow_2(hint_field_size)
+    void get_hint_hash(uint32_t slot, uint32_t &hint, uint16_t &hash) {
         assert(slot);
         switch(slot) {
-//::        hash_field_cnt = ftl_hash_field_cnt()
-//::        for hash_field in range(1, hash_field_cnt):
-//::            fields = get_hash_hint_fields_db(hash_field)
-//::            if fields is None:
-//::                continue
-//::            #endif
+//::                    hash_field_cnt = ftl_hash_field_cnt()
+//::                    for hash_field in range(1, hash_field_cnt):
+//::                        fields = get_hash_hint_fields_db(hash_field)
+//::                        if fields is None:
+//::                            continue
+//::                        #endif
             case ${hash_field}:
-//::            split_field_dict = {}
-//::            for field in fields:
-//::                if field.is_field_split():
-//::                    split_field_name = field.split_name()
-//::                    # ignore if method is already generated
-//::                    if split_field_name in split_field_dict:
-//::                        continue
-//::                    #endif
-//::                    split_field_dict[split_field_name] = 1
-//::                #endif
-//::                if field.is_hash_field():
-//::                    field_get_str_list = field.get_field_str('hash')
-//::                else:
-//::                    field_get_str_list = field.get_field_str('hint')
-//::                #endif
-//::                for field_get_str in field_get_str_list:
+//::                        split_field_dict = {}
+//::                        for field in fields:
+//::                            if field.is_field_split():
+//::                                split_field_name = field.split_name()
+//::                                # ignore if method is already generated
+//::                                if split_field_name in split_field_dict:
+//::                                    continue
+//::                                #endif
+//::                                split_field_dict[split_field_name] = 1
+//::                            #endif
+//::                            if field.is_hash_field():
+//::                                field_get_str_list = field.get_field_str('hash')
+//::                            else:
+//::                                field_get_str_list = field.get_field_str('hint')
+//::                            #endif
+//::                            for field_get_str in field_get_str_list:
                 ${field_get_str}
-//::                #endfor
-//::            #endfor
+//::                            #endfor
+//::                        #endfor
                 break;
-//::        #endfor
+//::                    #endfor
             default: hint = more_hints; hash = more_hashes; break;
         }
     }
@@ -624,40 +737,40 @@ public:
     void get_hint(uint32_t slot, uint32_t &hint) {
         assert(slot);
         switch(slot) {
-//::        hash_field_cnt = ftl_hash_field_cnt()
-//::        for hash_field in range(1, hash_field_cnt):
-//::            fields = get_hash_hint_fields_db(hash_field)
-//::            if fields is None:
-//::                continue
-//::            #endif
-            case ${hash_field}:
-//::            split_field_dict = {}
-//::            for field in fields:
-//::                if field.is_hash_field():
-//::                    continue
-//::                else:
-//::                    if field.is_field_split():
-//::                        split_field_name = field.split_name()
-//::                        # ignore if method is already generated
-//::                        if split_field_name in split_field_dict:
+//::                    hash_field_cnt = ftl_hash_field_cnt()
+//::                    for hash_field in range(1, hash_field_cnt):
+//::                        fields = get_hash_hint_fields_db(hash_field)
+//::                        if fields is None:
 //::                            continue
 //::                        #endif
-//::                        split_field_dict[split_field_name] = 1
-//::                    #endif
-//::                    field_get_str_list = field.get_field_str('hint')
-//::                #endif
-//::                for field_get_str in field_get_str_list:
+            case ${hash_field}:
+//::                        split_field_dict = {}
+//::                        for field in fields:
+//::                            if field.is_hash_field():
+//::                                continue
+//::                            else:
+//::                                if field.is_field_split():
+//::                                    split_field_name = field.split_name()
+//::                                    # ignore if method is already generated
+//::                                    if split_field_name in split_field_dict:
+//::                                        continue
+//::                                    #endif
+//::                                    split_field_dict[split_field_name] = 1
+//::                                #endif
+//::                                field_get_str_list = field.get_field_str('hint')
+//::                            #endif
+//::                            for field_get_str in field_get_str_list:
                 ${field_get_str}
-//::                #endfor
-//::            #endfor
+//::                            #endfor
+//::                        #endfor
                 break;
-//::        #endfor
+//::                    #endfor
             default: hint = more_hints; break;
         }
     }
 
     uint32_t get_num_hints(void) {
-//::        hash_field_cnt = ftl_hash_field_cnt()
+//::                    hash_field_cnt = ftl_hash_field_cnt()
         return ${hash_field_cnt-1};
     }
 
@@ -675,168 +788,164 @@ public:
     uint32_t find_last_hint(void) {
         if (more_hints && more_hashes) {
             return get_more_hint_slot();
-//::        hash_field_cnt = ftl_hash_field_cnt()
-//::        for hash_field in range(hash_field_cnt-1, 0, -1):
-//::            fields = get_hash_hint_fields_db(hash_field)
-//::            if fields is None:
-//::                continue
-//::            #endif
-//::            if len(fields) == 1:
-//::                field_name = fields[0].name()
-//::            else:
-//::                for field in fields:
-//::                    if field.is_hint_field():
-//::                        field_name = field.name()
-//::                    #endif
-//::                #endfor
-//::            #endif
+//::                    hash_field_cnt = ftl_hash_field_cnt()
+//::                    for hash_field in range(hash_field_cnt-1, 0, -1):
+//::                        fields = get_hash_hint_fields_db(hash_field)
+//::                        if fields is None:
+//::                            continue
+//::                        #endif
+//::                        if len(fields) == 1:
+//::                            field_name = fields[0].name()
+//::                        else:
+//::                            for field in fields:
+//::                                if field.is_hint_field():
+//::                                    field_name = field.name()
+//::                                #endif
+//::                            #endfor
+//::                        #endif
         } else if (${field_name}) {
             return ${hash_field};
-//::        #endfor
+//::                    #endfor
         }
         return 0;
     }
-
-    int data2str(char *buff, uint32_t len) {
-//::        format_list, args_list = ftl_field_print(data_fields_list)
-        return snprintf(buff, len, "data: "
-//::        if len(format_list) == 1:
-//::            format_str = format_list[0]
-//::        else:
-//::            format_str = ', '.join(map(lambda format: format, format_list))
-//::        #endif
-                 "${format_str}",
-//::        if len(args_list) == 1:
-//::            args = args_list[0]
-//::        else:
-//::            args = ', '.join(map(lambda arg: arg, args_list))
-//::        #endif
-                 ${args});
-    }
-
-//::
-    int key2str(char *buff, uint32_t len) {
-//::        format_list, args_list = ftl_field_print(key_fields_list)
-        return snprintf(buff, len, "key: "
-//::        if len(format_list) == 1:
-//::            format_str = format_list[0]
-//::        else:
-//::            format_str = ', '.join(map(lambda format: format, format_list))
-//::        #endif
-                 "${format_str}",
-//::        if len(args_list) == 1:
-//::            args = args_list[0]
-//::        else:
-//::            args = ', '.join(map(lambda arg: arg, args_list))
-//::        #endif
-                 ${args});
-    }
+//::                # if is_table_gen_hints(table):
+//::                #endif
 
     int tostr(char *buff, uint32_t len) {
-        int offset = key2str(buff, len);
+        int offset = 0;
 
+//::                if is_table_gen_key(table):
+        offset = key2str(buff, len);
         // delimiter b/w key and data
-        snprintf(buff + offset, len - offset, ", ");
-        return data2str(buff + offset + 2, len - offset - 2);
-    }
-//::
-//::        # To set fields if they are split
-//::        split_field_dict = {}
-//::        if pddict['pipeline'] == 'iris':
-//::            key_data_fields = itertools.chain(data_fields_list)
-//::        else:
-//::            key_data_fields = itertools.chain(key_fields_list, data_fields_list)
-//::        #endif
-//::        for key_data_field in key_data_fields:
-//::            # ignore if field is hash/hint/padding
-//::            if not key_data_field.is_key_appdata_field():
-//::                continue
-//::            #endif
-//::            field_name = key_data_field.name()
-//::            field_width = key_data_field.width()
-//::            field_type_str = key_data_field.field_type_str()
-//::            if key_data_field.is_field_split():
-//::                split_field_name = key_data_field.split_name()
-//::
-//::                # ignore if method is already generated
-//::                if split_field_name in split_field_dict:
-//::                    continue
+        snprintf(buff + offset, len-offset, ", ");
+        offset += 3;
 //::                #endif
-//::
-//::                split_field_dict[split_field_name] = 1
-//::                field_set_str_list = key_data_field.set_field_str('_' + split_field_name)
-    void set_${split_field_name}(${field_type_str} _${split_field_name}) {
-//::            else:
-//::                field_set_str_list = key_data_field.set_field_str('_' + field_name)
-    void set_${field_name}(${field_type_str} _${field_name}) {
-//::            #endif
-//::            for field_set_str in field_set_str_list:
-        ${field_set_str}
-//::            #endfor
+        return data2str(buff + offset, len - offset);
     }
 
-//::        #endfor
+    void clear(void) {
+//::                if is_table_gen_key(table):
+        clear_key();
+//::                #endif
+//::                if is_table_gen_hints(table):
+        clear_hints();
+//::                #endif
+        clear_data();
+        set_entry_valid(0);
+    }
+
+//::                ######################################
+//::                # SETTER METHODS
+//::                ######################################
 //::
-//::        # To get fields if they are split
-//::        split_field_dict = {}
-//::        if pddict['pipeline'] == 'iris':
-//::            key_data_fields = itertools.chain(data_fields_list)
-//::        else:
-//::            key_data_fields = itertools.chain(key_fields_list, data_fields_list)
-//::        #endif
-//::        for key_data_field in key_data_fields:
-//::            # ignore if field is hash/hint/padding
-//::            if not key_data_field.is_key_appdata_field():
-//::                continue
-//::            #endif
-//::            field_name = key_data_field.name()
-//::            field_width = key_data_field.width()
-//::            field_type_str = key_data_field.field_type_str()
-//::            if key_data_field.is_field_split():
-//::                split_field_name = key_data_field.split_name()
-//::
-//::                # ignore if method is already generated
-//::                if split_field_name in split_field_dict:
-//::                    continue
+//::                # To set fields if they are split
+//::                split_field_dict = {}
+//::                if is_table_gen_key(table) and pddict['pipeline'] != 'iris':
+//::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
+//::                else:
+//::                    key_data_chain = itertools.chain(data_fields_list)
 //::                #endif
 //::
-//::                split_field_dict[split_field_name] = 1
-//::                split_fields_list = get_split_field(split_field_name)
+//::                for key_data_field in key_data_chain:
+//::                    # ignore if field is hash/hint/padding
+//::                    if not key_data_field.is_key_appdata_field():
+//::                        continue
+//::                    #endif
+//::                    field_name = key_data_field.name()
+//::                    field_width = key_data_field.width()
+//::                    field_type_str = key_data_field.field_type_str()
+//::                    if key_data_field.is_field_split():
+//::                        split_field_name = key_data_field.split_name()
+//::
+//::                        # ignore if method is already generated
+//::                        if split_field_name in split_field_dict:
+//::                            continue
+//::                        #endif
+//::
+//::                        split_field_dict[split_field_name] = 1
+//::                        field_set_str_list = key_data_field.set_field_str('_' + split_field_name)
+    void set_${split_field_name}(${field_type_str} _${split_field_name}) {
+//::                    else:
+//::                        field_set_str_list = key_data_field.set_field_str('_' + field_name)
+    void set_${field_name}(${field_type_str} _${field_name}) {
+//::                    #endif
+//::                    for field_set_str in field_set_str_list:
+        ${field_set_str}
+//::                    #endfor
+    }
+
+//::                #endfor
+//::
+//::                ######################################
+//::                # GETTER METHODS
+//::                ######################################
+//::
+//::                # To get fields if they are split
+//::                split_field_dict = {}
+//::                if is_table_gen_key(table) and pddict['pipeline'] != 'iris':
+//::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
+//::                else:
+//::                    key_data_chain = itertools.chain(data_fields_list)
+//::                #endif
+//
+//::                for key_data_field in key_data_chain:
+//::                    # ignore if field is hash/hint/padding
+//::                    if not key_data_field.is_key_appdata_field():
+//::                        continue
+//::                    #endif
+//::                    field_name = key_data_field.name()
+//::                    field_width = key_data_field.width()
+//::                    field_type_str = key_data_field.field_type_str()
+//::                    if key_data_field.is_field_split():
+//::                        split_field_name = key_data_field.split_name()
+//::
+//::                        # ignore if method is already generated
+//::                        if split_field_name in split_field_dict:
+//::                            continue
+//::                        #endif
+//::
+//::                        split_field_dict[split_field_name] = 1
+//::                        split_fields_list = get_split_field(split_field_name)
     ${field_type_str} get_${split_field_name}(void) {
         ${field_type_str} ${split_field_name} = 0x0;
-//::                for split_field in split_fields_list:
-//::                    field_name = split_field.name()
-//::                    sbit = split_field.sbit()
-//::                    ebit = split_field.ebit()
-//::                    mask = 0
-//::                    for i in range(ebit-sbit+1):
-//::                        mask |= (1 << i)
-//::                    #endfor
-//::                    mask_str = str(hex(mask))
+//::                        for split_field in split_fields_list:
+//::                            field_name = split_field.name()
+//::                            sbit = split_field.sbit()
+//::                            ebit = split_field.ebit()
+//::                            mask = 0
+//::                            for i in range(ebit-sbit+1):
+//::                                mask |= (1 << i)
+//::                            #endfor
+//::                            mask_str = str(hex(mask))
         ${split_field_name} |= (${field_name} << ${sbit}) & ${mask_str};
-//::                #endfor
+//::                        #endfor
         return ${split_field_name};
-//::            else:
-//::                if field_width > get_field_bit_unit():
-//::                    arr_len = get_bit_arr_length(field_width)
+//::                    else:
+//::                        if field_width > get_field_bit_unit():
+//::                            arr_len = get_bit_arr_length(field_width)
     void get_${field_name}(uint8_t *_${field_name}) {
         memcpy(_${field_name}, ${field_name}, ${arr_len});
         return;
-//::                else:
+//::                        else:
     ${field_type_str} get_${field_name}(void) {
         return ${field_name};
-//::                #endif
-//::            #endif
+//::                        #endif
+//::                    #endif
     }
 
-//::        #endfor
+//::                #endfor
 #endif
 };
 //::
-//::        # reset the global state since this in invoked multiple times
-//::        ftl_hash_field_cnt_reset()
-//::        split_fields_dict_reset()
-//::        hash_hint_fields_dict_reset()
+//::                # reset the global state since this in invoked multiple times
+//::                ftl_hash_field_cnt_reset()
+//::                split_fields_dict_reset()
+//::                hash_hint_fields_dict_reset()
+//::
+//::            #endif
+//::        k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
+//::        #endfor
 //::
 //::        add_kd_action_bits = False
 //::        if len(pddict['tables'][table]['actions']) > 1:

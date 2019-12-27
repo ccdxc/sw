@@ -33,7 +33,7 @@
 namespace sdk {
 namespace table {
 
-class FTL_AFPFX();
+class FtlBaseTable;
 
 namespace ftlint {
 class indexer;
@@ -41,15 +41,15 @@ class apistats;
 class tablestats;
 }
 
-namespace FTL_MAKE_AFTYPE(internal) {
+namespace internal {
 
-class FTL_MAKE_AFTYPE(apictx);
-class FTL_MAKE_AFTYPE(base_table);
-class FTL_MAKE_AFTYPE(main_table);
-class FTL_MAKE_AFTYPE(hint_table);
-class FTL_MAKE_AFTYPE(bucket);
+class Apictx;
+class BaseTable;
+class MainTable;
+class HintTable;
+class Bucket;
 
-} // namespace FTL_MAKE_AFTYPE(int)
+} // namespace internal
 } // namespace table
 } // namespace sdk
 
@@ -57,12 +57,12 @@ using namespace std;
 using namespace sdk::lib;
 using namespace sdk::platform::capri;
 
-using sdk::table::FTL_AFPFX();
-using sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(main_table);
-using sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(hint_table);
-using sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(base_table);
-using sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(apictx);
-using sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(bucket);
+using sdk::table::FtlBaseTable;
+using sdk::table::internal::MainTable;
+using sdk::table::internal::HintTable;
+using sdk::table::internal::BaseTable;
+using sdk::table::internal::Apictx;
+using sdk::table::internal::Bucket;
 
 using sdk::table::ftlint::apistats;
 using sdk::table::ftlint::tablestats;
@@ -72,7 +72,6 @@ using sdk::table::sdk_table_factory_params_t;
 using sdk::table::sdk_table_api_params_t;
 
 #include "ftl_utils.hpp"
-// #include "ftl_structs.hpp"
 #include "ftl_indexer.hpp"
 #include "ftl_stats.hpp"
 #include "ftl_table.hpp"

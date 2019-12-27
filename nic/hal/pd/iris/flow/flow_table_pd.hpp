@@ -7,8 +7,9 @@
 #include "gen/proto/system.pb.h"
 #include "gen/proto/table.pb.h"
 #include "gen/proto/internal.pb.h"
-#include <nic/utils/ftl/ftl_structs.hpp>
-#include <nic/utils/ftl/ftlv6.hpp>
+#include "nic/sdk/include/sdk/mem.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
+#include "nic/utils/ftl/ftlv6.hpp"
 
 using table::TableResponse;
 using internal::FlowHashGetResponse;
@@ -32,13 +33,13 @@ public:
                      uint32_t *hash_value, bool hash_valid);
     hal_ret_t remove(void *entry);
     hal_ret_t get(void *entry, FlowHashGetResponse *rsp);
-    
+
     hal_ret_t meta_get(table::TableMetadataResponseMsg *rsp_msg);
     hal_ret_t stats_get(sys::TableStatsEntry *stats_entry);
     hal_ret_t dump(TableResponse *rsp);
 
 private:
-    ftlv6 *table_;
+    FtlBaseTable *table_;
     std::string table_name_;
     uint32_t table_size_;
     uint32_t oflow_table_size_;

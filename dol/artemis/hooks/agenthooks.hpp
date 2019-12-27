@@ -16,6 +16,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftl_structs.hpp"
 #include "nic/utils/ftl/ftlv4.hpp"
 #include "nic/utils/ftl/ftlv6.hpp"
@@ -32,8 +33,7 @@
 #define DBG_PRINT(fmt, args...)
 #endif
 
-using sdk::table::ftlv6;
-using sdk::table::ftlv4;
+using sdk::table::FtlBaseTable;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -74,34 +74,34 @@ flow_appdata2str(void *appdata) {
 
 #ifdef DUMP_FLOW_SESSION_INFO
 static void
-dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
+dump_flow_entry(flow_hash_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 ipv6_addr_t v6_addr_dip) {
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     char *src_ip_str = ipv6addr2str(v6_addr_sip);
     char *dst_ip_str = ipv6addr2str(v6_addr_dip);
 
     if (d_fp) {
-        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
-                "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
-                src_ip_str, dst_ip_str, entry->sport, entry->dport,
-                entry->epoch, entry->flow_role, entry->ktype);
+        fprintf(d_fp, "vpc %u, key_metadata_proto %u, session_index %u, sip %s, dip %s, "
+                "key_metadata_sport %u, key_metadata_dport %u, epoch %u, flow %u, key_metadata_ktype %u\n",
+                entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
+                src_ip_str, dst_ip_str, entry->key_metadata_sport, entry->key_metadata_dport,
+                entry->epoch, entry->flow_role, entry->key_metadata_ktype);
         fflush(d_fp);
     }
 }
 
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
+dump_flow_entry(ipv4_flow_hash_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 ipv4_addr_t v4_addr_dip) {
     static FILE *d_fp = fopen("/tmp/flow_log.log", "a+");
     char *src_ip_str = ipv4addr2str(v4_addr_sip);
     char *dst_ip_str = ipv4addr2str(v4_addr_dip);
 
     if (d_fp) {
-        fprintf(d_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
-                "sport %u, dport %u, epoch %u, role %u\n",
-                entry->vpc_id, entry->proto, entry->session_index,
-                src_ip_str, dst_ip_str, entry->sport, entry->dport,
+        fprintf(d_fp, "vpc %u, key_metadata_proto %u, session_index %u, sip %s, dip %s, "
+                "key_metadata_sport %u, key_metadata_dport %u, epoch %u, role %u\n",
+                entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
+                src_ip_str, dst_ip_str, entry->key_metadata_sport, entry->key_metadata_dport,
                 entry->epoch, entry->flow_role);
         fflush(d_fp);
     }
@@ -136,13 +136,13 @@ dump_hash_value(uint32_t hash)
 
 #else
 static void
-dump_flow_entry(ftlv6_entry_t *entry, ipv6_addr_t v6_addr_sip,
+dump_flow_entry(flow_hash_entry_t *entry, ipv6_addr_t v6_addr_sip,
                 ipv6_addr_t v6_addr_dip)
 {
     return;
 }
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ipv4_addr_t v4_addr_sip,
+dump_flow_entry(ipv4_flow_hash_entry_t *entry, ipv4_addr_t v4_addr_sip,
                 ipv4_addr_t v4_addr_dip)
 {
     return;
@@ -259,8 +259,8 @@ typedef enum session_type_e {
 
 class flow_test {
 private:
-    ftlv6 *v6table;
-    ftlv4 *v4table;
+    FtlBaseTable *v6table;
+    FtlBaseTable *v4table;
     vpc_epdb_t epdb[DOL_MAX_VPC+1];
     uint32_t session_index;
     uint32_t epoch;
@@ -271,8 +271,8 @@ private:
     uint16_t dport;
     sdk_table_api_params_t params;
     sdk_table_factory_params_t factory_params;
-    ftlv6_entry_t v6entry;
-    ftlv4_entry_t v4entry;
+    flow_hash_entry_t v6entry;
+    ipv4_flow_hash_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
@@ -378,7 +378,7 @@ private:
     }
 
 
-    sdk_ret_t insert_(ftlv6_entry_t *v6entry) {
+    sdk_ret_t insert_(flow_hash_entry_t *v6entry) {
         sdk_ret_t rv;
 
         memset(&params, 0, sizeof(params));
@@ -387,12 +387,13 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = flow_hash_entry_t::entry_size();
         rv = v6table->insert(&params);
         dump_hash_value(params.hash_32b);
         return rv;
     }
 
-    sdk_ret_t insert_(ftlv4_entry_t *v4entry) {
+    sdk_ret_t insert_(ipv4_flow_hash_entry_t *v4entry) {
         sdk_ret_t rv;
 
         memset(&params, 0, sizeof(params));
@@ -401,12 +402,13 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         rv = v4table->insert(&params);
         dump_hash_value(params.hash_32b);
         return rv;
     }
 
-    sdk_ret_t remove_(ftlv6_entry_t *key) {
+    sdk_ret_t remove_(flow_hash_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
         return v6table->remove(&params);
@@ -421,7 +423,8 @@ public:
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
-        v6table = ftlv6::factory(&factory_params);
+        factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
+        v6table = FtlBaseTable::factory(&factory_params);
         assert(v6table);
 
         memset(&factory_params, 0, sizeof(factory_params));
@@ -431,7 +434,8 @@ public:
         factory_params.key2str = NULL;
         factory_params.appdata2str = NULL;
         factory_params.entry_trace_en = false;
-        v4table = ftlv4::factory(&factory_params);
+        factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
+        v4table = FtlBaseTable::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -494,8 +498,8 @@ public:
     }
 
     ~flow_test() {
-        ftlv6::destroy(v6table);
-        ftlv4::destroy(v4table);
+        FtlBaseTable::destroy(v6table);
+        FtlBaseTable::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
@@ -799,27 +803,27 @@ public:
                           uint16_t iflow_sport, uint16_t iflow_dport,
                           ipv6_addr_t rflow_sip, ipv6_addr_t rflow_dip,
                           uint16_t rflow_sport, uint16_t rflow_dport) {
-        memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+        v6entry.clear();
         // Common DATA fields
         v6entry.session_index = session_index;
         v6entry.epoch = 0xFF;
         // Common KEY fields
-        v6entry.ktype = 2;
-        v6entry.vpc_id = vpc;
-        v6entry.proto = proto;
+        v6entry.key_metadata_ktype = 2;
+        v6entry.vnic_metadata_vpc_id = vpc;
+        v6entry.key_metadata_proto = proto;
         // Create IFLOW
-        v6entry.sport = iflow_sport;
-        v6entry.dport = iflow_dport;
-        sdk::lib::memrev(v6entry.src, iflow_sip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, iflow_dip.addr8, sizeof(ipv6_addr_t));
+        v6entry.key_metadata_sport = iflow_sport;
+        v6entry.key_metadata_dport = iflow_dport;
+        sdk::lib::memrev(v6entry.key_metadata_src, iflow_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.key_metadata_dst, iflow_dip.addr8, sizeof(ipv6_addr_t));
         auto ret = insert_(&v6entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
         dump_flow_entry(&v6entry, iflow_sip, iflow_dip);
         // Create RFLOW
-        v6entry.sport = rflow_sport;
-        v6entry.dport = rflow_dport;
-        sdk::lib::memrev(v6entry.src, rflow_sip.addr8, sizeof(ipv6_addr_t));
-        sdk::lib::memrev(v6entry.dst, rflow_dip.addr8, sizeof(ipv6_addr_t));
+        v6entry.key_metadata_sport = rflow_sport;
+        v6entry.key_metadata_dport = rflow_dport;
+        sdk::lib::memrev(v6entry.key_metadata_src, rflow_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.key_metadata_dst, rflow_dip.addr8, sizeof(ipv6_addr_t));
         ret = insert_(&v6entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
         dump_flow_entry(&v6entry, rflow_sip, rflow_dip);
@@ -832,26 +836,26 @@ public:
                           uint16_t iflow_sport, uint16_t iflow_dport,
                           ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
                           uint16_t rflow_sport, uint16_t rflow_dport) {
-        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+        v4entry.clear();
         // Common DATA fields
         v4entry.session_index = session_index;
         v4entry.epoch = 0xFF;
         // Common KEY fields
-        v4entry.vpc_id = vpc;
-        v4entry.proto = proto;
+        v4entry.vnic_metadata_vpc_id = vpc;
+        v4entry.key_metadata_proto = proto;
         // Create IFLOW
-        v4entry.sport = iflow_sport;
-        v4entry.dport = iflow_dport;
-        v4entry.src = iflow_sip;
-        v4entry.dst = iflow_dip;
+        v4entry.key_metadata_sport = iflow_sport;
+        v4entry.key_metadata_dport = iflow_dport;
+        v4entry.key_metadata_ipv4_src = iflow_sip;
+        v4entry.key_metadata_ipv4_dst = iflow_dip;
         auto ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
         dump_flow_entry(&v4entry, iflow_sip, iflow_dip);
         // Create RFLOW
-        v4entry.sport = rflow_sport;
-        v4entry.dport = rflow_dport;
-        v4entry.src = rflow_sip;
-        v4entry.dst = rflow_dip;
+        v4entry.key_metadata_sport = rflow_sport;
+        v4entry.key_metadata_dport = rflow_dport;
+        v4entry.key_metadata_ipv4_src = rflow_sip;
+        v4entry.key_metadata_ipv4_dst = rflow_dip;
         ret = insert_(&v4entry);
         SDK_ASSERT(ret == SDK_RET_OK || ret == SDK_RET_ENTRY_EXISTS);
         dump_flow_entry(&v4entry, rflow_sip, rflow_dip);

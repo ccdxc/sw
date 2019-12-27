@@ -12,7 +12,7 @@
 #define FOREACH_HINT_REVERSE(_n) for (uint32_t i = (_n); i > 0; i--)
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::read_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) {
+Bucket::read_(Apictx *ctx, bool force_hwread) {
     SDK_ASSERT(ctx->table_id);
     if (!ctx->is_main()) {
         SDK_ASSERT(ctx->table_index);
@@ -22,12 +22,12 @@ FTL_MAKE_AFTYPE(bucket)::read_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) 
         auto p4pdret = memrd(ctx);
         SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
     }
-    if (ctx->entry.entry_valid) {
+    if (ctx->entry->get_entry_valid()) {
         FTL_TRACE_VERBOSE("%s: TID:%d I:%d V:%d",
                           ctx->idstr(), ctx->table_id, ctx->table_index,
-                          ctx->entry.entry_valid);
+                          ctx->entry->get_entry_valid());
         ctx->trace();
-        if (valid_ != ctx->entry.entry_valid) {
+        if (valid_ != ctx->entry->get_entry_valid()) {
             FTL_TRACE_ERR("SW and HW data are out of sync !!");
             SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
         }
@@ -37,7 +37,7 @@ FTL_MAKE_AFTYPE(bucket)::read_(FTL_MAKE_AFTYPE(apictx) *ctx, bool force_hwread) 
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::write_(Apictx *ctx) {
     p4pd_error_t p4pdret = 0;
 
     if (ctx->write_pending == false) {
@@ -49,12 +49,12 @@ FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         SDK_ASSERT(ctx->table_index);
     }
 
-    ctx->entry.entry_valid = valid_;
+    ctx->entry->set_entry_valid(valid_);
     if (ctx->hint) {
-        if (ctx->hint_slot == ctx->entry.get_more_hint_slot()) {
-            ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, 1);
+        if (ctx->hint_slot == ctx->entry->get_more_hint_slot()) {
+            ctx->entry->set_hint_hash(ctx->hint_slot, ctx->hint, 1);
         } else {
-            ctx->entry.set_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
+            ctx->entry->set_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
         }
     }
 
@@ -75,11 +75,11 @@ FTL_MAKE_AFTYPE(bucket)::write_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::create_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::create_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_TRACE_VERBOSE("%s: Meta: [%s]", ctx->idstr(), ctx->metastr());
-    ctx->entry.copy_key_data((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
+    ctx->entry->copy_key_data(ctx->params->entry);
     ctx->tstats->insert(!ctx->is_main());
 
     // Set the Handle
@@ -100,7 +100,7 @@ FTL_MAKE_AFTYPE(bucket)::create_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::compare_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::compare_(Apictx *ctx) {
     uint16_t hashX = 0;
     uint32_t hintX = 0;
 
@@ -111,7 +111,7 @@ FTL_MAKE_AFTYPE(bucket)::compare_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 
     // Find a free hint slot in the bucket entry
     FOREACH_HINT(ctx->props->num_hints) {
-        ctx->entry.get_hint_hash(i, hintX, hashX);
+        ctx->entry->get_hint_hash(i, hintX, hashX);
         if (hashX == ctx->hash_msbits && HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
@@ -136,14 +136,14 @@ FTL_MAKE_AFTYPE(bucket)::compare_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         return SDK_RET_COLLISION;
     }
 
-    ctx->entry.get_hint_hash(FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE,
+    ctx->entry->get_hint_hash(Apictx::hint_slot::HINT_SLOT_MORE,
                              ctx->hint, ctx->more_hashs);
 
     return SDK_RET_COLLISION;
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::append_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::append_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_TRACE_VERBOSE("%s: Appending to bucket. - PreMeta: [%s].", ctx->idstr(), ctx->metastr());
@@ -178,12 +178,12 @@ FTL_MAKE_AFTYPE(bucket)::append_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::insert_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::insert_(Apictx *ctx) {
     return valid_ ? append_(ctx) : create_(ctx);
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::update_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::update_(Apictx *ctx) {
     FTL_TRACE_VERBOSE("%s: Updating bucket.", ctx->idstr());
     FTL_TRACE_VERBOSE("- Meta: [%s]", ctx->metastr());
 
@@ -191,7 +191,7 @@ FTL_MAKE_AFTYPE(bucket)::update_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     SDK_ASSERT(valid_);
 
     // Update app data
-    ctx->entry.copy_data((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
+    ctx->entry->copy_data(ctx->params->entry);
 
     // New entry, write required.
     ctx->write_pending = true;
@@ -200,12 +200,12 @@ FTL_MAKE_AFTYPE(bucket)::update_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::find_first_free_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::find_first_free_hint_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t hintX = 0;
 
     FOREACH_HINT(ctx->props->num_hints) {
-        ctx->entry.get_hint(i, hintX);
+        ctx->entry->get_hint(i, hintX);
         if (!HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
@@ -217,11 +217,11 @@ FTL_MAKE_AFTYPE(bucket)::find_first_free_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         // We have found a valid hint slot.
         FTL_TRACE_VERBOSE("hint slot %d is free", ctx->hint_slot);
     } else {
-        ctx->entry.get_hint_hash(FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE,
+        ctx->entry->get_hint_hash(Apictx::hint_slot::HINT_SLOT_MORE,
                                  ctx->hint, ctx->more_hashs);
         if (ctx->more_hashs == 0) {
             FTL_TRACE_VERBOSE("more_hashs slot is free");
-            ctx->hint_slot = ctx->entry.get_more_hint_slot();
+            ctx->hint_slot = ctx->entry->get_more_hint_slot();
         } else {
             FTL_TRACE_VERBOSE("all hint slots are full");
             ret = SDK_RET_NO_RESOURCE;
@@ -234,19 +234,18 @@ FTL_MAKE_AFTYPE(bucket)::find_first_free_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::find_last_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::find_last_hint_(Apictx *ctx) {
+    ctx->hint_slot = ctx->entry->find_last_hint();
 
-    ctx->hint_slot = ctx->entry.find_last_hint();
-
-    if (ctx->entry.is_hint_slot_valid(ctx->hint_slot) == false) {
+    if (ctx->entry->is_hint_slot_valid(ctx->hint_slot) == false) {
         FTL_TRACE_VERBOSE("- No Valid Hint Found, hint_slot: %d, hint: %d", ctx->hint_slot, ctx->hint);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    
-    if (ctx->hint_slot == ctx->entry.get_more_hint_slot()) {
-        ctx->entry.get_hint_hash(ctx->hint_slot, ctx->hint, ctx->more_hashs);
+
+    if (ctx->hint_slot == ctx->entry->get_more_hint_slot()) {
+        ctx->entry->get_hint_hash(ctx->hint_slot, ctx->hint, ctx->more_hashs);
     } else {
-        ctx->entry.get_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
+        ctx->entry->get_hint_hash(ctx->hint_slot, ctx->hint, ctx->hash_msbits);
     }
 
     FTL_TRACE_VERBOSE("Result = [ LastHint: Slot:%d Hint:%d ]",
@@ -256,19 +255,19 @@ FTL_MAKE_AFTYPE(bucket)::find_last_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) find_hint_: Finds a matching HINT slot.
+// Bucket find_hint_: Finds a matching HINT slot.
 //  - Returns SDK_RET_OK and hint_slot = 1 to N, if individual hints match.
 //  - Returns SDK_RET_OK and hint_slot = HINT_SLOT_MORE, if more_hints == 1
 //  - Returns SDK_RET_ENTRY_NOT_FOUND for all other cases.
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::find_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::find_hint_(Apictx *ctx) {
     uint16_t hashX = 0;
     uint32_t hintX = 0;
 
     // Find a free hint slot in the bucket entry
     FOREACH_HINT(ctx->props->num_hints) {
-        ctx->entry.get_hint_hash(i, hintX, hashX);
+        ctx->entry->get_hint_hash(i, hintX, hashX);
         if (hashX == ctx->hash_msbits && HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
@@ -279,13 +278,13 @@ FTL_MAKE_AFTYPE(bucket)::find_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         }
     }
 
-    ctx->entry.get_hint_hash(FTL_MAKE_AFTYPE(apictx)::hint_slot::HINT_SLOT_MORE,
+    ctx->entry->get_hint_hash(Apictx::hint_slot::HINT_SLOT_MORE,
                              ctx->hint, ctx->more_hashs);
     if (ctx->more_hashs) {
         // If more_hashs is set, then it is still a match at this level, if we
         // dont treat this as a match, then it will try to allocate a hint at
         // this level, which is not correct.
-        ctx->hint_slot = ctx->entry.get_more_hint_slot();
+        ctx->hint_slot = ctx->entry->get_more_hint_slot();
         ctx->match = 1;
         return SDK_RET_OK;
     }
@@ -295,10 +294,10 @@ FTL_MAKE_AFTYPE(bucket)::find_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) find_: Find key match or hint slot in the bucket..
+// Bucket find_: Find key match or hint slot in the bucket..
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::find_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::find_(Apictx *ctx) {
     bool match = false;
 
     // Compare the Key portion, if it matches, then we have to re-align
@@ -308,7 +307,7 @@ FTL_MAKE_AFTYPE(bucket)::find_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     //char buff[500];
     //((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry)->tostr(buff, 500);
     //FTL_TRACE_VERBOSE("Key :%s", buff);
-    match = ctx->entry.compare_key((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry);
+    match = ctx->entry->compare_key(ctx->params->entry);
     if (match) {
         ctx->match = 1; ctx->exmatch = 1;
         return SDK_RET_OK;
@@ -318,21 +317,21 @@ FTL_MAKE_AFTYPE(bucket)::find_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) clear_hint_: Clear hint and hash
+// Bucket clear_hint_: Clear hint and hash
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::clear_hint_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    ctx->entry.set_hint_hash(ctx->hint_slot, 0, 0);
+Bucket::clear_hint_(Apictx *ctx) {
+    ctx->entry->set_hint_hash(ctx->hint_slot, 0, 0);
     HINT_SET_INVALID(ctx->hint);
     ctx->write_pending = true;
     return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) remove_: Remove an entry from the bucket.
+// Bucket remove_: Remove an entry from the bucket.
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::remove_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (!valid_) {
@@ -358,7 +357,7 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
     }
 
     // This is an exact match entry, clear the key and data fields.
-    ctx->entry.clear_key_data();
+    ctx->entry->clear_key_data();
     ctx->write_pending = true;
 
     // find the last valid hint for defragmentation
@@ -387,23 +386,23 @@ FTL_MAKE_AFTYPE(bucket)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) mvkey_: Move key+data from src bucket to dst bucket
+// Bucket mvkey_: Move key+data from src bucket to dst bucket
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::move_(FTL_MAKE_AFTYPE(apictx) *dst, FTL_MAKE_AFTYPE(apictx) *src) {
+Bucket::move_(Apictx *dst, Apictx *src) {
     // NOTE NOTE NOTE:
     // This function will be called for 'dst' bucket context.
     SDK_ASSERT(this == dst->bucket);
 
-    auto sbkt = static_cast<FTL_MAKE_AFTYPE(bucket) *>(src->bucket);
+    auto sbkt = static_cast<Bucket *>(src->bucket);
 
     // Copy key and data
-    dst->entry.copy_key_data(&src->entry);
+    dst->entry->copy_key_data(src->entry);
     // dst node is now dirty, set write pending
     dst->write_pending = true;
 
     // Zero out src Key and Data
-    src->entry.clear_key_data();
+    src->entry->clear_key_data();
 
     FTL_TRACE_VERBOSE("- moved key and data");
     PRINT_API_CTX("MOVE-DST", dst);
@@ -418,10 +417,10 @@ FTL_MAKE_AFTYPE(bucket)::move_(FTL_MAKE_AFTYPE(apictx) *dst, FTL_MAKE_AFTYPE(api
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) mvkey_: Move key from src bucket to dst bucket
+// Bucket mvkey_: Move key from src bucket to dst bucket
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::delink_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::delink_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     // Clear the hint linkage from the parent context
@@ -434,7 +433,7 @@ FTL_MAKE_AFTYPE(bucket)::delink_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(bucket) defragment_: Defragment the bucket
+// Bucket defragment_: Defragment the bucket
 // Special cases:
 //  - If the chain is only 1 level, then ectx == pctx
 //  - If we are deleting tail, then ectx == tctx
@@ -448,7 +447,7 @@ FTL_MAKE_AFTYPE(bucket)::delink_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 // 6) Write all zeros to 'tctx' (delete)
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx, FTL_MAKE_AFTYPE(apictx) *tctx) {
+Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     // Get parent context from the tail node context
@@ -498,10 +497,10 @@ FTL_MAKE_AFTYPE(bucket)::defragment_(FTL_MAKE_AFTYPE(apictx) *ectx, FTL_MAKE_AFT
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(bucket)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+Bucket::iterate_(Apictx *ctx) {
     bool force_hwread = ctx->params->force_hwread;
 
-    ctx->entry.entry_valid = false;
+    ctx->entry->set_entry_valid(false);
     if (valid_ || force_hwread) {
         sdk_table_api_params_t params = { 0 };
         read_(ctx, force_hwread);
@@ -511,7 +510,7 @@ FTL_MAKE_AFTYPE(bucket)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
         } else {
             params.handle.sindex(ctx->table_index);
         }
-        params.entry = &ctx->entry;
+        params.entry = ctx->entry;
         params.cbdata = ctx->params->cbdata;
         ctx->params->itercb(&params);
     }

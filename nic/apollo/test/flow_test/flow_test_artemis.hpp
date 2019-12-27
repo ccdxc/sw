@@ -26,8 +26,7 @@
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "nic/apollo/p4/include/artemis_defines.h"
 
-using sdk::table::ftlv6;
-using sdk::table::ftlv4;
+using sdk::table::FtlBaseTable;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -73,11 +72,11 @@ flow_appdata2str(void *appdata) {
 }
 
 static void
-dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
+dump_flow_entry(flow_hash_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 #ifdef SIM
     if (g_fp) {
-        fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
-                "sport %u, dport %u, epoch %u, flow %u, ktype %u\n",
+        fprintf(g_fp, "vpc %lu, proto %lu, session_index %lu, sip %s, dip %s, "
+                "sport %lu, dport %lu, epoch %lu, flow %lu, ktype %lu\n",
                 entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->key_metadata_sport, entry->key_metadata_dport,
                 entry->epoch, entry->flow_role, entry->key_metadata_ktype);
@@ -87,11 +86,11 @@ dump_flow_entry(ftlv6_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 }
 
 static void
-dump_flow_entry(ftlv4_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
+dump_flow_entry(ipv4_flow_hash_entry_t *entry, ip_addr_t sip, ip_addr_t dip) {
 #ifdef SIM
     if (g_fp) {
-        fprintf(g_fp, "vpc %u, proto %u, session_index %u, sip %s, dip %s, "
-                "sport %u, dport %u, epoch %u, role %u\n",
+        fprintf(g_fp, "vpc %lu, proto %lu, session_index %lu, sip %s, dip %s, "
+                "sport %lu, dport %lu, epoch %lu, role %lu\n",
                 entry->vnic_metadata_vpc_id, entry->key_metadata_proto, entry->session_index,
                 ipaddr2str(&sip), ipaddr2str(&dip), entry->key_metadata_sport, entry->key_metadata_dport,
                 entry->epoch, entry->flow_role);
@@ -176,8 +175,8 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    ftlv6 *v6table;
-    ftlv4 *v4table;
+    FtlBaseTable *v6table;
+    FtlBaseTable *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
     uint32_t epoch;
@@ -188,8 +187,8 @@ private:
     uint16_t dport;
     sdk_table_api_params_t params;
     sdk_table_factory_params_t factory_params;
-    ftlv6_entry_t v6entry;
-    ftlv4_entry_t v4entry;
+    flow_hash_entry_t v6entry;
+    ipv4_flow_hash_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     uint32_t nexthop_idx_start;
@@ -255,27 +254,29 @@ private:
     }
 
 
-    sdk_ret_t insert_(ftlv6_entry_t *v6entry) {
+    sdk_ret_t insert_(flow_hash_entry_t *v6entry) {
         memset(&params, 0, sizeof(params));
         params.entry = v6entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = flow_hash_entry_t::entry_size();
         return v6table->insert(&params);
     }
 
-    sdk_ret_t insert_(ftlv4_entry_t *v4entry) {
+    sdk_ret_t insert_(ipv4_flow_hash_entry_t *v4entry) {
         memset(&params, 0, sizeof(params));
         params.entry = v4entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         return v4table->insert(&params);
     }
 
-    sdk_ret_t remove_(ftlv6_entry_t *key) {
+    sdk_ret_t remove_(flow_hash_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
         return v6table->remove(&params);
@@ -290,7 +291,8 @@ public:
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
-        v6table = ftlv6::factory(&factory_params);
+        factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
+        v6table = FtlBaseTable::factory(&factory_params);
         assert(v6table);
 
         memset(&factory_params, 0, sizeof(factory_params));
@@ -300,7 +302,8 @@ public:
         factory_params.key2str = NULL;
         factory_params.appdata2str = NULL;
         factory_params.entry_trace_en = false;
-        v4table = ftlv4::factory(&factory_params);
+        factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
+        v4table = FtlBaseTable::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -352,8 +355,8 @@ public:
     }
 
     ~flow_test() {
-        ftlv6::destroy(v6table);
-        ftlv4::destroy(v4table);
+        FtlBaseTable::destroy(v6table);
+        FtlBaseTable::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
@@ -724,7 +727,7 @@ public:
                           uint8_t role) {
         sdk_ret_t ret;
         if (flow_sip.af == IP_AF_IPV4) {
-            memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+            v4entry.clear();
             // Common DATA fields
             v4entry.session_index = session_index;
             v4entry.epoch = 0xFF;
@@ -743,7 +746,7 @@ public:
                 dump_flow_entry(&v4entry, flow_sip, flow_dip);
             //}
         } else if (flow_sip.af == IP_AF_IPV6) {
-            memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+            v6entry.clear();
             // Common DATA fields
             v6entry.session_index = session_index;
             v6entry.epoch = 0xFF;
@@ -774,7 +777,7 @@ public:
                              uint16_t rflow_sport, uint16_t rflow_dport) {
         sdk_ret_t ret;
         if (iflow_sip.af == IP_AF_IPV4) {
-            memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+            v4entry.clear();
 
             // Common DATA fields
             v4entry.session_index = session_index;
@@ -808,7 +811,7 @@ public:
                 dump_flow_entry(&v4entry, rflow_sip, rflow_dip);
             //}
         } else {
-            memset(&v6entry, 0, sizeof(ftlv6_entry_t));
+            v6entry.clear();
 
             // Common DATA fields
             v6entry.session_index = session_index;

@@ -46,7 +46,20 @@ def is_field_hash(field_name):
 
 # TODO use pragmas
 def is_table_ftl_gen(table):
-    return 'flow' in str(table) and 'stats' not in str(table) and 'info' not in str(table)
+    # return 'flow' in str(table) and 'stats' not in str(table) and 'info' not in str(table)
+    return 'flow' in str(table) and 'stats' not in str(table)
+
+# index based table
+def is_table_index_based(table):
+    return 'flow_info' in str(table)
+
+# generate key for table
+def is_table_gen_key(table):
+    return not is_table_index_based(table)
+
+# generate hashes/hints for table
+def is_table_gen_hints(table):
+    return not is_table_index_based(table)
 
 # TODO use pragmas
 def is_table_pad_256(table):
@@ -163,6 +176,11 @@ set_field_template_2 = Template(
 memcpy(${field_name}, ${field_arg}, ${arr_len});\
 """)
 
+set_field_template_3 = Template(
+"""\
+memset(${field_name}, ${field_arg}, ${arr_len});\
+""")
+
 get_field_template_1 = Template(
 """\
 ${field_arg} |= (${field_name} << ${sbit}) & ${mask_str};\
@@ -240,7 +258,10 @@ class Field:
         else:
             if field_width > get_field_bit_unit():
                 arr_len = get_bit_arr_length(field_width)
-                field_str_list.append(set_field_template_2.substitute(field_name=field_name, field_arg=field_arg, arr_len=arr_len))
+                if field_arg != '0':
+                    field_str_list.append(set_field_template_2.substitute(field_name=field_name, field_arg=field_arg, arr_len=arr_len))
+                else:
+                    field_str_list.append(set_field_template_3.substitute(field_name=field_name, field_arg=field_arg, arr_len=arr_len))
             else:
                 field_str_list.append(field_name + ' = ' + field_arg + ';')
         return field_str_list

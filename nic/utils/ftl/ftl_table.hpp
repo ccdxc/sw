@@ -1,20 +1,31 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+#ifndef __FTL_TABLE_HPP__
+#define __FTL_TABLE_HPP__
+
+#define PDS_FLOW_HINT_POOL_COUNT_MAX    256
+#define PDS_FLOW_HINT_POOLS_MAX 8
+
 namespace sdk {
 namespace table {
-namespace FTL_MAKE_AFTYPE(internal) {
+namespace internal {
 
-class FTL_MAKE_AFTYPE(base_table) {
+typedef struct ftl_flow_hint_id_thr_local_pool_s {
+    int16_t         pool_count;
+    uint32_t        hint_ids[PDS_FLOW_HINT_POOL_COUNT_MAX];
+} ftl_flow_hint_id_thr_local_pool_t;
+
+class BaseTable {
 public:
-    friend FTL_AFPFX();
-    static void destroy_(FTL_MAKE_AFTYPE(base_table) *table);
+    friend FtlBaseTable;
+    static void destroy_(BaseTable *table);
 
 protected:
     uint32_t table_id_;
     uint32_t table_size_;
     uint32_t num_table_index_bits_;
-    FTL_MAKE_AFTYPE(bucket) *buckets_;
+    Bucket *buckets_;
     volatile uint8_t slock_;
 
 protected:
@@ -27,7 +38,7 @@ protected:
     }
 
 public:
-    FTL_MAKE_AFTYPE(base_table)() {
+    BaseTable() {
         table_id_ = 0;
         table_size_ = 0;
         num_table_index_bits_ = 0;
@@ -36,85 +47,89 @@ public:
         slock_ = 0;
     }
 
-    ~FTL_MAKE_AFTYPE(base_table)() {
+    ~BaseTable() {
         //SDK_SPINLOCK_DESTROY(&slock_);
     }
 
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
+    sdk_ret_t iterate_(Apictx *ctx);
+    sdk_ret_t clear_(Apictx *ctx);
 };
 
-class FTL_MAKE_AFTYPE(hint_table): public FTL_MAKE_AFTYPE(base_table) {
+class HintTable: public BaseTable {
 public:
-    friend FTL_AFPFX();
-    friend FTL_MAKE_AFTYPE(main_table);
-    static void destroy_(FTL_MAKE_AFTYPE(hint_table) *table);
+    friend FtlBaseTable;
+    friend MainTable;
+    static void destroy_(HintTable *table);
 
 private:
     ftlindexer indexer_;
-    static thread_local uint8_t nctx_;
+    // static thread_local uint8_t nctx_;
+    uint8_t nctx_;
+    ftl_flow_hint_id_thr_local_pool_t thr_local_pools_[PDS_FLOW_HINT_POOLS_MAX];
 
 private:
-    sdk_ret_t alloc_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t dealloc_(FTL_MAKE_AFTYPE(apictx) *ctx);
+    sdk_ret_t alloc_(Apictx *ctx);
+    sdk_ret_t dealloc_(Apictx *ctx);
     sdk_ret_t init_(sdk::table::properties_t *props);
-    sdk_ret_t initctx_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t insert_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t remove_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t find_(FTL_MAKE_AFTYPE(apictx) *ctx,
-                    FTL_MAKE_AFTYPE(apictx) **retctx);
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t defragment_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t tail_(FTL_MAKE_AFTYPE(apictx) *ctx,
-                    FTL_MAKE_AFTYPE(apictx) **retctx);
-    FTL_MAKE_AFTYPE(apictx) *ctxnew_(FTL_MAKE_AFTYPE(apictx) *src);
+    sdk_ret_t initctx_(Apictx *ctx);
+    sdk_ret_t insert_(Apictx *ctx);
+    sdk_ret_t remove_(Apictx *ctx);
+    sdk_ret_t find_(Apictx *ctx,
+                    Apictx **retctx);
+    sdk_ret_t iterate_(Apictx *ctx);
+    sdk_ret_t clear_(Apictx *ctx);
+    sdk_ret_t defragment_(Apictx *ctx);
+    sdk_ret_t tail_(Apictx *ctx,
+                    Apictx **retctx);
+    Apictx *ctxnew_(Apictx *src);
 
 
 public:
-    static FTL_MAKE_AFTYPE(hint_table)* factory(sdk::table::properties_t *props);
-    FTL_MAKE_AFTYPE(hint_table)() {}
-    ~FTL_MAKE_AFTYPE(hint_table)() {}
+    static HintTable* factory(sdk::table::properties_t *props);
+    HintTable() {}
+    ~HintTable() {}
 };
 
-class FTL_MAKE_AFTYPE(main_table) : public FTL_MAKE_AFTYPE(base_table) {
+class MainTable : public BaseTable {
 public:
-    friend FTL_AFPFX();
-    static void destroy_(FTL_MAKE_AFTYPE(main_table) *table);
+    friend FtlBaseTable;
+    static void destroy_(MainTable *table);
 
 private:
-    FTL_MAKE_AFTYPE(hint_table) *hint_table_;
+    HintTable *hint_table_;
     uint32_t num_hash_bits_;
 
 private:
     sdk_ret_t init_(sdk::table::properties_t *props);
-    sdk_ret_t initctx_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t insert_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t insert_with_handle_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t remove_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t remove_with_handle_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t update_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t get_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t get_with_handle_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t find_(FTL_MAKE_AFTYPE(apictx) *ctx,
-                    FTL_MAKE_AFTYPE(apictx) **retctx);
-    sdk_ret_t iterate_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    sdk_ret_t clear_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    void lock_(FTL_MAKE_AFTYPE(apictx) *ctx);
-    void unlock_(FTL_MAKE_AFTYPE(apictx) *ctx);
+    sdk_ret_t initctx_(Apictx *ctx);
+    sdk_ret_t insert_(Apictx *ctx);
+    sdk_ret_t insert_with_handle_(Apictx *ctx);
+    sdk_ret_t remove_(Apictx *ctx);
+    sdk_ret_t remove_with_handle_(Apictx *ctx);
+    sdk_ret_t update_(Apictx *ctx);
+    sdk_ret_t get_(Apictx *ctx);
+    sdk_ret_t get_with_handle_(Apictx *ctx);
+    sdk_ret_t find_(Apictx *ctx,
+                    Apictx **retctx);
+    sdk_ret_t iterate_(Apictx *ctx);
+    sdk_ret_t clear_(Apictx *ctx);
+    void lock_(Apictx *ctx);
+    void unlock_(Apictx *ctx);
 
 public:
-    static FTL_MAKE_AFTYPE(main_table)* factory(sdk::table::properties_t *props);
+    static MainTable* factory(sdk::table::properties_t *props);
 
-    FTL_MAKE_AFTYPE(main_table)() {
+    MainTable() {
         hint_table_ = NULL;
         num_hash_bits_ = 0;
     }
 
-    ~FTL_MAKE_AFTYPE(main_table)() {}
+    ~MainTable() {}
 
 };
 
-} // namespace FTL_MAKE_AFTYPE(internal)
+} // namespace internal
 } // namespace table
 } // namespace sdk
+
+#endif    // __FTL_TABLE_HPP__

@@ -600,13 +600,13 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
 
 hal_ret_t
 p4pd_fill_flow_hash_key (flow_key_t *flow_key,
-                         uint8_t lkp_inst, ftlv6_entry_t &key)
+                         uint8_t lkp_inst, flow_hash_info_entry_t &key)
 {
     // initialize all the key fields of flow
     if (flow_key->flow_type == FLOW_TYPE_V4) {
         memcpy(key.flow_lkp_metadata_lkp_src, flow_key->sip.v6_addr.addr8, IP6_ADDR8_LEN);
         memcpy(key.flow_lkp_metadata_lkp_dst, flow_key->dip.v6_addr.addr8, IP6_ADDR8_LEN);
-    } 
+    }
     else if (flow_key->flow_type == FLOW_TYPE_V6) {
         sdk::lib::memrev(key.flow_lkp_metadata_lkp_src, flow_key->sip.v6_addr.addr8, IP6_ADDR8_LEN);
         sdk::lib::memrev(key.flow_lkp_metadata_lkp_dst, flow_key->dip.v6_addr.addr8, IP6_ADDR8_LEN);
@@ -617,8 +617,8 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key,
 
     if (flow_key->flow_type == FLOW_TYPE_V4 || flow_key->flow_type == FLOW_TYPE_V6) {
         if ((flow_key->proto == IP_PROTO_TCP) || (flow_key->proto == IP_PROTO_UDP)) {
-            key.flow_lkp_metadata_lkp_sport = flow_key->sport;
-            key.flow_lkp_metadata_lkp_dport = flow_key->dport;
+            key.set_flow_lkp_metadata_lkp_sport(flow_key->sport);
+            key.set_flow_lkp_metadata_lkp_dport(flow_key->dport);
         } else if ((flow_key->proto == IP_PROTO_ICMP) ||
                 (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Set Sport for ECHO request/response
@@ -628,31 +628,31 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key,
                 ((flow_key->icmp_type == ICMP_TYPE_ECHO_RESPONSE ||
                   flow_key->icmp_type == ICMPV6_TYPE_ECHO_RESPONSE) &&
                  flow_key->icmp_code == ICMP_CODE_ECHO_RESPONSE)) {
-                key.flow_lkp_metadata_lkp_sport = flow_key->icmp_id;
+                key.set_flow_lkp_metadata_lkp_sport(flow_key->icmp_id);
             }
-            key.flow_lkp_metadata_lkp_dport =
-                ((flow_key->icmp_type << 8) | flow_key->icmp_code);
+            key.set_flow_lkp_metadata_lkp_dport(
+                ((flow_key->icmp_type << 8) | flow_key->icmp_code));
         } else if (flow_key->proto == IPPROTO_ESP) {
-            key.flow_lkp_metadata_lkp_sport = flow_key->spi >> 16 & 0xFFFF;
-            key.flow_lkp_metadata_lkp_dport = flow_key->spi & 0xFFFF;
+            key.set_flow_lkp_metadata_lkp_sport(flow_key->spi >> 16 & 0xFFFF);
+            key.set_flow_lkp_metadata_lkp_dport(flow_key->spi & 0xFFFF);
         }
     } else {
         // For FLOW_TYPE_L2
-        key.flow_lkp_metadata_lkp_dport = flow_key->ether_type;
+        key.set_flow_lkp_metadata_lkp_dport(flow_key->ether_type);
     }
     if (flow_key->flow_type == FLOW_TYPE_L2) {
-        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+        key.set_flow_lkp_metadata_lkp_type(FLOW_KEY_LOOKUP_TYPE_MAC);
     } else if (flow_key->flow_type == FLOW_TYPE_V4) {
-        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+        key.set_flow_lkp_metadata_lkp_type(FLOW_KEY_LOOKUP_TYPE_IPV4);
     } else if (flow_key->flow_type == FLOW_TYPE_V6) {
-        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+        key.set_flow_lkp_metadata_lkp_type(FLOW_KEY_LOOKUP_TYPE_IPV6);
     } else {
         // TODO: for now !!
-        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_NONE;
+        key.set_flow_lkp_metadata_lkp_type(FLOW_KEY_LOOKUP_TYPE_NONE);
     }
-    key.flow_lkp_metadata_lkp_vrf = flow_key->lkpvrf;
-    key.flow_lkp_metadata_lkp_proto = flow_key->proto;
-    key.flow_lkp_metadata_lkp_inst = lkp_inst;
+    key.set_flow_lkp_metadata_lkp_vrf(flow_key->lkpvrf);
+    key.set_flow_lkp_metadata_lkp_proto(flow_key->proto);
+    key.set_flow_lkp_metadata_lkp_inst(lkp_inst);
 
     return HAL_RET_OK;
 }
@@ -667,8 +667,9 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
                                 uint32_t *flow_hash_p, bool update=false)
 {
     hal_ret_t ret = HAL_RET_OK;
-    ftlv6_entry_t key = { 0 };
+    flow_hash_info_entry_t key;
 
+    key.clear();
     HAL_TRACE_VERBOSE("update {} flow_pd->installed {}", update, flow_pd->installed);
     if (!update && flow_pd->installed) {
         return HAL_RET_OK;
@@ -746,7 +747,7 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
 
     HAL_TRACE_DEBUG("hash value {}, hash valid {}, hash entry {} ",
                     hash_val, hash_valid,
-                    hex_str((uint8_t*)&key, sizeof(ftlv6_entry_t))); 
+                    hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t))); 
 
     if (update) {
         ret = g_hal_state_pd->flow_table_pd_get()->update(&key,
@@ -776,8 +777,9 @@ p4pd_del_flow_hash_table_entry (flow_key_t *flow_key,
                                 pd_flow_t *flow_pd)
 {
     hal_ret_t ret = HAL_RET_OK;
-    ftlv6_entry_t key = {0};
+    flow_hash_info_entry_t key;
 
+    key.clear();
     if (flow_pd->installed == false) {
         return HAL_RET_OK;
     }
@@ -796,7 +798,7 @@ p4pd_del_flow_hash_table_entry (flow_key_t *flow_key,
     }
 
 
-    HAL_TRACE_DEBUG("Hash entry {} ", hex_str((uint8_t*)&key, sizeof(ftlv6_entry_t)));
+    HAL_TRACE_DEBUG("Hash entry {} ", hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t)));
 
     ret = g_hal_state_pd->flow_table_pd_get()->remove(&key);
     if (ret == HAL_RET_OK) {
@@ -1816,12 +1818,13 @@ hal_ret_t
 pd_flow_hash_get (pd_func_args_t *pd_func_args) {
     pd_flow_hash_get_args_t *args = pd_func_args->pd_flow_hash_get;
     hal_ret_t ret = HAL_RET_OK;
-    ftlv6_entry_t key = { 0 };
+    flow_hash_info_entry_t key;
 
+    key.clear();
     p4pd_fill_flow_hash_key(&args->key,
             args->lkp_inst, key);
 
-    HAL_TRACE_VERBOSE("Hash entry {}", hex_str((uint8_t*)&key, sizeof(ftlv6_entry_t)));
+    HAL_TRACE_VERBOSE("Hash entry {}", hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t)));
 
     ret = g_hal_state_pd->flow_table_pd_get()->get(&key, args->rsp);
     if (ret != HAL_RET_OK) {

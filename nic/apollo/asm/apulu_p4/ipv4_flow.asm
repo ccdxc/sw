@@ -54,7 +54,7 @@ label_flow_hit:
     phvwr.!c1   p.p4i_i2e_mapping_bypass, TRUE
     phvwr.!c1   p.p4i_i2e_nexthop_id, d.ipv4_flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
-    phvwr.e     p.p4i_i2e_session_id, d.ipv4_flow_hash_d.session_id
+    phvwr.e     p.p4i_i2e_session_index, d.ipv4_flow_hash_d.session_index
     phvwr.f     p.p4i_i2e_flow_role, d.ipv4_flow_hash_d.flow_role
 
 label_flow_hash_hit:

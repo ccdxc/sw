@@ -46,15 +46,15 @@ fte_flow_appdata2str (void *appdata)
 {
     static char str[512] = {0};
     flow_appdata_t *d = (flow_appdata_t *)appdata;
-    sprintf(str, "session_id:%d flow_role:%d",
-            d->session_id, d->flow_role);
+    sprintf(str, "session_index:%d flow_role:%d",
+            d->session_index, d->flow_role);
     return str;
 }
 
 static void
-fte_ftlv4_set_session_index (ftlv4_entry_t *entry, uint32_t session)
+fte_ftlv4_set_session_index (ipv4_flow_hash_entry_t *entry, uint32_t session)
 {
-    entry->set_session_id(session);
+    entry->set_session_index(session);
 }
 
 #endif    // __FTE_FLOW_APULU_IMPL_H__

@@ -6,16 +6,15 @@
 #ifndef __VPP_IMPL_FTL_WRAPPER_H__
 #define __VPP_IMPL_FTL_WRAPPER_H__
 
+typedef struct FtlBaseTable ftlv4;
+typedef struct FtlBaseTable ftlv6;
+
 #ifdef __cplusplus
+
+#include "gen/p4gen/p4/include/ftl.h"
+
 extern "C" {
 #endif
-
-#include <nic/utils/ftl/ftl_structs.hpp>
-
-typedef struct ftlv4 ftlv4;
-typedef struct ftlv6 ftlv6;
-typedef struct ftlv4_entry_t ftlv4_entry_t;
-typedef struct ftlv6_entry_t ftlv6_entry_t;
 
 // Prototypes
 
@@ -36,10 +35,6 @@ ftlv4 * ftlv4_create(void *key2str,
                      void *appdata2str,
                      uint32_t thread_id);
 
-int ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash);
-
-int ftlv4_remove(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash);
-
 void ftlv4_delete(ftlv4 *obj);
 
 int ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail);
@@ -59,27 +54,42 @@ uint64_t ftlv4_get_flow_count(ftlv4 *obj);
 void ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
                               char *buf, int max_len);
 
-void ftlv4_set_session_index(ftlv4_entry_t *entry, uint32_t session);
+void ftlv4_cache_batch_init(void);
 
-void ftlv4_set_epoch(ftlv4_entry_t *entry, uint8_t val);
+void ftlv4_cache_set_key(
+             uint32_t sip,
+             uint32_t dip,
+             uint8_t ip_proto,
+             uint16_t src_port,
+             uint16_t dst_port,
+             uint16_t lookup_id);
 
-void ftlv4_set_key(ftlv4_entry_t *entry,
-                   uint32_t sip,
-                   uint32_t dip,
-                   uint8_t ip_proto,
-                   uint16_t src_port,
-                   uint16_t dst_port,
-                   uint16_t lookup_id);
+void ftlv4_cache_set_nexthop(
+             uint32_t nhid,
+             uint32_t nhtype,
+             uint8_t nh_valid);
 
-uint32_t ftlv4_get_session_id(ftlv4_entry_t *entry);
+int ftlv4_cache_get_count(void);
+
+void ftlv4_cache_advance_count(int val);
+
+int ftlv4_cache_program_index(ftlv4 *obj, uint16_t id);
+
+int ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id);
+
+void ftlv4_cache_set_session_index(uint32_t val);
+
+uint32_t ftlv4_cache_get_session_index(int id);
+
+void ftlv4_cache_set_epoch(uint8_t val);
+
+void ftlv4_cache_set_hash(uint32_t val);
+
+void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
 ftlv6 * ftlv6_create(void *key2str,
                      void *appdata2str,
                      uint32_t thread_id);
-
-int ftlv6_insert(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
-
-int ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash);
 
 void ftlv6_delete(ftlv6 *obj);
 
@@ -100,20 +110,38 @@ uint64_t ftlv6_get_flow_count(ftlv6 *obj);
 void ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
                               char *buf, int max_len);
 
-void ftlv6_set_session_index(ftlv6_entry_t *entry, uint32_t session);
+void ftlv6_cache_batch_init(void);
 
-void ftlv6_set_epoch(ftlv6_entry_t *entry, uint8_t val);
+void ftlv6_cache_set_key(
+             uint8_t *sip,
+             uint8_t *dip,
+             uint8_t ip_proto,
+             uint16_t src_port,
+             uint16_t dst_port,
+             uint16_t lookup_id);
 
-void ftlv6_set_key(ftlv6_entry_t *entry,
-                   uint8_t *sip,
-                   uint8_t *dip,
-                   uint8_t ip_proto,
-                   uint16_t src_port,
-                   uint16_t dst_port,
-                   uint16_t lookup_id,
-                   uint8_t key_type);
+void ftlv6_cache_set_nexthop(
+             uint32_t nhid,
+             uint32_t nhtype,
+             uint8_t nh_valid);
 
-uint32_t ftlv6_get_session_id(ftlv6_entry_t *entry);
+int ftlv6_cache_get_count(void);
+
+void ftlv6_cache_advance_count(int val);
+
+int ftlv6_cache_program_index(ftlv6 *obj, uint16_t id);
+
+int ftlv6_cache_delete_index(ftlv6 *obj, uint16_t id);
+
+void ftlv6_cache_set_session_index(uint32_t val);
+
+uint32_t ftlv6_cache_get_session_index(int id);
+
+void ftlv6_cache_set_epoch(uint8_t val);
+
+void ftlv6_cache_set_hash(uint32_t val);
+
+void ftlv6_cache_batch_flush(ftlv6 *obj, int *status);
 
 #ifdef __cplusplus
 }

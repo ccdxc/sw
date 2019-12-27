@@ -9,9 +9,9 @@
 #include "ftl_includes.hpp"
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(base_table)::init_(uint32_t id, uint32_t size) {
+BaseTable::init_(uint32_t id, uint32_t size) {
     void *mem;
-    uint32_t bucket_size = sizeof(FTL_MAKE_AFTYPE(bucket));
+    uint32_t bucket_size = sizeof(Bucket);
 
     table_id_ = id;
     table_size_ = size;
@@ -24,20 +24,20 @@ FTL_MAKE_AFTYPE(base_table)::init_(uint32_t id, uint32_t size) {
         return SDK_RET_OOM;
     }
 
-    //buckets_ = (FTL_MAKE_AFTYPE(bucket) *) new(mem) FTL_MAKE_AFTYPE(bucket)[table_size_];
-    buckets_ = (FTL_MAKE_AFTYPE(bucket) *)mem;
+    //buckets_ = (Bucket *) new(mem) Bucket[table_size_];
+    buckets_ = (Bucket *)mem;
     return SDK_RET_OK;
 }
 
 void
-FTL_MAKE_AFTYPE(base_table)::destroy_(FTL_MAKE_AFTYPE(base_table) *table) {
+BaseTable::destroy_(BaseTable *table) {
     // Free the Hash table entries.
     SDK_FREE(SDK_MEM_ALLOC_FTL_TABLE_ENTRIES, table->buckets_);
     table->buckets_ = NULL;
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(base_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+BaseTable::iterate_(Apictx *ctx) {
     uint32_t i = (ctx->is_main()) ? 0 : 1;
 
     ctx->table_id = table_id_;
@@ -49,8 +49,8 @@ FTL_MAKE_AFTYPE(base_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(base_table)::clear_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    memset(buckets_, 0, table_size_ * sizeof( FTL_MAKE_AFTYPE(bucket)));
+BaseTable::clear_(Apictx *ctx) {
+    memset(buckets_, 0, table_size_ * sizeof( Bucket));
     return SDK_RET_OK;
 }
 

@@ -1,6 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+#include <string.h>
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "flow_table_pd.hpp"
@@ -18,7 +20,7 @@ key2str(void *key) {
     thread_local static char str[256] = { 0 };
     char srcstr[INET6_ADDRSTRLEN] = { 0 };
     char dststr[INET6_ADDRSTRLEN] = { 0 };
-    ftlv6_entry_t     *swkey = static_cast<ftlv6_entry_t*>(key);
+    flow_hash_info_entry_t     *swkey = static_cast<flow_hash_info_entry_t*>(key);
     SDK_ASSERT(swkey);
 
     if (swkey->flow_lkp_metadata_lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6) {
@@ -61,7 +63,7 @@ key2str(void *key) {
 static char*
 appdata2str(void *entry) {
     thread_local static char str[256] = { 0 };
-    ftlv6_entry_t     *swentry = static_cast<ftlv6_entry_t*>(entry);
+    flow_hash_info_entry_t     *swentry = static_cast<flow_hash_info_entry_t*>(entry);
     SDK_ASSERT(swentry);
 
     snprintf(str, sizeof(str), "export_en=%lu,flow_index=%lu",
@@ -89,7 +91,7 @@ flow_table_pd::factory() {
 
 void
 flow_table_pd::destroy(flow_table_pd *ftpd) {
-    ftlv6::destroy(ftpd->table_);
+    FtlBaseTable::destroy(ftpd->table_);
     return;
 }
 
@@ -110,8 +112,10 @@ flow_table_pd::init() {
     params.max_recircs = 8;
     params.key2str = key2str;
     params.appdata2str = appdata2str;
+    params.entry_alloc_cb = flow_hash_info_entry_t::alloc;
+    // params.entry_trace_en = true;
 
-    table_ = ftlv6::factory(&params);
+    table_ = FtlBaseTable::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
     return HAL_RET_OK;
 }
@@ -147,7 +151,7 @@ flow_table_pd::stats_get(sys::TableStatsEntry *stats_entry) {
 static void
 table_entry_fill(sdk_table_api_params_t *params) {
     char *str = NULL;
-    ftlv6_entry_t *hwentry = (ftlv6_entry_t *) params->entry;
+    flow_hash_info_entry_t *hwentry = (flow_hash_info_entry_t *) params->entry;
     TableResponse *rsp = static_cast<TableResponse*>(params->cbdata);
     TableFlowEntry *entry = rsp->mutable_flow_table()->add_flow_entry();
 
@@ -196,9 +200,10 @@ flow_table_pd::insert(void *entry,
     sdk_table_api_params_t params;
     sdk_ret_t sret = SDK_RET_OK;
     hal_ret_t ret = HAL_RET_OK;
-    
+
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
-    params.entry = entry;
+    params.entry = (base_table_entry_t *)entry;
+    params.entry_size = flow_hash_info_entry_t::entry_size();
     if (hash_valid) {
         params.hash_32b = *hash_value;
         params.hash_valid = true;
@@ -241,7 +246,8 @@ flow_table_pd::update(void *entry,
     hal_ret_t ret = HAL_RET_OK;
     
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
-    params.entry = entry;
+    params.entry = (base_table_entry_t *)entry;
+    params.entry_size = flow_hash_info_entry_t::entry_size();
     if (hash_valid) {
         params.hash_32b = *hash_value;
         params.hash_valid = 1;
@@ -269,7 +275,8 @@ flow_table_pd::remove(void *entry) {
     hal_ret_t ret = HAL_RET_OK;
 
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
-    params.entry = entry;
+    params.entry = (base_table_entry_t *)entry;
+    params.entry_size = flow_hash_info_entry_t::entry_size();
     sret = table_->remove(&params);
 
     ret = hal_sdk_ret_to_hal_ret(sret);
@@ -329,8 +336,9 @@ flow_table_pd::get(void *entry, FlowHashGetResponse *rsp) {
     sdk_ret_t sret = SDK_RET_OK;
     char *str = NULL;
 
-    params.entry = entry;
+    params.entry = (base_table_entry_t *)entry;
     params.appdata = &swappdata;
+    params.entry_size = flow_hash_info_entry_t::entry_size();
     sret = table_->get(&params);
     if (sret == SDK_RET_OK) {
         str = key2str(params.entry);

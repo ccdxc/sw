@@ -26,3 +26,8 @@
 
 char*
 ftlu_rawstr(void *data, uint32_t len);
+
+static inline void *
+get_sw_entry_pointer (base_table_entry_t *p) {
+    return (uint8_t *)p + sizeof(base_table_entry_t);
+}

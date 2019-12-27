@@ -15,7 +15,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
         modify_field(control_metadata.copp_policer_valid, TRUE);
     }
 
-    if (p4e_i2e.session_id == 0) {
+    if (p4e_i2e.session_index == 0) {
         egress_drop(P4E_DROP_SESSION_INVALID);
     }
 
@@ -28,7 +28,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
     if (egress_recirc.valid == FALSE) {
         modify_field(scratch_metadata.session_stats_addr,
                      scratch_metadata.session_stats_addr +
-                     (p4e_i2e.session_id * 8 * 4));
+                     (p4e_i2e.session_index * 8 * 4));
         modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
 
         if (tcp.valid == TRUE) {
@@ -92,7 +92,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 @pragma index_table
 table session {
     reads {
-        p4e_i2e.session_id  : exact;
+        p4e_i2e.session_index  : exact;
     }
     actions {
         session_info;

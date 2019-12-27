@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
+#include "include/sdk/base_table_entry.hpp"
 
 #define SDK_TABLE_BITS_TO_BYTES(_b) (((_b) >> 3) + (((_b) & 0x7) ? 1 : 0))
 #define SDK_TABLE_ALIGN_TO_64B(_s) \
@@ -124,6 +125,8 @@ typedef enum sdk_table_health_state_s {
 //                     uint32_t capacity, uint32_t usage,
 //                     sdk_table_health_state_t *new_state);
 
+typedef base_table_entry_t *(*entry_alloc_cb_t) (uint32_t size);
+
 typedef struct sdk_table_factory_params_ {
     // TableID of this table given by P4
     uint32_t table_id;
@@ -147,6 +150,7 @@ typedef struct sdk_table_factory_params_ {
     // Health monitoring callback
     //table_health_monitor_func_t health_monitor_func;
     uint32_t thread_id;
+    entry_alloc_cb_t entry_alloc_cb;
 } sdk_table_factory_params_t;
 
 typedef struct sdk_table_api_params_ {
@@ -154,7 +158,7 @@ typedef struct sdk_table_api_params_ {
         // [Input] Key of the entry
         void *key;
         // [Input] Entry (Key + Data)
-        void *entry;
+        base_table_entry_t *entry;
     };
     // [Input] Key mask of the entry
     void *mask;
@@ -190,6 +194,8 @@ typedef struct sdk_table_api_params_ {
     // [Input]
     // Set this to true to allocate from top of range for indices
     bool highest;
+    // size of the entry
+    uint32_t entry_size;
 } sdk_table_api_params_t;
 
 typedef struct sdk_table_api_stats_ {

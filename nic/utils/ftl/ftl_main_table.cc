@@ -11,25 +11,25 @@
 #define MASK(_nbits) ((1 << (_nbits)) - 1)
 
 //---------------------------------------------------------------------------
-// Factory method to instantiate the FTL_MAKE_AFTYPE(main_table) class
+// Factory method to instantiate the MainTable class
 //---------------------------------------------------------------------------
-FTL_MAKE_AFTYPE(main_table) *
-FTL_MAKE_AFTYPE(main_table)::factory(sdk::table::properties_t *props) {
+MainTable *
+MainTable::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
-    FTL_MAKE_AFTYPE(main_table) *table = NULL;
+    MainTable *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    mem = (FTL_MAKE_AFTYPE(main_table) *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
-                                          sizeof(FTL_MAKE_AFTYPE(main_table)));
+    mem = (MainTable *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
+                                          sizeof(MainTable));
     if (!mem) {
         return NULL;
     }
 
-    table = new (mem) FTL_MAKE_AFTYPE(main_table)();
+    table = new (mem) MainTable();
 
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
-        table->~FTL_MAKE_AFTYPE(main_table)();
+        table->~MainTable();
         SDK_FREE(SDK_MEM_ALLOC_FTL_MAIN_TABLE, mem);
     }
 
@@ -37,44 +37,44 @@ FTL_MAKE_AFTYPE(main_table)::factory(sdk::table::properties_t *props) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(main_table) init_()
+// MainTable init_()
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::init_(sdk::table::properties_t *props) {
+MainTable::init_(sdk::table::properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = FTL_MAKE_AFTYPE(base_table)::init_(props->ptable_id, props->ptable_size);
+    ret = BaseTable::init_(props->ptable_id, props->ptable_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
-    FTL_TRACE_VERBOSE("MainTable: Created FTL_MAKE_AFTYPE(main_table) "
+    FTL_TRACE_VERBOSE("MainTable: Created MainTable "
                       "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                       table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
-    hint_table_ = FTL_MAKE_AFTYPE(hint_table)::factory(props);
+    hint_table_ = HintTable::factory(props);
     SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
 
     return ret;
 }
 
 void
-FTL_MAKE_AFTYPE(main_table)::destroy_(FTL_MAKE_AFTYPE(main_table) *table) {
-    FTL_MAKE_AFTYPE(hint_table)::destroy_(table->hint_table_);
-    FTL_MAKE_AFTYPE(base_table)::destroy_(table);
+MainTable::destroy_(MainTable *table) {
+    HintTable::destroy_(table->hint_table_);
+    BaseTable::destroy_(table);
 }
 
 inline void 
-FTL_MAKE_AFTYPE(main_table)::lock_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::lock_(Apictx *ctx) {
     buckets_[ctx->table_index].lock_();
 }
 
 inline void
-FTL_MAKE_AFTYPE(main_table)::unlock_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::unlock_(Apictx *ctx) {
     buckets_[ctx->table_index].unlock_();
 }
 
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::initctx_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::initctx_(Apictx *ctx) {
     // By now, we should have a valid hash value.
     SDK_ASSERT(ctx->params->hash_valid);
 
@@ -90,10 +90,10 @@ FTL_MAKE_AFTYPE(main_table)::initctx_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(main_table) insert_: Insert entry to main table
+// MainTable insert_: Insert entry to main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::insert_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::insert_(Apictx *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     // INSERT SEQUENCE:
@@ -133,10 +133,10 @@ FTL_MAKE_AFTYPE(main_table)::insert_(FTL_MAKE_AFTYPE(apictx) *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(main_table) remove_: Remove entry from main table
+// MainTable remove_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::remove_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::remove_(Apictx *ctx) {
 __label__ done;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -162,11 +162,11 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(main_table) update_: Remove entry from main table
+// MainTable update_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::find_(FTL_MAKE_AFTYPE(apictx) *ctx,
-                      FTL_MAKE_AFTYPE(apictx) **match_ctx) {
+MainTable::find_(Apictx *ctx,
+                      Apictx **match_ctx) {
 __label__ done;
     if (!ctx->inited) {
         // If entry_valid, then context is already initialized.
@@ -191,9 +191,9 @@ done:
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::update_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::update_(Apictx *ctx) {
 __label__ done;
-    FTL_MAKE_AFTYPE(apictx) *match_ctx = NULL;
+    Apictx *match_ctx = NULL;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -208,9 +208,9 @@ done:
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::get_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::get_(Apictx *ctx) {
 __label__ done;
-    FTL_MAKE_AFTYPE(apictx) *match_ctx = NULL;
+    Apictx *match_ctx = NULL;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -226,18 +226,18 @@ __label__ done;
         ctx->params->handle.sindex(match_ctx->table_index);
     }
 
-    ctx->entry.copy_key_data((FTL_MAKE_AFTYPE(entry_t)*)match_ctx->params->entry);
+    ctx->entry->copy_key_data(match_ctx->params->entry);
 
 done:
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// FTL_MAKE_AFTYPE(main_table) iterate_: Iterate entries from main table
+// MainTable iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::iterate_(FTL_MAKE_AFTYPE(apictx) *ctx) {
-    auto ret = FTL_MAKE_AFTYPE(base_table)::iterate_(ctx);
+MainTable::iterate_(Apictx *ctx) {
+    auto ret = BaseTable::iterate_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table iterate r:%d", ret);
 
     ret = hint_table_->iterate_(ctx);
@@ -247,16 +247,17 @@ done:
 }
 
 sdk_ret_t
-FTL_MAKE_AFTYPE(main_table)::clear_(FTL_MAKE_AFTYPE(apictx) *ctx) {
+MainTable::clear_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (ctx->clear_global_state) {
-        ret = FTL_MAKE_AFTYPE(base_table)::clear_(ctx);
+        ret = BaseTable::clear_(ctx);
         FTL_RET_CHECK_AND_GOTO(ret, done, "main table clear r:%d", ret);
 
         memclr(ctx->props->ptable_base_mem_va,
                ctx->props->ptable_base_mem_pa,
-               ctx->props->ptable_size);
+               ctx->props->ptable_size,
+               ctx->entry_size);
     }
 
     ret = hint_table_->clear_(ctx);

@@ -9,9 +9,9 @@
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_base.hpp"
 
-sdk::table::properties_t * FTL_AFPFX()::props_ = NULL;
-void * FTL_AFPFX()::main_table_                = NULL;
-uint32_t hw_entry_count_                       = 0;
+// sdk::table::properties_t * FtlBaseTable::props_ = NULL;
+// void * FtlBaseTable::main_table_                = NULL;
+// uint32_t hw_entry_count_                    = 0;
 
 #define FTL_API_BEGIN(_name) {\
     FTL_TRACE_VERBOSE("%s %s begin: %s %s", \
@@ -53,19 +53,19 @@ crc32_aarch64(const uint64_t *p) {
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
-FTL_AFPFX() *
-FTL_AFPFX()::factory(sdk_table_factory_params_t *params) {
+FtlBaseTable *
+FtlBaseTable::factory(sdk_table_factory_params_t *params) {
     void *mem = NULL;
-    FTL_AFPFX() *f = NULL;
+    FtlBaseTable *f = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
     //FTL_API_BEGIN("NewTable");
-    mem = (FTL_AFPFX() *) SDK_CALLOC(SDK_MEM_ALLOC_FTL, sizeof(FTL_AFPFX()));
+    mem = (FtlBaseTable *) SDK_CALLOC(SDK_MEM_ALLOC_FTL, sizeof(FtlBaseTable));
     if (mem) {
-        f = new (mem) FTL_AFPFX()();
+        f = new (mem) FtlBaseTable();
         ret = f->init_(params);
         if (ret != SDK_RET_OK) {
-            f->~FTL_AFPFX()();
+            f->~FtlBaseTable();
             SDK_FREE(SDK_MEM_ALLOC_FTL, mem);
             f = NULL;
         }
@@ -78,8 +78,9 @@ FTL_AFPFX()::factory(sdk_table_factory_params_t *params) {
 }
 
 sdk_ret_t
-FTL_AFPFX()::init_(sdk_table_factory_params_t *params) {
+FtlBaseTable::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
+    Apictx *apictx;
     p4pd_table_properties_t tinfo, ctinfo;
     thread_id_ = params->thread_id;
 
@@ -134,7 +135,7 @@ skip_props:
         goto skip_tables;
     }
 
-    main_table_ = FTL_MAKE_AFTYPE(main_table)::factory(props_);
+    main_table_ = MainTable::factory(props_);
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
 
     FTL_TRACE_INFO("Creating Flow table.");
@@ -151,6 +152,14 @@ skip_props:
 
 skip_tables:
 
+    for (int i = 0; i < FTL_MAX_API_CONTEXTS+1; i++) {
+        apictx = &apictx_[i];
+        memset (apictx, 0, sizeof(Apictx));
+        apictx->entry = params->entry_alloc_cb(0);
+        if (apictx->entry == NULL) {
+            return SDK_RET_OOM;
+        }
+    }
     return SDK_RET_OK;
 }
 
@@ -158,13 +167,14 @@ skip_tables:
 // ftl Destructor
 //---------------------------------------------------------------------------
 void
-FTL_AFPFX()::destroy(FTL_AFPFX() *t) {
+FtlBaseTable::destroy(FtlBaseTable *t) {
     FTL_API_BEGIN("DestroyTable");
     FTL_TRACE_VERBOSE("%p", t);
-    FTL_MAKE_AFTYPE(main_table)::destroy_(static_cast<FTL_MAKE_AFTYPE(main_table)*>(t->main_table_));
+    MainTable::destroy_(static_cast<MainTable*>(t->main_table_));
     FTL_API_END("DestroyTable", SDK_RET_OK);
     t->main_table_ = NULL;
     t->props_ = NULL;
+    // TODO free entry
 }
 
 //---------------------------------------------------------------------------
@@ -172,27 +182,46 @@ FTL_AFPFX()::destroy(FTL_AFPFX() *t) {
 //---------------------------------------------------------------------------
 // TODO
 sdk_ret_t
-FTL_AFPFX()::genhash_(sdk_table_api_params_t *params) {
-    static thread_local uint8_t hashkey[64] = {0};
-    
-    ((FTL_MAKE_AFTYPE(entry_t)*)hashkey)->build_key((FTL_MAKE_AFTYPE(entry_t)*)params->entry);
-    sdk::table::FTL_MAKE_AFTYPE(internal)::FTL_MAKE_AFTYPE(swizzle)((FTL_MAKE_AFTYPE(entry_t)*)hashkey);
+FtlBaseTable::genhash_(sdk_table_api_params_t *params) {
+    static thread_local base_table_entry_t *hashkey = NULL;
+    static thread_local base_table_entry_t *hashkey32 = NULL;
+    static thread_local base_table_entry_t *hashkey64 = NULL;
+
+    if (params->entry_size == 32) {
+        hashkey = hashkey32;
+    } else {
+        hashkey = hashkey64;
+    }
+
+    if (hashkey == NULL) {
+        hashkey = params->entry->construct(64 + sizeof(base_table_entry_t));
+        if (hashkey == NULL) {
+            return SDK_RET_OOM;
+        }
+    }
+
+    hashkey->build_key(params->entry);
+    sdk::table::internal::base_table_entry_swizzle(
+                        get_sw_entry_pointer(hashkey), params->entry_size);
 
     if (!params->hash_valid) {
 #ifdef SIM
         static thread_local char buff[512];
-        ((FTL_MAKE_AFTYPE(entry_t)*)params->entry)->tostr(buff, sizeof(buff));
+        params->entry->tostr(buff, sizeof(buff));
         FTL_TRACE_VERBOSE("Input Entry = [%s]", buff);
-        params->hash_32b = sdk::utils::crc32((uint8_t *)&hashkey,
-                                             sizeof(ftlv6_entry_t),
-                                             props_->hash_poly);
+        params->hash_32b = sdk::utils::crc32(
+                                    (uint8_t *)get_sw_entry_pointer(hashkey),
+                                    64,
+                                    props_->hash_poly);
 #else
-        params->hash_32b = crc32_aarch64((uint64_t *)&hashkey);
+        params->hash_32b = crc32_aarch64(
+                                (uint64_t *)get_sw_entry_pointer(hashkey));
 #endif
         params->hash_valid = true;
     }
 
-    FTL_TRACE_VERBOSE("[%s] => H:%#x", ftlu_rawstr(hashkey, 64),
+    FTL_TRACE_VERBOSE("[%s] => H:%#x",
+                      ftlu_rawstr((uint8_t *)get_sw_entry_pointer(hashkey), 64),
                       params->hash_32b);
     return SDK_RET_OK;
 }
@@ -201,7 +230,7 @@ FTL_AFPFX()::genhash_(sdk_table_api_params_t *params) {
 // ftl: Create API context. This is used by all APIs
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::ctxinit_(sdk_table_api_op_t op,
+FtlBaseTable::ctxinit_(sdk_table_api_op_t op,
               sdk_table_api_params_t *params) {
     FTL_TRACE_VERBOSE("op:%d", op);
     if (SDK_TABLE_API_OP_IS_CRUD(op)) {
@@ -212,7 +241,8 @@ FTL_AFPFX()::ctxinit_(sdk_table_api_op_t op,
         }
     }
 
-    apictx_[0].init(op, params, props_, &tstats_, thread_id_);
+    apictx_[0].init(op, params, props_, &tstats_, thread_id_,
+                    params->entry_size);
     return SDK_RET_OK;
 }
 
@@ -220,7 +250,7 @@ FTL_AFPFX()::ctxinit_(sdk_table_api_op_t op,
 // ftl Insert entry to ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::insert(sdk_table_api_params_t *params) {
+FtlBaseTable::insert(sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -232,7 +262,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_INSERT, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->insert_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->insert_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table insert r:%d", ret);
 
 done:
@@ -246,7 +276,7 @@ done:
 // ftl Update entry to ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::update(sdk_table_api_params_t *params) {
+FtlBaseTable::update(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -258,7 +288,7 @@ FTL_AFPFX()::update(sdk_table_api_params_t *params) {
         goto update_return;
     }
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->update_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->update_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("update_ failed. ret:%d", ret);
         goto update_return;
@@ -274,7 +304,7 @@ update_return:
 // ftl Remove entry from ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::remove(sdk_table_api_params_t *params) {
+FtlBaseTable::remove(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -286,7 +316,7 @@ FTL_AFPFX()::remove(sdk_table_api_params_t *params) {
         goto remove_return;
     }
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->remove_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->remove_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
         goto remove_return;
@@ -302,7 +332,7 @@ remove_return:
 // ftl Get entry from ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::get(sdk_table_api_params_t *params) {
+FtlBaseTable::get(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -314,7 +344,7 @@ FTL_AFPFX()::get(sdk_table_api_params_t *params) {
         goto get_return;
     }
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->get_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->get_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("get_ failed. ret:%d", ret);
         goto get_return;
@@ -331,7 +361,7 @@ get_return:
 // As stats are maintained per thread, needs to call from each thread.
 //---------------------------------------------------------------------------
 sdk_ret_t
-FTL_AFPFX()::stats_get(sdk_table_api_stats_t *api_stats,
+FtlBaseTable::stats_get(sdk_table_api_stats_t *api_stats,
                        sdk_table_stats_t *table_stats) {
     FTL_API_BEGIN_();
     api_stats_.get(api_stats);
@@ -342,7 +372,7 @@ FTL_AFPFX()::stats_get(sdk_table_api_stats_t *api_stats,
 }
 
 sdk_ret_t
-FTL_AFPFX()::iterate(sdk_table_api_params_t *params) {
+FtlBaseTable::iterate(sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -352,7 +382,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->iterate_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->iterate_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "iterate r:%d", ret);
 
 done:
@@ -361,7 +391,7 @@ done:
 }
 
 sdk_ret_t
-FTL_AFPFX()::clear(bool clear_global_state,
+FtlBaseTable::clear(bool clear_global_state,
            bool clear_thread_local_state) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
@@ -372,7 +402,7 @@ __label__ done;
 
     apictx_[0].clear_global_state = clear_global_state;
     apictx_[0].clear_thread_local_state = clear_thread_local_state;
-    ret = static_cast<FTL_MAKE_AFTYPE(main_table)*>(main_table_)->clear_(apictx_);
+    ret = static_cast<MainTable*>(main_table_)->clear_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "clear r:%d", ret);
     
     if (clear_thread_local_state) {
@@ -385,7 +415,7 @@ done:
 }
 
 sdk_ret_t
-FTL_AFPFX()::clear_stats(void) {
+FtlBaseTable::clear_stats(void) {
     FTL_API_BEGIN_();
 
     api_stats_.clear();

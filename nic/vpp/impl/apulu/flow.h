@@ -175,40 +175,31 @@ pds_flow_appdata2str (void *appdata)
 {
     static char str[512] = {0};
     flow_appdata_t *d = (flow_appdata_t *)appdata;
-    sprintf(str, "session_id:%d flow_role:%d",
-            d->session_id, d->flow_role);
+    sprintf(str, "session_index:%d flow_role:%d",
+            d->session_index, d->flow_role);
     return str;
 }
 
 always_inline void
-pds_flow_extract_nexthop_info(void * local_entry,
-                              void * remote_entry,
-                              vlib_buffer_t *p0,
+pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
                               u8 is_ip4)
 {
     u32 nexthop = vnet_buffer(p0)->pds_data.nexthop;
 
     //TODO: Rflow nexthop
     if (is_ip4) {
-        ftlv4_entry_t *local = (ftlv4_entry_t *)local_entry;
         if (nexthop) {
-            local->nexthop_id = nexthop & 0xff;
-            local->nexthop_type = (nexthop >> 16) & 0x3;
-            local->nexthop_valid = 1;
+            ftlv4_cache_set_nexthop(nexthop & 0xff, ((nexthop >> 16) & 0x3), 1);
         } else {
-            local->nexthop_id = local->nexthop_type = local->nexthop_valid = 0;
+            ftlv4_cache_set_nexthop(0, 0, 0);
         }
     } else {
-        ftlv6_entry_t *local = (ftlv6_entry_t *)local_entry;
         if (nexthop) {
-            local->nexthop_id = nexthop & 0xff;
-            local->nexthop_type = (nexthop >> 16) & 0x3;
-            local->nexthop_valid = 1;
+            ftlv6_cache_set_nexthop(nexthop & 0xff, ((nexthop >> 16) & 0x3), 1);
         } else {
-            local->nexthop_id = local->nexthop_type = local->nexthop_valid = 0;
+            ftlv6_cache_set_nexthop(0, 0, 0);
         }
     }
-
 }
 
 always_inline void

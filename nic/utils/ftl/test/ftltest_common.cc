@@ -27,7 +27,7 @@ gencrc32 (bool nextindex, bool nexthint)
 }
 
 void
-fill_entry (uint32_t index, ftlv6_entry_t *entry)
+fill_entry (uint32_t index, flow_hash_entry_t *entry)
 {
     entry->set_key_metadata_proto(17);
     entry->key_metadata_sport = index;
@@ -52,7 +52,7 @@ fill_entry (uint32_t index, ftlv6_entry_t *entry)
 #define POOL_SIZE 16
 sdk_table_api_params_t *
 gen_entry (uint32_t index, bool with_hash, uint32_t hash_32b) {
-    static ftlv6_entry_t entry[POOL_SIZE];
+    static flow_hash_entry_t entry[POOL_SIZE];
     static sdk_table_api_params_t params[POOL_SIZE];
     static uint32_t pidx = 0;
 

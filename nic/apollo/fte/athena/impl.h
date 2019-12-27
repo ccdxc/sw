@@ -52,7 +52,7 @@ fte_flow_appdata2str (void *appdata)
 }
 
 static void
-fte_ftlv4_set_session_index (ftlv4_entry_t *entry, uint32_t session)
+fte_ftlv4_set_session_index (ipv4_flow_hash_entry_t *entry, uint32_t session)
 {
     entry->set_session_index(session);
 }

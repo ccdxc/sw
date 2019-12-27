@@ -4,17 +4,17 @@
 
 #include <stdint.h>
 #include <cstddef>
+#include <cstring>
 
 #include <nic/sdk/include/sdk/table.hpp>
-#include <cstring>
-#include "nic/utils/ftl/ftl_structs.hpp"
 #include <nic/utils/ftl/ftlv4.hpp>
 #include <nic/utils/ftl/ftlv6.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include <pd_utils.h>
-#include "ftl_wrapper.h"
+#include <ftl_wrapper.h>
+#include <ftl_utils.hpp>
 
 using namespace sdk;
 using namespace sdk::table;
@@ -25,10 +25,30 @@ typedef char* (*appdata2str_t)(void *data);
 
 extern "C" {
 
-int skip_ftl_program = 0;
-int skip_session_program = 0;
-
 #define FTL_ENTRY_STR_MAX   2048
+
+// max 256 packets are processed by VPP, so 512 flows
+#define MAX_FLOW_ENTRIES_PER_BATCH 512
+
+typedef struct ftlv4_cache_s {
+    ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
+    uint32_t ip4_hash[MAX_FLOW_ENTRIES_PER_BATCH];
+    uint16_t count;
+} ftlv4_cache_t;
+
+typedef struct ftlv6_cache_s {
+    flow_hash_entry_t ip6_flow[MAX_FLOW_ENTRIES_PER_BATCH]; 
+    uint32_t ip6_hash[MAX_FLOW_ENTRIES_PER_BATCH];
+    uint16_t count;
+} ftlv6_cache_t;
+
+thread_local ftlv4_cache_t g_ip4_flow_cache;
+thread_local ftlv6_cache_t g_ip6_flow_cache;
+
+p4pd_table_properties_t g_session_tbl_ctx;
+
+static int skip_ftl_program = 0;
+static int skip_session_program = 0;
 
 void
 set_skip_ftl_program(int val)
@@ -53,8 +73,6 @@ get_skip_session_program(void)
 {
     return skip_session_program;
 }
-
-p4pd_table_properties_t g_session_tbl_ctx;
 
 int
 initialize_flow(void)
@@ -217,12 +235,13 @@ ftlv4_create(void *key2str,
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
+    factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
 
     return ftlv4::factory(&factory_params);
 }
 
-int
-ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
+static int
+ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -235,14 +254,15 @@ ftlv4_insert(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
         params.hash_valid = 1;
     }
     params.entry = entry;
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
     return 0;
 }
 
-int
-ftlv4_remove(ftlv4 *obj, ftlv4_entry_t *entry, uint32_t hash)
+static int
+ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -278,12 +298,29 @@ ftlv4_delete(ftlv4 *obj)
     ftlv4::destroy(obj);
 }
 
+static void 
+ftlv4_set_key(ipv4_flow_hash_entry_t *entry,
+              uint32_t sip,
+              uint32_t dip,
+              uint8_t ip_proto,
+              uint16_t src_port,
+              uint16_t dst_port,
+              uint16_t lookup_id)
+{
+    entry->set_key_metadata_ipv4_dst(dip);
+    entry->set_key_metadata_ipv4_src(sip);
+    entry->set_key_metadata_proto(ip_proto);
+    entry->set_key_metadata_dport(dst_port);
+    entry->set_key_metadata_sport(src_port);
+    ftlv4_set_lookup_id(entry, lookup_id);
+}
+
 uint32_t ftlv4_entry_count;
 
 static void
 ftlv4_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
-    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+    ipv4_flow_hash_entry_t *hwentry =  (ipv4_flow_hash_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
     char buf[FTL_ENTRY_STR_MAX];
 
@@ -298,7 +335,7 @@ ftlv4_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 static void
 ftlv4_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
 {
-    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+    ipv4_flow_hash_entry_t *hwentry =  (ipv4_flow_hash_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
     uint8_t *entry;
     uint32_t size;
@@ -341,7 +378,7 @@ ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
     ftlv4_entry_count = 0;
 
     if (!detail) {
-        ftlv4_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
+        // ipv4_flow_hash_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
         fprintf(logfp, "%s", buf);
     }
 
@@ -370,7 +407,7 @@ ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
     sdk_ret_t ret;
     sdk_table_api_params_t params = {0};
     int retcode = 0;
-    ftlv4_entry_t entry;
+    ipv4_flow_hash_entry_t entry;
 
     entry.clear();
     ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
@@ -400,7 +437,7 @@ ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len)
 static void
 ftlv4_hw_entry_count_cb(sdk_table_api_params_t *params)
 {
-    ftlv4_entry_t *hwentry =  (ftlv4_entry_t *) params->entry;
+    ipv4_flow_hash_entry_t *hwentry =  (ipv4_flow_hash_entry_t *) params->entry;
 
     if (hwentry->entry_valid) {
         uint64_t *count = (uint64_t *)params->cbdata;
@@ -452,17 +489,38 @@ ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
     ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 
-void ftlv4_set_session_index(ftlv4_entry_t *entry, uint32_t session)
+static void
+ftlv4_set_session_index(ipv4_flow_hash_entry_t *entry, uint32_t session)
 {
     entry->set_session_index(session);
 }
 
-void ftlv4_set_epoch(ftlv4_entry_t *entry, uint8_t val)
+static void
+ftlv4_set_epoch(ipv4_flow_hash_entry_t *entry, uint8_t val)
 {
     entry->set_epoch(val);
 }
 
-void ftlv4_set_key(ftlv4_entry_t *entry,
+void
+ftlv4_cache_set_hash(uint32_t val)
+{
+    g_ip4_flow_cache.ip4_hash[g_ip4_flow_cache.count] = val;
+}
+
+static uint32_t
+ftlv4_get_session_id(ipv4_flow_hash_entry_t *entry)
+{
+    return entry->get_session_index();
+}
+
+void
+ftlv4_cache_batch_init(void)
+{
+   g_ip4_flow_cache.count = 0;
+}
+
+void
+ftlv4_cache_set_key(
              uint32_t sip,
              uint32_t dip,
              uint8_t ip_proto,
@@ -470,13 +528,73 @@ void ftlv4_set_key(ftlv4_entry_t *entry,
              uint16_t dst_port,
              uint16_t lookup_id)
 {
-    entry->set_key(sip, dip, ip_proto, src_port, dst_port, lookup_id);
+   ftlv4_set_key(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+                 sip, dip, ip_proto, src_port, dst_port, lookup_id);
+}
+
+void
+ftlv4_cache_set_nexthop(
+             uint32_t nhid,
+             uint32_t nhtype,
+             uint8_t nh_valid)
+{
+   ftlv4_set_nexthop(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+                     nhid, nhtype, nh_valid);
+}
+
+int
+ftlv4_cache_get_count(void)
+{
+    return g_ip4_flow_cache.count;
+}
+
+void
+ftlv4_cache_advance_count(int val)
+{
+    g_ip4_flow_cache.count += val;
+}
+
+int
+ftlv4_cache_program_index(ftlv4 *obj, uint16_t id)
+{
+    return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,
+                        g_ip4_flow_cache.ip4_hash[id]);
+}
+
+int
+ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id)
+{
+    return ftlv4_remove(obj, g_ip4_flow_cache.ip4_flow + id,
+                        g_ip4_flow_cache.ip4_hash[id]);
+}
+
+void
+ftlv4_cache_set_session_index(uint32_t val)
+{
+    ftlv4_set_session_index(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
 }
 
 uint32_t
-ftlv4_get_session_id(ftlv4_entry_t *entry)
+ftlv4_cache_get_session_index(int id)
 {
-    return entry->get_session_index();
+    return ftlv4_get_session_id(g_ip4_flow_cache.ip4_flow + id);
+}
+
+void
+ftlv4_cache_set_epoch(uint8_t val)
+{
+    ftlv4_set_epoch(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
+}
+
+void
+ftlv4_cache_batch_flush(ftlv4 *obj, int *status)
+{
+    int i;
+
+    for (i = 0; i < g_ip4_flow_cache.count; i++) {
+       status[i] = ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + i,
+                                g_ip4_flow_cache.ip4_hash[i]);
+    }
 }
 
 ftlv6 *
@@ -492,12 +610,13 @@ ftlv6_create(void *key2str,
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
+    factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
 
     return ftlv6::factory(&factory_params);
 }
 
-int
-ftlv6_insert(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash)
+static int
+ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -510,14 +629,15 @@ ftlv6_insert(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash)
         params.hash_valid = 1;
     }
     params.entry = entry;
+    params.entry_size = flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
     return 0;
 }
 
-int
-ftlv6_remove(ftlv6 *obj, ftlv6_entry_t *entry, uint32_t hash)
+static int
+ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -553,12 +673,31 @@ ftlv6_delete(ftlv6 *obj)
     ftlv6::destroy(obj);
 }
 
+static
+void ftlv6_set_key(flow_hash_entry_t *entry,
+                   uint8_t *sip,
+                   uint8_t *dip,
+                   uint8_t ip_proto,
+                   uint16_t src_port,
+                   uint16_t dst_port,
+                   uint16_t lookup_id,
+                   uint8_t key_type)
+{
+    entry->set_key_metadata_dst(dip);
+    entry->set_key_metadata_src(sip);
+    entry->set_key_metadata_proto(ip_proto);
+    entry->set_key_metadata_dport(dst_port);
+    entry->set_key_metadata_sport(src_port);
+    ftlv6_set_lookup_id(entry, lookup_id);
+    entry->set_key_metadata_ktype(key_type);
+}
+
 uint32_t ftlv6_entry_count;
 
 static void
 ftlv6_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 {
-    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+    flow_hash_entry_t *hwentry =  (flow_hash_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
     char buf[FTL_ENTRY_STR_MAX];
 
@@ -573,7 +712,7 @@ ftlv6_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
 static void
 ftlv6_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
 {
-    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+    flow_hash_entry_t *hwentry =  (flow_hash_entry_t *) params->entry;
     FILE *fp = (FILE *)params->cbdata;
     uint8_t *entry;
     uint32_t size;
@@ -615,7 +754,7 @@ ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
     params.force_hwread = false;
     ftlv6_entry_count = 0;
 
-    ftlv6_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
+    // flow_hash_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
     fprintf(logfp, "%s", buf);
 
     ret = obj->iterate(&params);
@@ -641,8 +780,9 @@ ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
     sdk_ret_t ret;
     sdk_table_api_params_t params = {0};
     int retcode = 0;
-    ftlv6_entry_t entry = {0};
+    flow_hash_entry_t entry;
 
+    entry.clear();
     ftlv6_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id, 0);
     params.entry = &entry;
 
@@ -660,7 +800,7 @@ done:
 static void
 ftlv6_hw_entry_count_cb(sdk_table_api_params_t *params)
 {
-    ftlv6_entry_t *hwentry =  (ftlv6_entry_t *) params->entry;
+    flow_hash_entry_t *hwentry =  (flow_hash_entry_t *) params->entry;
 
     if (hwentry->entry_valid) {
         uint64_t *count = (uint64_t *)params->cbdata;
@@ -722,34 +862,112 @@ ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
     ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 
-void ftlv6_set_session_index(ftlv6_entry_t *entry, uint32_t session)
+static void
+ftlv6_set_session_index(flow_hash_entry_t *entry, uint32_t session)
 {
     entry->set_session_index(session);
 }
 
-void ftlv6_set_epoch(ftlv6_entry_t *entry, uint8_t val)
+static void
+ftlv6_set_epoch(flow_hash_entry_t *entry, uint8_t val)
 {
     entry->set_epoch(val);
 }
 
-void ftlv6_set_key(ftlv6_entry_t *entry,
-                   uint8_t *sip,
-                   uint8_t *dip,
-                   uint8_t ip_proto,
-                   uint16_t src_port,
-                   uint16_t dst_port,
-                   uint16_t lookup_id,
-                   uint8_t key_type)
-{   
-    entry->set_key(sip, dip, ip_proto,
-                   src_port, dst_port,
-                   lookup_id, key_type);
+static uint32_t
+ftlv6_get_session_id(flow_hash_entry_t *entry)
+{
+    return entry->get_session_index();
+}
+
+void
+ftlv6_cache_batch_init(void)
+{
+   g_ip6_flow_cache.count = 0;
+}
+
+void
+ftlv6_cache_set_key(
+             uint8_t *sip,
+             uint8_t *dip,
+             uint8_t ip_proto,
+             uint16_t src_port,
+             uint16_t dst_port,
+             uint16_t lookup_id)
+{
+   ftlv6_set_key(g_ip6_flow_cache.ip6_flow + g_ip6_flow_cache.count,
+                 sip, dip, ip_proto, src_port, dst_port, lookup_id, 0);
+}
+
+void
+ftlv6_cache_set_nexthop(
+             uint32_t nhid,
+             uint32_t nhtype,
+             uint8_t nh_valid)
+{
+   ftlv6_set_nexthop(g_ip6_flow_cache.ip6_flow + g_ip6_flow_cache.count,
+                     nhid, nhtype, nh_valid);
+}
+
+int
+ftlv6_cache_get_count(void)
+{
+    return g_ip6_flow_cache.count;
+}
+
+void
+ftlv6_cache_advance_count(int val)
+{
+    g_ip6_flow_cache.count += val;
+}
+
+int
+ftlv6_cache_program_index(ftlv6 *obj, uint16_t id)
+{
+    return ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + id,
+                        g_ip6_flow_cache.ip6_hash[id]);
+}
+
+int
+ftlv6_cache_delete_index(ftlv6 *obj, uint16_t id)
+{
+    return ftlv6_remove(obj, g_ip6_flow_cache.ip6_flow + id,
+                        g_ip6_flow_cache.ip6_hash[id]);
+}
+
+void
+ftlv6_cache_set_session_index(uint32_t val)
+{
+    ftlv6_set_session_index(g_ip6_flow_cache.ip6_flow + g_ip6_flow_cache.count, val);
 }
 
 uint32_t
-ftlv6_get_session_id(ftlv6_entry_t *entry)
+ftlv6_cache_get_session_index(int id)
 {
-    return entry->get_session_index();
+    return ftlv6_get_session_id(g_ip6_flow_cache.ip6_flow + id);
+}
+
+void
+ftlv6_cache_set_epoch(uint8_t val)
+{
+    ftlv6_set_epoch(g_ip6_flow_cache.ip6_flow + g_ip6_flow_cache.count, val);
+}
+
+void
+ftlv6_cache_set_hash(uint32_t val)
+{
+    g_ip6_flow_cache.ip6_hash[g_ip6_flow_cache.count] = val;
+}
+
+void
+ftlv6_cache_batch_flush(ftlv6 *obj, int *status)
+{
+    int i;
+
+    for (i = 0; i < g_ip6_flow_cache.count; i++) {
+       status[i] = ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + i,
+                                g_ip6_flow_cache.ip6_hash[i]);
+    }
 }
 
 }

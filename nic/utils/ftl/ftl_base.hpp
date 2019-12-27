@@ -1,6 +1,10 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+
+#ifndef __FTL_BASE_HPP__
+#define __FTL_BASE_HPP__
+
 #ifndef FTL_ADDRESS_PREFIX
 #error ftl.hpp header cannot be included directly.
 #endif
@@ -11,13 +15,13 @@
 namespace sdk {
 namespace table {
 
-class FTL_AFPFX() {
+class FtlBaseTable {
 private:
-    static sdk::table::properties_t *props_;
-    static void *main_table_;
+    sdk::table::properties_t *props_;
+    void *main_table_;
     apistats api_stats_;
     tablestats tstats_;
-    FTL_MAKE_AFTYPE(apictx) apictx_[FTL_MAX_API_CONTEXTS + 1];
+    Apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
     uint32_t thread_id_;
 
 private:
@@ -27,11 +31,11 @@ private:
                        sdk_table_api_params_t *params);
 
 public:
-    static FTL_AFPFX() *factory(sdk_table_factory_params_t *params);
-    static void destroy(FTL_AFPFX() *f);
+    static FtlBaseTable *factory(sdk_table_factory_params_t *params);
+    static void destroy(FtlBaseTable *f);
 
-    FTL_AFPFX()() {}
-    ~FTL_AFPFX()() {}
+    FtlBaseTable() {}
+    ~FtlBaseTable() {}
 
     sdk_ret_t txn_start();
     sdk_ret_t txn_end();
@@ -48,3 +52,5 @@ public:
 
 }   // namespace table
 }   // namespace sdk
+
+#endif    // __FTL_BASE_HPP__
