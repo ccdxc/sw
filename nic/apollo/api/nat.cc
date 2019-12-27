@@ -33,6 +33,9 @@ nat_port_block::factory(pds_nat_port_block_spec_t *spec) {
 
     // create NAT port block entry with defaults, if any
     port_block = nat_db()->alloc();
+    if (port_block) {
+        new (port_block) nat_port_block();
+    }
     return port_block;
 }
 

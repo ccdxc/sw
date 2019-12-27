@@ -78,7 +78,7 @@ namespace impl {
 #define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \
 {                                                                            \
     memset((key), 0, sizeof(*(key)));                                        \
-    (key)->p4e_i2e_mapping_lkp_id = vpc_hw_id;                               \
+    (key)->p4e_i2e_mapping_lkp_id = (vpc_hw_id);                             \
     if ((ip)->af == IP_AF_IPV6) {                                            \
         (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV6;                     \
         sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr,                    \
@@ -88,6 +88,14 @@ namespace impl {
         memcpy((key)->p4e_i2e_mapping_lkp_addr,                              \
                &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
+}
+
+#define PDS_IMPL_FILL_L2_MAPPING_SWKEY(key, bd_hw_id, mac)                   \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->p4e_i2e_mapping_lkp_id = (bd_hw_id);                              \
+    (key)->p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;                          \
+    sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr, (mac), ETH_ADDR_LEN);  \
 }
 
 #define nat_action action_u.nat_nat_rewrite

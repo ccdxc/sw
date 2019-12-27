@@ -33,6 +33,9 @@ security_profile::factory(pds_security_profile_spec_t *spec) {
 
     // create security profile entry with defaults, if any
     profile = policy_db()->alloc_security_profile();
+    if (profile) {
+        new (profile) security_profile();
+    }
     return profile;
 }
 

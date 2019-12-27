@@ -33,6 +33,9 @@ dhcp_relay::factory(pds_dhcp_relay_spec_t *spec) {
 
     // create DHCP relay entry with defaults, if any
     relay = dhcp_db()->alloc_relay();
+    if (relay) {
+        new (relay) dhcp_relay();
+    }
     return relay;
 }
 
@@ -147,6 +150,9 @@ dhcp_policy::factory(pds_dhcp_policy_spec_t *spec) {
 
     // create DHCP policy entry with defaults, if any
     policy = dhcp_db()->alloc_policy();
+    if (policy) {
+        new (policy) dhcp_policy();
+    }
     return policy;
 }
 

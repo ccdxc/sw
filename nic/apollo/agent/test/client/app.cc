@@ -74,6 +74,7 @@ std::unique_ptr<pds::NhSvc::Stub>                g_nexthop_stub_;
 std::unique_ptr<pds::PolicerSvc::Stub>           g_policer_stub_;
 std::unique_ptr<pds::IfSvc::Stub>                g_if_stub_;
 std::unique_ptr<pds::Svc::Stub>                  g_svc_mapping_stub_;
+std::unique_ptr<pds::DHCPSvc::Stub>              g_dhcp_stub_;
 
 pds::RouteTableRequest        g_route_table_req;
 pds::SecurityPolicyRequest    g_policy_req;
@@ -688,6 +689,8 @@ test_app_init (void)
     g_policer_stub_ = pds::PolicerSvc::NewStub(channel);
     g_nexthop_stub_ = pds::NhSvc::NewStub(channel);
     g_if_stub_ = pds::IfSvc::NewStub(channel);
+    g_nat_stub_ = pds::NatSvc::NewStub(channel);
+    g_dhcp_stub_ = pds::DHCPSvc::NewStub(channel);
     g_svc_mapping_stub_ = pds::Svc::NewStub(channel);
 
     return;
