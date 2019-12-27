@@ -178,20 +178,6 @@
 #define TCP_RST_WITH_INVALID_ACK_NUM   0x2000
 
 /*****************************************************************************/
-/* ICMP related                                                              */
-/*****************************************************************************/
-#define ICMP_NEIGHBOR_SOLICITATION     135
-#define ICMP_NEIGHBOR_ADVERTISEMENT    136
-#define ICMP_ECHO_REQ_TYPE_CODE        0x0800
-#define ICMP_ECHO_REPLY_TYPE_CODE      0x0000
-
-/*****************************************************************************/
-/* ICMPv6 related                                                              */
-/*****************************************************************************/
-#define ICMPV6_ECHO_REQ_TYPE_CODE        0x8000
-#define ICMPV6_ECHO_REPLY_TYPE_CODE      0x8100
-
-/*****************************************************************************/
 /* DHCP related                                                              */
 /*****************************************************************************/
 #define DHCP_CLIENT_PORT               67

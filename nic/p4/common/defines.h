@@ -102,6 +102,14 @@
 #define TCP_FLAG_FIN                   0x01
 
 /*****************************************************************************/
+/* ICMP type code                                                            */
+/*****************************************************************************/
+#define ICMP_ECHO_REQ_TYPE_CODE         0x0800
+#define ICMP_ECHO_REPLY_TYPE_CODE       0x0000
+#define ICMP6_ECHO_REQ_TYPE_CODE        0x8000
+#define ICMP6_ECHO_REPLY_TYPE_CODE      0x8100
+
+/*****************************************************************************/
 /* Tunnel types                                                              */
 /*****************************************************************************/
 #define INGRESS_TUNNEL_TYPE_NONE        0

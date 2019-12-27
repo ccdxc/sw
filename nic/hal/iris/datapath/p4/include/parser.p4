@@ -1005,8 +1005,8 @@ parser parse_icmpv6 {
     extract(icmp);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.typeCode);
     return select(latest.typeCode) {
-        ICMPV6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
-        ICMPV6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
+        ICMP6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
+        ICMP6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
         default: ingress;
     }
 }

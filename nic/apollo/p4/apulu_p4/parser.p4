@@ -101,6 +101,7 @@ header udp_t udp_2;
 
 header tcp_t tcp;
 header icmp_t icmp;
+header icmp_echo_t icmp_echo;
 
 /******************************************************************************
  * Parser OHI                                                                 *
@@ -206,7 +207,7 @@ parser parse_ingress_packet {
         ETHERTYPE_IPV4 : parse_ipv4_1;
         ETHERTYPE_IPV6 : parse_ipv6_1;
         ETHERTYPE_ARP  : parse_arp;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -216,7 +217,7 @@ parser parse_ctag_1 {
         ETHERTYPE_IPV4 : parse_ipv4_1;
         ETHERTYPE_IPV6 : parse_ipv6_1;
         ETHERTYPE_ARP  : parse_arp;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -238,7 +239,7 @@ parser parse_ipv4_1_split {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp_1;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -247,7 +248,7 @@ parser parse_ipv6_1 {
     set_metadata(offset_metadata.l3_1, current + 0);
     set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
     return select(latest.nextHdr) {
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmp6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp_1;
         default : ingress;
@@ -257,8 +258,28 @@ parser parse_ipv6_1 {
 parser parse_icmp {
     extract(icmp);
     set_metadata(offset_metadata.l4_2, current + 0);
-    set_metadata(key_metadata.parsed_sport, latest.icmp_type);
-    set_metadata(key_metadata.parsed_dport, latest.icmp_code);
+    set_metadata(key_metadata.parsed_dport, latest.typeCode);
+    return select(latest.typeCode) {
+        ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo;
+        ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo;
+        default : ingress;
+    }
+}
+
+parser parse_icmp6 {
+    extract(icmp);
+    set_metadata(offset_metadata.l4_2, current + 0);
+    set_metadata(key_metadata.parsed_dport, latest.typeCode);
+    return select(latest.typeCode) {
+        ICMP6_ECHO_REQ_TYPE_CODE : parse_icmp_echo;
+        ICMP6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo;
+        default : ingress;
+    }
+}
+
+parser parse_icmp_echo {
+    extract(icmp_echo);
+    set_metadata(key_metadata.parsed_sport, latest.identifier);
     return ingress;
 }
 
@@ -276,7 +297,7 @@ parser parse_udp_1 {
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_1;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -295,7 +316,7 @@ parser parse_ethernet_2 {
         ETHERTYPE_CTAG : parse_ctag_2;
         ETHERTYPE_IPV4 : parse_ipv4_2;
         ETHERTYPE_IPV6 : parse_ipv6_2;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -304,7 +325,7 @@ parser parse_ctag_2 {
     return select(latest.etherType) {
         ETHERTYPE_IPV4 : parse_ipv4_2;
         ETHERTYPE_IPV6 : parse_ipv6_2;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -321,7 +342,7 @@ parser parse_ipv4_2_split {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp_2;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -480,7 +501,7 @@ parser parse_egress_packet {
         ETHERTYPE_CTAG : parse_egress_ctag_1;
         ETHERTYPE_IPV4 : parse_egress_ipv4_1;
         ETHERTYPE_IPV6 : parse_egress_ipv6_1;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -490,7 +511,7 @@ parser parse_egress_ctag_1 {
     return select(latest.etherType) {
         ETHERTYPE_IPV4 : parse_egress_ipv4_1;
         ETHERTYPE_IPV6 : parse_egress_ipv6_1;
-        default: ingress;
+        default : ingress;
     }
 }
 
@@ -501,7 +522,7 @@ parser parse_egress_ipv4_1 {
         IP_PROTO_ICMP : parse_egress_icmp;
         IP_PROTO_TCP : parse_egress_tcp;
         IP_PROTO_UDP : parse_egress_udp;
-        default: ingress;
+        default : ingress;
     }
 }
 

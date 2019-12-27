@@ -15,6 +15,8 @@ native_nonip_packet:
     seq             c1, k.ctag_1_valid, TRUE
     phvwr.c1        p.key_metadata_dport, k.ctag_1_etherType
     phvwr.!c1       p.key_metadata_dport, k.ethernet_1_etherType
+    seq             c1, k.arp_valid, TRUE
+    phvwr.c1        p.key_metadata_sport, k.arp_opcode
     phvwr           p.key_metadata_ktype, KEY_TYPE_MAC
     phvwr.e         p.key_metadata_src, k.ethernet_1_srcAddr
     phvwr.f         p.key_metadata_dst, k.ethernet_1_dstAddr
