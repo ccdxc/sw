@@ -64,6 +64,10 @@ pds_ifindex_to_ifname (uint32_t pds_ifindex)
 NBB_LONG 
 ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
 {
+    // ignore the conversion if it is ms generated ifindex
+    if (ms_ifindex_to_pds_type (ms_ifindex) != IF_TYPE_L3) {
+        return ms_ifindex;
+    }
     auto state_thr_ctxt = state_t::thread_context();
     auto phy_port_if_obj = state_thr_ctxt.state()->if_store().get(ms_ifindex);
     SDK_ASSERT (phy_port_if_obj != nullptr);

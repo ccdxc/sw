@@ -27,7 +27,7 @@ uint32_t ms_to_pds_eth_ifindex(uint32_t ms_ifindex);
 NBB_LONG ms_to_lnx_ifindex(NBB_LONG ms_ifindex, NBB_ULONG location);
 NBB_LONG lnx_to_ms_ifindex(NBB_LONG lnx_ifindex, NBB_ULONG location);
 
-static constexpr uint32_t k_ms_lif_if_base = 
+static constexpr uint32_t k_ms_lif_if_base =
     (lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE |
      (AMB_LIM_SOFTWIF_DUMMY << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT) |
      lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
@@ -44,7 +44,6 @@ static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type)
         return pds_ifindex & ~((IF_TYPE_MASK << IF_TYPE_SHIFT) | 
                 (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
     } else if (if_type == IF_TYPE_LIF) {
-        // Get SW ifindex base, add dummy interface type and bd_id and OR it with LIM Index Base
         return (k_ms_lif_if_base + LIF_IFINDEX_TO_LIF_ID(pds_ifindex));
     }
     // Return the pds_ifindex if it is not Eth or Lif
@@ -55,6 +54,13 @@ static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type)
 static inline uint32_t bd_id_to_ms_ifindex (uint32_t bd_id) {
     return ((lim::IfIndexBase::IRB_IF_INDEX_BASE + bd_id +
             (AMB_LIM_BRIDGE_DOMAIN_EVPN << lim::IfIndexBase::IRB_BASE_BIT_SHIFT)) |
+            lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+}
+
+// Used in Mgmt stubs to convert Loopback interface ID to MS SW/Loopback IfIndex
+static inline uint32_t loopback_to_ms_ifindex (uint32_t loopback_if_id) {
+    return ((lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE + loopback_if_id +
+            (AMB_LIM_SOFTWIF_LOOPBACK << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT)) |
             lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
 }
 

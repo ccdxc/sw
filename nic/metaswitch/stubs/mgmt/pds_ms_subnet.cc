@@ -1,14 +1,17 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "gen/proto/cp_interface.pb.h"
 
 //---------------------------------------------------------------------
 // 2 ways in which HAL is updated -
@@ -95,13 +98,11 @@ populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
 
 static void
 populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
-                              pds::LimInterfaceCfgSpec&  req)
+                              pds::LimInterfaceCfgSpec&  req,
+                              uint32_t                   if_index)
 {
-    uint32_t    if_index = 0;
     std::string vrf_name;
 
-    // Get IRB If Index
-    if_index = bd_id_to_ms_ifindex (subnet_spec->key.id);
     // Convert VRF ID to name
     vrf_name = std::to_string (subnet_spec->vpc.id);
 
@@ -145,18 +146,18 @@ populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
 }
 
 static void
-populate_lim_soft_if_spec (pds::LimSoftwIfSpec& req,
-                           pds_ifindex_t        host_ifindex)
+populate_lim_soft_if_spec (pds::CPInterfaceSpec& req,
+                           pds_ifindex_t           host_ifindex)
 {
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
-    req.set_ifindex (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
-    req.set_iftype (AMB_LIM_SOFTWIF_DUMMY);
+    req.set_ifid (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
+    req.set_iftype (pds::CP_IF_TYPE_LIF);
 }
-static void
+
+static types::ApiStatus
 process_subnet_update (pds_subnet_spec_t   *subnet_spec,
                        NBB_LONG            row_status)
 {
-    uint32_t lif_ifindex;
+    uint32_t if_index;
     
     PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
@@ -170,44 +171,52 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     populate_lim_irb_spec (subnet_spec, irb_spec);
     pdsa_set_amb_lim_gen_irb_if (irb_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
+    // Get IRB If Index
+    if_index = bd_id_to_ms_ifindex (subnet_spec->key.id);
+    SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X", 
+                    subnet_spec->key.id, if_index);
+
     // Update IRB to VRF binding
     pds::LimInterfaceCfgSpec lim_if_spec;
-    populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec);
+    populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
     pdsa_set_amb_lim_if_cfg (lim_if_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+
+    // Configure IRB IP Address 
+    ip_prefix_t ip_prefix;
+    ip_prefix.len = subnet_spec->v4_prefix.len;
+    ip_prefix.addr.af = IP_AF_IPV4;
+    ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
+    pds::CPInterfaceAddrSpec lim_addr_spec;
+    populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
+                            pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
+    pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
     if (subnet_spec->host_ifindex != IFINDEX_INVALID) {
         // Create Lif here for now
-        pds::LimSoftwIfSpec lim_swif_spec;
+        pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pdsa_set_amb_lim_software_if (lim_swif_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
         // Get Lif's MS IfIndex
-        lif_ifindex = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
+        if_index = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
         SDK_TRACE_DEBUG ("SW Interface:: PDS IfIndex: 0x%X MSIfIndex: 0x%X",
-                         subnet_spec->host_ifindex, lif_ifindex);
+                          subnet_spec->host_ifindex, if_index);
 
         // Set Lif interface settings
         pds::LimInterfaceCfgSpec lim_swifcfg_spec;
-        populate_lim_swif_cfg_spec (lim_swifcfg_spec, lif_ifindex);
+        populate_lim_swif_cfg_spec (lim_swifcfg_spec, if_index);
         pdsa_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, lif_ifindex);
+        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, if_index);
         pdsa_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
     }
-
-    // TODO: Configure IRB IP Address??
-    // TODO AMB_EVPN_EVI_RT for manual RT
 
     PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
-    pds_ms::mgmt_state_t::ms_response_wait();
-
-    // TODO: read return status from ms_response and send to caller
-   
-    return ;
+    return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 struct subnet_upd_flags_t {
@@ -219,7 +228,7 @@ struct subnet_upd_flags_t {
     }
 };
 
-static void
+static types::ApiStatus
 process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                              const subnet_upd_flags_t& ms_upd_flags,
                              NBB_LONG             row_status)
@@ -239,7 +248,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
         SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS BD If Update", subnet_spec->key.id);  
-        pds::LimSoftwIfSpec lim_swif_spec;
+        pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pdsa_set_amb_lim_software_if (lim_swif_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
@@ -261,18 +270,21 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     if (ms_upd_flags.irb) {
         SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS IRB Update", subnet_spec->key.id);  
-        // TODO: Configure IRB IP Address??
-        // TODO AMB_EVPN_EVI_RT for manual RT
+        // Configure IRB IP Address
+        ip_prefix_t ip_prefix;
+        ip_prefix.len = subnet_spec->v4_prefix.len;
+        ip_prefix.addr.af = IP_AF_IPV4;
+        ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
+        pds::CPInterfaceAddrSpec lim_addr_spec;
+        populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
+                                pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
+        pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
     }
 
     PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
-    pds_ms::mgmt_state_t::ms_response_wait();
-
-    // TODO: read return status from ms_response and send to caller
-   
-    return ;
+    return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 using pdsa_stub::bd_obj_t;
@@ -294,20 +306,36 @@ cache_subnet_spec(pds_subnet_spec_t* spec, bool op_delete)
 sdk_ret_t
 subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    cache_subnet_spec (spec, false /* Create new*/);
-    process_subnet_update (spec, AMB_ROW_ACTIVE);
+    types::ApiStatus ret_status;
 
-    // TODO: Get correct return code from CTM callback
+    cache_subnet_spec (spec, false /* Create new*/);
+    ret_status = process_subnet_update (spec, AMB_ROW_ACTIVE);
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process subnet %d create (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
+
+    SDK_TRACE_DEBUG ("subnet %d create is successfully processed\n", 
+                      spec->key.id);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    process_subnet_update (spec, AMB_ROW_DESTROY);
-    cache_subnet_spec (spec, true /* Delete */);
+    types::ApiStatus ret_status;
 
-    // TODO: Get correct return code from CTM callback
+    ret_status = process_subnet_update (spec, AMB_ROW_DESTROY);
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process subnet %d delete (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
+
+    cache_subnet_spec (spec, true /* Delete */);
+    SDK_TRACE_DEBUG ("subnet %d delete is successfully processed\n", 
+                      spec->key.id);
     return SDK_RET_OK;
 }
 
@@ -316,6 +344,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     subnet_upd_flags_t  ms_upd_flags;
     bool fastpath = false;
+    types::ApiStatus ret_status;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
@@ -367,8 +396,15 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
       // Do Not access/modify global state after this
 
     if (ms_upd_flags) {
-        process_subnet_field_update(spec, ms_upd_flags, AMB_ROW_ACTIVE);
-        // TODO: Get correct return code from CTM callback
+        ret_status = process_subnet_field_update(spec, ms_upd_flags, AMB_ROW_ACTIVE);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process subnet %d field update (error=%d)\n", 
+                            spec->key.id, ret_status);
+            return SDK_RET_ERR;                        
+        }
+
+        SDK_TRACE_DEBUG ("subnet %d field update is successfully processed\n", 
+                          spec->key.id);
     }
     return SDK_RET_OK;
 }

@@ -22,6 +22,7 @@
 #include <gen/proto/bgp.grpc.pb.h>
 #include <gen/proto/evpn.grpc.pb.h>
 #include <gen/proto/staticroute.grpc.pb.h>
+#include <gen/proto/cp_interface.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -39,6 +40,7 @@ static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::StaticRouteSvc::Stub>    g_route_stub_;
+static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -54,6 +56,8 @@ static void create_device_proto_grpc () {
     device_spec.gateway_ip_addr.addr.v4_addr = (htonl(g_test_conf_.local_gwip_addr));
 
     pds_device_api_spec_to_proto (request.mutable_request(), &device_spec);
+
+    printf ("Pushing Device Proto...\n");
     ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -61,7 +65,6 @@ static void create_device_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent Device proto\n");
 }
 
 static void create_l3_intf_proto_grpc () {
@@ -83,6 +86,8 @@ static void create_l3_intf_proto_grpc () {
     pds_if.l3_if_info.port_num = 0;
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
+    
+    printf ("Pushing Interface Proto...\n");
     ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -90,8 +95,6 @@ static void create_l3_intf_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent Interface proto\n");
-
 }
 
 static void create_bgp_global_proto_grpc () {
@@ -105,6 +108,7 @@ static void create_bgp_global_proto_grpc () {
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(g_test_conf_.local_ip_addr);
 
+    printf ("Pushing BGP Global proto...\n");
     ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -112,7 +116,6 @@ static void create_bgp_global_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent BGP Global proto\n");
 }
 
 static void create_evpn_evi_proto_grpc () {
@@ -128,6 +131,7 @@ static void create_evpn_evi_proto_grpc () {
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
     proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
 
+    printf ("Pushing EVPN Evi proto...\n");
     ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -135,7 +139,6 @@ static void create_evpn_evi_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent EVPN Evi proto\n");
 }
 
 static void create_route_proto_grpc () {
@@ -157,6 +160,7 @@ static void create_route_proto_grpc () {
     proto_spec->set_admindist (1);
     proto_spec->set_action (STRT_ACTION_FWD);
 
+    printf ("Pushing Static Route proto...\n");
     ret_status = g_route_stub_->StaticRouteSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -164,7 +168,6 @@ static void create_route_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent Static Route proto\n");
 }
 
 static void create_bgp_peer_proto_grpc () {
@@ -191,6 +194,7 @@ static void create_bgp_peer_proto_grpc () {
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
 
+    printf ("Pushing BGP Peer proto...\n");
     ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -198,7 +202,6 @@ static void create_bgp_peer_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent BGP Peer proto\n");
 }
 
 static void create_subnet_proto_grpc () {
@@ -218,7 +221,11 @@ static void create_subnet_proto_grpc () {
     proto_spec->set_hostifindex(g_test_conf_.lif_if_index);
     proto_spec->set_ipv4virtualrouterip(htonl(0x01010101));
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
+    auto v4_prefix = proto_spec->mutable_v4prefix();
+    v4_prefix->set_len(24);
+    v4_prefix->set_addr (htonl(0xC0A80001));
 
+    printf ("Pushing Subnet proto...\n");
     ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
@@ -226,7 +233,6 @@ static void create_subnet_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent Subnet proto\n");
 }
 
 static void create_vpc_proto_grpc () {
@@ -244,6 +250,7 @@ static void create_vpc_proto_grpc () {
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
 
+    printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
@@ -251,9 +258,51 @@ static void create_vpc_proto_grpc () {
                 response.apistatus());
         exit(1);
     }
-    printf("Sent VPC proto\n");
 }
 
+static void create_loopback_proto_grpc () {
+    CPInterfaceRequest  request;
+    CPInterfaceResponse   response;
+    ClientContext         context;
+    Status                ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_iftype (pds::CPIntfType::CP_IF_TYPE_LOOPBACK);
+    proto_spec->set_ifid (10);
+
+    printf ("Pushing Loopback Interface proto...\n");
+    ret_status = g_intf_stub_->CPInterfaceSpecCreate (&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_loopback_addr_proto_grpc () {
+    CPInterfaceAddrRequest  request;
+    CPInterfaceResponse     response;
+    ClientContext           context;
+    Status                  ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_iftype (pds::CPIntfType::CP_IF_TYPE_LOOPBACK);
+    proto_spec->set_ifid (10);
+    auto ipaddr = proto_spec->mutable_ipaddr();
+    ipaddr->set_af (types::IP_AF_INET);
+    ipaddr->set_v4addr (htonl(0x0A0100FE)); // setting 10.1.1.254
+    proto_spec->set_prefixlen (24);
+    
+    printf ("Pushing Loopback Interface IP Address proto...\n");
+    ret_status = g_intf_stub_->CPInterfaceAddrSpecCreate (&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
 int main(int argc, char** argv) 
 {
     // parse json config file
@@ -271,6 +320,7 @@ int main(int argc, char** argv)
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = StaticRouteSvc::NewStub (channel);
+    g_intf_stub_    = CPInterfaceSvc::NewStub (channel);
 
     // Send protos to grpc server
     create_device_proto_grpc();
@@ -281,6 +331,9 @@ int main(int argc, char** argv)
     create_evpn_evi_proto_grpc();
     create_subnet_proto_grpc();
     create_route_proto_grpc();
+    create_loopback_proto_grpc();
+    create_loopback_addr_proto_grpc();
 
+    printf ("Testapp is successful!\n");
     return 0;
 }

@@ -69,26 +69,3 @@ message LimInterfaceCfgSpec {
     uint32 FwdingMode   = 8 [(venice.pdsaFields) = {Field:"forwarding_mode"}];
     string VrfName      = 9 [(venice.pdsaFields) = {Field:"bind_vrf_name", IgnoreIfEmpty: true}];
 }
-
-message LimInterfaceAddrSpec {
-    option (venice.pdsaSetGlobOpts) = {
-        OidLen: "AMB_LIM_L3_ADDRESS_OID_LEN",
-        Mib:    "limL3InterfaceAddressTable"
-    };
-
-    uint32 EntityIndex       = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_L3_ADDR_ENT_IX_INDEX"}];
-    uint32 IfIndex           = 2 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_LIM_L3_ADDR_IF_IX_INDEX"}];
-    types.IPAddress IfIPAddr = 3 [(venice.pdsaFields) = {Field:"ipaddress"}];
-    uint32 PrefixLen         = 4 [(venice.pdsaFields) = {Field:"prefix_len"}];
-}
-
-message LimSoftwIfSpec {
-    option (venice.pdsaSetGlobOpts) = {
-        OidLen: "AMB_LIM_SOFTWIF_OID_LEN",
-        Mib:    "limSoftwareInterfaceTable"
-    };
-
-    uint32 EntityIndex = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_ENT_IX_INDEX"}];
-    uint32 IfIndex     = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
-    uint32 IfType      = 3 [(venice.pdsaFields) = {Field:"type", SetKeyOidIndex: "AMB_LIM_SOFTWIF_IF_TYPE"}];
-}

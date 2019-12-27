@@ -3,6 +3,7 @@
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 
@@ -21,28 +22,29 @@ populate_lim_l3_intf_cfg_spec ( pds::LimInterfaceCfgSpec& req, uint32_t ifindex)
     req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
 }
 
-static void
-populate_lim_addr_spec (pds_if_spec_t                *if_spec,
-                        pds::LimInterfaceAddrSpec&   req,
-                        uint32_t                     if_index)
+void
+populate_lim_addr_spec (ip_prefix_t                 *ip_prefix,
+                        pds::CPInterfaceAddrSpec&   req,
+                        uint32_t                    if_type,
+                        uint32_t                    if_id)
 {
-    auto ifipaddr = req.mutable_ifipaddr();
+    auto ifipaddr = req.mutable_ipaddr();
 
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
-    req.set_ifindex (if_index);
-    req.set_prefixlen (if_spec->l3_if_info.ip_prefix.len);
+    req.set_iftype ((pds::CPIntfType)if_type);
+    req.set_ifid (if_id);
+    req.set_prefixlen (ip_prefix->len);
 
-    if (if_spec->l3_if_info.ip_prefix.addr.af == IP_AF_IPV4) {
+    if (ip_prefix->addr.af == IP_AF_IPV4) {
         ifipaddr->set_af(types::IP_AF_INET);
-        ifipaddr->set_v4addr(if_spec->l3_if_info.ip_prefix.addr.addr.v4_addr);
+        ifipaddr->set_v4addr(ip_prefix->addr.addr.v4_addr);
     } else {
         ifipaddr->set_af(types::IP_AF_INET6);
-        ifipaddr->set_v6addr(if_spec->l3_if_info.ip_prefix.addr.addr.v6_addr.addr8, 
+        ifipaddr->set_v6addr(ip_prefix->addr.addr.v6_addr.addr8, 
                              IP6_ADDR8_LEN);
     }
 }
 
-static void
+static types::ApiStatus
 process_interface_update (pds_if_spec_t *if_spec,
                           NBB_LONG      row_status)
 {
@@ -60,35 +62,48 @@ process_interface_update (pds_if_spec_t *if_spec,
     pdsa_set_amb_lim_if_cfg (lim_if_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
     // Configure IP Address
-    pds::LimInterfaceAddrSpec lim_addr_spec;
-    populate_lim_addr_spec (if_spec, lim_addr_spec, ms_ifindex);
+    pds::CPInterfaceAddrSpec lim_addr_spec;
+    populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec, 
+                            pds::CP_IF_TYPE_ETH, if_spec->key.id);
     pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
     PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
-    pds_ms::mgmt_state_t::ms_response_wait();
-
-    // TODO: read return status from ms_response and send to caller
-
-    return;
+    return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 sdk_ret_t
 interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    process_interface_update (spec, AMB_ROW_ACTIVE);
+    types::ApiStatus ret_status;
+    ret_status = process_interface_update (spec, AMB_ROW_ACTIVE);
 
-    // TODO: Get correct return code from CTM callback
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process interface 0x%X create (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
+
+    SDK_TRACE_DEBUG ("interface 0x%X create is successfully processed\n", 
+                      spec->key.id);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 interface_delete (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    process_interface_update (spec, AMB_ROW_DESTROY);
+    types::ApiStatus ret_status;
+    ret_status = process_interface_update (spec, AMB_ROW_DESTROY);
 
-    // TODO: Get correct return code from CTM callback
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process interface 0x%X delete (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
+
+    SDK_TRACE_DEBUG ("interface 0x%X delete is successfully processed\n", 
+                      spec->key.id);
     return SDK_RET_OK;
 }
 

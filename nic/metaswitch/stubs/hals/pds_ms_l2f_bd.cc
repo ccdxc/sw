@@ -3,11 +3,13 @@
 // LI IRB HAL integration
 //---------------------------------------------------------------
 
+#include <thread>
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <l2f_fte.hpp>
 #include <l2f_bdpi_slave_join.hpp>
@@ -121,15 +123,21 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(bool async) {
 
     if (op_delete_) { // Delete
         auto if_key = make_pds_subnet_key_();
-        pds_subnet_delete(&if_key, bctxt);
+        if (!PDS_MOCK_MODE()) {
+            pds_subnet_delete(&if_key, bctxt);
+        }
 
     } else { // Add or update
         auto subnet_spec = make_pds_subnet_spec_();
-        sdk_ret_t ret;
+        sdk_ret_t ret = SDK_RET_OK;
         if (op_create_) {
-            ret = pds_subnet_create(&subnet_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_subnet_create(&subnet_spec, bctxt);
+            }
         } else {
-            ret = pds_subnet_update(&subnet_spec, bctxt);
+            if (!PDS_MOCK_MODE()) {
+                ret = pds_subnet_update(&subnet_spec, bctxt);
+            }
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS Subnet Create or Update failed for MS BD ")
@@ -160,6 +168,7 @@ pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
 void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     bd_add_upd_ips->return_code = ATG_OK;
     parse_ips_info_(bd_add_upd_ips);
+    pdsa_stub::cookie_t* cookie;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pdsa_stub::state_t::thread_context();
@@ -250,7 +259,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
 
         // All processing complete, only batch commit remains - 
         // safe to release the cookie_uptr_ unique_ptr
-        auto cookie = cookie_uptr_.release();
+        cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
@@ -270,6 +279,12 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     bd_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful", 
                      ips_info_.bd_id);
+
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
 }
 
 void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {

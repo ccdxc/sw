@@ -1,0 +1,77 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// protobuf specification for Control Plane Inteface Configuration
+//------------------------------------------------------------------------------
+syntax = "proto3";
+package pds;
+
+import "pdsa.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// CPInterface service definition
+service CPInterfaceSvc
+{
+  rpc CPInterfaceSpecCreate (CPInterfaceRequest) returns (CPInterfaceResponse) {}
+  rpc CPInterfaceSpecUpdate (CPInterfaceRequest) returns (CPInterfaceResponse) {}
+  rpc CPInterfaceSpecDelete (CPInterfaceRequest) returns (CPInterfaceResponse) {}
+  rpc CPInterfaceAddrSpecCreate (CPInterfaceAddrRequest) returns (CPInterfaceResponse) {}
+  rpc CPInterfaceAddrSpecUpdate (CPInterfaceAddrRequest) returns (CPInterfaceResponse) {}
+  rpc CPInterfaceAddrSpecDelete (CPInterfaceAddrRequest) returns (CPInterfaceResponse) {}
+}
+
+enum CPIntfType {
+    CP_IF_TYPE_NONE     = 0;
+    CP_IF_TYPE_ETH      = 1;
+    CP_IF_TYPE_LIF      = 2;
+    CP_IF_TYPE_LOOPBACK = 3;
+    CP_IF_TYPE_IRB      = 4;
+};
+
+message CPInterfaceAddrSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_LIM_L3_ADDRESS_OID_LEN",
+    Mib:    "limL3InterfaceAddressTable"
+    FillFn: "lim_intf_addr_fill_func"
+  };
+
+    CPIntfType      IfType      = 1 [(gogoproto.moretags) = "meta:mandatory"]; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
+    uint32          IfId        = 2 [(gogoproto.moretags) = "meta:mandatory"]; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
+    types.IPAddress IPAddr      = 3 [(venice.pdsaFields) = {Field:"ipaddress"}, (gogoproto.moretags) = "meta:mandatory"];
+    uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field:"prefix_len"}, (gogoproto.moretags) = "meta:mandatory"];
+}
+
+// This spec should be used to create only LIF and Loopback interfaces.
+// If at all there is a need to create other types of interfaces, another spec should be defined with relevent Mib
+message CPInterfaceSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_LIM_SOFTWIF_OID_LEN",
+    Mib:    "limSoftwareInterfaceTable"
+    FillFn: "lim_sw_intf_fill_func"
+  };
+
+    CPIntfType  IfType  = 1 [(gogoproto.moretags) = "meta:mandatory"]; // Interface Type should be converted to MS interface type/subtype, cannot be autogen
+    uint32      IfId    = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+}
+
+// CRUD request messages
+message CPInterfaceRequest {
+  option (venice.pdsaSetGlobOpts) = {
+    Mib:    "limSoftwareInterfaceTable"
+  };
+
+  repeated CPInterfaceSpec request = 1;
+}
+
+message CPInterfaceAddrRequest {
+  option (venice.pdsaSetGlobOpts) = {
+    Mib:    "limL3InterfaceAddressTable"
+  };
+
+  repeated CPInterfaceAddrSpec request = 1;
+}
+
+// response message
+message CPInterfaceResponse {
+  types.ApiStatus       ApiStatus = 1;
+}

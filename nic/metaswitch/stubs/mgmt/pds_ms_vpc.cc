@@ -110,7 +110,7 @@ pds_cache_vni_to_vrf_mapping (pds_vpc_spec_t *vpc_spec, bool op_delete)
     state_ctxt.state()->vpc_store().add_upd(vpc_spec->key.id, vpc_obj);
 }
 
-static void
+static types::ApiStatus
 process_vpc_update (pds_vpc_spec_t *vpc_spec, 
                     NBB_LONG       row_status)
 {
@@ -121,37 +121,50 @@ process_vpc_update (pds_vpc_spec_t *vpc_spec,
     populate_lim_vrf_spec (vpc_spec, lim_vrf_spec);
     pdsa_set_amb_lim_vrf (lim_vrf_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
 
-    // TODO: AMB_EVPN_IP_VRF_RT to configure manual RT
-
     PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
-    pds_ms::mgmt_state_t::ms_response_wait();
-   
-    // TODO: read return status from ms_response and send to caller
-    return ;
+    return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 sdk_ret_t
 vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
+    types::ApiStatus ret_status;
+
     // cache VPC spec to be used in hals stub
     pds_cache_vni_to_vrf_mapping (spec, false);
-    process_vpc_update (spec, AMB_ROW_ACTIVE);
+    
+    ret_status = process_vpc_update (spec, AMB_ROW_ACTIVE);
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process vpc %d create (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
 
-    // TODO: Get correct return code from CTM callback
+    SDK_TRACE_DEBUG ("vpc %d create is successfully processed\n", 
+                      spec->key.id);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    process_vpc_update (spec, AMB_ROW_DESTROY);
+    types::ApiStatus ret_status;
+    ret_status = process_vpc_update (spec, AMB_ROW_DESTROY);
+    if (ret_status != types::ApiStatus::API_STATUS_OK) {
+        SDK_TRACE_ERR ("Failed to process vpc %d delete (error=%d)\n", 
+                        spec->key.id, ret_status);
+        return SDK_RET_ERR;                        
+    }
 
+    SDK_TRACE_DEBUG ("vpc %d delete is successfully processed\n", 
+                      spec->key.id);
+
+    // TODO: Do we need to delete the mapping from here or from HAL stubs? 
     // Remove cached VPS spec, after successful reply from MS
     pds_cache_vni_to_vrf_mapping (spec, true);
 
-    // TODO: Get correct return code from CTM callback
     return SDK_RET_OK;
 }
 
@@ -171,5 +184,6 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     // PDS MS LI stub takes care of sequencing if create has not yet been
     // received from MS. Below function will release the state context lock.
     return li_vrf_update_pds_synch(std::move(state_ctxt), vpc_obj);
+
 }
 };    // namespace pds_ms

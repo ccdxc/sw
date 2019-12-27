@@ -36,7 +36,10 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
                     .append(std::to_string(ifindex))
                     .append(" err=").append(std::to_string(ret)));
     }
-    if (info.status.state == PDS_IF_STATE_DOWN) {
+    if (PDS_MOCK_MODE()) {
+        SDK_TRACE_DEBUG ("MS If 0x%lx: PDS MOCK MODE", ifindex);
+        return ATG_FRI_FAULT_NONE;
+    } else if (info.status.state == PDS_IF_STATE_DOWN) {
         SDK_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
         return ATG_FRI_FAULT_PRESENT;
     } else if (info.status.state == PDS_IF_STATE_UP) {

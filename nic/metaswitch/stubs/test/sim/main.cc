@@ -168,6 +168,8 @@ pdsa_sim_test_config ()
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
     subnet_spec.host_ifindex = g_test_conf.lif_if_index;
+    subnet_spec.v4_prefix.len = 24;
+    subnet_spec.v4_prefix.v4_addr =  htonl(0xC0A80001);
     pds_ms::subnet_create (&subnet_spec, 0);
     cout << "Config thread: Subnet Proto is done!\n";
 

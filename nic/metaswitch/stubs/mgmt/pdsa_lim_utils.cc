@@ -3,7 +3,79 @@
 
 #include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
 #include "evpn_prod.h"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "lim_mgmt_if.h"
+
+namespace pds {
+NBB_VOID
+lim_intf_addr_fill_func (CPInterfaceAddrSpec&   req,
+                         AMB_GEN_IPS            *mib_msg,
+                         AMB_LIM_L3_IF_ADDR     *data,
+                         NBB_LONG               row_status)
+{
+    // Local variables
+    NBB_ULONG if_type   = req.iftype();
+    NBB_ULONG if_id     = req.ifid();
+    NBB_ULONG if_index  = 0;
+    NBB_ULONG *oid      = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    data->entity_index                = PDSA_LIM_ENT_INDEX;
+    oid[AMB_LIM_L3_ADDR_ENT_IX_INDEX] = PDSA_LIM_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_L3_ADDR_ENT_IX);
+
+    // Convert Spec Interface ID to MS interface Index
+    switch (if_type)
+    {
+        case CP_IF_TYPE_IRB:
+            if_index = pds_ms::bd_id_to_ms_ifindex (if_id);
+            break;
+
+        case CP_IF_TYPE_ETH:
+        case CP_IF_TYPE_LIF:
+            if_index = pds_ms::pds_to_ms_ifindex (if_id, if_type);
+            break;
+
+        case CP_IF_TYPE_LOOPBACK:
+            if_index = pds_ms::loopback_to_ms_ifindex (if_id);
+            break;
+
+        default:
+           SDK_TRACE_ERR ("Invalid Interface Address Req %d\n", if_type); 
+    }
+    data->if_index                   = if_index;
+    oid[AMB_LIM_L3_ADDR_IF_IX_INDEX] = if_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_L3_ADDR_IF_IX);
+}
+
+NBB_VOID
+lim_sw_intf_fill_func (CPInterfaceSpec&    req,
+                       AMB_GEN_IPS         *mib_msg,
+                       AMB_LIM_SOFTWARE_IF *data,
+                       NBB_LONG            row_status)
+{
+    // Local variables
+    NBB_ULONG if_type       = req.iftype();
+    NBB_ULONG ms_if_subtype = 0;
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    // Set Entity Index
+    data->entity_index                = PDSA_LIM_ENT_INDEX;
+    oid[AMB_LIM_SOFTWIF_ENT_IX_INDEX] = PDSA_LIM_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_SOFTWIF_ENT_IX);
+
+    // Set SW interface type
+    if (if_type == CP_IF_TYPE_LIF) {
+        ms_if_subtype = AMB_LIM_SOFTWIF_DUMMY;
+    } else if (if_type == CP_IF_TYPE_LOOPBACK) {
+        ms_if_subtype = AMB_LIM_SOFTWIF_LOOPBACK;
+    } else {
+        SDK_TRACE_ERR ("Invalid Interface Creation Req %d\n", if_type);
+    }
+    data->type                   = ms_if_subtype;
+    oid[AMB_LIM_SOFTWIF_IF_TYPE] = ms_if_subtype;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_SOFTWIF_TYPE);
+}
+} // end of namespace pds
 
 namespace pdsa_stub {
 
