@@ -981,6 +981,20 @@ VLIB_REGISTER_NODE (pds_flow_classify_node) = {
     .format_trace = format_pds_flow_classify_trace,
 };
 
+void
+pds_flow_idle_timeout_get(uint32_t *flow_idle_timeout, size_t sz) {
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    clib_memcpy(flow_idle_timeout, fm->flow_idle_timeout, sz);
+}
+
+void
+pds_flow_idle_timeout_set(const uint32_t *flow_idle_timeout, size_t sz) {
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    clib_memcpy(fm->flow_idle_timeout, flow_idle_timeout, sz);
+}
+
 static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
 {
@@ -1031,6 +1045,10 @@ pds_flow_init (vlib_main_t * vm)
                                      i);
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
+
+    vec_validate(fm->flow_idle_timeout, IPPROTO_MAX - 1);
+
+    pds_flow_cfg_init();
 
     pds_flow_pipeline_init();
     return 0;

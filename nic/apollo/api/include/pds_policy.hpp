@@ -188,6 +188,20 @@ sdk_ret_t pds_policy_update(pds_policy_spec_t *policy,
 sdk_ret_t pds_policy_delete(pds_policy_key_t *key,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+// timeouts as defined in nic./apollo/agent/protos/policy.proto
+
+#define PDS_DEFAULT_TCP_IDLE_TIMEOUT        600 ///< tcp session timeout
+#define PDS_DEFAULT_UDP_IDLE_TIMEOUT        120 ///< udp session timeout
+#define PDS_DEFAULT_ICMP_IDLE_TIMEOUT       15  ///< icmp session timeout
+#define PDS_DEFAULT_OTHER_IDLE_TIMEOUT      90  ///< other proto timeout
+#define PDS_DEFAULT_TCP_SYN_TIMEOUT         10  ///< syn to establish timeout
+#define PDS_DEFAULT_TCP_HALFCLOSE_TIMEOUT   120 ///< fin to close timeout
+#define PDS_DEFAULT_TCP_CLOSE_TIMEOUT       15  ///< fin/rst to cleanup timeout
+#define PDS_DEFAULT_TCP_DROP_TIMEOUT        90  ///< tcp drop action timeout
+#define PDS_DEFAULT_UDP_DROP_TIMEOUT        60  ///< ucp drop action timeout
+#define PDS_DEFAULT_ICMP_DROP_TIMEOUT       30  ///< icmp drop action timeout
+#define PDS_DEFAULT_OTHER_DROP_TIMEOUT      60  ///< other drop action timeout
+
 /// \brief security profile spec
 typedef struct pds_security_profile_spec_s {
     pds_security_profile_key_t key;                    ///< id

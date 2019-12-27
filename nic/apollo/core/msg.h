@@ -38,6 +38,8 @@ typedef enum pds_msg_type_s {
     PDS_MSG_TYPE_CFG,      ///< config type message
     PDS_MSG_TYPE_CMD,      ///< any CLI commands
     PDS_MSG_TYPE_EVENT,    ///< event type message
+
+    PDS_MSG_TYPE_MAX
 } pds_msg_type_t;
 
 /// unique message identifiers

@@ -11,7 +11,6 @@
 #include <nic/p4/common/defines.h>
 #include <ftl_wrapper.h>
 
-
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 
 #define foreach_flow_classify_next                                  \
@@ -173,6 +172,7 @@ typedef struct pds_flow_main_s {
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     u16 *nh_flags;
     u32 max_sessions;
+    u32 *flow_idle_timeout;
 } pds_flow_main_t;
 
 extern pds_flow_main_t pds_flow_main;
@@ -313,5 +313,6 @@ always_inline void pds_session_id_flush(void)
     return;
 }
 
-#endif    // __VPP_FLOW_NODE_H__
+void pds_flow_cfg_init(void);
 
+#endif    // __VPP_FLOW_NODE_H__
