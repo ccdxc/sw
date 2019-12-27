@@ -374,12 +374,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
                                                        vf_id, is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
-        // Program the VF properties table
-        ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, vf_id,
-                                                is_upgrade);
-        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
-            goto fail_flag;
-        
+
         // Program LIF policers
         ret = pd_tunnelif_update_lif_policers(pd_tunnelif, false);
 #if 0
@@ -421,7 +416,7 @@ pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
     /* Deprogram VF properties table */
     if (hal_if->encap_type ==
            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
-        ret = pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif);
+        // ret = pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif);
         ret = pd_tunnelif_update_lif_policers(pd_tunnelif, true);
     }
     return ret;
@@ -504,9 +499,6 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     } else if (tbl_id == P4TBL_ID_INPUT_MAPPING_TUNNELED) {
         data = &tun_data;
         tun_data.action_id = actionid;
-        if (tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
-            tun_data.action_u.input_mapping_tunneled_tunneled_ipv4_packet.vf_id = vf_id;
-        }
     }
     if (is_upgrade) {
         sdk_ret = tcam->insert_withid(&key, &mask, data, *idx);
@@ -650,80 +642,6 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
 fail_flag:
     ret = pd_tunnelif_del_inp_mapp_entries(pd_tunnelif,
                                            P4TBL_ID_INPUT_MAPPING_TUNNELED);
-    return ret;
-}
-
-hal_ret_t
-pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
-                                  bool is_upgrade)
-{
-    hal_ret_t                       ret;
-    sdk_ret_t                       sdk_ret;
-    directmap                       *dm;
-    vf_properties_actiondata_t      d = { 0 };
-    if_t                            *pi_if;
-
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_VF_PROPERTIES);
-    SDK_ASSERT(dm != NULL);
-    SDK_ASSERT(pd_tif != NULL);
-    
-    pi_if = (if_t *) pd_tif->pi_if;
-    SDK_ASSERT(pi_if != NULL);
-    
-    d.action_id = VF_PROPERTIES_VF_PROPERTIES_ID;
-    d.action_u.vf_properties_vf_properties.overlay_ip1 = pi_if->overlay_ip[0];
-    d.action_u.vf_properties_vf_properties.overlay_ip2 =
-                        (pi_if->num_overlay_ip > 1) ? pi_if->overlay_ip[1] : 0;
-    d.action_u.vf_properties_vf_properties.mpls_in1 = pi_if->mpls_if[0].label;
-    d.action_u.vf_properties_vf_properties.mpls_in2 =
-                        (pi_if->num_mpls_if > 1) ? pi_if->mpls_if[1].label : 0;
-    d.action_u.vf_properties_vf_properties.gw_prefix = pi_if->source_gw.v4_addr;
-    d.action_u.vf_properties_vf_properties.gw_prefix_len = pi_if->source_gw.len;
-    d.action_u.vf_properties_vf_properties.tunnel_originate = 1;
-    d.action_u.vf_properties_vf_properties.tunnel_rewrite_index = pd_tif->tunnel_rw_idx;
-    d.action_u.vf_properties_vf_properties.mpls_out = pi_if->mpls_tag.label;
-    memcpy(d.action_u.vf_properties_vf_properties.vf_mac, 
-            pi_if->overlay_mac, sizeof(mac_addr_t));
-    memrev(d.action_u.vf_properties_vf_properties.vf_mac, ETH_ADDR_LEN);
-
-    // insert the entry
-    sdk_ret = dm->insert_withid(&d, vf_id);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("VF properties table write failure, err : {}", ret);
-        return ret;
-    }
-    pd_tif->vf_prop_idx = vf_id;
-    HAL_TRACE_DEBUG("Added vf_properties table entry idx: {}",
-                                                     pd_tif->vf_prop_idx);
-    return ret;
-}
-
-hal_ret_t
-pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif_t *pd_tif)
-{
-    hal_ret_t                       ret = HAL_RET_OK;
-    sdk_ret_t                       sdk_ret;
-    directmap                       *dm;
-
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_VF_PROPERTIES);
-    SDK_ASSERT(dm != NULL);
-    SDK_ASSERT(pd_tif != NULL);
-    
-    if (pd_tif->vf_prop_idx == INVALID_INDEXER_INDEX) {
-        HAL_TRACE_DEBUG("vf_properties table entry already deleted!");
-        return ret;
-    }
-    // delete the entry
-    sdk_ret = dm->remove(pd_tif->vf_prop_idx, NULL);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("VF properties table write failure, err : {}", ret);
-        return ret;
-    }
-    HAL_TRACE_DEBUG("Deleted vf_properties table entry idx: {}",
-                                                     pd_tif->vf_prop_idx);
-    pd_tif->vf_prop_idx = INVALID_INDEXER_INDEX;
     return ret;
 }
 

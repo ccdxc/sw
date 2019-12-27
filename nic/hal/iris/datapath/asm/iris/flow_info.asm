@@ -502,7 +502,8 @@ nop:
 
 validate_ipv4_flow_key:
   sub           r7, r0, 1
-  add           r6, r0, k.flow_lkp_metadata_lkp_src
+  or            r6, k.flow_lkp_metadata_lkp_src_s104_e127, \
+                    k.flow_lkp_metadata_lkp_src_s96_e103, 24
   seq           c1, r6[31:24], 0x7f
   seq           c2, r6[31:28], 0xe
   seq           c3, r6[31:0], r7[31:0]
@@ -517,8 +518,11 @@ validate_ipv4_flow_key:
 
 validate_ipv6_flow_key:
   // srcAddr => r2(hi) r3(lo)
-  add           r2, r0, k.flow_lkp_metadata_lkp_src[127:64]
-  add           r3, r0, k.flow_lkp_metadata_lkp_src[63:0]
+  add           r2, r0, k.flow_lkp_metadata_lkp_src_s0_e95[95:32]
+  or            r1, k.flow_lkp_metadata_lkp_src_s104_e127, \
+                    k.flow_lkp_metadata_lkp_src_s96_e103, 24
+  or            r3, r1, k.flow_lkp_metadata_lkp_src_s0_e95[31:0], 32
+
   // dstAddr ==> r4(hi), r5(lo)
   add           r4, r0, k.flow_lkp_metadata_lkp_dst[127:64]
   add           r5, r0, k.flow_lkp_metadata_lkp_dst[63:0]

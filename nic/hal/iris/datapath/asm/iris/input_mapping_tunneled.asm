@@ -20,7 +20,6 @@ tunneled_ipv4_packet:
   cmov          r4, c1, k.inner_ethernet_srcAddr, k.ethernet_srcAddr
   cmov          r5, c1, k.inner_ethernet_dstAddr, k.ethernet_dstAddr
   seq           c2, r5[40], 0
-  phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv4_packet_d.vf_id
   bcf           [c2], tunneled_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -61,7 +60,6 @@ tunneled_ipv6_packet:
   cmov          r4, c1, k.inner_ethernet_srcAddr, k.ethernet_srcAddr
   cmov          r5, c1, k.inner_ethernet_dstAddr, k.ethernet_dstAddr
   seq           c2, r5[40], 0
-  phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv6_packet_d.vf_id
   bcf           [c2], tunneled_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -86,7 +84,6 @@ tunneled_ipv6_packet_common:
 
 .align
 tunneled_non_ip_packet:
-  phvwr         p.control_metadata_vf_id, d.u.tunneled_non_ip_packet_d.vf_id
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0

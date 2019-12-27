@@ -113,10 +113,6 @@ hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                                    int tunnel_type,
                                                    uint16_t vf_id,
                                                    bool is_upgrade = false);
-hal_ret_t pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif,
-                                            uint16_t vf_id,
-                                            bool is_upgrade);
-hal_ret_t pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                            p4pd_table_id tbl_id);

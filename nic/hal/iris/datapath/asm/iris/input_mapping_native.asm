@@ -20,7 +20,6 @@ nop:
 
 .align
 native_ipv4_packet:
-  // phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -66,7 +65,6 @@ native_ipv4_esp_packet:
 
 .align
 native_ipv6_packet:
-  // phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -95,7 +93,6 @@ native_ipv6_packet_common:
 
 .align
 native_non_ip_packet:
-  // phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0

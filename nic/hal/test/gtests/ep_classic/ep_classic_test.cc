@@ -228,9 +228,12 @@ TEST_F(endpoint_test, test1)
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
-    seed = 1575415500;
+    seed = 1577395672;
     fill_registered_mac(seed);
-    fill_registered_mac(seed);
+    // seed++;
+    // fill_registered_mac(seed);
+    // seed++;
+    // fill_registered_mac(seed);
 
     registered_macs_swkey_t         key;
     registered_macs_actiondata_t    data;
