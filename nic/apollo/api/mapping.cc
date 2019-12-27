@@ -128,6 +128,14 @@ sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_mapping_spec_t *spec = &api_ctxt->api_params->mapping_spec;
 
+    if (spec->is_local) {
+        if (spec->key.type != PDS_MAPPING_TYPE_L3) {
+            // local L2 mapping will come down in the form of vnics, not as
+            // local mappings
+            PDS_TRACE_ERR("local mapppings can't be non-L3");
+            return SDK_RET_INVALID_OP;
+        }
+    }
     memcpy(&key_, &spec->key, sizeof(pds_mapping_key_t));
     return SDK_RET_OK;
 }
