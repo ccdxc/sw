@@ -203,7 +203,7 @@
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */
 /*****************************************************************************/
-#define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY             10
+#define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY              9
 #define P4_MAPPING_NUM_HINTS_PER_ENTRY                    9
 
 /*****************************************************************************/

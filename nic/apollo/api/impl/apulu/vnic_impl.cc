@@ -685,6 +685,11 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the data
     local_mapping_data.vnic_id = hw_id_;
     local_mapping_data.xlate_id = PDS_IMPL_RSVD_NAT_HW_ID;
+    if (spec->src_dst_check) {
+        local_mapping_data.binding_check_enabled = TRUE;
+        // we don't know the IPs associated with this yet until local IP
+        // mappings are created later on
+    }
 
     // program LOCAL_MAPPING entry
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,

@@ -144,19 +144,19 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
 
     MEMHASH_TRACE_VERBOSE("Creating mem_hash:%s table.", props_->name.c_str());
-    MEMHASH_TRACE_VERBOSE("- ptable_id:%d ptable_size:%d ",
+    MEMHASH_TRACE_VERBOSE("- ptable_id:%u ptable_size:%u ",
                           props_->ptable_id, props_->ptable_size);
-    MEMHASH_TRACE_VERBOSE("- stable_id:%d stable_size:%d ",
+    MEMHASH_TRACE_VERBOSE("- stable_id:%u stable_size:%u ",
                           props_->stable_id, props_->stable_size);
-    MEMHASH_TRACE_VERBOSE("- swkey_len:%dB swdata_len:%dB ",
+    MEMHASH_TRACE_VERBOSE("- swkey_len:%uB swdata_len:%du ",
                           props_->swkey_len, props_->swdata_len);
-    MEMHASH_TRACE_VERBOSE("- num_hints:%d max_recircs:%d hash_poly:%d",
+    MEMHASH_TRACE_VERBOSE("- num_hints:%u max_recircs:%u hash_poly:%u",
                           props_->num_hints, props_->max_recircs,
                           props_->hash_poly);
 
     p4pd_global_hwentry_query(props_->ptable_id, &props_->hwkey_len,
                               NULL, &props_->hwdata_len);
-    MEMHASH_TRACE_VERBOSE("- swkey_len:%dbits swdata_len:%dbits ",
+    MEMHASH_TRACE_VERBOSE("- swkey_len:%ubits swdata_len:%ubits ",
                           props_->hwkey_len, props_->hwdata_len);
 
     props_->hwkey_len = SDK_TABLE_BITS_TO_BYTES(props_->hwkey_len);
@@ -166,7 +166,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     props_->hwdata_len = SDK_TABLE_BITS_TO_BYTES(props_->hwdata_len);
     props_->hwdata_len = SDK_TABLE_ALIGN_TO_64B(props_->hwdata_len);
     SDK_ASSERT(props_->hwdata_len <= SDK_TABLE_MAX_HW_DATA_LEN);
-    MEMHASH_TRACE_VERBOSE("- hwkey_len:%dBytes hwdata_len:%dBytes ",
+    MEMHASH_TRACE_VERBOSE("- hwkey_len:%uBytes hwdata_len:%uBytes ",
                           props_->hwkey_len, props_->hwdata_len);
 
     mem_hash_p4pd_stats_reset();

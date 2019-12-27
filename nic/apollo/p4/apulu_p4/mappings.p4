@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id xlate_id
+@pragma capi appdatafields vnic_id xlate_id binding_check_enabled binding_id1 binding_id2
 @pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,

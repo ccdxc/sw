@@ -11,7 +11,7 @@ setup
 unset CAPRI_MOCK_MEMORY_MODE
 
 # run all gtests
-run_valgrind_gtest CFG=" -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json "
+run_valgrind_gtest scale CFG=" -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json "
 
 # end of script
 clean_exit
