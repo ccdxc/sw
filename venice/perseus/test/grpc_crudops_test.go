@@ -2,16 +2,28 @@ package test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+func printError(in api.Status) {
+	j, err := json.MarshalIndent(&in, "", "  ")
+	if err != nil {
+		fmt.Printf("failed to marshall")
+	}
+	fmt.Println(string(j))
+}
 
 func TestCrudOps(t *testing.T) {
 	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
@@ -62,6 +74,33 @@ func TestCrudOps(t *testing.T) {
 		_, err := apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), &snic)
 		if err != nil {
 			t.Fatalf("could not create smartnic (%s)", err)
+			return
+		}
+
+		intType := "loopback-tep"
+		nic := network.NetworkInterface{
+			TypeMeta: api.TypeMeta{Kind: "NetworkInterface"},
+			ObjectMeta: api.ObjectMeta{
+				Name: name,
+			},
+			Spec: network.NetworkInterfaceSpec{
+				Type: intType,
+				IPConfig: &cluster.IPConfig{
+					IPAddress: "9.9.9.9",
+				},
+				AdminStatus: "up",
+				IPAllocType: "static",
+			},
+			Status: network.NetworkInterfaceStatus{
+				Name:       name,
+				Type:       intType,
+				OperStatus: "up",
+			},
+		}
+		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), &nic)
+		if err != nil {
+			printError(apierrors.FromError(err))
+			t.Fatalf("could not create tep int (%s)", err)
 			return
 		}
 	}

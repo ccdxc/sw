@@ -10,22 +10,22 @@ import (
 
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/persues/env"
-	"github.com/pensando/sw/venice/persues/startup"
+	"github.com/pensando/sw/venice/perseus/env"
+	"github.com/pensando/sw/venice/perseus/startup"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 func main() {
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Persues)), "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Perseus)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 	)
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      globals.Persues,
+		Module:      globals.Perseus,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -53,7 +53,7 @@ func main() {
 
 	startup.OnStart(strings.Split(*resolverURLs, ","))
 
-	env.Logger.Infof("Launching server %s is running", globals.Persues)
+	env.Logger.Infof("Launching server %s is running", globals.Perseus)
 
 	// Wait forever
 	waitCh := make(chan bool)

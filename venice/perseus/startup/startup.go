@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/persues/apiclient"
-	"github.com/pensando/sw/venice/persues/env"
-	"github.com/pensando/sw/venice/persues/services"
+	"github.com/pensando/sw/venice/perseus/apiclient"
+	"github.com/pensando/sw/venice/perseus/env"
+	"github.com/pensando/sw/venice/perseus/services"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )

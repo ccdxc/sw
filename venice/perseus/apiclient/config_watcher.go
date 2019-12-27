@@ -12,8 +12,8 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/persues/env"
-	"github.com/pensando/sw/venice/persues/types"
+	"github.com/pensando/sw/venice/perseus/env"
+	"github.com/pensando/sw/venice/perseus/types"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -71,9 +71,9 @@ func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
 		r = env.ResolverClient.(resolver.Interface)
 	}
 	if r != nil {
-		sclient, err = svcsclient.NewGrpcAPIClient(globals.Persues, k.apiServerAddr, env.Logger, rpckit.WithBalancer(balancer.New(r)))
+		sclient, err = svcsclient.NewGrpcAPIClient(globals.Perseus, k.apiServerAddr, env.Logger, rpckit.WithBalancer(balancer.New(r)))
 	} else {
-		sclient, err = svcsclient.NewGrpcAPIClient(globals.Persues, k.apiServerAddr, env.Logger, rpckit.WithRemoteServerName(globals.APIServer))
+		sclient, err = svcsclient.NewGrpcAPIClient(globals.Perseus, k.apiServerAddr, env.Logger, rpckit.WithRemoteServerName(globals.APIServer))
 	}
 	if err != nil {
 		k.logger.Errorf("#### RPC client creation failed with error: %v", err)

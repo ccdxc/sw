@@ -20,8 +20,8 @@ import (
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/persues/env"
-	"github.com/pensando/sw/venice/persues/startup"
+	"github.com/pensando/sw/venice/perseus/env"
+	"github.com/pensando/sw/venice/perseus/startup"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
@@ -70,7 +70,7 @@ var tinfo tInfo
 func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
 	grpclog.SetLoggerV2(l)
-	recorder.Override(mockevtsrecorder.NewRecorder("persues_test", l)) // mock events recorder
+	recorder.Override(mockevtsrecorder.NewRecorder("perseus_test", l)) // mock events recorder
 
 	// TLS is needed for ApiServer to know who is making a request (ApiGw, controller, etc)
 
@@ -184,7 +184,7 @@ func TestMain(m *testing.M) {
 	// set auth bootstrap flag to true
 	testutils.MustSetAuthBootstrapFlag(apicl)
 
-	// start persues
+	// start perseus
 	env.Options = options.NewServerRunOptions()
 	env.Logger = l
 	s := []string{"localhost:" + tinfo.apiserverport}
