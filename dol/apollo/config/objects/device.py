@@ -37,6 +37,7 @@ class DeviceObject(base.ConfigObjectBase):
 
         ################# PRIVATE ATTRIBUTES OF DEVICE OBJECT #####################
         self.__spec = spec
+        self.DeriveOperInfo()
         self.Show()
         tunnel.client.GenerateObjects(self, spec.tunnel)
         return

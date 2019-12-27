@@ -13,6 +13,7 @@ import apollo.config.objects.base as base
 class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, tunobj, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING)
+        parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         self.MappingId = next(resmgr.RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
@@ -46,6 +47,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.AppPort = resmgr.TransportDstPort
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
+        self.DeriveOperInfo()
         self.Show()
         return
 
@@ -80,9 +82,45 @@ class RemoteMappingObject(base.ConfigObjectBase):
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
-        spec.TunnelId = self.TunID
         return
 
+    def GetDependees(self):
+        """
+        depender/dependent - remote mapping
+        dependee - tunnel
+        """
+        dependees = [ self.TUNNEL ]
+        return dependees
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunID = cObj.Id
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunID = 0
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
 
 class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):

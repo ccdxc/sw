@@ -1,0 +1,56 @@
+feature:
+    id          : networking
+    sub         : delete_nexthopgroup
+    package     : test.networking
+    module      : networking
+    runorder    : 9500
+    enable      : False
+    ignore      : True
+
+modules:
+# specify all the filters that are used in the packet testcases that will follow
+    - module:
+        name    : NEXTHOPGROUP_WORKFLOW_START
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : DEL_NEXTHOPGROUP
+        spec    : cfg_object.testspec
+        args    :
+            - object    : nexthopgroup
+              operation : Delete
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    # mlists to run post nexthopgroup deletion
+    - module:
+        name    : Local2Remote_PostNexthopGroupDelete
+        mlist   : local2remote.mlist
+        ignore  : True
+
+    - module:
+        name    : RESTORE_NEXTHOPGROUP
+        spec    : cfg_object.testspec
+        args    :
+            - object    : nexthopgroup
+              operation : Create
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    # mlists to run post nexthopgroup restore
+    - module:
+        name    : Local2Remote_PostNexthopGroupRestore
+        mlist   : local2remote.mlist
+        ignore  : True
+
+    - module:
+        name    : NEXTHOPGROUP_WORKFLOW_END
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

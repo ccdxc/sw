@@ -29,6 +29,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
             self.NumNexthops = resmgr.UnderlayNumNexthopsAllocator.rrnext()
         self.Mutable = utils.IsUpdateSupported()
+        self.DeriveOperInfo()
         self.Show()
         return
 
@@ -81,6 +82,30 @@ class NexthopGroupObject(base.ConfigObjectBase):
             nexthop_obj.FillSpec(nhspec)
         return
 
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        logger.error(" - ERROR: %s not handling %s restoration" %\
+                     (self.ObjType.name, cObj.ObjType))
+        assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        logger.error(" - ERROR: %s not handling %s deletion" %\
+                     (self.ObjType.name, dObj.ObjType))
+        assert(0)
+        # self.Update()
+        return
+
     def IsUnderlay(self):
         if self.Type == nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
             return True
@@ -91,14 +116,14 @@ class NexthopGroupObject(base.ConfigObjectBase):
             return True
         return False
 
-class NexthopGroupObjectClient:
+class NexthopGroupObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             if utils.IsPipelineApulu():
                 return True
             return False
 
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.NEXTHOPGROUP, resmgr.MAX_NEXTHOPGROUP)
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -106,12 +131,6 @@ class NexthopGroupObjectClient:
         self.__num_nhgs_per_vpc = []
         self.__supported = __isObjSupported()
         return
-
-    def Objects(self):
-        return self.__objs.values()
-
-    def GetNexthopGroupObject(self, nexthopid):
-        return self.__objs.get(nexthopid, None)
 
     def GetNumNextHopGroupsPerVPC(self):
         return self.__num_nhgs_per_vpc
@@ -160,7 +179,7 @@ class NexthopGroupObjectClient:
         for nhg_spec_obj in nhg_spec:
             for c in range(nhg_spec_obj.count):
                 obj = NexthopGroupObject(parent, nhg_spec_obj)
-                self.__objs.update({obj.Id: obj})
+                self.Objs.update({obj.Id: obj})
                 if isV4Stack:
                     self.__v4objs[vpcid].append(obj)
                 if isV6Stack:
@@ -170,21 +189,6 @@ class NexthopGroupObjectClient:
         if len(self.__v6objs[vpcid]):
             self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
         self.__num_nhgs_per_vpc.append(nhg_spec_obj.count)
-        return
-
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.NEXTHOPGROUP, msgs)
-        return
-
-    def GetGrpcReadAllMessage(self):
-        grpcmsg = nh_pb2.NhgroupGetRequest()
-        return grpcmsg
-
-    def ReadObjects(self):
-        msg = self.GetGrpcReadAllMessage()
-        api.client.Get(api.ObjectTypes.NEXTHOPGROUP, [msg])
         return
 
 client = NexthopGroupObjectClient()

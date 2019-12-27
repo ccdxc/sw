@@ -61,6 +61,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.UnderlayVPCId = EzAccessStore.GetUnderlayVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
+        self.DeriveOperInfo()
         self.Show()
         return
 

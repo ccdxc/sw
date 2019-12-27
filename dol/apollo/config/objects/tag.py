@@ -43,6 +43,7 @@ class TagObject(base.ConfigObjectBase):
             self.GID('IPv4TagTbl%d' %self.TagTblId)
         self.Rules = rules
         ##########################################################################
+        self.DeriveOperInfo()
         self.Show()
         return
 

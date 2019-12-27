@@ -52,6 +52,8 @@ vpc:
          - count : 1
            v4prefixlen : 24
            v6prefixlen : 64
+      nexthop:
+        - count : 1
       routetbl:
          - type: specific # route table with only default routes
            routetype: only_default

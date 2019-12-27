@@ -10,7 +10,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
-import apollo.config.objects.meter as meter
+from apollo.config.objects.meter  import client as MeterClient
 from apollo.config.objects.policy import client as PolicyClient
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -37,9 +37,9 @@ class VnicStatus(base.StatusObjectBase):
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC)
+        parent.AddChild(self)
         if (EzAccessStore.IsDeviceLearningEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
-        parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
@@ -54,8 +54,8 @@ class VnicObject(base.ConfigObjectBase):
             self.SourceGuard = c
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
-        self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
-        self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
+        self.V4MeterId = MeterClient.GetV4MeterId(parent.VPC.VPCId)
+        self.V6MeterId = MeterClient.GetV6MeterId(parent.VPC.VPCId)
         self.IngV4SecurityPolicyIds = []
         self.IngV6SecurityPolicyIds = []
         self.EgV4SecurityPolicyIds = []
@@ -214,12 +214,15 @@ class VnicObject(base.ConfigObjectBase):
         dependee - meter, mirror & policy
         """
         dependees = [ ]
-        # TODO: Add meter & mirror
+        meterids = [ self.V4MeterId, self.V6MeterId ]
+        meterobjs = MeterClient.GetObjectsByKeys(meterids)
+        dependees.extend(meterobjs)
         policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
         policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
-        for policyid in policyids:
-            policyObj = policy.client.GetPolicyObject(policyid)
-            dependees.append(policyObj)
+        policyobjs = PolicyClient.GetObjectsByKeys(policyids)
+        dependees.extend(policyobjs)
+        mirrorobjs = list(self.RxMirrorObjs.values()) + list(self.TxMirrorObjs.values())
+        dependees.extend(mirrorobjs)
         return dependees
 
     def DeriveOperInfo(self):
@@ -233,6 +236,109 @@ class VnicObject(base.ConfigObjectBase):
             txmirrorobj = mirror.client.GetMirrorObject(txmirrorid)
             self.TxMirrorObjs.update({txmirrorid: txmirrorobj})
         super().DeriveOperInfo()
+        return
+
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.POLICY:
+            policylist = None
+            if cObj.IsV4():
+                if cObj.IsIngressPolicy():
+                    policylist = self.IngV4SecurityPolicyIds
+                elif cObj.IsEgressPolicy():
+                    policylist = self.EgV4SecurityPolicyIds
+            elif cObj.IsV6():
+                if cObj.IsIngressPolicy():
+                    policylist = self.IngV6SecurityPolicyIds
+                elif cObj.IsEgressPolicy():
+                    policylist = self.EgV6SecurityPolicyIds
+            if policylist is not None:
+                policylist.append(cObj.PolicyId)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (cObj, self))
+                assert(0)
+        elif cObj.ObjType == api.ObjectTypes.MIRROR:
+            mirrorlist = None
+            if cObj.Id in self.RxMirrorObjs:
+                mirrorlist = self.RxMirror
+            elif cObj.Id in self.TxMirrorObjs:
+                mirrorlist = self.TxMirror
+            if mirrorlist is not None:
+                mirrorlist.append(cObj.Id)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (cObj, self))
+                assert(0)
+        elif cObj.ObjType == api.ObjectTypes.METER:
+            if cObj.IsV4():
+                self.V4MeterId = cObj.MeterId
+            elif cObj.IsV6():
+                self.V6MeterId = cObj.MeterId
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            cObj.Show()
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.POLICY:
+            policylist = None
+            if dObj.IsV4():
+                if dObj.IsIngressPolicy():
+                    policylist = self.IngV4SecurityPolicyIds
+                elif dObj.IsEgressPolicy():
+                    policylist = self.EgV4SecurityPolicyIds
+            elif dObj.IsV6():
+                if dObj.IsIngressPolicy():
+                    policylist = self.IngV6SecurityPolicyIds
+                elif dObj.IsEgressPolicy():
+                    policylist = self.EgV6SecurityPolicyIds
+            if policylist is not None:
+                policylist.remove(dObj.PolicyId)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        elif dObj.ObjType == api.ObjectTypes.MIRROR:
+            mirrorlist = None
+            if dObj.Id in self.RxMirror:
+                mirrorlist = self.RxMirror
+            elif dObj.Id in self.TxMirror:
+                mirrorlist = self.TxMirror
+            if mirrorlist is not None:
+                mirrorlist.remove(dObj.Id)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        elif dObj.ObjType == api.ObjectTypes.METER:
+            if self.V4MeterId == dObj.MeterId:
+                self.V4MeterId = 0
+            elif self.V6MeterId == dObj.MeterId:
+                self.V6MeterId = 0
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            dObj.Show()
+            assert(0)
+        # self.Update()
         return
 
 class VnicObjectClient(base.ConfigClientBase):

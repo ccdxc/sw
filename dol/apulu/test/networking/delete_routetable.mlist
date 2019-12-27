@@ -15,9 +15,6 @@ modules:
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     # delete the routetable objects
     - module:
@@ -28,14 +25,12 @@ modules:
               operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     # mlists to run post routetable deletion
+    # routing happens in case of local2igw only for now
     - module:
-        name    : IGW2Local_PostRouteTableDelete
-        mlist   : igw2local.mlist
+        name    : Local2IGW_PostRouteTableDelete
+        mlist   : local2igw.mlist
         ignore  : True
 
     # restore the deleted routetable objects
@@ -47,14 +42,11 @@ modules:
               operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     # mlists to run post routetable restore
     - module:
-        name    : IGW2Local_PostRouteTableRestore
-        mlist   : igw2local.mlist
+        name    : Local2IGW_PostRouteTableRestore
+        mlist   : local2igw.mlist
         ignore  : True
 
     # workflow_end - clear the cached objects
@@ -63,6 +55,3 @@ modules:
         spec    : workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING

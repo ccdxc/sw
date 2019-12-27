@@ -111,17 +111,19 @@ class MeterObject(base.ConfigObjectBase):
         self.VPCId = parent.VPCId
         if af == utils.IP_VERSION_6:
             self.MeterId = next(resmgr.V6MeterIdAllocator)
-            self.Af = 'IPV6'
+            self.AddrFamily = 'IPV6'
         else:
             self.MeterId = next(resmgr.V4MeterIdAllocator)
-            self.Af = 'IPV4'
+            self.AddrFamily = 'IPV4'
         self.GID('Meter%d'%self.MeterId)
         self.Rules = rules
+        self.DeriveOperInfo()
         self.Show()
         return
 
     def __repr__(self):
-        return "MeterID:%d|VPCId:%d" % (self.MeterId, self.VPCId)
+        return "MeterID:%d|Af:%s|VPCId:%d" %\
+               (self.MeterId, self.AddrFamily, self.VPCId)
 
     def Show(self):
         logger.info("Meter object:", self)
@@ -149,7 +151,7 @@ class MeterObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.MeterId
-        spec.Af = utils.GetRpcIPAddrFamily(self.Af)
+        spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.Rules:
             self.FillMeterRuleSpec(spec, rule)
         return

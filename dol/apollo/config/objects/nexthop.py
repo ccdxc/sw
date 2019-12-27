@@ -11,7 +11,7 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.objects.base as base
 from apollo.config.objects.interface import client as InterfaceClient
-import apollo.config.objects.tunnel as tunnel
+from apollo.config.objects.tunnel    import client as TunnelClient
 
 import nh_pb2 as nh_pb2
 
@@ -35,6 +35,7 @@ class NexthopObject(base.ConfigObjectBase):
         elif nh_type == 'underlay':
             self.__type = topo.NhType.UNDERLAY
             self.L3Interface = InterfaceClient.GetL3UplinkInterface()
+            self.L3InterfaceId = self.L3Interface.InterfaceId
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
             self.__type = topo.NhType.OVERLAY
@@ -45,6 +46,7 @@ class NexthopObject(base.ConfigObjectBase):
         else:
             self.__type = topo.NhType.NONE
         self.Mutable = utils.IsUpdateSupported()
+        self.DeriveOperInfo()
         self.Show()
         return
 
@@ -55,7 +57,7 @@ class NexthopObject(base.ConfigObjectBase):
                      self.MACAddr, self.VlanId)
         elif self.__type == topo.NhType.UNDERLAY:
             nh_str = "L3IfID:%d|UnderlayMac:%s" %\
-                     (self.L3Interface.InterfaceId, self.underlayMACAddr)
+                     (self.L3InterfaceId, self.underlayMACAddr)
         elif self.__type == topo.NhType.OVERLAY:
             nh_str = "TunnelId:%d" % (self.TunnelId)
         else:
@@ -79,6 +81,7 @@ class NexthopObject(base.ConfigObjectBase):
             self.MACAddr = resmgr.NexthopMacAllocator.get()
         elif self.__type == topo.NhType.UNDERLAY:
             self.L3Interface = InterfaceClient.GetL3UplinkInterface()
+            self.L3InterfaceId = self.L3Interface.InterfaceId
             self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif self.__type == topo.NhType.OVERLAY:
             if self.DualEcmp:
@@ -88,9 +91,16 @@ class NexthopObject(base.ConfigObjectBase):
         return
 
     def RollbackAttributes(self):
-        attrlist = ["IPAddr", "VlanId", "MACAddr", "L3Interface", "underlayMACAddr", "TunnelId"]
+        attrlist = ["IPAddr", "VlanId", "MACAddr", "L3Interface", "underlayMACAddr", "TunnelId", "L3InterfaceId"]
         self.RollbackMany(attrlist)
         return
+
+    def GetGrpcReadMessage(self):
+        # TODO: NH read req has only filters
+        grpcreq = api.client.GetGRPCMsgReq(self.ObjType, api.ApiOps.GET)
+        grpcmsg = grpcreq()
+        grpcmsg.Id = self.NexthopId
+        return grpcmsg
 
     def PopulateKey(self, grpcmsg):
         # TODO FIX THIS nh read message can take only one id, whereas nhdelete can take a list
@@ -105,7 +115,7 @@ class NexthopObject(base.ConfigObjectBase):
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         elif self.__type == topo.NhType.UNDERLAY:
-            spec.UnderlayNhInfo.L3InterfaceId = self.L3Interface.InterfaceId
+            spec.UnderlayNhInfo.L3InterfaceId = self.L3InterfaceId
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == topo.NhType.OVERLAY:
             spec.TunnelId = self.TunnelId
@@ -129,7 +139,7 @@ class NexthopObject(base.ConfigObjectBase):
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
         elif self.__type == topo.NhType.UNDERLAY:
-            if spec.UnderlayNhInfo.L3InterfaceId != self.L3Interface.InterfaceId:
+            if spec.UnderlayNhInfo.L3InterfaceId != self.L3InterfaceId:
                 return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
@@ -137,6 +147,55 @@ class NexthopObject(base.ConfigObjectBase):
             if spec.TunnelId != self.TunnelId:
                 return False
         return True
+
+    def GetDependees(self):
+        """
+        depender/dependent - nexthop
+        dependee - l3interface, tunnel
+        """
+        dependees = [ ]
+        if self.IsUnderlay():
+            l3intfObj = InterfaceClient.GetObjectByKey(self.L3InterfaceId)
+            dependees.append(l3intfObj)
+        elif self.IsOverlay():
+            tunnelObj = TunnelClient.GetObjectByKey(self.TunnelId)
+            dependees.append(tunnelObj)
+        return dependees
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunnelId = cObj.Id
+        elif cObj.ObjType == api.ObjectTypes.INTERFACE:
+            self.L3InterfaceId = cObj.InterfaceId
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunnelId = 0
+        elif dObj.ObjType == api.ObjectTypes.INTERFACE:
+            self.L3InterfaceId = 0
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            assert(0)
+        # TODO: move to UpdateAttributes() with attr list
+        # self.Update()
+        return
 
     def IsUnderlay(self):
         if self.__type == topo.NhType.UNDERLAY:
@@ -158,14 +217,14 @@ class NexthopObject(base.ConfigObjectBase):
             return True
         return False
 
-class NexthopObjectClient:
+class NexthopObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             if utils.IsPipelineArtemis() or utils.IsPipelineApulu():
                 return True
             return False
 
-        self.__objs = dict()
+        super().__init__(api.ObjectTypes.NEXTHOP, resmgr.MAX_NEXTHOP)
         self.__underlay_objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
@@ -175,21 +234,18 @@ class NexthopObjectClient:
         self.__supported = __isObjSupported()
         return
 
-    def Objects(self):
-        return self.__objs.values()
-
     def GetNexthopObject(self, nexthopid):
-        return self.__objs.get(nexthopid, None)
+        return self.GetObjectByKey(nexthopid)
 
     def GetV4Nexthop(self, vpcid):
-        if len(self.__objs.values()):
+        if self.GetNumObjects():
             assert(len(self.__v4objs[vpcid]) != 0)
             return self.__v4iter[vpcid].rrnext()
         else:
             return None
 
     def GetV6Nexthop(self, vpcid):
-        if len(self.__objs.values()):
+        if self.GetNumObjects():
             assert(len(self.__v6objs[vpcid]) != 0)
             return self.__v6iter[vpcid].rrnext()
         else:
@@ -203,7 +259,7 @@ class NexthopObjectClient:
         resmgr.CreateUnderlayNHAllocator()
         resmgr.CreateOverlayNHAllocator()
         resmgr.CreateDualEcmpNhAllocator()
-        tunnel.client.AssociateObjects()
+        TunnelClient.AssociateObjects()
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         if not self.__supported:
@@ -232,7 +288,7 @@ class NexthopObjectClient:
                 continue
             for c in range(nh_spec_obj.count):
                 obj = NexthopObject(parent, nh_spec_obj)
-                self.__objs.update({obj.NexthopId: obj})
+                self.Objs.update({obj.NexthopId: obj})
                 if nh_type == "underlay":
                     self.__underlay_objs.update({obj.NexthopId: obj})
                 if isV4Stack:
@@ -251,8 +307,8 @@ class NexthopObjectClient:
         if utils.IsPipelineApulu():
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs.values()))
         else:
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__objs.values()))
-        api.client.Create(api.ObjectTypes.NEXTHOP, msgs)
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+        api.client.Create(self.ObjType, msgs)
         return
 
     def GetGrpcReadAllMessage(self):
@@ -260,10 +316,8 @@ class NexthopObjectClient:
         return grpcmsg
 
     def ReadObjects(self):
-        if len(self.__objs.values()) == 0:
-            return
         msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.NEXTHOP, [msg])
+        resp = api.client.Get(self.ObjType, [msg])
         # TODO: Fix get all for nh, currently not supported
         # nh read is based on id and type only
         if False:
@@ -281,7 +335,7 @@ class NexthopObjectClient:
                 return False
             for resp in obj.Response:
                 spec = resp.Spec
-                nh = self.GetNexthopObject(spec.Id)
+                nh = self.GetObjectByKey(spec.Id)
                 if not utils.ValidateObject(nh, resp):
                     logger.error("NEXTHOP validation failed for ", obj)
                     vnic.Show()

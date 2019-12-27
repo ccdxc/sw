@@ -11,7 +11,7 @@ import apollo.config.objects.base as base
 from apollo.config.objects.interface import client as InterfaceClient
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
-import apollo.config.objects.policy as policy
+from apollo.config.objects.policy import client as PolicyClient
 import apollo.config.objects.route as route
 import apollo.config.utils as utils
 
@@ -36,6 +36,7 @@ class SubnetStatus(base.StatusObjectBase):
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
         super().__init__(api.ObjectTypes.SUBNET)
+        parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
@@ -48,10 +49,10 @@ class SubnetObject(base.ConfigObjectBase):
         self.VirtualRouterMacAddr = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
-        self.IngV4SecurityPolicyIds = [policy.client.GetIngV4SecurityPolicyId(parent.VPCId)]
-        self.IngV6SecurityPolicyIds = [policy.client.GetIngV6SecurityPolicyId(parent.VPCId)]
-        self.EgV4SecurityPolicyIds = [policy.client.GetEgV4SecurityPolicyId(parent.VPCId)]
-        self.EgV6SecurityPolicyIds = [policy.client.GetEgV6SecurityPolicyId(parent.VPCId)]
+        self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(parent.VPCId)]
+        self.IngV6SecurityPolicyIds = [PolicyClient.GetIngV6SecurityPolicyId(parent.VPCId)]
+        self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(parent.VPCId)]
+        self.EgV6SecurityPolicyIds = [PolicyClient.GetEgV6SecurityPolicyId(parent.VPCId)]
         self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         self.Vnid = next(resmgr.VxlanIdAllocator)
@@ -84,8 +85,8 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- Prefix %s VNI %d" % (self.IPPrefix, self.Vnid))
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
-        logger.info("- NaclIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
-                    (self.IngV4SecurityPolicyIds[0], self.IngV6SecurityPolicyIds[0], self.EgV4SecurityPolicyIds[0], self.EgV6SecurityPolicyIds[0]))
+        logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\
+                    (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
         self.Status.Show()
@@ -96,12 +97,12 @@ class SubnetObject(base.ConfigObjectBase):
         for policyid in ids:
             if policyid is 0:
                 continue
-            policyobj = policy.client.GetPolicyObject(policyid)
+            policyobj = PolicyClient.GetPolicyObject(policyid)
             if policyobj.PolicyType == 'default':
                 #TODO: move this to policy.py
                 self.__fill_default_rules(policyobj)
             else:
-                policy.client.ModifyPolicyRules(policyid, self)
+                PolicyClient.ModifyPolicyRules(policyid, self)
         return
 
     def __fill_default_rules(self, policyobj):
@@ -119,7 +120,7 @@ class SubnetObject(base.ConfigObjectBase):
                 pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
-        policyobj.rules = policy.client.Generate_Allow_All_Rules(srcPfx, dstPfx)
+        policyobj.rules = PolicyClient.Generate_Allow_All_Rules(srcPfx, dstPfx)
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
@@ -228,9 +229,8 @@ class SubnetObject(base.ConfigObjectBase):
         dependees = [ self.V4RouteTable, self.V6RouteTable ]
         policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
         policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
-        for policyid in policyids:
-            policyObj = policy.client.GetPolicyObject(policyid)
-            dependees.append(policyObj)
+        policyobjs = PolicyClient.GetObjectsByKeys(policyids)
+        dependees.extend(policyobjs)
         return dependees
 
     def RestoreNotify(self, cObj):
@@ -238,13 +238,36 @@ class SubnetObject(base.ConfigObjectBase):
         if not self.IsHwHabitant():
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
+        logger.info(" - Linking %s to %s " % (cObj, self))
         if cObj.ObjType == api.ObjectTypes.ROUTE:
-            logger.info(" - Update route table on %s " % self)
-            if 'IPV4' == cObj.AddrFamily:
+            if cObj.IsV4():
                 self.V4RouteTableId = cObj.RouteTblId
-            elif 'IPV6' == cObj.AddrFamily:
+            elif cObj.IsV6():
                 self.V6RouteTableId = cObj.RouteTblId
-        # TODO: handle other objects & invoke update())
+        elif cObj.ObjType == api.ObjectTypes.POLICY:
+            policylist = None
+            if cObj.IsV4():
+                if cObj.IsIngressPolicy():
+                    policylist = self.IngV4SecurityPolicyIds
+                elif cObj.IsEgressPolicy():
+                    policylist = self.EgV4SecurityPolicyIds
+            elif cObj.IsV6():
+                if cObj.IsIngressPolicy():
+                    policylist = self.IngV6SecurityPolicyIds
+                elif cObj.IsEgressPolicy():
+                    policylist = self.EgV6SecurityPolicyIds
+            if policylist is not None:
+                policylist.append(cObj.PolicyId)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (cObj, self))
+                cObj.Show()
+                assert(0)
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
         return
 
     def DeleteNotify(self, dObj):
@@ -252,14 +275,40 @@ class SubnetObject(base.ConfigObjectBase):
         if not self.IsHwHabitant():
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.ROUTE:
-            logger.info(" - Update route table on %s " % self)
             if self.V4RouteTableId == dObj.RouteTblId:
                 self.V4RouteTableId = 0
             elif self.V6RouteTableId == dObj.RouteTblId:
                 self.V6RouteTableId = 0
-        # TODO: handle other objects
-        # Send a modify message to agent
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        elif dObj.ObjType == api.ObjectTypes.POLICY:
+            policylist = None
+            if dObj.IsV4():
+                if dObj.IsIngressPolicy():
+                    policylist = self.IngV4SecurityPolicyIds
+                elif dObj.IsEgressPolicy():
+                    policylist = self.EgV4SecurityPolicyIds
+            elif dObj.IsV6():
+                if dObj.IsIngressPolicy():
+                    policylist = self.IngV6SecurityPolicyIds
+                elif dObj.IsEgressPolicy():
+                    policylist = self.EgV6SecurityPolicyIds
+            if policylist is not None:
+                policylist.remove(dObj.PolicyId)
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            dObj.Show()
+            assert(0)
+        # self.Update()
         return
 
 class SubnetObjectClient(base.ConfigClientBase):

@@ -14,11 +14,9 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
-import apollo.config.objects.nexthop as nexthop
-
-import route_pb2 as route_pb2
-import tunnel_pb2 as tunnel_pb2
-import types_pb2 as types_pb2
+from apollo.config.objects.nexthop import client as NexthopClient
+from apollo.config.objects.nexthop_group import client as NexthopGroupClient
+from apollo.config.objects.tunnel import client as TunnelClient
 
 DEFAULT_ROUTE_PRIORITY = 0
 MIN_ROUTE_PRIORITY = 65535
@@ -39,7 +37,6 @@ class RouteObject():
             self.NexthopId = nhid
         elif self.NextHopType == "nhg":
             self.NexthopGroupId = nhgid
-        self.Show()
 
     def __repr__(self):
         return "RouteID:%d|ip:%s|priority:%d|type:%s"\
@@ -65,14 +62,13 @@ class RouteTableObject(base.ConfigObjectBase):
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
             self.AddrFamily = 'IPV6'
-            self.NEXTHOP = nexthop.client.GetV6Nexthop(parent.VPCId)
+            self.NEXTHOP = NexthopClient.GetV6Nexthop(parent.VPCId)
         else:
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
-            self.NEXTHOP = nexthop.client.GetV4Nexthop(parent.VPCId)
+            self.NEXTHOP = NexthopClient.GetV4Nexthop(parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
         self.routes = routes
-        #resmgr.ResetRouteIdAllocator() #TODO fix bug while generating multiple route tables
         self.TUNNEL = tunobj
         self.NhGroup = None
         self.DualEcmp = utils.IsDualEcmp(spec)
@@ -91,35 +87,8 @@ class RouteTableObject(base.ConfigObjectBase):
         self.AppPort = resmgr.TransportDstPort
         self.Mutable = utils.IsUpdateSupported()
         ##########################################################################
-        self._derive_oper_info(spec)
+        self.DeriveOperInfo(spec)
         self.Show()
-        return
-
-    def _derive_oper_info(self, spec):
-        # operational info useful for testspec
-        routetype = self.RouteType
-        self.HasDefaultRoute = True if 'default' in routetype else False
-        self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
-        self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
-        self.HasNexthop = True if self.NEXTHOP else False
-        self.TepType = getattr(spec, 'teptype', None)
-        self.HasServiceTunnel = False
-        if utils.IsPipelineArtemis():
-            if self.TUNNEL and self.TUNNEL.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
-                self.HasServiceTunnel = True
-        if self.HasBlackHoleRoute:
-            self.NextHopType = "blackhole"
-        elif self.VPCPeeringEnabled:
-            self.NextHopType = "vpcpeer"
-        else:
-            if utils.IsPipelineArtemis() and \
-               self.HasServiceTunnel == False and self.HasNexthop:
-                self.NextHopType = "nh"
-            elif utils.IsPipelineApulu() and \
-                self.TepType == "overlay-ecmp":
-                self.NextHopType = "nhg"
-            else:
-                self.NextHopType = "tep"
         return
 
     def __repr__(self):
@@ -206,6 +175,88 @@ class RouteTableObject(base.ConfigObjectBase):
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
         return True
+
+    def GetDependees(self):
+        """
+        depender/dependent - route table
+        dependee - vpc, tunnel, nexthop, & nexthop_group
+        """
+        # TODO: get vpc
+        dependees = [ ]
+        if self.TUNNEL:
+            dependees.append(self.TUNNEL)
+        for route in self.routes.values():
+            if route.NextHopType == "vpcpeer":
+                # TODO: get VPC object
+                pass
+            elif route.NextHopType == "tep":
+                tunnelObj = TunnelClient.GetObjectByKey(route.TunnelId)
+                dependees.append(tunnelObj)
+            elif route.NextHopType == "nh":
+                nhObj = NexthopClient.GetObjectByKey(route.NexthopId)
+                dependees.append(nhObj)
+            elif route.NextHopType == "nhg":
+                nhgObj = NexthopGroupClient.GetObjectByKey(route.NexthopGroupId)
+                dependees.append(nhgObj)
+        return dependees
+
+    def DeriveOperInfo(self, spec):
+        # operational info useful for testspec
+        routetype = self.RouteType
+        self.HasDefaultRoute = True if 'default' in routetype else False
+        self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
+        self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
+        self.HasNexthop = True if self.NEXTHOP else False
+        self.TepType = getattr(spec, 'teptype', None)
+        self.HasServiceTunnel = False
+        if utils.IsPipelineArtemis():
+            if self.TUNNEL and self.TUNNEL.IsSvc():
+                self.HasServiceTunnel = True
+        if self.HasBlackHoleRoute:
+            self.NextHopType = "blackhole"
+        elif self.VPCPeeringEnabled:
+            self.NextHopType = "vpcpeer"
+        else:
+            if utils.IsPipelineArtemis() and \
+               self.HasServiceTunnel == False and self.HasNexthop:
+                self.NextHopType = "nh"
+            elif utils.IsPipelineApulu() and \
+                self.TepType == "overlay-ecmp":
+                self.NextHopType = "nhg"
+            else:
+                self.NextHopType = "tep"
+        super().DeriveOperInfo()
+        return
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunnelId = cObj.Id
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.TUNNEL:
+            self.TunnelId = 0
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
 
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
@@ -396,9 +447,9 @@ class RouteObjectClient(base.ConfigClientBase):
         def __get_nexthop(af):
             nh = None
             if af == utils.IP_VERSION_4:
-                nh = nexthop.client.GetV4Nexthop(parent.VPCId)
+                nh = NexthopClient.GetV4Nexthop(parent.VPCId)
             else:
-                nh = nexthop.client.GetV6Nexthop(parent.VPCId)
+                nh = NexthopClient.GetV6Nexthop(parent.VPCId)
             return nh
 
         def __get_route_attribs(spec, af=utils.IP_VERSION_4):
@@ -411,7 +462,7 @@ class RouteObjectClient(base.ConfigClientBase):
                 vpcid = vpcpeerid
             elif nh_type == "tep":
                 tunobj = __get_tunnel(spec)
-                if utils.IsPipelineArtemis() and tunobj.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
+                if utils.IsPipelineArtemis() and tunobj.IsSvc():
                     # service tunnel case
                     nh_type = "nh"
                     nexthop = __get_nexthop(af)

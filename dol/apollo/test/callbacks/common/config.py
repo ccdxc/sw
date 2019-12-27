@@ -29,16 +29,24 @@ def GetCfgObject(tc):
         cfgObject = tc.config.localmapping.VNIC.SUBNET
     elif objname == 'tunnel':
         cfgObject = tc.config.tunnel
+    elif objname == 'nexthopgroup':
+        tunnel = tc.config.tunnel
+        if tunnel.IsUnderlayEcmp():
+            cfgObject = tunnel.NEXTHOPGROUP
+    elif objname == 'nexthop':
+        tunnel = tc.config.tunnel
+        if tunnel.IsUnderlay():
+            cfgObject = tunnel.NEXTHOP
+    elif objname == 'interface':
+        tunnel = tc.config.tunnel
+        if tunnel.IsUnderlay():
+            cfgObject = tunnel.NEXTHOP.L3Interface
     elif objname == 'routetable':
         cfgObject = tc.config.route
+    elif objname == 'policy':
+        cfgObject = tc.config.policy
     elif objname == 'vpc':
         cfgObject = tc.config.localmapping.VNIC.SUBNET.VPC
-    elif objname == 'interface':
-        cfgObject = tc.config.tunnel.NEXTHOP.L3Interface
-    elif objname == 'nexthop':
-        cfgObject = tc.config.tunnel.NEXTHOP
-    elif objname == "nexthop_group":
-        cfgObject = tc.config.tunnel.NEXTHOPGROUP
     logger.info(" Selecting %s for %s" % (cfgObject, objname))
     return cfgObject
 

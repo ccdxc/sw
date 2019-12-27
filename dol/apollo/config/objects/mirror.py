@@ -36,6 +36,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
         else:
             assert(0)
         ################# PRIVATE ATTRIBUTES OF MIRROR OBJECT #####################
+        self.DeriveOperInfo()
         self.Show()
         return
 

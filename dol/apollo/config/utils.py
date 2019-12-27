@@ -1,8 +1,8 @@
 #! /usr/bin/python3
 import sys
 import ipaddress
+import random
 import socket
-from random import sample
 from scapy.layers.l2 import Dot1Q
 import time
 import yaml
@@ -56,13 +56,19 @@ def LifId2LifIfIndex(lifid):
 def LifIfindex2LifId(lififindex):
     return (lififindex & LIF_IF_LIF_ID_MASK)
 
-def GetFilteredObjects(objs, maxlimits, random=False):
+def GetRandomObject(objList):
+    return random.choice(objList)
+
+def GetRandomSamples(objList, num):
+    return random.sample(objList, k=num)
+
+def GetFilteredObjects(objs, maxlimits, randomize=False):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         num = len(objs)
     else:
         num = maxlimits
-    if random:
-        return sample(objs, k=num)
+    if randomize:
+        return GetRandomSamples(objs, num)
     return objs[0:num]
 
 def IsDryRun():

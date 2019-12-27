@@ -124,6 +124,7 @@ class PolicyObject(base.ConfigObjectBase):
         self.Level = level
         self.OverlapType = overlaptype
         self.rules = copy.deepcopy(rules)
+        self.DeriveOperInfo()
         self.Show()
         return
 
@@ -135,7 +136,7 @@ class PolicyObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         logger.info("- Level:%s" % self.Level)
         logger.info("- Vpc%d" % self.VPCId)
-        logger.info("- Direction:%s" % self.Direction)
+        logger.info("- Direction:%s|AF:%s" % (self.Direction, self.AddrFamily))
         logger.info("- PolicyType:%s" % self.PolicyType)
         logger.info("- OverlapType:%s" % self.OverlapType)
         logger.info("- Number of rules:%d" % len(self.rules))
@@ -252,6 +253,12 @@ class PolicyObject(base.ConfigObjectBase):
             if not utils.isDefaultRoute(pfx):
                 break
         return rule
+
+    def IsIngressPolicy(self):
+        return self.Direction == 'ingress'
+
+    def IsEgressPolicy(self):
+        return self.Direction == 'egress'
 
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj

@@ -117,3 +117,62 @@ session:
                 - descriptor    :
                     object      : ref://testcase/descriptors/id=DESC2
                     ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    # - step                   :
+    #     trigger              :
+    #         configs          :
+    #             - object     : ref://testcase/config/policy
+    #               method     : Delete
+
+    #         delay            : 1
+
+    #         descriptors      :
+    #             - descriptor :
+    #                 object   : ref://testcase/descriptors/id=DESC1
+    #                 ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+    #         packets          :
+    #             - packet     :
+    #                 object   : ref://testcase/packets/id=FROM_SWITCH_PKT
+    #                 port     : ref://testcase/config/switchport
+
+    #     expect               :
+    #         configs          :
+    #             - object     : ref://testcase/config/policy
+    #               method     : Read
+
+    #         descriptors      :
+    #             - descriptor :
+    #                 # even though the policy is now deleted,
+    #                 # a) subnet/vnic could still have other policies
+    #                 # b) no policy is currently being considered as bypass
+    #                 # so still need to evaluate & return the expectation
+    #                 # TODO: convert to callbacks
+    #                 object   : ref://testcase/descriptors/id=DESC2
+    #                 ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    # - step                   :
+    #     trigger              :
+    #         configs          :
+    #             - object     : ref://testcase/config/policy
+    #               method     : Create
+
+    #         delay            : 1
+
+    #         descriptors      :
+    #             - descriptor :
+    #                 object   : ref://testcase/descriptors/id=DESC1
+    #                 ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+    #         packets          :
+    #             - packet     :
+    #                 object   : ref://testcase/packets/id=FROM_SWITCH_PKT
+    #                 port     : ref://testcase/config/switchport
+
+    #     expect               :
+    #         configs          :
+    #             - object     : ref://testcase/config/policy
+    #               method     : Read
+
+    #         descriptors      :
+    #             - descriptor :
+    #                 object   : ref://testcase/descriptors/id=DESC2
+    #                 ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

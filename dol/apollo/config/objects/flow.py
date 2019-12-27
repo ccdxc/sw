@@ -150,7 +150,7 @@ class FlowMapObjectHelper:
         selected_objs = []
         if topo.ChosenFlowObjs.use_selected_objs == True and len(topo.ChosenFlowObjs.objs) != 0:
             maxlimits = topo.ChosenFlowObjs.getMaxLimits()
-            selected_objs = utils.GetFilteredObjects(topo.ChosenFlowObjs.objs, maxlimits, random=False)
+            selected_objs = utils.GetFilteredObjects(topo.ChosenFlowObjs.objs, maxlimits, randomize=False)
             maxlimits = selectors.maxlimits - topo.ChosenFlowObjs.maxlimits
             if maxlimits <= 0:
                 return utils.GetFilteredObjects(selected_objs, selectors.maxlimits)

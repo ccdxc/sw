@@ -78,6 +78,7 @@ class InterfaceObject(base.ConfigObjectBase):
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
+        self.DeriveOperInfo()
         self.Show()
         return
 

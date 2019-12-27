@@ -25,7 +25,9 @@ class TunnelObject(base.ConfigObjectBase):
         self.LocalIPAddr = self.DEVICE.IPAddr
         self.EncapValue = 0
         self.Nat = False
+        self.NexthopId = 0
         self.NEXTHOP = None
+        self.NexthopGroupId = 0
         self.NEXTHOPGROUP = None
         if (hasattr(spec, 'nat')):
             self.Nat = spec.nat
@@ -68,7 +70,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
-
+        self.DeriveOperInfo()
         self.Show()
         return
 
@@ -140,9 +142,9 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
-            spec.NexthopId = self.NEXTHOP.NexthopId
+            spec.NexthopId = self.NexthopId
         elif self.IsUnderlayEcmp():
-            spec.NexthopGroupId = self.NEXTHOPGROUP.Id
+            spec.NexthopGroupId = self.NexthopGroupId
         return
 
     def ValidateSpec(self, spec):
@@ -175,6 +177,53 @@ class TunnelObject(base.ConfigObjectBase):
         if spec['id'] != self.Id:
             return False
         return True
+
+    def GetDependees(self):
+        """
+        depender/dependent - tunnel
+        dependee - nexthop, & nexthop_group
+        """
+        # TODO: nh & nhg will be linked later
+        dependees = [ ]
+        if self.NEXTHOP:
+            dependees.append(self.NEXTHOP)
+        if self.NEXTHOPGROUP:
+            dependees.append(self.NEXTHOPGROUP)
+        return dependees
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.NEXTHOP:
+            self.NexthopId = cObj.NexthopId
+        elif cObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+            self.NexthopGroupId = cObj.Id
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.NEXTHOP:
+            self.NexthopId = 0
+        elif dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+            self.NexthopGroupId = 0
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
 
     def IsWorkload(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
@@ -218,18 +267,22 @@ class TunnelObjectClient(base.ConfigClientBase):
         logger.info("Filling nexthops")
         for tun in self.Objects():
             if tun.IsUnderlay():
-                tun.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
-                logger.info("Tunnel%d - Nexthop%d" %
-                            (tun.Id, tun.NEXTHOP.NexthopId))
+                nhObj = resmgr.UnderlayNHAllocator.rrnext()
+                tun.NEXTHOP = nhObj
+                tun.NexthopId = nhObj.NexthopId
+                logger.info("Linking %s - %s" % (tun, nhObj))
+                nhObj.AddDependent(tun)
         return
 
     def FillUnderlayNhGroups(self):
         logger.info("Filling nexthop groups")
         for tun in self.Objects():
             if tun.IsUnderlayEcmp():
-                tun.NEXTHOPGROUP = resmgr.UnderlayNhGroupAllocator.rrnext()
-                logger.info("Tunnel%d - NexthopGroup%d" %
-                            (tun.Id, tun.NEXTHOPGROUP.Id))
+                nhGroupObj = resmgr.UnderlayNhGroupAllocator.rrnext()
+                tun.NEXTHOPGROUP = nhGroupObj
+                tun.NexthopGroupId = nhGroupObj.Id
+                logger.info("Linking %s - %s" % (tun, nhGroupObj))
+                nhGroupObj.AddDependent(tun)
         return
 
 

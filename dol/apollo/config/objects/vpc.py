@@ -48,6 +48,8 @@ class VpcObject(base.ConfigObjectBase):
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
         self.Nat46_pfx = None
+        self.V4RouteTableId = 0
+        self.V6RouteTableId = 0
         if spec.type == 'underlay':
             self.Type = vpc_pb2.VPC_TYPE_UNDERLAY
             self.IPPrefix[0] = resmgr.ProviderIpV6Network
@@ -80,7 +82,6 @@ class VpcObject(base.ConfigObjectBase):
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
         self.__ip_subnet_prefix_pool[1] = {}
-
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -115,10 +116,14 @@ class VpcObject(base.ConfigObjectBase):
         # Generate Meter configuration
         meter.client.GenerateObjects(self, spec)
 
+        self.V4RouteTableId = route.client.GetRouteV4TableId(self.VPCId)
+        self.V6RouteTableId = route.client.GetRouteV6TableId(self.VPCId)
+        self.V4RouteTable = route.client.GetRouteV4Table(self.VPCId, self.V4RouteTableId)
+        self.V6RouteTable = route.client.GetRouteV6Table(self.VPCId, self.V6RouteTableId)
         # Generate Subnet configuration post policy & route
         if getattr(spec, 'subnet', None) != None:
             subnet.client.GenerateObjects(self, spec)
-
+        self.DeriveOperInfo()
         return
 
     def __repr__(self):
@@ -188,6 +193,8 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
+        spec.V4RouteTableId = self.V4RouteTableId
+        spec.V6RouteTableId = self.V6RouteTableId
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
@@ -220,6 +227,55 @@ class VpcObject(base.ConfigObjectBase):
 
     def IsV6Stack(self):
         return utils.IsV6Stack(self.Stack)
+
+    def GetDependees(self):
+        """
+        depender/dependent - vpc
+        dependee - routetable
+        """
+        dependees = [ self.V4RouteTable, self.V6RouteTable ]
+        return dependees
+
+    def RestoreNotify(self, cObj):
+        logger.info("Notify %s for %s creation" % (self, cObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Linking %s to %s " % (cObj, self))
+        if cObj.ObjType == api.ObjectTypes.ROUTE:
+            if cObj.IsV4():
+                self.V4RouteTableId = cObj.RouteTblId
+            elif cObj.IsV6():
+                self.V6RouteTableId = cObj.RouteTblId
+        else:
+            logger.error(" - ERROR: %s not handling %s restoration" %\
+                         (self.ObjType.name, cObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
+    def DeleteNotify(self, dObj):
+        logger.info("Notify %s for %s deletion" % (self, dObj))
+        if not self.IsHwHabitant():
+            logger.info(" - Skipping notification as %s already deleted" % self)
+            return
+        logger.info(" - Unlinking %s from %s " % (dObj, self))
+        if dObj.ObjType == api.ObjectTypes.ROUTE:
+            if self.V4RouteTableId == dObj.RouteTblId:
+                self.V4RouteTableId = 0
+            elif self.V6RouteTableId == dObj.RouteTblId:
+                self.V6RouteTableId = 0
+            else:
+                logger.error(" - ERROR: %s not associated with %s" % \
+                             (dObj, self))
+                assert(0)
+        else:
+            logger.error(" - ERROR: %s not handling %s deletion" %\
+                         (self.ObjType.name, dObj.ObjType))
+            assert(0)
+        # self.Update()
+        return
+
 
 class VpcObjectClient(base.ConfigClientBase):
     def __init__(self):

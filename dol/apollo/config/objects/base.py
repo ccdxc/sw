@@ -48,6 +48,18 @@ class ConfigObjectBase(base.ConfigObjectBase):
         grpcmsg.BatchCtxt.BatchCookie = cookie
         return
 
+    def IsV4(self):
+        af = getattr(self, 'AddrFamily', None)
+        if af == 'IPV4':
+            return True
+        return False
+
+    def IsV6(self):
+        af = getattr(self, 'AddrFamily', None)
+        if af == 'IPV6':
+            return True
+        return False
+
     def AddChild(self, child):
         child.Parent = self
         self.Children.append(child)
@@ -236,6 +248,9 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def GetObjectByKey(self, key):
         return self.Objs.get(key, None)
+
+    def GetObjectsByKeys(self, keys, filterfn=None):
+        return list(filter(filterfn, map(lambda key: self.GetObjectByKey(key), keys)))
 
     def GetObjectType(self):
         return self.ObjType

@@ -110,6 +110,8 @@ DeviceMacAllocator = objects.TemplateFieldObject("macstep/0002.0100.0000/0000.00
 #TODO: read from PDS header files & init
 MAX_DEVICE = 1
 MAX_TUNNEL = 1023
+MAX_NEXTHOP = 4095
+MAX_NEXTHOPGROUP = 1024
 MAX_VPC = 64
 MAX_VNIC = 128 if utils.IsPipelineArtemis() else 64
 # Apulu supports 8 lif for now and therefore cfg cannot have more than 8 subnets

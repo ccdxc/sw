@@ -129,14 +129,14 @@ session:
     #     expect:
     #         configs:
     #             - object    : ref://testcase/config/policy
-    #               method    : ReadAfterDelete
+    #               method    : Read
 
     #         packets:
     #             - packet:
-    #                 #object  : None
-    #                 # Currently, deleting a policy object does NOT cleanup HW
-    #                 # and corresponding vnic also do not get updated.
-    #                 # Even if vnic's sacl root addr gets updated to 0, it is still bypass
+    #                 # even though the policy is now deleted,
+    #                 # a) subnet/vnic could still have other policies
+    #                 # b) no policy is currently being considered as bypass
+    #                 # so still need to evaluate & return the expectation
     #                 object  : callback://networking/packets/GetExpectedCPSPacket/ipkt=FROM_HOST_PKT,epkt_pass=TO_SWITCH_PKT
     #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
 
