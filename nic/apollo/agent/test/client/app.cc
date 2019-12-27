@@ -62,6 +62,7 @@ std::unique_ptr<pds::MappingSvc::Stub>           g_mapping_stub_;
 std::unique_ptr<pds::VnicSvc::Stub>              g_vnic_stub_;
 std::unique_ptr<pds::SubnetSvc::Stub>            g_subnet_stub_;
 std::unique_ptr<pds::VPCSvc::Stub>               g_vpc_stub_;
+std::unique_ptr<pds::NatSvc::Stub>               g_nat_stub_;
 std::unique_ptr<pds::TunnelSvc::Stub>            g_tunnel_stub_;
 std::unique_ptr<pds::DeviceSvc::Stub>            g_device_stub_;
 std::unique_ptr<pds::BatchSvc::Stub>             g_batch_stub_;
@@ -91,6 +92,7 @@ pds::NhGroupRequest           g_nexthop_group_req;
 pds::SvcMappingRequest        g_svc_mapping_req;
 pds::VPCDeleteRequest         g_vpc_req_del;
 pds::VPCGetRequest            g_vpc_req_get;
+pds::NatPortBlockRequest      g_nat_port_block_req;
 pds::InterfaceRequest         g_if_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
@@ -228,6 +230,30 @@ create_subnet_grpc (pds_subnet_spec_t *spec)
         g_subnet_req.clear_request();
     }
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_nat_port_block_grpc (pds_nat_port_block_spec_t *spec)
+{
+    ClientContext           context;
+    NatPortBlockResponse    response;
+    Status                  status;
+
+    if (spec) {
+        pds_nat_port_block_api_spec_to_proto(g_nat_port_block_req.add_request(), spec);
+    }
+    if ((g_nat_port_block_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+        status = g_nat_stub_->NatPortBlockCreate(&context, g_nat_port_block_req, &response);
+        if (!status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
+            printf("create nat port block failed id %u status %u response %u err %u\n",
+                   spec ? spec->key.id : 0, status.ok(),
+                   response.apistatus(), status.error_code());
+            return SDK_RET_ERR;
+        }
+        g_nat_port_block_req.clear_request();
+    }
     return SDK_RET_OK;
 }
 

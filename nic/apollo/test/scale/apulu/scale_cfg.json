@@ -56,6 +56,10 @@
             "v6-vip-prefix" : "2022::/96"
         },
         {
+            "kind" : "napt",
+            "napt-prefix" : "6.0.0.0/8"
+        },
+        {
             "kind" : "mirror",
             "enable" : "false",
             "rspan" : "4",

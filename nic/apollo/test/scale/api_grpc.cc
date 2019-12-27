@@ -74,6 +74,12 @@ create_vpc (pds_vpc_spec_t *pds_vpc)
 }
 
 sdk_ret_t
+create_nat_port_block (pds_nat_port_block_spec_t *pds_napt)
+{
+    return create_nat_port_block_grpc(pds_napt);
+}
+
+sdk_ret_t
 read_vpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
 {
     return read_vpc_grpc(key, info);

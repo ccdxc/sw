@@ -17,6 +17,7 @@
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
 
 sdk_ret_t create_route_table(pds_route_table_spec_t *route_table);
@@ -26,6 +27,7 @@ sdk_ret_t create_remote_mapping(pds_remote_mapping_spec_t *pds_remote_mapping);
 sdk_ret_t create_vnic(pds_vnic_spec_t *pds_vnic);
 sdk_ret_t create_subnet(pds_subnet_spec_t *pds_subnet);
 sdk_ret_t create_vpc(pds_vpc_spec_t *pds_vpc);
+sdk_ret_t create_nat_port_block(pds_nat_port_block_spec_t *pds_napt);
 sdk_ret_t read_vpc(pds_vpc_key_t *key, pds_vpc_info_t *info);
 sdk_ret_t update_vpc(pds_vpc_spec_t *pds_vpc);
 sdk_ret_t delete_vpc(pds_vpc_key_t *key);

@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/test/api/utils/nexthop.hpp"
 #include "nic/apollo/test/api/utils/nexthop_group.hpp"
 
@@ -173,6 +174,10 @@ sdk_ret_t pds_if_delete(pds_if_key_t *key,
     return SDK_RET_OK;
 }
 
+sdk_ret_t pds_nat_port_block_create(pds_nat_port_block_spec_s *spec,
+                                    pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
 
 sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_s *spec,
                                    pds_batch_ctxt_t bctxt) {

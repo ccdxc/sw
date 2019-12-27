@@ -649,6 +649,41 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 }
 
 sdk_ret_t
+create_nat_port_blocks (uint32_t num_vpcs, ip_prefix_t *napt_prefix)
+{
+    sdk_ret_t rv = SDK_RET_OK;
+    pds_nat_port_block_spec_t pds_napt;
+    ip_addr_t lo_addr;
+    ip_addr_t hi_addr;
+    ipvx_range_t ip_range;
+
+    ip_prefix_ip_low(napt_prefix, &lo_addr);
+    ip_prefix_ip_high(napt_prefix, &hi_addr);
+
+    ip_range.af = IP_AF_IPV4;
+    ip_range.ip_lo.v4_addr = lo_addr.addr.v4_addr;
+    ip_range.ip_hi.v4_addr = hi_addr.addr.v4_addr;
+
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
+        memset(&pds_napt, 0, sizeof(pds_napt));
+        pds_napt.key.id = i;
+        pds_napt.vpc.id = i;
+        pds_napt.ip_proto = IP_PROTO_UDP;
+        pds_napt.nat_ip_range = ip_range;
+        pds_napt.nat_port_range.port_lo = 1024;
+        pds_napt.nat_port_range.port_hi = 65535;
+        //rv = create_nat_port_block(&pds_napt);
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create nat port block %u failed, rv %u", i, rv);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
              ip_prefix_t *ipv6_prefix, ip_prefix_t *nat46_pfx,
              uint32_t num_subnets)
@@ -1652,12 +1687,19 @@ create_objects (void)
         }
     }
 
-    // create vpcs and subnets
+    // create vpcs, NAT port block and subnets
     ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
                       &g_test_params.v6_vpc_pfx, &g_test_params.nat46_vpc_pfx,
                       g_test_params.num_subnets);
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+
+    if (apulu()) {
+        ret = create_nat_port_blocks(g_test_params.num_vpcs, &g_test_params.napt_pfx);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     if (!apulu()) {

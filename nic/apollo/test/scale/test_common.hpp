@@ -105,6 +105,10 @@ typedef struct test_params_s {
         uint32_t num_ip_per_vnic;
         uint32_t num_remote_mappings;
     };
+    // napt config
+    struct {
+        ip_prefix_t napt_pfx;
+    };
     // flow config
     struct {
         uint32_t num_tcp;
@@ -357,6 +361,9 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 if (!pfxstr.empty()) {
                     assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_provider_pfx) == 0);
                 }
+            } else if (kind == "napt") {
+                pfxstr = obj.second.get<std::string>("napt-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->napt_pfx) == 0);
             } else if (kind == "flows") {
                 test_params->num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 test_params->num_udp = std::stol(obj.second.get<std::string>("num_udp"));
