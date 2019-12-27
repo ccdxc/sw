@@ -9,8 +9,8 @@ import apollo.test.callbacks.common.modcbs as modcbs
 
 def Setup(infra, module):
     if 'WORKFLOW_START' in module.name:
-        topo.CachedObjs.select_objs = True
-        topo.CachedObjs.setMaxLimits(module.testspec.selectors.maxlimits)
+        topo.ChosenFlowObjs.select_objs = True
+        topo.ChosenFlowObjs.setMaxLimits(module.testspec.selectors.maxlimits)
     modcbs.Setup(infra, module)
     return True
 
@@ -42,8 +42,8 @@ def TestCaseVerify(tc):
     if tc.module.name.find("WORKFLOW"):
         generator.__read();
     if 'WORKFLOW_START' in tc.module.name:
-        topo.CachedObjs.select_objs = False
-        topo.CachedObjs.use_selected_objs = True
+        topo.ChosenFlowObjs.select_objs = False
+        topo.ChosenFlowObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
-        topo.CachedObjs.reset()
+        topo.ChosenFlowObjs.reset()
     return True

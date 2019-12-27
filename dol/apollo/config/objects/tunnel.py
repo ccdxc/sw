@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
@@ -19,12 +19,14 @@ class TunnelObject(base.ConfigObjectBase):
         self.__spec = spec
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
-
+        self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
-        self.LocalIPAddr = parent.IPAddr
+        self.LocalIPAddr = self.DEVICE.IPAddr
         self.EncapValue = 0
         self.Nat = False
+        self.NEXTHOP = None
+        self.NEXTHOPGROUP = None
         if (hasattr(spec, 'nat')):
             self.Nat = spec.nat
         if local == True:
@@ -38,7 +40,7 @@ class TunnelObject(base.ConfigObjectBase):
                 self.RemoteVnicVxlanIdAllocator = resmgr.CreateRemoteVnicVxlanIdAllocator()
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
                 self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
-                if parent.IsEncapTypeMPLS():
+                if self.DEVICE.IsEncapTypeMPLS():
                     self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
                 else:
                     self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
@@ -52,19 +54,19 @@ class TunnelObject(base.ConfigObjectBase):
                     self.Remote = False
                 self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
             else:
-                if utils.IsV4Stack(parent.stack):
+                if utils.IsV4Stack(self.DEVICE.stack):
                     self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 else:
                     self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
                 if spec.type == 'underlay':
                     self.__nhtype = topo.NhType.UNDERLAY
-                    self.NEXTHOP = None
                 elif spec.type == 'underlay-ecmp':
                     self.__nhtype = topo.NhType.UNDERLAY_ECMP
-                    self.NEXTHOPGROUP = None
         self.RemoteIP = str(self.RemoteIPAddr) # for testspec
         self.MACAddr = resmgr.TepMacAllocator.get()
+        self.Mutable = utils.IsUpdateSupported()
+
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
         self.Show()
@@ -83,6 +85,37 @@ class TunnelObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Tunnel Object: %s" % self)
         logger.info("- %s" % repr(self))
+        return
+
+    def UpdateAttributes(self):
+        if self.LocalIPAddr != self.RemoteIPAddr:
+            if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
+                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+            elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
+                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                if self.DEVICE.IsEncapTypeMPLS():
+                    self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
+                else:
+                    self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+            elif self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
+                self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+            else:
+                if utils.IsV4Stack(self.DEVICE.stack):
+                    self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                else:
+                    self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                #TODO: Update nh and nhgroups
+            if self.IsUnderlay():
+                self.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
+            elif self.IsUnderlayEcmp():
+                self.NEXTHOPGROUP = resmgr.UnderlayNhGroupAllocator.rrnext()
+        self.RemoteIP = str(self.RemoteIPAddr) # for testspec
+        self.MACAddr = resmgr.TepMacAllocator.get()
+        return
+
+    def RollbackAttributes(self):
+        attrlist = ["RemoteIPAddr", "EncapValue", "NEXTHOP", "NEXTHOPGROUP", "RemoteIP", "MACAddr"]
+        self.RollbackMany(attrlist)
         return
 
     def PopulateKey(self, grpcmsg):
@@ -219,7 +252,7 @@ class TunnelObjectClient(base.ConfigClientBase):
             for c in range(t.count):
                 obj = TunnelObject(parent, t, False)
                 self.Objs.update({obj.Id: obj})
-        Store.SetTunnels(self.Objects())
+        EzAccessStore.SetTunnels(self.Objects())
         resmgr.CreateInternetTunnels()
         resmgr.CreateVnicTunnels()
         resmgr.CollectSvcTunnels()

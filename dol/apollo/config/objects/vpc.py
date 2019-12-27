@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -173,6 +173,13 @@ class VpcObject(base.ConfigObjectBase):
             self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
         return __get()
 
+    #TODO - no scenario currently in DOL which uses vpc vrmac
+    #def UpdateAttributes(self):
+    #    self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+
+    #def RollbackAttributes(self):
+    #    self.VirtualRouterMACAddr = self.GetPrecedent().VirtualRouterMACAddr
+
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.VPCId)
         return
@@ -242,7 +249,7 @@ class VpcObjectClient(base.ConfigClientBase):
                 obj = VpcObject(p, c, p.count)
                 self.Objs.update({obj.VPCId: obj})
                 if obj.IsUnderlayVPC():
-                    Store.SetUnderlayVPC(obj)
+                    EzAccessStore.SetUnderlayVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)

@@ -104,18 +104,18 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC3
-                    ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
 
         expect:
             delay: 1
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
                     negtest : callback://networking/packets/IsNegativeTestCase
                     object  : ref://testcase/descriptors/id=DESC4
-                    ring    : ref://testcase/config/remotemapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX

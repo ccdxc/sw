@@ -10,7 +10,7 @@ import infra.engine.engine as engine
 
 from infra.common.glopts import GlobalOptions as GlobalOptions
 from infra.common.logging import logger as logger
-from apollo.config.store import Store as Store
+from apollo.config.store import EzAccessStore as EzAccessStore
 
 ARTEMIS_CONFIG_TEMPLATE_PATH = "apollo/config/templates/"
 ARTEMIS_CONFIG_TOPO_SPEC_PATH = "apollo/config/topology/%s" % GlobalOptions.topology
@@ -21,7 +21,7 @@ import apollo.config.generator    as generator
 
 def InitConfig():
     logger.info("Initializing ARTEMIS Config Templates and Specs")
-    config.Init(Store, ARTEMIS_CONFIG_TEMPLATE_PATH, None, None)
+    config.Init(EzAccessStore, ARTEMIS_CONFIG_TEMPLATE_PATH, None, None)
     return
 
 def InitEngine():

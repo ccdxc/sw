@@ -21,7 +21,9 @@ def __get_cfg_operation_selector(modargs):
 def GetCfgObject(tc):
     objname = __get_cfg_object_selector(tc.module.args)
     cfgObject = None
-    if objname == 'vnic':
+    if objname == 'device':
+        cfgObject =  tc.config.devicecfg
+    elif objname == 'vnic':
         cfgObject =  tc.config.localmapping.VNIC
     elif objname == 'subnet':
         cfgObject = tc.config.localmapping.VNIC.SUBNET
@@ -31,6 +33,12 @@ def GetCfgObject(tc):
         cfgObject = tc.config.route
     elif objname == 'vpc':
         cfgObject = tc.config.localmapping.VNIC.SUBNET.VPC
+    elif objname == 'interface':
+        cfgObject = tc.config.tunnel.NEXTHOP.L3Interface
+    elif objname == 'nexthop':
+        cfgObject = tc.config.tunnel.NEXTHOP
+    elif objname == "nexthop_group":
+        cfgObject = tc.config.tunnel.NEXTHOPGROUP
     logger.info(" Selecting %s for %s" % (cfgObject, objname))
     return cfgObject
 

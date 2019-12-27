@@ -181,4 +181,4 @@ class ApolloConfigStore:
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
-Store = ApolloConfigStore()
+EzAccessStore = ApolloConfigStore()

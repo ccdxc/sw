@@ -4,8 +4,6 @@ import ipaddress
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
-
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils

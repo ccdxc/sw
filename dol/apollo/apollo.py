@@ -10,7 +10,7 @@ import infra.engine.engine as engine
 
 from infra.common.glopts import GlobalOptions as GlobalOptions
 from infra.common.logging import logger as logger
-from apollo.config.store import Store as Store
+from apollo.config.store import EzAccessStore as EzAccessStore
 
 APOLLO_CONFIG_TEMPLATE_PATH  = "apollo/config/templates/"
 APOLLO_CONFIG_SPEC_PATH      = "apollo/config/specs/"
@@ -22,7 +22,7 @@ import apollo.config.generator    as generator
 
 def InitConfig():
     logger.info("Initializing APOLLO Config Templates and Specs")    
-    config.Init(Store, APOLLO_CONFIG_TEMPLATE_PATH, APOLLO_CONFIG_SPEC_PATH, APOLLO_CONFIG_TOPO_SPEC_PATH)
+    config.Init(EzAccessStore, APOLLO_CONFIG_TEMPLATE_PATH, APOLLO_CONFIG_SPEC_PATH, APOLLO_CONFIG_TOPO_SPEC_PATH)
     return
 
 def InitEngine():

@@ -216,10 +216,10 @@ class TagObjectClient(base.ConfigClientBase):
                 continue
 
         if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid].values())
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
 
         if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid].values())
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
         return
 
     """

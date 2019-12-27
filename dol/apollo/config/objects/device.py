@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 
 import apollo.config.resmgr as resmgr
@@ -33,11 +33,23 @@ class DeviceObject(base.ConfigObjectBase):
         self.MACAddr = resmgr.DeviceMacAllocator.get()
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
+        self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF DEVICE OBJECT #####################
         self.__spec = spec
         self.Show()
         tunnel.client.GenerateObjects(self, spec.tunnel)
+        return
+
+    def UpdateAttributes(self):
+        self.IPAddr = next(resmgr.TepIpAddressAllocator)
+        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+        self.IP = str(self.IPAddr)
+        return
+
+    def RollbackAttributes(self):
+        attrlist = ["IPAddr", "GatewayAddr", "IP"]
+        self.RollbackMany(attrlist)
         return
 
     def __repr__(self):
@@ -137,7 +149,7 @@ class DeviceObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, topospec):
         obj = DeviceObject(topospec.device)
         self.Objs.update({0: obj})
-        Store.SetDevice(obj)
+        EzAccessStore.SetDevice(obj)
         return
 
     def CreateObjects(self):

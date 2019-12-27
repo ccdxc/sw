@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -18,7 +18,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING)
         parent.AddChild(self)
-        if (Store.IsDeviceLearningEnabled()):
+        if (EzAccessStore.IsDeviceLearningEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
 
         self.__is_public = getattr(spec, 'public', False)
@@ -36,7 +36,7 @@ class LocalMappingObject(base.ConfigObjectBase):
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
             if parent.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
-            self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_6)
+            self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_6)
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
@@ -44,12 +44,12 @@ class LocalMappingObject(base.ConfigObjectBase):
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
-            self.SvcIPAddr, self.SvcPort = Store.GetSvcMapping(utils.IP_VERSION_4)
+            self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_4)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
         # Provider IP can be v4 or v6
-        self.ProviderIPAddr, self.TunFamily = Store.GetProviderIPAddr(count)
+        self.ProviderIPAddr, self.TunFamily = EzAccessStore.GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # for testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec
@@ -58,7 +58,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         # different rules will be applied
         self.AppPort = resmgr.TransportSrcPort
         self.LBPort = resmgr.TransportSrcLBPort
-        self.UnderlayVPCId = Store.GetUnderlayVPCId()
+        self.UnderlayVPCId = EzAccessStore.GetUnderlayVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.Show()

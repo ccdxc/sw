@@ -50,7 +50,7 @@ packets:
                 dst     : callback://networking/packets/GetUnderlayRemoteMac
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/route/TunIP
+                dst     : callback://networking/packets/GetTunnelIPFromRoute
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -97,7 +97,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
         expect:
 
@@ -111,7 +111,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
     # - step:
     #     trigger:
@@ -124,7 +124,7 @@ session:
     #         descriptors:
     #             - descriptor:
     #                 object  : ref://testcase/descriptors/id=DESC1
-    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
     #     expect:
     #         configs:
@@ -143,7 +143,7 @@ session:
     #         descriptors:
     #             - descriptor:
     #                 object  : ref://testcase/descriptors/id=DESC2
-    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
 
     # - step:
@@ -157,7 +157,7 @@ session:
     #         descriptors:
     #             - descriptor:
     #                 object  : ref://testcase/descriptors/id=DESC1
-    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
     #     expect:
     #         configs:
@@ -172,4 +172,28 @@ session:
     #         descriptors:
     #             - descriptor:
     #                 object  : ref://testcase/descriptors/id=DESC2
-    #                 ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+    
+    # - step:
+    #     trigger:
+    #         configs:
+    #             - object    : ref://testcase/config/policy
+    #               method    : Update
+
+    #         delay           : 1
+
+    #         packets:
+    #             - packet:
+    #                 object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+    #                 port    : ref://testcase/config/switchport
+
+    #     expect:
+    #         configs:
+    #             - object    : ref://testcase/config/policy
+    #               method    : Read
+
+    #         packets:
+    #             - packet:
+    #                 object  : ref://testcase/packets/id=TO_HOST_PKT
+    #                 port    : ref://testcase/config/hostport
+   

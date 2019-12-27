@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import copy
 from collections import defaultdict
 
 from infra.common.logging import logger
@@ -32,6 +33,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Parent = None
         self.Children = []
         self.Deps = defaultdict(list)
+        self.Precedent = None
+        self.Mutable = False
         return
 
     def __get_GrpcMsg(self, op):
@@ -70,6 +73,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def SetHwHabitant(self, value):
         self.HwHabitant = value
+        if self.HwHabitant == True and self.HasPrecedent() == True:
+             self.Precedent.HwHabitant = False
 
     def IsHwHabitant(self):
         return self.HwHabitant
@@ -80,6 +85,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def IsOriginFixed(self):
         return True if (self.Origin == topo.OriginTypes.FIXED) else False
 
+    def HasPrecedent(self):
+         return False if (self.Precedent == None) else True
+
+    def GetPrecedent(self):
+         return self.Precedent
+
     def Create(self, spec=None):
         utils.CreateObject(self)
         return
@@ -87,12 +98,45 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def Read(self, spec=None):
         return utils.ReadObject(self)
 
-    def Update(self, spec=None):
-        return utils.UpdateObject(self)
-
     def Delete(self, spec=None):
         utils.DeleteObject(self)
         return
+
+    def RollbackMany(self, attrlist):
+        if self.HasPrecedent():
+            for attr in attrlist:
+                setattr(self, attr, getattr(self.Precedent, attr))
+        return
+
+    def CopyObject(self):
+        clone = copy.copy(self)
+        return clone
+
+    def Update(self, spec=None):
+        if self.Mutable:
+            logger.info("Update Obj %s" % repr(self))
+            clone = self.CopyObject()
+            clone.Precedent = None
+            self.Precedent = clone
+            self.HwHabitant = False
+            self.UpdateAttributes()
+            logger.info("Updated values - Obj %s" % repr(self))
+            self.CommitUpdate()
+        return
+
+    def RollbackUpdate(self, spec=None):
+        self.PrepareRollbackUpdate(spec)
+        self.CommitUpdate(spec)
+        return
+
+    def PrepareRollbackUpdate(self, spec=None):
+        if self.HasPrecedent():
+            self.RollbackAttributes()
+            self.Precedent = None
+        return
+
+    def CommitUpdate(self, spec=None):
+        return utils.UpdateObject(self)
 
     def ValidateSpec(self, spec):
         logger.error("Method not implemented by class: %s" % self.__class__)

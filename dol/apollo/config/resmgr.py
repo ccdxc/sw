@@ -7,7 +7,7 @@ import re
 import infra.common.objects as objects
 import apollo.config.utils as utils
 import apollo.config.topo as topo
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 # Start and End inclusive range
 def irange(start, end):
@@ -124,9 +124,9 @@ MAX_METER = 64
 MAX_UNDERLAY_NHS = 2
 MAX_OVERLAY_NHS = 8
 
-NumVnicPolicyAllocator = topo.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
-UnderlayNumNexthopsAllocator = topo.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
-OverlayNumNexthopsAllocator = topo.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
+NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
+UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
+OverlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
@@ -161,75 +161,75 @@ def CreateIpv6AddrPool(subnet):
 def CreateInternetTunnels():
     global RemoteInternetNonNatTunAllocator
     global RemoteInternetNatTunAllocator
-    objs = Store.GetIgwNonNatTunnels()
+    objs = EzAccessStore.GetIgwNonNatTunnels()
     if len(objs) != 0:
-        RemoteInternetNonNatTunAllocator = topo.rrobiniter(objs)
-    objs = Store.GetIgwNatTunnels()
+        RemoteInternetNonNatTunAllocator = utils.rrobiniter(objs)
+    objs = EzAccessStore.GetIgwNatTunnels()
     if len(objs) != 0:
-        RemoteInternetNatTunAllocator = topo.rrobiniter(objs)
+        RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
 
 def CollectSvcTunnels():
     if utils.IsPipelineArtemis():
         global SvcTunAllocator
-        objs = Store.GetSvcTunnels()
+        objs = EzAccessStore.GetSvcTunnels()
         if len(objs) != 0:
-            SvcTunAllocator = topo.rrobiniter(objs)
+            SvcTunAllocator = utils.rrobiniter(objs)
         global RemoteSvcTunAllocator
-        objs = Store.GetSvcTunnels(True)
+        objs = EzAccessStore.GetSvcTunnels(True)
         if len(objs) != 0:
-            RemoteSvcTunAllocator = topo.rrobiniter(objs)
+            RemoteSvcTunAllocator = utils.rrobiniter(objs)
 
 def CreateVnicTunnels():
     global RemoteMplsVnicTunAllocator
-    objs = Store.GetWorkloadTunnels()
+    objs = EzAccessStore.GetWorkloadTunnels()
     if len(objs) != 0:
-        RemoteMplsVnicTunAllocator = topo.rrobiniter(objs)
+        RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
 
 def CreateUnderlayTunnels():
     global UnderlayTunAllocator
-    objs = Store.GetUnderlayTunnels()
+    objs = EzAccessStore.GetUnderlayTunnels()
     if len(objs) != 0:
-        UnderlayTunAllocator = topo.rrobiniter(objs)
+        UnderlayTunAllocator = utils.rrobiniter(objs)
     global UnderlayECMPTunAllocator
-    objs = Store.GetUnderlayTunnels(ecmp=True)
+    objs = EzAccessStore.GetUnderlayTunnels(ecmp=True)
     if len(objs) != 0:
-        UnderlayECMPTunAllocator = topo.rrobiniter(objs)
+        UnderlayECMPTunAllocator = utils.rrobiniter(objs)
 
 def CreateUnderlayNHAllocator():
     global UnderlayNHAllocator
-    objs = Store.GetUnderlayNexthops()
+    objs = EzAccessStore.GetUnderlayNexthops()
     if len(objs) != 0:
-        UnderlayNHAllocator = topo.rrobiniter(objs)
+        UnderlayNHAllocator = utils.rrobiniter(objs)
 
 def CreateOverlayNHAllocator():
     global OverlayNHAllocator
-    objs = Store.GetOverlayNexthops()
+    objs = EzAccessStore.GetOverlayNexthops()
     if len(objs) != 0:
-        OverlayNHAllocator = topo.rrobiniter(objs)
+        OverlayNHAllocator = utils.rrobiniter(objs)
 
 def CreateDualEcmpNhAllocator():
     global DualEcmpNhAllocator
-    objs = Store.GetDualEcmpNexthops()
+    objs = EzAccessStore.GetDualEcmpNexthops()
     if len(objs) != 0:
-        DualEcmpNhAllocator = topo.rrobiniter(objs)
+        DualEcmpNhAllocator = utils.rrobiniter(objs)
 
 def CreateUnderlayNhGroupAllocator():
     global UnderlayNhGroupAllocator
-    objs = Store.GetUnderlayNhGroups()
+    objs = EzAccessStore.GetUnderlayNhGroups()
     if len(objs) != 0:
-        UnderlayNhGroupAllocator = topo.rrobiniter(objs)
+        UnderlayNhGroupAllocator = utils.rrobiniter(objs)
 
 def CreateOverlayNhGroupAllocator():
     global OverlayNhGroupAllocator
-    objs = Store.GetOverlayNhGroups()
+    objs = EzAccessStore.GetOverlayNhGroups()
     if len(objs) != 0:
-        OverlayNhGroupAllocator = topo.rrobiniter(objs)
+        OverlayNhGroupAllocator = utils.rrobiniter(objs)
 
 def CreateDualEcmpNhGroupAllocator():
     global DualEcmpNhGroupAllocator
-    objs = Store.GetDualEcmpNhGroups()
+    objs = EzAccessStore.GetDualEcmpNhGroups()
     if len(objs) != 0:
-        DualEcmpNhGroupAllocator = topo.rrobiniter(objs)
+        DualEcmpNhGroupAllocator = utils.rrobiniter(objs)
 
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():

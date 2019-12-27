@@ -74,7 +74,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
         expect:
             delay    :    1
             packets:
@@ -84,4 +84,4 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX

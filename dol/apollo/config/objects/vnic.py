@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -37,7 +37,7 @@ class VnicStatus(base.StatusObjectBase):
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC)
-        if (Store.IsDeviceLearningEnabled()):
+        if (EzAccessStore.IsDeviceLearningEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
@@ -56,7 +56,6 @@ class VnicObject(base.ConfigObjectBase):
         self.TxMirror = txmirror
         self.V4MeterId = meter.client.GetV4MeterId(parent.VPC.VPCId)
         self.V6MeterId = meter.client.GetV6MeterId(parent.VPC.VPCId)
-        self.HostIf = parent.HostIf
         self.IngV4SecurityPolicyIds = []
         self.IngV6SecurityPolicyIds = []
         self.EgV4SecurityPolicyIds = []
@@ -68,6 +67,7 @@ class VnicObject(base.ConfigObjectBase):
         self.__numpolicy = resmgr.NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self.DeriveOperInfo()
+        self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -88,8 +88,8 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
-        if self.HostIf:
-            logger.info("- HostInterface:%s|%s", self.HostIf.Ifname, self.HostIf.lif.GID())
+        if self.SUBNET.HostIf:
+            logger.info("- HostInterface:%s|%s", self.SUBNET.HostIf.Ifname, self.SUBNET.HostIf.lif.GID())
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
@@ -97,6 +97,14 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("- Egr V4 Policies:", self.EgV4SecurityPolicyIds)
             logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
         self.Status.Show()
+        return
+
+    def UpdateAttributes(self):
+        self.MACAddr = resmgr.VnicMacAllocator.get()
+        return
+
+    def RollbackAttributes(self):
+        self.MACAddr = self.GetPrecedent().MACAddr
         return
 
     def PopulateKey(self, grpcmsg):
@@ -131,8 +139,8 @@ class VnicObject(base.ConfigObjectBase):
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(policyid)
         if utils.IsPipelineApulu():
-            if self.HostIf:
-                spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+            if self.SUBNET.HostIf:
+                spec.HostIfIndex = utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id)
         return
 
     def ValidateSpec(self, spec):
@@ -140,15 +148,15 @@ class VnicObject(base.ConfigObjectBase):
             return False
         # if spec.SubnetId != self.SUBNET.SubnetId:
         #     return False
-        if Store.IsDeviceEncapTypeMPLS():
+        if EzAccessStore.IsDeviceEncapTypeMPLS():
             if utils.ValidateTunnelEncap(self.MplsSlot, spec.FabricEncap) is False:
                 return False
         else:
             if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
                 return False
         if utils.IsPipelineApulu():
-            if self.HostIf:
-                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+            if self.SUBNET.HostIf:
+                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
         if spec.VPCId != self.SUBNET.VPC.VPCId:
             return False
@@ -167,8 +175,8 @@ class VnicObject(base.ConfigObjectBase):
         if spec['vnicid'] != self.VnicId:
             return False
         if utils.IsPipelineApulu():
-            if self.HostIf:
-                if spec['hostifindex'] != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+            if self.SUBNET.HostIf:
+                if spec['hostifindex'] != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
         if spec['vpcid'] != self.SUBNET.VPC.VPCId:
             return False

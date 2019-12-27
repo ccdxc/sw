@@ -2,9 +2,8 @@
 import pdb
 import ipaddress
 import itertools
-
+import copy
 from infra.common.logging import logger
-from apollo.config.store import Store
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -66,13 +65,13 @@ class SubnetObject(base.ConfigObjectBase):
         self.__set_vrouter_attributes()
         self.__fill_default_rules_in_policy()
         self.DeriveOperInfo()
+        self.Mutable = utils.IsUpdateSupported()
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
         # Generate VNIC and Remote Mapping configuration
         vnic.client.GenerateObjects(self, spec)
         rmapping.client.GenerateObjects(self, spec)
-
         return
 
     def __repr__(self):
@@ -134,6 +133,18 @@ class SubnetObject(base.ConfigObjectBase):
 
     def AllocIPv4Address(self):
         return next(self.__ip_address_pool[1])
+
+    def UpdateAttributes(self):
+        self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+        hostIf = InterfaceClient.GetHostInterface()
+        if hostIf != None:
+            self.HostIf = hostIf
+        return
+
+    def RollbackAttributes(self):
+        attrlist = ["VirtualRouterMACAddr", "HostIf"]
+        self.RollbackMany(attrlist)
+        return
 
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.SubnetId)

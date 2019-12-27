@@ -2,7 +2,7 @@
 import pdb
 
 from infra.common.logging import logger
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -28,6 +28,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         elif spec.type == 'underlay':
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
             self.NumNexthops = resmgr.UnderlayNumNexthopsAllocator.rrnext()
+        self.Mutable = utils.IsUpdateSupported()
         self.Show()
         return
 
@@ -55,6 +56,15 @@ class NexthopGroupObject(base.ConfigObjectBase):
         logger.info("- Type %s" % type)
         if self.DualEcmp:
             logger.info("- Dual ecmp")
+        return
+
+    def UpdateAttributes(self):
+        if self.NumNexthops > 1:
+            self.NumNexthops -= 1
+        return
+
+    def RollbackAttributes(self):
+        self.NumNexthops = self.GetPrecedent().NumNexthops
         return
 
     def PopulateKey(self, grpcmsg):
@@ -110,7 +120,7 @@ class NexthopGroupObjectClient:
         nh_groups = self.Objects()
         if not nh_groups:
             return
-        Store.SetNexthopgroups(nh_groups)
+        EzAccessStore.SetNexthopgroups(nh_groups)
         resmgr.CreateUnderlayNhGroupAllocator()
         resmgr.CreateOverlayNhGroupAllocator()
         resmgr.CreateDualEcmpNhGroupAllocator()
@@ -156,9 +166,9 @@ class NexthopGroupObjectClient:
                 if isV6Stack:
                     self.__v6objs[vpcid].append(obj)
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
         self.__num_nhgs_per_vpc.append(nhg_spec_obj.count)
         return
 

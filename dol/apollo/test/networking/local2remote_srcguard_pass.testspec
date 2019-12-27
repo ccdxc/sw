@@ -40,7 +40,7 @@ packets:
                 dst     : 00:02:0b:0a:0d:0e
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/remotemapping/TunIP
+                dst     : callback://networking/packets/GetTunnelIPFromMapping
                 ttl     : 64
                 tos     : 0
                 id      : 0

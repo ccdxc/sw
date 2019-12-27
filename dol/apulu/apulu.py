@@ -10,7 +10,7 @@ import infra.common.objects as objects
 import infra.config.config as config
 import infra.engine.engine as engine
 
-from apollo.config.store import Store as Store
+from apollo.config.store import EzAccessStore as EzAccessStore
 
 # reusing apollo objects
 APULU_CONFIG_TEMPLATE_PATH  = "apollo/config/templates/"
@@ -24,7 +24,7 @@ import apollo.config.generator    as generator
 
 def InitConfig():
     logger.info("Initializing APULU Config Templates and Specs")
-    config.Init(Store, APULU_CONFIG_TEMPLATE_PATH, APULU_CONFIG_SPEC_PATH, APULU_CONFIG_TOPO_SPEC_PATH)
+    config.Init(EzAccessStore, APULU_CONFIG_TEMPLATE_PATH, APULU_CONFIG_SPEC_PATH, APULU_CONFIG_TOPO_SPEC_PATH)
     return
 
 def InitEngine():

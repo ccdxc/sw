@@ -9,7 +9,7 @@ import batch_pb2 as batch_pb2
 import types_pb2 as types_pb2
 
 from infra.common.logging import logger
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 INVALID_BATCH_COOKIE = 0
 
@@ -98,4 +98,4 @@ class BatchObjectClient:
         return
 
 client = BatchObjectClient()
-Store.SetBatchClient(client)
+EzAccessStore.SetBatchClient(client)

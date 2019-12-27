@@ -4,7 +4,7 @@ import enum
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -58,9 +58,9 @@ class PortObjectClient:
                 return topo.PortTypes.SWITCH
             elif mode == 'host':
                 return topo.PortTypes.HOST
-            if Store.IsHostMode():
+            if EzAccessStore.IsHostMode():
                 return topo.PortTypes.SWITCH
-            elif Store.IsBitwMode():
+            elif EzAccessStore.IsBitwMode():
                 if port == UplinkPorts.UplinkPort0:
                     return topo.PortTypes.HOST
                 elif port == UplinkPorts.UplinkPort1:
@@ -77,9 +77,9 @@ class PortObjectClient:
             obj = PortObject(port, mode)
             self.__objs.update({obj.PortId: obj})
             if obj.IsHostPort():
-                Store.SetHostPort(obj.Port)
+                EzAccessStore.SetHostPort(obj.Port)
             elif obj.IsSwitchPort():
-                Store.SetSwitchPort(obj.Port)
+                EzAccessStore.SetSwitchPort(obj.Port)
         return
 
 client = PortObjectClient()

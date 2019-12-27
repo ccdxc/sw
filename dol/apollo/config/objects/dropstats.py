@@ -3,7 +3,7 @@ import copy
 
 from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import logger
-from apollo.config.store        import Store
+from apollo.config.store        import EzAccessStore
 
 class DropStats:
     def __init__(self):
@@ -24,7 +24,7 @@ class DropStats:
 
 class DropStatsVerifHelper:
     def __init__(self):
-        self.DevObject = Store.GetDevice()
+        self.DevObject = EzAccessStore.GetDevice()
         self.PreStats = DropStats()
         self.PostStats = DropStats()
         self.ExpStats = None

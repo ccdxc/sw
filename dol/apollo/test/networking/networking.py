@@ -8,8 +8,8 @@ import apollo.config.topo as topo
 
 def Setup(infra, module):
     if 'WORKFLOW_START' in module.name:
-        topo.CachedObjs.select_objs = True
-        topo.CachedObjs.setMaxLimits(module.testspec.selectors.maxlimits)
+        topo.ChosenFlowObjs.select_objs = True
+        topo.ChosenFlowObjs.setMaxLimits(module.testspec.selectors.maxlimits)
     modcbs.Setup(infra, module)
     return True
 
@@ -47,10 +47,10 @@ def TestCaseStepTeardown(tc, step):
 
 def TestCaseVerify(tc):
     if 'WORKFLOW_START' in tc.module.name:
-        topo.CachedObjs.select_objs = False
-        topo.CachedObjs.use_selected_objs = True
+        topo.ChosenFlowObjs.select_objs = False
+        topo.ChosenFlowObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
-        topo.CachedObjs.reset()
+        topo.ChosenFlowObjs.reset()
     if hasattr(tc.pvtdata, 'verify_drop_stats') and tc.pvtdata.verify_drop_stats\
        and hasattr(tc.pvtdata, 'dropstats') and tc.pvtdata.dropstats.Verify(tc) == False:
         return False

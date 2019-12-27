@@ -11,7 +11,7 @@ from collections import OrderedDict
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 import apollo.config.topo as topo
 import apollo.config.agent.api as api
 from infra.common.glopts import GlobalOptions
@@ -88,9 +88,9 @@ def ValidateRpcIPAddr(srcaddr, dstaddr):
     return True
 
 def ValidateTunnelEncap(srcencap, dstencap):
-    if dstencap.type != Store.GetDeviceEncapType():
+    if dstencap.type != EzAccessStore.GetDeviceEncapType():
         return False
-    if Store.IsDeviceEncapTypeMPLS():
+    if EzAccessStore.IsDeviceEncapTypeMPLS():
          if dstencap.value.MPLSTag != srcencap:
              return False
     else:
@@ -172,11 +172,23 @@ def ValidateDelete(obj, resps):
                 obj.Show()
     return
 
+def ValidateUpdate(obj, resps):
+    if IsDryRun(): return
+    for resp in resps:
+        for status in resp.ApiStatus:
+            if status == types_pb2.API_STATUS_OK:
+                obj.SetHwHabitant(True)
+            else:
+                logger.error("Update failed for %s" %(obj.__repr__()))
+                obj.PrepareRollbackUpdate()
+                obj.SetHwHabitant(True)
+    return
+
 def LoadYaml(cmdoutput):
     return yaml.load(cmdoutput, Loader=yaml.FullLoader)
 
 def GetBatchCookie():
-    batchClient = Store.GetBatchClient()
+    batchClient = EzAccessStore.GetBatchClient()
     obj = batchClient.Objects()
     return obj.GetBatchCookie()
 
@@ -194,7 +206,7 @@ def CreateObject(obj):
     if obj.IsHwHabitant():
         logger.info("Already restored %s" % (obj))
         return
-    batchClient = Store.GetBatchClient()
+    batchClient = EzAccessStore.GetBatchClient()
     
     def RestoreObj(robj):
         logger.info("Recreating object %s" % (robj))
@@ -218,7 +230,7 @@ def ReadObject(obj):
 
 def UpdateObject(obj):
     logger.info("Updating object %s" % (obj))
-    batchClient = Store.GetBatchClient()
+    batchClient = EzAccessStore.GetBatchClient()
     batchClient.Start()
     cookie = GetBatchCookie()
     msg = obj.GetGrpcUpdateMessage(cookie)
@@ -231,7 +243,7 @@ def DeleteObject(obj):
     if not obj.IsHwHabitant():
         logger.info("Already deleted %s" % (obj))
         return
-    batchClient = Store.GetBatchClient()
+    batchClient = EzAccessStore.GetBatchClient()
     
     def DelObj(dobj):
         InformDependents(dobj, 'DeleteNotify')
@@ -399,8 +411,8 @@ def GetRpcIPRange(addrLow, addrHigh, addrRange):
     return
 
 def GetRpcEncap(mplsslot, vxlanid, encap):
-    encap.type = Store.GetDeviceEncapType()
-    if Store.IsDeviceEncapTypeMPLS():
+    encap.type = EzAccessStore.GetDeviceEncapType()
+    if EzAccessStore.IsDeviceEncapTypeMPLS():
          encap.value.MPLSTag  = mplsslot
     else:
          encap.value.Vnid  = vxlanid
@@ -526,10 +538,15 @@ def GetVlanHeaderSize(packet):
         return DOT1Q_HDR_LEN
     return 0
 
+def IsUpdateSupported():
+    if IsPipelineApulu():
+        return True
+    return False
+
 def MergeFilteredObjects(objs, selected_objs):
-    if topo.CachedObjs.select_objs is True:
-        topo.CachedObjs.add(objs)
-    elif topo.CachedObjs.use_selected_objs is True:
+    if topo.ChosenFlowObjs.select_objs is True:
+        topo.ChosenFlowObjs.add(objs)
+    elif topo.ChosenFlowObjs.use_selected_objs is True:
         objs.extend(selected_objs)
 
 def MergeDicts(objs1, objs2):
@@ -542,7 +559,7 @@ def MergeDicts(objs1, objs2):
 
 def getTunInfo(nh_type, id):
     if nh_type == "tep":
-        tuns = Store.tunnels.GetAll()
+        tuns = EzAccessStore.tunnels.GetAll()
         for tun in tuns:
             if tun.Id == id:
                 return (tun.EncapValue, str(tun.RemoteIPAddr))
@@ -585,3 +602,19 @@ def DumpTestcaseConfig(obj):
         cfgObj.Show()
     logger.info("========== Testcase config end ==========")
     return
+
+class rrobiniter:
+    def __init__(self, objs):
+        assert len(objs) != 0
+        self.objs = objs
+        self.iterator = iter(objs)
+        self.size = len(objs)
+    def rrnext(self):
+        while True:
+            try:
+                return next(self.iterator)
+            except:
+                self.iterator = iter(self.objs)
+                continue
+    def size(self):
+        return self.size

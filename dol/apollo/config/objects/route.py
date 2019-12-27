@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -79,8 +79,6 @@ class RouteTableObject(base.ConfigObjectBase):
         self.PriorityType = getattr(spec, "priority", None)
         if self.TUNNEL:
             self.TunnelId = self.TUNNEL.Id
-            self.TunIPAddr = tunobj.RemoteIPAddr
-            self.TunIP = str(self.TunIPAddr)
             self.TunEncap = tunobj.EncapValue
         else:
             self.TunnelId = 0
@@ -91,6 +89,7 @@ class RouteTableObject(base.ConfigObjectBase):
         self.RouteType = routetype # used for lpm route cases
         self.PeerVPCId = vpcpeerid
         self.AppPort = resmgr.TransportDstPort
+        self.Mutable = utils.IsUpdateSupported()
         ##########################################################################
         self._derive_oper_info(spec)
         self.Show()
@@ -127,10 +126,8 @@ class RouteTableObject(base.ConfigObjectBase):
         return "RouteTableID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s"\
                %(self.RouteTblId, self.VPCId, self.AddrFamily,\
                  len(self.routes), self.RouteType)
-
+    
     def Show(self):
-        logger.info("RouteTable object:", self)
-        logger.info("- %s" % repr(self))
         logger.info("- HasDefaultRoute:%s|HasBlackHoleRoute:%s"\
                     %(self.HasDefaultRoute, self.HasBlackHoleRoute))
         logger.info("- VPCPeering:%s Peer Vpc%d" %(self.VPCPeeringEnabled, self.PeerVPCId))
@@ -140,7 +137,7 @@ class RouteTableObject(base.ConfigObjectBase):
             if self.DualEcmp:
                 logger.info("- Dual ecmp:%s" % (self.DualEcmp))
         if self.TUNNEL:
-            logger.info("- TEP: Tunnel%d|IP:%s" %(self.TunnelId, self.TunIP))
+            logger.info("- TEP: Tunnel%d|IP:%s" %(self.TunnelId, str(self.TUNNEL.RemoteIPAddr)))
         elif self.NhGroup:
             logger.info("- TEP: None")
             logger.info("- NexthopGroup%d" % (self.NhGroup.Id))
@@ -150,6 +147,29 @@ class RouteTableObject(base.ConfigObjectBase):
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.route.filters)
+
+    def CopyObject(self):
+        clone = copy.copy(self)
+        clone.routes = self.routes
+        self.routes = copy.deepcopy(clone.routes)
+        return clone
+
+    def UpdateAttributes(self):
+        ipaddr = utils.GetNextSubnet(self.routes.get(list(self.routes)[-1]).ipaddr)
+        for route in self.routes.values():
+            ipaddr = utils.GetNextSubnet(ipaddr)
+            route.ipaddr = ipaddr
+            if route.NextHopType == "nh":
+                if af == utils.IP_VERSION_4:
+                    nh = nexthop.client.GetV4Nexthop(self.VPCId)
+                else:
+                    nh = nexthop.client.GetV6Nexthop(self.VPCId)
+                route.NexthopId = nh.NexthopId
+        return
+
+    def RollbackAttributes(self):
+        self.routes = self.GetPrecedent().routes
+        return
 
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.RouteTblId)
@@ -191,9 +211,9 @@ class RouteTableObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.route = self
         obj.tunnel = self.TUNNEL
-        obj.hostport = Store.GetHostPort()
-        obj.switchport = Store.GetSwitchPort()
-        obj.devicecfg = Store.GetDevice()
+        obj.hostport = EzAccessStore.GetHostPort()
+        obj.switchport = EzAccessStore.GetSwitchPort()
+        obj.devicecfg = EzAccessStore.GetDevice()
         obj.vpc = self.VPC
         utils.DumpTestcaseConfig(obj)
         return
@@ -502,10 +522,10 @@ class RouteObjectClient(base.ConfigClientBase):
                         v6base = utils.GetNextSubnet(routes.get(list(routes)[-1]).ipaddr)
 
         if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid].values())
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
 
         if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid].values())
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
 client = RouteObjectClient()
 

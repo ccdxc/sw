@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
@@ -19,7 +19,6 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.SUBNET = parent
         self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
         self.TunID = tunobj.Id
-        self.TunIPAddr = tunobj.RemoteIPAddr
         self.HasDefaultRoute = False
         if tunobj.IsWorkload():
             self.MplsSlot = next(tunobj.RemoteVnicMplsSlotIdAllocator)
@@ -39,12 +38,11 @@ class RemoteMappingObject(base.ConfigObjectBase):
             if self.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
         # Provider IP can be v4 or v6
-        self.ProviderIPAddr, self.TunFamily = Store.GetProviderIPAddr(count)
+        self.ProviderIPAddr, self.TunFamily = EzAccessStore.GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
-        self.TunIP = str(self.TunIPAddr) # For testspec
         self.AppPort = resmgr.TransportDstPort
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
@@ -59,7 +57,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- IPAddr:%s|TunID:%u|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
-                (str(self.IPAddr), self.TunID, str(self.TunIPAddr), self.MACAddr,
+                (str(self.IPAddr), self.TunID, str(self.TUNNEL.RemoteIPAddr), self.MACAddr,
                 self.MplsSlot, self.Vnid, self.ProviderIPAddr))
         return
 

@@ -44,7 +44,7 @@ packets:
                 dst     : 00:02:0b:0a:0d:0e
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/route/TunIP
+                dst     : callback://networking/packets/GetTunnelIPFromRoute
                 ttl     : 64
                 tos     : 0
                 id      : 0

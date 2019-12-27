@@ -40,7 +40,7 @@ packets:
                 src     : 00:02:0b:0a:0d:0e
                 dst     : ref://testcase/config/devicecfg/MACAddr
             outeripv4:
-                src     : ref://testcase/config/remotemapping/TunIP
+                src     : callback://networking/packets/GetTunnelIPFromMapping
                 dst     : ref://testcase/config/devicecfg/IP
                 ttl     : 64
                 tos     : 0

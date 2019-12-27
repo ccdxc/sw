@@ -46,7 +46,7 @@ packets:
                 dst     : callback://networking/packets/GetUnderlayRemoteMac
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : ref://testcase/config/route/TunIP
+                dst     : callback://networking/packets/GetTunnelIPFromRoute
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -90,7 +90,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
         expect:
             delay    :    1
@@ -102,4 +102,4 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
-                    ring    : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=TX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX

@@ -293,9 +293,9 @@ class MeterObjectClient(base.ConfigClientBase):
                     c += 1
 
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
         self.__num_v4_meter_per_vpc.append(v4_count)
         self.__num_v6_meter_per_vpc.append(v6_count)
         return

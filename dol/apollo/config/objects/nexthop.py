@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -40,9 +40,11 @@ class NexthopObject(base.ConfigObjectBase):
             self.__type = topo.NhType.OVERLAY
             if self.DualEcmp:
                 self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
-            self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
+            else:
+                self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
         else:
             self.__type = topo.NhType.NONE
+        self.Mutable = utils.IsUpdateSupported()
         self.Show()
         return
 
@@ -69,7 +71,29 @@ class NexthopObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
+    def UpdateAttributes(self):
+        if self.__type == topo.NhType.IP:
+            self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
+            self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
+            self.VlanId = next(resmgr.NexthopVlanIdAllocator)
+            self.MACAddr = resmgr.NexthopMacAllocator.get()
+        elif self.__type == topo.NhType.UNDERLAY:
+            self.L3Interface = InterfaceClient.GetL3UplinkInterface()
+            self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
+        elif self.__type == topo.NhType.OVERLAY:
+            if self.DualEcmp:
+                self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
+            else:
+                self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
+        return
+
+    def RollbackAttributes(self):
+        attrlist = ["IPAddr", "VlanId", "MACAddr", "L3Interface", "underlayMACAddr", "TunnelId"]
+        self.RollbackMany(attrlist)
+        return
+
     def PopulateKey(self, grpcmsg):
+        # TODO FIX THIS nh read message can take only one id, whereas nhdelete can take a list
         grpcmsg.Id.append(self.NexthopId)
         return
 
@@ -175,7 +199,7 @@ class NexthopObjectClient:
         return self.__num_nh_per_vpc
 
     def AssociateObjects(self):
-        Store.SetNexthops(self.Objects())
+        EzAccessStore.SetNexthops(self.Objects())
         resmgr.CreateUnderlayNHAllocator()
         resmgr.CreateOverlayNHAllocator()
         resmgr.CreateDualEcmpNhAllocator()
@@ -216,9 +240,9 @@ class NexthopObjectClient:
                 if isV6Stack:
                     self.__v6objs[vpcid].append(obj)
         if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = topo.rrobiniter(self.__v4objs[vpcid])
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
         if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = topo.rrobiniter(self.__v6objs[vpcid])
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
         self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 

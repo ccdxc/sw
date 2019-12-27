@@ -29,7 +29,6 @@ import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
-from apollo.config.store import Store
 from infra.common.glopts import GlobalOptions
 
 ObjectInfo = [None] * agentapi.ObjectTypes.MAX

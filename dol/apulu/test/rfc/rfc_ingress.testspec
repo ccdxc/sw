@@ -36,7 +36,7 @@ packets:
                 src     : callback://networking/packets/GetUnderlayRemoteMac
                 dst     : callback://networking/packets/GetUplinkPortMac
             outeripv4:
-                src     : ref://testcase/config/route/TunIP
+                src     : callback://networking/packets/GetTunnelIPFromRoute
                 dst     : ref://testcase/config/devicecfg/IP
                 ttl     : 64
                 tos     : 0
@@ -106,7 +106,7 @@ session:
             descriptors         :
                 - descriptor    :
                     object      : ref://testcase/descriptors/id=DESC1
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
             packets             :
                 - packet        :
                     object      : ref://testcase/packets/id=FROM_SWITCH_PKT
@@ -116,4 +116,4 @@ session:
             descriptors         :
                 - descriptor    :
                     object      : ref://testcase/descriptors/id=DESC2
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

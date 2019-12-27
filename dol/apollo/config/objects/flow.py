@@ -11,7 +11,7 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 
 from infra.common.logging import logger
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 def IsNatEnabled(routetblobj):
     tunnel = routetblobj.TUNNEL
@@ -20,7 +20,7 @@ def IsNatEnabled(routetblobj):
     return False
 
 def IsAlreadySelected(obj, objs):
-    if topo.CachedObjs.use_selected_objs is True and obj in objs:
+    if topo.ChosenFlowObjs.use_selected_objs is True and obj in objs:
         return True
     return False
 
@@ -28,7 +28,7 @@ def IsAlreadySelected(obj, objs):
 class FlowMapObject(base.ConfigObjectBase):
     def __init__(self, lobj, robj, fwdmode, routetblobj = None, tunobj = None, policyobj = None):
         super().__init__()
-        self.Clone(Store.templates.Get('FLOW'))
+        self.Clone(EzAccessStore.templates.Get('FLOW'))
         self.FlowMapId = next(resmgr.FlowIdAllocator)
         self.GID('FlowMap%d'%self.FlowMapId)
         self.FwdMode = fwdmode
@@ -37,7 +37,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.__routeTblObj = routetblobj
         self.__tunobj = tunobj
         self.__policyobj = policyobj
-        self.__dev = Store.GetDevice()
+        self.__dev = EzAccessStore.GetDevice()
         self.Show()
         return
 
@@ -49,8 +49,8 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
         #TODO: Handle host mode
-        obj.hostport = Store.GetHostPort()
-        obj.switchport = Store.GetSwitchPort()
+        obj.hostport = EzAccessStore.GetHostPort()
+        obj.switchport = EzAccessStore.GetSwitchPort()
         utils.DumpTestcaseConfig(obj)
         return
 
@@ -148,10 +148,10 @@ class FlowMapObjectHelper:
                 fwdmode == 'POLICY' or fwdmode == 'L2L') == True
 
         selected_objs = []
-        if topo.CachedObjs.use_selected_objs == True and len(topo.CachedObjs.objs) != 0:
-            maxlimits = topo.CachedObjs.getMaxLimits()
-            selected_objs = utils.GetFilteredObjects(topo.CachedObjs.objs, maxlimits, random=False)
-            maxlimits = selectors.maxlimits - topo.CachedObjs.maxlimits
+        if topo.ChosenFlowObjs.use_selected_objs == True and len(topo.ChosenFlowObjs.objs) != 0:
+            maxlimits = topo.ChosenFlowObjs.getMaxLimits()
+            selected_objs = utils.GetFilteredObjects(topo.ChosenFlowObjs.objs, maxlimits, random=False)
+            maxlimits = selectors.maxlimits - topo.ChosenFlowObjs.maxlimits
             if maxlimits <= 0:
                 return utils.GetFilteredObjects(selected_objs, selectors.maxlimits)
         else:

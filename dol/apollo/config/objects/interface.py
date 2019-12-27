@@ -1,10 +1,11 @@
 #! /usr/bin/python3
 import pdb
+import copy
 
 from infra.common.logging import logger
 import infra.common.objects as objects
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
@@ -74,6 +75,8 @@ class InterfaceObject(base.ConfigObjectBase):
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
+        self.Mutable = utils.IsUpdateSupported()
+
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
         self.Show()
         return
@@ -87,6 +90,19 @@ class InterfaceObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         if self.IfInfo:
             self.IfInfo.Show()
+        return
+
+    def CopyObject(self):
+        clone = copy.copy(self)
+        clone.IfInfo = copy.copy(self.IfInfo)
+        return clone
+
+    def UpdateAttributes(self):
+        self.IfInfo.macaddr = resmgr.DeviceMacAllocator.get()
+        return
+
+    def RollbackAttributes(self):
+        self.IfInfo.macaddr = self.GetPrecedent().IfInfo.macaddr
         return
 
     def PopulateKey(self, grpcmsg):
@@ -138,9 +154,13 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return self.GetObjectByKey(infid)
 
     def GetHostInterface(self):
+        Interface = None
         if self.__hostifs:
-            return self.__hostifs_iter.rrnext()
-        return None
+            try:
+                Interface = next(self.__hostifs_iter)
+            except:
+                Interface = None
+        return Interface
 
     def GetL3UplinkInterface(self):
         if self.__uplinkl3ifs:
@@ -154,7 +174,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         spec.port = 0
         spec.status = 'UP'
         spec.mode = 'host'
-        spec.lifspec = ifspec.lif.Get(Store)
+        spec.lifspec = ifspec.lif.Get(EzAccessStore)
         for obj in resmgr.HostIfs.values():
             spec.id = obj.IfName
             spec.ifinfo = obj
@@ -166,7 +186,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.__hostifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__hostifs:
-            self.__hostifs_iter = topo.rrobiniter(self.__hostifs.values())
+            self.__hostifs_iter = iter(self.__hostifs.values())
         return
 
     def __generate_l3_uplink_interfaces(self):
@@ -185,7 +205,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.__uplinkl3ifs.update({ifobj.InterfaceId: ifobj})
 
         if self.__uplinkl3ifs:
-            self.__uplinkl3ifs_iter = topo.rrobiniter(self.__uplinkl3ifs.values())
+            self.__uplinkl3ifs_iter = utils.rrobiniter(self.__uplinkl3ifs.values())
         return
 
     def GenerateObjects(self, topospec):

@@ -85,7 +85,7 @@ class ClientModule:
     def __set_msg_reqs(self, p):
         self.__set_one_msg_req(ApiOps.CREATE, "%sRequest"%p)
         self.__set_one_msg_req(ApiOps.DELETE, "%sDeleteRequest"%p)
-        self.__set_one_msg_req(ApiOps.UPDATE, "%sUpdateRequest"%p)
+        self.__set_one_msg_req(ApiOps.UPDATE, "%sRequest"%p)
         self.__set_one_msg_req(ApiOps.GET, "%sGetRequest"%p)
         return
 

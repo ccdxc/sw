@@ -12,7 +12,7 @@ from infra.common.glopts        import GlobalOptions
 import infra.config.base        as base
 
 import apollo.config.utils as utils
-from apollo.config.store        import Store
+from apollo.config.store        import EzAccessStore
 import apollo.config.objects.host.queue_type as queue_type
 
 NICMGR_DEV_CMD_TIMEOUT = 10
@@ -77,7 +77,7 @@ class LifInitDevCmdObject(DevCmdObject):
 class LifObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('LIF'))
+        self.Clone(EzAccessStore.templates.Get('LIF'))
         return
 
     def Init(self, ifinfo, spec, namespace = None):
@@ -159,7 +159,7 @@ class LifObjectHelper:
         for lif in self.lifs:
             lif.Configure()
             lif.ConfigureQueueTypes()
-        Store.objects.SetAll(self.lifs)
+        EzAccessStore.objects.SetAll(self.lifs)
 
     def GetRandomHostLif(self):
         if len(self.lifs) == 0:

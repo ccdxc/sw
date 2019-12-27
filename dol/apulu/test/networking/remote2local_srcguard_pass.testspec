@@ -95,7 +95,7 @@ session:
             descriptors         :
                 - descriptor    :
                     object      : ref://testcase/descriptors/id=DESC1
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
             packets             :
                 - packet        :
                     object      : ref://testcase/packets/id=FROM_SWITCH_PKT
@@ -108,4 +108,4 @@ session:
                 - descriptor    :
                     negtest     : callback://networking/packets/IsNegativeTestCase
                     object      : ref://testcase/descriptors/id=DESC2
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

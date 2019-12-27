@@ -37,7 +37,7 @@ packets:
                 src     : 00:02:0b:0a:0d:0e
             outeripv4:
                 dst     : ref://testcase/config/devicecfg/IP
-                src     : ref://testcase/config/remotemapping/TunIP
+                src     : callback://networking/packets/GetTunnelIPFromMapping
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -95,7 +95,7 @@ session:
             descriptors         :
                 - descriptor    :
                     object      : ref://testcase/descriptors/id=DESC1
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
             packets             :
                 - packet        :
                     object      : ref://testcase/packets/id=FROM_SWITCH_PKT
@@ -108,4 +108,4 @@ session:
                     # set negtest to True if packet is NOT expected on this queue
                     negtest     : callback://networking/packets/IsNegativeTestCase
                     object      : ref://testcase/descriptors/id=DESC2
-                    ring        : ref://testcase/config/localmapping/VNIC/HostIf/lif/queue_types/id=RX
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

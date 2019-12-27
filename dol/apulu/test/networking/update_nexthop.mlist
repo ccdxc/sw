@@ -1,0 +1,68 @@
+feature:
+    id          : networking
+    sub         : update_nexthop
+    package     : test.networking
+    module      : networking
+    runorder    : 70000
+# TODO fix nh PopulateKey for GET before enabling
+    enable      : False
+    ignore      : True
+
+modules:
+# specify all the filters that are used in the packet testcases that will follow
+    - module:
+        name    : NEXTHOP_WORKFLOW_START
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : UPD_NEXTHOP
+        spec    : cfg_object.testspec
+        args    :
+            - object    : nexthop
+              operation : Update
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : LOCAL2REMOTE
+        mlist   : local2remote.mlist
+
+# this triggers a packet with old values which is expected to fail since hwHabitant is False
+    - module:
+        name    : PREPARE_ROLLBACK
+        spec    : cfg_object.testspec
+        args    :
+            - object    : nexthop
+              operation : PrepareRollbackUpdate
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : LOCAL2REMOTE
+        mlist   : local2remote.mlist
+
+    - module:
+        name    : COMMIT_ROLLBACK
+        spec    : cfg_object.testspec
+        args    :
+            - object    : nexthop
+              operation : CommitUpdate
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : LOCAL2REMOTE
+        mlist   : local2remote.mlist
+
+    - module:
+        name    : NEXTHOP_WORKFLOW_END
+        spec    : workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

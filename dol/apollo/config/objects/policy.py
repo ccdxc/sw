@@ -7,7 +7,7 @@ import random
 
 from infra.common.logging import logger
 
-from apollo.config.store import Store
+from apollo.config.store import EzAccessStore
 
 import apollo.config.agent.api as api
 import apollo.config.resmgr as resmgr
@@ -146,6 +146,24 @@ class PolicyObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.policy.filters)
 
+    def CopyObject(self):
+        clone = copy.copy(self)
+        clone.rules = self.rules
+        self.rules = copy.deepcopy(clone.rules)
+        return clone
+
+    def UpdateAttributes(self):
+        for rule in self.rules:
+            if rule.Action == policy_pb2.SECURITY_RULE_ACTION_ALLOW:
+                rule.Action = policy_pb2.SECURITY_RULE_ACTION_DENY
+            else:
+                rule.Action = policy_pb2.SECURITY_RULE_ACTION_ALLOW
+        return
+
+    def RollbackAttributes(self):
+        self.rules = self.GetPrecedent().rules
+        return
+
     def FillRuleSpec(self, spec, rule):
         proto = 0
         specrule = spec.Rules.add()
@@ -240,9 +258,9 @@ class PolicyObject(base.ConfigObjectBase):
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.tunnel = obj.route.TUNNEL
-        obj.hostport = Store.GetHostPort()
-        obj.switchport = Store.GetSwitchPort()
-        obj.devicecfg = Store.GetDevice()
+        obj.hostport = EzAccessStore.GetHostPort()
+        obj.switchport = EzAccessStore.GetSwitchPort()
+        obj.devicecfg = EzAccessStore.GetDevice()
         # select a random rule for this testcase
         if utils.IsPipelineApollo():
             # TODO: move apollo also to random rule
@@ -725,16 +743,16 @@ class PolicyObjectClient(base.ConfigClientBase):
                 __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
 
         if len(self.__v4ingressobjs[vpcid]) != 0:
-            self.__v4ipolicyiter[vpcid] = topo.rrobiniter(self.__v4ingressobjs[vpcid])
+            self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])
 
         if len(self.__v6ingressobjs[vpcid]) != 0:
-            self.__v6ipolicyiter[vpcid] = topo.rrobiniter(self.__v6ingressobjs[vpcid])
+            self.__v6ipolicyiter[vpcid] = utils.rrobiniter(self.__v6ingressobjs[vpcid])
 
         if len(self.__v4egressobjs[vpcid]) != 0:
-            self.__v4epolicyiter[vpcid] = topo.rrobiniter(self.__v4egressobjs[vpcid])
+            self.__v4epolicyiter[vpcid] = utils.rrobiniter(self.__v4egressobjs[vpcid])
 
         if len(self.__v6egressobjs[vpcid]) != 0:
-            self.__v6epolicyiter[vpcid] = topo.rrobiniter(self.__v6egressobjs[vpcid])
+            self.__v6epolicyiter[vpcid] = utils.rrobiniter(self.__v6egressobjs[vpcid])
 
         return
 

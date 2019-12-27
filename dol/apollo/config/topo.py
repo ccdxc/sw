@@ -41,23 +41,7 @@ class OriginTypes(enum.IntEnum):
      FIXED = 0
      DISCOVERED = 1
 
-class rrobiniter:
-    def __init__(self, objs):
-        assert len(objs) != 0
-        self.objs = objs
-        self.iterator = iter(objs)
-        self.size = len(objs)
-    def rrnext(self):
-        while True:
-            try:
-                return next(self.iterator)
-            except:
-                self.iterator = iter(self.objs)
-                continue
-    def size(self):
-        return self.size
-
-class CachedObjs:
+class ChosenFlowObjs:
     def __init__(self):
         self.select_objs = False
         self.use_selected_objs = False
@@ -75,5 +59,5 @@ class CachedObjs:
     def getMaxLimits(self):
         return self.maxlimits
 
-CachedObjs = CachedObjs()
+ChosenFlowObjs = ChosenFlowObjs()
 

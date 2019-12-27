@@ -510,6 +510,12 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
             testcase.config.devicecfg, testcase.config.remotemapping,
             testcase.config.localmapping, args)
 
+def GetTunnelIPFromMapping(testcase, packet, args=None):
+    return str(testcase.config.remotemapping.TUNNEL.RemoteIPAddr)
+
+def GetTunnelIPFromRoute(testcase, packet, args=None):
+    return str(testcase.config.route.TUNNEL.RemoteIPAddr)
+
 def __is_any_cfg_deleted(tc):
     vnic = tc.config.localmapping.VNIC
     tunnel = tc.config.tunnel
@@ -585,3 +591,11 @@ def GetUnderlayRemoteMac(testcase, args=None):
         return None
     mac = nh.underlayMACAddr.get()
     return mac
+
+def GetRingFromMapping(testcase, args):
+    if args.type == "remote":
+        hostIf = testcase.config.remotemapping.VNIC.SUBNET.HostIf
+    else:
+        hostIf = testcase.config.localmapping.VNIC.SUBNET.HostIf
+    return hostIf.lif.GetQt(args.qid)
+
