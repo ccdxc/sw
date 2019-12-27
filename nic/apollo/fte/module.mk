@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsfte.so
 MODULE_PIPELINE = apollo artemis athena apulu
-MODULE_INCS     = ${SDKDIR}/dpdk/build/include/
+MODULE_INCS     = ${SDKDIR}/dpdk/build/include/ ${MODULE_DIR}/${PIPELINE}
 MODULE_SOLIBS   = ${NIC_FTL_LIBS}
 MODULE_FLAGS    = -O3
 MODULE_DEFS     = -DRTE_FORCE_INTRINSICS
