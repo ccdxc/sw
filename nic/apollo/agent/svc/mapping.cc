@@ -35,7 +35,8 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, mapping creation failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mapping creation "
+                          "failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -110,7 +111,8 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
         batch_params.async = false;
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, mapping update failed");
+            PDS_TRACE_ERR("Failed to create a new batch, mapping update "
+                          "failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
             return Status::CANCELLED;
         }
@@ -191,10 +193,26 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.type = PDS_MAPPING_TYPE_L3;
-        key.vpc.id = proto_req->id(i).ipkey().vpcid();
-        ipaddr_proto_spec_to_api_spec(&key.ip_addr,
-                                      proto_req->id(i).ipkey().ipaddr());
+        auto proto_key = proto_req->id(i);
+        switch (proto_key.keyinfo_case()) {
+        case pds::MappingKey::kIPKey:
+            key.type = PDS_MAPPING_TYPE_L3;
+            key.vpc.id = proto_key.ipkey().vpcid();
+            ipaddr_proto_spec_to_api_spec(&key.ip_addr,
+                                          proto_key.ipkey().ipaddr());
+            break;
+
+        case pds::MappingKey::kMACKey:
+            key.type = PDS_MAPPING_TYPE_L2;
+            key.subnet.id = proto_key.mackey().subnetid();
+            MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
+            break;
+
+        default:
+            ret = SDK_RET_INVALID_ARG;
+            goto end;
+            break;
+        }
         ret = pds_local_mapping_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
