@@ -96,9 +96,9 @@ private:
 };
 
 static inline if_entry *
-if_find (void)
+if_find (pds_if_key_t *key)
 {
-    return (if_entry *)api_base::find_obj(OBJ_ID_IF, NULL);
+    return (if_entry *)api_base::find_obj(OBJ_ID_IF, key);
 }
 
 /// \@}

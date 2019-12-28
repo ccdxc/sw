@@ -79,9 +79,9 @@ private:
 };
 
 static inline tag_entry *
-tag_find (void)
+tag_find (pds_tag_key_t *key)
 {
-    return (tag_entry *)api_base::find_obj(OBJ_ID_TAG, NULL);
+    return (tag_entry *)api_base::find_obj(OBJ_ID_TAG, key);
 }
 
 /// \@}    // end of PDS_TAG_STATE

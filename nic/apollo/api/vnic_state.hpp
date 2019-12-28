@@ -102,9 +102,9 @@ private:
 };
 
 static inline vnic_entry *
-vnic_find (void)
+vnic_find (pds_vnic_key_t *key)
 {
-    return (vnic_entry *)api_base::find_obj(OBJ_ID_VNIC, NULL);
+    return (vnic_entry *)api_base::find_obj(OBJ_ID_VNIC, key);
 }
 
 /** @} */    // end of PDS_VNIC_STATE

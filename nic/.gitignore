@@ -110,3 +110,5 @@ agent/cmd/halctl/halctl_ext/man_pages
 agent/cmd/halctl/halctl_ext/markdown
 captrace.syms
 *.swo
+*.dat
+*_log.txt

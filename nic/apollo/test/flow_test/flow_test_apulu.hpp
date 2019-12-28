@@ -129,6 +129,7 @@ dump_session_info(uint32_t vpc,
 #endif
 }
 
+#if 0
 static base_table_entry_t *
 ipv4_entry_alloc_cb (void)
 {
@@ -152,6 +153,7 @@ ipv6_entry_alloc_cb (void)
     }
     return new (mem) flow_hash_entry_t();
 }
+#endif
 
 #define MAX_VPCS        512
 #define MAX_LOCAL_EPS   32

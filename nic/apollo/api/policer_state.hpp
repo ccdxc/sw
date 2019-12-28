@@ -79,9 +79,9 @@ private:
 };
 
 static inline policer_entry *
-policer_find (void)
+policer_find (pds_policer_key_t *key)
 {
-    return (policer_entry *)api_base::find_obj(OBJ_ID_POLICER, NULL);
+    return (policer_entry *)api_base::find_obj(OBJ_ID_POLICER, key);
 }
 
 /// \@}    // end of PDS_POLICER_ENTRY

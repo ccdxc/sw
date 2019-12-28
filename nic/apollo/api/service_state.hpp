@@ -87,9 +87,9 @@ private:
 };
 
 static inline svc_mapping *
-svc_mapping_find (void)
+svc_mapping_find (pds_svc_mapping_key_t *key)
 {
-    return (svc_mapping *)api_base::find_obj(OBJ_ID_SVC_MAPPING, NULL);
+    return (svc_mapping *)api_base::find_obj(OBJ_ID_SVC_MAPPING, key);
 }
 
 /** @} */    // end of PDS_SVC_MAPPING_STATE

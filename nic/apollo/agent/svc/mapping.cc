@@ -191,6 +191,7 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
+        key.type = PDS_MAPPING_TYPE_L3;
         key.vpc.id = proto_req->id(i).ipkey().vpcid();
         ipaddr_proto_spec_to_api_spec(&key.ip_addr,
                                       proto_req->id(i).ipkey().ipaddr());
@@ -231,22 +232,20 @@ MappingSvcImpl::MappingGet(ServerContext *context,
     }
     proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     for (int i = 0; i < proto_req->id_size(); i++) {
-        // perhaps reference is sufficient here ?
-        pds::MappingKey proto_key;
-        proto_key = proto_req->id(i);
+        auto proto_key = proto_req->id(i);
         switch (proto_key.keyinfo_case()) {
         case pds::MappingKey::kIPKey:
             key.type = PDS_MAPPING_TYPE_L3;
             key.vpc.id = proto_key.ipkey().vpcid();
-            ipaddr_proto_spec_to_api_spec(&key.ip_addr, proto_key.ipkey().ipaddr());
+            ipaddr_proto_spec_to_api_spec(&key.ip_addr,
+                                          proto_key.ipkey().ipaddr());
             break;
 
-        // TODO: L2 key needs to be taken care of
         case pds::MappingKey::kMACKey:
             key.type = PDS_MAPPING_TYPE_L2;
             key.subnet.id = proto_key.mackey().subnetid();
             MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
-            // Fall through for now
+            break;
 
         default:
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);

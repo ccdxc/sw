@@ -73,9 +73,9 @@ private:
 };
 
 static inline meter_entry *
-meter_find (void)
+meter_find (pds_meter_key_t *key)
 {
-    return (meter_entry *)api_base::find_obj(OBJ_ID_METER, NULL);
+    return (meter_entry *)api_base::find_obj(OBJ_ID_METER, key);
 }
 
 /// \@}    // end of PDS_METER_STATE

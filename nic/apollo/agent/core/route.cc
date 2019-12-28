@@ -144,7 +144,7 @@ route_table_get (pds_route_table_key_t *key, pds_route_table_info_t *info)
     memset(info, 0, sizeof(pds_route_table_info_t));
     spec = agent_state::state()->find_in_route_table_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find route_table {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find route table {} in db", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

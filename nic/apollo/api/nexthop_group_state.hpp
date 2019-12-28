@@ -75,9 +75,9 @@ private:
 };
 
 static inline nexthop_group *
-nexthop_group_find (void)
+nexthop_group_find (pds_nexthop_group_key_t *key)
 {
-    return (nexthop_group *)api_base::find_obj(OBJ_ID_NEXTHOP_GROUP, NULL);
+    return (nexthop_group *)api_base::find_obj(OBJ_ID_NEXTHOP_GROUP, key);
 }
 
 /// \@}

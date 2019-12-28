@@ -105,7 +105,7 @@ nh_get (pds_nexthop_key_t *key, pds_nexthop_info_t *info)
 
     spec = agent_state::state()->find_in_nh_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find nh {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find nexthop {} in db", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

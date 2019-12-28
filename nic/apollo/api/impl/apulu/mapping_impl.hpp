@@ -157,26 +157,30 @@ private:
     ~mapping_impl() {}
 
     /// \brief     add necessary entries to NAT table
+    /// \param[in] mapping mapping object being processed
     /// \param[in] spec    mapping configurtion
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_nat_entries_(pds_mapping_spec_t *spec);
+    sdk_ret_t add_nat_entries_(mapping_entry *mapping,
+                               pds_mapping_spec_t *spec);
 
     /// \brief     reserve necessary entries in local mapping table
-    /// \param[in] api_obj API object being processed
+    /// \param[in] mapping mapping object being processed
     /// \param[in] vpc     VPC of this mapping
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_local_mapping_resources_(api_base *api_obj,
+    sdk_ret_t reserve_local_mapping_resources_(mapping_entry *mapping,
                                                vpc_entry *vpc,
                                                pds_mapping_spec_t *spec);
 
     /// \brief     reserve necessary entries in remote mapping table
-    /// \param[in] api_obj API object being processed
+    /// \param[in] mapping mapping object being processed
     /// \param[in] vpc     VPC of this mapping
+    /// \param[in] subnet  subnet of this mapping
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_remote_mapping_resources_(api_base *api_obj,
+    sdk_ret_t reserve_remote_mapping_resources_(mapping_entry *mapping,
                                                 vpc_entry *vpc,
+                                                subnet_entry *subnet,
                                                 pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for local mappings
@@ -188,9 +192,11 @@ private:
 
     /// \brief     add necessary entries for remote mappings
     /// \param[in] vpc  VPC of this mapping
+    /// \param[in] subnet subnet of this mapping
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc,
+                                          subnet_entry *subnet,
                                           pds_mapping_spec_t *spec);
 
     /// \brief     program and activate mapping related tables during create
@@ -220,10 +226,13 @@ private:
     sdk_ret_t read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info);
 
     /// \brief         read the configured values from the local mapping tables
-    /// \param[in]     vpc  pointer to the vpc entry
+    /// \param[in]     vpc       pointer to the vpc entry
+    /// \param[in]     subnet    subnet of the mapping, if mapping is L2 or
+    ///                          else NULL
     /// \param[in/out] info pointer to the info
     /// \return        SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_info_t *info);
+    sdk_ret_t read_remote_mapping_(vpc_entry *vpc, subnet_entry *subnet,
+                                   pds_mapping_info_t *info);
 
     /// \brief     release all the resources reserved for local mapping
     /// \param[in] api_obj mapping object
@@ -234,6 +243,13 @@ private:
     /// \param[in] api_obj mapping object
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_remote_mapping_resources_(api_base *api_obj);
+
+    /// \brief     deactivate L2 mapping entry for a given MAC
+    /// \param[in] subnet    subnet id of the mapping
+    /// \param[in] mac_addr    MAC address of the mapping
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_l2_mapping_entry_(pds_subnet_key_t subnet,
+                                           mac_addr_t mac_addr);
 
     /// \brief     deactivate mapping entry for a given overlay or public ip
     /// \param[in] vpc    vpc id of the mapping

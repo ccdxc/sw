@@ -81,9 +81,9 @@ private:
 };
 
 static inline tep_entry *
-tep_find (void)
+tep_find (pds_tep_key_t *key)
 {
-    return (tep_entry *)api_base::find_obj(OBJ_ID_TEP, NULL);
+    return (tep_entry *)api_base::find_obj(OBJ_ID_TEP, key);
 }
 
 /// \@}

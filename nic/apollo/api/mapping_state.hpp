@@ -88,9 +88,9 @@ private:
 };
 
 static inline mapping_entry *
-mapping_find (void)
+mapping_find (pds_mapping_key_t *key)
 {
-    return (mapping_entry *)api_base::find_obj(OBJ_ID_MAPPING, NULL);
+    return (mapping_entry *)api_base::find_obj(OBJ_ID_MAPPING, key);
 }
 
 /** @} */    // end of PDS_MAPPING_STATE

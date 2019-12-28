@@ -217,9 +217,11 @@ public:
         if (key_.type == PDS_MAPPING_TYPE_L3) {
             return "mapping-(" + std::to_string(key_.vpc.id) + ", " +
                        std::string(ipaddr2str(&key_.ip_addr)) + ")";
-        } else {
+        } else if (key_.type == PDS_MAPPING_TYPE_L2) {
             return "mapping-(" + std::to_string(key_.subnet.id) + ", " +
                        std::string(macaddr2str(key_.mac_addr)) + ")";
+        } else {
+            SDK_ASSERT(FALSE);
         }
     }
 

@@ -728,6 +728,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                              api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
+    PDS_TRACE_DEBUG("Performing API op %u on %s", obj_ctxt->api_op,
+                    api_obj->key2str().c_str());
     switch (obj_ctxt->api_op) {
     case API_OP_NONE:
         // only case where a dirty obj ends up with this opcode is when new

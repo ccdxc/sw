@@ -72,11 +72,10 @@ private:
     slab    *nexthop_slab_;    ///< slab for allocating nexthop entry
 };
 static inline nexthop *
-nexthop_find (void)
+nexthop_find (pds_nexthop_key_t *key)
 {
-    return (nexthop *)api_base::find_obj(OBJ_ID_NEXTHOP, NULL);
+    return (nexthop *)api_base::find_obj(OBJ_ID_NEXTHOP, key);
 }
-
 
 /// \@}
 

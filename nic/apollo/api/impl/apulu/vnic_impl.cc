@@ -844,7 +844,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
                                            NULL, NULL, &vlan_data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to deactivate VLAN entry %u for vnic %s",
-                          vnic_encap.val.vlan_tag, vnic->key2str());
+                          vnic_encap.val.vlan_tag, vnic->key2str().c_str());
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
     }
