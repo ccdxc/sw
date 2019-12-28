@@ -68,8 +68,11 @@ header_type apulu_p4_to_arm_header_t {
 
 header_type apulu_arm_to_p4_header_t {
     fields {
-        pad     : 5;
-        lif     : 11;
+        pad                 : 4;
+        nexthop_valid       : 1;
+        lif                 : 11;
+        nexthop_type        : 8;
+        nexthop_id          : 16;
     }
 }
 

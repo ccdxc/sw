@@ -1492,7 +1492,7 @@ class capri_p4pd:
                             break
                 if not found:
                     if not ctable.is_wide_key:
-                        ncc_assert(0, "Missing I field %s for table %s" % (table_name, cfkname))
+                        ncc_assert(0, "Missing I field %s for table %s" % (cfiname, table_name))
                         notfound_cfi.append((ctable.d, table_name, cfiname))
                 else:
                     verified_cfi.append(cfiname)

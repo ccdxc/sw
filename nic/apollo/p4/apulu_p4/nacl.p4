@@ -9,12 +9,17 @@ action nacl_drop() {
 }
 
 action nacl_redirect(nexthop_type, nexthop_id, copp_policer_id) {
-    modify_field(p4i_i2e.mapping_bypass, TRUE);
-    modify_field(p4i_i2e.nexthop_type, nexthop_type);
-    modify_field(p4i_i2e.nexthop_id, nexthop_id);
-    modify_field(p4i_i2e.session_index, -1);
-    modify_field(p4i_i2e.copp_policer_id, copp_policer_id);
+    if (arm_to_p4i.nexthop_valid == TRUE) {
+        modify_field(p4i_i2e.nexthop_type, arm_to_p4i.nexthop_type);
+        modify_field(p4i_i2e.nexthop_id, arm_to_p4i.nexthop_id);
+    } else {
+        modify_field(p4i_i2e.nexthop_type, nexthop_type);
+        modify_field(p4i_i2e.nexthop_id, nexthop_id);
+        modify_field(p4i_i2e.copp_policer_id, copp_policer_id);
+    }
 
+    modify_field(p4i_i2e.mapping_bypass, TRUE);
+    modify_field(p4i_i2e.session_index, -1);
     modify_field(capri_intrinsic.drop, 0);
     modify_field(control_metadata.p4i_drop_reason, 0);
 }
@@ -46,6 +51,7 @@ table nacl {
         control_metadata.local_mapping_miss : ternary;
         control_metadata.learn_enabled      : ternary;
         control_metadata.lif_type           : ternary;
+        arm_to_p4i.nexthop_valid            : ternary;
     }
     actions {
         nacl_permit;

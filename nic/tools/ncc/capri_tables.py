@@ -2509,7 +2509,7 @@ class capri_table:
                     km0_prof.byte_sel.insert(km_kstart, b)
                     moved_bits += 8
                     k_start += 1
-                    km_start += 1
+                    km_kstart += 1
                     self.start_key_off += 8
                     bit_loc = km0_prof.bit_loc
                     bit_loc1 = km0_prof.bit_loc1
@@ -2518,23 +2518,24 @@ class capri_table:
                     if bit_loc1 >= km_kstart and bit_loc1 < rm_index:
                         km0_prof.bit_loc1 += 1
 
-                for b in km1_i2k_bytes.reverse():
-                    ncc_assert(b in fix_km_prof.k_byte_sel)
-                    rm_index = km1_prof.byte_sel.index(b)
-                    km1_prof.k_byte_sel.remove(b)
-                    km1_prof.i2_byte_sel.append(b)
-                    km1.byte_sel.insert(km_kend, b)
-                    km1.byte_sel.remove(b)
-                    moved_bits += 8
-                    k_end -= 1
-                    km_kend -= 1
-                    self.end_key_off -= 8
-                    bit_loc = km1_prof.bit_loc
-                    bit_loc1 = km1_prof.bit_loc1
-                    if bit_loc <= km_kend and bit_loc > rm_index:
-                        km1_prof.bit_loc -= 1
-                    if bit_loc1 <= km_kstart and bit_lo > rm_index:
-                        km1_prof.bit_loc1 -= 1
+                if km1_i2k_bytes:
+                    for b in km1_i2k_bytes.reverse():
+                        ncc_assert(b in fix_km_prof.k_byte_sel)
+                        rm_index = km1_prof.byte_sel.index(b)
+                        km1_prof.k_byte_sel.remove(b)
+                        km1_prof.i2_byte_sel.append(b)
+                        km1.byte_sel.insert(km_kend, b)
+                        km1.byte_sel.remove(b)
+                        moved_bits += 8
+                        k_end -= 1
+                        km_kend -= 1
+                        self.end_key_off -= 8
+                        bit_loc = km1_prof.bit_loc
+                        bit_loc1 = km1_prof.bit_loc1
+                        if bit_loc <= km_kend and bit_loc > rm_index:
+                            km1_prof.bit_loc -= 1
+                        if bit_loc1 <= km_kstart and bit_lo > rm_index:
+                            km1_prof.bit_loc1 -= 1
 
             self.key_size -= moved_bits
             self.key_phv_size -= moved_bits
