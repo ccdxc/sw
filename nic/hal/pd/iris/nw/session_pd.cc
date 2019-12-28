@@ -392,6 +392,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
                                      flow_cfg->eg_mirror_session;
             }
         }
+        d.action_u.flow_info_flow_info.ingress_mirror_overwrite = 
+            d.action_u.flow_info_flow_info.ingress_mirror_session_id ? 1 : 0;
 
         if (flow_attrs->export_en) {
             d.action_u.flow_info_flow_info.export_id1 =

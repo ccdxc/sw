@@ -372,7 +372,7 @@ action flow_hit_drop(start_timestamp, mirror_on_drop_overwrite,
 }
 
 action flow_info(flow_only_policy, dst_lport_en, dst_lport, 
-                 multicast_ptr, multicast_en,
+                 multicast_ptr, multicast_en, ingress_mirror_overwrite,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  mirror_on_drop_overwrite, mirror_on_drop_en,
                  mirror_on_drop_session_id,
@@ -455,7 +455,9 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
     }
 
     /* mirror session id */
-    modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
+    if (ingress_mirror_overwrite == TRUE) {
+        modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
+    }
     modify_field(control_metadata.egress_mirror_session_id,
                  egress_mirror_session_id);
     if (mirror_on_drop_overwrite == TRUE) {
@@ -502,6 +504,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
     modify_field(scratch_metadata.tm_replicate_ptr, capri_intrinsic.tm_replicate_ptr);
     modify_field(scratch_metadata.flag, flow_only_policy);
     modify_field(scratch_metadata.flag, dst_lport_en);
+    modify_field(scratch_metadata.flag, ingress_mirror_overwrite);
     modify_field(scratch_metadata.flag, mirror_on_drop_overwrite);
     modify_field(scratch_metadata.flag, tunnel_en);
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);

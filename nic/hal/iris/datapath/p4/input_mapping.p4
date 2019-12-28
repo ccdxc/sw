@@ -533,7 +533,29 @@ table input_properties_mac_vlan {
     size : INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE;
 }
 
+/******************************************************************************/
+/* LIF info                                                                   8/
+/******************************************************************************/
+action lif_info(ingress_mirror_en, ingress_mirror_session_id) {
+    if (ingress_mirror_en == TRUE) {
+        modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
+    }
+    modify_field(scratch_metadata.flag, ingress_mirror_en);
+}
+
+@pragma stage 0
+table lif {
+    reads {
+        capri_intrinsic.lif : exact;
+    }
+    actions {
+        lif_info;
+    }
+    size : LIF_TABLE_SIZE;
+}
+
 control process_input_mapping {
+    apply(lif);
     apply(input_mapping_tunneled);
     apply(input_mapping_native);
     if (ipv6.valid == TRUE) {
