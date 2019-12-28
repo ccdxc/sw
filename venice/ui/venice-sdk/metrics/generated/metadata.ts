@@ -2993,6 +2993,152 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerFwRule",
   "objectKind": "DistributedServiceCard"
 },
+  AsicFrequencyMetrics: {
+  "name": "AsicFrequencyMetrics",
+  "description": "Asic Frequency",
+  "displayName": "Asic Frequency",
+  "fields": [
+    {
+      "name": "Frequency",
+      "displayName": "Frequency of the system",
+      "description": "Frequency of the system in MHz",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  AsicPowerMetrics: {
+  "name": "AsicPowerMetrics",
+  "description": "Asic Power",
+  "displayName": "Asic Power",
+  "fields": [
+    {
+      "name": "Pin",
+      "displayName": "Input Power",
+      "description": "Input power to the system",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Pout1",
+      "displayName": "Core Output Power",
+      "description": "Core output power",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Pout2",
+      "displayName": "Input Power",
+      "description": "ARM output power",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
+  AsicTemperatureMetrics: {
+  "name": "AsicTemperatureMetrics",
+  "description": "Asic Temperature",
+  "displayName": "Asic Temperature",
+  "fields": [
+    {
+      "name": "LocalTemperature",
+      "displayName": "Local Temperature",
+      "description": "Temperature of the board in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "DieTemperature",
+      "displayName": "Die Temperature",
+      "description": "Temperature of the die in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "HbmTemperature",
+      "displayName": "HBM Temperature",
+      "description": "Temperature of the HBM in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerASIC",
+  "objectKind": "DistributedServiceCard"
+},
   Node: {
   "name": "Node",
   "objectKind": "Node",

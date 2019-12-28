@@ -1,0 +1,98 @@
+{
+  "FileName": "sysmond.proto",
+  "Package": "sysmond",
+  "Prefix": "sysmond",
+  "Messages": [
+    {
+      "Name": "AsicFrequencyMetrics",
+      "Description": "Asic Frequency",
+      "DisplayName": "Asic Frequency",
+      "Fields": [
+        {
+          "Name": "Frequency",
+          "DisplayName": "Frequency of the system",
+          "Description": "Frequency of the system in MHz",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "AsicMemoryMetrics",
+      "Description": "System Memory",
+      "DisplayName": "System Memory",
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "UnknownScope"
+    },
+    {
+      "Name": "AsicPowerMetrics",
+      "Description": "Asic Power",
+      "DisplayName": "Asic Power",
+      "Fields": [
+        {
+          "Name": "Pin",
+          "DisplayName": "Input Power",
+          "Description": "Input power to the system",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Pout1",
+          "DisplayName": "Core Output Power",
+          "Description": "Core output power",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Pout2",
+          "DisplayName": "Input Power",
+          "Description": "ARM output power",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    },
+    {
+      "Name": "AsicTemperatureMetrics",
+      "Description": "Asic Temperature",
+      "DisplayName": "Asic Temperature",
+      "Fields": [
+        {
+          "Name": "LocalTemperature",
+          "DisplayName": "Local Temperature",
+          "Description": "Temperature of the board in celsius",
+          "Units": "Celsius",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "DieTemperature",
+          "DisplayName": "Die Temperature",
+          "Description": "Temperature of the die in celsius",
+          "Units": "Celsius",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "HbmTemperature",
+          "DisplayName": "HBM Temperature",
+          "Description": "Temperature of the HBM in celsius",
+          "Units": "Celsius",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerASIC"
+    }
+  ]
+}

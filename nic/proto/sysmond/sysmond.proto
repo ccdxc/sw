@@ -36,9 +36,9 @@ message AsicTemperatureMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter local_temperature              = 2;
-    delphi.Counter die_temperature                = 3;
-    delphi.Counter hbm_temperature                = 4;
+    delphi.Counter local_temperature              = 2 [(venice.metricsField) = {DisplayName: "Local Temperature" Description: "Temperature of the board in celsius", Units: Celsius }];
+    delphi.Counter die_temperature                = 3 [(venice.metricsField) = {DisplayName: "Die Temperature" Description: "Temperature of the die in celsius", Units: Celsius }];
+    delphi.Counter hbm_temperature                = 4 [(venice.metricsField) = {DisplayName: "HBM Temperature" Description: "Temperature of the HBM in celsius", Units: Celsius }];
     delphi.Counter qsfp_port1_temperature         = 5;
     delphi.Counter qsfp_port2_temperature         = 6;
     delphi.Counter qsfp_port1_warning_temperature = 7;
@@ -68,9 +68,9 @@ message AsicPowerMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter pin           = 2;
-    delphi.Counter pout1         = 3;
-    delphi.Counter pout2         = 4;
+    delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system" }];
+    delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power" }];
+    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "Input Power" Description: "ARM output power" }];
 }
 
 message AsicFrequencyMetrics {
@@ -93,7 +93,7 @@ message AsicFrequencyMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter frequency           = 2;
+    delphi.Counter frequency           = 2 [(venice.metricsField) = {DisplayName: "Frequency of the system" Description: "Frequency of the system in MHz" }];
 }
 
 enum SpeedState {

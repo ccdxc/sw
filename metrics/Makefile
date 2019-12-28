@@ -6,6 +6,7 @@ METRICS_PATHS =\
 	ftestats:nic/proto/ftestats \
 	rulestats:nic/proto/rulestats \
 	flowstats:nic/proto/flowstats \
+	sysmond:nic/proto/sysmond \
 	nmdmetrics:nic/agent/protos/nmd/nmdmetrics
 
 # all generated files are in the generated/<prefix> path

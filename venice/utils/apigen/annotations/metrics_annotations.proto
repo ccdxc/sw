@@ -11,6 +11,7 @@ enum MetricUnitType {
     ID          = 3;
     Gauge       = 4;
     Bitmap      = 5;
+    Celsius     = 6;
 }
 
 // defines as a hint of type of metric

@@ -33,6 +33,7 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
         Gauge: 'number',
         PrecisionGauge: 'number',
         Bitmap: 'number',
+        Celsius: 'number',
         string: 'string',
     };
     var files = utils_1.walk(inputBaseFolder, function (x) { return x.endsWith('.json'); });

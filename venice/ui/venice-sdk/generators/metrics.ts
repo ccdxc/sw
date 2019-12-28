@@ -33,6 +33,7 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
     Gauge: 'number',
     PrecisionGauge: 'number',
     Bitmap: 'number',
+    Celsius: 'number',
 
     string: 'string',
   }
