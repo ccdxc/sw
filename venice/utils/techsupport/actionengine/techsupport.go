@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // RunActions runs all the actions provided in the techsupport config
-func RunActions(actions []*tsconfig.ActionItem, techsupportDir string) error {
+func RunActions(actions []*tsconfig.ActionItem, techsupportDir string, skipCores bool) error {
 	log.Infof("ACTIONS : %v", actions)
 	if len(actions) == 0 {
 		log.Errorf("ActionItem list is empty")
@@ -45,10 +47,15 @@ func RunActions(actions []*tsconfig.ActionItem, techsupportDir string) error {
 	for _, action := range actions {
 		switch action.GetMethod() {
 		case tsconfig.ActionItem_ShellCmd:
-			f.WriteString("==== Running Command ====\n")
-			f.WriteString(action.Command + "\n")
-			out, _ := RunShellCmd(action.Command)
-			f.WriteString(string(out) + "\n")
+			if !(skipCores && strings.Contains(action.Command, "core")) {
+				f.WriteString("==== Running Command ====\n")
+				f.WriteString(action.Command + "\n")
+				out, _ := RunShellCmd(action.Command)
+				f.WriteString(string(out) + "\n")
+			} else {
+				f.WriteString("==== Skipping Command ====\n")
+				f.WriteString(action.Command + "\n")
+			}
 
 		case tsconfig.ActionItem_DelphiObj:
 			f.WriteString(fmt.Sprintf("==== Getting Delphi Object : %v ====\n", action.Command))
@@ -111,10 +118,15 @@ func ReadConfig(configPath string) (*tsconfig.TechSupportConfig, error) {
 }
 
 // CollectTechSupport runs all actions in config file
-func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string) error {
+func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string, tsWork *tsproto.TechSupportRequest) error {
 	if config == nil {
 		log.Error("TechSupportConfig passed is nil.")
 		return fmt.Errorf("config passed is nil")
+	}
+
+	if tsWork == nil {
+		log.Error("TechSupportRequest passed is nil.")
+		return fmt.Errorf("tsWork passed is nil")
 	}
 
 	baseDir := config.FileSystemRoot + "/" + targetID
@@ -137,21 +149,21 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string) err
 	log.Infof("Starting to collect TechSupport in directory : %v", baseDir)
 
 	log.Infof("======== Prep Actions - Start ========")
-	err = RunActions(config.PrepActions, baseDir+"/PrepActions")
+	err = RunActions(config.PrepActions, baseDir+"/PrepActions", tsWork.Spec.SkipCores)
 	log.Infof("======== Prep Actions - End ========")
 	if err != nil {
 		log.Errorf("Failed to run PrepActions. %v", err)
 	}
 
 	log.Infof("======== Collect Actions - Start ========")
-	err = RunActions(config.CollectActions, baseDir+"/CollectActions")
+	err = RunActions(config.CollectActions, baseDir+"/CollectActions", tsWork.Spec.SkipCores)
 	log.Infof("======== Collect Actions - End ========")
 	if err != nil {
 		log.Errorf("Failed to run CollectActions. %v", err)
 	}
 
 	log.Infof("======== Export Actions - Start ========")
-	err = RunActions(config.ExportActions, baseDir+"/ExportActions")
+	err = RunActions(config.ExportActions, baseDir+"/ExportActions", tsWork.Spec.SkipCores)
 	log.Infof("======== Export Actions - End ========")
 	if err != nil {
 		log.Errorf("Failed to run ExportActions. %v", err)

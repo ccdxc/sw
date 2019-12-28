@@ -51,6 +51,9 @@ testcases:
     -   name    : CHECK_TECH_SUPPORT
         testcase: testcases.penctl.techsupport
 
+    -   name    : CHECK_TECH_SUPPORT_NO_CORE
+        testcase: testcases.penctl.techsupport_no_core
+
     -   name    : CHECK_TECH_SUPPORT_COLL
         testcase: testcases.penctl.techsupport_coll
 

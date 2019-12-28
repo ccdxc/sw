@@ -28,6 +28,7 @@ message TechSupportRequestSpec {
   labels.Selector           Labels = 2 [(gogoproto.jsontag) = "labels,omitempty"];
   repeated DestinationSpec  Destinations  = 3 [(gogoproto.jsontag) = "destinations,omitempty"];
   int32                     Verbosity     = 4 [(gogoproto.jsontag) = "verbosity,omitempty"];
+  bool                      SkipCores     = 5 [(gogoproto.jsontag) = "skip-cores,omitempty"];
 }
 
 message TechSupportRequestStatus {

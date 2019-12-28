@@ -57,7 +57,7 @@ func (rs *RestServer) CollectTechSupport(w http.ResponseWriter, r *http.Request)
 		targetID := fmt.Sprintf("%s-%s", instanceName, instanceID)
 		localTarget := fmt.Sprintf("%v.tar.gz", targetID)
 
-		err := action.CollectTechSupport(rs.cfg, targetID)
+		err := action.CollectTechSupport(rs.cfg, targetID, tsWork)
 		if err != nil {
 			log.Errorf("Techsupport collection failed. Err : %v", err)
 			tsWork.Status.Status = tsproto.TechSupportRequestStatus_Failed

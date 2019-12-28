@@ -25,6 +25,7 @@ Options
 ::
 
   -h, --help             help for tech-support
+      --skip-cores       Skip the collection of core files
   -b, --tarball string   Name of tarball to create (without .tar.gz)
 
 Options inherited from parent commands

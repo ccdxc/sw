@@ -230,7 +230,7 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	}
 	targetID := ag.generateTargetID(instanceID, instanceName)
 	vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
-	err := action.CollectTechSupport(ag.cfg, targetID)
+	err := action.CollectTechSupport(ag.cfg, targetID, work)
 	if err != nil {
 		log.Errorf("Err : %v", err)
 		delErr := ag.deleteTechsupportFiles(work)

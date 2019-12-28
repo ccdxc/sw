@@ -13,6 +13,7 @@ import (
 	//"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -84,6 +85,16 @@ func CreateDefaultTechSupportConfigFile(name, fileSystemPath, configLocation str
 	writeConfigToFile(config, configLocation)
 }
 
+func buildTechSupportRequest() *tsproto.TechSupportRequest {
+	spec := &tsproto.TechSupportRequestSpec{
+		SkipCores: false,
+	}
+	tsr := &tsproto.TechSupportRequest{
+		Spec: *spec,
+	}
+	return tsr
+}
+
 func TestReadValidConfig(t *testing.T) {
 	CreateDefaultTechSupportConfigFile(defaultName, defaultFileSystemPath, defaultConfigPath)
 
@@ -111,7 +122,7 @@ func TestInvalidConfig(t *testing.T) {
 }
 
 func TestRunActionsNilTechSupport(t *testing.T) {
-	err := RunActions(nil, "")
+	err := RunActions(nil, "", false)
 	Assert(t, err != nil, "RunActions failed")
 }
 
@@ -119,12 +130,12 @@ func TestRunActionsMany(t *testing.T) {
 	outDir := "/tmp/default-tsc"
 	defaultConfig := createDefaultTechSupportConfig(defaultName, defaultFileSystemPath)
 
-	err := RunActions(defaultConfig.CollectActions, outDir)
+	err := RunActions(defaultConfig.CollectActions, outDir, false)
 	Assert(t, err == nil, "RunActions for many actions failed")
 }
 
 func TestCollectTechSupportNil(t *testing.T) {
-	err := CollectTechSupport(nil, "")
+	err := CollectTechSupport(nil, "", nil)
 	Assert(t, err != nil, "Collection of techsupport passed for bad parameters")
 }
 
@@ -133,8 +144,9 @@ func TestCollectTechSupport(t *testing.T) {
 
 	cfg, err := ReadConfig(defaultConfigPath)
 	deleteFile(defaultConfigPath)
+	tsWork := buildTechSupportRequest()
 
-	err = CollectTechSupport(cfg, "techsupport-collect")
+	err = CollectTechSupport(cfg, "techsupport-collect", tsWork)
 	Assert(t, err == nil, "Collection of techsupport failed")
 }
 
@@ -192,7 +204,7 @@ func TestRunActionsEmpty(t *testing.T) {
 		FileSystemRoot: "/tmp",
 	}
 
-	err := RunActions(techSupportConfig.CollectActions, "/tmp")
+	err := RunActions(techSupportConfig.CollectActions, "/tmp", false)
 	Assert(t, err != nil, "RunActions with empty actions passed")
 }
 
@@ -206,7 +218,7 @@ func TestRunActionsEmptyOutDir(t *testing.T) {
 
 	techSupportConfig.CollectActions = append(techSupportConfig.CollectActions, action1)
 
-	err := RunActions(techSupportConfig.CollectActions, "")
+	err := RunActions(techSupportConfig.CollectActions, "", false)
 	Assert(t, err != nil, "RunActions with empty actions passed")
 }
 
@@ -223,7 +235,7 @@ func TestRunActionsNonExistingDir(t *testing.T) {
 
 	techSupportConfig.CollectActions = append(techSupportConfig.CollectActions, action1)
 
-	err := RunActions(techSupportConfig.CollectActions, outDir)
+	err := RunActions(techSupportConfig.CollectActions, outDir, false)
 	Assert(t, err == nil, "RunActions failed")
 
 	_, err = os.Stat(outDir)

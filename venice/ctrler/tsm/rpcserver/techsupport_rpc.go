@@ -46,6 +46,7 @@ func buildNodeTechSupportRequest(tsr *monitoring.TechSupportRequest, nodeName st
 			},
 		},
 		Verbosity: tsr.Spec.Verbosity,
+		SkipCores: false,
 	}
 	atsr := &tsproto.TechSupportRequest{
 		TypeMeta:   tsr.TypeMeta,

@@ -29,12 +29,14 @@ var showTechCmd = &cobra.Command{
 
 var tarFile string
 var tarFileDir string
+var skipCores bool
 
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 	showTechCmd.Flags().StringVarP(&tarFileDir, "odir", "", "", "Directory to create the tech-support in")
+	showTechCmd.Flags().BoolVarP(&skipCores, "skip-cores", "", false, "Skip the collection of core files")
 
 	showTechCmd.Flags().MarkHidden("odir")
 }
@@ -81,6 +83,7 @@ func requestTechSupport() (string, error) {
 		},
 		Spec: tsproto.TechSupportRequestSpec{
 			InstanceID: "penctl-techsupport",
+			SkipCores:  skipCores,
 		},
 	}
 	ntsaResp, err := restPost(tsReq, "api/techsupport/")
@@ -99,6 +102,7 @@ func requestTechSupport() (string, error) {
 
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = false
+	skipCores = false
 	if !cmd.Flags().Changed("tarball") {
 		tarFile = "naples-tech-support"
 	}
@@ -106,6 +110,9 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		tarFileDir = "./"
 	} else {
 		tarFileDir += "/"
+	}
+	if cmd.Flags().Changed("skip-cores") {
+		skipCores = true
 	}
 	createDestDir(tarFileDir)
 	tarFile = tarFileDir + tarFile + ".tar.gz"
