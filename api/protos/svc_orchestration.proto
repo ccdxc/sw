@@ -15,7 +15,7 @@ import "orchestration.proto";
 
 service OrchestratorV1 {
     // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "orchestrator";
+    option (venice.apiPrefix) = "orchestration";
     // API Version.
     option (venice.apiVersion) = "v1";
 

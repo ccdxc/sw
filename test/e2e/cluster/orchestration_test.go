@@ -92,6 +92,42 @@ var _ = Describe("orchestration object tests", func() {
 		})
 
 		// run tests
+		It("Orchestrator pause-unpause", func() {
+
+			ts.tu.LocalCommandOutput(fmt.Sprintf("docker pause vc"))
+			orch := createOrchestrator("vcenter-pause-unpause", vcIP, username, password)
+			_, err := ts.tu.APIClient.OrchestratorV1().Orchestrator().Create(ts.loggedInCtx, orch)
+			Expect(err).Should(BeNil())
+			ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause vc"))
+			// VCHub retry interval is 3 seconds
+			time.Sleep(5 * time.Second)
+			Eventually(func() error {
+				opts := api.ListWatchOptions{}
+				objList, err := ts.tu.APIClient.OrchestratorV1().Orchestrator().List(ts.loggedInCtx, &opts)
+				if err != nil {
+					return err
+				}
+
+				if len(objList) == 0 {
+					return fmt.Errorf("Orchestrator list is empty")
+				}
+
+				found := false
+				for _, obj := range objList {
+					if obj.Name == "vcenter-pause-unpause" {
+						found = true
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("Orchestrator object was not found")
+				}
+
+				return nil
+			}, 10, 1).Should(BeNil())
+
+		})
+
 		It("Orchestration operations should succeed", func() {
 			Eventually(func() error {
 				orch := createOrchestrator("vcenter", vcIP, username, password)

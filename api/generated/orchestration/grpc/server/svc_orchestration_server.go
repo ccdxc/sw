@@ -111,48 +111,48 @@ func (s *sorchestrationSvc_orchestrationBackend) regSvcsFunc(ctx context.Context
 		s.endpointsOrchestratorV1.fnAutoWatchSvcOrchestratorV1 = srv.WatchFromKv
 
 		s.endpointsOrchestratorV1.fnAutoAddOrchestrator = srv.AddMethod("AutoAddOrchestrator",
-			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestrator", "AutoAddOrchestrator")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoAddOrchestrator")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(orchestration.Orchestrator)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestrator/v1/orchestrator/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoDeleteOrchestrator = srv.AddMethod("AutoDeleteOrchestrator",
-			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestrator", "AutoDeleteOrchestrator")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoDeleteOrchestrator")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(orchestration.Orchestrator)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestrator/v1/orchestrator/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoGetOrchestrator = srv.AddMethod("AutoGetOrchestrator",
-			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestrator", "AutoGetOrchestrator")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoGetOrchestrator")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(orchestration.Orchestrator)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestrator/v1/orchestrator/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoListOrchestrator = srv.AddMethod("AutoListOrchestrator",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["orchestration.OrchestratorList"], "orchestrator", "AutoListOrchestrator")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["orchestration.OrchestratorList"], "orchestration", "AutoListOrchestrator")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestrator/v1/orchestrator/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoUpdateOrchestrator = srv.AddMethod("AutoUpdateOrchestrator",
-			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestrator", "AutoUpdateOrchestrator")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["orchestration.Orchestrator"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoUpdateOrchestrator")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(orchestration.Orchestrator)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestrator/v1/orchestrator/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoWatchOrchestrator = pkgMessages["orchestration.Orchestrator"].WatchFromKv
@@ -178,7 +178,7 @@ func (s *sorchestrationSvc_orchestrationBackend) regWatchersFunc(ctx context.Con
 		svc := s.Services["orchestration.OrchestratorV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/orchestrator"
+				key := globals.ConfigRootPrefix + "/orchestration"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()
@@ -250,7 +250,7 @@ func (s *sorchestrationSvc_orchestrationBackend) regWatchersFunc(ctx context.Con
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*orchestration.Orchestrator)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "orchestrator")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "orchestration")
 
 					strEvent := &orchestration.AutoMsgOrchestratorWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -352,7 +352,7 @@ func (e *eOrchestratorV1Endpoints) AutoUpdateOrchestrator(ctx context.Context, t
 }
 
 func (e *eOrchestratorV1Endpoints) AutoWatchOrchestrator(in *api.ListWatchOptions, stream orchestration.OrchestratorV1_AutoWatchOrchestratorServer) error {
-	return e.fnAutoWatchOrchestrator(in, stream, "orchestrator")
+	return e.fnAutoWatchOrchestrator(in, stream, "orchestration")
 }
 func (e *eOrchestratorV1Endpoints) AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream orchestration.OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
 	return e.fnAutoWatchSvcOrchestratorV1(in, stream, "")

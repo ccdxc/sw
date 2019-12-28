@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/configs/orchestrator/v1/orchestrator": {
+    "/configs/orchestration/v1/orchestrator": {
       "get": {
         "summary": "List Orchestrator objects",
         "operationId": "ListOrchestrator",
@@ -179,7 +179,7 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       },
       "post": {
@@ -240,11 +240,11 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       }
     },
-    "/configs/orchestrator/v1/orchestrator/{O.Name}": {
+    "/configs/orchestration/v1/orchestrator/{O.Name}": {
       "get": {
         "summary": "Get Orchestrator object",
         "operationId": "GetOrchestrator",
@@ -463,7 +463,7 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       },
       "delete": {
@@ -522,7 +522,7 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       },
       "put": {
@@ -589,11 +589,11 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       }
     },
-    "/configs/orchestrator/v1/watch/orchestrator": {
+    "/configs/orchestration/v1/watch/orchestrator": {
       "get": {
         "summary": "Watch Orchestrator objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchOrchestrator",
@@ -756,7 +756,7 @@
           }
         ],
         "tags": [
-          "orchestrator/v1"
+          "orchestration/v1"
         ]
       }
     }

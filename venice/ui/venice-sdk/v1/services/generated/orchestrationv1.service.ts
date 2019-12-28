@@ -7,7 +7,7 @@ import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 import { IOrchestrationOrchestratorList,OrchestrationOrchestratorList,IApiStatus,ApiStatus,IOrchestrationOrchestrator,OrchestrationOrchestrator,IOrchestrationAutoMsgOrchestratorWatchHelper,OrchestrationAutoMsgOrchestratorWatchHelper } from '../../models/generated/orchestration';
 
 @Injectable()
-export class Orchestratorv1Service extends AbstractService {
+export class Orchestrationv1Service extends AbstractService {
   constructor(protected _http: HttpClient) {
     super(_http);
   }
@@ -22,7 +22,7 @@ export class Orchestratorv1Service extends AbstractService {
 
   /** List Orchestrator objects */
   public ListOrchestrator(queryParam: any = null, stagingID: string = ""):Observable<{body: IOrchestrationOrchestratorList | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator';
     const opts = {
       eventID: 'ListOrchestrator',
       objType: 'OrchestrationOrchestratorList',
@@ -37,7 +37,7 @@ export class Orchestratorv1Service extends AbstractService {
   
   /** Create Orchestrator object */
   public AddOrchestrator(body: IOrchestrationOrchestrator, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator';
     const opts = {
       eventID: 'AddOrchestrator',
       objType: 'OrchestrationOrchestrator',
@@ -55,7 +55,7 @@ export class Orchestratorv1Service extends AbstractService {
   
   /** Get Orchestrator object */
   public GetOrchestrator(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator/{O.Name}';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
       eventID: 'GetOrchestrator',
@@ -71,7 +71,7 @@ export class Orchestratorv1Service extends AbstractService {
   
   /** Delete Orchestrator object */
   public DeleteOrchestrator(O_Name, stagingID: string = ""):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator/{O.Name}';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
       eventID: 'DeleteOrchestrator',
@@ -87,7 +87,7 @@ export class Orchestratorv1Service extends AbstractService {
   
   /** Update Orchestrator object */
   public UpdateOrchestrator(O_Name, body: IOrchestrationOrchestrator, stagingID: string = "", previousVal: IOrchestrationOrchestrator = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/orchestrator/{O.Name}';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
       eventID: 'UpdateOrchestrator',
@@ -106,7 +106,7 @@ export class Orchestratorv1Service extends AbstractService {
   
   /** Watch Orchestrator objects. Supports WebSockets or HTTP long poll */
   public WatchOrchestrator(queryParam: any = null, stagingID: string = ""):Observable<{body: IOrchestrationAutoMsgOrchestratorWatchHelper | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/orchestrator/v1/watch/orchestrator';
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/watch/orchestrator';
     const opts = {
       eventID: 'WatchOrchestrator',
       objType: 'OrchestrationAutoMsgOrchestratorWatchHelper',

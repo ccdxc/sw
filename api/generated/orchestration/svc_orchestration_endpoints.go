@@ -553,32 +553,32 @@ func (r *EndpointsOrchestratorV1RestClient) getHTTPRequest(ctx context.Context, 
 
 //
 func makeURIOrchestratorV1AutoAddOrchestratorCreateOper(in *Orchestrator) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/orchestrator")
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator")
 }
 
 //
 func makeURIOrchestratorV1AutoDeleteOrchestratorDeleteOper(in *Orchestrator) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/orchestrator/", in.Name)
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator/", in.Name)
 }
 
 //
 func makeURIOrchestratorV1AutoGetOrchestratorGetOper(in *Orchestrator) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/orchestrator/", in.Name)
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator/", in.Name)
 }
 
 //
 func makeURIOrchestratorV1AutoListOrchestratorListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/orchestrator")
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator")
 }
 
 //
 func makeURIOrchestratorV1AutoUpdateOrchestratorUpdateOper(in *Orchestrator) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/orchestrator/", in.Name)
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator/", in.Name)
 }
 
 //
 func makeURIOrchestratorV1AutoWatchOrchestratorWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/orchestrator/v1", "/watch/orchestrator")
+	return fmt.Sprint("/configs/orchestration/v1", "/watch/orchestrator")
 }
 
 //

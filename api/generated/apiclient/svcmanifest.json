@@ -678,7 +678,7 @@
               "list",
               "watch"
             ],
-            "URI": "/configs/orchestrator/v1/orchestrator"
+            "URI": "/configs/orchestration/v1/orchestrator"
           }
         }
       }

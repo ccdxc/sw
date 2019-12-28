@@ -50,7 +50,7 @@ var typesMapSvc_orchestration = map[string]*api.Struct{
 var keyMapSvc_orchestration = map[string][]api.PathsMap{
 
 	"orchestration.Orchestrator": []api.PathsMap{
-		{URI: "/configs/orchestrator/v1/orchestrator/{Name}", Key: "/venice/config/orchestrator/orchestrator/{Name}"}},
+		{URI: "/configs/orchestration/v1/orchestrator/{Name}", Key: "/venice/config/orchestration/orchestrator/{Name}"}},
 }
 
 func init() {

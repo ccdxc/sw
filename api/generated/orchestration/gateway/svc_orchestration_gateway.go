@@ -303,21 +303,21 @@ func (a adapterOrchestratorV1) AutoWatchOrchestrator(oldctx oldcontext.Context, 
 }
 
 func (e *sOrchestratorV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "orchestrator", apiintf.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "orchestration", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestrator", apiintf.CreateOper)
+	e.svcProf["AutoAddOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestrator", apiintf.DeleteOper)
+	e.svcProf["AutoDeleteOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestrator", apiintf.GetOper)
+	e.svcProf["AutoGetOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.GetOper)
 
-	e.svcProf["AutoListOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "OrchestratorList", "orchestrator", apiintf.ListOper)
+	e.svcProf["AutoListOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "OrchestratorList", "orchestration", apiintf.ListOper)
 
-	e.svcProf["AutoUpdateOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestrator", apiintf.UpdateOper)
+	e.svcProf["AutoUpdateOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.UpdateOper)
 
-	e.svcProf["AutoWatchOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgOrchestratorWatchHelper", "orchestrator", apiintf.WatchOper)
+	e.svcProf["AutoWatchOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgOrchestratorWatchHelper", "orchestration", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -393,7 +393,7 @@ func (e *sOrchestratorV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service orchestration.OrchestratorV1")
-					m.Handle("/configs/orchestrator/v1/", http.StripPrefix("/configs/orchestrator/v1", mux))
+					m.Handle("/configs/orchestration/v1/", http.StripPrefix("/configs/orchestration/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -452,5 +452,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcOrchestratorV1 := sOrchestratorV1GwService{}
-	apigw.Register("orchestration.OrchestratorV1", "orchestrator/", &svcOrchestratorV1)
+	apigw.Register("orchestration.OrchestratorV1", "orchestration/", &svcOrchestratorV1)
 }

@@ -26,7 +26,7 @@
 | NetworkSecurityPolicy | /configs/security/v1/networksecuritypolicies |
 | Node | /configs/cluster/v1/nodes |
 | Object | /configs/v1//{Namespace}/objects |
-| Orchestrator | /configs/orchestrator/v1/orchestrator |
+| Orchestrator | /configs/orchestration/v1/orchestrator |
 | Role | /configs/auth/v1/roles |
 | RoleBinding | /configs/auth/v1/role-bindings |
 | Rollout | /configs/rollout/v1/rollout |

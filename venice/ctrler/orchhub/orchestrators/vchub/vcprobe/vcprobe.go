@@ -288,7 +288,10 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 
 	cView, err := v.viewMgr.CreateContainerView(v.watcherCtx, root, kinds, true)
 	if err != nil {
-		v.Log.Fatalf("CreateContainerView returned %v", err)
+		v.Log.Errorf("CreateContainerView returned %v", err)
+		v.checkSessionLock.Lock()
+		v.checkSession = true
+		v.checkSessionLock.Unlock()
 		return
 	}
 
