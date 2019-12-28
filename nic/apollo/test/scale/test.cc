@@ -1468,7 +1468,8 @@ create_l3_intfs (uint32_t num_if)
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr =
             (g_test_params.tep_pfx.addr.addr.v4_addr | 0x01200000) + i;
         pds_if.l3_if_info.ip_prefix.len = 30;
-        pds_if.l3_if_info.port_num = i - 1;
+        pds_if.l3_if_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, i,
+                                                    ETH_IF_DEFAULT_CHILD_PORT);
         MAC_UINT64_TO_ADDR(pds_if.l3_if_info.mac_addr, (l3if_mac + i));
         rv = create_l3_intf(&pds_if);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,

@@ -211,7 +211,7 @@ public:
         if (type_ == PDS_IF_TYPE_UPLINK) {
             return if_info_.uplink_.port_;
         } else if (type_ == PDS_IF_TYPE_L3) {
-            return if_info_.l3_.port_;
+            return if_info_.l3_.eth_ifindex_;
         }
         return PDS_PORT_INVALID;
     }
@@ -277,7 +277,7 @@ private:
         struct {
             pds_vpc_key_t vpc_;    ///< vpc of this L3 interface
             ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
-            uint8_t port_;         ///< port number
+            uint32_t eth_ifindex_;   ///< eth ifindex
             pds_encap_t encap_;    ///< wire encap, if any
             mac_addr_t mac_;       ///< MAC address of this L3 interface
         } l3_;

@@ -128,26 +128,28 @@ sdk_ret_t
 if_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;
 
-    PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
-                    spec->key.id, spec->type);
     memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
     type_ = spec->type;
     ifindex_ = spec->key.id;
     admin_state_ = spec->admin_state;
     switch (type_) {
      case PDS_IF_TYPE_UPLINK:
+         PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
+                         spec->key.id, spec->type);
          if_info_.uplink_.port_ = spec->uplink_info.port_num;
          break;
 
      case PDS_IF_TYPE_L3:
+         PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u, ifindex %u",
+                         spec->key.id, spec->type, spec->l3_if_info.eth_ifindex);
          if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
          if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
-         if_info_.l3_.port_ = spec->l3_if_info.port_num;
+         if_info_.l3_.eth_ifindex_ = spec->l3_if_info.eth_ifindex;
          if_info_.l3_.encap_ = spec->l3_if_info.encap;
          memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
                 ETH_ADDR_LEN);
          break;
-     
+
      case PDS_IF_TYPE_NONE:
         break;
 
@@ -224,7 +226,7 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
         spec->uplink_info.port_num = if_info_.uplink_.port_;
         break;
     case PDS_IF_TYPE_L3:
-        spec->l3_if_info.port_num = if_info_.l3_.port_;
+        spec->l3_if_info.eth_ifindex = if_info_.l3_.eth_ifindex_;
         spec->l3_if_info.vpc = if_info_.l3_.vpc_;
         spec->l3_if_info.ip_prefix = if_info_.l3_.ip_pfx_;
         spec->l3_if_info.encap = if_info_.l3_.encap_;

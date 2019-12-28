@@ -41,6 +41,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (iftype == topo.InterfaceTypes.L3):
             self.VPC = getattr(spec, 'vpc', 0)
             self.ip_prefix = getattr(spec, 'ippfx', None)
+            self.ethifidx = getattr(spec, 'ethifidx', -1)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
@@ -51,8 +52,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (self.__type == topo.InterfaceTypes.UPLINKPC):
             res = str("port_bmap: %s" % self.port_bmap)
         elif (self.__type == topo.InterfaceTypes.L3):
-            res = str("VPC:%d|ip:%s|port_num:%d|encap:%s|mac:%s"% \
-                    (self.VPC, self.ip_prefix, self.port_num, self.encap, \
+            res = str("VPC:%d|ip:%s|ethifidx:%d|encap:%s|mac:%s"% \
+                    (self.VPC, self.ip_prefix, self.ethifidx, self.encap, \
                     self.macaddr))
         else:
             return
@@ -116,7 +117,7 @@ class InterfaceObject(base.ConfigObjectBase):
         spec.AdminStatus = interface_pb2.IF_STATUS_UP
         if self.Type == topo.InterfaceTypes.L3:
             spec.Type = interface_pb2.IF_TYPE_L3
-            spec.L3IfSpec.PortId = self.IfInfo.port_num
+            spec.L3IfSpec.EthIfIndex = self.IfInfo.ethifidx
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
         return
 
@@ -128,7 +129,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if self.Type == topo.InterfaceTypes.L3:
             if spec.Type != interface_pb2.IF_TYPE_L3:
                 return False
-            if spec.L3IfSpec.PortId != self.IfInfo.port_num:
+            if spec.L3IfSpec.EthIfIndex != self.IfInfo.ethifidx:
                 return False
             #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():
             #    return False
@@ -173,6 +174,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return
         spec = InterfaceSpec_()
         spec.port = 0
+        spec.ethifidx = 0
         spec.status = 'UP'
         spec.mode = 'host'
         spec.lifspec = ifspec.lif.Get(EzAccessStore)
@@ -198,6 +200,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             spec = InterfaceSpec_()
             spec.mode = 'l3'
             spec.port = port.Port - 1
+            spec.ethifidx = topo.PortToEthIfIdx(port.Port)
             spec.id = 'Uplink%d' % spec.port
             spec.status = port.AdminState
             spec.MACAddr = resmgr.DeviceMacAllocator.get()

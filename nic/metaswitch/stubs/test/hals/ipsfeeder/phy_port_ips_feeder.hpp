@@ -7,7 +7,9 @@
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/apollo/test/base/base.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 
 extern NBB_ULONG li_proc_id;
 namespace pdsa_test {
@@ -16,7 +18,10 @@ class phy_port_ips_feeder_t final : public phy_port_input_params_t {
 public:
    void init() override {
        phy_port = 1;
-       phy_port_ifindex = 0x10000;
+       phy_port_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, phy_port,
+                                      ETH_IF_DEFAULT_CHILD_PORT);
+       phy_port_ifindex = pds_ms::pds_to_ms_ifindex(phy_port_ifindex,
+                                                    IF_TYPE_ETH);
        admin_state = false;
     }
 

@@ -33,6 +33,7 @@ enum {
 #define ETH_IF_PARENT_PORT_MASK                  0xFF
 #define ETH_IF_CHILD_PORT_MASK                   0xFFFF
 #define ETH_IF_DEFAULT_CHILD_PORT                1
+#define ETH_IF_DEFAULT_SLOT                      1
 #define LIF_IF_LIF_ID_MASK                       0xFFFFFF
 
 ///< interface index is formed from

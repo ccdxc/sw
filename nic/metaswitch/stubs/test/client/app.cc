@@ -15,6 +15,7 @@
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
 #include <gen/proto/vpc.grpc.pb.h>
@@ -60,7 +61,7 @@ static void create_device_proto_grpc () {
     printf ("Pushing Device Proto...\n");
     ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -83,14 +84,15 @@ static void create_l3_intf_proto_grpc () {
     pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = htonl(g_test_conf_.local_ip_addr);
     pds_if.l3_if_info.ip_prefix.len = 16;
-    pds_if.l3_if_info.port_num = 0;
+    pds_if.l3_if_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, 1,
+                                                ETH_IF_DEFAULT_CHILD_PORT);
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
-    
+
     printf ("Pushing Interface Proto...\n");
     ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -111,7 +113,7 @@ static void create_bgp_global_proto_grpc () {
     printf ("Pushing BGP Global proto...\n");
     ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -134,7 +136,7 @@ static void create_evpn_evi_proto_grpc () {
     printf ("Pushing EVPN Evi proto...\n");
     ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -163,7 +165,7 @@ static void create_route_proto_grpc () {
     printf ("Pushing Static Route proto...\n");
     ret_status = g_route_stub_->StaticRouteSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -197,7 +199,7 @@ static void create_bgp_peer_proto_grpc () {
     printf ("Pushing BGP Peer proto...\n");
     ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -253,7 +255,7 @@ static void create_vpc_proto_grpc () {
     printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -273,7 +275,7 @@ static void create_loopback_proto_grpc () {
     printf ("Pushing Loopback Interface proto...\n");
     ret_status = g_intf_stub_->CPInterfaceSpecCreate (&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
@@ -293,17 +295,17 @@ static void create_loopback_addr_proto_grpc () {
     ipaddr->set_af (types::IP_AF_INET);
     ipaddr->set_v4addr (htonl(0x0A0100FE)); // setting 10.1.1.254
     proto_spec->set_prefixlen (24);
-    
+
     printf ("Pushing Loopback Interface IP Address proto...\n");
     ret_status = g_intf_stub_->CPInterfaceAddrSpecCreate (&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n", 
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
         exit(1);
     }
 }
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
     // parse json config file
     if (parse_json_config(&g_test_conf_, 1) < 0) {

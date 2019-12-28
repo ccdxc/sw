@@ -18,7 +18,7 @@ uint32_t k_l3_if_id = 0x70000001;
 
 #define l3_info spec_feeder.l3_if_info
 void
-if_feeder::init(pds_if_id_t id, std::string ip_pfx_str, 
+if_feeder::init(pds_if_id_t id, std::string ip_pfx_str,
                 pds_if_type_t type, int num_ifs) {
     spec_feeder.key.id = id;
     spec_feeder.type = type;
@@ -30,11 +30,12 @@ if_feeder::init(pds_if_id_t id, std::string ip_pfx_str,
         str2ipv4pfx((char *)ip_pfx_str.c_str(), &l3_info.ip_prefix);
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,
                            (uint64_t)l3_info.ip_prefix.addr.addr.v4_addr);
-        l3_info.port_num = TM_PORT_UPLINK_0;
+        l3_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, TM_PORT_UPLINK_0+1,
+                                          ETH_IF_DEFAULT_CHILD_PORT);
         l3_info.encap.type = PDS_ENCAP_TYPE_VXLAN;
         l3_info.encap.val.vnid = 1;
     }
-    
+
     num_obj = num_ifs;
 }
 
@@ -48,7 +49,8 @@ if_feeder::iter_next(int width) {
         memcpy(&l3_info.ip_prefix.addr, &ipaddr, sizeof(ip_addr_t));
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,
                            (uint64_t)l3_info.ip_prefix.addr.addr.v4_addr);
-        l3_info.port_num = TM_PORT_UPLINK_1;
+        l3_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, TM_PORT_UPLINK_1+1,
+                                          ETH_IF_DEFAULT_CHILD_PORT);
     }
 
     cur_iter_pos++;

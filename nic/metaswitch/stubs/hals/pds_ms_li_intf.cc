@@ -175,7 +175,7 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
     // TODO: Change this to eth IfIndex when HAL supports it
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
-    spec.l3_if_info.port_num = ETH_IFINDEX_TO_PARENT_PORT(ifindex)-1;
+    spec.l3_if_info.eth_ifindex = ifindex;
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
     return spec;
 }

@@ -10,6 +10,7 @@
 
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -120,6 +121,7 @@ sdk_ret_t
 if_impl::program_l3_if_(pds_if_spec_t *spec) {
     p4pd_error_t p4pd_ret;
     p4i_device_info_actiondata_t p4i_device_info_data;
+    uint32_t port_num;
 
     // if MAC is explicitly set in the spec, use it or else continue using the
     // MAC from the corresponding lif
@@ -136,10 +138,11 @@ if_impl::program_l3_if_(pds_if_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
     // TODO: cleanup capri dependency
-    if (spec->l3_if_info.port_num == TM_PORT_UPLINK_0) {
+    port_num = ETH_IFINDEX_TO_PARENT_PORT(spec->l3_if_info.eth_ifindex);
+    if ((port_num - 1) == TM_PORT_UPLINK_0) {
         sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
                          spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
-    } else if (spec->l3_if_info.port_num == TM_PORT_UPLINK_1) {
+    } else if ((port_num - 1) == TM_PORT_UPLINK_1) {
         sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr2,
                          spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
     }
@@ -290,6 +293,8 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_if_info_t *if_info = (pds_if_info_t *)info;
 
     spec = &if_info->spec;
+    uint32_t port_num;
+
     if (spec->type == PDS_IF_TYPE_L3) {
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                           NULL, NULL, &p4i_device_info_data);
@@ -297,11 +302,12 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
             PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        if (spec->l3_if_info.port_num == TM_PORT_UPLINK_0) {
+        port_num = ETH_IFINDEX_TO_PARENT_PORT(spec->l3_if_info.eth_ifindex);
+        if ((port_num - 1) == TM_PORT_UPLINK_0) {
             sdk::lib::memrev(spec->l3_if_info.mac_addr,
                              p4i_device_info_data.p4i_device_info.device_mac_addr1,
                              ETH_ADDR_LEN);
-        } else if (spec->l3_if_info.port_num == TM_PORT_UPLINK_1) {
+        } else if ((port_num - 1) == TM_PORT_UPLINK_1) {
             sdk::lib::memrev(spec->l3_if_info.mac_addr,
                              p4i_device_info_data.p4i_device_info.device_mac_addr2,
                              ETH_ADDR_LEN);

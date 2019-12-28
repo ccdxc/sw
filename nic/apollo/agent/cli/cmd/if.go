@@ -103,7 +103,7 @@ func printIf(intf *pds.Interface) {
 	adminState := strings.Replace(spec.GetAdminStatus().String(),
 		"IF_STATUS_", "", -1)
 	adminState = strings.Replace(adminState, "_", "-", -1)
-	var portNum uint32
+	portNum := ""
 	vpc := "-"
 	ipPrefix := "-"
 	encap := "-"
@@ -112,15 +112,15 @@ func printIf(intf *pds.Interface) {
 	switch spec.GetType() {
 	case pds.IfType_IF_TYPE_UPLINK:
 		lifId = fmt.Sprint(status.GetUplinkStatus().GetLifId())
-		portNum = spec.GetUplinkSpec().GetPortId()
+		portNum = fmt.Sprintf("%d", spec.GetUplinkSpec().GetPortId())
 	case pds.IfType_IF_TYPE_L3:
-		portNum = spec.GetL3IfSpec().GetPortId()
+		portNum = ifIndexToPortIdStr(spec.GetL3IfSpec().GetEthIfIndex())
 		vpc = fmt.Sprint(spec.GetL3IfSpec().GetVpcId())
 		ipPrefix = utils.IPPrefixToStr(spec.GetL3IfSpec().GetPrefix())
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())
 		encap = utils.EncapToString(spec.GetL3IfSpec().GetEncap())
 	}
-	fmt.Printf("0x%-12x%-14s%-11s%-8d%-6s%-6s%-18s%-14s%-20s\n",
+	fmt.Printf("0x%-12x%-14s%-11s%-8s%-6s%-6s%-18s%-14s%-20s\n",
 		ifIndex, ifStr, adminState, portNum, lifId,
 		vpc, ipPrefix, encap, mac)
 }
