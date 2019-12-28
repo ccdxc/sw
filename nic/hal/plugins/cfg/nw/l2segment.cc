@@ -1744,7 +1744,7 @@ l2seg_select_pinned_uplink (l2seg_t *l2seg)
         HAL_TRACE_DEBUG("Picked pinned uplink hdl: {}", l2seg->pinned_uplink);
     } else {
         // Not an error. Uplinks can come up after l2seg creation
-        HAL_TRACE_ERR("Failed to pick pinned uplink. No uplinks are UP");
+        HAL_TRACE_DEBUG("Failed to pick pinned uplink. No uplinks are UP");
         l2seg->pinned_uplink = HAL_HANDLE_INVALID;
     }
     return ret;
