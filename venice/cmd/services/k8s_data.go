@@ -47,6 +47,13 @@ var logVolume = protos.ModuleSpec_Volume{
 	MountPath: globals.LogDir,
 }
 
+// journalVolume is a reusable volume definition for Journal logs.
+var journalVolume = protos.ModuleSpec_Volume{
+	Name:      "journallogs",
+	HostPath:  globals.JournalLogDir,
+	MountPath: globals.JournalLogDir,
+}
+
 // runVolume is a volume to keep run time configs.
 var runVolume = protos.ModuleSpec_Volume{
 	Name:      "run",
@@ -450,6 +457,7 @@ var k8sModules = map[string]protos.Module{
 				eventsVolume,
 				configVolume,
 				runVolume,
+				journalVolume,
 				kubernetesPKIVolume,
 				varLogVolume,
 			},

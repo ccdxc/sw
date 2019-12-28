@@ -41,6 +41,11 @@
       "Command":"mkdir logs && cp -r /var/log/pensando/* logs/"
     },
     {
+      "Name":"JournalLogs",
+      "Method":0,
+      "Command":"mkdir journallogs && cp -r /run/log/journal/* journallogs/"
+    },
+    {
       "Name":"syslog",
       "Method":0,
       "Command":"mkdir syslogs && cp /var/syslog/messages syslogs/"

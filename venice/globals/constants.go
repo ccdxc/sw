@@ -83,6 +83,9 @@ const (
 	// PenCtlLogDir direcory
 	PenCtlLogDir = "/var/log"
 
+	// JournalLogDir direcory
+	JournalLogDir = "/run/log/journal"
+
 	//ObflLogDir directory
 	ObflLogDir = "/obfl"
 
