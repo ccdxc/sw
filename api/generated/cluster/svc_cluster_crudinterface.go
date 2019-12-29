@@ -115,6 +115,18 @@ type ClusterV1SnapshotRestoreInterface interface {
 	Restore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error)
 }
 
+// ClusterV1LicenseInterface exposes the CRUD methods for License
+type ClusterV1LicenseInterface interface {
+	Create(ctx context.Context, in *License) (*License, error)
+	Update(ctx context.Context, in *License) (*License, error)
+	UpdateStatus(ctx context.Context, in *License) (*License, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*License, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*License, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*License, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
@@ -125,5 +137,6 @@ type ClusterV1Interface interface {
 	Version() ClusterV1VersionInterface
 	ConfigurationSnapshot() ClusterV1ConfigurationSnapshotInterface
 	SnapshotRestore() ClusterV1SnapshotRestoreInterface
+	License() ClusterV1LicenseInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

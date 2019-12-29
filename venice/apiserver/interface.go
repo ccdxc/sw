@@ -57,6 +57,10 @@ type ServiceBackend interface {
 // ServiceHookCb is a callback registered with the ApiServer for the purpose of registering Hooks for services.
 type ServiceHookCb func(srv Service, logger log.Logger)
 
+// RestoreCb is a callback called back on init after the cache has been restored. Used by hook to restore state
+//  on bootup
+type RestoreCb func(p kvstore.Interface, logger log.Logger)
+
 // Server interface is implemented by the API server and used by the backends to register themselves
 //  to the API server.
 type Server interface {
@@ -68,6 +72,8 @@ type Server interface {
 	RegisterService(name string, svc Service)
 	// RegisterHooksCb registers a callback to register hooks for the service svcName
 	RegisterHooksCb(svcName string, fn ServiceHookCb)
+	// RegisterRestoreCallback is used to restore state by hooks on bootup/restart
+	RegisterRestoreCallback(cb RestoreCb)
 	// GetService returns a registered service given the name.
 	GetService(name string) Service
 	// GetMessage returns a registered mesage given the kind and service name.

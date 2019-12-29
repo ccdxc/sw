@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -201,6 +202,8 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 			return !ag.nagent.IsNpmClientConnected(), nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
+	// Set feature flags to initialized
+	featureflags.SetInitialized()
 
 	// restart the NPM
 	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
@@ -345,6 +348,9 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 
+	// Set feature flags to initialized
+	featureflags.SetInitialized()
+
 	// restart the NPM
 	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
@@ -428,6 +434,9 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 			return !ag.nagent.IsNpmClientConnected(), nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
+
+	// Set feature flags to initialized
+	featureflags.SetInitialized()
 
 	// restart the NPM
 	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)

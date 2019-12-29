@@ -66,6 +66,16 @@ func (m *HostList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *LicenseList) MakeKey(prefix string) string {
+	obj := License{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *LicenseList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *NodeList) MakeKey(prefix string) string {
 	obj := Node{}
 	return obj.MakeKey(prefix)
@@ -126,6 +136,12 @@ func (m *AutoMsgDistributedServiceCardWatchHelper) MakeKey(prefix string) string
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgHostWatchHelper) MakeKey(prefix string) string {
 	obj := Host{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgLicenseWatchHelper) MakeKey(prefix string) string {
+	obj := License{}
 	return obj.MakeKey(prefix)
 }
 
@@ -318,6 +334,48 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 
 // Default sets up the defaults for the object
 func (m *AutoMsgHostWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgLicenseWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgLicenseWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgLicenseWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgLicenseWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgLicenseWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgLicenseWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgLicenseWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgLicenseWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgLicenseWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgLicenseWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgLicenseWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgLicenseWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -570,6 +628,27 @@ func (m *HostList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *HostList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *LicenseList) Clone(into interface{}) (interface{}, error) {
+	var out *LicenseList
+	var ok bool
+	if into == nil {
+		out = &LicenseList{}
+	} else {
+		out, ok = into.(*LicenseList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*LicenseList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *LicenseList) Defaults(ver string) bool {
 	return false
 }
 
@@ -892,6 +971,66 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 }
 
 func (m *AutoMsgHostWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgLicenseWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgLicenseWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgLicenseWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgLicenseWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgLicenseWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgLicenseWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -1249,6 +1388,36 @@ func (m *HostList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 }
 
 func (m *HostList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *LicenseList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *LicenseList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *LicenseList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {

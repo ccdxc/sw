@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/featureflags"
+
 	"github.com/pensando/sw/venice/utils/objstore/client"
 
 	"github.com/pensando/sw/api"
@@ -1529,4 +1531,88 @@ func TestGetResposeWriters(t *testing.T) {
 	AssertOk(t, err, "get should have succeeded")
 	Assert(t, reflect.DeepEqual(ret, snapObj), "Objects do not match[%+v]/[%+v]", ret, snapObj)
 
+}
+
+func TestFeatureFlagsHooks(t *testing.T) {
+	kvs := &mocks.FakeKvStore{}
+	txn := &mocks.FakeTxn{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	ch := &clusterHooks{
+		logger: l,
+	}
+
+	ff := cluster.License{
+		Spec: cluster.LicenseSpec{
+			Features: []cluster.Feature{
+				{FeatureKey: featureflags.OverlayRouting},
+			},
+		},
+	}
+
+	errs := ch.validateFFBootstrap(ff, "v1", false, false)
+	Assert(t, len(errs) == 0, "expecting no errors")
+
+	ri, kvwrite, err := ch.checkFFBootstrap(ctx, kvs, txn, "", apiintf.CreateOper, false, ff)
+	AssertOk(t, err, "not expecting errors")
+	Assert(t, kvwrite, "expecting kvwrite to be true")
+	fstatus := ri.(cluster.License)
+	found := false
+	for _, v := range fstatus.Status.Features {
+		if v.FeatureKey == featureflags.OverlayRouting {
+			Assert(t, v.Value == "enabled", "did not get enabled for routing")
+			found = true
+		}
+	}
+	Assert(t, found, "did not find feature in status")
+	ch.applyFeatureFlags(ctx, apiintf.CreateOper, fstatus, false)
+	Assert(t, featureflags.IsOVerlayRoutingEnabled() == true, "expecting overlay routing to be true")
+	// With Errors
+	ff = cluster.License{
+		Spec: cluster.LicenseSpec{
+			Features: []cluster.Feature{
+				{FeatureKey: featureflags.OverlayRouting},
+				{FeatureKey: featureflags.OverlayRouting},
+			},
+		},
+	}
+	errs = ch.validateFFBootstrap(ff, "v1", false, false)
+	Assert(t, len(errs) == 1, "expecting errors")
+
+	ri, kvwrite, err = ch.checkFFBootstrap(ctx, kvs, txn, "", apiintf.CreateOper, false, ff)
+	Assert(t, err != nil, "expecting errors")
+
+	// With Errors
+	ff = cluster.License{
+		Spec: cluster.LicenseSpec{
+			Features: []cluster.Feature{
+				{FeatureKey: featureflags.SubnetSecurityPolicies},
+			},
+		},
+	}
+
+	ri, kvwrite, err = ch.checkFFBootstrap(ctx, kvs, txn, "", apiintf.CreateOper, false, ff)
+	AssertOk(t, err, "not expecting errors")
+
+	ff = ri.(cluster.License)
+	ch.applyFeatureFlags(ctx, apiintf.CreateOper, ff, false)
+	Assert(t, featureflags.IsOVerlayRoutingEnabled() == false, "expecing overlay routing to be false")
+
+	ff = cluster.License{
+		Spec: cluster.LicenseSpec{
+			Features: []cluster.Feature{
+				{FeatureKey: featureflags.OverlayRouting},
+			},
+		},
+	}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		inO := into.(*cluster.License)
+		*inO = ff
+		return nil
+	}
+
+	ch.restoreFeatureFlags(kvs, l)
+	Assert(t, featureflags.IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
 }

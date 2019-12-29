@@ -13,14 +13,11 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
+	"golang.org/x/net/context"
+	"gopkg.in/check.v1"
 
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/utils/netutils"
-
-	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
-
-	"golang.org/x/net/context"
-	"gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -32,7 +29,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
+	"github.com/pensando/sw/venice/utils/featureflags"
 
 	"github.com/pensando/sw/nic/agent/nmd"
 	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
@@ -1026,6 +1025,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// start API server
 	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, c.TestName(), l)
 	c.Assert(err, check.IsNil)
+
+	// Set feature flags to initialized
+	featureflags.SetInitialized()
 
 	// create a controller
 	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, rc, logger.WithContext("submodule", "pen-npm"), false)

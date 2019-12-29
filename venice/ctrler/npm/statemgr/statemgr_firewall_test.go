@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -24,6 +25,7 @@ func newStatemgr() (*Statemgr, error) {
 	// create nimbus server
 	msrv := nimbus.NewMbusServer("npm-test", nil)
 
+	featureflags.SetInitialized()
 	// create network state manager
 	stateMgr := MustGetStatemgr()
 	err := stateMgr.Run(nil, globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")), 0)
@@ -60,7 +62,7 @@ func startGrpcServer() (*rpckit.RPCServer, error) {
 }
 
 func newStatemgrWithMserver(grpcServer *rpckit.RPCServer) (*Statemgr, error) {
-
+	featureflags.SetInitialized()
 	// create nimbus server
 	msrv := nimbus.NewMbusServer("npm-test", grpcServer)
 

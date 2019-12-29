@@ -55,6 +55,7 @@ type eClusterV1Endpoints struct {
 	fnAutoAddConfigurationSnapshot     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddHost                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddLicense                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddNode                      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddSnapshotRestore           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddTenant                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -63,6 +64,7 @@ type eClusterV1Endpoints struct {
 	fnAutoDeleteConfigurationSnapshot  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteHost                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteLicense                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteNode                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteSnapshotRestore        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTenant                 func(ctx context.Context, t interface{}) (interface{}, error)
@@ -71,6 +73,7 @@ type eClusterV1Endpoints struct {
 	fnAutoGetConfigurationSnapshot     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetHost                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetLicense                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetNode                      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetSnapshotRestore           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTenant                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -79,6 +82,7 @@ type eClusterV1Endpoints struct {
 	fnAutoListConfigurationSnapshot    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListDistributedServiceCard   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListHost                     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListLicense                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListNode                     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListSnapshotRestore          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListTenant                   func(ctx context.Context, t interface{}) (interface{}, error)
@@ -87,6 +91,7 @@ type eClusterV1Endpoints struct {
 	fnAutoUpdateConfigurationSnapshot  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateHost                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateLicense                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateNode                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateSnapshotRestore        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateTenant                 func(ctx context.Context, t interface{}) (interface{}, error)
@@ -103,6 +108,7 @@ type eClusterV1Endpoints struct {
 	fnAutoWatchVersion                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchConfigurationSnapshot  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchSnapshotRestore        func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchLicense                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
@@ -113,6 +119,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.AutoMsgConfigurationSnapshotWatchHelper":  apisrvpkg.NewMessage("cluster.AutoMsgConfigurationSnapshotWatchHelper"),
 		"cluster.AutoMsgDistributedServiceCardWatchHelper": apisrvpkg.NewMessage("cluster.AutoMsgDistributedServiceCardWatchHelper"),
 		"cluster.AutoMsgHostWatchHelper":                   apisrvpkg.NewMessage("cluster.AutoMsgHostWatchHelper"),
+		"cluster.AutoMsgLicenseWatchHelper":                apisrvpkg.NewMessage("cluster.AutoMsgLicenseWatchHelper"),
 		"cluster.AutoMsgNodeWatchHelper":                   apisrvpkg.NewMessage("cluster.AutoMsgNodeWatchHelper"),
 		"cluster.AutoMsgSnapshotRestoreWatchHelper":        apisrvpkg.NewMessage("cluster.AutoMsgSnapshotRestoreWatchHelper"),
 		"cluster.AutoMsgTenantWatchHelper":                 apisrvpkg.NewMessage("cluster.AutoMsgTenantWatchHelper"),
@@ -223,6 +230,32 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.HostList)
+			return &r
+		}),
+		"cluster.LicenseList": apisrvpkg.NewMessage("cluster.LicenseList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cluster.LicenseList{}
+			into.Kind = "LicenseList"
+			r := cluster.License{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.License")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.LicenseList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.LicenseList)
 			return &r
 		}),
 		"cluster.NodeList": apisrvpkg.NewMessage("cluster.NodeList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -378,6 +411,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoAddLicense = srv.AddMethod("AutoAddLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.License"], pkgMessages["cluster.License"], "cluster", "AutoAddLicense")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/licenses"), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoAddNode")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
@@ -432,6 +470,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoDeleteLicense = srv.AddMethod("AutoDeleteLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.License"], pkgMessages["cluster.License"], "cluster", "AutoDeleteLicense")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
@@ -490,6 +533,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoGetLicense = srv.AddMethod("AutoGetLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.License"], pkgMessages["cluster.License"], "cluster", "AutoGetLicense")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/licenses"), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoGetNode")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
@@ -546,6 +594,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoListLicense = srv.AddMethod("AutoListLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.LicenseList"], "cluster", "AutoListLicense")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoListNode = srv.AddMethod("AutoListNode",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.NodeList"], "cluster", "AutoListNode")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -600,6 +653,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoUpdateLicense = srv.AddMethod("AutoUpdateLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.License"], pkgMessages["cluster.License"], "cluster", "AutoUpdateLicense")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/licenses"), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
@@ -661,6 +719,8 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoWatchSnapshotRestore = pkgMessages["cluster.SnapshotRestore"].WatchFromKv
 
+		s.endpointsClusterV1.fnAutoWatchLicense = pkgMessages["cluster.License"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"cluster.ClusterV1": srv,
 		}
@@ -668,7 +728,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := cluster.MakeClusterV1ServerEndpoints(s.endpointsClusterV1, logger)
 		server := cluster.MakeGRPCServerClusterV1(ctx, endpoints, logger)
 		cluster.RegisterClusterV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Cluster", "Node", "Host", "DistributedServiceCard", "Tenant", "Version", "ConfigurationSnapshot", "SnapshotRestore"}
+		svcObjs := []string{"Cluster", "Node", "Host", "DistributedServiceCard", "Tenant", "Version", "ConfigurationSnapshot", "SnapshotRestore", "License"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("cluster", "ClusterV1", svcObjs)
 	}
 }
@@ -1502,6 +1562,106 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
+		pkgMessages["cluster.License"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := cluster.License{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(cluster.ClusterV1_AutoWatchLicenseServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.License")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.License")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.License")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgLicenseWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.License")
+					return err
+				}
+				events = &cluster.AutoMsgLicenseWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.License")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.License")
+						return nil
+					}
+					evin, ok := ev.Object.(*cluster.License)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.License)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
+
+					strEvent := &cluster.AutoMsgLicenseWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received License watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "License", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.License")
+							break
+						}
+						strEvent.Object = i.(*cluster.License)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.License")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -1559,6 +1719,14 @@ func (e *eClusterV1Endpoints) AutoAddHost(ctx context.Context, t cluster.Host) (
 		return r.(cluster.Host), err
 	}
 	return cluster.Host{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoAddLicense(ctx context.Context, t cluster.License) (cluster.License, error) {
+	r, err := e.fnAutoAddLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.License), err
+	}
+	return cluster.License{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoAddNode(ctx context.Context, t cluster.Node) (cluster.Node, error) {
@@ -1625,6 +1793,14 @@ func (e *eClusterV1Endpoints) AutoDeleteHost(ctx context.Context, t cluster.Host
 	return cluster.Host{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoDeleteLicense(ctx context.Context, t cluster.License) (cluster.License, error) {
+	r, err := e.fnAutoDeleteLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.License), err
+	}
+	return cluster.License{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoDeleteNode(ctx context.Context, t cluster.Node) (cluster.Node, error) {
 	r, err := e.fnAutoDeleteNode(ctx, t)
 	if err == nil {
@@ -1687,6 +1863,14 @@ func (e *eClusterV1Endpoints) AutoGetHost(ctx context.Context, t cluster.Host) (
 		return r.(cluster.Host), err
 	}
 	return cluster.Host{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoGetLicense(ctx context.Context, t cluster.License) (cluster.License, error) {
+	r, err := e.fnAutoGetLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.License), err
+	}
+	return cluster.License{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoGetNode(ctx context.Context, t cluster.Node) (cluster.Node, error) {
@@ -1753,6 +1937,14 @@ func (e *eClusterV1Endpoints) AutoListHost(ctx context.Context, t api.ListWatchO
 	return cluster.HostList{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoListLicense(ctx context.Context, t api.ListWatchOptions) (cluster.LicenseList, error) {
+	r, err := e.fnAutoListLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.LicenseList), err
+	}
+	return cluster.LicenseList{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchOptions) (cluster.NodeList, error) {
 	r, err := e.fnAutoListNode(ctx, t)
 	if err == nil {
@@ -1815,6 +2007,14 @@ func (e *eClusterV1Endpoints) AutoUpdateHost(ctx context.Context, t cluster.Host
 		return r.(cluster.Host), err
 	}
 	return cluster.Host{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoUpdateLicense(ctx context.Context, t cluster.License) (cluster.License, error) {
+	r, err := e.fnAutoUpdateLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.License), err
+	}
+	return cluster.License{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoUpdateNode(ctx context.Context, t cluster.Node) (cluster.Node, error) {
@@ -1897,6 +2097,9 @@ func (e *eClusterV1Endpoints) AutoWatchConfigurationSnapshot(in *api.ListWatchOp
 }
 func (e *eClusterV1Endpoints) AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSnapshotRestoreServer) error {
 	return e.fnAutoWatchSnapshotRestore(in, stream, "cluster")
+}
+func (e *eClusterV1Endpoints) AutoWatchLicense(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchLicenseServer) error {
+	return e.fnAutoWatchLicense(in, stream, "cluster")
 }
 func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
 	return e.fnAutoWatchSvcClusterV1(in, stream, "")

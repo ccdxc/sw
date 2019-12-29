@@ -48,6 +48,8 @@ type apiSrv struct {
 	messages map[string]apiserver.Message
 	// hookregs is a collection of hooks registration callbacks.
 	hookregs map[string]apiserver.ServiceHookCb
+	// restoreCbs is a collection of all restore callbacks registered
+	restoreCbs []apiserver.RestoreCb
 	// version is the native version of the API server. Can be changed
 	//  on the command line when starting the API server.
 	version string
@@ -209,6 +211,11 @@ func (a *apiSrv) RegisterHooksCb(name string, fn apiserver.ServiceHookCb) {
 		panic(fmt.Sprintf("Duplicate hooks registration for %s", name))
 	}
 	a.hookregs[name] = fn
+}
+
+// RegisterRestoreCallback is used to restore state by hooks on bootup/restart
+func (a *apiSrv) RegisterRestoreCallback(cb apiserver.RestoreCb) {
+	a.restoreCbs = append(a.restoreCbs, cb)
 }
 
 // GetService returns the registered service object give the name of the service.
@@ -384,6 +391,10 @@ func (a *apiSrv) Run(config apiserver.Config) {
 
 	a.apiCache.Restore()
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
+	// call all restore callbacks
+	for i := range a.restoreCbs {
+		a.restoreCbs[i](a.apiCache, a.Logger)
+	}
 	a.runstate.cond.L.Lock()
 	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
 	a.runstate.running = true

@@ -99,6 +99,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoAddHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddHost")(lAutoAddHostEndpoint)
 	}
+	var lAutoAddLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoAddLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddLicense",
+			cluster.EncodeGrpcReqLicense,
+			cluster.DecodeGrpcRespLicense,
+			&cluster.License{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddLicense")(lAutoAddLicenseEndpoint)
+	}
 	var lAutoAddNodeEndpoint endpoint.Endpoint
 	{
 		lAutoAddNodeEndpoint = grpctransport.NewClient(
@@ -210,6 +224,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteHost")(lAutoDeleteHostEndpoint)
+	}
+	var lAutoDeleteLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteLicense",
+			cluster.EncodeGrpcReqLicense,
+			cluster.DecodeGrpcRespLicense,
+			&cluster.License{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteLicense")(lAutoDeleteLicenseEndpoint)
 	}
 	var lAutoDeleteNodeEndpoint endpoint.Endpoint
 	{
@@ -323,6 +351,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetHost")(lAutoGetHostEndpoint)
 	}
+	var lAutoGetLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoGetLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetLicense",
+			cluster.EncodeGrpcReqLicense,
+			cluster.DecodeGrpcRespLicense,
+			&cluster.License{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetLicense")(lAutoGetLicenseEndpoint)
+	}
 	var lAutoGetNodeEndpoint endpoint.Endpoint
 	{
 		lAutoGetNodeEndpoint = grpctransport.NewClient(
@@ -434,6 +476,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoListHost")(lAutoListHostEndpoint)
+	}
+	var lAutoListLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoListLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListLicense",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespLicenseList,
+			&cluster.LicenseList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoListLicense")(lAutoListLicenseEndpoint)
 	}
 	var lAutoListNodeEndpoint endpoint.Endpoint
 	{
@@ -547,6 +603,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateHost")(lAutoUpdateHostEndpoint)
 	}
+	var lAutoUpdateLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateLicense",
+			cluster.EncodeGrpcReqLicense,
+			cluster.DecodeGrpcRespLicense,
+			&cluster.License{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateLicense")(lAutoUpdateLicenseEndpoint)
+	}
 	var lAutoUpdateNodeEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateNodeEndpoint = grpctransport.NewClient(
@@ -653,6 +723,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoAddConfigurationSnapshotEndpoint:     lAutoAddConfigurationSnapshotEndpoint,
 		AutoAddDistributedServiceCardEndpoint:    lAutoAddDistributedServiceCardEndpoint,
 		AutoAddHostEndpoint:                      lAutoAddHostEndpoint,
+		AutoAddLicenseEndpoint:                   lAutoAddLicenseEndpoint,
 		AutoAddNodeEndpoint:                      lAutoAddNodeEndpoint,
 		AutoAddSnapshotRestoreEndpoint:           lAutoAddSnapshotRestoreEndpoint,
 		AutoAddTenantEndpoint:                    lAutoAddTenantEndpoint,
@@ -661,6 +732,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoDeleteConfigurationSnapshotEndpoint:  lAutoDeleteConfigurationSnapshotEndpoint,
 		AutoDeleteDistributedServiceCardEndpoint: lAutoDeleteDistributedServiceCardEndpoint,
 		AutoDeleteHostEndpoint:                   lAutoDeleteHostEndpoint,
+		AutoDeleteLicenseEndpoint:                lAutoDeleteLicenseEndpoint,
 		AutoDeleteNodeEndpoint:                   lAutoDeleteNodeEndpoint,
 		AutoDeleteSnapshotRestoreEndpoint:        lAutoDeleteSnapshotRestoreEndpoint,
 		AutoDeleteTenantEndpoint:                 lAutoDeleteTenantEndpoint,
@@ -669,6 +741,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoGetConfigurationSnapshotEndpoint:     lAutoGetConfigurationSnapshotEndpoint,
 		AutoGetDistributedServiceCardEndpoint:    lAutoGetDistributedServiceCardEndpoint,
 		AutoGetHostEndpoint:                      lAutoGetHostEndpoint,
+		AutoGetLicenseEndpoint:                   lAutoGetLicenseEndpoint,
 		AutoGetNodeEndpoint:                      lAutoGetNodeEndpoint,
 		AutoGetSnapshotRestoreEndpoint:           lAutoGetSnapshotRestoreEndpoint,
 		AutoGetTenantEndpoint:                    lAutoGetTenantEndpoint,
@@ -677,6 +750,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoListConfigurationSnapshotEndpoint:    lAutoListConfigurationSnapshotEndpoint,
 		AutoListDistributedServiceCardEndpoint:   lAutoListDistributedServiceCardEndpoint,
 		AutoListHostEndpoint:                     lAutoListHostEndpoint,
+		AutoListLicenseEndpoint:                  lAutoListLicenseEndpoint,
 		AutoListNodeEndpoint:                     lAutoListNodeEndpoint,
 		AutoListSnapshotRestoreEndpoint:          lAutoListSnapshotRestoreEndpoint,
 		AutoListTenantEndpoint:                   lAutoListTenantEndpoint,
@@ -685,6 +759,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoUpdateConfigurationSnapshotEndpoint:  lAutoUpdateConfigurationSnapshotEndpoint,
 		AutoUpdateDistributedServiceCardEndpoint: lAutoUpdateDistributedServiceCardEndpoint,
 		AutoUpdateHostEndpoint:                   lAutoUpdateHostEndpoint,
+		AutoUpdateLicenseEndpoint:                lAutoUpdateLicenseEndpoint,
 		AutoUpdateNodeEndpoint:                   lAutoUpdateNodeEndpoint,
 		AutoUpdateSnapshotRestoreEndpoint:        lAutoUpdateSnapshotRestoreEndpoint,
 		AutoUpdateTenantEndpoint:                 lAutoUpdateTenantEndpoint,
@@ -2277,6 +2352,195 @@ func (a *restObjClusterV1SnapshotRestore) Restore(ctx context.Context, in *clust
 	return a.endpoints.RestoreSnapshotRestore(ctx, in)
 }
 
+type grpcObjClusterV1License struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1License) Create(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddLicense(nctx, in)
+}
+
+func (a *grpcObjClusterV1License) Update(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateLicense(nctx, in)
+}
+
+func (a *grpcObjClusterV1License) UpdateStatus(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateLicense(nctx, in)
+}
+
+func (a *grpcObjClusterV1License) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.License{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetLicense(nctx, &in)
+}
+
+func (a *grpcObjClusterV1License) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.License{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteLicense(nctx, &in)
+}
+
+func (a *grpcObjClusterV1License) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListLicense(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1License) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchLicense(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchLicenseClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1License) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1License struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1License) Create(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddLicense(ctx, in)
+}
+
+func (a *restObjClusterV1License) Update(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateLicense(ctx, in)
+}
+
+func (a *restObjClusterV1License) UpdateStatus(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1License) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.License{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetLicense(ctx, &in)
+}
+
+func (a *restObjClusterV1License) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.License{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteLicense(ctx, &in)
+}
+
+func (a *restObjClusterV1License) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.License, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListLicense(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1License) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchLicense(ctx, options)
+}
+
+func (a *restObjClusterV1License) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientClusterV1 struct {
 	logger log.Logger
 	client cluster.ServiceClusterV1Client
@@ -2289,6 +2553,7 @@ type crudClientClusterV1 struct {
 	grpcVersion                cluster.ClusterV1VersionInterface
 	grpcConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
 	grpcSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
+	grpcLicense                cluster.ClusterV1LicenseInterface
 }
 
 // NewGrpcCrudClientClusterV1 creates a GRPC client for the service
@@ -2306,6 +2571,7 @@ func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluste
 		grpcVersion:                &grpcObjClusterV1Version{client: client, logger: logger},
 		grpcConfigurationSnapshot:  &grpcObjClusterV1ConfigurationSnapshot{client: client, logger: logger},
 		grpcSnapshotRestore:        &grpcObjClusterV1SnapshotRestore{client: client, logger: logger},
+		grpcLicense:                &grpcObjClusterV1License{client: client, logger: logger},
 	}
 }
 
@@ -2339,6 +2605,10 @@ func (a *crudClientClusterV1) ConfigurationSnapshot() cluster.ClusterV1Configura
 
 func (a *crudClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
 	return a.grpcSnapshotRestore
+}
+
+func (a *crudClientClusterV1) License() cluster.ClusterV1LicenseInterface {
+	return a.grpcLicense
 }
 
 func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -2392,6 +2662,7 @@ type crudRestClientClusterV1 struct {
 	restVersion                cluster.ClusterV1VersionInterface
 	restConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
 	restSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
+	restLicense                cluster.ClusterV1LicenseInterface
 }
 
 // NewRestCrudClientClusterV1 creates a REST client for the service.
@@ -2410,6 +2681,7 @@ func NewRestCrudClientClusterV1(url string, httpClient *http.Client) cluster.Clu
 		restVersion:                &restObjClusterV1Version{endpoints: endpoints, instance: url},
 		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
+		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2429,6 +2701,7 @@ func NewStagedRestCrudClientClusterV1(url string, id string, httpClient *http.Cl
 		restVersion:                &restObjClusterV1Version{endpoints: endpoints, instance: url},
 		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
+		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2462,6 +2735,10 @@ func (a *crudRestClientClusterV1) ConfigurationSnapshot() cluster.ClusterV1Confi
 
 func (a *crudRestClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestoreInterface {
 	return a.restSnapshotRestore
+}
+
+func (a *crudRestClientClusterV1) License() cluster.ClusterV1LicenseInterface {
+	return a.restLicense
 }
 
 func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

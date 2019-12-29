@@ -13,6 +13,7 @@ import "tenant.proto";
 import "cluster.proto";
 import "smartnic.proto";
 import "snapshot.proto";
+import "license.proto";
 
 //-------------------------------- R E S T / g R P C  A P I ----------------------------------------------------
 
@@ -30,6 +31,7 @@ service ClusterV1 {
     option(venice.apiGrpcCrudService) = "Version";
     option(venice.apiGrpcCrudService) = "ConfigurationSnapshot";
     option(venice.apiGrpcCrudService) = "SnapshotRestore";
+    option(venice.apiGrpcCrudService) = "License";
 
 
     option (venice.apiRestService) = {
@@ -104,5 +106,10 @@ service ClusterV1 {
      Request: "SnapshotRestore"
      Response: "SnapshotRestore"
      Desc: "Restore Configuration"
+    };
+
+    option (venice.apiRestService) = {
+        Object: "License"
+        Method : ["post", "put", "get"]
     };
 }

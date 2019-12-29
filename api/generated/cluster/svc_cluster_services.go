@@ -24,6 +24,7 @@ type ServiceClusterV1Client interface {
 	AutoAddConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	AutoAddDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoAddHost(ctx context.Context, t *Host) (*Host, error)
+	AutoAddLicense(ctx context.Context, t *License) (*License, error)
 	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
 	AutoAddSnapshotRestore(ctx context.Context, t *SnapshotRestore) (*SnapshotRestore, error)
 	AutoAddTenant(ctx context.Context, t *Tenant) (*Tenant, error)
@@ -32,6 +33,7 @@ type ServiceClusterV1Client interface {
 	AutoDeleteConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	AutoDeleteDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoDeleteHost(ctx context.Context, t *Host) (*Host, error)
+	AutoDeleteLicense(ctx context.Context, t *License) (*License, error)
 	AutoDeleteNode(ctx context.Context, t *Node) (*Node, error)
 	AutoDeleteSnapshotRestore(ctx context.Context, t *SnapshotRestore) (*SnapshotRestore, error)
 	AutoDeleteTenant(ctx context.Context, t *Tenant) (*Tenant, error)
@@ -40,6 +42,7 @@ type ServiceClusterV1Client interface {
 	AutoGetConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	AutoGetDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoGetHost(ctx context.Context, t *Host) (*Host, error)
+	AutoGetLicense(ctx context.Context, t *License) (*License, error)
 	AutoGetNode(ctx context.Context, t *Node) (*Node, error)
 	AutoGetSnapshotRestore(ctx context.Context, t *SnapshotRestore) (*SnapshotRestore, error)
 	AutoGetTenant(ctx context.Context, t *Tenant) (*Tenant, error)
@@ -48,6 +51,7 @@ type ServiceClusterV1Client interface {
 	AutoListConfigurationSnapshot(ctx context.Context, t *api.ListWatchOptions) (*ConfigurationSnapshotList, error)
 	AutoListDistributedServiceCard(ctx context.Context, t *api.ListWatchOptions) (*DistributedServiceCardList, error)
 	AutoListHost(ctx context.Context, t *api.ListWatchOptions) (*HostList, error)
+	AutoListLicense(ctx context.Context, t *api.ListWatchOptions) (*LicenseList, error)
 	AutoListNode(ctx context.Context, t *api.ListWatchOptions) (*NodeList, error)
 	AutoListSnapshotRestore(ctx context.Context, t *api.ListWatchOptions) (*SnapshotRestoreList, error)
 	AutoListTenant(ctx context.Context, t *api.ListWatchOptions) (*TenantList, error)
@@ -56,6 +60,7 @@ type ServiceClusterV1Client interface {
 	AutoUpdateConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
 	AutoUpdateDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoUpdateHost(ctx context.Context, t *Host) (*Host, error)
+	AutoUpdateLicense(ctx context.Context, t *License) (*License, error)
 	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
 	AutoUpdateSnapshotRestore(ctx context.Context, t *SnapshotRestore) (*SnapshotRestore, error)
 	AutoUpdateTenant(ctx context.Context, t *Tenant) (*Tenant, error)
@@ -72,6 +77,7 @@ type ServiceClusterV1Client interface {
 	AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchVersionClient, error)
 	AutoWatchConfigurationSnapshot(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchConfigurationSnapshotClient, error)
 	AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSnapshotRestoreClient, error)
+	AutoWatchLicense(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchLicenseClient, error)
 }
 
 // ServiceClusterV1Server is the server interface for the service.
@@ -83,6 +89,7 @@ type ServiceClusterV1Server interface {
 	AutoAddConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
 	AutoAddDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoAddHost(ctx context.Context, t Host) (Host, error)
+	AutoAddLicense(ctx context.Context, t License) (License, error)
 	AutoAddNode(ctx context.Context, t Node) (Node, error)
 	AutoAddSnapshotRestore(ctx context.Context, t SnapshotRestore) (SnapshotRestore, error)
 	AutoAddTenant(ctx context.Context, t Tenant) (Tenant, error)
@@ -91,6 +98,7 @@ type ServiceClusterV1Server interface {
 	AutoDeleteConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
 	AutoDeleteDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoDeleteHost(ctx context.Context, t Host) (Host, error)
+	AutoDeleteLicense(ctx context.Context, t License) (License, error)
 	AutoDeleteNode(ctx context.Context, t Node) (Node, error)
 	AutoDeleteSnapshotRestore(ctx context.Context, t SnapshotRestore) (SnapshotRestore, error)
 	AutoDeleteTenant(ctx context.Context, t Tenant) (Tenant, error)
@@ -99,6 +107,7 @@ type ServiceClusterV1Server interface {
 	AutoGetConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
 	AutoGetDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoGetHost(ctx context.Context, t Host) (Host, error)
+	AutoGetLicense(ctx context.Context, t License) (License, error)
 	AutoGetNode(ctx context.Context, t Node) (Node, error)
 	AutoGetSnapshotRestore(ctx context.Context, t SnapshotRestore) (SnapshotRestore, error)
 	AutoGetTenant(ctx context.Context, t Tenant) (Tenant, error)
@@ -107,6 +116,7 @@ type ServiceClusterV1Server interface {
 	AutoListConfigurationSnapshot(ctx context.Context, t api.ListWatchOptions) (ConfigurationSnapshotList, error)
 	AutoListDistributedServiceCard(ctx context.Context, t api.ListWatchOptions) (DistributedServiceCardList, error)
 	AutoListHost(ctx context.Context, t api.ListWatchOptions) (HostList, error)
+	AutoListLicense(ctx context.Context, t api.ListWatchOptions) (LicenseList, error)
 	AutoListNode(ctx context.Context, t api.ListWatchOptions) (NodeList, error)
 	AutoListSnapshotRestore(ctx context.Context, t api.ListWatchOptions) (SnapshotRestoreList, error)
 	AutoListTenant(ctx context.Context, t api.ListWatchOptions) (TenantList, error)
@@ -115,6 +125,7 @@ type ServiceClusterV1Server interface {
 	AutoUpdateConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
 	AutoUpdateDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoUpdateHost(ctx context.Context, t Host) (Host, error)
+	AutoUpdateLicense(ctx context.Context, t License) (License, error)
 	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
 	AutoUpdateSnapshotRestore(ctx context.Context, t SnapshotRestore) (SnapshotRestore, error)
 	AutoUpdateTenant(ctx context.Context, t Tenant) (Tenant, error)
@@ -131,4 +142,5 @@ type ServiceClusterV1Server interface {
 	AutoWatchVersion(in *api.ListWatchOptions, stream ClusterV1_AutoWatchVersionServer) error
 	AutoWatchConfigurationSnapshot(in *api.ListWatchOptions, stream ClusterV1_AutoWatchConfigurationSnapshotServer) error
 	AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSnapshotRestoreServer) error
+	AutoWatchLicense(in *api.ListWatchOptions, stream ClusterV1_AutoWatchLicenseServer) error
 }

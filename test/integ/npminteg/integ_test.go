@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
 
-	"golang.org/x/net/context"
+	"github.com/pensando/sw/venice/utils/featureflags"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -147,6 +148,9 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	m.AddServiceInstance(&apiSrvSi)
 
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
+
+	// Set feature flags to initialized
+	featureflags.SetInitialized()
 
 	// create a controller
 	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, rc, logger.WithContext("submodule", "pen-npm"), false)

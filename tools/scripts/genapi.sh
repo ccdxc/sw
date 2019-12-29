@@ -40,7 +40,7 @@ if [ -e ${curdir}/generated/relations/schema.json ]; then
 fi
 
 # Delete the relations file if already exists.
-if [ -e ${curdir}/generated/relations/schema.go]; then
+if [ -e ${curdir}/generated/relations/schema.go ]; then
     rm -f ${curdir}/generated/relations/schema.go
 fi
 

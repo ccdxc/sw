@@ -1076,6 +1076,132 @@ func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Restore(ctx, in int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Restore", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Restore), ctx, in)
 }
 
+// MockClusterV1LicenseInterface is a mock of ClusterV1LicenseInterface interface
+type MockClusterV1LicenseInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1LicenseInterfaceMockRecorder
+}
+
+// MockClusterV1LicenseInterfaceMockRecorder is the mock recorder for MockClusterV1LicenseInterface
+type MockClusterV1LicenseInterfaceMockRecorder struct {
+	mock *MockClusterV1LicenseInterface
+}
+
+// NewMockClusterV1LicenseInterface creates a new mock instance
+func NewMockClusterV1LicenseInterface(ctrl *gomock.Controller) *MockClusterV1LicenseInterface {
+	mock := &MockClusterV1LicenseInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1LicenseInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClusterV1LicenseInterface) EXPECT() *MockClusterV1LicenseInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockClusterV1LicenseInterface) Create(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockClusterV1LicenseInterface) Update(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1LicenseInterface) UpdateStatus(ctx context.Context, in *cluster.License) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockClusterV1LicenseInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockClusterV1LicenseInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockClusterV1LicenseInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.License, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockClusterV1LicenseInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockClusterV1LicenseInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Allowed), oper)
+}
+
 // MockClusterV1Interface is a mock of ClusterV1Interface interface
 type MockClusterV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1193,6 +1319,18 @@ func (m *MockClusterV1Interface) SnapshotRestore() cluster.ClusterV1SnapshotRest
 // SnapshotRestore indicates an expected call of SnapshotRestore
 func (mr *MockClusterV1InterfaceMockRecorder) SnapshotRestore() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotRestore", reflect.TypeOf((*MockClusterV1Interface)(nil).SnapshotRestore))
+}
+
+// License mocks base method
+func (m *MockClusterV1Interface) License() cluster.ClusterV1LicenseInterface {
+	ret := m.ctrl.Call(m, "License")
+	ret0, _ := ret[0].(cluster.ClusterV1LicenseInterface)
+	return ret0
+}
+
+// License indicates an expected call of License
+func (mr *MockClusterV1InterfaceMockRecorder) License() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "License", reflect.TypeOf((*MockClusterV1Interface)(nil).License))
 }
 
 // Watch mocks base method

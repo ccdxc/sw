@@ -1,0 +1,53 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Feature represents each individual feature on the system.
+message Feature {
+    string FeatureKey           = 1 [(gogoproto.jsontag) = "feature-key,omitempty"];
+    string License              = 2 [(gogoproto.jsontag) = "licence,omitempty"];
+}
+
+// FeatureStatus is the current operational status of a feature
+message FeatureStatus {
+    string FeatureKey           = 1 [(gogoproto.jsontag) = "feature-key,omitempty"];
+    string Value                = 2 [(gogoproto.jsontag) = "value,omitempty"];
+    string Expiry               = 3 [(gogoproto.jsontag) = "expiry,omitempty"];
+}
+
+message LicenseSpec {
+    // List of Feature licences applied
+   repeated Feature Features    = 1 [(gogoproto.jsontag) = "features,omitempty", (gogoproto.nullable) = false];
+}
+
+message LicenseStatus {
+    // Status of current Licenced features
+    repeated FeatureStatus  Features    = 1 [(gogoproto.jsontag) = "features,omitempty", (gogoproto.nullable) = false];
+    // Licenses that are not understood by the current running version of software.
+    repeated string Unknown             = 2 [(gogoproto.jsontag) = "unknown,omitempty"];
+}
+
+message License {
+    option (venice.objectPrefix) = {Singleton: "licenses"};
+
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "meta,omitempty"];
+
+    LicenseSpec Spec        = 3 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "spec,omitempty"];
+
+    LicenseStatus Status    = 4 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "status,omitempty"];
+}

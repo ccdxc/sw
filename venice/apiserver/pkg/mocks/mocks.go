@@ -37,6 +37,9 @@ func (f *FakeServer) RegisterService(name string, svc apisrv.Service) {}
 // RegisterHooksCb registers a callback to register hooks for the service svcName
 func (f *FakeServer) RegisterHooksCb(svcName string, fn apisrv.ServiceHookCb) {}
 
+// RegisterRestoreCallback is used to restore state by hooks on bootup/restart
+func (f *FakeServer) RegisterRestoreCallback(cb apisrv.RestoreCb) {}
+
 // GetService returns a registered service given the name.
 func (f *FakeServer) GetService(name string) apisrv.Service {
 	return f.SvcMap[name]

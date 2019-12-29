@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -483,6 +484,8 @@ func newStateMgrWithServer(t *testing.T, grpcServer *rpckit.RPCServer) (*Statemg
 
 	// create nimbus server
 	msrv := nimbus.NewMbusServer("npm-test", grpcServer)
+
+	featureflags.SetInitialized()
 
 	// create network state manager
 	stateMgr := MustGetStatemgr()

@@ -19,6 +19,7 @@
 | Host | /configs/cluster/v1/hosts |
 | IPAMPolicy | /configs/network/v1/ipam-policies |
 | LbPolicy | /configs/network/v1/lb-policy |
+| License | /configs/cluster/v1/licenses |
 | MirrorSession | /configs/monitoring/v1/MirrorSession |
 | Module | /configs/diagnostics/v1/modules |
 | Network | /configs/network/v1/networks |

@@ -585,6 +585,79 @@ func restPutSnapshotRestore(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for SnapshotRestore object")
 }
 
+func restGetLicense(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.License); ok {
+		nv, err := restcl.ClusterV1().License().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*cluster.LicenseList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.ClusterV1().License().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteLicense(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for License object")
+}
+
+func restPostLicense(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.License); ok {
+		nv, err := restcl.ClusterV1().License().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutLicense(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.License); ok {
+		nv, err := restcl.ClusterV1().License().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -621,5 +694,10 @@ func init() {
 	cl.AddRestGetFunc("cluster.ConfigurationSnapshot", "v1", restGetConfigurationSnapshot)
 
 	cl.AddRestGetFunc("cluster.SnapshotRestore", "v1", restGetSnapshotRestore)
+
+	cl.AddRestPostFunc("cluster.License", "v1", restPostLicense)
+
+	cl.AddRestPutFunc("cluster.License", "v1", restPutLicense)
+	cl.AddRestGetFunc("cluster.License", "v1", restGetLicense)
 
 }

@@ -135,6 +135,11 @@ func (m MockClusterV1) DistributedServiceCard() cluster.ClusterV1DistributedServ
 	return nil
 }
 
+// License method
+func (m MockClusterV1) License() cluster.ClusterV1LicenseInterface {
+	return nil
+}
+
 // Watch method
 func (m MockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil

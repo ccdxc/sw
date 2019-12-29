@@ -197,7 +197,8 @@
           "Tenant",
           "Version",
           "ConfigurationSnapshot",
-          "SnapshotRestore"
+          "SnapshotRestore",
+          "License"
         ],
         "Properties": {
           "Cluster": {
@@ -257,6 +258,17 @@
               "watch"
             ],
             "URI": "/configs/cluster/v1/hosts"
+          },
+          "License": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "post",
+              "put",
+              "get"
+            ],
+            "URI": "/configs/cluster/v1/licenses"
           },
           "Node": {
             "Scopes": [

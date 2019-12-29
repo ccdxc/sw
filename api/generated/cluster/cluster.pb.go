@@ -8,6 +8,7 @@
 
 	It is generated from these files:
 		cluster.proto
+		license.proto
 		smartnic.proto
 		snapshot.proto
 		svc_cluster.proto
@@ -43,6 +44,11 @@
 		Version
 		VersionSpec
 		VersionStatus
+		Feature
+		FeatureStatus
+		License
+		LicenseSpec
+		LicenseStatus
 		BiosInfo
 		DSCCondition
 		DSCInfo
@@ -63,6 +69,7 @@
 		AutoMsgConfigurationSnapshotWatchHelper
 		AutoMsgDistributedServiceCardWatchHelper
 		AutoMsgHostWatchHelper
+		AutoMsgLicenseWatchHelper
 		AutoMsgNodeWatchHelper
 		AutoMsgSnapshotRestoreWatchHelper
 		AutoMsgTenantWatchHelper
@@ -71,6 +78,7 @@
 		ConfigurationSnapshotList
 		DistributedServiceCardList
 		HostList
+		LicenseList
 		NodeList
 		SnapshotRestoreList
 		TenantList

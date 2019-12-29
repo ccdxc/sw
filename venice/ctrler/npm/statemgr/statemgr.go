@@ -9,17 +9,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/protos/netproto"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
-	memdb "github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -344,6 +344,9 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		logger.Info("svc", name, "complete registration")
 		svc.CompleteRegistration(flags)
 	}
+
+	// Fetch feature flags if available before proceeding.
+	featureflags.Initialize(globals.Npm, apisrvURL, rslvr)
 
 	// start all object watches
 	// there is a specific order we do these watches to meet dependency requirements

@@ -13,6 +13,7 @@ export.proto monitoring true
 fwprofile.proto security true
 ipam.proto network true
 lb.proto network true
+license.proto cluster true
 mirror.proto monitoring true
 module.proto diagnostics true
 network.proto network true

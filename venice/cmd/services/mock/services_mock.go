@@ -804,13 +804,18 @@ func (ma *APIClient) Tenant() cmd.ClusterV1TenantInterface {
 	return nil
 }
 
-// ConfigurationSnapshot returns mock Tenant - nill till we need this functionality
+// ConfigurationSnapshot returns mock ConfigurationSnapshot - nill till we need this functionality
 func (ma *APIClient) ConfigurationSnapshot() cmd.ClusterV1ConfigurationSnapshotInterface {
 	return nil
 }
 
-// SnapshotRestore returns mock Tenant - nill till we need this functionality
+// SnapshotRestore returns mock SnapshotRestore - nill till we need this functionality
 func (ma *APIClient) SnapshotRestore() cmd.ClusterV1SnapshotRestoreInterface {
+	return nil
+}
+
+// License returns mock License - nill till we need this functionality
+func (ma *APIClient) License() cmd.ClusterV1LicenseInterface {
 	return nil
 }
 

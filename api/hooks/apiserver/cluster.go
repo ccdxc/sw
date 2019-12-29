@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/featureflags"
+
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc/codes"
@@ -986,8 +988,44 @@ func (cl *clusterHooks) performSnapshotNow(ctx context.Context, kvs kvstore.Inte
 	return scfg, false, err
 }
 
+func (cl *clusterHooks) validateFFBootstrap(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
+	ff := i.(cluster.License)
+	_, errs := featureflags.Validate(ff.Spec.Features)
+	return errs
+}
+
+// checkFFBootstrap checks if the FeatureFlags can be updated
+func (cl *clusterHooks) checkFFBootstrap(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	ff := i.(cluster.License)
+	ffs, errs := featureflags.Validate(ff.Spec.Features)
+	if len(errs) != 0 {
+		str := ""
+		for _, err := range errs {
+			str = str + "[" + fmt.Sprintf("%s", err) + "]"
+		}
+		return i, false, fmt.Errorf("failed applying feature flags %s", str)
+	}
+	ff.Status = ffs
+	return ff, true, nil
+}
+
+func (cl *clusterHooks) applyFeatureFlags(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
+	ff := i.(cluster.License)
+	featureflags.Update(ff.Spec.Features)
+}
+
+func (cl *clusterHooks) restoreFeatureFlags(kvs kvstore.Interface, logger log.Logger) {
+	ff := cluster.License{}
+	key := ff.MakeKey(string(apiclient.GroupCluster))
+	err := kvs.Get(context.TODO(), key, &ff)
+	if err == nil {
+		featureflags.Update(ff.Spec.Features)
+	}
+}
+
 func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
+	apisrv := apisrvpkg.MustGetAPIServer()
 	r.logger = logger.WithContext("Service", "ClusterHooks")
 	logger.Log("msg", "registering Hooks for cluster apigroup")
 	svc.GetCrudService("Host", apiintf.CreateOper).WithPreCommitHook(r.hostPreCommitHook).GetRequestType().WithValidate(r.validateHostConfig)
@@ -1019,6 +1057,12 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultTelemetryPolicies)
 
+	svc.GetCrudService("License", apiintf.CreateOper).GetRequestType().WithValidate(r.validateFFBootstrap)
+	svc.GetCrudService("License", apiintf.UpdateOper).WithPreCommitHook(r.checkFFBootstrap)
+
+	svc.GetCrudService("License", apiintf.CreateOper).WithPostCommitHook(r.applyFeatureFlags)
+	svc.GetCrudService("License", apiintf.UpdateOper).WithPostCommitHook(r.applyFeatureFlags)
+	apisrv.RegisterRestoreCallback(r.restoreFeatureFlags)
 }
 
 func init() {

@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
@@ -71,6 +72,18 @@ func (a *clusterHooks) addOwner(ctx context.Context, in interface{}) (context.Co
 	return nctx, in, nil
 }
 
+// checkFFBootstrap checks if the FeatureFlags can be updated
+func (a *clusterHooks) checkFFBootstrap(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	bs, err := a.bootstrapper.IsFlagSet(globals.DefaultTenant, bootstrapper.Auth)
+	if err != nil {
+		return ctx, in, false, err
+	}
+	if bs {
+		return ctx, in, false, fmt.Errorf("updating feature flags allowed only during cluster bootstrapping")
+	}
+	return ctx, in, true, nil
+}
+
 func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := clusterHooks{
 		bootstrapper: bootstrapper.GetBootstrapper(),
@@ -87,6 +100,11 @@ func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	prof.AddPreAuthZHook(r.addOwner)
 	prof, err = svc.GetCrudServiceProfile("Version", apiintf.WatchOper)
 	prof.AddPreAuthZHook(r.addOwner)
+
+	prof, err = svc.GetCrudServiceProfile("License", apiintf.CreateOper)
+	prof.AddPreAuthNHook(r.checkFFBootstrap)
+	prof, err = svc.GetCrudServiceProfile("License", apiintf.UpdateOper)
+	prof.AddPreAuthNHook(r.checkFFBootstrap)
 
 	return r.registerSetAuthBootstrapFlagHook(svc)
 }

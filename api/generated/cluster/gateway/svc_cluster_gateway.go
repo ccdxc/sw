@@ -188,6 +188,33 @@ func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host
 	return ret.(*cluster.Host), err
 }
 
+func (a adapterClusterV1) AutoAddLicense(oldctx oldcontext.Context, t *cluster.License, options ...grpc.CallOption) (*cluster.License, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddLicense", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "License", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.License)
+		return a.service.AutoAddLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.License), err
+}
+
 func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -404,6 +431,33 @@ func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.H
 	return ret.(*cluster.Host), err
 }
 
+func (a adapterClusterV1) AutoDeleteLicense(oldctx oldcontext.Context, t *cluster.License, options ...grpc.CallOption) (*cluster.License, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteLicense", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "License", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.License)
+		return a.service.AutoDeleteLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.License), err
+}
+
 func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -618,6 +672,33 @@ func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host
 		return nil, err
 	}
 	return ret.(*cluster.Host), err
+}
+
+func (a adapterClusterV1) AutoGetLicense(oldctx oldcontext.Context, t *cluster.License, options ...grpc.CallOption) (*cluster.License, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetLicense", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "License", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.License)
+		return a.service.AutoGetLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.License), err
 }
 
 func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
@@ -848,6 +929,36 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 	return ret.(*cluster.HostList), err
 }
 
+func (a adapterClusterV1) AutoListLicense(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.LicenseList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListLicense", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "License", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.LicenseList), err
+}
+
 func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.NodeList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -1074,6 +1185,33 @@ func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.H
 		return nil, err
 	}
 	return ret.(*cluster.Host), err
+}
+
+func (a adapterClusterV1) AutoUpdateLicense(oldctx oldcontext.Context, t *cluster.License, options ...grpc.CallOption) (*cluster.License, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateLicense", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "License", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.License)
+		return a.service.AutoUpdateLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.License), err
 }
 
 func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.Node, options ...grpc.CallOption) (*cluster.Node, error) {
@@ -1775,6 +1913,63 @@ func (a adapterClusterV1) AutoWatchSnapshotRestore(oldctx oldcontext.Context, in
 	return ret.(cluster.ClusterV1_AutoWatchSnapshotRestoreClient), err
 }
 
+func (a adapterClusterV1) AutoWatchLicense(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchLicenseClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchLicense")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "License", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchLicense] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchLicense(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchLicenseClient), err
+}
+
 func (e *sClusterV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1785,6 +1980,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoAddConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoAddLicense"] = apigwpkg.NewServiceProfile(e.defSvcProf, "License", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.CreateOper)
 
@@ -1807,6 +2004,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.GetOper)
+
+	e.svcProf["AutoGetLicense"] = apigwpkg.NewServiceProfile(e.defSvcProf, "License", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.GetOper)
 
@@ -1831,6 +2030,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateLicense"] = apigwpkg.NewServiceProfile(e.defSvcProf, "License", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.UpdateOper)
 

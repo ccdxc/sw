@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterSnapshotRestore,ClusterSnapshotRestore,IClusterConfigurationSnapshot,ClusterConfigurationSnapshot,ClusterConfigurationSnapshotRequest,IClusterConfigurationSnapshotRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgConfigurationSnapshotWatchHelper,ClusterAutoMsgConfigurationSnapshotWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterSnapshotRestore,ClusterSnapshotRestore,IClusterConfigurationSnapshot,ClusterConfigurationSnapshot,ClusterConfigurationSnapshotRequest,IClusterConfigurationSnapshotRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterLicense,ClusterLicense,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgConfigurationSnapshotWatchHelper,ClusterAutoMsgConfigurationSnapshotWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -354,6 +354,57 @@ export class Clusterv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new ClusterHost(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get License object */
+  public GetLicense(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/licenses';
+    const opts = {
+      eventID: 'GetLicense',
+      objType: 'ClusterLicense',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create License object */
+  public AddLicense(body: IClusterLicense, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/licenses';
+    const opts = {
+      eventID: 'AddLicense',
+      objType: 'ClusterLicense',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterLicense(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update License object */
+  public UpdateLicense(body: IClusterLicense, stagingID: string = "", previousVal: IClusterLicense = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/licenses';
+    const opts = {
+      eventID: 'UpdateLicense',
+      objType: 'ClusterLicense',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ClusterLicense(body), previousVal, trimDefaults)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IClusterLicense | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Node objects */

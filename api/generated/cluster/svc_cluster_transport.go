@@ -30,6 +30,7 @@ type grpcServerClusterV1 struct {
 	AutoAddConfigurationSnapshotHdlr     grpctransport.Handler
 	AutoAddDistributedServiceCardHdlr    grpctransport.Handler
 	AutoAddHostHdlr                      grpctransport.Handler
+	AutoAddLicenseHdlr                   grpctransport.Handler
 	AutoAddNodeHdlr                      grpctransport.Handler
 	AutoAddSnapshotRestoreHdlr           grpctransport.Handler
 	AutoAddTenantHdlr                    grpctransport.Handler
@@ -38,6 +39,7 @@ type grpcServerClusterV1 struct {
 	AutoDeleteConfigurationSnapshotHdlr  grpctransport.Handler
 	AutoDeleteDistributedServiceCardHdlr grpctransport.Handler
 	AutoDeleteHostHdlr                   grpctransport.Handler
+	AutoDeleteLicenseHdlr                grpctransport.Handler
 	AutoDeleteNodeHdlr                   grpctransport.Handler
 	AutoDeleteSnapshotRestoreHdlr        grpctransport.Handler
 	AutoDeleteTenantHdlr                 grpctransport.Handler
@@ -46,6 +48,7 @@ type grpcServerClusterV1 struct {
 	AutoGetConfigurationSnapshotHdlr     grpctransport.Handler
 	AutoGetDistributedServiceCardHdlr    grpctransport.Handler
 	AutoGetHostHdlr                      grpctransport.Handler
+	AutoGetLicenseHdlr                   grpctransport.Handler
 	AutoGetNodeHdlr                      grpctransport.Handler
 	AutoGetSnapshotRestoreHdlr           grpctransport.Handler
 	AutoGetTenantHdlr                    grpctransport.Handler
@@ -54,6 +57,7 @@ type grpcServerClusterV1 struct {
 	AutoListConfigurationSnapshotHdlr    grpctransport.Handler
 	AutoListDistributedServiceCardHdlr   grpctransport.Handler
 	AutoListHostHdlr                     grpctransport.Handler
+	AutoListLicenseHdlr                  grpctransport.Handler
 	AutoListNodeHdlr                     grpctransport.Handler
 	AutoListSnapshotRestoreHdlr          grpctransport.Handler
 	AutoListTenantHdlr                   grpctransport.Handler
@@ -62,6 +66,7 @@ type grpcServerClusterV1 struct {
 	AutoUpdateConfigurationSnapshotHdlr  grpctransport.Handler
 	AutoUpdateDistributedServiceCardHdlr grpctransport.Handler
 	AutoUpdateHostHdlr                   grpctransport.Handler
+	AutoUpdateLicenseHdlr                grpctransport.Handler
 	AutoUpdateNodeHdlr                   grpctransport.Handler
 	AutoUpdateSnapshotRestoreHdlr        grpctransport.Handler
 	AutoUpdateTenantHdlr                 grpctransport.Handler
@@ -112,6 +117,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqHost,
 			EncodeGrpcRespHost,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddHost", logger)))...,
+		),
+
+		AutoAddLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoAddLicenseEndpoint,
+			DecodeGrpcReqLicense,
+			EncodeGrpcRespLicense,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddLicense", logger)))...,
 		),
 
 		AutoAddNodeHdlr: grpctransport.NewServer(
@@ -170,6 +182,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteHost", logger)))...,
 		),
 
+		AutoDeleteLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteLicenseEndpoint,
+			DecodeGrpcReqLicense,
+			EncodeGrpcRespLicense,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteLicense", logger)))...,
+		),
+
 		AutoDeleteNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNodeEndpoint,
 			DecodeGrpcReqNode,
@@ -224,6 +243,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqHost,
 			EncodeGrpcRespHost,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetHost", logger)))...,
+		),
+
+		AutoGetLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoGetLicenseEndpoint,
+			DecodeGrpcReqLicense,
+			EncodeGrpcRespLicense,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetLicense", logger)))...,
 		),
 
 		AutoGetNodeHdlr: grpctransport.NewServer(
@@ -282,6 +308,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListHost", logger)))...,
 		),
 
+		AutoListLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoListLicenseEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespLicenseList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListLicense", logger)))...,
+		),
+
 		AutoListNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoListNodeEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -336,6 +369,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqHost,
 			EncodeGrpcRespHost,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateHost", logger)))...,
+		),
+
+		AutoUpdateLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateLicenseEndpoint,
+			DecodeGrpcReqLicense,
+			EncodeGrpcRespLicense,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateLicense", logger)))...,
 		),
 
 		AutoUpdateNodeHdlr: grpctransport.NewServer(
@@ -475,6 +515,24 @@ func decodeHTTPrespClusterV1AutoAddHost(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoAddLicense(ctx oldcontext.Context, req *License) (*License, error) {
+	_, resp, err := s.AutoAddLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddLicense).V
+	return &r, resp.(respClusterV1AutoAddLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp License
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -623,6 +681,24 @@ func decodeHTTPrespClusterV1AutoDeleteHost(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoDeleteLicense(ctx oldcontext.Context, req *License) (*License, error) {
+	_, resp, err := s.AutoDeleteLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteLicense).V
+	return &r, resp.(respClusterV1AutoDeleteLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp License
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteNode(ctx oldcontext.Context, req *Node) (*Node, error) {
 	_, resp, err := s.AutoDeleteNodeHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -763,6 +839,24 @@ func decodeHTTPrespClusterV1AutoGetHost(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoGetLicense(ctx oldcontext.Context, req *License) (*License, error) {
+	_, resp, err := s.AutoGetLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetLicense).V
+	return &r, resp.(respClusterV1AutoGetLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp License
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -911,6 +1005,24 @@ func decodeHTTPrespClusterV1AutoListHost(_ context.Context, r *http.Response) (i
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoListLicense(ctx oldcontext.Context, req *api.ListWatchOptions) (*LicenseList, error) {
+	_, resp, err := s.AutoListLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListLicense).V
+	return &r, resp.(respClusterV1AutoListLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoListLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LicenseList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListNode(ctx oldcontext.Context, req *api.ListWatchOptions) (*NodeList, error) {
 	_, resp, err := s.AutoListNodeHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1051,6 +1163,24 @@ func decodeHTTPrespClusterV1AutoUpdateHost(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoUpdateLicense(ctx oldcontext.Context, req *License) (*License, error) {
+	_, resp, err := s.AutoUpdateLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateLicense).V
+	return &r, resp.(respClusterV1AutoUpdateLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp License
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1217,6 +1347,10 @@ func (s *grpcServerClusterV1) AutoWatchSnapshotRestore(in *api.ListWatchOptions,
 	return s.Endpoints.AutoWatchSnapshotRestore(in, stream)
 }
 
+func (s *grpcServerClusterV1) AutoWatchLicense(in *api.ListWatchOptions, stream ClusterV1_AutoWatchLicenseServer) error {
+	return s.Endpoints.AutoWatchLicense(in, stream)
+}
+
 func encodeHTTPClusterList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -1350,6 +1484,40 @@ func EncodeGrpcRespHostList(ctx context.Context, response interface{}) (interfac
 
 // DecodeGrpcRespHostList decodes the GRPC response
 func DecodeGrpcRespHostList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPLicenseList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPLicenseList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LicenseList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqLicenseList encodes GRPC request
+func EncodeGrpcReqLicenseList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LicenseList)
+	return req, nil
+}
+
+// DecodeGrpcReqLicenseList decodes GRPC request
+func DecodeGrpcReqLicenseList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LicenseList)
+	return req, nil
+}
+
+// EncodeGrpcRespLicenseList endodes the GRPC response
+func EncodeGrpcRespLicenseList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespLicenseList decodes the GRPC response
+func DecodeGrpcRespLicenseList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

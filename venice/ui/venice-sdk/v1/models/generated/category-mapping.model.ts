@@ -11,6 +11,7 @@ import { ClusterTenant } from './cluster';
 import { ClusterVersion } from './cluster';
 import { ClusterConfigurationSnapshot } from './cluster';
 import { ClusterSnapshotRestore } from './cluster';
+import { ClusterLicense } from './cluster';
 import { DiagnosticsModule } from './diagnostics';
 import { MonitoringEventPolicy } from './monitoring';
 import { MonitoringStatsPolicy } from './monitoring';
@@ -124,6 +125,11 @@ export const CategoryMapping: CatMap  = {
       instance: new ClusterSnapshotRestore(),
       scopes: [ 'cluster', ] ,
       actions:  [ 'restore', ] ,
+    },
+    "License" : {
+      instance: new ClusterLicense(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
     },
   },
   "Diagnostics" : {
