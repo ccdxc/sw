@@ -5,7 +5,7 @@
 
 #include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -17,7 +17,7 @@ int pdsa_init ()
     if (!pdsa_stub::state_init()) {
         return -1;
     }
-    if (!pdsa_stub_mgmt_init()) {
+    if (!pds_ms_stub_mgmt_init()) {
         goto error;
     }
 

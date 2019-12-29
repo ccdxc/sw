@@ -4495,22 +4495,22 @@ func TestApis(t *testing.T) {
 	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "NBB_PUT_LONG" {
 		t.Errorf("Got wrong value")
 	}
-	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_set_string_in_byte_array" {
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pds_ms_set_string_in_byte_array" {
 		t.Errorf("Got wrong value")
 	}
 	opt.SetKeyOidLenIndex = "temp"
-	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_set_string_in_byte_array_with_len" {
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pds_ms_set_string_in_byte_array_with_len" {
 		t.Errorf("Got wrong value")
 	}
 	opt.GetKeyOidLenIndex = ""
-	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "pdsa_nbb_get_long" {
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "pds_ms_nbb_get_long" {
 		t.Errorf("Got wrong value")
 	}
-	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_get_string_in_byte_array" {
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pds_ms_get_string_in_byte_array" {
 		t.Errorf("Got wrong value")
 	}
 	opt.GetKeyOidLenIndex = "temp"
-	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pdsa_get_string_in_byte_array_with_len" {
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pds_ms_get_string_in_byte_array_with_len" {
 		t.Errorf("Got wrong value")
 	}
 }

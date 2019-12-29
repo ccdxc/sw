@@ -1,8 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Initialize Mgmt Stub
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_stubs_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_stubs_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
@@ -197,7 +197,7 @@ nbase_init ()
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pdsa_stub::pdsa_stubs_create();
+    pds_ms_stub::pds_ms_stubs_create();
     
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
@@ -244,7 +244,7 @@ EXIT_LABEL:
 }
 
 
-bool pdsa_stub_mgmt_init()
+bool pds_ms_stub_mgmt_init()
 {
     pds_ms::mgmt_state_init();
     // Enter thread-safe context to cache nbase thread ptr

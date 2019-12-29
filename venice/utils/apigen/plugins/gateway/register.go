@@ -831,22 +831,22 @@ func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 	}
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
 		if f.SetKeyOidLenIndex != "" || f.FieldHasLen == true {
-			return "pdsa_set_string_in_byte_array_with_len"
+			return "pds_ms_set_string_in_byte_array_with_len"
 		}
-		return "pdsa_set_string_in_byte_array"
+		return "pds_ms_set_string_in_byte_array"
 	}
 	return ""
 }
 
 func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string, f pdsaFieldOpt) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
-		return "pdsa_nbb_get_long"
+		return "pds_ms_nbb_get_long"
 	}
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
 		if f.GetKeyOidLenIndex != "" || f.FieldHasLen == true {
-			return "pdsa_get_string_in_byte_array_with_len"
+			return "pds_ms_get_string_in_byte_array_with_len"
 		}
-		return "pdsa_get_string_in_byte_array"
+		return "pds_ms_get_string_in_byte_array"
 	}
 	return ""
 }

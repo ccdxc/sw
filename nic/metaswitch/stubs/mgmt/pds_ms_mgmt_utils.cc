@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Common helper APIs for metaswitch stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 
 #define SHARED_DATA_TYPE CSS_LOCAL
 
@@ -42,12 +42,12 @@ ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
 }
 
 NBB_VOID 
-pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 
+pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr, 
                                      NBB_LONG      *type, 
                                      NBB_ULONG     *len, 
                                      NBB_BYTE      *amb_ip_addr)
 {
-    switch (pdsa_ip_addr.af)
+    switch (pds_ms_ip_addr.af)
     {
         case IP_AF_IPV4:
             *type = AMB_INETWK_ADDR_TYPE_IPV4;
@@ -64,44 +64,36 @@ pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr,
             return;
     }
 
-    NBB_MEMCPY (amb_ip_addr, &pdsa_ip_addr.addr, *len);
+    NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, *len);
     return;
 }
 
+// Converts from byte-order to network-order IP Address
 NBB_VOID
-pdsa_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
+pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
                                      NBB_LONG      type,
                                      NBB_ULONG     len,
-                                     ip_addr_t     *pdsa_ip_addr)
+                                     ip_addr_t     *proto_ip_addr)
 {
     switch (type)
     {
         case AMB_INETWK_ADDR_TYPE_IPV4:
-            pdsa_ip_addr->af = IP_AF_IPV4;
+            proto_ip_addr->af = IP_AF_IPV4;
             break;
 
         case AMB_INETWK_ADDR_TYPE_IPV6:
-            pdsa_ip_addr->af = IP_AF_IPV6;
+            proto_ip_addr->af = IP_AF_IPV6;
             break;
 
         default:
             assert(0);
     }
-
-    NBB_MEMCPY (&pdsa_ip_addr->addr, amb_ip_addr, len);
+    NBB_MEMCPY (&proto_ip_addr->addr, amb_ip_addr, len);
     return;
 }
 
 NBB_VOID
-pdsa_convert_long_to_pdsa_ipv4_addr (NBB_ULONG ip, ip_addr_t *pdsa_ip_addr)
-{
-    pdsa_ip_addr->af            = IP_AF_IPV4;
-    pdsa_ip_addr->addr.v4_addr  = htonl(ip);
-}
-
-
-NBB_VOID
-pdsa_set_address_oid(NBB_ULONG *oid,
+pds_ms_set_address_oid(NBB_ULONG *oid,
                      const NBB_CHAR  *tableName,
                      const NBB_CHAR  *fieldName,
                      const types::IPAddress &addr)
@@ -166,7 +158,7 @@ pdsa_set_address_oid(NBB_ULONG *oid,
     }
 
     ip_addr_spec_to_ip_addr(addr, &outAddr);
-    pdsa_convert_ip_addr_to_amb_ip_addr(outAddr, &ambAddrType, &ambAddrLen, ambAddr);
+    pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr, &ambAddrType, &ambAddrLen, ambAddr);
 
     // Fill oid now
     oid[oidAddrTypeIdx]   = ambAddrType;
@@ -179,7 +171,7 @@ pdsa_set_address_oid(NBB_ULONG *oid,
 }
 
 NBB_VOID
-pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
+pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
                        const NBB_CHAR  *tableName,
                        const NBB_CHAR  *fieldName,
                        NBB_VOID        *dest,
@@ -194,7 +186,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     if (strcmp(fieldName, "remote_addr") == 0) {
         if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI *data = (AMB_BGP_PEER_AFI_SAFI *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
                                                 &data->remote_addr_len,
                                                 data->remote_addr);
@@ -202,7 +194,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
             addrType = AMB_OID_BGP_PAS_REMOTE_ADDR_TYP;
         } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             AMB_BGP_PEER *data = (AMB_BGP_PEER *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
                                                 &data->remote_addr_len,
                                                 data->remote_addr);
@@ -214,7 +206,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     } else if (strcmp(fieldName, "local_addr") == 0) {
         if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI *data = (AMB_BGP_PEER_AFI_SAFI *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
                                                 &data->local_addr_len,
                                                 data->local_addr);
@@ -222,7 +214,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
             addrType = AMB_OID_BGP_PAS_LOCAL_ADDR_TYP;
         } else if (strcmp(tableName, "bgpPeerTable") == 0) {
             AMB_BGP_PEER *data = (AMB_BGP_PEER *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr(outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
                                                 &data->local_addr_len,
                                                 data->local_addr);
@@ -234,7 +226,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     } else if (strcmp(fieldName, "ipaddress")  == 0) {
         if (strcmp(tableName, "limL3InterfaceAddressTable") == 0) {
             AMB_LIM_L3_IF_ADDR *data = (AMB_LIM_L3_IF_ADDR *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
                                                  &data->ipaddr_type, 
                                                  &data->ipaddress_len,
                                                  data->ipaddress);
@@ -244,7 +236,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     } else if (strcmp(fieldName, "dest_addr")  == 0) {
         if (strcmp(tableName, "rtmStaticRtTable") == 0) {
             AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
                                                  &data->dest_addr_type, 
                                                  &data->dest_addr_len,
                                                  data->dest_addr);
@@ -254,7 +246,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
     } else if (strcmp(fieldName, "next_hop")  == 0) {
         if (strcmp(tableName, "rtmStaticRtTable") == 0) {
             AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
-            pdsa_convert_ip_addr_to_amb_ip_addr (outAddr,
+            pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
                                                  &data->next_hop_type, 
                                                  &data->next_hop_len,
                                                  data->next_hop);
@@ -269,7 +261,7 @@ pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
 }
 
 NBB_LONG
-pdsa_nbb_get_long(NBB_BYTE *byteVal)
+pds_ms_nbb_get_long(NBB_BYTE *byteVal)
 {
     NBB_LONG val;
     NBB_GET_LONG(val, byteVal);
@@ -277,14 +269,14 @@ pdsa_nbb_get_long(NBB_BYTE *byteVal)
 }
 
 NBB_VOID
-pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_ULONG &len, string in_str)
+pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_ULONG &len, string in_str)
 {
     len = in_str.length();
     NBB_MEMCPY(field, in_str.c_str(), len);
 }
 
 NBB_VOID
-pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx, NBB_LONG setKeyOidLenIdx)
+pds_ms_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx, NBB_LONG setKeyOidLenIdx)
 {
     oid[setKeyOidLenIdx] = (NBB_ULONG)in_str.length();
 
@@ -295,14 +287,14 @@ pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LO
 }
 
 string
-pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_ULONG len)
+pds_ms_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_ULONG len)
 {
     std::string ret(in_str, in_str + len);
     return ret;
 }
 
 NBB_VOID
-pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx, NBB_LONG getKeyOidLenIdx)
+pds_ms_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx, NBB_LONG getKeyOidLenIdx)
 {
     oid[getKeyOidLenIdx] = (NBB_ULONG)in_str.length();
     const char* str = in_str.c_str();
@@ -312,13 +304,13 @@ pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LO
 }
 
 NBB_VOID
-pdsa_set_string_in_byte_array(NBB_BYTE *field, string in_str)
+pds_ms_set_string_in_byte_array(NBB_BYTE *field, string in_str)
 {
     NBB_MEMCPY(field, in_str.c_str(), in_str.length());
 }
 
 NBB_VOID
-pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx)
+pds_ms_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx)
 {
     const char* str = in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
@@ -327,14 +319,14 @@ pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKey
 }
 
 string
-pdsa_get_string_in_byte_array(NBB_BYTE *val, NBB_ULONG len)
+pds_ms_get_string_in_byte_array(NBB_BYTE *val, NBB_ULONG len)
 {
     std::string ret(val, val + len);
     return ret;
 }
 
 NBB_VOID
-pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx)
+pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx)
 {
     const char* str = in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
@@ -345,47 +337,47 @@ pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKey
 types::IPAddress   res;
 
 types::IPAddress*
-pdsa_get_address(const NBB_CHAR  *tableName,
+pds_ms_get_address(const NBB_CHAR  *tableName,
                  const NBB_CHAR  *fieldName,
                  NBB_VOID        *src)
 {
-    ip_addr_t          pdsa_ip_addr;
+    ip_addr_t          pds_ms_ip_addr;
 
     if (strcmp(fieldName, "remote_addr") == 0) {
         if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI_STAT *data = (AMB_BGP_PEER_AFI_SAFI_STAT *)src;
-            pdsa_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
-                                                data->remote_addr_type,
-                                                data->remote_addr_len,
-                                                &pdsa_ip_addr);
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
+                                                  data->remote_addr_type,
+                                                  data->remote_addr_len,
+                                                  &pds_ms_ip_addr);
         } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             AMB_BGP_PEER_STATUS *data = (AMB_BGP_PEER_STATUS *)src;
-            pdsa_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
-                                                data->remote_addr_type,
-                                                data->remote_addr_len,
-                                                &pdsa_ip_addr);
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
+                                                  data->remote_addr_type,
+                                                  data->remote_addr_len,
+                                                  &pds_ms_ip_addr);
         } else {
             assert(0);
         }
     } else if (strcmp(fieldName, "local_addr") == 0) {
         if (strcmp(tableName, "bgpPeerAfiSafiStatusTable") == 0) {
             AMB_BGP_PEER_AFI_SAFI_STAT *data = (AMB_BGP_PEER_AFI_SAFI_STAT *)src;
-            pdsa_convert_amb_ip_addr_to_ip_addr(data->local_addr,
-                                                data->local_addr_type,
-                                                data->local_addr_len,
-                                                &pdsa_ip_addr);
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
+                                                  data->local_addr_type,
+                                                  data->local_addr_len,
+                                                  &pds_ms_ip_addr);
         } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             AMB_BGP_PEER_STATUS *data = (AMB_BGP_PEER_STATUS *)src;
-            pdsa_convert_amb_ip_addr_to_ip_addr(data->local_addr,
-                                                data->local_addr_type,
-                                                data->local_addr_len,
-                                                &pdsa_ip_addr);
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
+                                                  data->local_addr_type,
+                                                  data->local_addr_len,
+                                                  &pds_ms_ip_addr);
         } else {
             assert(0);
         }
     } else {
         assert(0);
     }
-    ip_addr_to_spec(&pdsa_ip_addr, &res);
+    ip_addr_to_spec(&pds_ms_ip_addr, &res);
     return &res;
 }

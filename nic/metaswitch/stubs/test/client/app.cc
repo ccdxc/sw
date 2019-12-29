@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
@@ -106,7 +106,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_vrfid (PDSA_BGP_RM_ENT_INDEX);
+    proto_spec->set_vrfid (PDS_MS_BGP_RM_ENT_INDEX);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(g_test_conf_.local_ip_addr);
 
@@ -182,7 +182,7 @@ static void create_bgp_peer_proto_grpc () {
     auto peeraddr = proto_spec->mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(htonl(g_test_conf_.remote_ip_addr));
-    proto_spec->set_vrfid(PDSA_BGP_RM_ENT_INDEX);
+    proto_spec->set_vrfid(PDS_MS_BGP_RM_ENT_INDEX);
     proto_spec->set_adminen(pds::ADMIN_UP);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();

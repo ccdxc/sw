@@ -4,14 +4,14 @@
 
 
 #include <iostream>
-#include "nic/metaswitch/stubs/mgmt/pdsa_get_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_get_utils.hpp"
 #include <iostream>
 
 using namespace std;
 
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
-NBB_VOID pdsa_amb_gen_common(AMB_GEN_IPS *amb_gen,
+NBB_VOID pds_ms_amb_gen_common(AMB_GEN_IPS *amb_gen,
                              NBB_LONG row_status
                              NBB_CCXT_T NBB_CXT)
 {
@@ -19,7 +19,7 @@ NBB_VOID pdsa_amb_gen_common(AMB_GEN_IPS *amb_gen,
   /* Local Variables                                                         */
   /***************************************************************************/
 
-  NBB_TRC_ENTRY("pdsa_amb_gen_common");
+  NBB_TRC_ENTRY("pds_ms_amb_gen_common");
 
   /***************************************************************************/
   /* Fill in common fields.                                                  */
@@ -75,9 +75,9 @@ NBB_VOID pdsa_amb_gen_common(AMB_GEN_IPS *amb_gen,
 
   return;
 
-} /* pdsa_amb_gen_common */
+} /* pds_ms_amb_gen_common */
 
-AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
+AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
                                   NBB_LONG data_len,
                                   NBB_LONG oid_len,
                                   NBB_ULONG *oid
@@ -91,7 +91,7 @@ AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
   NBB_BUF_SIZE get_buf_size;
   AMB_GET *v_amb_get = NULL;
 
-  NBB_TRC_ENTRY("pdsa_amb_get_bulk_common");
+  NBB_TRC_ENTRY("pds_ms_amb_get_bulk_common");
 
   /***************************************************************************/
   /* Get an internal buffer.                                                 */
@@ -112,7 +112,7 @@ AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
   /* Fill in all fields on the message.                                      */
   /***************************************************************************/
   v_amb_get->ips_hdr.ips_type = IPS_AMB_GET;
-  pdsa_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
+  pds_ms_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
   AMB_BULK_GET_INIT_REQ(v_amb_get, bulk_size, oid_len, data_len, 0);
 
   /***************************************************************************/
@@ -131,9 +131,9 @@ AMB_GET *pdsa_amb_get_bulk_common(NBB_LONG bulk_size,
 
   return(v_amb_get);
 
-} /* pdsa_amb_get_bulk_common */
+} /* pds_ms_amb_get_bulk_common */
 
-AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
+AMB_GET *pds_ms_amb_get_common(NBB_LONG data_len,
                                 NBB_LONG oid_len,
                                 NBB_ULONG *oid
                                 NBB_CCXT_T NBB_CXT)
@@ -146,7 +146,7 @@ AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
   NBB_BUF_SIZE ctrl_size = 0;
   AMB_GET *v_amb_get = NULL;
 
-  NBB_TRC_ENTRY("pdsa_amb_get_common");
+  NBB_TRC_ENTRY("pds_ms_amb_get_common");
 
   /***************************************************************************/
   /* Get an internal buffer.                                                 */
@@ -168,7 +168,7 @@ AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
   /***************************************************************************/
   v_amb_get->ips_hdr.ips_type = IPS_AMB_GET;
 
-  pdsa_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
+  pds_ms_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
 
   v_amb_get->oid_offset = sizeof(AMB_GET);
   v_amb_get->data_offset = sizeof(AMB_GET) + (oid_len * sizeof(NBB_ULONG));
@@ -187,4 +187,4 @@ AMB_GET *pdsa_amb_get_common(NBB_LONG data_len,
 
   return(v_amb_get);
 
-} /* pdsa_amb_get_common */
+} /* pds_ms_amb_get_common */

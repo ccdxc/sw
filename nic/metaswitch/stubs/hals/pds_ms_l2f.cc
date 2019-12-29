@@ -112,6 +112,11 @@ NBB_BYTE l2f_integ_subcomp_t::add_upd_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac
 void l2f_integ_subcomp_t::delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                                const char *vrf_name)
 {
+    if (mac_ip_id->ip_address.length ==0) {
+        SDK_TRACE_INFO("L2F VRF MAC IP DEL BD %d MAC only %s VRF %s",
+                       mac_ip_id->bd_id.bd_id, macaddr2str(mac_ip_id->mac_address), vrf_name);
+        return;
+    }
     ip_addr_t ip;
     pdsa_stub::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
     SDK_TRACE_INFO("L2F VRF MAC IP DEL BD %d IP %s MAC %s VRF %s", mac_ip_id->bd_id.bd_id,

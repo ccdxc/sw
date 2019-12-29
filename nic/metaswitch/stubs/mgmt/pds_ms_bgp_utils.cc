@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //Purpose: Helper APIs for metaswitch BGP-RM/NM components
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "qb0mib.h"
 
@@ -17,8 +17,14 @@ bgp_peer_fill_func (pds::BGPPeerSpec&   req,
     // Always set admin status to UP
     if (row_status != AMB_ROW_DESTROY) {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying peer: fill in field Local_NM"));
-        v_amb_bgp_peer->local_nm = PDSA_BGP_NM_ENT_INDEX;
+        v_amb_bgp_peer->local_nm = PDS_MS_BGP_NM_ENT_INDEX;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_LOCAL_NM);
+
+        // Trap settings. Enabled by default for all Peers
+        v_amb_bgp_peer->trap_estab = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_TRAP_ESTAB);
+        v_amb_bgp_peer->trap_backw = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_TRAP_BACKW);
     }
 }
 
@@ -35,24 +41,24 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
         v_amb_bgp_rm_ent->admin_status = AMB_BGP_ADMIN_STATUS_UP; 
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ADMIN_STATUS);
 
-        v_amb_bgp_rm_ent->i3_ent_index = PDSA_I3_ENT_INDEX;;
+        v_amb_bgp_rm_ent->i3_ent_index = PDS_MS_I3_ENT_INDEX;;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_I3_ENT_INDEX);
 
     }
 }
 } // end namespace pds
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill bgpRmEntTable: AMB_BGP_RM_ENT
 NBB_VOID
-pdsa_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_BGP_RM_ENT  *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_bgp_rm");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_rm");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -87,13 +93,13 @@ pdsa_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill  bgpNmEntTable: AMB_BGP_NM_ENT
 NBB_VOID
-pdsa_fill_amb_bgp_nm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_bgp_nm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_BGP_NM_ENT  *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_bgp_nm");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_nm");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -117,13 +123,13 @@ pdsa_fill_amb_bgp_nm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     if (data->row_status != AMB_ROW_DESTROY)
     {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying NM: fill in fields"));
-        data->rm_index = PDSA_BGP_RM_ENT_INDEX;
+        data->rm_index = PDS_MS_BGP_RM_ENT_INDEX;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_NM_RM_INDEX);
 
         data->admin_status = conf->admin_status;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_NM_ADMIN_STATUS);
 
-        data->sck_index = PDSA_SCK_ENT_INDEX;
+        data->sck_index = PDS_MS_SCK_ENT_INDEX;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_NM_SCK_INDEX);
     }
 
@@ -134,13 +140,13 @@ pdsa_fill_amb_bgp_nm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill bgpRmAfiSafiTable: AMB_BGP_RM_AFI_SAFI
 NBB_VOID
-pdsa_fill_amb_bgp_rm_afi_safi (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_bgp_rm_afi_safi (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_BGP_RM_AFI_SAFI *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_bgp_rm_afi_safi");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_rm_afi_safi");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -181,13 +187,13 @@ pdsa_fill_amb_bgp_rm_afi_safi (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill bgpNmListenTable: AMB_BGP_NM_LISTEN
 NBB_VOID
-pdsa_fill_amb_bgp_nm_listen (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_bgp_nm_listen (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_BGP_NM_LISTEN   *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_bgp_nm_listen");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_nm_listen");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -205,8 +211,8 @@ pdsa_fill_amb_bgp_nm_listen (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     data->ent_index                     = conf->entity_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_LIS_ENT_INDEX);
 
-    oid[AMB_BGP_LIS_INDEX_INDEX]    = PDSA_SCK_ENT_INDEX;
-    data->index                     = PDSA_SCK_ENT_INDEX;
+    oid[AMB_BGP_LIS_INDEX_INDEX]    = PDS_MS_SCK_ENT_INDEX;
+    data->index                     = PDS_MS_SCK_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_LIS_INDEX);
 
     data->row_status = conf->row_status;
@@ -231,13 +237,13 @@ pdsa_fill_amb_bgp_nm_listen (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill bgpRmAfmJoinTable: AMB_BGP_RM_AFM_JOIN
 NBB_VOID
-pdsa_fill_amb_bgp_rm_afm_join (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_bgp_rm_afm_join (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_BGP_RM_AFM_JOIN *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_bgp_rm_afm_join");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_rm_afm_join");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -284,16 +290,16 @@ pdsa_fill_amb_bgp_rm_afm_join (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // row_update for BGP-RM
 NBB_VOID
-pdsa_row_update_bgp_rm (pdsa_config_t *conf)
+pds_ms_row_update_bgp_rm (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_bgp_rm");
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_rm");
 
     // Set params
     conf->oid_len           = AMB_BGP_RM_OID_LEN;
     conf->data_len          = sizeof (AMB_BGP_RM_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_rm); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_rm); 
 
     NBB_TRC_EXIT();
     return;
@@ -301,16 +307,16 @@ pdsa_row_update_bgp_rm (pdsa_config_t *conf)
 
 // row_update for BGP-NM
 NBB_VOID
-pdsa_row_update_bgp_nm (pdsa_config_t *conf)
+pds_ms_row_update_bgp_nm (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_bgp_nm");
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_nm");
 
     // Set params
     conf->oid_len       = AMB_BGP_NM_OID_LEN;
     conf->data_len      = sizeof (AMB_BGP_NM_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_nm); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_nm); 
 
     NBB_TRC_EXIT();
     return;
@@ -318,16 +324,16 @@ pdsa_row_update_bgp_nm (pdsa_config_t *conf)
 
 // row_update for bgpRmAfiSafiTable
 NBB_VOID
-pdsa_row_update_bgp_rm_afi_safi (pdsa_config_t *conf)
+pds_ms_row_update_bgp_rm_afi_safi (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_bgp_rm_afi_safi");
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_rm_afi_safi");
 
     // Set params
     conf->oid_len       = AMB_BGP_AFI_OID_LEN;
     conf->data_len      = sizeof (AMB_BGP_RM_AFI_SAFI);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_rm_afi_safi); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_rm_afi_safi); 
 
     NBB_TRC_EXIT();
     return;
@@ -335,16 +341,16 @@ pdsa_row_update_bgp_rm_afi_safi (pdsa_config_t *conf)
 
 // row_update for bgpNmListenTable
 NBB_VOID
-pdsa_row_update_bgp_nm_listen (pdsa_config_t *conf)
+pds_ms_row_update_bgp_nm_listen (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_bgp_nm_listen");
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_nm_listen");
 
     // Set params
     conf->oid_len       = AMB_BGP_LIS_OID_LEN;
     conf->data_len      = sizeof (AMB_BGP_NM_LISTEN);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_nm_listen); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_nm_listen); 
 
     NBB_TRC_EXIT();
     return;
@@ -352,38 +358,38 @@ pdsa_row_update_bgp_nm_listen (pdsa_config_t *conf)
 
 // row_update for bgpRmAfmJoinTable
 NBB_VOID
-pdsa_row_update_bgp_rm_afm_join (pdsa_config_t *conf)
+pds_ms_row_update_bgp_rm_afm_join (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_bgp_rm_afm_join");
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_rm_afm_join");
 
     // Set params
     conf->oid_len       = AMB_BGP_AFM_OID_LEN;
     conf->data_len      = sizeof (AMB_BGP_RM_AFM_JOIN);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_bgp_rm_afm_join); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_rm_afm_join); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_bgp_create (pdsa_config_t *conf)
+pds_ms_bgp_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_bgp_create");
+    NBB_TRC_ENTRY ("pds_ms_bgp_create");
 
    // bgpRmEntTable
-   conf->entity_index        = PDSA_BGP_RM_ENT_INDEX;
+   conf->entity_index        = PDS_MS_BGP_RM_ENT_INDEX;
    conf->admin_status        = AMB_ADMIN_STATUS_DOWN;
-   pdsa_row_update_bgp_rm (conf);
+   pds_ms_row_update_bgp_rm (conf);
 
     // bgpNmEntTable
-    conf->entity_index       = PDSA_BGP_NM_ENT_INDEX;
+    conf->entity_index       = PDS_MS_BGP_NM_ENT_INDEX;
     conf->admin_status       = AMB_ADMIN_STATUS_UP;
-    pdsa_row_update_bgp_nm (conf);
+    pds_ms_row_update_bgp_nm (conf);
 
     // bgpRmAfmJoinTable
-    conf->entity_index       = PDSA_BGP_RM_ENT_INDEX;
+    conf->entity_index       = PDS_MS_BGP_RM_ENT_INDEX;
     conf->admin_status       = AMB_ADMIN_STATUS_UP;
     conf->partner_index      = 1;
 
@@ -391,22 +397,22 @@ pdsa_bgp_create (pdsa_config_t *conf)
     conf->join_index         = 1;
     conf->afi                = AMB_BGP_AFI_IPV4;
     conf->safi               = AMB_BGP_UNICAST;
-    pdsa_row_update_bgp_rm_afm_join (conf);
+    pds_ms_row_update_bgp_rm_afm_join (conf);
 
     // AFM: AMB_BGP_AFI_L2VPN
     conf->join_index         = 2;
     conf->afi                = AMB_BGP_AFI_L2VPN;
     conf->safi               = AMB_BGP_EVPN;
-    pdsa_row_update_bgp_rm_afm_join (conf);
+    pds_ms_row_update_bgp_rm_afm_join (conf);
 
     // bgpRmAfiSafiTable
     conf->entity_index      = 1;
-    pdsa_row_update_bgp_rm_afi_safi (conf);
+    pds_ms_row_update_bgp_rm_afi_safi (conf);
 
     // bgpNmListenTable
-    conf->entity_index       = PDSA_BGP_NM_ENT_INDEX;
+    conf->entity_index       = PDS_MS_BGP_NM_ENT_INDEX;
     conf->admin_status       = AMB_ADMIN_STATUS_UP;
-    pdsa_row_update_bgp_nm_listen (conf);
+    pds_ms_row_update_bgp_nm_listen (conf);
 
     NBB_TRC_EXIT();
     return;

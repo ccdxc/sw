@@ -3,8 +3,8 @@
 
 
 #include <iostream>
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
@@ -14,7 +14,7 @@ using namespace std;
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
 NBB_VOID 
-pdsa_ctm_send_transaction_start (NBB_ULONG correlator)
+pds_ms_ctm_send_transaction_start (NBB_ULONG correlator)
 {
     // Local variables
     ATG_CPI_TRANSACTION_START   *trans_start = NULL;
@@ -36,7 +36,7 @@ pdsa_ctm_send_transaction_start (NBB_ULONG correlator)
 }
 
 NBB_VOID 
-pdsa_ctm_send_transaction_abort (NBB_ULONG correlator)
+pds_ms_ctm_send_transaction_abort (NBB_ULONG correlator)
 {
     // Local variables
     ATG_CPI_TRANSACTION_ABORT   *trans_abort = NULL;
@@ -56,7 +56,7 @@ pdsa_ctm_send_transaction_abort (NBB_ULONG correlator)
 }
 
 NBB_VOID 
-pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
+pds_ms_ctm_send_transaction_end (NBB_ULONG correlator)
 {
     // Local variables
     ATG_CPI_TRANSACTION_END   *trans_end = NULL;
@@ -77,7 +77,7 @@ pdsa_ctm_send_transaction_end (NBB_ULONG correlator)
 }
 
 static NBB_VOID
-pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
+pds_ms_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 {
     NBB_ASSERT_PTR_NE (trans_done, NULL);
     types::ApiStatus status;
@@ -127,11 +127,11 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
             break;
     }
 
-    if (trans_done->trans_correlator.correlator1 == PDSA_CTM_GRPC_CORRELATOR) {
+    if (trans_done->trans_correlator.correlator1 == PDS_MS_CTM_GRPC_CORRELATOR) {
         // Unblock the GRPC thread which is waiting for the response
         pds_ms::mgmt_state_t::ms_response_ready(status);
     } else if (trans_done->trans_correlator.correlator1 ==
-                                PDSA_CTM_STUB_INIT_CORRELATOR) {
+                                PDS_MS_CTM_STUB_INIT_CORRELATOR) {
         SDK_ABORT_TRACE((trans_done->return_code == ATG_CPI_RC_OK),
                                 "Nbase stubs init txn failed! Aborting!");
         // Stubs initialization transaction is successful
@@ -146,7 +146,7 @@ pdsa_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
 }
 
 static NBB_VOID 
-pdsa_ctm_fill_mib_msg_defaults (AMB_GEN_IPS   *mib_msg)
+pds_ms_ctm_fill_mib_msg_defaults (AMB_GEN_IPS   *mib_msg)
 {
     //Fill in the mib_msg defaults
     mib_msg->ips_hdr.ips_type       = IPS_AMB_SET;
@@ -180,7 +180,7 @@ pdsa_ctm_fill_mib_msg_defaults (AMB_GEN_IPS   *mib_msg)
 
 
 ATG_CPI_ROW_UPDATE *
-pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
+pds_ms_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
                                  NBB_LONG        data_len,
                                  NBB_LONG        oid_len,
                                  NBB_LONG        row_status,
@@ -227,7 +227,7 @@ pdsa_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
     NBB_ASSERT_PTR_NE(mib_msg, NULL);
 
     // Fill in the defaults
-    pdsa_ctm_fill_mib_msg_defaults (mib_msg);
+    pds_ms_ctm_fill_mib_msg_defaults (mib_msg);
 
     // Set control portion of the buffer
     mib_msg->ips_hdr.ctrl_size      = amb_set_size;
@@ -265,8 +265,8 @@ EXIT_LABEL:
 }
 
 NBB_VOID 
-pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
-                                 pdsa_amb_fill_fnptr_t      fill_api)
+pds_ms_ctm_send_row_update_common (pds_ms_stub::pds_ms_config_t   *conf,
+                                 pds_ms_amb_fill_fnptr_t      fill_api)
 {
     ATG_CPI_ROW_UPDATE  *row_update = NULL; 
     AMB_GEN_IPS         *mib_msg = NULL;
@@ -274,7 +274,7 @@ pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
     NBB_ASSERT_PTR_NE (conf, NULL);
 
     // Build row update
-    row_update = pdsa_ctm_bld_row_update_common ( &mib_msg,
+    row_update = pds_ms_ctm_bld_row_update_common ( &mib_msg,
                                                   conf->data_len, 
                                                   conf->oid_len,
                                                   conf->row_status,
@@ -290,12 +290,12 @@ pdsa_ctm_send_row_update_common (pdsa_stub::pdsa_config_t   *conf,
 }
 
 NBB_VOID
-pdsa_ctm_rcv_ips (NBB_IPS *ips NBB_CCXT NBB_CXT)
+pds_ms_ctm_rcv_ips (NBB_IPS *ips NBB_CCXT NBB_CXT)
 {
     NBB_ASSERT_NUM_EQ (ips->ips_type, IPS_ATG_CPI_TRANSACTION_DONE);
 
     NBB_TRC_FLOW ((NBB_FORMAT "Received IPS_ATG_CPI_TRANSACTION_DONE"));
-    pdsa_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
+    pds_ms_ctm_rcv_transaction_done ((ATG_CPI_TRANSACTION_DONE *)ips NBB_CCXT);
     
     return;
 }

@@ -6,12 +6,12 @@
 {{$cam := getMetaswitchMibTablesInfo}}
 {{$pkgName := .Package}}
 {{$fileName := .GetName}}
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_common.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_common.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
 {{range .Services}}
@@ -33,46 +33,46 @@ Status
     //Delete request
   {{end}}
   {{if (HasSuffix $rpc "Get")}}
-    PDSA_GET_SHARED_START();
+    PDS_MS_GET_SHARED_START();
     //Get request
     {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
       {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_get_{{$struct | ToLower}}(proto_spec, resp);
+        pds_ms_get_{{$struct | ToLower}}(proto_spec, resp);
     }
     {{end}}
-    PDSA_GET_SHARED_END();
+    PDS_MS_GET_SHARED_END();
   {{end}}
   {{if (HasSuffix $rpc "GetAll")}}
-    PDSA_GET_SHARED_START();
+    PDS_MS_GET_SHARED_START();
     //Getall request
     {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
       {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_getall_{{$struct | ToLower}}(proto_spec, resp);
+        pds_ms_getall_{{$struct | ToLower}}(proto_spec, resp);
     }
     {{end}}
-    PDSA_GET_SHARED_END();
+    PDS_MS_GET_SHARED_END();
   {{end}}
   {{if or (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
-    uint correlator = PDSA_CTM_GRPC_CORRELATOR;
-    PDSA_START_TXN(correlator);
+    uint correlator = PDS_MS_CTM_GRPC_CORRELATOR;
+    PDS_MS_START_TXN(correlator);
     //Create/Update request
     {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
       {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
       {{$struct := $param.Struct}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
-        pdsa_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
-        pdsa_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
-        pdsa_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
     }
     {{end}}
-    PDSA_END_TXN(correlator);
+    PDS_MS_END_TXN(correlator);
   {{end}}
     resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
     return Status::OK;

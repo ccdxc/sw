@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch RTM component
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "qc0rtmib.h"
 
 namespace pds {
@@ -15,8 +15,8 @@ rtm_strt_fill_func (StaticRouteSpec&        req,
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
     // for now static routes are added on default VRF
-    data->fte_index                   = PDSA_RTM_ENT_INDEX;
-    oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDSA_RTM_ENT_INDEX;
+    data->fte_index                   = PDS_MS_RTM_ENT_INDEX;
+    oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDS_MS_RTM_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_FTE_INDEX);
     
     data->if_index                    = 0;
@@ -25,17 +25,17 @@ rtm_strt_fill_func (StaticRouteSpec&        req,
 }
 } // End of namespace pds
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill rtmEntityTable: AMB_CIPR_RTM_ENTITY 
 NBB_VOID 
-pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_CIPR_RTM_ENTITY *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_cipr_rtm");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_cipr_rtm");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -65,7 +65,7 @@ pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
         data->addr_family = AMB_INETWK_ADDR_TYPE_IPV4;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADDR_FAM);
 
-        data->i3_index = PDSA_I3_ENT_INDEX; 
+        data->i3_index = PDS_MS_I3_ENT_INDEX; 
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_I3_INDEX);
     }
 
@@ -75,7 +75,7 @@ pdsa_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill rtmMjTable: AMB_CIPR_RTM_MJ
 NBB_VOID
-pdsa_fill_amb_cipr_rtm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_cipr_rtm_mj (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG       *oid = NULL; 
@@ -124,13 +124,13 @@ pdsa_fill_amb_cipr_rtm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill rtmRedistTable: AMB_CIPR_RTM_REDIST 
 NBB_VOID 
-pdsa_fill_amb_cipr_rtm_redist (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_cipr_rtm_redist (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_CIPR_RTM_REDIST *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_cipr_rtm_redist");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_cipr_rtm_redist");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -176,75 +176,75 @@ pdsa_fill_amb_cipr_rtm_redist (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 } 
 
 NBB_VOID
-pdsa_row_update_rtm (pdsa_config_t *conf)
+pds_ms_row_update_rtm (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_rtm");
+    NBB_TRC_ENTRY ("pds_ms_row_update_rtm");
 
     // Set params
     conf->oid_len       = AMB_QCR_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_CIPR_RTM_ENTITY);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_cipr_rtm); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_cipr_rtm); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_row_update_rtm_mj (pdsa_config_t *conf)
+pds_ms_row_update_rtm_mj (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_rtm_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_rtm_mj");
     
     // Set params
     conf->oid_len               = AMB_QRPM_MJ_OID_LEN;
     conf->data_len              = sizeof (AMB_CIPR_RTM_MJ);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_cipr_rtm_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_cipr_rtm_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
-NBB_VOID pdsa_rtm_redis_connected (pdsa_config_t *conf)
+NBB_VOID pds_ms_rtm_redis_connected (pds_ms_config_t *conf)
 {
     conf->oid_len               = AMB_QCR_RDS_OID_LEN;
     conf->data_len              = sizeof (AMB_CIPR_RTM_REDIST);
 
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_cipr_rtm_redist); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_cipr_rtm_redist); 
     return;
 }
 
 NBB_VOID
-pdsa_rtm_create (pdsa_config_t *conf)
+pds_ms_rtm_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_rtm_create");
+    NBB_TRC_ENTRY ("pds_ms_rtm_create");
 
     // rtmEntityTable - Admin Down                                
-    conf->entity_index          = PDSA_RTM_ENT_INDEX;
+    conf->entity_index          = PDS_MS_RTM_ENT_INDEX;
     conf->admin_status          = AMB_ADMIN_STATUS_DOWN;
-    pdsa_row_update_rtm (conf);
+    pds_ms_row_update_rtm (conf);
 
     // rtmMjTable - AMB_RTM_ARI_PARTNER_BGP
-    conf->slave_entity_index    = PDSA_BGP_RM_ENT_INDEX;
+    conf->slave_entity_index    = PDS_MS_BGP_RM_ENT_INDEX;
     conf->slave_type            = AMB_RTM_ARI_PARTNER_BGP;
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pdsa_row_update_rtm_mj (conf);
+    pds_ms_row_update_rtm_mj (conf);
 
     // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
-    conf->slave_entity_index    = PDSA_FT_ENT_INDEX;
+    conf->slave_entity_index    = PDS_MS_FT_ENT_INDEX;
     conf->slave_type            = AMB_RTM_ARI_PARTNER_FT;
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pdsa_row_update_rtm_mj (conf);
+    pds_ms_row_update_rtm_mj (conf);
 
     // rtmEntityTable - Admin UP                                
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pdsa_row_update_rtm (conf);
+    pds_ms_row_update_rtm (conf);
 
     // rtm Redistribute connected
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pdsa_rtm_redis_connected (conf);
+    pds_ms_rtm_redis_connected (conf);
 
     NBB_TRC_EXIT();
     return;

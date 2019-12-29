@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch NRM stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nrm_mgmt_if.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill nrmEntTable: AMB_NRM_ENT
 NBB_VOID
-pdsa_fill_amb_nrm_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_nrm_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG   *oid = NULL; 
     AMB_NRM_ENT *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_nrm_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_nrm_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -41,7 +41,7 @@ pdsa_fill_amb_nrm_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill nrmMjTable: AMB_NRM_MJ
 NBB_VOID
-pdsa_fill_amb_nrm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_nrm_mj (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG   *oid = NULL; 
@@ -51,7 +51,7 @@ pdsa_fill_amb_nrm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
     data    = (AMB_NRM_MJ *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_nrm_mj");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_nrm_mj");
 
     // Set all fields absent
     AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
@@ -89,73 +89,73 @@ pdsa_fill_amb_nrm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_nrm (pdsa_config_t *conf)
+pds_ms_row_update_nrm (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_nrm");
+    NBB_TRC_ENTRY ("pds_ms_row_update_nrm");
 
     // Set params
     conf->oid_len       = AMB_NRM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_NRM_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nrm_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_nrm_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_row_update_nrm_mj (pdsa_config_t  *conf)
+pds_ms_row_update_nrm_mj (pds_ms_config_t  *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_nrm_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_nrm_mj");
 
     // Set params
     conf->oid_len       = AMB_NRM_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_NRM_MJ);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nrm_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_nrm_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_nrm_create (pdsa_config_t *conf)
+pds_ms_nrm_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_nrm_create");
+    NBB_TRC_ENTRY ("pds_ms_nrm_create");
 
     // nrmEntTable
-    conf->entity_index   = PDSA_NRM_ENT_INDEX;
-    pdsa_row_update_nrm (conf);
+    conf->entity_index   = PDS_MS_NRM_ENT_INDEX;
+    pds_ms_row_update_nrm (conf);
 
     // nrmMjTable - AMB_NRM_IF_ATG_NARI
     conf->interface_id   = AMB_NRM_IF_ATG_NARI;
     conf->partner_type   = AMB_NRM_MJ_PARTNER_NAR;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_nrm_mj (conf);
+    pds_ms_row_update_nrm_mj (conf);
 
     // nrmMjTable - AMB_NRM_IF_ATG_NBPI
     conf->interface_id   = AMB_NRM_IF_ATG_NBPI;
     conf->partner_type   = AMB_NRM_MJ_PARTNER_HALS;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_nrm_mj (conf);
+    pds_ms_row_update_nrm_mj (conf);
 
     // nrmMjTable - AMB_NRM_IF_ATG_MMI 
     conf->interface_id   = AMB_NRM_IF_ATG_MMI;
     conf->partner_type   = AMB_NRM_MJ_PARTNER_L2FST;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_nrm_mj (conf);
+    pds_ms_row_update_nrm_mj (conf);
 
     // nrmMjTable - AMB_NRM_IF_ATG_I3 
     conf->interface_id   = AMB_NRM_IF_ATG_I3;
     conf->partner_type   = AMB_NRM_MJ_PARTNER_LIM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_nrm_mj (conf);
+    pds_ms_row_update_nrm_mj (conf);
 
     NBB_TRC_EXIT();
     return;

@@ -1,8 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Defines data structure to read/store init config
 
-#ifndef __PDSA_CONFIG_HPP__
-#define __PDSA_CONFIG_HPP__
+#ifndef __PDS_MS_CONFIG_HPP__
+#define __PDS_MS_CONFIG_HPP__
 
 #include <nbase.h>
 extern "C" {
@@ -20,9 +20,9 @@ extern "C" {
 
 // TODO: check if nbbxtype.h include is enough
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
-typedef struct pdsa_config_s {
+typedef struct pds_ms_config_s {
     NBB_ULONG   oid_len;
     NBB_ULONG   data_len;
     NBB_ULONG   correlator;               
@@ -39,7 +39,7 @@ typedef struct pdsa_config_s {
     NBB_ULONG   join_index;
     NBB_LONG    afi;
     NBB_LONG    safi;
-}pdsa_config_t;
+}pds_ms_config_t;
 
 }
-#endif /*__PDSA_CONFIG_HPP__*/
+#endif /*__PDS_MS_CONFIG_HPP__*/

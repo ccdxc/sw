@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch NAR stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nar_mib.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill narEntTable: AMB_STUBS_NAR_ENT
 NBB_VOID
-pdsa_fill_amb_nar_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_nar_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_STUBS_NAR_ENT   *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_nar_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_nar_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -40,29 +40,29 @@ pdsa_fill_amb_nar_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_nar (pdsa_config_t *conf)
+pds_ms_row_update_nar (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_nar");
+    NBB_TRC_ENTRY ("pds_ms_row_update_nar");
 
     // Set params
     conf->oid_len       = AMB_NAR_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_NAR_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_nar_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_nar_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID 
-pdsa_nar_stub_create (pdsa_config_t *conf)
+pds_ms_nar_stub_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_nar_stub_create");
+    NBB_TRC_ENTRY ("pds_ms_nar_stub_create");
 
     // narEntTable
-    conf->entity_index  = PDSA_NAR_ENT_INDEX;
-    pdsa_row_update_nar (conf);
+    conf->entity_index  = PDS_MS_NAR_ENT_INDEX;
+    pds_ms_row_update_nar (conf);
 
     NBB_TRC_EXIT();
     return;

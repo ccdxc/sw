@@ -3,8 +3,8 @@
  * This is an auto generated package.
  * Input file: {{.Name}}
  */
-#ifndef __PDSA_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__
-#define __PDSA_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__
+#ifndef __PDS_MS_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__
+#define __PDS_MS_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__
 #include <nbase.h>
 extern "C" {
 #include <a0spec.h>
@@ -19,8 +19,7 @@ extern "C" {
 #include "smsincl.h"
 }
 #include "include/sdk/ip.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix .GetName ".proto" | ToLower}}_gen.hpp"
 #include "qb0mib.h"
 
@@ -40,18 +39,18 @@ extern "C" {
     /*===== Set helpers for MS Table: {{$struct}} =====*/
     typedef void (*pre_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
     typedef void (*post_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pdsa_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid);
-    NBB_VOID pdsa_fill_{{$struct | ToLower}}_fields(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields(pds::{{$msgName}} &req,
                                              AMB_GEN_IPS *mib_msg,
                                              {{$struct}} *v_{{$struct | ToLower}},
                                              NBB_LONG row_status);
-    NBB_VOID pdsa_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type);
-    NBB_VOID pdsa_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type);
-    NBB_VOID pdsa_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pdsa_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pdsa_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status);
+    NBB_VOID pds_ms_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type);
+    NBB_VOID pds_ms_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type);
+    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
+    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status);
     {{end}}
   {{end}}
   {{if hasExtension "venice.pdsaGetGlobOpts" . }}
@@ -62,14 +61,14 @@ extern "C" {
     {{$mib    := $param.Mib}}
     {{if not (eq $oidLen "")}}
     /*===== Get helpers for MS Table: {{$struct}} =====*/
-    NBB_VOID pdsa_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
-    NBB_VOID pdsa_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pdsa_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
-    NBB_VOID pdsa_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pdsa_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
     {{end}}
   {{end}}
 {{end}}
-#endif /* __PDSA_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__  */
+#endif /* __PDS_MS_{{TrimSuffix .GetName ".proto" | ToUpper}}_UTILS_GEN_HPP__  */

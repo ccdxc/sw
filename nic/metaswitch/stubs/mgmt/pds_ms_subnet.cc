@@ -1,10 +1,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_cp_interface_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -82,7 +82,7 @@ static void
 populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
                        pds::EvpnBdSpec&  req)
 {
-    req.set_entityindex (PDSA_EVPN_ENT_INDEX);
+    req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_eviindex (subnet_spec->key.id);
     req.set_vni (subnet_spec->fabric_encap.val.vnid);
 }
@@ -91,7 +91,7 @@ static void
 populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
                        pds::LimGenIrbIfSpec& req)
 {
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_bdindex (subnet_spec->key.id);
     req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
 } 
@@ -109,7 +109,7 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X VRF name %s len %d", 
                     subnet_spec->key.id, if_index, vrf_name.c_str(), vrf_name.length());
 
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_ifindex (if_index);
     req.set_ifenable (AMB_TRUE);
     req.set_ipv4enabled (AMB_TRISTATE_TRUE);
@@ -125,7 +125,7 @@ populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
                                 pds::EvpnIfBindCfgSpec&  req, 
                                 uint32_t                 if_index)
 {
-    req.set_entityindex (PDSA_EVPN_ENT_INDEX);
+    req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_ifindex (if_index);
     req.set_eviindex (subnet_spec->key.id);
 }
@@ -135,7 +135,7 @@ static void
 populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
                             uint32_t                  if_index)
 {
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_ifindex (if_index);
     req.set_ifenable (AMB_TRUE);
     req.set_ipv4enabled (AMB_TRISTATE_FALSE);
@@ -159,17 +159,17 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 {
     uint32_t if_index;
     
-    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
     pds::EvpnBdSpec evpn_bd_spec;
     populate_evpn_bd_spec (subnet_spec, evpn_bd_spec);
-    pdsa_set_amb_evpn_bd (evpn_bd_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // limGenIrbInterfaceTable Row Update
     pds::LimGenIrbIfSpec irb_spec;
     populate_lim_irb_spec (subnet_spec, irb_spec);
-    pdsa_set_amb_lim_gen_irb_if (irb_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_gen_irb_if (irb_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Get IRB If Index
     if_index = bd_id_to_ms_ifindex (subnet_spec->key.id);
@@ -179,7 +179,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     // Update IRB to VRF binding
     pds::LimInterfaceCfgSpec lim_if_spec;
     populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
-    pdsa_set_amb_lim_if_cfg (lim_if_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Configure IRB IP Address 
     ip_prefix_t ip_prefix;
@@ -189,13 +189,13 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     pds::CPInterfaceAddrSpec lim_addr_spec;
     populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
                             pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
-    pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     if (subnet_spec->host_ifindex != IFINDEX_INVALID) {
         // Create Lif here for now
         pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
-        pdsa_set_amb_lim_software_if (lim_swif_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // Get Lif's MS IfIndex
         if_index = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
@@ -205,15 +205,15 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
         // Set Lif interface settings
         pds::LimInterfaceCfgSpec lim_swifcfg_spec;
         populate_lim_swif_cfg_spec (lim_swifcfg_spec, if_index);
-        pdsa_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
         populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, if_index);
-        pdsa_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
-    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     return pds_ms::mgmt_state_t::ms_response_wait();
@@ -235,14 +235,14 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 {
     uint32_t lif_ifindex;
 
-    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
         SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS BD Update", subnet_spec->key.id);  
         pds::EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, evpn_bd_spec);
-        pdsa_set_amb_evpn_bd (evpn_bd_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     // Create Lif here for now
@@ -250,7 +250,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS BD If Update", subnet_spec->key.id);  
         pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
-        pdsa_set_amb_lim_software_if (lim_swif_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // Get Lif's MS IfIndex
         lif_ifindex = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
@@ -260,12 +260,12 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         // Set Lif interface settings
         pds::LimInterfaceCfgSpec lim_swifcfg_spec;
         populate_lim_swif_cfg_spec (lim_swifcfg_spec, lif_ifindex);
-        pdsa_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
         populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, lif_ifindex);
-        pdsa_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     if (ms_upd_flags.irb) {
@@ -278,10 +278,10 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         pds::CPInterfaceAddrSpec lim_addr_spec;
         populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
                                 pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
-        pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+        pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
-    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     return pds_ms::mgmt_state_t::ms_response_wait();

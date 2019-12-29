@@ -12,7 +12,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
@@ -20,12 +20,12 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_bgp_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_evpn_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_evpn_utils_gen.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
@@ -36,7 +36,7 @@ test_params_t* test_params() {
     return &g_test_params;
 }
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 using namespace pds_ms_test;
 using namespace std;
 using grpc::Server;
@@ -48,40 +48,47 @@ static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
+static NBB_VOID
+pds_ms_convert_long_to_pds_ipv4_addr (NBB_ULONG ip, ip_addr_t *pds_ms_ip_addr)
+{
+    pds_ms_ip_addr->af            = IP_AF_IPV4;
+    pds_ms_ip_addr->addr.v4_addr  = htonl(ip);
+}
+
 namespace pds_ms_test {
 
 static test_config_t  g_test_conf;
 static NBB_VOID
-pdsa_sim_test_mac_ip()
+pds_ms_sim_test_mac_ip()
 {
 
     ip_addr_t ip_addr;
     auto host_ifindex = pds_ms::pds_to_ms_ifindex (g_test_conf.lif_if_index, IF_TYPE_LIF);
 
     // Start CTM
-    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
-    pdsa_convert_long_to_pdsa_ipv4_addr (g_test_conf.local_mai_ip, &ip_addr);
-    pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
+    pds_ms_convert_long_to_pds_ipv4_addr (g_test_conf.local_mai_ip, &ip_addr);
+    pds_ms_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
 
     // End CTM transaction
-    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Wait for MS response
     pds_ms::mgmt_state_t::ms_response_wait();
 }
 static NBB_VOID
-pdsa_sim_test_bgp_update ()
+pds_ms_sim_test_bgp_update ()
 {
     // Start CTM 
-    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_vrfid (PDSA_BGP_RM_ENT_INDEX);
+    bgp_global_spec.set_vrfid (PDS_MS_BGP_RM_ENT_INDEX);
     bgp_global_spec.set_routerid (g_test_conf.local_ip_addr);
-    pdsa_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
@@ -101,20 +108,20 @@ pdsa_sim_test_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
-    pdsa_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR); 
+    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR); 
 
     // End CTM transaction
-    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Wait for MS response
     pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 static NBB_VOID
-pdsa_sim_test_evpn_evi_update ()
+pds_ms_sim_test_evpn_evi_update ()
 {
     // Start CTM
-    PDSA_START_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EvpnEviTable
     pds::EvpnEviSpec evpn_evi_spec;
@@ -123,16 +130,16 @@ pdsa_sim_test_evpn_evi_update ()
     evpn_evi_spec.set_autort(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
     evpn_evi_spec.set_encap(pds::EVPN_ENCAP_VXLAN);
-    pdsa_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     // End CTM transaction
-    PDSA_END_TXN (PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Wait for MS response
     pds_ms::mgmt_state_t::ms_response_wait();
 }
 
 static NBB_VOID
-pdsa_sim_test_config ()
+pds_ms_sim_test_config ()
 {
     cout << "Config thread is waiting for Nbase....\n";
     while (!g_routing_thread->ready()) {
@@ -144,13 +151,13 @@ pdsa_sim_test_config ()
     pds_if_spec_t l3_if_spec = {0};
     l3_if_spec.l3_if_info.ip_prefix.len = 24;
     l3_if_spec.key.id = g_test_conf.eth_if_index;
-    pdsa_convert_long_to_pdsa_ipv4_addr (g_test_conf.local_ip_addr, 
+    pds_ms_convert_long_to_pds_ipv4_addr (g_test_conf.local_ip_addr, 
                                          &l3_if_spec.l3_if_info.ip_prefix.addr);
     pds_ms::interface_create (&l3_if_spec, 0);
     cout << "Config thread: L3 Interface Config is done!\n";
     
     // BGP Update
-    pdsa_sim_test_bgp_update();
+    pds_ms_sim_test_bgp_update();
     cout << "Config thread: BGP Proto is done!\n";
 
     // VPC update
@@ -174,10 +181,10 @@ pdsa_sim_test_config ()
     cout << "Config thread: Subnet Proto is done!\n";
 
     // Evpn Evi Update
-    pdsa_sim_test_evpn_evi_update();
+    pds_ms_sim_test_evpn_evi_update();
 
     // Push MAC-IP
-    pdsa_sim_test_mac_ip();
+    pds_ms_sim_test_mac_ip();
     cout << "Config thread: pushed a mac-ip entry to l2fMacIpCfgTable\n";
     sleep(40);
 
@@ -263,7 +270,7 @@ main (int argc, char **argv)
                             "Routing thread create failure");
     g_routing_thread->start(g_routing_thread);
     // Push the test config, this will wait for nbase init to complete
-    pds_ms_test::pdsa_sim_test_config();
+    pds_ms_test::pds_ms_sim_test_config();
     svc_reg();
     return 0;
 }

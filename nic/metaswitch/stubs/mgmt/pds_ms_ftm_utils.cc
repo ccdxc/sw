@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //Purpose: Helper APIs for metaswitch FTM stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "ftm_mgmt_if.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill ftmEntTable: AMB_FTM_ENT
 NBB_VOID
-pdsa_fill_amb_ftm_ent (AMB_GEN_IPS *mib_msg,  pdsa_config_t *conf)
+pds_ms_fill_amb_ftm_ent (AMB_GEN_IPS *mib_msg,  pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_FTM_ENT     *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_ftm_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_ftm_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -41,13 +41,13 @@ pdsa_fill_amb_ftm_ent (AMB_GEN_IPS *mib_msg,  pdsa_config_t *conf)
 
 // Fill ftmMjTable: AMB_FTM_MJ
 NBB_VOID
-pdsa_fill_amb_ftm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_ftm_mj (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG   *oid = NULL; 
     AMB_FTM_MJ  *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_ftm_mj");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_ftm_mj");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -89,59 +89,59 @@ pdsa_fill_amb_ftm_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_ftm (pdsa_config_t *conf)
+pds_ms_row_update_ftm (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_ftm");
+    NBB_TRC_ENTRY ("pds_ms_row_update_ftm");
     
     // Set params
     conf->oid_len       = AMB_FTM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_FTM_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_ftm_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_ftm_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_row_update_ftm_mj (pdsa_config_t  *conf)
+pds_ms_row_update_ftm_mj (pds_ms_config_t  *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_ftm_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_ftm_mj");
 
     // Set params
     conf->oid_len       = AMB_FTM_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_FTM_MJ);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_ftm_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_ftm_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_ftm_create (pdsa_config_t *conf)
+pds_ms_ftm_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_ftm_create");
+    NBB_TRC_ENTRY ("pds_ms_ftm_create");
 
     // ftmEntTable
-    conf->entity_index   = PDSA_FTM_ENT_INDEX;
-    pdsa_row_update_ftm (conf);
+    conf->entity_index   = PDS_MS_FTM_ENT_INDEX;
+    pds_ms_row_update_ftm (conf);
 
     // ftmMjTable - ROPI
     conf->interface_id   = AMB_FTM_IF_ATG_ROPI;
     conf->partner_type   = AMB_FTM_MJ_PARTNER_HALS;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_ftm_mj (conf);
+    pds_ms_row_update_ftm_mj (conf);
 
     // ftmMjTable - PRI
     conf->interface_id   = AMB_FTM_IF_ATG_PRI;
     conf->partner_type   = AMB_FTM_MJ_PARTNER_PSM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_ftm_mj (conf);
+    pds_ms_row_update_ftm_mj (conf);
 
     NBB_TRC_EXIT();
     return;

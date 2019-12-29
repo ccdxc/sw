@@ -1,8 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 #include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_vpc_store.hpp"
 #include "nic/metaswitch/stubs/common/pdsa_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
@@ -86,7 +86,7 @@ populate_lim_vrf_spec (pds_vpc_spec_t  *vpc_spec,
     // Convert VRF ID to name
     vrf_name = std::to_string (vpc_spec->key.id);
 
-    req.set_entityindex (PDSA_LIM_ENT_INDEX); 
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX); 
     req.set_vrfname (vrf_name);
     req.set_vrfnamelen (vrf_name.length());
 }
@@ -114,14 +114,14 @@ static types::ApiStatus
 process_vpc_update (pds_vpc_spec_t *vpc_spec, 
                     NBB_LONG       row_status)
 {
-    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
     
     // LIM VRF Row Update
     pds::LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vpc_spec, lim_vrf_spec);
-    pdsa_set_amb_lim_vrf (lim_vrf_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_vrf (lim_vrf_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     return pds_ms::mgmt_state_t::ms_response_wait();

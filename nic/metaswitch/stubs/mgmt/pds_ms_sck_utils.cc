@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch Sock stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "sck0mib.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill sckTable: AMB_STUBS_SCK
 NBB_VOID
-pdsa_fill_amb_sck (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_sck (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_STUBS_SCK   *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_sck");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_sck");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -41,29 +41,29 @@ pdsa_fill_amb_sck (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 
 NBB_VOID
-pdsa_row_update_sck (pdsa_config_t *conf)
+pds_ms_row_update_sck (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_sck");
+    NBB_TRC_ENTRY ("pds_ms_row_update_sck");
 
     // Set params
     conf->oid_len       = AMB_STUBS_SCK_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_SCK);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_sck); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_sck); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_sck_stub_create (pdsa_config_t *conf)
+pds_ms_sck_stub_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_sck_stub_create");
+    NBB_TRC_ENTRY ("pds_ms_sck_stub_create");
 
     // sckTable 
-    conf->entity_index  = PDSA_SCK_ENT_INDEX;
-    pdsa_row_update_sck (conf);
+    conf->entity_index  = PDS_MS_SCK_ENT_INDEX;
+    pds_ms_row_update_sck (conf);
 
     NBB_TRC_EXIT();
     return;

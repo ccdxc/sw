@@ -1,9 +1,9 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_cp_interface_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 
@@ -12,7 +12,7 @@ namespace pds_ms {
 static void
 populate_lim_l3_intf_cfg_spec ( pds::LimInterfaceCfgSpec& req, uint32_t ifindex)
 {
-    req.set_entityindex (PDSA_LIM_ENT_INDEX);
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_ifindex (ifindex);
     req.set_ifenable (AMB_TRUE);
     req.set_ipv4enabled (AMB_TRISTATE_TRUE);
@@ -50,7 +50,7 @@ process_interface_update (pds_if_spec_t *if_spec,
 {
     uint32_t ms_ifindex = 0;
 
-    PDSA_START_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Get PDS to MS IfIndex
     ms_ifindex = pds_to_ms_ifindex(if_spec->key.id, IF_TYPE_ETH);
@@ -59,15 +59,15 @@ process_interface_update (pds_if_spec_t *if_spec,
     // Create L3 interfaces
     pds::LimInterfaceCfgSpec lim_if_spec;
     populate_lim_l3_intf_cfg_spec (lim_if_spec, ms_ifindex);
-    pdsa_set_amb_lim_if_cfg (lim_if_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Configure IP Address
     pds::CPInterfaceAddrSpec lim_addr_spec;
     populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec, 
                             pds::CP_IF_TYPE_ETH, if_spec->key.id);
-    pdsa_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDSA_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    PDSA_END_TXN(PDSA_CTM_GRPC_CORRELATOR);
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // blocking on response from MS
     return pds_ms::mgmt_state_t::ms_response_wait();

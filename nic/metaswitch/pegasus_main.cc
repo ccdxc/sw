@@ -8,7 +8,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 
 using namespace std;
 using grpc::Server;
@@ -43,12 +43,12 @@ svc_reg (void)
     server->Wait();
 }
 
-void *pdsa_nbase_thread_init (void *ctxt)
+void *pds_ms_nbase_thread_init (void *ctxt)
 {
     // opting for graceful termination
     SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
-    if (!pdsa_stub_mgmt_init()) {
+    if (!pds_ms_stub_mgmt_init()) {
         SDK_ASSERT("pdsa init failed!");
     }
 
@@ -61,7 +61,7 @@ spawn_nbase_thread (void)
     g_nbase_thread =
         sdk::lib::thread::factory(
             "nbase", 1, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, &pdsa_nbase_thread_init,
+            0x0, &pds_ms_nbase_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             false);

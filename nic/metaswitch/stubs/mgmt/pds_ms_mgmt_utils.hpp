@@ -1,8 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Common helper APIs header file for metaswitch stub programming 
 
-#ifndef __PDSA_MGMT_UTILS_HPP__
-#define __PDSA_MGMT_UTILS_HPP__
+#ifndef __PDS_MS_MGMT_UTILS_HPP__
+#define __PDS_MS_MGMT_UTILS_HPP__
 #include <nbase.h>
 extern "C" {
 #include <a0spec.h>
@@ -24,99 +24,99 @@ extern "C" {
 #include "nrm_prod.h"
 #include "psm_mgmt_if.h"
 #include "include/sdk/ip.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_config.hpp"
-#include "nic/metaswitch/stubs/mgmt/pdsa_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_config.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "gen/proto/types.pb.h"
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
 #include "gen/proto/evpn.pb.h"
 #include "gen/proto/cp_interface.pb.h"
 #include "gen/proto/staticroute.pb.h"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pdsa_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 
-#define PDSA_CTM_GRPC_CORRELATOR 0x101
-#define PDSA_CTM_STUB_INIT_CORRELATOR 0x42
-#define PDSA_BGP_RM_ENT_INDEX   1
-#define PDSA_BGP_NM_ENT_INDEX   1
-#define PDSA_SCK_ENT_INDEX      1
-#define PDSA_I3_ENT_INDEX       1
-#define PDSA_LI_ENT_INDEX       1
-#define PDSA_LIM_ENT_INDEX      1
-#define PDSA_L2F_ENT_INDEX      1
-#define PDSA_NAR_ENT_INDEX      1
-#define PDSA_NRM_ENT_INDEX      1
-#define PDSA_RTM_ENT_INDEX      1
-#define PDSA_PSM_ENT_INDEX      1
-#define PDSA_SMI_ENT_INDEX      1
-#define PDSA_FTM_ENT_INDEX      1
-#define PDSA_FT_ENT_INDEX       1
-#define PDSA_HALS_ENT_INDEX     1
-#define PDSA_EVPN_ENT_INDEX     1
+#define PDS_MS_CTM_GRPC_CORRELATOR 0x101
+#define PDS_MS_CTM_STUB_INIT_CORRELATOR 0x42
+#define PDS_MS_BGP_RM_ENT_INDEX   1
+#define PDS_MS_BGP_NM_ENT_INDEX   1
+#define PDS_MS_SCK_ENT_INDEX      1
+#define PDS_MS_I3_ENT_INDEX       1
+#define PDS_MS_LI_ENT_INDEX       1
+#define PDS_MS_LIM_ENT_INDEX      1
+#define PDS_MS_L2F_ENT_INDEX      1
+#define PDS_MS_NAR_ENT_INDEX      1
+#define PDS_MS_NRM_ENT_INDEX      1
+#define PDS_MS_RTM_ENT_INDEX      1
+#define PDS_MS_PSM_ENT_INDEX      1
+#define PDS_MS_SMI_ENT_INDEX      1
+#define PDS_MS_FTM_ENT_INDEX      1
+#define PDS_MS_FT_ENT_INDEX       1
+#define PDS_MS_HALS_ENT_INDEX     1
+#define PDS_MS_EVPN_ENT_INDEX     1
 
 using namespace std;
 
-NBB_VOID  pdsa_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pdsa_ip_addr, 
+NBB_VOID pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
+                                                NBB_LONG      type,
+                                                NBB_ULONG     len,
+                                                ip_addr_t     *pds_ms_ip_addr);
+NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr, 
                                                NBB_LONG      *type, 
                                                NBB_ULONG     *len, 
                                                NBB_BYTE      *amb_ip_addr);
 
-NBB_VOID pdsa_convert_long_to_pdsa_ipv4_addr (NBB_ULONG ip,
-                                              ip_addr_t *pdsa_ip_addr); 
-
-
-NBB_VOID pdsa_set_address_oid(NBB_ULONG *oid,
+NBB_VOID pds_ms_set_address_oid(NBB_ULONG *oid,
                               const NBB_CHAR  *tableName,
                               const NBB_CHAR  *fieldName,
                               const types::IPAddress &addr);
 
-NBB_VOID pdsa_set_address_field(AMB_GEN_IPS *mib_msg,
+NBB_VOID pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
                                 const NBB_CHAR  *tableName,
                                 const NBB_CHAR  *fieldName,
                                 NBB_VOID        *dest,
                                 const types::IPAddress &addr);
 
-NBB_LONG pdsa_nbb_get_long(NBB_BYTE *byteVal);
+NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
 
 NBB_VOID
-pdsa_set_string_in_byte_array_with_len(NBB_BYTE *field,
+pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field,
                                        NBB_ULONG &len,
                                        string in_str);
 
 NBB_VOID
-pdsa_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
+pds_ms_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
                                            string in_str,
                                            NBB_LONG setKeyOidIdx,
                                            NBB_LONG setKeyOidLenIdx);
 
 string
-pdsa_get_string_in_byte_array_with_len(NBB_BYTE *in_str,
+pds_ms_get_string_in_byte_array_with_len(NBB_BYTE *in_str,
                                        NBB_ULONG len);
 
 NBB_VOID
-pdsa_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
+pds_ms_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid,
                                            string in_str,
                                            NBB_LONG getKeyOidIdx,
                                            NBB_LONG getKeyOidLenIdx);
 
 NBB_VOID
-pdsa_set_string_in_byte_array(NBB_BYTE *field,
+pds_ms_set_string_in_byte_array(NBB_BYTE *field,
                               string in_str);
 
 NBB_VOID
-pdsa_set_string_in_byte_array_oid(NBB_ULONG *oid,
+pds_ms_set_string_in_byte_array_oid(NBB_ULONG *oid,
                                   string in_str,
                                   NBB_LONG setKeyOidIdx);
 
 string
-pdsa_get_string_in_byte_array(NBB_BYTE *val,
+pds_ms_get_string_in_byte_array(NBB_BYTE *val,
                               NBB_ULONG len);
 
 NBB_VOID
-pdsa_get_string_in_byte_array_oid(NBB_ULONG *oid,
+pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid,
                                   string in_str,
                                   NBB_LONG getKeyOidIdx);
 
-types::IPAddress* pdsa_get_address(const NBB_CHAR  *tableName,
+types::IPAddress* pds_ms_get_address(const NBB_CHAR  *tableName,
                                   const NBB_CHAR  *fieldName,
                                   NBB_VOID    *src);
 namespace pds {
@@ -166,25 +166,25 @@ NBB_VOID lim_sw_intf_fill_func (CPInterfaceSpec&    req,
                                 NBB_LONG            row_status);
 } // namespace pds
 
-namespace pdsa_stub {
-NBB_VOID pdsa_li_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_l2f_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_smi_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_sck_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_hals_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_nar_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_ft_stub_create (pdsa_config_t *conf);
-NBB_VOID pdsa_lim_create (pdsa_config_t *conf);
-NBB_VOID pdsa_ftm_create (pdsa_config_t *conf);
-NBB_VOID pdsa_nrm_create (pdsa_config_t *conf);
-NBB_VOID pdsa_psm_create (pdsa_config_t *conf);
-NBB_VOID pdsa_rtm_create (pdsa_config_t *conf);
-NBB_VOID pdsa_bgp_create (pdsa_config_t *conf);
-NBB_VOID pdsa_evpn_create (pdsa_config_t *conf);
+namespace pds_ms_stub {
+NBB_VOID pds_ms_li_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_l2f_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_smi_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_sck_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_hals_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_nar_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_ft_stub_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_lim_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_ftm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_nrm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_psm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_rtm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_bgp_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_evpn_create (pds_ms_config_t *conf);
 }
 
 namespace pds_ms_test {
-NBB_VOID pdsa_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr,
+NBB_VOID pds_ms_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr,
                                               NBB_ULONG host_ifindex);
 } // end namespace pds_ms_test
 
@@ -194,4 +194,4 @@ void populate_lim_addr_spec (ip_prefix_t                 *ip_prefix,
                              uint32_t                    if_type,
                              uint32_t                    if_id);
 } // end namespace pds_ms
-#endif /*__PDSA_MGMT_UTILS_HPP__*/
+#endif /*__PDS_MS_MGMT_UTILS_HPP__*/

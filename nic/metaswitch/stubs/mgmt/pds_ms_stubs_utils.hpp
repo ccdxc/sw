@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //---------------------------------------------------------------
-#ifndef __PDSA_STUBS_UTILS_HPP__
-#define __PDSA_STUBS_UTILS_HPP__
+#ifndef __PDS_MS_STUBS_UTILS_HPP__
+#define __PDS_MS_STUBS_UTILS_HPP__
 
-namespace pdsa_stub{
-void pdsa_stubs_create ();
+namespace pds_ms_stub{
+void pds_ms_stubs_create ();
 }
-#endif /*__PDSA_STUBS_UTILS_HPP__*/
+#endif /*__PDS_MS_STUBS_UTILS_HPP__*/

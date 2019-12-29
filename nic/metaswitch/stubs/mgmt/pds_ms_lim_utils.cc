@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch LIM stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "evpn_prod.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "lim_mgmt_if.h"
@@ -19,8 +19,8 @@ lim_intf_addr_fill_func (CPInterfaceAddrSpec&   req,
     NBB_ULONG if_index  = 0;
     NBB_ULONG *oid      = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    data->entity_index                = PDSA_LIM_ENT_INDEX;
-    oid[AMB_LIM_L3_ADDR_ENT_IX_INDEX] = PDSA_LIM_ENT_INDEX;
+    data->entity_index                = PDS_MS_LIM_ENT_INDEX;
+    oid[AMB_LIM_L3_ADDR_ENT_IX_INDEX] = PDS_MS_LIM_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_L3_ADDR_ENT_IX);
 
     // Convert Spec Interface ID to MS interface Index
@@ -59,8 +59,8 @@ lim_sw_intf_fill_func (CPInterfaceSpec&    req,
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
     // Set Entity Index
-    data->entity_index                = PDSA_LIM_ENT_INDEX;
-    oid[AMB_LIM_SOFTWIF_ENT_IX_INDEX] = PDSA_LIM_ENT_INDEX;
+    data->entity_index                = PDS_MS_LIM_ENT_INDEX;
+    oid[AMB_LIM_SOFTWIF_ENT_IX_INDEX] = PDS_MS_LIM_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_SOFTWIF_ENT_IX);
 
     // Set SW interface type
@@ -77,17 +77,17 @@ lim_sw_intf_fill_func (CPInterfaceSpec&    req,
 }
 } // end of namespace pds
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill limEntTable: AMB_LIM_ENT
 NBB_VOID
-pdsa_fill_amb_lim_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_lim_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG   *oid = NULL; 
     AMB_LIM_ENT *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_lim_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_lim_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -114,13 +114,13 @@ pdsa_fill_amb_lim_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill limMjTable: AMB_LIM_MJ
 NBB_VOID
-pdsa_fill_amb_lim_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_lim_mj (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG   *oid = NULL; 
     AMB_LIM_MJ  *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_lim_mj");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_lim_mj");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -162,66 +162,66 @@ pdsa_fill_amb_lim_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 }
 
 NBB_VOID
-pdsa_row_update_lim (pdsa_config_t *conf)
+pds_ms_row_update_lim (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_lim");
+    NBB_TRC_ENTRY ("pds_ms_row_update_lim");
 
     // Set params
     conf->oid_len       = AMB_LIM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_LIM_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_lim_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_lim_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_row_update_lim_mj (pdsa_config_t  *conf)
+pds_ms_row_update_lim_mj (pds_ms_config_t  *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_lim_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_lim_mj");
 
     // Set params
     conf->oid_len       = AMB_LIM_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_LIM_ENT);
     
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_lim_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_lim_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_lim_create (pdsa_config_t *conf)
+pds_ms_lim_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_lim_create");
+    NBB_TRC_ENTRY ("pds_ms_lim_create");
 
     // limEntTable
-    conf->entity_index  = PDSA_LIM_ENT_INDEX;
-    pdsa_row_update_lim (conf);
+    conf->entity_index  = PDS_MS_LIM_ENT_INDEX;
+    pds_ms_row_update_lim (conf);
 
     // limMjTable - LIPI
     conf->interface_id   = AMB_LIM_IF_ATG_LIPI;
     conf->partner_type   = AMB_LIM_MJ_PARTNER_LI;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_lim_mj (conf);
+    pds_ms_row_update_lim_mj (conf);
 
     // limMjTable - SMI
     conf->interface_id   = AMB_LIM_IF_ATG_SMI;
     conf->partner_type   = AMB_LIM_MJ_PARTNER_SMI;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_lim_mj (conf);
+    pds_ms_row_update_lim_mj (conf);
 
     // limMjTable - BDII to EVPN
     conf->interface_id   = AMB_LIM_IF_ATG_BDII;
     conf->partner_type   = AMB_LIM_MJ_PARTNER_EVPN;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_lim_mj (conf);
+    pds_ms_row_update_lim_mj (conf);
 
     NBB_TRC_EXIT();
     return;

@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch SMI component
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "smi_mib.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill smiTable: AMB_STUBS_SMI_ENT
 NBB_VOID
-pdsa_fill_amb_smi_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_smi_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 {
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_STUBS_SMI_ENT   *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_smi_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_smi_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -41,29 +41,29 @@ pdsa_fill_amb_smi_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 
 NBB_VOID
-pdsa_row_update_smi (pdsa_config_t *conf)
+pds_ms_row_update_smi (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_smi");
+    NBB_TRC_ENTRY ("pds_ms_row_update_smi");
 
     // Set params
     conf->oid_len       = AMB_SMI_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_SMI_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_smi_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_smi_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_smi_stub_create (pdsa_config_t *conf)
+pds_ms_smi_stub_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_smi_stub_create");
+    NBB_TRC_ENTRY ("pds_ms_smi_stub_create");
 
     // smiEntTable
-    conf->entity_index   = PDSA_SMI_ENT_INDEX;
-    pdsa_row_update_smi (conf);
+    conf->entity_index   = PDS_MS_SMI_ENT_INDEX;
+    pds_ms_row_update_smi (conf);
 
     NBB_TRC_EXIT();
     return;

@@ -50,6 +50,7 @@ MS_INCLPATH = \
 	code/stubs/smi           \
 	code/comn/l2             \
 	code/lim                 \
+	code/bgp                 \
 	code/stubs/l2/unix       \
 	code/comn/worker         \
 	code/lim                 \

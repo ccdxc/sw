@@ -1,20 +1,20 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // Purpose: Helper APIs for metaswitch LI stub programming 
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "li_mgmt_if.h"
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill liEntTable: AMB_STUBS_LI_ENT
 static NBB_VOID
-pdsa_fill_amb_li_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_li_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG           *oid = NULL; 
     AMB_STUBS_LI_ENT    *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_li_ent");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_li_ent");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -47,13 +47,13 @@ pdsa_fill_amb_li_ent (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 // Fill liMjTable: AMB_STUBS_LI_MJ
 static NBB_VOID
-pdsa_fill_amb_li_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_li_mj (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_STUBS_LI_MJ *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_li_mj");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_li_mj");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -96,54 +96,54 @@ pdsa_fill_amb_li_mj (AMB_GEN_IPS *mib_msg, pdsa_config_t *conf)
 
 
 static NBB_VOID
-pdsa_row_update_li (pdsa_config_t *conf)
+pds_ms_row_update_li (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_li");
+    NBB_TRC_ENTRY ("pds_ms_row_update_li");
 
     // Set params
     conf->oid_len       = AMB_LI_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_LI_ENT);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_li_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_li_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 static NBB_VOID
-pdsa_row_update_li_mj (pdsa_config_t   *conf)
+pds_ms_row_update_li_mj (pds_ms_config_t   *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_li_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_li_mj");
 
     // Set params
     conf->oid_len       = AMB_LI_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_STUBS_LI_MJ);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_li_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_li_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_li_stub_create (pdsa_config_t *conf)
+pds_ms_li_stub_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_li_stub_create");
+    NBB_TRC_ENTRY ("pds_ms_li_stub_create");
 
     // liEntTable
-    conf->entity_index   = PDSA_LI_ENT_INDEX;
+    conf->entity_index   = PDS_MS_LI_ENT_INDEX;
     conf->stateful       = AMB_FALSE;
-    pdsa_row_update_li (conf);
+    pds_ms_row_update_li (conf);
 
     // liMjTable
-    conf->entity_index   = PDSA_LI_ENT_INDEX;
+    conf->entity_index   = PDS_MS_LI_ENT_INDEX;
     conf->interface_id   = AMB_LI_IF_ATG_FRI;
     conf->partner_type   = AMB_LI_MJ_PARTNER_LIM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_li_mj (conf);
+    pds_ms_row_update_li_mj (conf);
 
     NBB_TRC_EXIT();
     return;

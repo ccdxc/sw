@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //Purpose: Helper APIs for metaswitch EVPN component
 
-#include "nic/metaswitch/stubs/mgmt/pdsa_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "evpn_mgmt_if.h"
 
 namespace pds {
@@ -14,8 +14,8 @@ evpn_evi_fill_func (EvpnEviSpec&    req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    data->entity_index                = PDSA_EVPN_ENT_INDEX;
-    oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDSA_EVPN_ENT_INDEX;
+    data->entity_index                = PDS_MS_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);
 }
 
@@ -28,8 +28,8 @@ evpn_ip_vrf_fill_func (EvpnIpVrfSpec&   req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    data->entity_index              = PDSA_EVPN_ENT_INDEX;
-    oid[AMB_EVPN_IP_VRF_ENT_INDEX]  = PDSA_EVPN_ENT_INDEX;
+    data->entity_index              = PDS_MS_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_IP_VRF_ENT_INDEX]  = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_ENT_IX);
 }
 
@@ -42,8 +42,8 @@ evpn_evi_rt_fill_func (EvpnEviRtSpec&   req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    data->entity_index              = PDSA_EVPN_ENT_INDEX;
-    oid[AMB_EVPN_EVI_RT_ENT_INDEX]  = PDSA_EVPN_ENT_INDEX;
+    data->entity_index              = PDS_MS_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_EVI_RT_ENT_INDEX]  = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_RT_ENT_IX);
 }
 
@@ -56,8 +56,8 @@ evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    data->entity_index                  = PDSA_EVPN_ENT_INDEX;
-    oid[AMB_EVPN_IP_VRF_RT_ENT_INDEX]   = PDSA_EVPN_ENT_INDEX;
+    data->entity_index                  = PDS_MS_EVPN_ENT_INDEX;
+    oid[AMB_EVPN_IP_VRF_RT_ENT_INDEX]   = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IV_RT_ENT_IX);
 }
 
@@ -138,17 +138,17 @@ evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req, AMB_EVPN_IP_VRF_RT *data)
 }
 } // End namespace pds
 
-namespace pdsa_stub {
+namespace pds_ms_stub {
 
 // Fill evpnEntTable: AMB_EVPN_ENT 
 NBB_VOID
-pdsa_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG       *oid = NULL; 
     AMB_EVPN_ENT    *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_evpn");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_evpn");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -175,13 +175,13 @@ pdsa_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pdsa_config_t *conf)
 
 // Fill evpnMjTable:AMB_EVPN_MJ 
 NBB_VOID
-pdsa_fill_amb_evpn_mj (AMB_GEN_IPS  *mib_msg, pdsa_config_t *conf)
+pds_ms_fill_amb_evpn_mj (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)
 { 
     // Local variables
     NBB_ULONG   *oid = NULL; 
     AMB_EVPN_MJ *data= NULL;
 
-    NBB_TRC_ENTRY ("pdsa_fill_amb_evpn_mj");
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_evpn_mj");
 
     // Get oid and data offset 
     oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -224,75 +224,73 @@ pdsa_fill_amb_evpn_mj (AMB_GEN_IPS  *mib_msg, pdsa_config_t *conf)
 
 // row_update for evpnEntTable
 NBB_VOID
-pdsa_row_update_evpn (pdsa_config_t *conf)
+pds_ms_row_update_evpn (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_evpn");
+    NBB_TRC_ENTRY ("pds_ms_row_update_evpn");
 
     // Set params
     conf->oid_len       = AMB_EVPN_ENT_OID_LEN;
     conf->data_len      = sizeof (AMB_EVPN_ENT);
 
-    //pdsa_convert_long_to_pdsa_ipv4_addr (conf->g_node_a_ip, &conf->ip_addr);
-
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_ent); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_evpn_ent); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_row_update_evpn_mj (pdsa_config_t *conf)
+pds_ms_row_update_evpn_mj (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_row_update_evpn_mj");
+    NBB_TRC_ENTRY ("pds_ms_row_update_evpn_mj");
 
     // Set params
     conf->oid_len       = AMB_EVPN_MJ_OID_LEN;
     conf->data_len      = sizeof (AMB_EVPN_MJ);
 
     // Convert to row_update and send
-    pdsa_ctm_send_row_update_common (conf, pdsa_fill_amb_evpn_mj); 
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_evpn_mj); 
 
     NBB_TRC_EXIT();
     return;
 }
 
 NBB_VOID
-pdsa_evpn_create (pdsa_config_t *conf)
+pds_ms_evpn_create (pds_ms_config_t *conf)
 {
-    NBB_TRC_ENTRY ("pdsa_evpn_create");
+    NBB_TRC_ENTRY ("pds_ms_evpn_create");
 
     // evpnEntTable
-    conf->entity_index  = PDSA_EVPN_ENT_INDEX;
-    pdsa_row_update_evpn (conf);
+    conf->entity_index  = PDS_MS_EVPN_ENT_INDEX;
+    pds_ms_row_update_evpn (conf);
 
     // evpnMjTable - AMB_EVPN_IF_ATG_BDPI
     conf->interface_id   = AMB_EVPN_IF_ATG_BDPI;
     conf->partner_type   = AMB_EVPN_MJ_PARTNER_L2FST;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_evpn_mj (conf);
+    pds_ms_row_update_evpn_mj (conf);
 
     // evpnMjTable - AMB_EVPN_IF_ATG_I3
     conf->interface_id   = AMB_EVPN_IF_ATG_I3;
     conf->partner_type   = AMB_EVPN_MJ_PARTNER_LIM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_evpn_mj (conf);
+    pds_ms_row_update_evpn_mj (conf);
 
     // evpnMjTable -AMB_EVPN_IF_ATG_TPI 
     conf->interface_id   = AMB_EVPN_IF_ATG_TPI;
     conf->partner_type   = AMB_EVPN_MJ_PARTNER_LIM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_evpn_mj (conf);
+    pds_ms_row_update_evpn_mj (conf);
 
     // evpnMjTable - AMB_EVPN_IF_ATG_MAI
     conf->interface_id   = AMB_EVPN_IF_ATG_MAI;
     conf->partner_type   = AMB_EVPN_MJ_PARTNER_L2FST;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
-    pdsa_row_update_evpn_mj (conf);
+    pds_ms_row_update_evpn_mj (conf);
 
     NBB_TRC_EXIT();
     return;
