@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.39"
+from "registry.test.pensando.io:5000/pensando/nic:1.40"
 
 inside "/etc" do
   run "rm localtime"

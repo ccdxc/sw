@@ -107,6 +107,8 @@ PACKAGES = %w[
   ipmitool
   libxml2-devel
   devtoolset-7-make.x86_64
+  jq
+  perl-Archive-Zip
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -317,7 +319,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.39"
+tag "pensando/nic:1.40"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

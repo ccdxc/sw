@@ -6,7 +6,7 @@ SW_DIR:=$(shell dirname ${CUR_DIR})
 CUR_USER:=$(shell whoami)
 CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
 CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
-NIC_CONTAINER_VERSION:=1.39
+NIC_CONTAINER_VERSION:=1.40
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)
@@ -84,8 +84,8 @@ docker/deps-release:
 
 # make a shell based on the local build of the dependencies image, for testing
 docker/deps-test-shell:
-	NO_PULL=1 make shell
+	NO_PULL=1 make docker/shell
 
 # do a test build with a local build of the dependencies image.
 docker/deps-test-build:
-	NO_PULL=1 make build
+	NO_PULL=1 make docker/build
