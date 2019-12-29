@@ -198,8 +198,10 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     uint32_t               idx;
 
     // Flow Miss -> CPU
-    //key.predicate_header_redirect_to_arm = 1;
-    //mask.predicate_header_redirect_to_arm_mask = 1;
+    key.p4i_to_p4e_header_flow_miss = 1;
+    mask.p4i_to_p4e_header_flow_miss_mask = 1;
+    key.control_metadata_direction = TX_FROM_HOST;
+    mask.control_metadata_direction_mask = 1;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CPU;
     data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;

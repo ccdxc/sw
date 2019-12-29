@@ -1,8 +1,9 @@
 #include "athena.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_key_native_k.h"
 
-struct key_native_k k;
+struct key_native_k_ k;
 struct key_native_d d;
 struct phv_ p;
 
@@ -15,7 +16,7 @@ nop:
 .align
 native_ipv4_packet:
     seq             c1, k.ctag_1_valid, TRUE
-    phvwr.c1        p.key_metadata_vlan, k.{ctag_1_vid_sbit0_ebit3,ctag_1_vid_sbit4_ebit11}
+    phvwr.c1        p.key_metadata_vlan, k.ctag_1_vid
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr           p.key_metadata_src, k.ipv4_1_srcAddr
     seq             c1, k.udp_1_valid, TRUE
@@ -30,10 +31,9 @@ native_ipv4_packet:
 .align
 native_ipv6_packet:
     seq             c1, k.ctag_1_valid, TRUE
-    phvwr.c1        p.key_metadata_vlan, k.{ctag_1_vid_sbit0_ebit3,ctag_1_vid_sbit4_ebit11}
+    phvwr.c1        p.key_metadata_vlan, k.ctag_1_vid
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
-    phvwr           p.key_metadata_src, \
-                        k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
+    phvwr           p.key_metadata_src, k.ipv6_1_srcAddr
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort

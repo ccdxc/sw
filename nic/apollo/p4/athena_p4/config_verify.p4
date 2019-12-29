@@ -40,6 +40,8 @@ table config2 {
 }
 
 control config_verify {
-    apply(config1);
-    apply(config2);
+    if (control_metadata.flow_miss == FALSE) {
+        apply(config1);
+        apply(config2);
+    }
 }

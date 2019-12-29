@@ -36,6 +36,7 @@ flow_hash:
     add         r2, r0, d.flow_hash_d.more_hints
 label_flow_miss:
     phvwr       p.p4i_to_p4e_header_flow_miss, TRUE
+    phvwr       p.control_metadata_flow_miss, TRUE
     phvwr.e     p.p4i_to_p4e_header_session_index, 0
     phvwr       p.ingress_recirc_header_flow_done, TRUE
 

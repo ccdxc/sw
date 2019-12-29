@@ -17,6 +17,7 @@
 #include "statistics.p4"
 #include "config_verify.p4"
 #include "inter_pipe.p4"
+#include "policers.p4"
 
 action nop() {
 }
@@ -34,6 +35,7 @@ control ingress {
     nacl();
     session_info_lookup();
     config_verify();
+    policers();
     ingress_inter_pipe();
 }
 
@@ -42,6 +44,6 @@ control ingress {
 /*****************************************************************************/
 control egress {
     session_info_encap_lookup();
-    statistics();
+    //statistics();
     egress_inter_pipe();
 }

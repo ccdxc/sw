@@ -1,9 +1,10 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "athena.h"
+#include "EGRESS_session_info_rewrite_k.h"
 
-struct session_rewrite_k   k;
-struct session_rewrite_d   d;
+struct session_info_rewrite_k_      k;
+struct session_info_rewrite_d       d;
 struct phv_     p;
 
 %%
@@ -127,3 +128,5 @@ session_info_pkt_rewrite_done:
     .brend
 
 session_info_pkt_encap_done:
+        nop.e
+        nop

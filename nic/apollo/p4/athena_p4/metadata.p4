@@ -27,6 +27,8 @@ header_type key_metadata_t {
 
 header_type control_metadata_t {
     fields {
+        forward_to_uplink                   : 1;
+        redir_to_rxdma                      : 1;
         skip_flow_lkp                       : 1;
         flow_ohash_lkp                      : 1;
         direction                           : 1;
@@ -104,6 +106,18 @@ header_type scratch_metadata_t {
         // Counters
         counter_rx          : 64;
         counter_tx          : 64;
+
+        // policer
+        policer_valid       : 1;
+        policer_pkt_rate    : 1;
+        policer_rlimit_en   : 1;
+        policer_rlimit_prof : 2;
+        policer_color_aware : 1;
+        policer_rsvd        : 1;
+        policer_axi_wr_pend : 1;
+        policer_burst       : 40;
+        policer_rate        : 40;
+        policer_tbkt        : 40;
     }
 }
 
@@ -124,6 +138,10 @@ metadata control_metadata_t     control_metadata;
 
 
 metadata offset_metadata_t      offset_metadata;
+
+@pragma deparser_variable_length_header
+@pragma dont_trim
+metadata capri_deparser_len_t   capri_deparser_len;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;

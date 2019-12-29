@@ -1,7 +1,7 @@
-action session_info(valid_flag, timestamp, config1_epoch, config1_idx,
-                    config2_epoch, config2_idx, config_substrate_src_ip,
+action session_info(valid_flag, pop_hdr_flag, pad6, timestamp, config1_epoch, config2_epoch,
+                    config1_idx, config2_idx, config_substrate_src_ip,
                     throttle_pps, throttle_bw, counterset1, counterset2,
-                    histogram, pop_hdr_flag) {
+                    histogram) {
 
     if (control_metadata.direction == RX_FROM_SWITCH) {
         if (ipv4_1.srcAddr != config_substrate_src_ip) {
@@ -24,9 +24,20 @@ action session_info(valid_flag, timestamp, config1_epoch, config1_idx,
             remove_header(mpls_label1_1);
             remove_header(mpls_label2_1);
         }
+
+        if (ipv4_2.valid == TRUE) {
+            modify_field(p4i_to_p4e_header.packet_type, P4E_PACKET_OVERLAY_IPV4);
+        }
+        else {
+            if (ipv6_2.valid == TRUE) {
+                modify_field(p4i_to_p4e_header.packet_type, P4E_PACKET_OVERLAY_IPV6);
+            }
+        }
+
     }
 
     modify_field(scratch_metadata.flag, valid_flag);
+    modify_field(scratch_metadata.pad6, pad6);
     modify_field(scratch_metadata.timestamp, timestamp);
 
     modify_field(control_metadata.config1_epoch, config1_epoch);
@@ -122,7 +133,7 @@ action session_info_rewrite(valid_flag, user_pkt_rewrite_type, user_pkt_rewrite_
 @pragma hbm_table
 @pragma table_write
 @pragma index_table
-table session {
+table session_info {
     reads {
         p4i_to_p4e_header.session_index   : exact;
     }
@@ -135,7 +146,7 @@ table session {
 @pragma stage 0
 @pragma hbm_table
 @pragma index_table
-table session_rewrite {
+table session_info_rewrite {
     reads {
         p4i_to_p4e_header.session_index   : exact;
     }
@@ -147,12 +158,12 @@ table session_rewrite {
 
 control session_info_lookup {
     if (control_metadata.flow_miss == FALSE) {
-        apply(session);
+        apply(session_info);
     }
 }
 
 control session_info_encap_lookup {
     if (control_metadata.flow_miss == FALSE) {
-        apply(session_rewrite);
+        apply(session_info_rewrite);
     }
 }

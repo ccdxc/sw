@@ -8,6 +8,7 @@ action p4i_to_p4e() {
     if (ingress_recirc_header.flow_done != TRUE) {
         /* Recirc back to P4I */
         add_header(ingress_recirc_header);
+        modify_field(ingress_recirc_header.direction, control_metadata.direction);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
     }
     else {
@@ -28,13 +29,28 @@ table p4i_to_p4e {
 }
 
 control ingress_inter_pipe {
-    apply(p4i_to_p4e);
+    if (capri_intrinsic.drop == 0) {
+        apply(p4i_to_p4e);
+    }
 }
 
 
 /*****************************************************************************/
 /* Inter pipe : egress pipeline                                              */
 /*****************************************************************************/
+action p4i_to_p4e_state() {
+    if (p4i_to_p4e_header.valid == TRUE) {
+        modify_field(control_metadata.forward_to_uplink, p4i_to_p4e_header.forward_to_uplink);
+        modify_field(control_metadata.redir_to_rxdma, p4i_to_p4e_header.redir_to_rxdma);
+    }
+}
+
+@pragma stage 0
+table p4i_to_p4e_state {
+    actions {
+        p4i_to_p4e_state;
+    }
+}
 
 action p4e_to_uplink() {
     modify_field(capri_intrinsic.tm_oport, p4i_to_p4e_header.nacl_redir_oport);
@@ -106,7 +122,11 @@ table p4e_to_rxdma {
 }
 
 control egress_inter_pipe {
-    /* TODO: Predicate the tables */
-    apply(p4e_to_uplink);
-    apply(p4e_to_rxdma);
+    apply(p4i_to_p4e_state);    
+    if (control_metadata.forward_to_uplink == TRUE) {
+        apply(p4e_to_uplink);
+    }
+    if (control_metadata.redir_to_rxdma == TRUE) {
+        apply(p4e_to_rxdma);
+    }
 }

@@ -253,7 +253,8 @@ header_type ingress_recirc_header_t {
     fields {
         flow_ohash              : 32;
 
-        pad1                    : 7;
+        pad1                    : 6;
+        direction               : 1;
         flow_done               : 1;
     }
 }
@@ -270,17 +271,11 @@ header_type p4i_to_p4e_header_t {
         nacl_redir_qtype        : 3;
         pad0                    : 2;
         nacl_redir_qid          : 24;
+        packet_type             : 2;
         flow_miss               : 1;
         forward_to_uplink       : 1;
         redir_to_rxdma          : 1;
-        pad1                    : 5;
-    }
-}
-
-header_type predicate_header_t {
-    fields {
-        pad0                    : 7;
-        direction               : 1;
+        pad1                    : 3;
     }
 }
 

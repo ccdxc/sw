@@ -15,6 +15,12 @@ action nacl_redirect(app_id, oport, lif, qtype, qid) {
 
     modify_field(capri_intrinsic.drop, 0);
     modify_field(control_metadata.p4i_drop_reason, 0);
+    if (app_id == P4PLUS_APPTYPE_CPU) {
+        modify_field(p4i_to_p4e_header.redir_to_rxdma, TRUE);
+    }
+    else {
+        modify_field(p4i_to_p4e_header.forward_to_uplink, TRUE);
+    }
 }
 
 @pragma stage 3

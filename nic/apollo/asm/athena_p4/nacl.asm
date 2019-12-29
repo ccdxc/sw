@@ -8,11 +8,17 @@ struct phv_     p;
 %%
 
 nacl_permit:
+    //phvwr.!c1       p.capri_intrinsic_drop, 1
     nop.e
     nop
 
 .align
 nacl_redirect:
+    //phvwr.!c1.e     p.capri_intrinsic_drop, 1
+    seq             c2, d.u.nacl_redirect_d.app_id, P4PLUS_APPTYPE_CPU
+    phvwr.c2        p.p4i_to_p4e_header_redir_to_rxdma, TRUE
+    phvwr.!c2       p.p4i_to_p4e_header_forward_to_uplink, TRUE
+    
     phvwr           p.p4i_to_p4e_header_nacl_redir_oport, d.u.nacl_redirect_d.oport
     phvwr           p.p4i_to_p4e_header_nacl_redir_lif, d.u.nacl_redirect_d.lif
     phvwr           p.p4i_to_p4e_header_nacl_redir_qtype, d.u.nacl_redirect_d.qtype
