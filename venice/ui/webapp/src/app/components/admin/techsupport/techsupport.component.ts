@@ -102,8 +102,6 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     this.subscriptions.push(sub);
   }
 
-
-
   /**
    * This API serves html template
    */
@@ -138,7 +136,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   timeoutOrFailure(rowData: MonitoringTechSupportRequest): boolean {
-    return (this.isTSFailure(rowData) || this.isTSFailure(rowData));
+    return (this.isTSFailure(rowData) || this.isTSTimeout(rowData));
   }
 
   isTSFailure(rowData: MonitoringTechSupportRequest): boolean {

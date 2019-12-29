@@ -30,11 +30,19 @@
 }
 
 .techsupport-bad-icon {
-  margin-left: 5px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .techsupportrequests-selected-nodes {
   text-overflow: ellipsis;
   overflow: hidden;
   width: 100%;
+}
+
+.techsupport-status-reason {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-left: 5px;
+  margin-right: 5px;
 }

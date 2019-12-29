@@ -29,15 +29,17 @@
 
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
-    <ng-container *ngSwitchCase="'meta.mod-time'">
-      {{rowData.meta['mod-time'] | PrettyDate }}
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'status.status'">
 
       <div *ngIf="!isTechsupportCompleted(rowData, col)">
         {{displayColumn(rowData, col)}}
+        <span *ngIf="timeoutOrFailure(rowData)"
+              class="techsupport-status-reason">{{rowData.status.reason}}</span>
         <mat-icon *ngIf="timeoutOrFailure(rowData)"
-                  fxFlex="nogrow" [inline]="true"
+                  fxFlex="nogrow" [inline]="true" [matTooltip]="rowData.status.reason"
                   class="global-alert-critical-icon techsupport-bad-icon">error</mat-icon>
         <!-- vs-779 partial failure, let user download all available ts files -->
         <a *ngIf="timeoutOrFailure(rowData) && triggerBuildDownloaZip(rowData) "

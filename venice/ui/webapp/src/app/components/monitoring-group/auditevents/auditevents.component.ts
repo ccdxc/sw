@@ -189,8 +189,8 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
         }
         this.lastUpdateTime = new Date().toISOString();
         this.dataObjects = this.mergeEntriesByName(entries);
-        // TODO: This isn't technically the total records anymore, but its hard to figure out what is
-        this.totalRecords = this.dataObjects.length;
+        // response.body  is like  {total-hits: 430, actual-hits: 430, time-taken-msecs: 100, entries: Array(430)}.
+        this.totalRecords = response.body['total-hits'];  // html tableheader user showTotalHit to display total # of audit events
         this.loading = false;
       },
       (error) => {

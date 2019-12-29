@@ -1,6 +1,5 @@
 // const URL = "10.7.100.108:10001"  // Rohan's
-
-// const URL = "10.7.100.21:10001"  // Jeff's dev
+const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.7.100.76:10001"; // Titus
 // const URL = "10.7.100.75:10001"  // For CalSoftInc
 // const URL = "192.168.71.124:10001" // Ubuntu Box
@@ -23,6 +22,9 @@
 // const URL =  "192.168.76.201"
 // const URL =  "192.168.76.198"
 
+// Since 2019-12-20, all above 192.xxx servers are not avaible. 
+// const URL =  "10.8.100.11"  // QA admin/Pensando0$
+// const URL =  "10.30.2.173"  // QA Ambish's large scale setup  admin/Pensando0$
 
 const PROXY_CONFIG =
   {

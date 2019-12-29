@@ -27,6 +27,7 @@ export class TableheaderComponent implements OnInit {
   @Input() total: number;
   @Input() max: number;
   @Input() width: string;
+  @Input() showTotalHits: boolean = false;  // e.g In auditEvent table, there are 2m hits, but each query fetch 4K records. We want to show total hits. Thus, we want sh
 
   // Right hand side options
   @Input() lastUpdateTime: string;

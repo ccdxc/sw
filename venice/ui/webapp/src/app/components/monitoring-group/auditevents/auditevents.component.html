@@ -37,7 +37,7 @@
                    fxLayout="row" [tableMenuItems]="tableMenuItems"
                    [enableColumnSelect]="true" [icon]="headerIcon" [cols]="cols"
                    (columnSelectChange)="onColumnSelectChange($event)"
-                   [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
+                   [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true" [showTotalHits]="true"
                    (refreshIconClick)="getAuditevents()">
   </app-tableheader>
 </ng-template>
