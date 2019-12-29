@@ -371,8 +371,8 @@ apulu_impl::nacl_init_(void) {
 #endif
 #endif
 
-    // drop all DHCP responses from host lifs (i.e., prevent DHCP server
-    // spoofing of workloads)
+    // drop all DHCP responses from host lifs to prevent DHCP server spoofing
+    // by workloads
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));

@@ -515,16 +515,18 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    key.control_metadata_flow_miss = 1;
     key.control_metadata_rx_packet = 0;
-    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 1;    // ARP request
-    mask.control_metadata_flow_miss_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
-    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
@@ -555,6 +557,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&data, 0, sizeof(data));
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_flow_miss = 1;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = 67;
@@ -562,6 +565,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     key.key_metadata_proto = 17;    // UDP
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_flow_miss_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
@@ -588,6 +592,84 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     policer = { sdk::POLICER_TYPE_PPS, 300000, 30000 };
     program_copp_entry_(&policer, idx, false);
 
+    // redirect flow miss encapped TCP traffic from uplinks to s/w datapath lif
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 1;
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_tunneled_packet = 1;
+    key.key_metadata_proto = IP_PROTO_TCP;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_proto_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped TCP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // redirect flow miss encapped UDP traffic from uplinks to s/w datapath lif
+    key.key_metadata_proto = IP_PROTO_UDP;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped UDP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // redirect flow miss encapped ICMP traffic from uplinks to s/w datapath lif
+    key.key_metadata_proto = IP_PROTO_ICMP;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_PERMIT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped ICMP, "
+                      "err %u", ret);
+        goto error;
+    }
+
+    // drop all flow miss non-TCP/UDP/ICMP encapped traffic from uplinks
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_rx_packet = 1;
+    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_tunneled_packet = 1;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    data.action_id = NACL_NACL_DROP_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_DROP_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program drop entry for nonTCP/UDP/ICMP "
+                      "encapped traffic, err %u", ret);
+        goto error;
+    }
+
     // flow miss packet coming back from txdma to s/w datapath
     // lif (i.e., dpdk/vpp lif)
     memset(&key, 0, sizeof(key));
@@ -601,7 +683,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
+                                   NACL_NACL_REDIRECT_TO_ARM_ID,
                                    sdk::table::handle_t::null());
     ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
