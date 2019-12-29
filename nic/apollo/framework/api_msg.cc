@@ -111,7 +111,7 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         if (likely(api_msg != NULL)) {
             api_msg->batch.apis.push_back(api_ctxt);
         }
-
+        // send API msg to API thread and receive the response synchronously
         sdk::ipc::request(core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, api_msg,
                           sizeof(*api_msg), api_process_sync_result_, &ret);
 

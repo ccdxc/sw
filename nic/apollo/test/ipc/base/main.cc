@@ -99,12 +99,11 @@ TEST_F(ipc_base_test, ipc_base_batch_test) {
         pds_msg_t *msg = &msglist->msgs[i];
         msg->id = PDS_MSG_ID_NONE;
     }
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_BATCH, msglist,
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG, msglist,
                       sz, response_handler_cb, (const void *)&ret_val);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_OK);
     free(msglist);
 }
-
 
 }    // namespace ipc
 }    // namespace test

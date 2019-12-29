@@ -28,13 +28,12 @@ extern "C" {
 typedef enum pds_ipc_id_s {
     PDS_IPC_ID_NONE = 48,
     PDS_IPC_ID_MIN  = PDS_IPC_ID_NONE,
-    PDS_IPC_ID_VPP,
+    PDS_IPC_ID_VPP  = PDS_IPC_ID_MIN,
 } pds_ipc_id_t;
 
 /// message types
 typedef enum pds_msg_type_s {
     PDS_MSG_TYPE_NONE,
-    PDS_MSG_TYPE_BATCH,    ///< batch of below messages
     PDS_MSG_TYPE_CFG,      ///< config type message
     PDS_MSG_TYPE_CMD,      ///< any CLI commands
     PDS_MSG_TYPE_EVENT,    ///< event type message

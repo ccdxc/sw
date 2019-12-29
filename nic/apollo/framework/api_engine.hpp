@@ -17,6 +17,7 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/msg.hpp"
@@ -251,6 +252,15 @@ typedef struct api_counters_s {
             uint32_t err;
         } upd;
     } re_act_cfg;
+    // batch commit stage specific counters
+    struct {
+        uint32_t ipc_err;
+    } commit;;
+    // batch abort stage specific counters
+    struct {
+        uint32_t abort;
+        uint32_t txn_end_err;
+    } abort;;
 } api_counters_t;
 
 /// \brief Encapsulation for all API processing framework
@@ -548,6 +558,21 @@ private:
         batch_ctxt_.aom.erase(api_obj);
         api_obj->clear_in_deps_list();
     }
+
+    /// \brief    helper callback function thats invoked when IPC
+    ///           response is received from other components like VPP
+    ///           for the config messages
+    /// \param[in] msg     ipc response message received
+    /// \param[out] ret    pointer to response code that will be filled in from
+    ///                    the IPC response received
+    static void process_ipc_sync_result_(sdk::ipc::ipc_msg_ptr msg,
+                                         const void *ret);
+
+    /// \brief    helper function to send batch of config messages to other
+    ///           components (e.g., VPP) and receive a response
+    /// \param[in] msgs    batched msg to be sent
+    /// \return #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t pds_msg_send_(pds_msg_list_t *msgs);
 
 private:
     friend api_obj_ctxt_t;

@@ -91,7 +91,6 @@ security_profile::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 security_profile::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;

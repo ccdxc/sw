@@ -85,7 +85,6 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_read) {
 
     memset(&request.cfg_msg.security_profile, 0,
            sizeof(pds_security_profile_cfg_msg_t));
-    request.type = PDS_MSG_TYPE_CMD;
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
     request.cfg_msg.security_profile.key.id = 9999;
@@ -113,7 +112,6 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_reate) {
     reply_data_t reply;
 
     msg = new pds_msg_t;
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_CREATE;
     msg->cfg_msg.security_profile.spec.tcp_idle_timeout = 100;
@@ -128,7 +126,6 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_reate) {
     // Read data and verify that it is configured value
     memset(&msg->cfg_msg.security_profile, 0,
            sizeof(pds_security_profile_cfg_msg_t));
-    msg->type = PDS_MSG_TYPE_CMD;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_NONE;
     msg->cfg_msg.security_profile.key.id = 1234;
@@ -158,7 +155,6 @@ TEST_F(ipc_flow_test, ipc_flow_update) {
     reply_data_t reply;
 
     msg = new pds_msg_t;
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_UPDATE;
     msg->cfg_msg.security_profile.spec.tcp_idle_timeout = 1000;
@@ -173,7 +169,6 @@ TEST_F(ipc_flow_test, ipc_flow_update) {
     // Read data and verify that it is configured value
     memset(&msg->cfg_msg.security_profile, 0,
            sizeof(pds_security_profile_cfg_msg_t));
-    msg->type = PDS_MSG_TYPE_CMD;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_NONE;
     msg->cfg_msg.security_profile.key.id = 5555;
@@ -217,7 +212,7 @@ TEST_F(ipc_flow_test, ipc_flow_batch_test) {
         msg->cfg_msg.security_profile.spec.icmp_idle_timeout = i * 300;
         msg->cfg_msg.security_profile.spec.other_idle_timeout = i * 400;
     }
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_BATCH, msglist,
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG, msglist,
                       sz, response_handler_cb, (const void *)&ret_val);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_OK);
     free(msglist);
@@ -225,7 +220,6 @@ TEST_F(ipc_flow_test, ipc_flow_batch_test) {
     // Read data and verify that it is last configured value
     memset(&request.cfg_msg.security_profile, 0,
            sizeof(pds_security_profile_cfg_msg_t));
-    request.type = PDS_MSG_TYPE_CMD;
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
     request.cfg_msg.security_profile.key.id = 2222;
@@ -256,7 +250,6 @@ TEST_F(ipc_flow_test, ipc_flow_delete) {
     reply_data_t reply;
 
     msg = new pds_msg_t;
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_DELETE;
     msg->cfg_msg.security_profile.key.id = 4321;
@@ -269,7 +262,6 @@ TEST_F(ipc_flow_test, ipc_flow_delete) {
 
     memset(&msg->cfg_msg.security_profile, 0,
            sizeof(pds_security_profile_cfg_msg_t));
-    msg->type = PDS_MSG_TYPE_CMD;
     msg->id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     msg->cfg_msg.op = API_OP_NONE;
     msg->cfg_msg.security_profile.key.id = 4321;

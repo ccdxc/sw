@@ -97,6 +97,7 @@ pds_ipc_register_callback (pds_msg_id_t msgid,
     return 0;
 }
 
+#if 0
 // stage one of batch processing. reserve resources for all messages in batch.
 // Any failures will trigger release of resources already allocated prior to
 // failure
@@ -233,6 +234,7 @@ error:
     }
     sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk::sdk_ret_t));
 }
+#endif
 
 // handler for singleton config message from HAL
 static void
@@ -315,7 +317,7 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     }
 
     msg = (pds_msg_t *)ipc_msg->data();
-    if ((msg->type != PDS_MSG_TYPE_CMD) || (msg->id >= PDS_MSG_ID_MAX)) {
+    if (msg->id >= PDS_MSG_ID_MAX) {
         retcode = sdk::SDK_RET_INVALID_ARG;
         goto error;
     }
@@ -362,9 +364,11 @@ ipcshim_init (void)
     // register handler for configuration singletons
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG, pds_ipc_cfg_msg_cb,
                                   NULL);
+#if 0
     // register handler for configuration batch
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_BATCH, pds_ipc_msglist_cb,
                                   NULL);
+#endif
     // register handler for command messages
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CMD, pds_ipc_cmd_msg_cb,
                                   NULL);

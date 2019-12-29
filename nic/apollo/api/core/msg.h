@@ -92,7 +92,6 @@ typedef struct pds_cfg_msg_s {
 
 /// top level PDS message structure for all types of messages
 typedef struct pds_msg_s {
-    pds_msg_type_t type;          ///< type of the message
     pds_msg_id_t   id;            ///< unique id of the msg
     union {
         pds_cfg_msg_t cfg_msg;    ///< cfg msg
@@ -101,8 +100,10 @@ typedef struct pds_msg_s {
 
 /// batch of PDS messages
 typedef struct pds_msg_list_s {
-    uint32_t num_msgs;
-    pds_msg_t msgs[0];
+    pds_msg_type_t type;    ///< type of the message
+    pds_epoch_t epoch;      ///< config epoch (for cfg msgs) or PDS_EPOCH_INVALID
+    uint32_t num_msgs;      ///< number of messages in this batch
+    pds_msg_t msgs[0];      ///< batch of messages
 } pds_msg_list_t;
 
 #ifdef __cplusplus

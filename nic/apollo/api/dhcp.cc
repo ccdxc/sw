@@ -91,7 +91,6 @@ dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 dhcp_relay::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_DHCP_RELAY;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_DHCP_RELAY;
@@ -211,7 +210,6 @@ dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 dhcp_policy::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->type = PDS_MSG_TYPE_CFG;
     msg->id = PDS_CFG_MSG_ID_DHCP_POLICY;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_DHCP_POLICY;

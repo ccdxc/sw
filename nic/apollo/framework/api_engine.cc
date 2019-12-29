@@ -16,6 +16,8 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/msg.h"
+#include "nic/apollo/core/msg.hpp"
 
 #define PDS_API_PREPROCESS_COUNTER_INC(cntr_, val)           \
             counters_.preprocess.cntr_ += (val)
@@ -61,6 +63,12 @@
 
 #define PDS_API_RE_ACTCFG_UPDATE_COUNTER_INC(cntr_, val)     \
             counters_.re_act_cfg.upd.cntr_ += (val)
+
+#define PDS_API_COMMIT_COUNTER_INC(cntr_, val)               \
+            counters_.commit.cntr_ += (val)
+
+#define PDS_API_ABORT_COUNTER_INC(cntr_, val)                \
+            counters_.abort.cntr_ += (val)
 
 namespace api {
 
@@ -124,6 +132,27 @@ api_obj_add_to_deps (obj_id_t obj_id, api_op_t api_op,
                         api_obj->key2str(), octxt->upd_bmap);
         api_obj->add_deps(octxt);
     }
+    return SDK_RET_OK;
+}
+
+void
+api_engine::process_ipc_sync_result_(sdk::ipc::ipc_msg_ptr msg,
+                                     const void *ret) {
+    *(sdk_ret_t *)ret = *(sdk_ret_t *)msg->data();
+}
+
+sdk_ret_t
+api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
+    // TODO: uncomment once ipc lib issue is fixed
+#if 0
+    sdk_ret_t ret;
+
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG,
+                      msgs, core::pds_msg_list_size(msgs),
+                      process_ipc_sync_result_, &ret);
+    PDS_TRACE_DEBUG("IPC sent, result %u", ret);
+    return ret;
+#endif
     return SDK_RET_OK;
 }
 
@@ -552,7 +581,9 @@ api_engine::resource_reservation_stage_(void)
     // memory for the necessary messages
     if (batch_ctxt_.num_msgs) {
         batch_ctxt_.pds_msgs =
-            (pds_msg_list_t *)core::pds_msg_list_alloc(batch_ctxt_.num_msgs);
+            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG,
+                                                       batch_ctxt_.epoch,
+                                                       batch_ctxt_.num_msgs);
         if (batch_ctxt_.pds_msgs == NULL) {
             PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
                           batch_ctxt_.num_msgs);
@@ -997,8 +1028,8 @@ api_engine::batch_abort_(void) {
     dirty_obj_list_t::iterator    next_it;
     api_obj_ctxt_t                    *octxt;
 
+    PDS_API_ABORT_COUNTER_INC(abort, 1);
     PDS_TRACE_DEBUG("Initiating batch abort for epoch %u", batch_ctxt_.epoch);
-
     // beyond API_BATCH_STAGE_PROGRAM_CONFIG stage is a point of no return
     SDK_ASSERT_RETURN((batch_ctxt_.stage <= API_BATCH_STAGE_PROGRAM_CONFIG),
                       sdk::SDK_RET_INVALID_ARG);
@@ -1019,6 +1050,7 @@ api_engine::batch_abort_(void) {
                    batch_ctxt_.epoch);
     impl_base::pipeline_impl()->table_transaction_end();
     if (ret != SDK_RET_OK) {
+        PDS_API_ABORT_COUNTER_INC(txn_end_err, 1);
         PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
         return ret;
     }
@@ -1075,6 +1107,18 @@ api_engine::batch_commit(batch_info_t *batch) {
     PDS_TRACE_INFO("Dependency object list size %u, map size %u",
                    batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
     PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
+
+    if (batch_ctxt_.pds_msgs) {
+        // if this API batch contains any config messages that are of interest
+        // to other components, send a batched config msg now
+        ret = pds_msg_send_(batch_ctxt_.pds_msgs);
+        if (ret != SDK_RET_OK) {
+            PDS_API_COMMIT_COUNTER_INC(ipc_err, 1);
+            PDS_TRACE_ERR("Failed to send cfg batch to %u over ipc, err %u",
+                          PDS_IPC_ID_VPP, ret);
+            goto error;
+        }
+    }
 
     // walk over the dirty object list, performe the de-duped operation on
     // each object including allocating resources and h/w programming (with the
