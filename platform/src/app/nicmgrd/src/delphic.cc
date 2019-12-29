@@ -18,6 +18,8 @@ using namespace upgrade;
 using grpc::Status;
 using delphi::error;
 using dobj::PortStatus;
+using dobj::NcsiVlanFilter;
+using dobj::NcsiMacFilter;
 using dobj::HalStatus;
 using sdk::types::port_oper_status_t;
 
@@ -29,6 +31,9 @@ namespace nicmgr {
 // port reactors
 port_status_handler_ptr_t g_port_status_handler;
 hal_status_handler_ptr_t g_hal_status_handler;
+ncsi_vlan_filter_handler_ptr_t g_ncsi_vlan_filter_handler;
+ncsi_mac_filter_handler_ptr_t g_ncsi_mac_filter_handler;
+
 shared_ptr<NicMgrService> g_nicmgr_svc;
 system_spec_handler_ptr_t g_system_spec_handler;
 
@@ -341,6 +346,53 @@ Status init_eth_objects(delphi::SdkPtr sdk) {
     delphi::objects::UplinkInfo::Mount(sdk, delphi::ReadWriteMode);
     return Status::OK;
 }
+
+// init_ncsi_vlan_filter_handler creates a ncsi vlan filter reactor
+Status init_ncsi_vlan_filter_handler (delphi::SdkPtr sdk) {
+    // create the NcsiVlanFilter reactor
+    g_ncsi_vlan_filter_handler = std::make_shared<ncsi_vlan_filter_handler>(sdk);
+
+    // mount objects
+    delphi::objects::NcsiVlanFilter::Mount(sdk, delphi::ReadMode);
+
+    // Register NcsiVlanFilter reactor
+    delphi::objects::NcsiVlanFilter::Watch(sdk, g_ncsi_vlan_filter_handler);
+
+    return Status::OK;
+}
+
+error ncsi_vlan_filter_handler::OnNcsiVlanFilterCreate(NcsiVlanFilterPtr ncsiVlanFilter) {
+    NIC_LOG_DEBUG("Rcvd ncsi vlan filter create");
+    return error::OK();
+}
+
+
+// OnNcsiVlanFilterUpdate gets called when NcsiVlanFilter object is updated
+error ncsi_vlan_filter_handler::OnNcsiVlanFilterUpdate(NcsiVlanFilterPtr ncsiVlanFilter) {
+    NIC_LOG_DEBUG("Rcvd ncsi vlan filter update");
+    return error::OK();
+}
+
+// init_ncsi_mac_filter_handler creates a ncsi mac filter reactor
+Status init_ncsi_mac_filter_handler (delphi::SdkPtr sdk) {
+    // create the NcsiMacFilter reactor
+    g_ncsi_mac_filter_handler = std::make_shared<ncsi_mac_filter_handler>(sdk);
+
+    // mount objects
+    delphi::objects::NcsiMacFilter::Mount(sdk, delphi::ReadMode);
+
+    // Register NcsiMacFilter reactor
+    delphi::objects::NcsiMacFilter::Watch(sdk, g_ncsi_mac_filter_handler);
+
+    return Status::OK;
+}
+
+// OnNcsiMacFilterUpdate gets called when NcsiMacFilter object is updated
+error ncsi_mac_filter_handler::OnNcsiMacFilterUpdate(NcsiMacFilterPtr ncsiMacFilter) {
+    NIC_LOG_DEBUG("Rcvd ncsi mac filter update");
+    return error::OK();
+}
+
 // initialization function for delphi
 void
 delphi_init (void)
@@ -356,6 +408,12 @@ delphi_init (void)
 
     // init port status handler
     init_port_status_handler(sdk);
+
+    //init ncsi vlan filter handler
+    init_ncsi_vlan_filter_handler(sdk);
+
+    //init ncsi mac filter handler
+    init_ncsi_mac_filter_handler(sdk);
 
     // init hal status handler
     init_hal_status_handler(sdk);

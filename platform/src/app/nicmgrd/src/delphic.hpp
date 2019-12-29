@@ -28,6 +28,8 @@ using delphi::error;
 using dobj::PortStatusPtr;
 using dobj::HalStatusPtr;
 using dobj::SystemSpecPtr;
+using dobj::NcsiVlanFilterPtr;
+using dobj::NcsiMacFilterPtr;
 
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
@@ -104,6 +106,43 @@ private:
 typedef std::shared_ptr<hal_status_handler> hal_status_handler_ptr_t;
 // init_hal_status_handler creates a reactor for HAL status
 Status init_hal_status_handler(delphi::SdkPtr sdk);
+
+// Reactor for NcsiVlanFilter object
+class ncsi_vlan_filter_handler : public dobj::NcsiVlanFilterReactor {
+public:
+    ncsi_vlan_filter_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+
+    virtual error OnNcsiVlanFilterCreate(NcsiVlanFilterPtr ncsiVlanFilter);
+    // OnNcsiVlanFilterUpdate gets called when NcsiVlanFilter object is updated
+    virtual error OnNcsiVlanFilterUpdate(NcsiVlanFilterPtr ncsiVlanFilter);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_vlan_filter_handler> ncsi_vlan_filter_handler_ptr_t;
+
+// init_ncsi_vlan_filter_handler creates a port reactor
+Status init_ncsi_vlan_filter_handler(delphi::SdkPtr sdk);
+
+// Reactor for NcsiMacFilter object
+class ncsi_mac_filter_handler : public dobj::NcsiMacFilterReactor {
+public:
+    ncsi_mac_filter_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+
+    // OnNcsiMacFilterUpdate gets called when NcsiMacFilter object is updated
+    virtual error OnNcsiMacFilterUpdate(NcsiMacFilterPtr port);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_mac_filter_handler> ncsi_mac_filter_handler_ptr_t;
+
+// init_ncsi_mac_filter_handler creates a port reactor
+Status init_ncsi_mac_filter_handler(delphi::SdkPtr sdk);
 
 // init_accel_objects mounts accelerator objects
 Status init_accel_objects(delphi::SdkPtr sdk);

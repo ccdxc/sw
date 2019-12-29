@@ -24,6 +24,7 @@ nic/build/aarch64/iris/bin/capmon                                               
 nic/build/aarch64/iris/bin/sysmond                                              /platform/bin/
 nic/build/aarch64/iris/bin/fructl                                               /platform/bin/
 nic/build/aarch64/iris/bin/powerctl                                             /platform/bin/
+nic/build/aarch64/iris/bin/ncsid                                                /platform/bin/
 
 # Libraries
 nic/build/aarch64/iris/lib/libpciehw.so                                         /platform/lib/
@@ -50,6 +51,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpal.so                                         
 nic/build/aarch64/iris/lib/libsensor.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libsysmon.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libasicerror.so                                      /platform/lib/
+nic/build/aarch64/iris/lib/libncsi.so                                           /platform/lib/
 
 # Third-Party Libraries
 nic/sdk/third-party/edit/aarch64/*.so                                          /platform/lib/

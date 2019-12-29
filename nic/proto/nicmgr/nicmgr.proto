@@ -87,3 +87,88 @@ message EthDeviceInfo {
     EthDevResource             eth_dev_res = 3;
     EthDevSpec                 eth_dev_spec = 4;
 }
+
+message NcsiVlanFilter {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    uint32              vlan_id = 3;
+    bool                enable = 4;
+    uint32              port = 5;
+}
+
+message NcsiVlanMode {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    uint32              vlan_mode = 3;
+    bool                enable = 4;
+    uint32              port = 5;
+}
+
+message NcsiMacFilter {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //id
+    uint64              mac_addr = 3;
+    uint32              addr_type = 4;
+    bool                enable = 5;
+    uint32              port = 6;
+}
+
+message NcsiSetLinkMsg {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                link_up = 3;
+    uint32              port = 4;
+}
+
+message NcsiEnableChanMsg {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                enable = 3;
+    uint32              port = 4;
+}
+
+message NcsiResetChanMsg {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                reset = 3;
+    uint32              port = 4;
+}
+
+message NcsiEnableChanTxMsg {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                enable = 3;
+    uint32              port = 4;
+}
+
+message NcsiEnableBcastFilter {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                enable_arp = 3;
+    bool                enable_dhcp_client = 4;
+    bool                enable_dhcp_server = 5;
+    bool                enable_netbios = 6;
+    uint32              port = 7;
+}
+
+message NcsiEnableGlobalMcastFilter {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta = 1;
+    uint32              Key = 2; //filter id
+    bool                enable_ipv6_neigh_adv = 3;
+    bool                enable_ipv6_router_adv = 4;
+    bool                enable_dhcpv6_relay = 5;
+    bool                enable_dhcpv6_mcast = 6;
+    bool                enable_ipv6_mld = 7;
+    bool                enable_ipv6_neigh_sol = 8;
+    uint32              port = 9;
+}
+
