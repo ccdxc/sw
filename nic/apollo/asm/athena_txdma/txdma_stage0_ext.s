@@ -65,3 +65,8 @@ nicmgr_req_stage0_ext:
 nicmgr_resp_stage0_ext:
     nop.e
     nop
+
+.align
+session_age_stage0_ext:
+    nop.e
+    nop

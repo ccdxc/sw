@@ -682,6 +682,14 @@
                      CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
         phvwr       p.##_dma_cmd_prefix##_addr, __addr
 
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(_dma_cmd_prefix, __addr, _sfield, _efield)     \
+        phvwri.e    p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \
+                     (DMA_CACHE << 5 | DMA_CMD_EOP << 3 | DMA_CMD_WR_FENCE << 6) |              \
+                     CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr
+
 
 #define CAPRI_DMA_CMD_PKT2MEM_SETUP(_dma_cmd_prefix, __addr, _len)                               \
         phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \

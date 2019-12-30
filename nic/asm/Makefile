@@ -8,6 +8,7 @@ LIBDIRS = \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
+          session_age \
           p4pt \
           eth \
           ipfix \
@@ -26,6 +27,7 @@ IRIS_SUBDIRS = \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
+          session_age \
           p4pt \
           eth \
           ipfix \
@@ -42,6 +44,7 @@ MSFT_GFT_SUBDIRS= \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
+          session_age \
           p4pt \
           eth \
           adminq \
@@ -68,7 +71,7 @@ msft_gft: $(MSFT_GFT_SUBDIRS)
 apollo: $(APOLLO_SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+        $(MAKE) -C $@
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
