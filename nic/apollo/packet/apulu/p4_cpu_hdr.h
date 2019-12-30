@@ -52,17 +52,16 @@ typedef struct p4_rx_cpu_hdr_s {
 // Meta sent to P4 for tx packet
 typedef struct p4_tx_cpu_hdr_s {
     union {
-        uint16_t lif_pad;
+        uint16_t lif_flags;
         struct {
-#if __BYTE_ORDER == __BIG_ENDIAN
-            uint16_t pad : 5;
-            uint16_t lif : 11;
-#else
-            uint16_t lif : 11;
-            uint16_t pad : 5;
-#endif
+            uint16_t lif_sbit0_ebit7 : 8;
+            uint16_t lif_sbit8_ebit10 : 3;
+            uint16_t nexthop_valid : 1;
+            uint16_t pad : 4;
         };
     };
+    uint8_t nexthop_type;
+    uint16_t nexthop_id;
 } __attribute__ ((packed)) p4_tx_cpu_hdr_t;
 
 #endif     // __APOLLO_PACKET_APULU_P4_CPU_HDR_H__

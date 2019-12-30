@@ -117,12 +117,19 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 
     tx0 = vlib_buffer_get_current(b0);
     tx1 = vlib_buffer_get_current(b1);
-    tx0->lif = vnet_buffer(b0)->pds_data.flow_hash & 0x7ff;
-    tx1->lif = vnet_buffer(b1)->pds_data.flow_hash & 0x7ff;
+
     tx0->pad = 0;
     tx1->pad = 0;
-    tx0->lif_pad = clib_net_to_host_u16(tx0->lif_pad);
-    tx1->lif_pad = clib_net_to_host_u16(tx1->lif_pad);
+    tx0->nexthop_valid = 0;
+    tx1->nexthop_valid = 0;
+    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_data.flow_hash & 0xff;
+    tx1->lif_sbit0_ebit7 = vnet_buffer(b1)->pds_data.flow_hash & 0xff;
+    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_data.flow_hash >> 0x8;
+    tx1->lif_sbit8_ebit10 = vnet_buffer(b1)->pds_data.flow_hash >> 0x8;
+
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+    tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
+    //Dont care about nexthoptype/id as we don't set nexthop_valid.
 }
 
 always_inline void
@@ -131,9 +138,13 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
     p4_tx_cpu_hdr_t *tx0;
 
     tx0 = vlib_buffer_get_current(b0);
-    tx0->lif = vnet_buffer(b0)->pds_data.flow_hash & 0x7ff;
     tx0->pad = 0;
-    tx0->lif_pad = clib_net_to_host_u16(tx0->lif_pad);
+    tx0->nexthop_valid = 0;
+    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_data.flow_hash & 0xff;
+    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_data.flow_hash >> 0x8;
+
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+    //Dont care about nexthoptype/id as we don't set nexthop_valid.
 }
 
 static char *

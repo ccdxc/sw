@@ -68,7 +68,9 @@ format_pds_p4_tx_cpu_hdr (u8 * s, va_list * args)
 {
     p4_tx_cpu_hdr_t *t = va_arg (*args, p4_tx_cpu_hdr_t *);
 
-    s = format (s, "lif_pad[0x%x]", t->lif_pad);
+    s = format(s, "lif[0x%x], nhop_valid[%d], nhop_type[%d], nhop_id[%d]",
+               t->lif_sbit0_ebit7 | (t->lif_sbit8_ebit10 << 8),
+               t->nexthop_valid, t->nexthop_type, t->nexthop_id);
     return s;
 }
 
