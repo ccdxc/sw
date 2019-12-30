@@ -10,18 +10,13 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 
-	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
-
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
-
-	"github.com/pensando/sw/nic/agent/protos/netproto"
-
 	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
-
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -120,20 +115,22 @@ func TestMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	oldEpCount := len(ag.ListEndpoint())
 	oldTunCount := len(ag.ListTunnel())
 
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			//PacketSize:    256, //Modified
+			//Enable:        true,
+			//PacketFilters: []string{"FIREWALL_POLICY_DROP"},
+			//CaptureAt:     1, // Modified
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -236,16 +233,19 @@ func TestNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -298,20 +298,18 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 	AssertOk(t, err, "failed to find the mgmt IP.")
 
 	fmt.Println("MGMT IP: ", mgmtIP)
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -382,16 +380,18 @@ func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{Protocol: "tcp",
+								Port: "1000",
+							},
+						},
 					},
 				},
 			},
@@ -465,17 +465,23 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
-					},
+					//AppProtoSel: &netproto.AppProtoSelector{
+					//	Ports: []string{"TCP/1000"},
+					//},
 				},
 			},
 			Interval: "15s",
@@ -489,20 +495,18 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 		},
 	}
 
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -585,38 +589,34 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	mgmtIP, err := findMgmtIP(destIPOutSideSubnet)
 	fmt.Println("MGMT IP: ", mgmtIP)
 	AssertOk(t, err, "failed to find the mgmt IP.")
-	ms1 := &tsproto.MirrorSession{
+	ms1 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
 
-	ms2 := &tsproto.MirrorSession{
+	ms2 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw_1",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    128, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -731,16 +731,19 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy1",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -763,16 +766,19 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy2",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -879,38 +885,34 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollector(t *testing.T) {
 	mgmtIP, err := findMgmtIP(destIPOutSideSubnet)
 	AssertOk(t, err, "failed to find the mgmt IP.")
 
-	ms1 := &tsproto.MirrorSession{
+	ms1 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
 
-	ms2 := &tsproto.MirrorSession{
+	ms2 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw_1",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    128, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -980,16 +982,19 @@ func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy1",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1012,16 +1017,19 @@ func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
 			Name:      "testPostFlowExportPolicy2",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1096,16 +1104,19 @@ func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
 			Name:      "testPostFlowExportPolicy1",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1128,16 +1139,19 @@ func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
 			Name:      "testPostFlowExportPolicy1",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1208,38 +1222,34 @@ func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
 	AssertOk(t, err, "failed to find the mgmt IP.")
 
 	fmt.Println("MGMT IP: ", mgmtIP)
-	ms1 := &tsproto.MirrorSession{
+	ms1 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
 
-	ms2 := &tsproto.MirrorSession{
+	ms2 := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    128, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -1305,20 +1315,18 @@ func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
 
 	fmt.Println("MGMT IP: ", mgmtIP)
 
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -1378,16 +1386,19 @@ func TestCreateDeleteLateralObjUnknownCollectorWithoutTunnel(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1441,20 +1452,18 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 	mgmtIP, err := findMgmtIP(destIPOutSideSubnet)
 	fmt.Println("MGMT IP: ", mgmtIP)
 	AssertOk(t, err, "failed to find the mgmt IP.")
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}
@@ -1547,20 +1556,18 @@ func TestFailedARPResolution(t *testing.T) {
 	if shouldSkip() {
 		t.Skip("Needs CAP_SYSADMIN set for netlink. Either unsupported platform or don't have enough privs to run.")
 	}
-	ms := &tsproto.MirrorSession{
+	ms := &netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_drop_fw",
 		},
-		Spec: tsproto.MirrorSessionSpec{
-			PacketSize:    256, //Modified
-			Enable:        true,
-			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
-			CaptureAt:     1, // Modified
-			Collectors: []tsproto.MirrorCollector{
-				{Type: "erspan", ExportCfg: tsproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
 			},
 		},
 	}

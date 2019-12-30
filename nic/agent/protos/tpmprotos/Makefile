@@ -17,6 +17,7 @@ default: ${DEST} ${NICFILES} gen-tmagent gen-restserver
 %.pb.go: %.proto Makefile
 	protoc -I/usr/local/include -I. -I../../../../vendor -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
+        -I../../../../nic/agent/protos/netproto \
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
@@ -31,6 +32,7 @@ ${TPADIR}/%_api.go ${TPADIR}/%_api_test.go: %.proto
 	protoc -I/usr/local/include -I. -I../../../../vendor -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
+	-I../../../../nic/agent/protos/netproto \
 	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
@@ -44,6 +46,7 @@ gen-restserver:
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I../../../../vendor/github.com/gogo/protobuf/protobuf \
+        -I../../../../nic/agent/protos/netproto \
         --grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent/rest.yml,log_dir=${TMAGENTDIR}/tmp,logtostderr=false,v=7:${TMAGENTDIR} *.proto 
 	rm -f ${TMAGENTDIR}/tpm_apigen.go
 	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/*.go 
@@ -71,6 +74,7 @@ gen-tmagent:
             -I../../../../vendor -I${GOPATH}/src \
     	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
     	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+    	-I../../../../nic/agent/protos/netproto \
     	--grpc-gateway_out=templates=${TMPLATEDIR}/metricsgen.yml,log_dir=${TMAGENTDIR}/tmp,logtostderr=false,v=7:${METRICSGENDIR} ${PROTOFILE}
 	goimports -local "github.com/pensando/sw" -w ${METRICSGENDIR}/*.go
 

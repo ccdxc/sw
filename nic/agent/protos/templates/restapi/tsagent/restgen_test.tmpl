@@ -28,7 +28,7 @@ var _ Evaluator
                 {{if strEq . "list"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
                         t.Parallel()
-                        var {{lower $crudObject}}{{title .}} []*tsproto.{{title $crudObject}}
+                        var {{lower $crudObject}}{{title .}} []*netproto.{{title $crudObject}}
                         err := netutils.HTTPGet("http://"+agentRestURL+"/api/mirror/sessions/", &{{lower $crudObject}}{{title .}} )
                         AssertOk(t, err, "Error getting {{lower $crudObject}}s from the REST Server")
                     }
@@ -37,21 +37,21 @@ var _ Evaluator
                         t.Parallel()
                         var resp Response
                         var ok bool
-                        var {{lower $crudObject}}Get tsproto.{{title $crudObject}}
-                        {{lower .}}Data := tsproto.{{title $crudObject}}{
+                        var {{lower $crudObject}}Get netproto.{{title $crudObject}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
                             TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                             ObjectMeta: api.ObjectMeta{
                                 Tenant: "default",
                                 Namespace: "default",
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
-                            Spec:   tsproto.{{title $crudObject}}Spec{
+                            Spec:   netproto.{{title $crudObject}}Spec{
                                 PacketSize: 128,
                                 Enable: true,
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
-                                Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                Collectors: []netproto.MirrorCollector{
+                                    netproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -76,21 +76,21 @@ var _ Evaluator
                         t.Parallel()
                         var resp Response
                         var ok bool
-                        var {{lower $crudObject}}Get tsproto.{{title $crudObject}}
-                        {{lower .}}Data := tsproto.{{title $crudObject}}{
+                        var {{lower $crudObject}}Get netproto.{{title $crudObject}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
                             TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                             ObjectMeta: api.ObjectMeta{
                                 Tenant: "default",
                                 Namespace: "default",
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
-                            Spec:   tsproto.{{title $crudObject}}Spec{
+                            Spec:   netproto.{{title $crudObject}}Spec{
                                 PacketSize: 128,
                                 Enable: true,
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
-                                Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                Collectors: []netproto.MirrorCollector{
+                                    netproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -99,20 +99,20 @@ var _ Evaluator
                         AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
 
                         // update using put
-                        {{lower .}}Data = tsproto.{{title $crudObject}}{
+                        {{lower .}}Data = netproto.{{title $crudObject}}{
                             TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                             ObjectMeta: api.ObjectMeta{
                                 Tenant: "default",
                                 Namespace: "default",
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
-                            Spec:   tsproto.{{title $crudObject}}Spec{
+                            Spec:   netproto.{{title $crudObject}}Spec{
                                 PacketSize: 256,
                                 Enable: true,
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 1,
-                                Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                Collectors: []netproto.MirrorCollector{
+                                    netproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -131,20 +131,20 @@ var _ Evaluator
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
                         t.Parallel()
                         var resp Response
-                        {{lower .}}Data := tsproto.{{title $crudObject}}{
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
                             TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                             ObjectMeta: api.ObjectMeta{
                                 Tenant: "default",
                                 Namespace: "default",
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
-                            Spec:   tsproto.{{title $crudObject}}Spec{
+                            Spec:   netproto.{{title $crudObject}}Spec{
                                 PacketSize: 128,
                                 Enable: true,
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
-                                Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                Collectors: []netproto.MirrorCollector{
+                                    netproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }

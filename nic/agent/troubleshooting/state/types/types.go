@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	tsproto "github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 
@@ -128,7 +129,7 @@ type FlowMonitorMACRuleDetails struct {
 
 // MirrorDB maintains list of mirrorSessions, flow, drop rule objects.
 type MirrorDB struct {
-	MirrorSessionDB        map[string]*tsproto.MirrorSession
+	MirrorSessionDB        map[string]*netproto.MirrorSession
 	MirrorSessionNameToID  map[string]uint64
 	MirrorSessionIDToObj   map[uint64]MirrorSessionObj
 	FlowMonitorRuleToID    map[FlowMonitorRuleSpec]uint64
@@ -157,20 +158,20 @@ type CtrlerAPI interface {
 type CtrlerIntf interface {
 	GetAgentID() string
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
-	CreateMirrorSession(pcSession *tsproto.MirrorSession) error
-	ListMirrorSession() []*tsproto.MirrorSession
-	GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession
-	UpdateMirrorSession(pcSession *tsproto.MirrorSession) error
-	DeleteMirrorSession(pcSession *tsproto.MirrorSession) error
+	CreateMirrorSession(pcSession *netproto.MirrorSession) error
+	ListMirrorSession() []*netproto.MirrorSession
+	GetMirrorSession(pcSession *netproto.MirrorSession) *netproto.MirrorSession
+	UpdateMirrorSession(pcSession *netproto.MirrorSession) error
+	DeleteMirrorSession(pcSession *netproto.MirrorSession) error
 	//EnablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error
 	//DisablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error
 
 	// TechSupportRequest APIs
-	CreateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
-	ListTechSupportRequest() []*tsproto.TechSupportRequest
-	GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest
-	UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
-	DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	//CreateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	//ListTechSupportRequest() []*tsproto.TechSupportRequest
+	//GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest
+	//UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	//DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
 	Debug(w http.ResponseWriter, r *http.Request)
 }
 

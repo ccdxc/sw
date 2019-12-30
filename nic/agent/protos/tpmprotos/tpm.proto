@@ -14,7 +14,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/telemetry.proto";
 import "export.proto";
-import "github.com/pensando/sw/nic/agent/protos/tsproto/matchrule.proto";
+import "github.com/pensando/sw/nic/agent/protos/netproto/mirror.proto";
 
 //================================ statsPolicy ==========================================================
 
@@ -114,7 +114,7 @@ message FlowExportPolicySpec {
 
     string Format                               = 4 [(gogoproto.jsontag) = "format,omitempty"];
 
-    repeated tsproto.MatchRule  MatchRules      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
+    repeated netproto.MatchRule  MatchRules     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
 
     // Export contains export parameters.
     repeated monitoring.ExportConfig Exports    = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];

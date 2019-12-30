@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 
 	"github.com/pensando/sw/api"
 	apiProtos "github.com/pensando/sw/api/generated/monitoring"
@@ -286,23 +289,29 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy", nil) {
-
-		if _, ok := obj.(*apiProtos.FlowExportPolicy); !ok {
+		var fePolicy *apiProtos.FlowExportPolicy
+		var ok bool
+		if fePolicy, ok = obj.(*apiProtos.FlowExportPolicy); !ok {
 			rpcLog.Errorf("invalid flow export policy from list, %T", obj)
 			return fmt.Errorf("invalid flow export policy from list")
 		}
 
-		p, err := json.Marshal(obj)
-		if err != nil {
-			rpcLog.Errorf("invalid flow export policy from list %+v", obj)
-			return fmt.Errorf("invalid flow export policy from list")
-		}
-		flowExportPolicy := &tpmProtos.FlowExportPolicy{}
+		//p, err := json.Marshal(obj)
+		//if err != nil {
+		//	rpcLog.Errorf("invalid flow export policy from list %+v", obj)
+		//	return fmt.Errorf("invalid flow export policy from list")
+		//}
 
-		if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
-			rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
-			return fmt.Errorf("failed to convert flow export policy from list")
+		flowExportPolicy := &tpmProtos.FlowExportPolicy{
+			TypeMeta:   fePolicy.TypeMeta,
+			ObjectMeta: fePolicy.ObjectMeta,
+			Spec:       convertFlowExportPolicySpec(&fePolicy.Spec),
 		}
+		//
+		//if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
+		//	rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
+		//	return fmt.Errorf("failed to convert flow export policy from list")
+		//}
 
 		if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: api.EventType_CreateEvent,
 			Policy: flowExportPolicy}); err != nil {
@@ -443,4 +452,54 @@ func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval st
 	server.Start()
 
 	return rpcServer, nil
+}
+
+func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) tpmProtos.FlowExportPolicySpec {
+	var matchRules []netproto.MatchRule
+
+	for _, r := range fePolicySpec.MatchRules {
+		var protoPorts []*netproto.ProtoPort
+		if r.AppProtoSel.ProtoPorts != nil {
+			for _, pp := range r.AppProtoSel.ProtoPorts {
+				var protoPort netproto.ProtoPort
+				components := strings.Split(pp, "/")
+				switch len(components) {
+				case 1:
+					protoPort.Protocol = components[0]
+				case 2:
+					protoPort.Protocol = components[0]
+					protoPort.Port = components[1]
+				case 3:
+					protoPort.Protocol = components[0]
+					protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+				default:
+					continue
+				}
+				protoPorts = append(protoPorts, &protoPort)
+			}
+		}
+
+		m := netproto.MatchRule{
+			Src: &netproto.MatchSelector{
+				Addresses: r.Src.IPAddresses,
+			},
+			Dst: &netproto.MatchSelector{
+				Addresses:  r.Dst.IPAddresses,
+				ProtoPorts: protoPorts,
+			},
+		}
+
+		matchRules = append(matchRules, m)
+	}
+
+	spec := tpmProtos.FlowExportPolicySpec{
+		VrfName:          fePolicySpec.VrfName,
+		Interval:         fePolicySpec.Interval,
+		TemplateInterval: fePolicySpec.TemplateInterval,
+		Format:           fePolicySpec.Format,
+		Exports:          fePolicySpec.Exports,
+		MatchRules:       matchRules,
+	}
+
+	return spec
 }

@@ -7,13 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -84,7 +85,7 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 		log.Infof("connected to %v", globals.Tsm)
 
 		// start watch
-		tsaRPCClient := tsproto.NewMirrorSessionApiClient(rpcClient.ClientConn)
+		tsaRPCClient := netproto.NewMirrorSessionApiV1Client(rpcClient.ClientConn)
 		stream, err := tsaRPCClient.WatchMirrorSessions(ctx, &api.ObjectMeta{})
 
 		if err != nil {
@@ -97,7 +98,7 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 			continue
 		}
 
-		mc := make(chan *tsproto.MirrorSessionEventList)
+		mc := make(chan *netproto.MirrorSessionEventList)
 		go func() {
 			defer close(mc)
 			for {
@@ -132,19 +133,19 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 
 							switch evt.EventType {
 							case api.EventType_CreateEvent:
-								if err = client.tsagent.CreateMirrorSession(&evt.MirrorSession); err != nil {
+								if err = client.tsagent.CreateMirrorSession(evt.MirrorSession); err != nil {
 									if strings.Contains(err.Error(), "already exists") {
-										err = client.tsagent.UpdateMirrorSession(&evt.MirrorSession)
+										err = client.tsagent.UpdateMirrorSession(evt.MirrorSession)
 									}
 								}
 							case api.EventType_UpdateEvent:
-								if err = client.tsagent.UpdateMirrorSession(&evt.MirrorSession); err != nil {
+								if err = client.tsagent.UpdateMirrorSession(evt.MirrorSession); err != nil {
 									if strings.Contains(err.Error(), "does not exist") {
-										err = client.tsagent.CreateMirrorSession(&evt.MirrorSession)
+										err = client.tsagent.CreateMirrorSession(evt.MirrorSession)
 									}
 								}
 							case api.EventType_DeleteEvent:
-								if err = client.tsagent.DeleteMirrorSession(&evt.MirrorSession); err != nil {
+								if err = client.tsagent.DeleteMirrorSession(evt.MirrorSession); err != nil {
 									if strings.Contains(err.Error(), "does not exist") {
 										err = nil
 									}
@@ -163,17 +164,17 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 						}
 
 						recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-							strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), &evt.MirrorSession)
+							strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), evt.MirrorSession)
 					}()
 				}
 
 			case <-time.After(syncInterval):
 				eventList, err := tsaRPCClient.ListMirrorSessions(ctx, &api.ObjectMeta{})
 				if err == nil {
-					ctrlMs := map[string]*tsproto.MirrorSession{}
+					ctrlMs := map[string]*netproto.MirrorSession{}
 					for i := range eventList.MirrorSessionEvents {
 						ev := eventList.MirrorSessionEvents[i]
-						ctrlMs[ev.MirrorSession.GetKey()] = &ev.MirrorSession
+						ctrlMs[ev.MirrorSession.GetKey()] = ev.MirrorSession
 					}
 
 					// read policy from agent

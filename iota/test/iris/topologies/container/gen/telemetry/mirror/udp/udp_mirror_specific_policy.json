@@ -11,54 +11,52 @@
                 "tenant": "default"
             }, 
             "spec": {
-                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
-                            "ip-addresses": [
+                            "addresses": [
                                 "192.168.100.103"
                             ]
                         }, 
                         "destination": {
-                            "ip-addresses": [
-                                "192.168.100.101"
-                            ]
-                        }, 
-                        "app-protocol-selectors": {
                             "proto-ports": [
-                                "UDP/120"
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.101"
                             ]
                         }
                     }, 
                     {
                         "source": {
-                            "ip-addresses": [
+                            "addresses": [
                                 "192.168.100.101"
                             ]
                         }, 
                         "destination": {
-                            "ip-addresses": [
-                                "192.168.100.103"
-                            ]
-                        }, 
-                        "app-protocol-selectors": {
                             "proto-ports": [
-                                "UDP/120"
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.103"
                             ]
                         }
                     }
                 ], 
-                "enable": true, 
                 "collectors": [
                     {
                         "export-config": {
                             "destination": "192.168.100.101"
                         }, 
-                        "pcap-dir-name": "", 
                         "type": "erspan"
                     }
-                ], 
-                "stop-condition": {}
+                ]
             }
         }
     ], 

@@ -1,0 +1,116 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+// Trouble shooting: Mirroring APIs
+package tsproto;
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "matchrule.proto";
+//========================================================================================
+// Packet Mirroring
+//========================================================================================
+//-----------------------
+//---- MirrorSessionSpec
+//-----------------------
+message MirrorSessionSpec {
+    string                  VrfName         = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    bool                    Enable          = 2 [(gogoproto.jsontag) = "enable"];
+    // Original packets can be truncated when being mirrored to save bandwidth and storage
+    // When mirrored packets are sent to Venice, default size is 128 (venice)??? or complete packet (erspan)?
+    uint32                  PacketSize      = 3 [(gogoproto.jsontag) = "packet-size,omitempty"];
+
+    MirrorStopConditions    StopConditions  = 4 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "stop-condition,inline"];
+
+    // Mirrored packet collectors
+    repeated MirrorCollector Collectors     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
+
+    // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
+    repeated MatchRule      MatchRules      = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
+
+    // CaptureAt and PacketDirection for capturing
+    // When Src and Dst is on the same NIC, only one mirror copy in each direction is made
+    MirrorSrcDst        CaptureAt           = 7 [(gogoproto.jsontag) = "capture-at,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
+    MirrorDir           PacketDir           = 8 [(gogoproto.jsontag) = "packet-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+
+    // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
+    enum MirrorPacketFilter {
+        ALL_PKTS                = 0;
+        ALL_DROPS               = 1;
+        NETWORK_POLICY_DROP     = 2;
+        FIREWALL_POLICY_DROP    = 3;
+    }
+    repeated string PacketFilters           = 9 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+}
+
+enum MirrorDir {
+    BOTH        = 0;
+    INGRESS     = 1;
+    EGRESS      = 2;
+}
+
+// A MirrorSession will stop mirroring after this condition is met
+message MirrorStopConditions {
+    // Stop after capturing specified number of packets
+    uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
+}
+
+message MirrorExportConfig {
+    // IP address or URL of the collector/entity to which the data is to be exported
+    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+}
+
+// Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
+message MirrorCollector {
+    enum PacketCollectorType {
+        VENICE  = 0;
+        ERSPAN  = 1; // external collector via erspan
+    }
+    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(MirrorCollector.PacketCollectorType)"];
+
+    // Collector export information for ERSPAN. Not required for VENICE collector
+    MirrorExportConfig  ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+
+    string              PcapDirName = 3 [(gogoproto.jsontag) = "pcap-dir-name"];
+}
+
+enum MirrorSrcDst {
+    SRC_DST = 0;    // both src and dst are on the same SamrtNIC
+    SRC     = 1;    // captured at src
+    DST     = 2;    // captured at dst
+}
+
+message MirrorSession {
+    api.TypeMeta            T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    MirrorSessionSpec       Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
+}
+
+// mirror session crud event
+message MirrorSessionEvent {
+    api.EventType   EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    MirrorSession   MirrorSession   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "mirror-session,omitempty"];
+}
+
+message MirrorSessionEventList {
+    repeated MirrorSessionEvent mirrorSessionEvents = 1;
+}
+
+message MirrorSessionList {
+    repeated MirrorSession      MirrorSessions = 1 [(gogoproto.jsontag) = "mirror-sessions,omitempty"];
+}
+
+// trouble shooting controller - mirror api
+service MirrorSessionApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "MirrorSession",
+        Method: ["get", "list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+    };
+    rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
+    rpc ListMirrorSessions (api.ObjectMeta) returns (MirrorSessionEventList) {};
+}

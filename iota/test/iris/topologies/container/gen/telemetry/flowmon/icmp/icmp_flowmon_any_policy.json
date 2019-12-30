@@ -22,35 +22,37 @@
                 "match-rules": [
                     {
                         "source": {
-                            "ip-addresses": [
+                            "addresses": [
                                 "192.168.100.103"
                             ]
                         }, 
                         "destination": {
-                            "ip-addresses": [
-                                "0.0.0.0/0"
-                            ]
-                        }, 
-                        "app-protocol-selectors": {
                             "proto-ports": [
-                                "ICMP/0/0"
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0/0"
+                                }
+                            ], 
+                            "addresses": [
+                                "0.0.0.0/0"
                             ]
                         }
                     }, 
                     {
                         "source": {
-                            "ip-addresses": [
+                            "addresses": [
                                 "0.0.0.0/0"
                             ]
                         }, 
                         "destination": {
-                            "ip-addresses": [
-                                "192.168.100.103"
-                            ]
-                        }, 
-                        "app-protocol-selectors": {
                             "proto-ports": [
-                                "ICMP/0/0"
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0/0"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.103"
                             ]
                         }
                     }

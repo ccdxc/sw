@@ -3,6 +3,7 @@
 package rpcserver
 
 import (
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/globals"
@@ -45,7 +46,7 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 	diagServer := NewDiagnosticsServer(stateMgr)
 
 	// register the RPC handlers and start the server
-	tsproto.RegisterMirrorSessionApiServer(grpcServer.GrpcServer, msServer)
+	netproto.RegisterMirrorSessionApiV1Server(grpcServer.GrpcServer, msServer)
 	tsproto.RegisterTechSupportApiServer(grpcServer.GrpcServer, tsServer)
 	tsproto.RegisterDiagnosticsApiServer(grpcServer.GrpcServer, diagServer)
 	grpcServer.Start()

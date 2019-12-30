@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/generated/restclient"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
@@ -32,7 +31,7 @@ type CfgPush struct {
 	SecurityProfiles   []*netproto.SecurityProfile
 	FlowExportPolicies []*monitoring.FlowExportPolicy
 	Tunnels            []*netproto.Tunnel
-	MirrorSessions     []*tsproto.MirrorSession
+	MirrorSessions     []*netproto.MirrorSession
 }
 
 func NewPusher(genDir string, netagentRESTEndpoints []string) (*CfgPush, error) {
@@ -204,7 +203,7 @@ func (p *CfgPush) ReadJSON() error {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
-	p.MirrorSessions, ok = objs.([]*tsproto.MirrorSession)
+	p.MirrorSessions, ok = objs.([]*netproto.MirrorSession)
 	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.MirrorSession")
 		return errors.New("failed to cast JSON data onto []*netproto.MirrorSession")
@@ -268,7 +267,7 @@ func readJSON(kind, filePath string) (interface{}, error) {
 		err := json.Unmarshal(*objBytes, &tun)
 		return tun, err
 	case "MirrorSession":
-		var ms []*tsproto.MirrorSession
+		var ms []*netproto.MirrorSession
 		err := json.Unmarshal(*objBytes, &ms)
 		return ms, err
 	default:

@@ -7,31 +7,20 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
-func (c *CfgGen) generateMirrorRules(namespace string, count int) (rules []tsproto.MatchRule) {
+func (c *CfgGen) generateMirrorRules(namespace string, count int) (rules []netproto.MatchRule) {
 	sgpRules := c.generatePolicyRules(namespace, count)
 
 	for _, s := range sgpRules {
-		var protoPorts []string
-		// Pick up from APP Object
-		if len(s.Dst.ProtoPorts) == 0 {
-			continue
-		} else {
-			protoPorts = convertProtoPort(s.Dst.ProtoPorts[0])
-		}
-
-		r := tsproto.MatchRule{
-			Src: &tsproto.MatchSelector{
-				IPAddresses: s.Src.Addresses,
+		r := netproto.MatchRule{
+			Src: &netproto.MatchSelector{
+				Addresses: s.Src.Addresses,
 			},
-			Dst: &tsproto.MatchSelector{
-				IPAddresses: s.Dst.Addresses,
-			},
-			AppProtoSel: &tsproto.AppProtoSelector{
-				Ports: protoPorts,
+			Dst: &netproto.MatchSelector{
+				Addresses: s.Dst.Addresses,
+				ProtoPorts: s.Dst.ProtoPorts,
 			},
 		}
 
@@ -43,7 +32,7 @@ func (c *CfgGen) generateMirrorRules(namespace string, count int) (rules []tspro
 
 func (c *CfgGen) GenerateMirrorSessions() error {
 	var cfg pkg.IOTAConfig
-	var mirrors []*tsproto.MirrorSession
+	var mirrors []*netproto.MirrorSession
 	var mirrorManifest, mirrorRuleMaifest *pkg.Object
 	for _, o := range c.Config.Objects {
 		o := o
@@ -84,7 +73,7 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 
 		newPolicyRules := policyRules[:rulesPerPolicy]
 		policyRules = policyRules[rulesPerPolicy:]
-		ms := tsproto.MirrorSession{
+		ms := netproto.MirrorSession{
 			TypeMeta: api.TypeMeta{
 				Kind: "MirrorSession",
 			},
@@ -93,13 +82,10 @@ func (c *CfgGen) GenerateMirrorSessions() error {
 				Namespace: namespace.Name,
 				Name:      mirrorSessionName,
 			},
-			Spec: tsproto.MirrorSessionSpec{
-				Enable:     true,
-				PacketSize: 128,
-				Collectors: []tsproto.MirrorCollector{
+			Spec: netproto.MirrorSessionSpec{
+				Collectors: []netproto.MirrorCollector{
 					{
-						Type: "erspan",
-						ExportCfg: tsproto.MirrorExportConfig{
+						ExportCfg: netproto.MirrorExportConfig{
 							Destination: t.Spec.Dst,
 						},
 					},

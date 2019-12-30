@@ -11,6 +11,7 @@
 		interface.proto
 		ipam.proto
 		match.proto
+		mirror.proto
 		namespace.proto
 		network.proto
 		port.proto
@@ -67,6 +68,15 @@
 		IPAMPolicy
 		MatchSelector
 		ProtoPort
+		MirrorSession
+		MirrorSessionSpec
+		MatchRule
+		MirrorSessionStatus
+		MirrorSessionList
+		MirrorSessionEvent
+		MirrorSessionEventList
+		MirrorExportConfig
+		MirrorCollector
 		Namespace
 		NamespaceSpec
 		NamespaceStatus

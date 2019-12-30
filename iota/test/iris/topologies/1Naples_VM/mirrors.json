@@ -11,68 +11,66 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": true,
-      "packet-size": 128,
-      "stop-condition": {},
       "collectors": [
         {
-          "type": "ERSPAN",
           "export-config": {
             "destination": "192.168.100.103",
             "transport": "TCP/8000"
-          },
-          "pcap-dir-name": ""
+          }
         }
       ],
       "match-rules": [
         {
           "source": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
             ]
           },
           "destination": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
-            ]
-          },
-          "app-protocol-selectors": {
-            "ports": [
-              "ICMP/0/0"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "icmp",
+                "port": "0/0"
+              }
             ]
           }
         },
         {
           "source": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
             ]
           },
           "destination": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
-            ]
-          },
-          "app-protocol-selectors": {
-            "ports": [
-              "TCP/0/0"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "tcp",
+                "port": "0/0"
+              }
             ]
           }
         },
         {
           "source": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
             ]
           },
           "destination": {
-            "ip-addresses": [
+            "addresses": [
               "0.0.0.0/0"
-            ]
-          },
-          "app-protocol-selectors": {
-            "ports": [
-              "UDP/0/0"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "udp",
+                "port": "0/0"
+              }
             ]
           }
         }

@@ -54,24 +54,45 @@ def get_appconfig(protocol, port):
     return app_config
 
 def get_app_proto(protocol, dport):
+    proto_ports = []
+    app = {}
+    app['protocol'] = protocol
     if protocol == 'icmp':
-        proto_str = str(protocol).upper() + '/' + '0' + '/' + '0'
+        app['port'] = '0/0'
+        #proto_str = str(protocol).upper() + '/' + '0' + '/' + '0'
     else:
         if dport == 'any':
-            proto_str = str(protocol).upper() + '/' + '0'
+            app['port'] = '0'
+            #proto_str = str(protocol).upper() + '/' + '0'
         else:
-            proto_str = str(protocol).upper() + '/' + str(dport)
-    app = {}
-    app['proto-ports'] = []
-    app['proto-ports'].append(proto_str)
-    return app
+            app['port'] = str(dport)
+            #proto_str = str(protocol).upper() + '/' + str(dport)
+#    app['port'] = str(dport)
+#     app['proto-ports'] = []
+#     app['proto-ports'].append(proto_str)
+    proto_ports.append(app)
+    return proto_ports
+
+# def get_app_proto(protocol, dport):
+#     if protocol == 'icmp':
+#         proto_str = str(protocol).upper() + '/' + '0' + '/' + '0'
+#     else:
+#         if dport == 'any':
+#             proto_str = str(protocol).upper() + '/' + '0'
+#         else:
+#             proto_str = str(protocol).upper() + '/' + str(dport)
+#     app = {}
+#     app['proto-ports'] = []
+#     app['proto-ports'].append(proto_str)
+#     return app
 
 def get_destination(dst_ip, protocol, port):
     if dst_ip == 'any':
         dst_ip = '0.0.0.0/0'
     dst = {}
-    dst['ip-addresses'] = []
-    dst['ip-addresses'].append(dst_ip)
+    dst['addresses'] = []
+    dst['addresses'].append(dst_ip)
+    dst['proto-ports'] = get_app_proto(protocol, port)
     #dst['app-protocol-selectors'] = []
     #dst['app-protocol-selectors'].append(get_appconfig(protocol, port))
     return dst
@@ -80,15 +101,15 @@ def get_source(src_ip):
     if src_ip == 'any':
         src_ip = '0.0.0.0/0'
     src = {}
-    src['ip-addresses'] = []
-    src['ip-addresses'].append(src_ip)
+    src['addresses'] = []
+    src['addresses'].append(src_ip)
     return src
 
 def get_rule(dst_ip, src_ip, protocol, port, action):
     rule = {}
     rule['destination'] = get_destination(dst_ip, protocol, port)
     rule['source'] = get_source(src_ip)
-    rule['app-protocol-selectors'] = get_app_proto(protocol, port)
+    #rule['app-protocol-selectors'] = get_app_proto(protocol, port)
     #rule['action'] = action
     return rule
 

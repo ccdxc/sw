@@ -15,27 +15,22 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/constants"
-
-	"github.com/pensando/sw/venice/globals"
-
 	"golang.org/x/sys/unix"
 
-	"github.com/pensando/sw/venice/utils/ipfix"
-
-	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ctrler/tpm"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/constants"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
+	"github.com/pensando/sw/venice/ctrler/tpm"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/ipfix"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -72,7 +67,7 @@ type ipfixTemplateContext struct {
 type policyDb struct {
 	state *PolicyState
 	//validated matchrules for the current policy
-	matchRules []tsproto.MatchRule
+	matchRules []netproto.MatchRule
 	// collector keys for the current policy
 	collectorKeys map[types.CollectorKey]bool
 	//FlowMonitorRule keys for the current policy
@@ -287,7 +282,7 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 			return fmt.Errorf("failed to marshal, %v", err)
 		}
 
-		matchrules := []tsproto.MatchRule{}
+		matchrules := []netproto.MatchRule{}
 		if err := json.Unmarshal(data, &matchrules); err != nil {
 			return fmt.Errorf("failed to unmarshal, %v", err)
 		}
@@ -883,26 +878,26 @@ func (p *policyDb) createIPFlowMonitorRule(ctx context.Context, ipFmRuleList []*
 }
 
 func (p *policyDb) createMacFlowMonitorRule(ctx context.Context, macFmRuleList []*tstype.FlowMonitorMACRuleDetails) error {
-	for _, macRule := range macFmRuleList {
-		ruleKey := types.FlowMonitorRuleKey{
-			SourceIP:  "",
-			DestIP:    "",
-			SourceMac: macRule.SrcMAC,
-			DestMac:   macRule.DestMAC,
-			//EtherType: 0,
-			// ??? : Does it make sense to use proto, l4ports when src/dest MAC based matching is used ?
-			Protocol:     uint32(macRule.AppPortObj.Ipproto),
-			SourceL4Port: uint32(macRule.AppPortObj.L4port), //  not sent to hal
-			DestL4Port:   uint32(macRule.AppPortObj.L4port),
-			VrfID:        p.vrf,
-		}
-		log.Infof("mac flow rule %+v", ruleKey)
-
-		if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
-			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
-			return err
-		}
-	}
+	//for _, macRule := range macFmRuleList {
+	//ruleKey := types.FlowMonitorRuleKey{
+	//	SourceIP:  "",
+	//	DestIP:    "",
+	//	SourceMac: macRule.SrcMAC,
+	//	DestMac:   macRule.DestMAC,
+	//	//EtherType: 0,
+	//	// ??? : Does it make sense to use proto, l4ports when src/dest MAC based matching is used ?
+	//	Protocol:     uint32(macRule.AppPortObj.Ipproto),
+	//	SourceL4Port: uint32(macRule.AppPortObj.L4port), //  not sent to hal
+	//	DestL4Port:   uint32(macRule.AppPortObj.L4port),
+	//	VrfID:        p.vrf,
+	//}
+	//log.Infof("mac flow rule %+v", ruleKey)
+	//
+	//if err := p.createHalFlowMonitorRule(ctx, ruleKey, true); err != nil {
+	//	log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
+	//	return err
+	//}
+	//}
 	return nil
 }
 
@@ -935,7 +930,7 @@ func (p *policyDb) createFlowMonitorRule(ctx context.Context) (err error) {
 		ipFmRuleList, _ := utils.CreateIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
 		macFmRuleList, _ := utils.CreateMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
 
-		log.Debugf("num ip-rules %v, mac-rules %v", len(ipFmRuleList), len(macFmRuleList))
+		log.Infof("num ip-rules %v, mac-rules %v", len(ipFmRuleList), len(macFmRuleList))
 		//TODO: Fold in ether-type in monitor rule
 		if len(ipFmRuleList) == 0 && len(macFmRuleList) == 0 {
 			log.Errorf("Match Rules specified with only AppPort Selector without IP/MAC")
@@ -1077,20 +1072,34 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 
 	// todo: check no match-rule ? match all for ipfix
 	if p.Spec.MatchRules == nil {
-		policyCtx.matchRules = []tsproto.MatchRule{
+		policyCtx.matchRules = []netproto.MatchRule{
 			{
-				Src:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
-				Dst:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
-				AppProtoSel: &tsproto.AppProtoSelector{Ports: []string{"any"}},
+				Src: &netproto.MatchSelector{Addresses: []string{"any"}},
+				Dst: &netproto.MatchSelector{
+					Addresses: []string{"any"},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: "any",
+							Port:     "any",
+						},
+					},
+				},
 			},
 		}
 
 	} else {
 		for _, r := range p.Spec.MatchRules {
-			rule := tsproto.MatchRule{
-				Src:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
-				Dst:         &tsproto.MatchSelector{IPAddresses: []string{"any"}},
-				AppProtoSel: &tsproto.AppProtoSelector{Ports: []string{"any"}},
+			rule := netproto.MatchRule{
+				Src: &netproto.MatchSelector{Addresses: []string{"any"}},
+				Dst: &netproto.MatchSelector{
+					Addresses: []string{"any"},
+					ProtoPorts: []*netproto.ProtoPort{
+						{
+							Protocol: "any",
+							Port:     "any",
+						},
+					},
+				},
 			}
 
 			if r.Src != nil {
@@ -1098,9 +1107,6 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 			}
 			if r.Dst != nil {
 				rule.Dst = r.Dst
-			}
-			if r.AppProtoSel != nil {
-				rule.AppProtoSel = r.AppProtoSel
 			}
 			policyCtx.matchRules = append(policyCtx.matchRules, rule)
 		}

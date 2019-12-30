@@ -12,7 +12,6 @@ import (
 	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
-	tsproto "github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )

@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -128,7 +127,7 @@ func (tsa *Tagent) GetAgentID() string {
 	return tsa.NodeUUID
 }
 
-func (tsa *Tagent) findMirrorSession(meta api.ObjectMeta) (*tsproto.MirrorSession, error) {
+func (tsa *Tagent) findMirrorSession(meta api.ObjectMeta) (*netproto.MirrorSession, error) {
 	typeMeta := api.TypeMeta{
 		Kind: "MirrorSession",
 	}
@@ -149,7 +148,7 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 	tsa.NodeUUID = nodeUUID
 	tsa.Datapath = dp
 
-	tsa.DB.MirrorSessionDB = make(map[string]*tsproto.MirrorSession)
+	tsa.DB.MirrorSessionDB = make(map[string]*netproto.MirrorSession)
 	tsa.DB.MirrorSessionNameToID = make(map[string]uint64)
 	tsa.DB.MirrorSessionIDToObj = make(map[uint64]types.MirrorSessionObj)
 	tsa.DB.FlowMonitorRuleToID = make(map[types.FlowMonitorRuleSpec]uint64)
@@ -211,13 +210,13 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 				tsa.DB.DropRuleIDToObj[ruleID] = *dropRuleObj
 			}
 		}
-		listMirrorSession := tsproto.MirrorSession{
+		listMirrorSession := netproto.MirrorSession{
 			TypeMeta: api.TypeMeta{Kind: "MonitorSession"},
 		}
 		mirrorSessions, err := tsa.Store.List(&listMirrorSession)
 		if err == nil {
 			for _, storedMirrorSession := range mirrorSessions {
-				mirrorSession, ok := storedMirrorSession.(*tsproto.MirrorSession)
+				mirrorSession, ok := storedMirrorSession.(*netproto.MirrorSession)
 				if !ok {
 					log.Errorf("Mirror sesion spec object retrieved from db cannot be used")
 					return ErrDbRead
@@ -388,45 +387,45 @@ func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 	return IPAddr
 }
 
-func buildVeniceCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_LocalSpanIf {
-	var mirrorCollectors []*halproto.MirrorSessionSpec_LocalSpanIf
-	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
-		if mirrorCollector.Type == "venice" {
-			mirrorDestObj := &halproto.MirrorSessionSpec_LocalSpanIf{}
-			//TODO
-			mirrorCollectors = append(mirrorCollectors, mirrorDestObj)
-		}
-	}
-	return mirrorCollectors
-}
+//func buildVeniceCollectorProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_LocalSpanIf {
+//	var mirrorCollectors []*halproto.MirrorSessionSpec_LocalSpanIf
+//	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
+//		if mirrorCollector.Type == "venice" {
+//			mirrorDestObj := &halproto.MirrorSessionSpec_LocalSpanIf{}
+//			//TODO
+//			mirrorCollectors = append(mirrorCollectors, mirrorDestObj)
+//		}
+//	}
+//	return mirrorCollectors
+//}
 
-func buildErspanCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_ErspanSpec {
+func buildErspanCollectorProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_ErspanSpec {
 	var mirrorCollectors []*halproto.MirrorSessionSpec_ErspanSpec
 	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
-		if mirrorCollector.Type == "erspan" {
-			//mirrorCollector.ExportCfg.Transport -- Does this info from ctrler need to be used ??
-			destIPDetails := utils.BuildIPAddrDetails(mirrorCollector.ExportCfg.Destination)
-			mirrorDestObj := &halproto.MirrorSessionSpec_ErspanSpec{
-				ErspanSpec: &halproto.ERSpanSpec{
-					DestIp: buildIPAddrProtoObj(destIPDetails),
-					SpanId: uint32(mirrorSessID), //For now this value is same as mirrorSessionID.
-					//SrcIp: HAL can for now choose appropriate value.
-					//Dscp:  HAL can for now choose appropriate value.
-				},
-			}
-			mirrorCollectors = append(mirrorCollectors, mirrorDestObj)
+		//if mirrorCollector.Type == "erspan" {
+		//mirrorCollector.ExportCfg.Transport -- Does this info from ctrler need to be used ??
+		destIPDetails := utils.BuildIPAddrDetails(mirrorCollector.ExportCfg.Destination)
+		mirrorDestObj := &halproto.MirrorSessionSpec_ErspanSpec{
+			ErspanSpec: &halproto.ERSpanSpec{
+				DestIp: buildIPAddrProtoObj(destIPDetails),
+				SpanId: uint32(mirrorSessID), //For now this value is same as mirrorSessionID.
+				//SrcIp: HAL can for now choose appropriate value.
+				//Dscp:  HAL can for now choose appropriate value.
+			},
 		}
+		mirrorCollectors = append(mirrorCollectors, mirrorDestObj)
+		//}
 	}
 	return mirrorCollectors
 }
 
-func buildMirrorTrafficCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) ([]*halproto.MirrorSessionSpec_LocalSpanIf, []*halproto.MirrorSessionSpec_ErspanSpec) {
-	veniceCollectors := buildVeniceCollectorProtoObj(mirrorSession, mirrorSessID)
+func buildMirrorTrafficCollectorProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_ErspanSpec {
+	//veniceCollectors := buildVeniceCollectorProtoObj(mirrorSession, mirrorSessID)
 	erspanCollectors := buildErspanCollectorProtoObj(mirrorSession, mirrorSessID)
-	return veniceCollectors, erspanCollectors
+	return erspanCollectors
 }
 
-func getVrfID(mirrorSession *tsproto.MirrorSession) (vrfID uint64, err error) {
+func getVrfID(mirrorSession *netproto.MirrorSession) (vrfID uint64, err error) {
 	vrfObj, err := nAgent.ValidateVrf(mirrorSession.Tenant, mirrorSession.Namespace, mirrorSession.Spec.VrfName)
 	if err != nil {
 		log.Errorf("failed to find vrf %s. Err: %v", mirrorSession.Spec.VrfName, err)
@@ -435,13 +434,13 @@ func getVrfID(mirrorSession *tsproto.MirrorSession) (vrfID uint64, err error) {
 	return vrfObj.Status.VrfID, nil
 }
 
-func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorSession, sessID uint64) (*halproto.MirrorSessionRequestMsg, error) {
+func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *netproto.MirrorSession, sessID uint64) (*halproto.MirrorSessionRequestMsg, error) {
 
-	veniceCollectors, erspanCollectors := buildMirrorTrafficCollectorProtoObj(mirrorSession, sessID)
-	if len(veniceCollectors) == 0 && len(erspanCollectors) == 0 {
-		log.Errorf("mirror session collector is neither erspan nor venice/local")
-		return nil, ErrInvalidMirrorSpec
-	}
+	erspanCollectors := buildMirrorTrafficCollectorProtoObj(mirrorSession, sessID)
+	//if len(veniceCollectors) == 0 && len(erspanCollectors) == 0 {
+	//	log.Errorf("mirror session collector is neither erspan nor venice/local")
+	//	return nil, ErrInvalidMirrorSpec
+	//}
 
 	// TODO: LocalSpan/Venice; for now populate only ERSPAN collector details
 	if len(erspanCollectors) == 0 {
@@ -466,8 +465,8 @@ func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorS
 			},
 		},
 		VrfKeyHandle: vrfKey,
-		Snaplen:      mirrorSession.Spec.PacketSize,
-		Destination:  erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
+		//Snaplen:      mirrorSession.Spec.PacketSize,
+		Destination: erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
 	}
 	ReqMsg := halproto.MirrorSessionRequestMsg{
 		Request: []*halproto.MirrorSessionSpec{&mirrorSpec},
@@ -485,7 +484,7 @@ func checkIDContainment(IDs []uint64, ID uint64) (bool, int) {
 	return false, 0
 }
 
-func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *tsproto.MirrorSession,
+func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *netproto.MirrorSession,
 	dropReason *halproto.DropReasons, updateDropRuleIDs []uint64) (*halproto.DropMonitorRuleSpec, error) {
 
 	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
@@ -526,7 +525,7 @@ func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *tsproto.MirrorSess
 	return &dropRuleSpec, nil
 }
 
-func (tsa *Tagent) buildDropRuleDeleteProtoObj(mirrorSession *tsproto.MirrorSession,
+func (tsa *Tagent) buildDropRuleDeleteProtoObj(mirrorSession *netproto.MirrorSession,
 	dropReason *halproto.DropReasons, deleteDropRuleIDs []uint64) (*halproto.DropMonitorRuleDeleteRequest, error) {
 
 	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
@@ -552,62 +551,62 @@ func (tsa *Tagent) buildDropRuleDeleteProtoObj(mirrorSession *tsproto.MirrorSess
 	return &dropRule, nil
 }
 
-func (tsa *Tagent) createDropMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsproto.MirrorSession,
+func (tsa *Tagent) createDropMonitorRuleIDMatchingHALProtoObj(mirrorSession *netproto.MirrorSession,
 	mirrorSessID uint64, updateDropRuleIDs, deleteDropRuleIDs []uint64) ([]*halproto.DropMonitorRuleRequestMsg, []*halproto.DropMonitorRuleDeleteRequestMsg, error) {
 
 	var updateReqMsgList []*halproto.DropMonitorRuleRequestMsg
 	var deleteReqMsgList []*halproto.DropMonitorRuleDeleteRequestMsg
 
-	for _, filter := range mirrorSession.Spec.PacketFilters {
-		updateReqMsg := halproto.DropMonitorRuleRequestMsg{}
-		deleteReqMsg := halproto.DropMonitorRuleDeleteRequestMsg{}
-		if filter == "ALL_DROPS" {
-			allDropReasons := getAllDropReasons()
-			for i := range allDropReasons {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &allDropReasons[i], updateDropRuleIDs)
-				if dropRuleSpec != nil {
-					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
-				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &allDropReasons[i], deleteDropRuleIDs)
-					if deleteDropRule != nil {
-						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
-					}
-				}
-			}
-		} else if filter == "NETWORK_POLICY_DROP" {
-			nwPolicyDrops := getNetWorkPolicyDropReasons()
-			for i := range nwPolicyDrops {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &nwPolicyDrops[i], updateDropRuleIDs)
-				if dropRuleSpec != nil {
-					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
-				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &nwPolicyDrops[i], deleteDropRuleIDs)
-					if deleteDropRule != nil {
-						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
-					}
-				}
-			}
-		} else if filter == "FIREWALL_POLICY_DROP" {
-			fwPolicyDrops := getFireWallPolicyDropReasons()
-			for i := range fwPolicyDrops {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &fwPolicyDrops[i], updateDropRuleIDs)
-				if dropRuleSpec != nil {
-					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
-				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &fwPolicyDrops[i], deleteDropRuleIDs)
-					if deleteDropRule != nil {
-						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
-					}
-				}
-			}
-		}
-		updateReqMsgList = append(updateReqMsgList, &updateReqMsg)
-		deleteReqMsgList = append(deleteReqMsgList, &deleteReqMsg)
-	}
+	//for _, filter := range mirrorSession.Spec.PacketFilters {
+	//	updateReqMsg := halproto.DropMonitorRuleRequestMsg{}
+	//	deleteReqMsg := halproto.DropMonitorRuleDeleteRequestMsg{}
+	//	if filter == "ALL_DROPS" {
+	//		allDropReasons := getAllDropReasons()
+	//		for i := range allDropReasons {
+	//			dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &allDropReasons[i], updateDropRuleIDs)
+	//			if dropRuleSpec != nil {
+	//				updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
+	//			} else {
+	//				deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &allDropReasons[i], deleteDropRuleIDs)
+	//				if deleteDropRule != nil {
+	//					deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
+	//				}
+	//			}
+	//		}
+	//	} else if filter == "NETWORK_POLICY_DROP" {
+	//		nwPolicyDrops := getNetWorkPolicyDropReasons()
+	//		for i := range nwPolicyDrops {
+	//			dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &nwPolicyDrops[i], updateDropRuleIDs)
+	//			if dropRuleSpec != nil {
+	//				updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
+	//			} else {
+	//				deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &nwPolicyDrops[i], deleteDropRuleIDs)
+	//				if deleteDropRule != nil {
+	//					deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
+	//				}
+	//			}
+	//		}
+	//	} else if filter == "FIREWALL_POLICY_DROP" {
+	//		fwPolicyDrops := getFireWallPolicyDropReasons()
+	//		for i := range fwPolicyDrops {
+	//			dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &fwPolicyDrops[i], updateDropRuleIDs)
+	//			if dropRuleSpec != nil {
+	//				updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
+	//			} else {
+	//				deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &fwPolicyDrops[i], deleteDropRuleIDs)
+	//				if deleteDropRule != nil {
+	//					deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
+	//				}
+	//			}
+	//		}
+	//	}
+	//	updateReqMsgList = append(updateReqMsgList, &updateReqMsg)
+	//	deleteReqMsgList = append(deleteReqMsgList, &deleteReqMsg)
+	//}
 	return updateReqMsgList, deleteReqMsgList, nil
 }
 
-func (tsa *Tagent) buildDropRuleCreateProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64, dropReason *halproto.DropReasons) (*halproto.DropMonitorRuleSpec, uint64, bool, error) {
+func (tsa *Tagent) buildDropRuleCreateProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64, dropReason *halproto.DropReasons) (*halproto.DropMonitorRuleSpec, uint64, bool, error) {
 	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
 	if err != nil {
 		return nil, 0, false, err
@@ -659,62 +658,62 @@ func (tsa *Tagent) buildDropRuleCreateProtoObj(mirrorSession *tsproto.MirrorSess
 	return &dropRuleSpec, ruleID, allocated, nil
 }
 
-func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) ([]*halproto.DropMonitorRuleRequestMsg, []uint64, error) {
+func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64) ([]*halproto.DropMonitorRuleRequestMsg, []uint64, error) {
 
 	var newRuleIDs []uint64
 
 	var ReqMsgList []*halproto.DropMonitorRuleRequestMsg
-	for _, filter := range mirrorSession.Spec.PacketFilters {
-		ReqMsg := halproto.DropMonitorRuleRequestMsg{}
-		// Iterate over drops reasons and create one ruleSpec for each drop condition.
-		// HAL expects each droprule to contain only one dropreason code.
-		//create array of all drop reasons
-		if filter == "ALL_DROPS" {
-			allDropReasons := getAllDropReasons()
-			for i := range allDropReasons {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &allDropReasons[i])
-				if err == nil {
-					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
-					if allocated {
-						newRuleIDs = append(newRuleIDs, ruleID)
-					}
-				} else {
-					return nil, nil, err
-				}
-			}
-		} else if filter == "NETWORK_POLICY_DROP" {
-			nwPolicyDrops := getNetWorkPolicyDropReasons()
-			for i := range nwPolicyDrops {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &nwPolicyDrops[i])
-				if err == nil {
-					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
-					if allocated {
-						newRuleIDs = append(newRuleIDs, ruleID)
-					}
-				} else {
-					return nil, nil, err
-				}
-			}
-		} else if filter == "FIREWALL_POLICY_DROP" {
-			fwPolicyDrops := getFireWallPolicyDropReasons()
-			for i := range fwPolicyDrops {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &fwPolicyDrops[i])
-				if err == nil {
-					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
-					if allocated {
-						newRuleIDs = append(newRuleIDs, ruleID)
-					}
-				} else {
-					return nil, nil, err
-				}
-			}
-		}
-		ReqMsgList = append(ReqMsgList, &ReqMsg)
-	}
+	//for _, filter := range mirrorSession.Spec.PacketFilters {
+	//	ReqMsg := halproto.DropMonitorRuleRequestMsg{}
+	//	// Iterate over drops reasons and create one ruleSpec for each drop condition.
+	//	// HAL expects each droprule to contain only one dropreason code.
+	//	//create array of all drop reasons
+	//	if filter == "ALL_DROPS" {
+	//		allDropReasons := getAllDropReasons()
+	//		for i := range allDropReasons {
+	//			dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &allDropReasons[i])
+	//			if err == nil {
+	//				ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
+	//				if allocated {
+	//					newRuleIDs = append(newRuleIDs, ruleID)
+	//				}
+	//			} else {
+	//				return nil, nil, err
+	//			}
+	//		}
+	//	} else if filter == "NETWORK_POLICY_DROP" {
+	//		nwPolicyDrops := getNetWorkPolicyDropReasons()
+	//		for i := range nwPolicyDrops {
+	//			dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &nwPolicyDrops[i])
+	//			if err == nil {
+	//				ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
+	//				if allocated {
+	//					newRuleIDs = append(newRuleIDs, ruleID)
+	//				}
+	//			} else {
+	//				return nil, nil, err
+	//			}
+	//		}
+	//	} else if filter == "FIREWALL_POLICY_DROP" {
+	//		fwPolicyDrops := getFireWallPolicyDropReasons()
+	//		for i := range fwPolicyDrops {
+	//			dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &fwPolicyDrops[i])
+	//			if err == nil {
+	//				ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
+	//				if allocated {
+	//					newRuleIDs = append(newRuleIDs, ruleID)
+	//				}
+	//			} else {
+	//				return nil, nil, err
+	//			}
+	//		}
+	//	}
+	//	ReqMsgList = append(ReqMsgList, &ReqMsg)
+	//}
 	return ReqMsgList, newRuleIDs, nil
 }
 
-func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsproto.MirrorSession,
+func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *netproto.MirrorSession,
 	mirrorSessID uint64, updateFmRuleIDs, deleteFmRuleIDs []uint64) ([]*halproto.FlowMonitorRuleRequestMsg, []*halproto.FlowMonitorRuleDeleteRequestMsg, error) {
 
 	var updateReqMsgList []*halproto.FlowMonitorRuleRequestMsg
@@ -938,7 +937,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 	return updateReqMsgList, deleteReqMsgList, nil
 }
 
-func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) ([]*halproto.FlowMonitorRuleRequestMsg, []uint64, error) {
+func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *netproto.MirrorSession, mirrorSessID uint64) ([]*halproto.FlowMonitorRuleRequestMsg, []uint64, error) {
 
 	var ReqMsgList []*halproto.FlowMonitorRuleRequestMsg
 	var newRuleIDs []uint64
@@ -1132,15 +1131,15 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		// For flow match rule based sessions, its only possible to support
 		// mirroring on ruleMatch and if pkt matching monitoring rule is dropped for any reason.
 		// It is not possible to apply specific dropreason filter that also matched flow monitor rule..
-		filterAllPkts := false
-		for _, filter := range mirrorSession.Spec.PacketFilters {
-			if filter == "ALL_PKTS" {
-				filterAllPkts = true
-				break
-			}
-			if filterAllPkts {
-			}
-		}
+		//filterAllPkts := false
+		//for _, filter := range mirrorSession.Spec.PacketFilters {
+		//	if filter == "ALL_PKTS" {
+		//		filterAllPkts = true
+		//		break
+		//	}
+		//	if filterAllPkts {
+		//	}
+		//}
 		ReqMsgList = append(ReqMsgList, &ReqMsg)
 	}
 	log.Debugf("FMRule ReqMsg List %v  NewRuleIDs %v", ReqMsgList, newRuleIDs)
@@ -1156,7 +1155,7 @@ type mirrorProtoObjs struct {
 }
 
 // CreatePacketCaptureSessionProtoObjects creates all proto objects needed to create mirror session.
-func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.MirrorSession) (*mirrorProtoObjs, error) {
+func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *netproto.MirrorSession) (*mirrorProtoObjs, error) {
 	var flowRuleProtoObjs []*halproto.FlowMonitorRuleRequestMsg
 	var dropRuleProtoObjs []*halproto.DropMonitorRuleRequestMsg
 	var mirrorSessionProtoObjs *halproto.MirrorSessionRequestMsg
@@ -1205,14 +1204,14 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 			return nil, err
 		}
 	}
-	// Drop monitor rules
-	if dropMonitor {
-		dropRuleProtoObjs, newDropRuleIDs, err = tsa.createHALDropMonitorRulesProtoObj(mirrorSession, sessID)
-		if err != nil {
-			log.Errorf("Could not create mirror drop monitor rule object")
-			return nil, err
-		}
-	}
+	// Drop monitor rules TODO uncomment when drop monitoring is supported fully
+	//if dropMonitor {
+	//	dropRuleProtoObjs, newDropRuleIDs, err = tsa.createHALDropMonitorRulesProtoObj(mirrorSession, sessID)
+	//	if err != nil {
+	//		log.Errorf("Could not create mirror drop monitor rule object")
+	//		return nil, err
+	//	}
+	//}
 	if createMirrorSession {
 		tsa.DB.MirrorSessionIDToObj[sessID] = types.MirrorSessionObj{
 			TypeMeta:   api.TypeMeta{Kind: "MonitorSessionObject"},
@@ -1246,7 +1245,7 @@ func (tsa *Tagent) deleteRuleObjsFromDB(deleteFmRuleIDs, deleteDropRuleIDs []uin
 	}
 }
 
-func (tsa *Tagent) storePacketCaptureSessionInDB(pcSession *tsproto.MirrorSession, mirrorProtoObjs *mirrorProtoObjs) error {
+func (tsa *Tagent) storePacketCaptureSessionInDB(pcSession *netproto.MirrorSession, mirrorProtoObjs *mirrorProtoObjs) error {
 	var err error
 
 	// Emstore new rules (new flowmonitor rule and new drop rules) and mirror
@@ -1273,7 +1272,7 @@ func (tsa *Tagent) storePacketCaptureSessionInDB(pcSession *tsproto.MirrorSessio
 	return err
 }
 
-func (tsa *Tagent) deleteModifyMirrorSessionRules(pcSession *tsproto.MirrorSession, purgedFlowRuleIDs, purgedDropRuleIDs []uint64) ([]uint64, []uint64, error) {
+func (tsa *Tagent) deleteModifyMirrorSessionRules(pcSession *netproto.MirrorSession, purgedFlowRuleIDs, purgedDropRuleIDs []uint64) ([]uint64, []uint64, error) {
 	var deleteFmRuleIDs, deleteDropRuleIDs []uint64
 	var updateFmRuleIDs, updateDropRuleIDs []uint64
 
@@ -1361,7 +1360,7 @@ func (tsa *Tagent) deleteModifyMirrorSessionRules(pcSession *tsproto.MirrorSessi
 	return deleteFmRuleIDs, deleteDropRuleIDs, nil
 }
 
-func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession, oldMs *tsproto.MirrorSession, update bool) error {
+func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession, oldMs *netproto.MirrorSession, update bool) error {
 	// Create lateral objects here
 	if update && oldMs != nil {
 		for _, oldCollectors := range oldMs.Spec.Collectors {
@@ -1463,7 +1462,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession, oldMs *tsproto.Mi
 	return err
 }
 
-func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
+func (tsa *Tagent) deletePacketCaptureSession(pcSession *netproto.MirrorSession) error {
 	for _, mirrorCollector := range pcSession.Spec.Collectors {
 		err := nAgent.DeleteLateralNetAgentObjects(pcSession.GetKey(), getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
 		if err != nil {
@@ -1527,7 +1526,7 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 }
 
 // CreateMirrorSession creates mirror session to enable packet capture
-func (tsa *Tagent) CreateMirrorSession(pcSession *tsproto.MirrorSession) error {
+func (tsa *Tagent) CreateMirrorSession(pcSession *netproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session create... {%+v}", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -1543,22 +1542,22 @@ func (tsa *Tagent) CreateMirrorSession(pcSession *tsproto.MirrorSession) error {
 		log.Infof("Received duplicate mirror session create {%+v}", pcSession.Name)
 		return nil
 	}
-	if !pcSession.Spec.Enable {
-		// Session created in disable mode. Just store the mirrorSession in DB
-		// At later time, update mirrorsession will trigger setting up mirror
-		// session in HW. Update mirrorSession object will also carry required
-		// drop/monitor rules.
-		key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
-		tsa.Lock()
-		tsa.DB.MirrorSessionDB[key] = pcSession
-		tsa.Unlock()
-		return nil
-	}
+	//if !pcSession.Spec.Enable {
+	// Session created in disable mode. Just store the mirrorSession in DB
+	// At later time, update mirrorsession will trigger setting up mirror
+	// session in HW. Update mirrorSession object will also carry required
+	// drop/monitor rules.
+	key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
+	tsa.Lock()
+	tsa.DB.MirrorSessionDB[key] = pcSession
+	tsa.Unlock()
+	//return nil
+	//}
 	return tsa.createUpdatePacketCaptureSession(pcSession, oldMs, false)
 }
 
 // UpdateMirrorSession updates mirror session
-func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
+func (tsa *Tagent) UpdateMirrorSession(pcSession *netproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session update... %+v", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -1574,14 +1573,14 @@ func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
 		log.Errorf("MirrorSession %v does not exist to update", pcSession.Name)
 		return fmt.Errorf("mirrorsession %v does not exist", pcSession.Name)
 	}
-	if pcSession.Spec.Enable {
-		return tsa.createUpdatePacketCaptureSession(pcSession, oldMs, true)
-	}
-	return nil
+	//if pcSession.Spec.Enable {
+	return tsa.createUpdatePacketCaptureSession(pcSession, oldMs, true)
+	//}
+	//return nil
 }
 
 // DeleteMirrorSession deletes packet capture session.
-func (tsa *Tagent) DeleteMirrorSession(pcSession *tsproto.MirrorSession) error {
+func (tsa *Tagent) DeleteMirrorSession(pcSession *netproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session delete... %v", pcSession.Name)
 	existingPcSession, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
@@ -1592,7 +1591,7 @@ func (tsa *Tagent) DeleteMirrorSession(pcSession *tsproto.MirrorSession) error {
 }
 
 // GetMirrorSession gets a mirror session
-func (tsa *Tagent) GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession {
+func (tsa *Tagent) GetMirrorSession(pcSession *netproto.MirrorSession) *netproto.MirrorSession {
 	log.Debugf("Processing packet capture session get... %v", pcSession)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -1609,7 +1608,7 @@ func (tsa *Tagent) GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.M
 // Debug gets debug info
 func (tsa *Tagent) Debug(w http.ResponseWriter, r *http.Request) {
 	type dbgInfo struct {
-		MirrorSessionDB       map[string]*tsproto.MirrorSession
+		MirrorSessionDB       map[string]*netproto.MirrorSession
 		MirrorSessionNameToID map[string]uint64
 		MirrorSessionIDToObj  map[uint64]types.MirrorSessionObj
 		// key: types.FlowMonitorRuleSpec
@@ -1655,12 +1654,12 @@ func (tsa *Tagent) Debug(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListMirrorSession lists all mirror sessions
-func (tsa *Tagent) ListMirrorSession() []*tsproto.MirrorSession {
+func (tsa *Tagent) ListMirrorSession() []*netproto.MirrorSession {
 	log.Debugf("Processing packet capture session list...")
 	//TODO
 	tsa.Lock()
 	defer tsa.Unlock()
-	var mirrList []*tsproto.MirrorSession
+	var mirrList []*netproto.MirrorSession
 
 	// walk all mirror sessions
 	for _, mr := range tsa.DB.MirrorSessionDB {
@@ -1670,27 +1669,27 @@ func (tsa *Tagent) ListMirrorSession() []*tsproto.MirrorSession {
 	return mirrList
 }
 
-// CreateTechSupportRequest is not implemented
-func (tsa *Tagent) CreateTechSupportRequest(*tsproto.TechSupportRequest) error {
-	return errors.New("not implemented")
-}
-
-// UpdateTechSupportRequest is not implemented
-func (tsa *Tagent) UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
-	return errors.New("not implemented")
-}
-
-// DeleteTechSupportRequest is not implemented
-func (tsa *Tagent) DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
-	return errors.New("not implemented")
-}
-
-// GetTechSupportRequest is not implemented
-func (tsa *Tagent) GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest {
-	return nil
-}
-
-// ListTechSupportRequest is not implemented
-func (tsa *Tagent) ListTechSupportRequest() []*tsproto.TechSupportRequest {
-	return nil
-}
+//// CreateTechSupportRequest is not implemented
+//func (tsa *Tagent) CreateTechSupportRequest(*tsproto.TechSupportRequest) error {
+//	return errors.New("not implemented")
+//}
+//
+//// UpdateTechSupportRequest is not implemented
+//func (tsa *Tagent) UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
+//	return errors.New("not implemented")
+//}
+//
+//// DeleteTechSupportRequest is not implemented
+//func (tsa *Tagent) DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
+//	return errors.New("not implemented")
+//}
+//
+//// GetTechSupportRequest is not implemented
+//func (tsa *Tagent) GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest {
+//	return nil
+//}
+//
+//// ListTechSupportRequest is not implemented
+//func (tsa *Tagent) ListTechSupportRequest() []*tsproto.TechSupportRequest {
+//	return nil
+//}

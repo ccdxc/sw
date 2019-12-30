@@ -3,11 +3,11 @@ NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/nim
 RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restclient
 
 # all the sources for which .pb.go is generated
-SRC := app.proto agg_watch.proto endpoint.proto interface.proto ipam.proto match.proto namespace.proto network.proto port.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto vrf.proto
+SRC := app.proto agg_watch.proto endpoint.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto vrf.proto
 NIMBUS_SRC := app.proto endpoint.proto ipam.proto network.proto sgpolicy.proto secprofile.proto interface.proto
 
 #these wont have _api.go generated
-FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto namespace.proto tenant.proto
+FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto mirror.proto namespace.proto tenant.proto
 
 #additionally these wont have swagger spec generated
 FILTER_OUT_SWAGGER := qos.proto copp.proto
@@ -21,7 +21,7 @@ DELPHI_SRC := $(NIMBUS_SRC:%.proto=./delphi/%.proto)
 
 default: ${DEST} nimbus delphi-gen
 
-app.pb.% endpoint.pb.% interface.pb.% ipam.pb.% match.pb.% namespace.pb.% network.pb.% secprofile.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% vrf.pb.%:  ${SRC}
+app.pb.% endpoint.pb.% interface.pb.% ipam.pb.% match.pb.% mirror.pb.% namespace.pb.% network.pb.% secprofile.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% vrf.pb.%:  ${SRC}
 	protoc -I. -I../../../../vendor -I${GOPATH}/src -I../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../vendor/github.com/gogo/protobuf/gogoproto \

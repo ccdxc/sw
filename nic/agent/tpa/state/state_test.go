@@ -22,7 +22,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	mockdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -235,16 +234,19 @@ func TestFindNumExports(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
 			Spec: tpmprotos.FlowExportPolicySpec{
-				MatchRules: []tsproto.MatchRule{
+				MatchRules: []netproto.MatchRule{
 					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
+						Src: &netproto.MatchSelector{
+							Addresses: []string{"any"},
 						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
-						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"any"},
+						Dst: &netproto.MatchSelector{
+							Addresses: []string{"any"},
+							ProtoPorts: []*netproto.ProtoPort{
+								{
+									Protocol: "any",
+									Port:     "any",
+								},
+							},
 						},
 					},
 				},
@@ -359,27 +361,33 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1010"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1010",
+							},
+						},
 					},
 				},
 			},
@@ -429,27 +437,33 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default", Namespace: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1010"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1010",
+							},
+						},
 					},
 				},
 			},
@@ -473,27 +487,33 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1010"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1010",
+							},
+						},
 					},
 				},
 			},
@@ -670,16 +690,19 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
 			Spec: tpmprotos.FlowExportPolicySpec{
-				MatchRules: []tsproto.MatchRule{
+				MatchRules: []netproto.MatchRule{
 					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
+						Src: &netproto.MatchSelector{
+							Addresses: []string{"any"},
 						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
-						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"any"},
+						Dst: &netproto.MatchSelector{
+							Addresses: []string{"any"},
+							ProtoPorts: []*netproto.ProtoPort{
+								{
+									Protocol: "any",
+									Port:     "any",
+								},
+							},
 						},
 					},
 				},
@@ -714,16 +737,19 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
 			Spec: tpmprotos.FlowExportPolicySpec{
-				MatchRules: []tsproto.MatchRule{
+				MatchRules: []netproto.MatchRule{
 					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
+						Src: &netproto.MatchSelector{
+							Addresses: []string{"any"},
 						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"any"},
-						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"any"},
+						Dst: &netproto.MatchSelector{
+							Addresses: []string{"any"},
+							ProtoPorts: []*netproto.ProtoPort{
+								{
+									Protocol: "any",
+									Port:     "any",
+								},
+							},
 						},
 					},
 				},
@@ -880,16 +906,19 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"any"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"any"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"any"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "any",
+								Port:     "any",
+							},
+						},
 					},
 				},
 			},
@@ -956,27 +985,33 @@ func TestNetagentInfo(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1010"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.2.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1010",
+							},
+						},
 					},
 				},
 			},
@@ -1112,28 +1147,29 @@ func TestTpaDebug(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "flowexport1", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses:  []string{"1.1.1.1"},
-						MACAddresses: []string{"00a0.f802.0304"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.2"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"1.1.1.2"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 				{
-					Src: &tsproto.MatchSelector{
-						MACAddresses: []string{"00a0.f802.0304"},
-					},
-					Dst: &tsproto.MatchSelector{
-						MACAddresses: []string{"00a0.f802.0305"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1000"},
+					Dst: &netproto.MatchSelector{
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "1000",
+							},
+						},
 					},
 				},
 			},
@@ -1233,8 +1269,11 @@ func TestTpaDebug(t *testing.T) {
 		},
 	}
 
-	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(2)
-	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(2)
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).AnyTimes()
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).AnyTimes()
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	err = s.CreateFlowExportPolicy(context.Background(), pol1)
 	tu.AssertOk(t, err, "failed to create policy")
@@ -1359,16 +1398,19 @@ func TestPolicyOps(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"tcp/5001"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "5001",
+							},
+						},
 					},
 				},
 			},
@@ -1436,16 +1478,19 @@ func TestPolicyOps(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"tcp/5001"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "5001",
+							},
+						},
 					},
 				},
 			},
@@ -1484,16 +1529,19 @@ func TestPolicyOps(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			MatchRules: []tsproto.MatchRule{
+			MatchRules: []netproto.MatchRule{
 				{
-					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.100.1"},
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"192.168.100.1"},
 					},
-					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"192.168.200.1"},
-					},
-					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"tcp/5001"},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.200.1"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Protocol: "tcp",
+								Port:     "5001",
+							},
+						},
 					},
 				},
 			},
@@ -1626,572 +1674,604 @@ func TestMatchRule(t *testing.T) {
 
 	// example test from iota
 	policyJSON := `{
-    "kind": "FlowExportPolicy",
-    "meta": {
-        "name": "flow-export-ipfix-0",
-        "namespace": "default",
-        "tenant": "default"
-    },
-    "spec": {
-        "exports": [
+  "kind": "FlowExportPolicy",
+  "meta": {
+    "name": "flow-export-ipfix-0",
+    "namespace": "default",
+    "tenant": "default"
+  },
+  "spec": {
+    "exports": [
+      {
+        "destination": "192.168.100.12",
+        "transport": "UDP/2055"
+      }
+    ],
+    "format": "IPFIX",
+    "interval": "1s",
+    "template-interval": "5m",
+    "match-rules": [
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
             {
-                "destination": "192.168.100.12",
-                "transport": "UDP/2055"
+              "protocol": "tcp",
+              "port": "120"
             }
-        ],
-        "format": "IPFIX",
-        "interval": "1s",
-		"template-interval": "5m",
-        "match-rules": [
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.101"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.101"
+          ],
+          "proto-ports": [
             {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.101"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.102"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.103"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/120"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/550"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/65535"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                }
-            },
-            {
-                "app-protocol-selectors": {
-                    "proto-ports": [
-                        "TCP/0"
-                    ]
-                },
-                "destination": {
-                    "ip-addresses": [
-                        "192.168.100.104"
-                    ]
-                },
-                "source": {
-                    "ip-addresses": [
-                        "0.0.0.0/0"
-                    ]
-                }
+              "protocol": "tcp",
+              "port": "120"
             }
-        ]
-    },
-    "status": {}
-	}
-	`
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.101"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.101"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.101"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.101"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.101"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.101"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.102"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.102"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.102"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.102"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.102"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.102"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.102"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.102"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.103"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.103"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.103"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.103"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.103"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.103"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.103"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.103"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.104"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.104"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "120"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.104"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.104"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "550"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.104"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.104"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "65535"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "0.0.0.0/0"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "192.168.100.104"
+          ]
+        }
+      },
+      {
+        "destination": {
+          "addresses": [
+            "192.168.100.104"
+          ],
+          "proto-ports": [
+            {
+              "protocol": "tcp",
+              "port": "0"
+            }
+          ]
+        },
+        "source": {
+          "addresses": [
+            "0.0.0.0/0"
+          ]
+        }
+      }
+    ]
+  },
+  "status": {}
+}
+`
 
 	/*
 		    "192.168.100.101:0.0.0.0/0:0:0:0:6:120:120:0:501",
@@ -2233,8 +2313,11 @@ func TestMatchRule(t *testing.T) {
 	err = json.Unmarshal([]byte(policyJSON), pol)
 	tu.AssertOk(t, err, "failed to convert json to policy")
 
-	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(1)
-	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(32)
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).AnyTimes()
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).AnyTimes()
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy"))
@@ -2267,8 +2350,8 @@ func TestMatchRule(t *testing.T) {
 		},
 	}
 
-	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).Times(1)
-	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(flowDelResp, nil).Times(32)
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).AnyTimes()
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(flowDelResp, nil).AnyTimes()
 
 	err = s.DeleteFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", pol))

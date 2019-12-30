@@ -12,7 +12,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 )
 
@@ -453,7 +452,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 }
 
 func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object, error) {
-	var mirrors []tsproto.MirrorSession
+	var mirrors []netproto.MirrorSession
 	specFile := "generated/mirrors.json"
 	if !genRequired(o) {
 		return o, nil
@@ -487,47 +486,44 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 		localEP := endpointCache[local]
 		remoteEP := endpointCache[remote]
 		fmt.Println(localEP, remoteEP)
-		ms := tsproto.MirrorSession{
+		ms := netproto.MirrorSession{
 			TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: namespace,
 				Name:      name,
 			},
-			Spec: tsproto.MirrorSessionSpec{
-				Enable:     true,
-				PacketSize: 128,
-				Collectors: []tsproto.MirrorCollector{
+			Spec: netproto.MirrorSessionSpec{
+				Collectors: []netproto.MirrorCollector{
 					{
-						Type: "ERSPAN",
-						ExportCfg: tsproto.MirrorExportConfig{
+						ExportCfg: netproto.MirrorExportConfig{
 							Destination: greTunDst,
 						},
 					},
 				},
 				//PacketFilters: []string{"ALL_DROPS"},
-				MatchRules: []tsproto.MatchRule{
+				MatchRules: []netproto.MatchRule{
 					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
+						Src: &netproto.MatchSelector{
+							Addresses: []string{"0.0.0.0/0"},
 						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
+						Dst: &netproto.MatchSelector{
+							Addresses: []string{"0.0.0.0/0"},
 						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"ICMP/0/0"},
-						},
+						//AppProtoSel: &netproto.AppProtoSelector{
+						//	Ports: []string{"ICMP/0/0"},
+						//},
 					},
 					{
-						Src: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
+						Src: &netproto.MatchSelector{
+							Addresses: []string{"0.0.0.0/0"},
 						},
-						Dst: &tsproto.MatchSelector{
-							IPAddresses: []string{"0.0.0.0/0"},
+						Dst: &netproto.MatchSelector{
+							Addresses: []string{"0.0.0.0/0"},
 						},
-						AppProtoSel: &tsproto.AppProtoSelector{
-							Ports: []string{"TCP/0/0"},
-						},
+						//AppProtoSel: &netproto.AppProtoSelector{
+						//	Ports: []string{"TCP/0/0"},
+						//},
 					},
 				},
 			},

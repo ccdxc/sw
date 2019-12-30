@@ -4,12 +4,14 @@ package rpcserver
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -22,63 +24,80 @@ type MirrorSessionRPCServer struct {
 	stateMgr *statemgr.Statemgr
 }
 
-func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSession {
+func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *netproto.MirrorSession {
 	ms := mss.MirrorSession
-	tms := tsproto.MirrorSession{
+	tms := netproto.MirrorSession{
 		TypeMeta:   ms.TypeMeta,
 		ObjectMeta: ms.ObjectMeta,
 	}
 	tSpec := &tms.Spec
-	tSpec.CaptureAt = tsproto.MirrorSrcDst_SRC_DST
-	tSpec.PacketDir = tsproto.MirrorDir_BOTH
-	tSpec.Enable = (mss.State == monitoring.MirrorSessionState_RUNNING)
-	tSpec.PacketSize = ms.Spec.PacketSize
-	tSpec.PacketFilters = ms.Spec.PacketFilters
+	//tSpec.CaptureAt = netproto.MirrorSrcDst_SRC_DST
+	//tSpec.PacketDir = netproto.MirrorDir_BOTH
+	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_RUNNING)
+	//tSpec.PacketSize = ms.Spec.PacketSize
+	//tSpec.PacketFilters = ms.Spec.PacketFilters
 
 	for _, c := range ms.Spec.Collectors {
 		var export monitoring.MirrorExportConfig
 		if c.ExportCfg != nil {
 			export = *c.ExportCfg
 		}
-		tc := tsproto.MirrorCollector{
-			Type:      c.Type,
-			ExportCfg: tsproto.MirrorExportConfig{Destination: export.Destination},
+		tc := netproto.MirrorCollector{
+			//Type:      c.Type,
+			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination},
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}
 	for _, mr := range ms.Spec.MatchRules {
-		tmr := tsproto.MatchRule{}
+		tmr := netproto.MatchRule{}
 		if mr.Src == nil && mr.Dst == nil {
 			log.Debugf("Ignore MatchRule with Src = * and Dst = *")
 			continue
 		}
 		if mr.Src != nil {
-			tmr.Src = &tsproto.MatchSelector{}
-			tmr.Src.IPAddresses = mr.Src.IPAddresses
-			tmr.Src.MACAddresses = mr.Src.MACAddresses
+			tmr.Src = &netproto.MatchSelector{}
+			tmr.Src.Addresses = mr.Src.IPAddresses
+			//tmr.Src.MACAddresses = mr.Src.MACAddresses
 		}
 		if mr.Dst != nil {
-			tmr.Dst = &tsproto.MatchSelector{}
-			tmr.Dst.IPAddresses = mr.Dst.IPAddresses
-			tmr.Dst.MACAddresses = mr.Dst.MACAddresses
-		}
-		if mr.AppProtoSel != nil {
-			tmr.AppProtoSel = &tsproto.AppProtoSelector{}
-			for _, port := range mr.AppProtoSel.ProtoPorts {
-				tmr.AppProtoSel.Ports = append(tmr.AppProtoSel.Ports, port)
+			tmr.Dst = &netproto.MatchSelector{}
+			tmr.Dst.Addresses = mr.Dst.IPAddresses
+			for _, pp := range mr.AppProtoSel.ProtoPorts {
+				var protoPort netproto.ProtoPort
+				components := strings.Split(pp, "/")
+				switch len(components) {
+				case 1:
+					protoPort.Protocol = components[0]
+				case 2:
+					protoPort.Protocol = components[0]
+					protoPort.Port = components[1]
+				case 3:
+					protoPort.Protocol = components[0]
+					protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+				default:
+					continue
+				}
+				tmr.Dst.ProtoPorts = append(tmr.Dst.ProtoPorts, &protoPort)
 			}
-			for _, app := range mr.AppProtoSel.Apps {
-				tmr.AppProtoSel.Apps = append(tmr.AppProtoSel.Apps, app)
-			}
+			//tmr.Dst.MACAddresses = mr.Dst.MACAddresses
 		}
+		//if mr.AppProtoSel != nil {
+		//	tmr.AppProtoSel = &netproto.AppProtoSelector{}
+		//	for _, port := range mr.AppProtoSel.ProtoPorts {
+		//		tmr.AppProtoSel.Ports = append(tmr.AppProtoSel.Ports, port)
+		//	}
+		//	for _, app := range mr.AppProtoSel.Apps {
+		//		tmr.AppProtoSel.Apps = append(tmr.AppProtoSel.Apps, app)
+		//	}
+		//}
 		tSpec.MatchRules = append(tSpec.MatchRules, tmr)
 	}
 	return &tms
 }
 
 // ListMirrorSessionsActive : List only sessions that are running/scheduled i.e. not in ERR_xxx state
-func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, sel *api.ObjectMeta) (*tsproto.MirrorSessionList, error) {
-	var msList tsproto.MirrorSessionList
+func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, sel *api.ObjectMeta) (*netproto.MirrorSessionList, error) {
+	var msList netproto.MirrorSessionList
 	mirrorSessions, err := r.stateMgr.ListMirrorSessions()
 	if err != nil {
 		return nil, err
@@ -100,18 +119,18 @@ func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, s
 }
 
 // ListMirrorSessions api to list
-func (r *MirrorSessionRPCServer) ListMirrorSessions(ctx context.Context, sel *api.ObjectMeta) (*tsproto.MirrorSessionEventList, error) {
+func (r *MirrorSessionRPCServer) ListMirrorSessions(ctx context.Context, sel *api.ObjectMeta) (*netproto.MirrorSessionEventList, error) {
 	tmsList, err := r.ListMirrorSessionsActive(context.Background(), sel)
 	if err != nil {
 		log.Errorf("Error getting a list of MirrorSessions. Err: %v", err)
 		return nil, err
 	}
-	evList := &tsproto.MirrorSessionEventList{}
+	evList := &netproto.MirrorSessionEventList{}
 	for _, tms := range tmsList.MirrorSessions {
 		evList.MirrorSessionEvents = append(evList.MirrorSessionEvents,
-			&tsproto.MirrorSessionEvent{
+			&netproto.MirrorSessionEvent{
 				EventType:     api.EventType_CreateEvent,
-				MirrorSession: *tms,
+				MirrorSession: tms,
 			})
 	}
 	return evList, nil
@@ -119,7 +138,7 @@ func (r *MirrorSessionRPCServer) ListMirrorSessions(ctx context.Context, sel *ap
 
 // WatchMirrorSessions watches mirror session objects for changes and sends them as streaming rpc
 // This function is invoked when agent (grpc client) performs stream.Recv() on this watch stream service
-func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream tsproto.MirrorSessionApi_WatchMirrorSessionsServer) error {
+func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream netproto.MirrorSessionApiV1_WatchMirrorSessionsServer) error {
 	// watch for changes
 	watcher := memdb.Watcher{Name: "mirror-session"}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -136,14 +155,14 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 	}
 
 	ctx := stream.Context()
-	watchEvtList := tsproto.MirrorSessionEventList{}
+	watchEvtList := netproto.MirrorSessionEventList{}
 
 	// send the objects out as a stream
 	for _, tms := range tmsList.MirrorSessions {
 		watchEvtList.MirrorSessionEvents = append(watchEvtList.MirrorSessionEvents,
-			&tsproto.MirrorSessionEvent{
+			&netproto.MirrorSessionEvent{
 				EventType:     api.EventType_CreateEvent,
-				MirrorSession: *tms,
+				MirrorSession: tms,
 			})
 	}
 	if len(watchEvtList.MirrorSessionEvents) > 0 {
@@ -166,7 +185,7 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 				log.Errorf("tms:Error reading from channel. Closing watch")
 				return errors.New("Error reading from channel")
 			}
-			watchEvtList = tsproto.MirrorSessionEventList{}
+			watchEvtList = netproto.MirrorSessionEventList{}
 			mss := evt.Obj.(*statemgr.MirrorSessionState)
 			mss.Mutex.Lock()
 			// Errorred session are not sent to Naples, so avoid all create/update/del transactions
@@ -191,14 +210,14 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 				mss.Mutex.Unlock()
 				continue
 			}
-			// convert to tsproto object
+			// convert to netproto object
 			tms := buildNICMirrorSession(mss)
 			mss.Mutex.Unlock()
 
-			// construct the tsproto object
-			watchEvt := tsproto.MirrorSessionEvent{
+			// construct the netproto object
+			watchEvt := netproto.MirrorSessionEvent{
 				EventType:     etype,
-				MirrorSession: *tms,
+				MirrorSession: tms,
 			}
 			log.Infof("Send Mirror session %s to agent - event %v state %v", mss.Name, etype, mss.Status.State)
 			watchEvtList.MirrorSessionEvents = append(watchEvtList.MirrorSessionEvents, &watchEvt)

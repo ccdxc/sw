@@ -12,7 +12,6 @@ import (
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
@@ -32,7 +31,7 @@ type AgentConfig struct {
 	Networks           []netproto.Network
 	Endpoints          []netproto.Endpoint
 	SgPolicies         []netproto.NetworkSecurityPolicy
-	MirrorSessions     []tsproto.MirrorSession
+	MirrorSessions     []netproto.MirrorSession
 	Tunnels            []netproto.Tunnel
 	FlowExportPolicies []monitoring.FlowExportPolicy
 	restApiMap         map[reflect.Type]string

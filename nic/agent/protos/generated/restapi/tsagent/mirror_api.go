@@ -18,22 +18,26 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
-	"github.com/pensando/sw/nic/agent/protos/tsproto"
+	tsproto "github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
 // AddMirrorSessionAPIRoutes adds MirrorSession
 func (srv *RestServer) AddMirrorSessionAPIRoutes(r *mux.Router) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.getMirrorSessionHandler))
-
 	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listMirrorSessionHandler))
+
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.getMirrorSessionHandler))
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postMirrorSessionHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putMirrorSessionHandler))
-
 	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteMirrorSessionHandler))
 
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putMirrorSessionHandler))
+
+}
+
+func (s *RestServer) listMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	return s.TsAgent.ListMirrorSession(), nil
 }
 
 func (s *RestServer) getMirrorSessionHandler(r *http.Request) (interface{}, error) {
@@ -46,10 +50,6 @@ func (s *RestServer) getMirrorSessionHandler(r *http.Request) (interface{}, erro
 
 	return s.TsAgent.GetMirrorSession(&o), nil
 
-}
-
-func (s *RestServer) listMirrorSessionHandler(r *http.Request) (interface{}, error) {
-	return s.TsAgent.ListMirrorSession(), nil
 }
 
 func (s *RestServer) postMirrorSessionHandler(r *http.Request) (interface{}, error) {
@@ -80,6 +80,18 @@ func (s *RestServer) postMirrorSessionHandler(r *http.Request) (interface{}, err
 
 }
 
+func (s *RestServer) deleteMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	var o tsproto.MirrorSession
+
+	o.TypeMeta.Kind = "MirrorSession"
+	o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
+	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
+	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
+
+	return nil, s.TsAgent.DeleteMirrorSession(&o)
+
+}
+
 func (s *RestServer) putMirrorSessionHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
@@ -102,17 +114,5 @@ func (s *RestServer) putMirrorSessionHandler(r *http.Request) (interface{}, erro
 	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 	res.StatusCode = http.StatusOK
 	return res, err
-
-}
-
-func (s *RestServer) deleteMirrorSessionHandler(r *http.Request) (interface{}, error) {
-	var o tsproto.MirrorSession
-
-	o.TypeMeta.Kind = "MirrorSession"
-	o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
-	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
-	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
-
-	return nil, s.TsAgent.DeleteMirrorSession(&o)
 
 }
