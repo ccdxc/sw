@@ -8,6 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pensando/sw/iota/test/venice/iotakit"
 )
 
 var _ = Describe("firewall tests", func() {
@@ -66,13 +67,31 @@ var _ = Describe("firewall tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			err := make(chan error)
 
+			conns := 1
+			cps := 10
+			duration := "30s"
+			timeout := time.Duration(120) * time.Second
+			if ts.scaleData {
+				conns = 100
+				duration = "300s"
+				timeout = time.Duration(900) * time.Second
+
+			}
 			go func() {
-				err <- ts.model.Action().TCPSessionWithOptions(workloadPairs, 0, "30s", 5)
+				options := &iotakit.ConnectionOptions{
+					Cps:               cps,
+					Duration:          duration,
+					NumConns:          conns,
+					Port:              "0",
+					Proto:             "tcp",
+					ReconnectAttempts: 5,
+				}
+				err <- ts.model.Action().ConnectionWithOptions(workloadPairs, options)
 			}()
 
 			select {
 			case <-err:
-			case <-time.After(time.Duration(120) * time.Second):
+			case <-time.After(timeout):
 				err <- errors.New("Test timed out")
 			}
 

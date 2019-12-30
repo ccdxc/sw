@@ -389,14 +389,13 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	return clientErr
 }
 
-// TCPSessionWithOptions runs TCP session between pair of workloads with options
-func (act *ActionCtx) TCPSessionWithOptions(wpc *WorkloadPairCollection, port int,
-	duration string, reconnectAttempts int) error {
+// ConnectionWithOptions runs  session between pair of workloads with options
+func (act *ActionCtx) ConnectionWithOptions(wpc *WorkloadPairCollection, options *ConnectionOptions) error {
 	if wpc.err != nil {
 		return wpc.err
 	}
 
-	return act.FuzItWithOptions(wpc, 1, "tcp", strconv.Itoa(port), duration, reconnectAttempts)
+	return act.FuzItWithOptions(wpc, options)
 }
 
 // TCPSession runs TCP session between pair of workloads
@@ -676,15 +675,40 @@ func (act *ActionCtx) FTPGetFails(wpc *WorkloadPairCollection) error {
 
 // FuzIt Establish large number (numConns) of connections from client workload to server workload
 func (act *ActionCtx) FuzIt(wpc *WorkloadPairCollection, numConns int, proto, port string) error {
-	return act.FuzItWithOptions(wpc, numConns, proto, port, "10s", 5)
+	options := &ConnectionOptions{Port: port,
+		NumConns:          numConns,
+		Duration:          "10s",
+		ReconnectAttempts: 5,
+		Proto:             proto,
+	}
+	return act.FuzItWithOptions(wpc, options)
+}
+
+//ConnectionOptions options for fuz connections
+type ConnectionOptions struct {
+	NumConns          int
+	Port              string
+	Proto             string
+	Duration          string
+	ReconnectAttempts int32
+	Cps               int //Connections per second
 }
 
 // FuzItWithOptions Establish large number (numConns) of connections from client workload to server workload with some options
-func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int, proto, port string, duration string, reconnectAttempts int) error {
+func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, options *ConnectionOptions) error {
 	var pairNames []string
 	// no need to perform connection scale in sim run
 	if act.model.tb.HasNaplesSim() {
 		return nil
+	}
+
+	numConns := options.NumConns
+	if numConns == 0 {
+		numConns = 1
+	}
+	cps := options.Cps
+	if cps == 0 {
+		cps = 100
 	}
 
 	srvWorkloads := make(map[string]*workloadPort)
@@ -698,13 +722,13 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 		workloads[wfName] = pair.first
 
 		key := ""
-		actualPort := port
+		actualPort := options.Port
 
-		if port == "0" {
+		if options.Port == "0" || options.Port == "" {
 			key = wfName + "-" + strconv.Itoa(pair.ports[0])
 			actualPort = strconv.Itoa(pair.ports[0])
 		} else {
-			key = wfName + "-" + port
+			key = wfName + "-" + options.Port
 		}
 
 		//Add only if added before
@@ -714,7 +738,7 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 			if _, ok := serverInput[wfName]; ok {
 				conns = serverInput[wfName].Connections
 			}
-			conns = append(conns, &fuze.Connection{ServerIPPort: ":" + actualPort, Proto: proto})
+			conns = append(conns, &fuze.Connection{ServerIPPort: ":" + actualPort, Proto: options.Proto})
 			serverInput[wfName] = fuze.Input{Connections: conns}
 		}
 
@@ -725,7 +749,7 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 		}
 		destIPAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
 		for ii := 0; ii < numConns; ii++ {
-			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + actualPort, Proto: proto})
+			conns = append(conns, &fuze.Connection{ServerIPPort: destIPAddr + ":" + actualPort, Proto: options.Proto})
 		}
 		workloads[wfName] = pair.second
 		clientInput[wfName] = fuze.Input{Connections: conns}
@@ -812,6 +836,7 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 
 	// run fuz client from each server to the others and verify the client results
 	var clientErr error
+
 	trig = act.model.tb.NewTrigger()
 	for _, ws := range workloads {
 		wsName := ws.iotaWorkload.WorkloadName
@@ -819,15 +844,19 @@ func (act *ActionCtx) FuzItWithOptions(wpc *WorkloadPairCollection, numConns int
 			if len(clientInput[wsName].Connections) > 1 {
 				filename := fmt.Sprintf("%s_fuz_client.json", ws.iotaWorkload.WorkloadName)
 				outfilename := fmt.Sprintf("%s_fuz_client_out.json", ws.iotaWorkload.WorkloadName)
-				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -talk -jsonInput %s -jsonOut > %s",
-					reconnectAttempts,
-					duration,
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -conns %v -cps %v -talk -jsonInput %s -jsonOut > %s",
+					options.ReconnectAttempts,
+					options.Duration,
+					numConns,
+					cps,
 					filename, outfilename),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)
 			} else {
-				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -talk -proto %v %v",
-					reconnectAttempts,
-					duration,
+				trig.AddCommand(fmt.Sprintf("./fuz  -attempts %v -duration %v -conns %v -cps %v -talk -proto %v %v",
+					options.ReconnectAttempts,
+					options.Duration,
+					numConns,
+					cps,
 					clientInput[wsName].Connections[0].Proto,
 					clientInput[wsName].Connections[0].ServerIPPort),
 					ws.iotaWorkload.WorkloadName, ws.iotaWorkload.NodeName)

@@ -2,8 +2,9 @@ package rollout_test
 
 import (
 	"errors"
-	"github.com/pensando/sw/venice/utils/log"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -47,7 +48,13 @@ var _ = Describe("rollout tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			rerr := make(chan bool)
 			go func() {
-				_ = ts.model.Action().TCPSessionWithOptions(workloadPairs, 8000, "180s", 100)
+				options := &iotakit.ConnectionOptions{
+					Duration:          "180s",
+					Port:              "8000",
+					Proto:             "tcp",
+					ReconnectAttempts: 100,
+				}
+				_ = ts.model.Action().ConnectionWithOptions(workloadPairs, options)
 				log.Infof("TCP SESSION TEST COMPLETE")
 				rerr <- true
 				return
