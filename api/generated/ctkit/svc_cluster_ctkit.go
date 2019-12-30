@@ -6347,6 +6347,31 @@ type LicenseHandler interface {
 	GetLicenseWatchOptions() *api.ListWatchOptions
 }
 
+// OnLicenseCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLicenseCreate(obj *License) error {
+	log.Info("OnLicenseCreate is not implemented")
+	return nil
+}
+
+// OnLicenseUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLicenseUpdate(oldObj *License, newObj *cluster.License) error {
+	log.Info("OnLicenseUpdate is not implemented")
+	return nil
+}
+
+// OnLicenseDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLicenseDelete(obj *License) error {
+	log.Info("OnLicenseDelete is not implemented")
+	return nil
+}
+
+// GetLicenseWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetLicenseWatchOptions() *api.ListWatchOptions {
+	log.Info("GetLicenseWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleLicenseEvent handles License events from watcher
 func (ct *ctrlerCtx) handleLicenseEvent(evt *kvstore.WatchEvent) error {
 
