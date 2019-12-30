@@ -1,20 +1,20 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA object-store base
+// PDS-MS object-store base
 //--------------------------------------------------------------
 
-#ifndef __PDSA_OBJ_STORE_HPP__
-#define __PDSA_OBJ_STORE_HPP__
+#ifndef __PDS_MS_OBJ_STORE_HPP__
+#define __PDS_MS_OBJ_STORE_HPP__
 
 #include <functional>
 #include <unordered_map>
 #include <memory>
 #include <string>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 //------------------------------------------------------------------------------------
-// Base class template for all PDSA object stores.
+// Base class template for all PDS-MS object stores.
 // Stores with KEY that is not a built-in type need to provide a Hash function object
 //-------------------------------------------------------------------------------------
 template <typename KEY, typename OBJECT, typename HASH = std::hash<KEY>> 

@@ -12,7 +12,7 @@
 #include "nic/apollo/agent/core/cmd.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -261,7 +261,7 @@ spawn_routing_thread (void)
         sdk::lib::thread::factory(
             "routing", PDS_AGENT_THREAD_ID_ROUTING,
             sdk::lib::THREAD_ROLE_CONTROL, 0x0,
-            pdsa_stub::pdsa_thread_init,
+            pds_ms::pds_ms_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             false);

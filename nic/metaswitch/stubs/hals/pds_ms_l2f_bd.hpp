@@ -3,12 +3,12 @@
 // L2F BD HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_L2F_BD_HPP__
-#define __PDSA_L2F_BD_HPP__
+#ifndef __PDS_MS_L2F_BD_HPP__
+#define __PDS_MS_L2F_BD_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <nbase.h>
 extern "C"
@@ -18,12 +18,12 @@ extern "C"
 
 namespace pds_ms {
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::ms_bd_id_t;
-using pdsa_stub::cookie_t;
-using pdsa_stub::pds_batch_ctxt_guard_t;
-using pdsa_stub::bd_obj_t;
-using pdsa_stub::state_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::ms_bd_id_t;
+using pds_ms::cookie_t;
+using pds_ms::pds_batch_ctxt_guard_t;
+using pds_ms::bd_obj_t;
+using pds_ms::state_t;
 
 class l2f_bd_t {
 public:    
@@ -54,7 +54,7 @@ private:
 
 private:
     pds_batch_ctxt_guard_t make_batch_pds_spec_(bool async);
-    void fetch_store_info_(pdsa_stub::state_t* state);
+    void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd);
     pds_subnet_spec_t make_pds_subnet_spec_(void);
     pds_subnet_key_t make_pds_subnet_key_(void);

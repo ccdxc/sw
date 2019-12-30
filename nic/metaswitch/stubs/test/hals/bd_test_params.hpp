@@ -1,16 +1,16 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_TEST_BD_PARAMS_HPP__
-#define __PDSA_TEST_BD_PARAMS_HPP__
+#ifndef __PDS_MS_TEST_BD_PARAMS_HPP__
+#define __PDS_MS_TEST_BD_PARAMS_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 
-namespace pdsa_test{
+namespace pds_ms_test{
 
 class bd_input_params_t : public test_input_base_t {
 public:
@@ -42,9 +42,9 @@ public:
     subnet_spec.dhcp_policy.id = 10;
     subnet_spec.tos = 5;
 
-    auto state_ctxt = pdsa_stub::state_t::thread_context(); 
+    auto state_ctxt = pds_ms::state_t::thread_context(); 
     state_ctxt.state()->bd_store().add_upd (bd_id,
-                                            new pdsa_stub::bd_obj_t(subnet_spec));
+                                            new pds_ms::bd_obj_t(subnet_spec));
    }
 
    void modify(void) override {
@@ -68,12 +68,12 @@ public:
        subnet_spec.key.id = ++bd_id;
        str2ipv4addr("24.4.10.1", &subnet_spec.v4_prefix.v4_addr);
        subnet_spec.fabric_encap.val.vnid  += 100;
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
        state_ctxt.state()->bd_store().add_upd (bd_id,
-                                               new pdsa_stub::bd_obj_t(subnet_spec));
+                                               new pds_ms::bd_obj_t(subnet_spec));
    }
    void trigger_delete(void) override { 
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
        state_ctxt.state()->bd_store().erase (subnet_spec.key.id);
    }
    virtual ~bd_input_params_t(void) {};
@@ -82,9 +82,9 @@ public:
        subnet_spec.key.id = ++bd_id;
        subnet_spec.fabric_encap.val.vnid  += 100;
        str2ipv4addr("33.3.10.1", &subnet_spec.v4_prefix.v4_addr);
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
        state_ctxt.state()->bd_store().add_upd (bd_id,
-                                               new pdsa_stub::bd_obj_t(subnet_spec));
+                                               new pds_ms::bd_obj_t(subnet_spec));
 
        // And then change it to simulate Direct Update
        subnet_spec.num_ing_v4_policy = 3;
@@ -119,4 +119,3 @@ load_bd_test (void)
 } // End namespace
 
 #endif
-

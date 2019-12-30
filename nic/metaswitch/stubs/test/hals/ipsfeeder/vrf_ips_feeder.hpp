@@ -5,11 +5,11 @@
 #define __VRF_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/vrf_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class vrf_ips_feeder_t final : public vrf_input_params_t {
 public:

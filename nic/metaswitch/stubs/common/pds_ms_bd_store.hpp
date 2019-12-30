@@ -1,20 +1,19 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Overlay Bridge Domain store
+// PDS-MS stub Overlay Bridge Domain store
 //---------------------------------------------------------------
 
-#ifndef __PDSA_BD_STORE_HPP__
-#define __PDSA_BD_STORE_HPP__
+#ifndef __PDS_MS_BD_STORE_HPP__
+#define __PDS_MS_BD_STORE_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_object_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 class bd_obj_t : public slab_obj_t<bd_obj_t>,
                  public base_obj_t {

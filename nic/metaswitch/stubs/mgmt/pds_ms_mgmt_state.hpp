@@ -9,7 +9,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "gen/proto/types.pb.h"
 #include <mutex>
 #include <condition_variable>

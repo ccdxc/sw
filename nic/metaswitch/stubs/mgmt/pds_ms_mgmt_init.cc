@@ -190,14 +190,14 @@ nbase_init ()
     NBS_SPIN_START();
 
     NBS_ENTER_SHARED_CONTEXT(NBS_ROOT_PROCESS);
-    pdsa_stub::hal_init();
+    pds_ms::hal_init();
     NBS_EXIT_SHARED_CONTEXT();
 
 
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pds_ms_stub::pds_ms_stubs_create();
+    pds_ms::pds_mss_create();
     
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
@@ -244,7 +244,7 @@ EXIT_LABEL:
 }
 
 
-bool pds_ms_stub_mgmt_init()
+bool pds_ms_mgmt_init()
 {
     pds_ms::mgmt_state_init();
     // Enter thread-safe context to cache nbase thread ptr

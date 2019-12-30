@@ -5,9 +5,9 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -62,14 +62,14 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
-using pdsa_stub::vrfname_2_vrfid;
+using pds_ms::Error;
+using pds_ms::vrfname_2_vrfid;
 
 void li_vrf_t::parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     ips_info_.vrf_id = vrfname_2_vrfid(vrf_add_upd_ips->vrf_name, vrf_add_upd_ips->vrf_name_len);
 }
 
-void li_vrf_t::fetch_store_info_(pdsa_stub::state_t* state) {
+void li_vrf_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.vpc_obj = state->vpc_store().get(ips_info_.vrf_id);
     if (likely(store_info_.vpc_obj != nullptr)) {
         op_create_ = !store_info_.vpc_obj->properties().hal_created;
@@ -94,7 +94,7 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     }
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
                            async ? PDS_BATCH_PARAMS_ASYNC : false, 
-                           pdsa_stub::hal_callback,
+                           pds_ms::hal_callback,
                            async ? cookie_uptr_.get() : nullptr};
     auto bctxt = pds_batch_start(&bp);
 
@@ -149,10 +149,10 @@ pds_batch_ctxt_guard_t li_vrf_t::prepare_pds(state_t::context_t& state_ctxt,
 void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     vrf_add_upd_ips->return_code = ATG_OK;
     parse_ips_info_(vrf_add_upd_ips);
-    pdsa_stub::cookie_t* cookie;
+    pds_ms::cookie_t* cookie;
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
         // Ensure that the cached vpc_spec is still valid
@@ -184,7 +184,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
                 // Enter thread-safe context to access/modify global state
                 SDK_TRACE_DEBUG ("MS VRF %d: VRF Create failed "
                                  "- delete store obj ", l_vrf_id);
-                auto state_ctxt = pdsa_stub::state_t::thread_context();
+                auto state_ctxt = pds_ms::state_t::thread_context();
                 auto vpc_obj = state_ctxt.state()->vpc_store().get(l_vrf_id);
                 if (vpc_obj != nullptr) {
                     vpc_obj->properties().hal_created = false;
@@ -251,7 +251,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
 }
@@ -308,7 +308,7 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
     SDK_TRACE_INFO ("MS VRF %d: Delete IPS", ips_info_.vrf_id);
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
         // Empty cookie to force async PDS.

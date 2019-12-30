@@ -3,12 +3,12 @@
 // LI VRF HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LI_VRF_HPP__
-#define __PDSA_LI_VRF_HPP__
+#ifndef __PDS_MS_LI_VRF_HPP__
+#define __PDS_MS_LI_VRF_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <nbase.h>
 extern "C"
@@ -23,10 +23,10 @@ extern "C"
 
 namespace pds_ms {
 
-using pdsa_stub::cookie_t;
-using pdsa_stub::pds_batch_ctxt_guard_t;
-using pdsa_stub::state_t;
-using pdsa_stub::vpc_obj_t;
+using pds_ms::cookie_t;
+using pds_ms::pds_batch_ctxt_guard_t;
+using pds_ms::state_t;
+using pds_ms::vpc_obj_t;
 
 class li_vrf_t {
 public:    
@@ -54,7 +54,7 @@ private:
 
 private:
     pds_batch_ctxt_guard_t make_batch_pds_spec_(bool async);
-    void fetch_store_info_(pdsa_stub::state_t* state);
+    void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
     pds_vpc_spec_t make_pds_vpc_spec_(void);
     pds_vpc_key_t make_pds_vpc_key_(void);

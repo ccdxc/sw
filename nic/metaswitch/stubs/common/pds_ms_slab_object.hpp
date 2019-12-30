@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Base for all PDSA objects
+// Base for all PDS-MS objects
 //---------------------------------------------------------------
 
-#ifndef __PDSA_SLAB_OBJECT_HPP__
-#define __PDSA_SLAB_OBJECT_HPP__
+#ifndef __PDS_MS_SLAB_OBJECT_HPP__
+#define __PDS_MS_SLAB_OBJECT_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include <new>
@@ -27,10 +27,10 @@
 // new_slab->alloc
 //
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 //----------------------------------------------------------------
-// All PDSA stub objects that need to be allocated from the Slab 
+// All PDS-MS stub objects that need to be allocated from the Slab 
 // needs to derive from this. set_slab() needs to be called for
 // each of them at init time.
 //--------------------------------------------------------------- 

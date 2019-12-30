@@ -3,9 +3,9 @@
 // Mock stub init 
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 int init() 
 {
     return 1;

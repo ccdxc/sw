@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <gtest/gtest.h>
@@ -18,10 +18,10 @@
 #include <netpacket/packet.h>
 #include <iostream>
 
-using pdsa_stub::state_t;
-using pdsa_stub::tep_store_t;
-using pdsa_stub::tep_obj_t;
-using pdsa_stub::tep_obj_uptr_t;
+using pds_ms::state_t;
+using pds_ms::tep_store_t;
+using pds_ms::tep_obj_t;
+using pds_ms::tep_obj_uptr_t;
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
@@ -43,7 +43,7 @@ public:
 
 TEST_F(tep_store_test, create) {
     auto state = state_thr_ctxt.state();
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 0);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 0);
     ipv4_addr_t tep_ip;
     str2ipv4addr((char*) "10.1.2.54", &tep_ip);
 
@@ -59,7 +59,7 @@ TEST_F(tep_store_test, create) {
                                501009  // PDS Overlay ECMP index
                                )
                               ));
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 1);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 1);
 }
 
 TEST_F(tep_store_test, get) {
@@ -87,9 +87,9 @@ TEST_F(tep_store_test, update) {
     tep_obj->properties().hal_uecmp_idx = 12;
 
     // After insert old object should be freed back to slab
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 2);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 2);
     state->tep_store().add_upd (tep_ip, tep_obj);
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 1);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 1);
 
     // Test the BD store
     auto tep_obj_test = state->tep_store().get (tep_ip);
@@ -108,7 +108,7 @@ TEST_F(tep_store_test, delete_store) {
     state->tep_store().erase (tep_ip);
     auto tep_obj = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj == nullptr);
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_TEP_SLAB_ID) == 0);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 0);
 }
 
 } // namespace api_test

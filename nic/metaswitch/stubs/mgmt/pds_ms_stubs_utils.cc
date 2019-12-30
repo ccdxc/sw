@@ -4,11 +4,11 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_stubs_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 
-namespace pds_ms_stub {
+namespace pds_ms {
 extern NBB_VOID
 pds_ms_li_stub_create (pds_ms_config_t& conf);
 
-void pds_ms_stubs_create ()
+void pds_mss_create ()
 {
     // Local variables
     pds_ms_config_t   conf = {0};

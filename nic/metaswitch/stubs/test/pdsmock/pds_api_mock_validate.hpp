@@ -1,12 +1,12 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_PDS_MOCK_VALIDATE__
-#define _PDSA_PDS_MOCK_VALIDATE__
+#ifndef __PDS_MS_PDS_MOCK_VALIDATE__
+#define __PDS_MS_PDS_MOCK_VALIDATE__ 
 
 #include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 bool
 pds_tep_mock_validate(const spec_t&  expected_pds,
                       const spec_t&  rcvd_pds);
@@ -23,5 +23,5 @@ bool
 pds_vpc_mock_validate(const spec_t&  expected_pds,
                          const spec_t&  rcvd_pds);
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 #endif

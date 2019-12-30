@@ -1,13 +1,13 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_TEST_UNDERLAY_ECMP_PDS_MOCK_HPP__
-#define __PDSA_TEST_UNDERLAY_ECMP_PDS_MOCK_HPP__
+#ifndef __PDS_MS_TEST_UNDERLAY_ECMP_PDS_MOCK_HPP__
+#define __PDS_MS_TEST_UNDERLAY_ECMP_PDS_MOCK_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
 #include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class underlay_ecmp_pds_mock_t final : public pds_mock_t {
 public:
@@ -52,6 +52,6 @@ private:
     void validate_();
 };
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 
 #endif

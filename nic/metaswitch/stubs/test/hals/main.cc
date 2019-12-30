@@ -14,7 +14,7 @@ extern "C"
 {
 #include <lipi.h>
 }
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
@@ -22,9 +22,9 @@ extern "C"
 #include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/bd_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vrf_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include <iostream>
@@ -51,30 +51,30 @@ extern "C"
  *
  *-------------------------------------------------*/
   
-namespace pdsa_test {
+namespace pds_ms_test {
 test_params_t* test_params() {    
     static test_params_t  g_test_params;
     return &g_test_params;
 }
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 
-class pdsa_hals_test: public ::testing::Test {
+class pds_ms_hals_test: public ::testing::Test {
 protected:
     void TearDown(void) {
-        pdsa_test::test_params()->test_input->cleanup();
-        pdsa_test::test_params()->test_output->cleanup();
-        pdsa_test::test_params()->test_input = nullptr;
-        pdsa_test::test_params()->test_output = nullptr;
+        pds_ms_test::test_params()->test_input->cleanup();
+        pds_ms_test::test_params()->test_output->cleanup();
+        pds_ms_test::test_params()->test_input = nullptr;
+        pds_ms_test::test_params()->test_output = nullptr;
     }
 };
 
-TEST_F(pdsa_hals_test, phy_port_test) {
-    pdsa_test::load_phy_port_test();
-    auto test_input = pdsa_test::test_params()->test_input;
-    auto test_output = pdsa_test::test_params()->test_output;
+TEST_F(pds_ms_hals_test, phy_port_test) {
+    pds_ms_test::load_phy_port_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
 
     // Initialize
-    auto phy_port_input = dynamic_cast<pdsa_test::phy_port_input_params_t*>
+    auto phy_port_input = dynamic_cast<pds_ms_test::phy_port_input_params_t*>
                               (test_input);
     phy_port_input->init ();
 
@@ -119,13 +119,13 @@ TEST_F(pdsa_hals_test, phy_port_test) {
     test_output->validate();
 }
 
-TEST_F(pdsa_hals_test, vxlan_test) {
-    pdsa_test::load_vxlan_test();
-    auto test_input = pdsa_test::test_params()->test_input;
-    auto test_output = pdsa_test::test_params()->test_output;
+TEST_F(pds_ms_hals_test, vxlan_test) {
+    pds_ms_test::load_vxlan_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
 
     // Initialize
-    auto vxlan_input = dynamic_cast<pdsa_test::vxlan_input_params_t*>(test_input);
+    auto vxlan_input = dynamic_cast<pds_ms_test::vxlan_input_params_t*>(test_input);
     vxlan_input->init ("10.0.0.1",  // Source IP
                        "20.0.0.1"); // Dest IP
     // Create
@@ -174,7 +174,7 @@ TEST(pdsa_loopback_test, test) {
     ip_addr_t in_ip;
     str2ipaddr((char*)"39.0.0.1", &in_ip);
     ATG_LIPI_L3_IP_ADDR ip_addr = {0};
-    pdsa_stub::pds_to_ms_ipaddr(in_ip, &ip_addr.inet_addr);
+    pds_ms::pds_to_ms_ipaddr(in_ip, &ip_addr.inet_addr);
 
     std::cout << "=== Loopback IP Add test ===" << std::endl;
     pds_ms::li_is()->softwif_addr_set("lo1", &ip_addr,
@@ -208,14 +208,14 @@ TEST(pdsa_loopback_test, test) {
     ASSERT_TRUE (strcmp (buf,"") == 0) ;
 }
 
-TEST_F(pdsa_hals_test, underlay_ecmp_test) {
-    pdsa_test::load_underlay_ecmp_test();
-    auto test_input = pdsa_test::test_params()->test_input;
-    auto test_output = pdsa_test::test_params()->test_output;
+TEST_F(pds_ms_hals_test, underlay_ecmp_test) {
+    pds_ms_test::load_underlay_ecmp_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
 
     // Initialize
-    std::vector<pdsa_test::nhinfo_t>   nexthops;
-    auto underlay_ecmp_input = dynamic_cast<pdsa_test::underlay_ecmp_input_params_t*>(test_input);
+    std::vector<pds_ms_test::nhinfo_t>   nexthops;
+    auto underlay_ecmp_input = dynamic_cast<pds_ms_test::underlay_ecmp_input_params_t*>(test_input);
     // Nexthop MS L3 Intf Index, Dest MAC
     underlay_ecmp_input->init ({{0x10001, "00:05:56:54:57:58"},
                                 {0x20001, "00:06:66:64:67:68"}});
@@ -239,13 +239,13 @@ TEST_F(pdsa_hals_test, underlay_ecmp_test) {
     test_output->validate();
 }
 
-TEST_F(pdsa_hals_test, bd_test) {
-    pdsa_test::load_bd_test();
-    auto test_input = pdsa_test::test_params()->test_input;
-    auto test_output = pdsa_test::test_params()->test_output;
+TEST_F(pds_ms_hals_test, bd_test) {
+    pds_ms_test::load_bd_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
 
     // Initialize
-    auto bd_input = dynamic_cast<pdsa_test::bd_input_params_t*>
+    auto bd_input = dynamic_cast<pds_ms_test::bd_input_params_t*>
                               (test_input);
     bd_input->init ();
 
@@ -259,11 +259,11 @@ TEST_F(pdsa_hals_test, bd_test) {
     std::cout << "=== BD Update test ===" << std::endl;
     // Modify both fastpath and slowpath fields
     // Expect update of only fastpath fields first
-    ((pdsa_test::bd_input_params_t*) test_input)->modify_fast_fields();
+    ((pds_ms_test::bd_input_params_t*) test_input)->modify_fast_fields();
     test_output->expect_update();
-    ((pdsa_test::bd_input_params_t*) test_input)->modify_slow_fields();
+    ((pds_ms_test::bd_input_params_t*) test_input)->modify_slow_fields();
     // Trigger direct update
-    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    ((pds_ms_test::bd_input_params_t*) test_input)->send_direct_update();
     test_output->validate();
     sleep(1);
     // Next Expect update of slowpath fields
@@ -273,13 +273,13 @@ TEST_F(pdsa_hals_test, bd_test) {
     test_output->validate();
 
     std::cout << "=== BD If bind test ===" << std::endl;
-    ((pdsa_test::bd_input_params_t*) test_input)->add_if_bind();
+    ((pds_ms_test::bd_input_params_t*) test_input)->add_if_bind();
     test_output->expect_update();
     test_input->trigger_update();
     test_output->validate();
 
     std::cout << "=== BD If Unbind test ===" << std::endl;
-    ((pdsa_test::bd_input_params_t*) test_input)->del_if_bind();
+    ((pds_ms_test::bd_input_params_t*) test_input)->del_if_bind();
     test_output->expect_update();
     test_input->trigger_update();
     test_output->validate();
@@ -313,27 +313,27 @@ TEST_F(pdsa_hals_test, bd_test) {
 
     // Mock Direct update received before L2F Stub create call
     std::cout << "=== BD Direct update out of sequence test ===" << std::endl;
-    ((pdsa_test::bd_input_params_t*) test_input)->init_direct_update();
+    ((pds_ms_test::bd_input_params_t*) test_input)->init_direct_update();
     test_output->expect_create();
-    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    ((pds_ms_test::bd_input_params_t*) test_input)->send_direct_update();
     test_input->trigger_create();
     test_output->validate();
 
     // Mock Direct update received after L2F Stub create call
     std::cout << "=== BD Direct update in sequence test ===" << std::endl;
-    ((pdsa_test::bd_input_params_t*) test_input)->modify_direct_update();
+    ((pds_ms_test::bd_input_params_t*) test_input)->modify_direct_update();
     test_output->expect_update();
-    ((pdsa_test::bd_input_params_t*) test_input)->send_direct_update();
+    ((pds_ms_test::bd_input_params_t*) test_input)->send_direct_update();
     test_output->validate();
 }
 
-TEST_F(pdsa_hals_test, vrf_test) {
-    pdsa_test::load_vrf_test();
-    auto test_input = pdsa_test::test_params()->test_input;
-    auto test_output = pdsa_test::test_params()->test_output;
+TEST_F(pds_ms_hals_test, vrf_test) {
+    pds_ms_test::load_vrf_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
 
     // Initialize
-    auto vrf_input = dynamic_cast<pdsa_test::vrf_input_params_t*>
+    auto vrf_input = dynamic_cast<pds_ms_test::vrf_input_params_t*>
                               (test_input);
     vrf_input->init ();
 
@@ -379,17 +379,17 @@ TEST_F(pdsa_hals_test, vrf_test) {
 
     // LI Direct update received before LI Stub create call
     std::cout << "=== VRF Direct update out of sequence test ===" << std::endl;
-    ((pdsa_test::vrf_input_params_t*) test_input)->init_direct_update();
+    ((pds_ms_test::vrf_input_params_t*) test_input)->init_direct_update();
     test_output->expect_create();
-    ((pdsa_test::vrf_input_params_t*) test_input)->send_direct_update();
+    ((pds_ms_test::vrf_input_params_t*) test_input)->send_direct_update();
     test_input->trigger_create();
     test_output->validate();
 
     // LI Direct update received after LI Stub create call
     std::cout << "=== VRF Direct update in sequence test ===" << std::endl;
-    ((pdsa_test::vrf_input_params_t*) test_input)->modify_direct_update();
+    ((pds_ms_test::vrf_input_params_t*) test_input)->modify_direct_update();
     test_output->expect_update();
-    ((pdsa_test::vrf_input_params_t*) test_input)->send_direct_update();
+    ((pds_ms_test::vrf_input_params_t*) test_input)->send_direct_update();
     test_output->validate();
 }
 
@@ -407,7 +407,7 @@ main (int argc, char **argv)
     g_routing_thread =
         sdk::lib::thread::factory(
             "routing", 0, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, &pdsa_stub::pdsa_thread_init,
+            0x0, &pds_ms::pds_ms_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             false);
@@ -421,7 +421,7 @@ main (int argc, char **argv)
     std::cout << "Nbase is ready!\n";
     sleep(1);
 
-    while (pdsa_stub::state_t::thread_context().state()->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID)
+    while (pds_ms::state_t::thread_context().state()->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID)
            != 0) {
         sleep(1);
     }

@@ -1,21 +1,21 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub VRF/VPC store
+// PDS-MS stub VRF/VPC store
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_vpc_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 template<> sdk::lib::slab* slab_obj_t<vpc_obj_t>::slab_ = nullptr;
 
 void
 vpc_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
-        reset(sdk::lib::slab::factory("PDSA-VPC", slab_id, 
+        reset(sdk::lib::slab::factory("PDS-MS-VPC", slab_id, 
                                       sizeof(vpc_obj_t), 
                                       8,               // PDS_MAX_VPC/8 
                                       true, true, true));

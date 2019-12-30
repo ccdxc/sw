@@ -3,8 +3,8 @@
 // L2F MAI HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_L2F_MAI_HPP__
-#define __PDSA_L2F_MAI_HPP__
+#ifndef __PDS_MS_L2F_MAI_HPP__
+#define __PDS_MS_L2F_MAI_HPP__
 
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"

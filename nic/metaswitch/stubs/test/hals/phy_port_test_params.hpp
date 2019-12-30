@@ -1,12 +1,12 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_TEST_PHY_PORT_PARAMS_HPP__
-#define __PDSA_TEST_PHY_PORT_PARAMS_HPP__
+#ifndef __PDS_MS_TEST_PHY_PORT_PARAMS_HPP__
+#define __PDS_MS_TEST_PHY_PORT_PARAMS_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 
-namespace pdsa_test{
+namespace pds_ms_test{
 
 class phy_port_input_params_t : public test_input_base_t {
 public:

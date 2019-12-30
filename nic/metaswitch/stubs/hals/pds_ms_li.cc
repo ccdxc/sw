@@ -1,15 +1,15 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA Implementation of Metaswitch LI stub integration 
+// PDS-MS Implementation of Metaswitch LI stub integration 
 //---------------------------------------------------------------
  
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_linux_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -18,9 +18,9 @@
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
-using pdsa_stub::vrfname_2_vrfid;
-using pdsa_stub::in_ipx_addr_t;
+using pds_ms::Error;
+using pds_ms::vrfname_2_vrfid;
+using pds_ms::in_ipx_addr_t;
 
 li_integ_subcomp_t* li_is () 
 {
@@ -181,7 +181,7 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
         } 
-        pdsa_stub::config_linux_loopback_ip(ip, ip_addr->prefix_len);
+        pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Loopback interface IP address add failed %s", e.what());
         return ATG_UNSUCCESSFUL;
@@ -204,7 +204,7 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
         } 
-        pdsa_stub::config_linux_loopback_ip(ip, ip_addr->prefix_len, true);
+        pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len, true);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Loopback interface IP address delete failed %s", e.what());
         return ATG_UNSUCCESSFUL;

@@ -1,21 +1,21 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Interface Store
+// PDS-MS stub Interface Store
 //---------------------------------------------------------------
 
-#ifndef __PDSA_INTERFACE_STORE_HPP__
-#define __PDSA_INTERFACE_STORE_HPP__
+#ifndef __PDS_MS_INTERFACE_STORE_HPP__
+#define __PDS_MS_INTERFACE_STORE_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_object_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include <unordered_map>
 #include <memory>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 enum class ms_iftype_t
 {

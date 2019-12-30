@@ -4,9 +4,9 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -16,7 +16,7 @@
 
 extern NBB_ULONG li_proc_id;
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 void
 hal_callback (sdk_ret_t status, const void *cookie)
@@ -32,7 +32,7 @@ hal_callback (sdk_ret_t status, const void *cookie)
         SDK_TRACE_DEBUG("Async PDS Batch success"); 
         cookie_ptr->print_debug_str(); 
 
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         for (auto& obj_uptr: cookie_ptr->objs) {
             obj_uptr->update_store (state_ctxt.state(), false); 
             // For create/update operations the underlying obj is saved in store.
@@ -77,7 +77,7 @@ handle_port_event (core::port_event_info_t &portev)
         fault_state.hw_link_faults = ATG_FRI_FAULT_PRESENT;
     }
     {
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         auto obj = state_ctxt.state()->if_store().get(ifidx);
         if (obj != nullptr) {
             worker = obj->phy_port_properties().fri_worker;

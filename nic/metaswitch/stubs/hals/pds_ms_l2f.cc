@@ -5,12 +5,12 @@
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pds_ms {
-using pdsa_stub::Error;
+using pds_ms::Error;
 
 // Class that implements the L2F Integration subcomponent interface 
 void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips) {
@@ -75,7 +75,7 @@ NBB_ULONG l2f_integ_subcomp_t::add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
         return ATG_OK;
     }
     ip_addr_t ip;
-    pdsa_stub::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
+    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
     SDK_TRACE_INFO("L2F MAC IP ADD BD %d IP %s MAC %s", mac_ip_id->bd_id.bd_id,
                    ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address));
     return ATG_OK;
@@ -90,7 +90,7 @@ void l2f_integ_subcomp_t::delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
         return;
     }
     ip_addr_t ip;
-    pdsa_stub::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
+    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
     SDK_TRACE_INFO("L2F MAC IP DEL BD %d IP %s MAC %s", mac_ip_id->bd_id.bd_id,
                    ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address));
 }
@@ -103,7 +103,7 @@ NBB_BYTE l2f_integ_subcomp_t::add_upd_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac
         return ATG_OK;
     }
     ip_addr_t ip;
-    pdsa_stub::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
+    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
     SDK_TRACE_INFO("L2F VRF MAC IP ADD BD %d IP %s MAC %s VRF %s", mac_ip_id->bd_id.bd_id,
                    ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address), vrf_name);
     return ATG_OK;
@@ -118,7 +118,7 @@ void l2f_integ_subcomp_t::delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_i
         return;
     }
     ip_addr_t ip;
-    pdsa_stub::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
+    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
     SDK_TRACE_INFO("L2F VRF MAC IP DEL BD %d IP %s MAC %s VRF %s", mac_ip_id->bd_id.bd_id,
                    ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address), vrf_name);
 }

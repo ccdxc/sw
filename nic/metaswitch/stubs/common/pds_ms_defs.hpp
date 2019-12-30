@@ -3,12 +3,12 @@
 // Typedefs for Metaswitch types
 //---------------------------------------------------------------
 
-#ifndef __PDSA_MS_DEFS_HPP__
-#define __PDSA_MS_DEFS_HPP__
+#ifndef __PDS_MS_MS_DEFS_HPP__
+#define __PDS_MS_MS_DEFS_HPP__
 
 #include <nbase.h>
 
-namespace pdsa_stub {
+namespace pds_ms {
 using ms_ps_id_t = NBB_CORRELATOR; // Pathset ID
 using ms_ifindex_t = NBB_ULONG;
 using ms_bd_id_t = NBB_ULONG;

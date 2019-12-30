@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
-MODULE_TARGET   = libpdsamgmt.so
+MODULE_TARGET   = libpdsmsmgmt.so
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_PREREQS  = metaswitch.submake pdsgen.proto
 MODULE_INCS 	= ${BLD_PROTOGEN_DIR} $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))

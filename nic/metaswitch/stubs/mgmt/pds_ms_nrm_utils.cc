@@ -4,7 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nrm_mgmt_if.h"
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill nrmEntTable: AMB_NRM_ENT
 NBB_VOID

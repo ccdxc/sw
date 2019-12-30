@@ -10,7 +10,7 @@
 
 namespace pds_ms {
 
-// PDSA Class that implements the L2F Integration subcomponent interface 
+// PDS-MS Class that implements the L2F Integration subcomponent interface 
 class l2f_integ_subcomp_t: public l2f::IntegrationSubcomponent {
 public:
     void add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips);

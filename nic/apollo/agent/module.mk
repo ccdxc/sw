@@ -8,8 +8,8 @@ MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam \
                   rfc_${PIPELINE} event_thread pdsrfc pdsagentcore slhash \
-                  pdsahals pdsamgmt pdsacommon pdsastubs pdsamgmtsvc pdsfte \
-                  ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS}
+                  pdsmshals pdsmsmgmt pdsmscommon pdsmsstubs pdsmsmgmtsvc \
+                  pdsfte ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS}
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_COMMON_LDLIBS} edit ncurses \

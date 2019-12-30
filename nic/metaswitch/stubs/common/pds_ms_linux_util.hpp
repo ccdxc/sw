@@ -3,14 +3,14 @@
 // Utilities to interface with Linux OS
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LINUX_UTIL_HPP__
-#define __PDSA_LINUX_UTIL_HPP__
+#ifndef __PDS_MS_LINUX_UTIL_HPP__
+#define __PDS_MS_LINUX_UTIL_HPP__
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <string>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 struct in_ipx_addr_t {
     uint8_t af; // AF_INET or AF_INET6

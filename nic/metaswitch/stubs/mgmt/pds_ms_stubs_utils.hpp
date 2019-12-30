@@ -4,7 +4,7 @@
 #ifndef __PDS_MS_STUBS_UTILS_HPP__
 #define __PDS_MS_STUBS_UTILS_HPP__
 
-namespace pds_ms_stub{
-void pds_ms_stubs_create ();
+namespace pds_ms{
+void pds_mss_create ();
 }
 #endif /*__PDS_MS_STUBS_UTILS_HPP__*/

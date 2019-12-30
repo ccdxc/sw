@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Common Utilities used by all PDSA stub components
+// Common Utilities used by all PDS-MS stub components
 //---------------------------------------------------------------
 
-#ifndef __PDSA_UTIL_HPP__
-#define __PDSA_UTIL_HPP__
+#ifndef __PDS_MS_UTIL_HPP__
+#define __PDS_MS_UTIL_HPP__
 
 #include <nbase.h>
 extern "C" {
@@ -16,10 +16,10 @@ extern "C" {
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 constexpr size_t VRF_PREF_LEN = 4;
 

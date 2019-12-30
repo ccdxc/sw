@@ -5,8 +5,8 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_linux_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -19,9 +19,9 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::Error;
-using pdsa_stub::get_linux_intf_params;
+using pds_ms::ms_ifindex_t;
+using pds_ms::Error;
+using pds_ms::get_linux_intf_params;
 
 static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     sdk_ret_t ret;
@@ -65,7 +65,7 @@ void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         (port_add_upd_ips->port_settings.no_switch_port_updated == ATG_YES);
 }
 
-void li_intf_t::fetch_store_info_(pdsa_stub::state_t* state) {
+void li_intf_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.phy_port_if_obj = state->if_store().get(ips_info_.ifindex);
     if (op_delete_) {
         if (unlikely(store_info_.phy_port_if_obj == nullptr)) {
@@ -185,7 +185,7 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
 
     SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
-                           pdsa_stub::hal_callback,
+                           pds_ms::hal_callback,
                            cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
     if (unlikely (!bctxt)) {
@@ -239,7 +239,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     cookie_uptr_.reset (new cookie_t);
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
         if (op_create_) {
@@ -314,7 +314,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
 }
@@ -338,7 +338,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     pds_bctxt_guard = make_batch_pds_spec_ (); 
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         // If we have batched multiple IPS earlier flush it now
         // Cannot add a Tunnel create to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
@@ -368,7 +368,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
                      ips_info_.ifindex);
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         // Deletes are synchronous - Delete the store entry immediately 
         state_ctxt.state()->if_store().erase(ifindex);
     }

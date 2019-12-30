@@ -2,8 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#ifndef __PDSA_TEST_PARAMS_HPP__
-#define __PDSA_TEST_PARAMS_HPP__
+#ifndef __PDS_MS_TEST_PARAMS_HPP__
+#define __PDS_MS_TEST_PARAMS_HPP__
 
 #include <gtest/gtest.h>
 #include "nic/apollo/test/api/utils/base.hpp"
@@ -28,7 +28,7 @@
  *    xxx_proto_feeder      xxx_hal_pds_verif
  *-------------------------------------------------*/
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class test_input_base_t {
 public:
@@ -72,6 +72,6 @@ test_params_t* test_params();
 void vxlan_reg_test_input();
 void vxlan_reg_test_output();
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 
 #endif

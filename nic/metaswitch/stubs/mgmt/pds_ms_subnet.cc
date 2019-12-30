@@ -8,7 +8,7 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/cp_interface.pb.h"
@@ -287,9 +287,9 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
-using pdsa_stub::bd_obj_t;
-using pdsa_stub::bd_obj_uptr_t;
-using pdsa_stub::state_t;
+using pds_ms::bd_obj_t;
+using pds_ms::bd_obj_uptr_t;
+using pds_ms::state_t;
 
 static void 
 cache_subnet_spec(pds_subnet_spec_t* spec, bool op_delete) 

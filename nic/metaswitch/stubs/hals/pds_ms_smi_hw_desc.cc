@@ -1,11 +1,11 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA SMI HW description
+// PDS-MS SMI HW description
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/hals/pds_ms_smi_hw_desc.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include <lipi.h>
 #include <lim_smi_mac.hpp>
 #include "nic/apollo/api/pds_state.hpp"
@@ -47,7 +47,7 @@ NBB_ULONG get_initial_mac_address(NBB_BYTE (&initial_mac)[ATG_L2_MAC_ADDR_LEN],
 namespace smi
 {
 // Replace the MS stock smi::create_hw_desc function 
-// with our PDSA version that creates instance of our class
+// with our PDS-MS version that creates instance of our class
 HwDesc*
 create_hw_desc(void)
 {
@@ -61,13 +61,13 @@ create_hw_desc(void)
     // method set a bit in the memory.
     // Eve with this it asserts if there is a failure in the 
     // initial CTM transaction - need to look into this.
-    return (new pds_ms::pdsa_smi_hw_desc_t(initial_mac_address, total_macs));
+    return (new pds_ms::pds_ms_smi_hw_desc_t(initial_mac_address, total_macs));
 }
 } // End namespace
 
 namespace pds_ms 
 {
-pdsa_smi_hw_desc_t::pdsa_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_ADDR_LEN],
+pds_ms_smi_hw_desc_t::pds_ms_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_ADDR_LEN],
                      NBB_ULONG total_macs) :
     mac_pool(mac_address, total_macs)
 {
@@ -78,7 +78,7 @@ pdsa_smi_hw_desc_t::pdsa_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_ADDR_L
 // This is called from smi::fte, smi::PortManager class construction 
 // that happens as part of NBASE init when a new SMI entity is created. 
 // The HW Desc is sent to LIM during the Join activation between LIM & SMI
-bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
+bool pds_ms_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
 {
     SDK_TRACE_INFO("Creating uplinks ...");
 
@@ -108,7 +108,7 @@ bool pdsa_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
     return true;
 }
 
-bool pdsa_smi_hw_desc_t::create_default_port_settings(ATG_SMI_PORT_SETTINGS &settings)
+bool pds_ms_smi_hw_desc_t::create_default_port_settings(ATG_SMI_PORT_SETTINGS &settings)
 {
     settings.enabled = true;
     settings.support_autoneg = true;

@@ -265,7 +265,7 @@ EXIT_LABEL:
 }
 
 NBB_VOID 
-pds_ms_ctm_send_row_update_common (pds_ms_stub::pds_ms_config_t   *conf,
+pds_ms_ctm_send_row_update_common (pds_ms::pds_ms_config_t   *conf,
                                  pds_ms_amb_fill_fnptr_t      fill_api)
 {
     ATG_CPI_ROW_UPDATE  *row_update = NULL; 

@@ -1,15 +1,15 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Interface Store
+// PDS-MS stub Interface Store
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 template<> sdk::lib::slab* slab_obj_t<if_obj_t>::slab_ = nullptr;
 template<> sdk::lib::slab* slab_obj_t<host_lif_obj_t>::slab_ = nullptr;
@@ -25,7 +25,7 @@ void
 if_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
-        reset(sdk::lib::slab::factory("PDSA-IF", slab_id, 
+        reset(sdk::lib::slab::factory("PDS-MS-IF", slab_id, 
                                       sizeof(if_obj_t), 
                                       k_max_if,
                                       true, true, true));
@@ -39,7 +39,7 @@ void
 host_lif_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
-        reset(sdk::lib::slab::factory("PDSA-LIF", slab_id, 
+        reset(sdk::lib::slab::factory("PDS-MS-LIF", slab_id, 
                                       sizeof(host_lif_obj_t), 
                                       PDS_MAX_SUBNET/8, 
                                       true, true, true));

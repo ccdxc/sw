@@ -18,7 +18,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
@@ -30,7 +30,7 @@
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 test_params_t* test_params() {    
     static test_params_t  g_test_params;
     return &g_test_params;
@@ -262,7 +262,7 @@ main (int argc, char **argv)
     g_routing_thread =
         sdk::lib::thread::factory(
             "routing", 0, sdk::lib::THREAD_ROLE_CONTROL,
-            0x0, &pdsa_stub::pdsa_thread_init,
+            0x0, &pds_ms::pds_ms_thread_init,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             false);

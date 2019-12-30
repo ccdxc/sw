@@ -4,7 +4,7 @@
 
 #include "nic/metaswitch/stubs/test/pdsmock/pds_api_mock_validate.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 using namespace test::api; 
 bool
@@ -135,4 +135,4 @@ pds_vpc_mock_validate (const spec_t&  expected_pds,
     return true;
 }
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test

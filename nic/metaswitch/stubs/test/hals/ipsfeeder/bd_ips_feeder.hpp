@@ -5,15 +5,15 @@
 #define __BD_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/bd_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 
-namespace pdsa_test {
-using pdsa_stub::ms_ifindex_t;
+namespace pds_ms_test {
+using pds_ms::ms_ifindex_t;
 
 class bd_ips_feeder_t final : public bd_input_params_t {
 public:

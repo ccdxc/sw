@@ -5,7 +5,7 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -17,10 +17,10 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
-using pdsa_stub::ms_to_pds_ipaddr;
+using pds_ms::Error;
+using pds_ms::ms_to_pds_ipaddr;
 
-void li_vxlan_tnl::fetch_store_info_(pdsa_stub::state_t* state) {
+void li_vxlan_tnl::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);
     if (op_delete_) {
         if (unlikely(store_info_.tun_if_obj == nullptr)) {
@@ -135,7 +135,7 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
 
     SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
-                           pdsa_stub::hal_callback,
+                           pds_ms::hal_callback,
                            cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
 
@@ -213,7 +213,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
     cookie_uptr_.reset (new cookie_t);
 
     { // Enter thread-safe context to access/modify global state
-    auto state_ctxt = pdsa_stub::state_t::thread_context();
+    auto state_ctxt = pds_ms::state_t::thread_context();
 
     fetch_store_info_(state_ctxt.state());
 
@@ -293,7 +293,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                      ips_info_.tep_ip_str.c_str());
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
 }
@@ -315,7 +315,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     ip_addr_t tep_ip;
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
 
         fetch_store_info_(state_ctxt.state());
         if (unlikely (store_info_.tep_obj == nullptr && 
@@ -359,7 +359,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
                      ipaddr2str(&tep_ip));
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         // Deletes are synchronous - Delete the store entry immediately 
         state_ctxt.state()->tep_store().erase(tep_ip.addr.v4_addr);
         state_ctxt.state()->if_store().erase(ips_info_.if_index);

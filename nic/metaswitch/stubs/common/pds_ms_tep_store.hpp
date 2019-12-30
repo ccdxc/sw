@@ -1,15 +1,15 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Remote VXLAN Tunnel Endpoint store
+// PDS-MS stub Remote VXLAN Tunnel Endpoint store
 //---------------------------------------------------------------
 
-#ifndef __PDSA_TEP_STORE_HPP__
-#define __PDSA_TEP_STORE_HPP__
+#ifndef __PDS_MS_TEP_STORE_HPP__
+#define __PDS_MS_TEP_STORE_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_object_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
 #include "nic/third-party/metaswitch/code/comn/ntlpp/ntl_comparators.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <map>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 struct tep_dmac_t {
     pds_tep_id_t hal_tep_idx;

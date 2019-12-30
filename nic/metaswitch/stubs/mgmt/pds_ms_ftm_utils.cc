@@ -4,7 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "ftm_mgmt_if.h"
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill ftmEntTable: AMB_FTM_ENT
 NBB_VOID

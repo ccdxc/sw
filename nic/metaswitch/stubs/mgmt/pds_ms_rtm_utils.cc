@@ -25,7 +25,7 @@ rtm_strt_fill_func (StaticRouteSpec&        req,
 }
 } // End of namespace pds
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill rtmEntityTable: AMB_CIPR_RTM_ENTITY 
 NBB_VOID 

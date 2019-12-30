@@ -1,15 +1,15 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Remote VXLAN Tunnel Endpoint store
+// PDS-MS stub Remote VXLAN Tunnel Endpoint store
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_slab_object.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 template<> sdk::lib::slab* slab_obj_t<tep_obj_t>::slab_ = nullptr;
 
@@ -17,7 +17,7 @@ void
 tep_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
-        reset(sdk::lib::slab::factory("PDSA-TEP", slab_id, 
+        reset(sdk::lib::slab::factory("PDS-MS-TEP", slab_id, 
                                       sizeof(tep_obj_t), 
                                       100,   // 1/10 of PDS_MAX_TEP
                                       true, true, true));

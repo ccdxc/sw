@@ -3,8 +3,8 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_vpc_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
@@ -94,7 +94,7 @@ populate_lim_vrf_spec (pds_vpc_spec_t  *vpc_spec,
 static void
 pds_cache_vni_to_vrf_mapping (pds_vpc_spec_t *vpc_spec, bool op_delete)
 {
-    auto state_ctxt = pdsa_stub::state_t::thread_context();
+    auto state_ctxt = pds_ms::state_t::thread_context();
 
     if (op_delete) {
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vpc_spec->key.id);
@@ -106,7 +106,7 @@ pds_cache_vni_to_vrf_mapping (pds_vpc_spec_t *vpc_spec, bool op_delete)
         }
         return;
     } 
-    auto vpc_obj = (new pdsa_stub::vpc_obj_t(*vpc_spec));
+    auto vpc_obj = (new pds_ms::vpc_obj_t(*vpc_spec));
     state_ctxt.state()->vpc_store().add_upd(vpc_spec->key.id, vpc_obj);
 }
 

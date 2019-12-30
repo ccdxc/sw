@@ -3,13 +3,13 @@
 // Initialize Stubs that drive the dataplane
 //---------------------------------------------------------------
 
-#ifndef __PDSA_HAL_INIT_HPP__
-#define __PDSA_HAL_INIT_HPP__
+#ifndef __PDS_MS_HAL_INIT_HPP__
+#define __PDS_MS_HAL_INIT_HPP__
 
 #include <cstdint>
 #include "nic/sdk/include/sdk/base.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 bool hal_init (void);
 void hal_deinit (void);

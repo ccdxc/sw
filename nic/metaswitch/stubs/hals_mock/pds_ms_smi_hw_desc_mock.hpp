@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA mock SMI HW ports, MAC description for Pegasus
+// PDS-MS mock SMI HW ports, MAC description for Pegasus
 //---------------------------------------------------------------
 
-#ifndef PDSA_SMI_HPP_INCLUDED
-#define PDSA_SMI_HPP_INCLUDED
+#ifndef PDS_MS_SMI_HPP_INCLUDED
+#define PDS_MS_SMI_HPP_INCLUDED
 
 #include <smi_c_includes.hpp>
 #include <smi.h>
@@ -12,7 +12,7 @@
 
 #include <vector>
 
-namespace pdsa_stub
+namespace pds_ms
 {
 // Pegasus implementation of the SMI Hardware Description class.
 class mock_smi_hw_desc_t : public smi::HwDesc

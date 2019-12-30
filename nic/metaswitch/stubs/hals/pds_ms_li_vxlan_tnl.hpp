@@ -3,11 +3,11 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LI_VXLAN_TNL_HPP__
-#define __PDSA_LI_VXLAN_TNL_HPP__
+#ifndef __PDS_MS_LI_VXLAN_TNL_HPP__
+#define __PDS_MS_LI_VXLAN_TNL_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -24,12 +24,12 @@ extern "C"
 
 namespace pds_ms {
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::mac_addr_wr_t;
-using pdsa_stub::cookie_t;
-using pdsa_stub::pds_batch_ctxt_guard_t;
-using pdsa_stub::tep_obj_t;
-using pdsa_stub::if_obj_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::mac_addr_wr_t;
+using pds_ms::cookie_t;
+using pds_ms::pds_batch_ctxt_guard_t;
+using pds_ms::tep_obj_t;
+using pds_ms::if_obj_t;
 
 class li_vxlan_tnl {
 public:    
@@ -63,7 +63,7 @@ private:
     bool cache_obj_in_cookie_for_update_op_(void);
     void cache_obj_in_cookie_for_delete_op_(void); 
     pds_batch_ctxt_guard_t make_batch_pds_spec_ (void);
-    void fetch_store_info_(pdsa_stub::state_t* state);
+    void fetch_store_info_(pds_ms::state_t* state);
 
     void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
     pds_tep_spec_t make_pds_tep_spec_(void);

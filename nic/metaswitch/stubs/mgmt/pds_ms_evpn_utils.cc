@@ -138,7 +138,7 @@ evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req, AMB_EVPN_IP_VRF_RT *data)
 }
 } // End namespace pds
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill evpnEntTable: AMB_EVPN_ENT 
 NBB_VOID

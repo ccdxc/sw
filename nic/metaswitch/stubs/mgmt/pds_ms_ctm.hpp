@@ -9,7 +9,7 @@
 #include "include/sdk/ip.hpp"
 
 typedef NBB_VOID (*pds_ms_amb_fill_fnptr_t)(AMB_GEN_IPS *, 
-                                          pds_ms_stub::pds_ms_config_t *);
+                                          pds_ms::pds_ms_config_t *);
 
 NBB_VOID pds_ms_ctm_send_transaction_start (NBB_ULONG correlator);
 NBB_VOID pds_ms_ctm_send_transaction_abort (NBB_ULONG correlator);
@@ -21,7 +21,7 @@ pds_ms_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
                                  NBB_LONG        oid_len,
                                  NBB_LONG        row_status,
                                  NBB_ULONG       correlator);
-NBB_VOID pds_ms_ctm_send_row_update_common (pds_ms_stub::pds_ms_config_t  *conf, 
+NBB_VOID pds_ms_ctm_send_row_update_common (pds_ms::pds_ms_config_t  *conf, 
                                           pds_ms_amb_fill_fnptr_t     fill_api);
 
 #define PDS_MS_START_TXN(correlator) \

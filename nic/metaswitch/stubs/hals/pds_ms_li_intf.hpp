@@ -3,10 +3,10 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LI_INTF_HPP__
-#define __PDSA_LI_INTF_HPP__
+#ifndef __PDS_MS_LI_INTF_HPP__
+#define __PDS_MS_LI_INTF_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <nbase.h>
@@ -22,11 +22,11 @@ extern "C"
 
 namespace pds_ms {
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::mac_addr_wr_t;
-using pdsa_stub::cookie_t;
-using pdsa_stub::pds_batch_ctxt_guard_t;
-using pdsa_stub::if_obj_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::mac_addr_wr_t;
+using pds_ms::cookie_t;
+using pds_ms::pds_batch_ctxt_guard_t;
+using pds_ms::if_obj_t;
 
 class li_intf_t {
 public:    
@@ -57,7 +57,7 @@ private:
 private:
     bool cache_new_obj_in_cookie_(void);
     pds_batch_ctxt_guard_t make_batch_pds_spec_(void);
-    void fetch_store_info_(pdsa_stub::state_t* state);
+    void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
     pds_if_spec_t make_pds_if_spec_(void);
     pds_if_key_t make_pds_if_key_(void);

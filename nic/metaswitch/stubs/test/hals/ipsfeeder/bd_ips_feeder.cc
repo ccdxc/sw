@@ -4,7 +4,7 @@
 
 #include "nic/metaswitch/stubs/test/hals/ipsfeeder/bd_ips_feeder.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 void load_bd_test_input ()
 {

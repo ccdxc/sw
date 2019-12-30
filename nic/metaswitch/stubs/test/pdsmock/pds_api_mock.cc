@@ -23,25 +23,25 @@
 #include "nic/sdk/include/sdk/platform.hpp"
 
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include <thread>
 
 pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
 {
-    auto pds_mock = dynamic_cast<pdsa_test::pds_mock_t*>(pdsa_test::test_params()->test_output);
+    auto pds_mock = dynamic_cast<pds_ms_test::pds_mock_t*>(pds_ms_test::test_params()->test_output);
     if (pds_mock == nullptr) {
         // Not running in mock test mode - return dummy
-        auto pds_mock = new pdsa_test::pds_mock_t(true /* sim */);
-        pds_mock->cookie = (pdsa_stub::cookie_t*) batch_params->cookie;
+        auto pds_mock = new pds_ms_test::pds_mock_t(true /* sim */);
+        pds_mock->cookie = (pds_ms::cookie_t*) batch_params->cookie;
         return (uint64_t) pds_mock;
     }
-    pds_mock->cookie = (pdsa_stub::cookie_t*) batch_params->cookie;
-    pds_mock->async = (pdsa_stub::cookie_t*) batch_params->async;
+    pds_mock->cookie = (pds_ms::cookie_t*) batch_params->cookie;
+    pds_mock->async = (pds_ms::cookie_t*) batch_params->async;
     if (pds_mock->async) {
         pds_mock->cookie->ips_mock = 
-            pdsa_test::test_params()->test_input->ips_mock();
+            pds_ms_test::test_params()->test_input->ips_mock();
     }
     return ((pds_batch_ctxt_t) pds_mock);
 }
@@ -49,12 +49,12 @@ pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params)
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) 
 {
     // Gtest mode
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     int count = 0;
     auto& pds_ret_status =  pds_mock->pds_ret_status;
 
     if (pds_mock->sim) {
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, pds_mock->cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, pds_mock->cookie);
         cb.detach();
         return SDK_RET_OK;
     }
@@ -80,7 +80,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         switch (expected_pds.obj_id) {
         case OBJ_ID_TEP: 
         {
-            if (!pdsa_test::pds_tep_mock_validate (expected_pds, rcvd_pds)) {
+            if (!pds_ms_test::pds_tep_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
                 return SDK_RET_OK;
             }
@@ -88,7 +88,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         }
         case OBJ_ID_NEXTHOP_GROUP:
         {
-            if (!pdsa_test::pds_nhgroup_mock_validate (expected_pds, rcvd_pds)) {
+            if (!pds_ms_test::pds_nhgroup_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
                 return SDK_RET_OK;
             }
@@ -96,7 +96,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         }
         case OBJ_ID_IF: 
         {
-            if (!pdsa_test::pds_if_mock_validate (expected_pds, rcvd_pds)) {
+            if (!pds_ms_test::pds_if_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
                 return SDK_RET_OK;
             }
@@ -104,7 +104,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         }
         case OBJ_ID_SUBNET: 
         {
-            if (!pdsa_test::pds_subnet_mock_validate (expected_pds, rcvd_pds)) {
+            if (!pds_ms_test::pds_subnet_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
                 return SDK_RET_OK;
             }
@@ -112,7 +112,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         }
         case OBJ_ID_VPC: 
         {
-            if (!pdsa_test::pds_vpc_mock_validate (expected_pds, rcvd_pds)) {
+            if (!pds_ms_test::pds_vpc_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
                 return SDK_RET_OK;
             }
@@ -137,7 +137,7 @@ sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
 
 sdk_ret_t pds_if_create(pds_if_spec_s *spec,
                         pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -157,7 +157,7 @@ sdk_ret_t pds_if_read_all(if_read_cb_t cb, void *ctxt) {
 
 sdk_ret_t pds_if_update(pds_if_spec_s *spec,
                         pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -168,7 +168,7 @@ sdk_ret_t pds_if_update(pds_if_spec_s *spec,
 
 sdk_ret_t pds_if_delete(pds_if_key_t *key,
                         pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_IF, API_OP_DELETE);
     pds_mock->rcvd_pds.back().intf.key = *key;
     return SDK_RET_OK;
@@ -260,7 +260,7 @@ sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key,
 
 sdk_ret_t pds_tep_create(pds_tep_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_CREATE);
     pds_mock->rcvd_pds.back().tep = *spec;
     return SDK_RET_OK;
@@ -272,7 +272,7 @@ sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info) {
 
 sdk_ret_t pds_tep_update(pds_tep_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -283,7 +283,7 @@ sdk_ret_t pds_tep_update(pds_tep_spec_s *spec,
 
 sdk_ret_t pds_tep_delete(pds_tep_key_t *key,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_DELETE);
     pds_mock->rcvd_pds.back().tep.key = *key;
     return SDK_RET_OK;
@@ -310,7 +310,7 @@ sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key,
 
 sdk_ret_t pds_vpc_create(pds_vpc_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -325,7 +325,7 @@ sdk_ret_t pds_vpc_read(pds_vpc_key_t *key, pds_vpc_info_t *info) {
 
 sdk_ret_t pds_vpc_update(pds_vpc_spec_s *spec,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -336,7 +336,7 @@ sdk_ret_t pds_vpc_update(pds_vpc_spec_s *spec,
 
 sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key,
                          pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_VPC, API_OP_DELETE);
     pds_mock->rcvd_pds.back().vpc.key = *key;
     return SDK_RET_OK;
@@ -390,7 +390,7 @@ sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_s *spec,
 
 sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
                             pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -401,7 +401,7 @@ sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
 
 sdk_ret_t pds_subnet_update(pds_subnet_spec_s *spec,
                             pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -412,7 +412,7 @@ sdk_ret_t pds_subnet_update(pds_subnet_spec_s *spec,
 
 sdk_ret_t pds_subnet_delete(pds_subnet_key_s *key,
                             pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_SUBNET, API_OP_DELETE);
     pds_mock->rcvd_pds.back().subnet.key = *key;
     return SDK_RET_OK;
@@ -440,7 +440,7 @@ sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_s *spec,
 
 sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_s *spec,
                                    pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -456,7 +456,7 @@ sdk_ret_t pds_nexthop_group_read(pds_nexthop_key_t *key,
 
 sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_s *spec,
                                    pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
         return SDK_RET_ENTRY_EXISTS;
     }
@@ -467,7 +467,7 @@ sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_s *spec,
 
 sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
                                    pds_batch_ctxt_t bctxt) {
-    auto pds_mock = (pdsa_test::pds_mock_t*) bctxt;
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_NEXTHOP_GROUP, API_OP_DELETE);
     pds_mock->rcvd_pds.back().nhgroup.key = *key;
     return SDK_RET_OK;

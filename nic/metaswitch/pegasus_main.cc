@@ -48,7 +48,7 @@ void *pds_ms_nbase_thread_init (void *ctxt)
     // opting for graceful termination
     SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
-    if (!pds_ms_stub_mgmt_init()) {
+    if (!pds_ms_mgmt_init()) {
         SDK_ASSERT("pdsa init failed!");
     }
 

@@ -4,13 +4,13 @@
 //---------------------------------------------------------------
  
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 
 namespace pds_ms {
 
-using pdsa_stub::vpc_obj_t;
-using pdsa_stub::state_t;
+using pds_ms::vpc_obj_t;
+using pds_ms::state_t;
 
 li_integ_subcomp_t* li_is () 
 {

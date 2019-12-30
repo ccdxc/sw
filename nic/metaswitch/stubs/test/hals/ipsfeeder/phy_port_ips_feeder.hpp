@@ -5,14 +5,14 @@
 #define __PHY_PORT_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/phy_port_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/apollo/test/base/base.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 
 extern NBB_ULONG li_proc_id;
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class phy_port_ips_feeder_t final : public phy_port_input_params_t {
 public:

@@ -4,7 +4,7 @@
 
 #include "nic/metaswitch/stubs/test/hals/ipsfeeder/vxlan_ips_feeder.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 void load_vxlan_test_input ()
 {

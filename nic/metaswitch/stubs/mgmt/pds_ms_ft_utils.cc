@@ -3,7 +3,7 @@
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill ftsEntityTable: AMB_CIPR_FTS_ENTITY 
 NBB_VOID 

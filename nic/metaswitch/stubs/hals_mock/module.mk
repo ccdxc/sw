@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
-MODULE_TARGET   = libpdsahals_mock.so
+MODULE_TARGET   = libpdsmshals_mock.so
 MODULE_PREREQS  = metaswitch.submake
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_ARCH     = x86_64

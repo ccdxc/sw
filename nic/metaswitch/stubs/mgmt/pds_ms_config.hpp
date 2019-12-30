@@ -20,7 +20,7 @@ extern "C" {
 
 // TODO: check if nbbxtype.h include is enough
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 typedef struct pds_ms_config_s {
     NBB_ULONG   oid_len;

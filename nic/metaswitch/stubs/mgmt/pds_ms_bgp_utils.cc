@@ -2,7 +2,7 @@
 //Purpose: Helper APIs for metaswitch BGP-RM/NM components
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/pdsa_stubs_init.hpp"
+#include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "qb0mib.h"
 
 namespace pds {
@@ -48,7 +48,7 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
 }
 } // end namespace pds
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill bgpRmEntTable: AMB_BGP_RM_ENT
 NBB_VOID

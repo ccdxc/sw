@@ -5,13 +5,13 @@
 
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 
 namespace pds_ms {
 
-using pdsa_stub::bd_obj_t;
-using pdsa_stub::state_t;
+using pds_ms::bd_obj_t;
+using pds_ms::state_t;
 
 void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips)
 {

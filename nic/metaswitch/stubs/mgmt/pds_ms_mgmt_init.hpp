@@ -4,6 +4,6 @@
 #ifndef __PDS_MS_MGMT_INIT_HPP__
 #define __PDS_MS_MGMT_INIT_HPP__
 
-bool pds_ms_stub_mgmt_init();
+bool pds_ms_mgmt_init();
 
 #endif

@@ -77,7 +77,7 @@ lim_sw_intf_fill_func (CPInterfaceSpec&    req,
 }
 } // end of namespace pds
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill limEntTable: AMB_LIM_ENT
 NBB_VOID

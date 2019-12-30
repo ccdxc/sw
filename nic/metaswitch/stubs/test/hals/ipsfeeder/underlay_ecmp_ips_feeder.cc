@@ -4,7 +4,7 @@
 
 #include "nic/metaswitch/stubs/test/hals/ipsfeeder/underlay_ecmp_ips_feeder.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 void
 load_underlay_ecmp_test_input ()

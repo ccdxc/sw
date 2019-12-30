@@ -3,16 +3,16 @@
 // Stub state implementation
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state_init.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state_init.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 state_t* state_t::g_state_ = nullptr;
 std::mutex state_t::g_mtx_;
@@ -21,22 +21,22 @@ template<> sdk::lib::slab* slab_obj_t<cookie_t>::slab_ = nullptr;
 
 state_t::state_t(void)
 {    
-    tep_slab_init(slabs_, PDSA_TEP_SLAB_ID);
-    if_slab_init(slabs_, PDSA_IF_SLAB_ID);
-    host_lif_slab_init(slabs_, PDSA_HOST_LIF_SLAB_ID);
-    bd_slab_init(slabs_, PDSA_BD_SLAB_ID);
-    vpc_slab_init (slabs_, PDSA_VPC_SLAB_ID);
+    tep_slab_init(slabs_, PDS_MS_TEP_SLAB_ID);
+    if_slab_init(slabs_, PDS_MS_IF_SLAB_ID);
+    host_lif_slab_init(slabs_, PDS_MS_HOST_LIF_SLAB_ID);
+    bd_slab_init(slabs_, PDS_MS_BD_SLAB_ID);
+    vpc_slab_init (slabs_, PDS_MS_VPC_SLAB_ID);
 
-    slabs_[PDSA_COOKIE_SLAB_ID].
-        reset(sdk::lib::slab::factory("PDSA-COOKIE", 
-                                      PDSA_COOKIE_SLAB_ID, 
+    slabs_[PDS_MS_COOKIE_SLAB_ID].
+        reset(sdk::lib::slab::factory("PDS-MS-COOKIE", 
+                                      PDS_MS_COOKIE_SLAB_ID, 
                                       sizeof(cookie_t), 
                                       100, 
                                       true, true, true));
-    if (unlikely(!slabs_[PDSA_COOKIE_SLAB_ID])) {
+    if (unlikely(!slabs_[PDS_MS_COOKIE_SLAB_ID])) {
         throw Error("SLAB creation failed for Cookie");
     }
-    cookie_t::set_slab(slabs_[PDSA_COOKIE_SLAB_ID].get());
+    cookie_t::set_slab(slabs_[PDS_MS_COOKIE_SLAB_ID].get());
 }
 
 bool 

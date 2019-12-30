@@ -5,7 +5,7 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -17,7 +17,7 @@ extern NBB_ULONG hals_proc_id;
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
+using pds_ms::Error;
 
 #define NHPI_GET_FIRST_NH(ips, list_ptr) \
        (ATG_NHPI_APPENDED_NEXT_HOP*) \
@@ -110,7 +110,7 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(void) {
     sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(cookie_uptr_); // Cookie should have been alloc before
     pds_batch_params_t bp { PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
-                            pdsa_stub::hal_callback,
+                            pds_ms::hal_callback,
                             cookie_uptr_.get() };
     auto bctxt = pds_batch_start(&bp);
 
@@ -199,7 +199,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
 
         pds_bctxt_guard = make_batch_pds_spec_(); 
         // If we have batched multiple IPS earlier flush it now
@@ -267,7 +267,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                      ips_info_.pathset_id);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
 }
@@ -289,7 +289,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     pds_bctxt_guard = make_batch_pds_spec_ (); 
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         // If we have batched multiple IPS earlier flush it now
         // Cannot defer Nexthop updates
         state_ctxt.state()->flush_outstanding_pds_batch();

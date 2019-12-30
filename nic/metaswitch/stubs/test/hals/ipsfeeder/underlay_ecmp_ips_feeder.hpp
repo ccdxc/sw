@@ -6,7 +6,7 @@
 #define __UNDERLAY_ECMP_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include <hals_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
 #include "nic/apollo/test/base/utils.hpp"
@@ -14,7 +14,7 @@
 
 extern NBB_ULONG hals_proc_id;
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class underlay_ecmp_ips_feeder_t final : public underlay_ecmp_input_params_t {
 public:

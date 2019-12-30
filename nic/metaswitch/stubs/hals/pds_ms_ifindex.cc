@@ -4,15 +4,15 @@
 //--------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pds_ms {
-using pdsa_stub::state_t;
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::ms_iftype_t;
-using pdsa_stub::if_obj_t;
+using pds_ms::state_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::ms_iftype_t;
+using pds_ms::if_obj_t;
 
 uint32_t 
 ms_to_pds_ifindex (uint32_t ms_ifindex)

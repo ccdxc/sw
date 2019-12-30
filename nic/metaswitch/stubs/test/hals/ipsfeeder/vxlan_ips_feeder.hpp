@@ -5,11 +5,11 @@
 #define __VXLAN_IPS_FEEDER_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/apollo/test/base/base.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 class vxlan_ips_feeder_t final : public vxlan_input_params_t {
 public:
@@ -25,9 +25,9 @@ public:
         ATG_LIPI_VXLAN_ADD_UPDATE add_upd;
       // generate_ips_header (add_upd); 
         add_upd.id.if_index = tnl_ifindex;
-        pdsa_stub::pds_to_ms_ipaddr(source_ip, 
+        pds_ms::pds_to_ms_ipaddr(source_ip, 
                                     &(add_upd.vxlan_settings.source_ip));
-        pdsa_stub::pds_to_ms_ipaddr(dest_ip, &(add_upd.vxlan_settings.dest_ip));
+        pds_ms::pds_to_ms_ipaddr(dest_ip, &(add_upd.vxlan_settings.dest_ip));
         NBB_CORR_PUT_VALUE(add_upd.vxlan_settings.dp_pathset_correlator, unh_dp_idx);
         return add_upd;
     }

@@ -6,11 +6,11 @@
 #include <hals_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
+using pds_ms::Error;
 //-------------------------------------------------------------------------
 // NHPI
 //-------------------------------------------------------------------------

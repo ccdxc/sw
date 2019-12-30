@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA LI stub DP APIs
+// PDS-MS LI stub DP APIs
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LI_HPP__
-#define __PDSA_LI_HPP__
+#ifndef __PDS_MS_LI_HPP__
+#define __PDS_MS_LI_HPP__
 
 #include <nbase.h>
 #include <ntl_remote_object.hpp>

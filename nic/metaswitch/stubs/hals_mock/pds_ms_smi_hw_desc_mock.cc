@@ -30,7 +30,7 @@ namespace smi
 HwDesc*
 create_hw_desc(void)
 {
-    static pdsa_stub::mock_smi_hw_desc_t g_mock_smi_hw_desc_;
+    static pds_ms::mock_smi_hw_desc_t g_mock_smi_hw_desc_;
     return &g_mock_smi_hw_desc_;
 }
 } // End namespace

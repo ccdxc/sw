@@ -5,12 +5,12 @@
 #include "nic/metaswitch/stubs/test/pdsmock/bd_pds_mock.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include <cstdlib>
 #include <cstdio>
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 void load_bd_test_output ()
 {
@@ -39,10 +39,10 @@ void bd_pds_mock_t::validate_()
     if (mock_pds_spec_op_fail_ ||
         mock_pds_batch_commit_fail_) {
         // Verify all temporary objects and cookies are freed
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == (num_bd_objs_));
-        ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID) == 0);
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_));
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
         auto bd_obj = state->bd_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
         ASSERT_FALSE(bd_obj == nullptr);
         ASSERT_FALSE(bd_obj->properties().hal_created);
@@ -52,13 +52,13 @@ void bd_pds_mock_t::validate_()
      // Verify temporary objects and cookie are created as expected
 
     { // Enter state thread context
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
         if (op_delete_) {
             // Object is removed from store synchronously for deletes
-            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == (num_bd_objs_-1));
+            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_-1));
         } else if (op_create_) {
-            ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == (num_bd_objs_));
+            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_));
         }
     }
 
@@ -69,17 +69,17 @@ void bd_pds_mock_t::validate_()
     if (op_create_ || op_delete_) {
         ASSERT_TRUE(pds_mock->async);
     }
-    auto cookie = (pdsa_stub::cookie_t*) pds_mock->cookie;
+    auto cookie = (pds_ms::cookie_t*) pds_mock->cookie;
     if (pds_mock->async) {
-        pdsa_stub::hal_callback((mock_pds_batch_async_fail_) 
+        pds_ms::hal_callback((mock_pds_batch_async_fail_) 
                                 ? SDK_RET_ERR : SDK_RET_OK, cookie);
     }
     if (mock_pds_batch_async_fail_) {
         // Verify no change to slab - all temporary objects released
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == num_bd_objs_);
-        ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID) == 0);
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == num_bd_objs_);
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
         auto bd_obj = state->bd_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
         ASSERT_FALSE(bd_obj == nullptr);
         ASSERT_FALSE(bd_obj->properties().hal_created);
@@ -87,7 +87,7 @@ void bd_pds_mock_t::validate_()
         return;
     }
 
-    auto state_ctxt = pdsa_stub::state_t::thread_context();
+    auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
     if (op_delete_) { 
         --num_bd_objs_;
@@ -96,9 +96,9 @@ void bd_pds_mock_t::validate_()
         ASSERT_FALSE(bd_obj == nullptr);
         ASSERT_TRUE(bd_obj->properties().hal_created);
     }
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_BD_SLAB_ID) == num_bd_objs_);
-    ASSERT_TRUE (state->get_slab_in_use (pdsa_stub::PDSA_COOKIE_SLAB_ID) == 0);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == num_bd_objs_);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
 }
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 

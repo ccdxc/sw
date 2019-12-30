@@ -20,7 +20,7 @@ mgmt_state_init (void)
 {
     try { 
         mgmt_state_t::create();
-    } catch (pdsa_stub::Error& e) {
+    } catch (pds_ms::Error& e) {
         SDK_TRACE_ERR("Mgmt state Initialization failed - %s", e.what());
         return false;
     }

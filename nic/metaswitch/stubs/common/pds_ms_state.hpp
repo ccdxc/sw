@@ -1,17 +1,17 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA global states
+// PDS-MS global states
 //--------------------------------------------------------------
 
-#ifndef __PDSA_STATE_HPP__
-#define __PDSA_STATE_HPP__
+#ifndef __PDS_MS_STATE_HPP__
+#define __PDS_MS_STATE_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_tep_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_if_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_vpc_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -23,19 +23,19 @@
 #define PDS_BATCH_PARAMS_EPOCH  1
 #define PDS_BATCH_PARAMS_ASYNC  true
 
-namespace pdsa_stub {
+namespace pds_ms {
 
-enum pdsa_tep_slab_id_e {
-    PDSA_TEP_SLAB_ID = 1,
-    PDSA_IF_SLAB_ID,
-    PDSA_HOST_LIF_SLAB_ID,
-    PDSA_BD_SLAB_ID,
-    PDSA_VPC_SLAB_ID,
-    PDSA_COOKIE_SLAB_ID,
-    PDSA_MAX_SLAB_ID
+enum pds_ms_tep_slab_id_e {
+    PDS_MS_TEP_SLAB_ID = 1,
+    PDS_MS_IF_SLAB_ID,
+    PDS_MS_HOST_LIF_SLAB_ID,
+    PDS_MS_BD_SLAB_ID,
+    PDS_MS_VPC_SLAB_ID,
+    PDS_MS_COOKIE_SLAB_ID,
+    PDS_MS_MAX_SLAB_ID
 };
 
-// Singleton that holds all global state for the PDSA stubs
+// Singleton that holds all global state for the PDS-MS stubs
 class state_t {
 public:
     struct context_t {
@@ -91,7 +91,7 @@ public:
     host_lif_store_t&  host_lif_store(void) {return host_lif_store_;}
     vpc_store_t& vpc_store(void) {return vpc_store_;}
 
-    uint32_t get_slab_in_use(pdsa_tep_slab_id_e slab_id) {
+    uint32_t get_slab_in_use(pds_ms_tep_slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
     } 
     uint32_t lnx_ifindex(uint32_t pds_ifindex) {
@@ -112,7 +112,7 @@ public:
 private:
     static constexpr uint32_t k_max_fp_ports = 2;
     // Unique ptr helps to uninitialize cleanly in case of initialization errors
-    slab_uptr_t slabs_[PDSA_MAX_SLAB_ID];
+    slab_uptr_t slabs_[PDS_MS_MAX_SLAB_ID];
 
     tep_store_t tep_store_; 
     bd_store_t bd_store_; 

@@ -1,16 +1,16 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_TEST_VRF_PARAMS_HPP__
-#define __PDSA_TEST_VRF_PARAMS_HPP__
+#ifndef __PDS_MS_TEST_VRF_PARAMS_HPP__
+#define __PDS_MS_TEST_VRF_PARAMS_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 
-namespace pdsa_test{
+namespace pds_ms_test{
 
 class vrf_input_params_t : public test_input_base_t {
 public:
@@ -31,8 +31,8 @@ public:
     vpc_spec.fabric_encap.val.vnid  = 100;
     vpc_spec.tos = 5;
 
-    auto state_ctxt = pdsa_stub::state_t::thread_context(); 
-    state_ctxt.state()->vpc_store().add_upd (vrf_id, new pdsa_stub::vpc_obj_t(vpc_spec));
+    auto state_ctxt = pds_ms::state_t::thread_context(); 
+    state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
    }
    void modify(void) override {
        vpc_spec.fabric_encap.val.vnid  += 100;
@@ -45,11 +45,11 @@ public:
        mac_str_to_addr((char*) "04:26:23:29:20:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table.id = vrf_id;
        vpc_spec.fabric_encap.val.vnid  += 100;
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
-       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pdsa_stub::vpc_obj_t(vpc_spec));
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
    }; 
    void trigger_delete(void) override { 
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
        state_ctxt.state()->vpc_store().erase (vrf_id);
    }
    virtual ~vrf_input_params_t(void) {};
@@ -61,8 +61,8 @@ public:
        mac_str_to_addr((char*) "04:66:63:69:60:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table.id = vrf_id;
        vpc_spec.fabric_encap.val.vnid  += 100;
-       auto state_ctxt = pdsa_stub::state_t::thread_context(); 
-       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pdsa_stub::vpc_obj_t(vpc_spec));
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
 
        // And then change it to simulate Direct Update
        vpc_spec.fabric_encap.val.vnid  += 100;

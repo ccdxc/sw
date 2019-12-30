@@ -6,7 +6,7 @@
 #include <thread>
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -71,7 +71,7 @@ extern NBB_ULONG l2f_proc_id;
 
 namespace pds_ms {
 
-using pdsa_stub::Error;
+using pds_ms::Error;
 
 void l2f_bd_t::parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     ips_info_.bd_id = bd_add_upd_ips->bd_id.bd_id;
@@ -79,7 +79,7 @@ void l2f_bd_t::parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     // Rest of the attributes can be fetched directly from cached spec
 }
 
-void l2f_bd_t::fetch_store_info_(pdsa_stub::state_t* state) {
+void l2f_bd_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.bd_obj = state->bd_store().get(ips_info_.bd_id);
     if (store_info_.bd_obj == nullptr) {return;} 
     if (!store_info_.bd_obj->properties().hal_created) {
@@ -111,7 +111,7 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(bool async) {
     }
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
                            async ? PDS_BATCH_PARAMS_ASYNC : false, 
-                           pdsa_stub::hal_callback,
+                           pds_ms::hal_callback,
                            async ? cookie_uptr_.get() : nullptr};
     auto bctxt = pds_batch_start(&bp);
 
@@ -168,10 +168,10 @@ pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
 void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     bd_add_upd_ips->return_code = ATG_OK;
     parse_ips_info_(bd_add_upd_ips);
-    pdsa_stub::cookie_t* cookie;
+    pds_ms::cookie_t* cookie;
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // The prev BD IPS response could have possibly been delayed
@@ -204,7 +204,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                 SDK_TRACE_DEBUG ("MS BD %d: Create failed "
                                  "- delete store obj ",
                                  bd_add_upd_ips->bd_id);
-                auto state_ctxt = pdsa_stub::state_t::thread_context();
+                auto state_ctxt = pds_ms::state_t::thread_context();
                 auto bd_obj = state_ctxt.state()->bd_store().
                                    get(bd_add_upd_ips->bd_id.bd_id);
                 if (bd_obj != nullptr) {
@@ -282,7 +282,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
 
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
-        std::thread cb(pdsa_stub::hal_callback, SDK_RET_OK, cookie);
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
 }
@@ -302,7 +302,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     SDK_TRACE_INFO ("MS BD %d: Delete IPS", ips_info_.bd_id);
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
@@ -347,7 +347,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // the HAL processing is always asynchronous. 
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // The prev IPS response could have possibly been delayed
@@ -405,7 +405,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // the HAL processing is always asynchronous. 
 
     { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pdsa_stub::state_t::thread_context();
+        auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // The prev IPS response could have possibly been delayed

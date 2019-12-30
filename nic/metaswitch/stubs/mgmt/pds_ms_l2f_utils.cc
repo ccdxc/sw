@@ -8,7 +8,7 @@
 using namespace std;
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill l2fEntTable: AMB_STUBS_L2F_ENT
 NBB_VOID

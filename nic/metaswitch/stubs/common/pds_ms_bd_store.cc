@@ -1,21 +1,21 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDSA stub Overlay Bridge Domain store
+// PDS-MS stub Overlay Bridge Domain store
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_bd_store.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 
-namespace pdsa_stub {
+namespace pds_ms {
 template<> sdk::lib::slab* slab_obj_t<bd_obj_t>::slab_ = nullptr;
 
 void
 bd_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
-        reset(sdk::lib::slab::factory("PDSA-BD", slab_id, 
+        reset(sdk::lib::slab::factory("PDS-MS-BD", slab_id, 
                                       sizeof(bd_obj_t), 
                                       8,               // PDS_MAX_SUBNET/8 
                                       true, true, true));

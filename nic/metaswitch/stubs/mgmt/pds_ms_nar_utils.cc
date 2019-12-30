@@ -4,7 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nar_mib.h"
 
-namespace pds_ms_stub {
+namespace pds_ms {
 
 // Fill narEntTable: AMB_STUBS_NAR_ENT
 NBB_VOID

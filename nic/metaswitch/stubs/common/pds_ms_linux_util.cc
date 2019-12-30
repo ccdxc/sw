@@ -3,8 +3,8 @@
 // Utilities to interface with Linux OS
 //---------------------------------------------------------------
 
-#include "nic/metaswitch/stubs/common/pdsa_linux_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_linux_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include <ifaddrs.h>
@@ -23,7 +23,7 @@
 #include <ctime>
 #include <thread>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 // Utility function to get MAC address for interface from Linux
 static bool 

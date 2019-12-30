@@ -18,9 +18,9 @@
 #include "nic/apollo/test/api/utils/vpc_peer.hpp"
 #include "nic/apollo/framework/api.h"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 
-namespace pdsa_test {
+namespace pds_ms_test {
 
 struct spec_t {
     obj_id_t               obj_id;
@@ -39,7 +39,7 @@ struct spec_t {
 };
 
 using batch_spec_t = std::vector<spec_t>;
-using pdsa_stub::cookie_t;
+using pds_ms::cookie_t;
 
 class pds_mock_t : public test_output_base_t {
 public:
@@ -89,6 +89,6 @@ protected:
    }
 };
 
-} // End namespace pdsa_test
+} // End namespace pds_ms_test
 
 #endif

@@ -166,7 +166,7 @@ NBB_VOID lim_sw_intf_fill_func (CPInterfaceSpec&    req,
                                 NBB_LONG            row_status);
 } // namespace pds
 
-namespace pds_ms_stub {
+namespace pds_ms {
 NBB_VOID pds_ms_li_stub_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_l2f_stub_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_smi_stub_create (pds_ms_config_t *conf);

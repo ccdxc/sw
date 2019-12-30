@@ -1,14 +1,14 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// Exception used by all PDSA stub components
+// Exception used by all PDS-MS stub components
 //---------------------------------------------------------------
 
-#ifndef __PDSA_ERR_HPP__
-#define __PDSA_ERR_HPP__
+#ifndef __PDS_MS_ERR_HPP__
+#define __PDS_MS_ERR_HPP__
 
 #include <stdexcept>
 
-namespace pdsa_stub {
+namespace pds_ms {
 
 class Error : public std::runtime_error {
 public:

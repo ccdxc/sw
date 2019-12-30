@@ -3,12 +3,12 @@
 // LI VXLAN Tunnel HAL integration
 //---------------------------------------------------------------
 
-#ifndef __PDSA_LI_INTF_HPP__
-#define __PDSA_LI_INTF_HPP__
+#ifndef __PDS_MS_LI_INTF_HPP__
+#define __PDS_MS_LI_INTF_HPP__
 
-#include "nic/metaswitch/stubs/common/pdsa_cookie.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <nbase.h>
@@ -22,10 +22,10 @@ extern "C"
 }
 namespace pds_ms {
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::mac_addr_wr_t;
-using pdsa_stub::cookie_t;
-using pdsa_stub::pds_batch_ctxt_guard_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::mac_addr_wr_t;
+using pds_ms::cookie_t;
+using pds_ms::pds_batch_ctxt_guard_t;
 
 class hals_ecmp_t {
 public:    

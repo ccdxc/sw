@@ -1,17 +1,17 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#ifndef __PDSA_TEST_UNDERLAY_ECMP_PARAMS_HPP__
-#define __PDSA_TEST_UNDERLAY_ECMP_PARAMS_HPP__
+#ifndef __PDS_MS_TEST_UNDERLAY_ECMP_PARAMS_HPP__
+#define __PDS_MS_TEST_UNDERLAY_ECMP_PARAMS_HPP__
 
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_util.hpp"
-#include "nic/metaswitch/stubs/common/pdsa_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 
-namespace pdsa_test{
+namespace pds_ms_test{
 
-using pdsa_stub::ms_ifindex_t;
-using pdsa_stub::mac_addr_wr_t;
+using pds_ms::ms_ifindex_t;
+using pds_ms::mac_addr_wr_t;
 
 struct nhinfo_t {
     ms_ifindex_t   l3_ifindex;
