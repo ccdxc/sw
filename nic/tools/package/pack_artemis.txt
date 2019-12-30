@@ -244,11 +244,11 @@ nic/third-party/libxml2/$ARCH/lib/libxml2.so.2                    /nic/lib/
 nic/third-party/liblzma/$ARCH/lib/liblzma.so.5                    /nic/lib/
 nic/third-party/libicuuc/$ARCH/lib/libicuuc.so.60                 /nic/lib/
 nic/third-party/libicuuc/$ARCH/lib/libicudata.so.60               /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsahals.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsacommon.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsamgmt.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsastubs.so                     /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsamgmtsvc.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmshals.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmscommon.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmsmgmt.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmsstubs.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmsmgmtsvc.so                  /nic/lib/
 nic/metaswitch/config/nbase.ini                                   /nic/conf/
 
 # cronjobs
