@@ -28,12 +28,10 @@
 #ifndef __FTL_INCLUDES_HPP__
 #define __FTL_INCLUDES_HPP__
 
-#include "ftlaf.hpp"
-
 namespace sdk {
 namespace table {
 
-class FtlBaseTable;
+class ftl_base;
 
 namespace ftlint {
 class indexer;
@@ -44,9 +42,9 @@ class tablestats;
 namespace internal {
 
 class Apictx;
-class BaseTable;
-class MainTable;
-class HintTable;
+class base_table;
+class main_table;
+class hint_table;
 class Bucket;
 
 } // namespace internal
@@ -57,10 +55,10 @@ using namespace std;
 using namespace sdk::lib;
 using namespace sdk::platform::capri;
 
-using sdk::table::FtlBaseTable;
-using sdk::table::internal::MainTable;
-using sdk::table::internal::HintTable;
-using sdk::table::internal::BaseTable;
+using sdk::table::ftl_base;
+using sdk::table::internal::main_table;
+using sdk::table::internal::hint_table;
+using sdk::table::internal::base_table;
 using sdk::table::internal::Apictx;
 using sdk::table::internal::Bucket;
 

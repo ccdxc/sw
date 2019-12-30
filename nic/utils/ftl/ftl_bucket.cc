@@ -305,7 +305,7 @@ Bucket::find_(Apictx *ctx) {
     // TODO
 
     //char buff[500];
-    //((FTL_MAKE_AFTYPE(entry_t)*)ctx->params->entry)->tostr(buff, 500);
+    //(ctx->params->entry)->tostr(buff, 500);
     //FTL_TRACE_VERBOSE("Key :%s", buff);
     match = ctx->entry->compare_key(ctx->params->entry);
     if (match) {

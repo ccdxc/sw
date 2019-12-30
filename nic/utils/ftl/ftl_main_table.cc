@@ -11,25 +11,25 @@
 #define MASK(_nbits) ((1 << (_nbits)) - 1)
 
 //---------------------------------------------------------------------------
-// Factory method to instantiate the MainTable class
+// Factory method to instantiate the main_table class
 //---------------------------------------------------------------------------
-MainTable *
-MainTable::factory(sdk::table::properties_t *props) {
+main_table *
+main_table::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
-    MainTable *table = NULL;
+    main_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    mem = (MainTable *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
-                                          sizeof(MainTable));
+    mem = (main_table *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_MAIN_TABLE,
+                                          sizeof(main_table));
     if (!mem) {
         return NULL;
     }
 
-    table = new (mem) MainTable();
+    table = new (mem) main_table();
 
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
-        table->~MainTable();
+        table->~main_table();
         SDK_FREE(SDK_MEM_ALLOC_FTL_MAIN_TABLE, mem);
     }
 
@@ -37,44 +37,44 @@ MainTable::factory(sdk::table::properties_t *props) {
 }
 
 //---------------------------------------------------------------------------
-// MainTable init_()
+// main_table init_()
 //---------------------------------------------------------------------------
 sdk_ret_t
-MainTable::init_(sdk::table::properties_t *props) {
+main_table::init_(sdk::table::properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = BaseTable::init_(props->ptable_id, props->ptable_size);
+    ret = base_table::init_(props->ptable_id, props->ptable_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
-    FTL_TRACE_VERBOSE("MainTable: Created MainTable "
+    FTL_TRACE_VERBOSE("main_table: Created main_table "
                       "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                       table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
-    hint_table_ = HintTable::factory(props);
+    hint_table_ = hint_table::factory(props);
     SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
 
     return ret;
 }
 
 void
-MainTable::destroy_(MainTable *table) {
-    HintTable::destroy_(table->hint_table_);
-    BaseTable::destroy_(table);
+main_table::destroy_(main_table *table) {
+    hint_table::destroy_(table->hint_table_);
+    base_table::destroy_(table);
 }
 
 inline void 
-MainTable::lock_(Apictx *ctx) {
+main_table::lock_(Apictx *ctx) {
     buckets_[ctx->table_index].lock_();
 }
 
 inline void
-MainTable::unlock_(Apictx *ctx) {
+main_table::unlock_(Apictx *ctx) {
     buckets_[ctx->table_index].unlock_();
 }
 
 
 sdk_ret_t
-MainTable::initctx_(Apictx *ctx) {
+main_table::initctx_(Apictx *ctx) {
     // By now, we should have a valid hash value.
     SDK_ASSERT(ctx->params->hash_valid);
 
@@ -90,10 +90,10 @@ MainTable::initctx_(Apictx *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// MainTable insert_: Insert entry to main table
+// main_table insert_: Insert entry to main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-MainTable::insert_(Apictx *ctx) {
+main_table::insert_(Apictx *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     // INSERT SEQUENCE:
@@ -125,7 +125,7 @@ MainTable::insert_(Apictx *ctx) {
         ret = buckets_[ctx->table_index].write_(ctx);
         ctx->params->handle.pindex(ctx->table_index);
     } else {
-        FTL_TRACE_ERR("MainTable: insert failed: ret:%d", ret);
+        FTL_TRACE_ERR("main_table: insert failed: ret:%d", ret);
     }
 
     unlock_(ctx);
@@ -133,10 +133,10 @@ MainTable::insert_(Apictx *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// MainTable remove_: Remove entry from main table
+// main_table remove_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-MainTable::remove_(Apictx *ctx) {
+main_table::remove_(Apictx *ctx) {
 __label__ done;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
@@ -162,10 +162,10 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// MainTable update_: Remove entry from main table
+// main_table update_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-MainTable::find_(Apictx *ctx,
+main_table::find_(Apictx *ctx,
                       Apictx **match_ctx) {
 __label__ done;
     if (!ctx->inited) {
@@ -191,7 +191,7 @@ done:
 }
 
 sdk_ret_t
-MainTable::update_(Apictx *ctx) {
+main_table::update_(Apictx *ctx) {
 __label__ done;
     Apictx *match_ctx = NULL;
 
@@ -208,7 +208,7 @@ done:
 }
 
 sdk_ret_t
-MainTable::get_(Apictx *ctx) {
+main_table::get_(Apictx *ctx) {
 __label__ done;
     Apictx *match_ctx = NULL;
 
@@ -233,11 +233,11 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// MainTable iterate_: Iterate entries from main table
+// main_table iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
-MainTable::iterate_(Apictx *ctx) {
-    auto ret = BaseTable::iterate_(ctx);
+main_table::iterate_(Apictx *ctx) {
+    auto ret = base_table::iterate_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table iterate r:%d", ret);
 
     ret = hint_table_->iterate_(ctx);
@@ -247,11 +247,11 @@ done:
 }
 
 sdk_ret_t
-MainTable::clear_(Apictx *ctx) {
+main_table::clear_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (ctx->clear_global_state) {
-        ret = BaseTable::clear_(ctx);
+        ret = base_table::clear_(ctx);
         FTL_RET_CHECK_AND_GOTO(ret, done, "main table clear r:%d", ret);
 
         memclr(ctx->props->ptable_base_mem_va,

@@ -91,7 +91,7 @@ flow_table_pd::factory() {
 
 void
 flow_table_pd::destroy(flow_table_pd *ftpd) {
-    FtlBaseTable::destroy(ftpd->table_);
+    ftl_base::destroy(ftpd->table_);
     return;
 }
 
@@ -115,7 +115,7 @@ flow_table_pd::init() {
     params.entry_alloc_cb = flow_hash_info_entry_t::alloc;
     // params.entry_trace_en = true;
 
-    table_ = FtlBaseTable::factory(&params);
+    table_ = ftl_base::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
     return HAL_RET_OK;
 }

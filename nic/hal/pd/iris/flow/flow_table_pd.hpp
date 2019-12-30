@@ -9,7 +9,7 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftlv6.hpp"
+#include "nic/utils/ftl/ftl_base.hpp"
 
 using table::TableResponse;
 using internal::FlowHashGetResponse;
@@ -39,7 +39,7 @@ public:
     hal_ret_t dump(TableResponse *rsp);
 
 private:
-    FtlBaseTable *table_;
+    ftl_base *table_;
     std::string table_name_;
     uint32_t table_size_;
     uint32_t oflow_table_size_;

@@ -14,16 +14,15 @@
 #include "include/sdk/table.hpp"
 #include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftlv4.hpp"
-#include "nic/utils/ftl/ftlv6.hpp"
+#include "nic/utils/ftl/ftl_base.hpp"
 
 #include "ftltest_common.hpp"
 
 #define WITH_HASH true
 #define WITHOUT_HASH false
 
-using sdk::table::FtlBaseTable;
-using sdk::table::FtlBaseTable;
+using sdk::table::ftl_base;
+using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -33,8 +32,8 @@ using sdk::table::sdk_table_factory_params_t;
 
 class FtlGtestBase: public ::testing::Test {
 protected:
-    FtlBaseTable *v6table;
-    FtlBaseTable *v4table;
+    ftl_base *v6table;
+    ftl_base *v4table;
     uint32_t num_insert;
     uint32_t num_remove;
     uint32_t num_update;
@@ -63,12 +62,12 @@ protected:
         
         params.table_id = FTL_TBLID_IPV6;
         params.num_hints = 4;
-        v6table = FtlBaseTable::factory(&params);
+        v6table = ftl_base::factory(&params);
         assert(v6table);
 
         params.table_id = FTL_TBLID_IPV4;
         params.num_hints = 2;
-        v4table = FtlBaseTable::factory(&params);
+        v4table = ftl_base::factory(&params);
         assert(v4table);
 
         num_insert = 0;
@@ -85,8 +84,8 @@ protected:
     }
     virtual void TearDown() {
         ValidateStats();
-        FtlBaseTable::destroy(v6table);
-        FtlBaseTable::destroy(v4table);
+        ftl_base::destroy(v6table);
+        ftl_base::destroy(v4table);
         reset_cache();
         ftl_mock_cleanup();
         SDK_TRACE_VERBOSE("============== TEARDOWN : %s.%s ===============",

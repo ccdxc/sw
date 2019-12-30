@@ -49,5 +49,5 @@ MODULE_SRCS     := ${MODULE_SRCS} \
 endif
 MODULE_INCS     = ${NIC_CSR_INCS} \
                   ${BLD_PROTOGEN_DIR}
-MODULE_SOLIBS   = ftlv6
+MODULE_SOLIBS   = ${NIC_FTL_LIBS}
 include ${MKDEFS}/post.mk

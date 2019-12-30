@@ -16,8 +16,7 @@
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftlv4.hpp"
-#include "nic/utils/ftl/ftlv6.hpp"
+#include "nic/utils/ftl/ftl_base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -26,7 +25,7 @@
 #include "gen/p4gen/artemis/include/p4pd.h"
 #include "nic/apollo/p4/include/artemis_defines.h"
 
-using sdk::table::FtlBaseTable;
+using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -175,8 +174,8 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    FtlBaseTable *v6table;
-    FtlBaseTable *v4table;
+    ftl_base *v6table;
+    ftl_base *v4table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
     uint32_t epoch;
@@ -292,7 +291,7 @@ public:
         factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
         factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
-        v6table = FtlBaseTable::factory(&factory_params);
+        v6table = ftl_base::factory(&factory_params);
         assert(v6table);
 
         memset(&factory_params, 0, sizeof(factory_params));
@@ -303,7 +302,7 @@ public:
         factory_params.appdata2str = NULL;
         factory_params.entry_trace_en = false;
         factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
-        v4table = FtlBaseTable::factory(&factory_params);
+        v4table = ftl_base::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -355,8 +354,8 @@ public:
     }
 
     ~flow_test() {
-        FtlBaseTable::destroy(v6table);
-        FtlBaseTable::destroy(v4table);
+        ftl_base::destroy(v6table);
+        ftl_base::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {

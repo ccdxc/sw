@@ -6,8 +6,8 @@
 #ifndef __VPP_IMPL_FTL_WRAPPER_H__
 #define __VPP_IMPL_FTL_WRAPPER_H__
 
-typedef struct FtlBaseTable ftlv4;
-typedef struct FtlBaseTable ftlv6;
+typedef struct ftl_base ftlv4;
+typedef struct ftl_base ftlv6;
 
 #ifdef __cplusplus
 

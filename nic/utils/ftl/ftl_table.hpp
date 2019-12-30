@@ -16,10 +16,10 @@ typedef struct ftl_flow_hint_id_thr_local_pool_s {
     uint32_t        hint_ids[PDS_FLOW_HINT_POOL_COUNT_MAX];
 } ftl_flow_hint_id_thr_local_pool_t;
 
-class BaseTable {
+class base_table {
 public:
-    friend FtlBaseTable;
-    static void destroy_(BaseTable *table);
+    friend ftl_base;
+    static void destroy_(base_table *table);
 
 protected:
     uint32_t table_id_;
@@ -38,7 +38,7 @@ protected:
     }
 
 public:
-    BaseTable() {
+    base_table() {
         table_id_ = 0;
         table_size_ = 0;
         num_table_index_bits_ = 0;
@@ -47,7 +47,7 @@ public:
         slock_ = 0;
     }
 
-    ~BaseTable() {
+    ~base_table() {
         //SDK_SPINLOCK_DESTROY(&slock_);
     }
 
@@ -55,11 +55,11 @@ public:
     sdk_ret_t clear_(Apictx *ctx);
 };
 
-class HintTable: public BaseTable {
+class hint_table: public base_table {
 public:
-    friend FtlBaseTable;
-    friend MainTable;
-    static void destroy_(HintTable *table);
+    friend ftl_base;
+    friend main_table;
+    static void destroy_(hint_table *table);
 
 private:
     ftlindexer indexer_;
@@ -85,18 +85,18 @@ private:
 
 
 public:
-    static HintTable* factory(sdk::table::properties_t *props);
-    HintTable() {}
-    ~HintTable() {}
+    static hint_table* factory(sdk::table::properties_t *props);
+    hint_table() {}
+    ~hint_table() {}
 };
 
-class MainTable : public BaseTable {
+class main_table : public base_table {
 public:
-    friend FtlBaseTable;
-    static void destroy_(MainTable *table);
+    friend ftl_base;
+    static void destroy_(main_table *table);
 
 private:
-    HintTable *hint_table_;
+    hint_table *hint_table_;
     uint32_t num_hash_bits_;
 
 private:
@@ -117,14 +117,14 @@ private:
     void unlock_(Apictx *ctx);
 
 public:
-    static MainTable* factory(sdk::table::properties_t *props);
+    static main_table* factory(sdk::table::properties_t *props);
 
-    MainTable() {
+    main_table() {
         hint_table_ = NULL;
         num_hash_bits_ = 0;
     }
 
-    ~MainTable() {}
+    ~main_table() {}
 
 };
 

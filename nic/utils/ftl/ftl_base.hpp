@@ -5,17 +5,13 @@
 #ifndef __FTL_BASE_HPP__
 #define __FTL_BASE_HPP__
 
-#ifndef FTL_ADDRESS_PREFIX
-#error ftl.hpp header cannot be included directly.
-#endif
-
-#undef __FTL_INCLUDES_HPP__
+// #undef __FTL_INCLUDES_HPP__
 #include "ftl_includes.hpp"
 
 namespace sdk {
 namespace table {
 
-class FtlBaseTable {
+class ftl_base {
 private:
     sdk::table::properties_t *props_;
     void *main_table_;
@@ -31,11 +27,11 @@ private:
                        sdk_table_api_params_t *params);
 
 public:
-    static FtlBaseTable *factory(sdk_table_factory_params_t *params);
-    static void destroy(FtlBaseTable *f);
+    static ftl_base *factory(sdk_table_factory_params_t *params);
+    static void destroy(ftl_base *f);
 
-    FtlBaseTable() {}
-    ~FtlBaseTable() {}
+    ftl_base() {}
+    ~ftl_base() {}
 
     sdk_ret_t txn_start();
     sdk_ret_t txn_end();

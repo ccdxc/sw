@@ -9,18 +9,18 @@
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_base.hpp"
 
-// sdk::table::properties_t * FtlBaseTable::props_ = NULL;
-// void * FtlBaseTable::main_table_                = NULL;
+// sdk::table::properties_t * ftl_base::props_ = NULL;
+// void * ftl_base::main_table_                = NULL;
 // uint32_t hw_entry_count_                    = 0;
 
 #define FTL_API_BEGIN(_name) {\
     FTL_TRACE_VERBOSE("%s %s begin: %s %s", \
-                      "--", FTL_AFPFX_STR(), _name, "--");\
+                      "--", "ftl", _name, "--");\
 }
 
 #define FTL_API_END(_name, _status) {\
    FTL_TRACE_VERBOSE("%s %s end: %s (r:%d) %s", \
-                     "--", FTL_AFPFX_STR(), _name, _status, "--");\
+                     "--", "ftl", _name, _status, "--");\
 }
 
 #define FTL_API_BEGIN_() {\
@@ -53,19 +53,19 @@ crc32_aarch64(const uint64_t *p) {
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
-FtlBaseTable *
-FtlBaseTable::factory(sdk_table_factory_params_t *params) {
+ftl_base *
+ftl_base::factory(sdk_table_factory_params_t *params) {
     void *mem = NULL;
-    FtlBaseTable *f = NULL;
+    ftl_base *f = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
     //FTL_API_BEGIN("NewTable");
-    mem = (FtlBaseTable *) SDK_CALLOC(SDK_MEM_ALLOC_FTL, sizeof(FtlBaseTable));
+    mem = (ftl_base *) SDK_CALLOC(SDK_MEM_ALLOC_FTL, sizeof(ftl_base));
     if (mem) {
-        f = new (mem) FtlBaseTable();
+        f = new (mem) ftl_base();
         ret = f->init_(params);
         if (ret != SDK_RET_OK) {
-            f->~FtlBaseTable();
+            f->~ftl_base();
             SDK_FREE(SDK_MEM_ALLOC_FTL, mem);
             f = NULL;
         }
@@ -78,7 +78,7 @@ FtlBaseTable::factory(sdk_table_factory_params_t *params) {
 }
 
 sdk_ret_t
-FtlBaseTable::init_(sdk_table_factory_params_t *params) {
+ftl_base::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
     Apictx *apictx;
     p4pd_table_properties_t tinfo, ctinfo;
@@ -135,7 +135,7 @@ skip_props:
         goto skip_tables;
     }
 
-    main_table_ = MainTable::factory(props_);
+    main_table_ = main_table::factory(props_);
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
 
     FTL_TRACE_INFO("Creating Flow table.");
@@ -167,10 +167,10 @@ skip_tables:
 // ftl Destructor
 //---------------------------------------------------------------------------
 void
-FtlBaseTable::destroy(FtlBaseTable *t) {
+ftl_base::destroy(ftl_base *t) {
     FTL_API_BEGIN("DestroyTable");
     FTL_TRACE_VERBOSE("%p", t);
-    MainTable::destroy_(static_cast<MainTable*>(t->main_table_));
+    main_table::destroy_(static_cast<main_table*>(t->main_table_));
     FTL_API_END("DestroyTable", SDK_RET_OK);
     t->main_table_ = NULL;
     t->props_ = NULL;
@@ -182,7 +182,7 @@ FtlBaseTable::destroy(FtlBaseTable *t) {
 //---------------------------------------------------------------------------
 // TODO
 sdk_ret_t
-FtlBaseTable::genhash_(sdk_table_api_params_t *params) {
+ftl_base::genhash_(sdk_table_api_params_t *params) {
     static thread_local base_table_entry_t *hashkey = NULL;
     static thread_local base_table_entry_t *hashkey32 = NULL;
     static thread_local base_table_entry_t *hashkey64 = NULL;
@@ -230,7 +230,7 @@ FtlBaseTable::genhash_(sdk_table_api_params_t *params) {
 // ftl: Create API context. This is used by all APIs
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::ctxinit_(sdk_table_api_op_t op,
+ftl_base::ctxinit_(sdk_table_api_op_t op,
               sdk_table_api_params_t *params) {
     FTL_TRACE_VERBOSE("op:%d", op);
     if (SDK_TABLE_API_OP_IS_CRUD(op)) {
@@ -250,7 +250,7 @@ FtlBaseTable::ctxinit_(sdk_table_api_op_t op,
 // ftl Insert entry to ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::insert(sdk_table_api_params_t *params) {
+ftl_base::insert(sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -262,7 +262,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_INSERT, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<MainTable*>(main_table_)->insert_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->insert_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table insert r:%d", ret);
 
 done:
@@ -276,7 +276,7 @@ done:
 // ftl Update entry to ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::update(sdk_table_api_params_t *params) {
+ftl_base::update(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -288,7 +288,7 @@ FtlBaseTable::update(sdk_table_api_params_t *params) {
         goto update_return;
     }
 
-    ret = static_cast<MainTable*>(main_table_)->update_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->update_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("update_ failed. ret:%d", ret);
         goto update_return;
@@ -304,7 +304,7 @@ update_return:
 // ftl Remove entry from ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::remove(sdk_table_api_params_t *params) {
+ftl_base::remove(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -316,7 +316,7 @@ FtlBaseTable::remove(sdk_table_api_params_t *params) {
         goto remove_return;
     }
 
-    ret = static_cast<MainTable*>(main_table_)->remove_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->remove_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
         goto remove_return;
@@ -332,7 +332,7 @@ remove_return:
 // ftl Get entry from ftl table
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::get(sdk_table_api_params_t *params) {
+ftl_base::get(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
 
     FTL_API_BEGIN_();
@@ -344,7 +344,7 @@ FtlBaseTable::get(sdk_table_api_params_t *params) {
         goto get_return;
     }
 
-    ret = static_cast<MainTable*>(main_table_)->get_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->get_(apictx_);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("get_ failed. ret:%d", ret);
         goto get_return;
@@ -361,7 +361,7 @@ get_return:
 // As stats are maintained per thread, needs to call from each thread.
 //---------------------------------------------------------------------------
 sdk_ret_t
-FtlBaseTable::stats_get(sdk_table_api_stats_t *api_stats,
+ftl_base::stats_get(sdk_table_api_stats_t *api_stats,
                        sdk_table_stats_t *table_stats) {
     FTL_API_BEGIN_();
     api_stats_.get(api_stats);
@@ -372,7 +372,7 @@ FtlBaseTable::stats_get(sdk_table_api_stats_t *api_stats,
 }
 
 sdk_ret_t
-FtlBaseTable::iterate(sdk_table_api_params_t *params) {
+ftl_base::iterate(sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -382,7 +382,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<MainTable*>(main_table_)->iterate_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->iterate_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "iterate r:%d", ret);
 
 done:
@@ -391,7 +391,7 @@ done:
 }
 
 sdk_ret_t
-FtlBaseTable::clear(bool clear_global_state,
+ftl_base::clear(bool clear_global_state,
            bool clear_thread_local_state) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
@@ -402,7 +402,7 @@ __label__ done;
 
     apictx_[0].clear_global_state = clear_global_state;
     apictx_[0].clear_thread_local_state = clear_thread_local_state;
-    ret = static_cast<MainTable*>(main_table_)->clear_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->clear_(apictx_);
     FTL_RET_CHECK_AND_GOTO(ret, done, "clear r:%d", ret);
     
     if (clear_thread_local_state) {
@@ -415,7 +415,7 @@ done:
 }
 
 sdk_ret_t
-FtlBaseTable::clear_stats(void) {
+ftl_base::clear_stats(void) {
     FTL_API_BEGIN_();
 
     api_stats_.clear();

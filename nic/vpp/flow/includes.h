@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "node.h"
-#include <nic/utils/ftl/ftl_structs.hpp>
 #include <nic/vpp/infra/ipc/pds_ipc.h>
 #include <pkt.h>
 #include <flow.h>

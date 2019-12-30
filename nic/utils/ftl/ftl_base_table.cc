@@ -9,7 +9,7 @@
 #include "ftl_includes.hpp"
 
 sdk_ret_t
-BaseTable::init_(uint32_t id, uint32_t size) {
+base_table::init_(uint32_t id, uint32_t size) {
     void *mem;
     uint32_t bucket_size = sizeof(Bucket);
 
@@ -30,14 +30,14 @@ BaseTable::init_(uint32_t id, uint32_t size) {
 }
 
 void
-BaseTable::destroy_(BaseTable *table) {
+base_table::destroy_(base_table *table) {
     // Free the Hash table entries.
     SDK_FREE(SDK_MEM_ALLOC_FTL_TABLE_ENTRIES, table->buckets_);
     table->buckets_ = NULL;
 }
 
 sdk_ret_t
-BaseTable::iterate_(Apictx *ctx) {
+base_table::iterate_(Apictx *ctx) {
     uint32_t i = (ctx->is_main()) ? 0 : 1;
 
     ctx->table_id = table_id_;
@@ -49,7 +49,7 @@ BaseTable::iterate_(Apictx *ctx) {
 }
 
 sdk_ret_t
-BaseTable::clear_(Apictx *ctx) {
+base_table::clear_(Apictx *ctx) {
     memset(buckets_, 0, table_size_ * sizeof( Bucket));
     return SDK_RET_OK;
 }

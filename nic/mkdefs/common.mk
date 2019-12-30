@@ -294,7 +294,7 @@ export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
 
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
-export NIC_FTL_LIBS           := ftlv4 ftlv6
+export NIC_FTL_LIBS         := ftl
 
 # ==========================================================================
 #                        Apollo Specific Defs

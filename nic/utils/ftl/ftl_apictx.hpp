@@ -81,8 +81,8 @@ public:
     // API Params of this context
     sdk_table_api_params_t *params;
     // Parent API Context: used for context nesting.
-    // 1st level HintTable: pctx = MainTable context.
-    // 2nd level HintTable: pctx = 1st level HintTable context.
+    // 1st level hint_table: pctx = main_table context.
+    // 2nd level hint_table: pctx = 1st level hint_table context.
     // and so on...
     Apictx *pctx;
     // Table stats

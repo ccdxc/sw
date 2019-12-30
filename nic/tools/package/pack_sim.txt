@@ -96,15 +96,15 @@ nic/build/x86_64/iris/lib/libpenctlproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgrproto.so                         /nic/lib/
-nic/build/x86_64/iris/lib/liblinkmgrproto.so                         /nic/lib/
+nic/build/x86_64/iris/lib/liblinkmgrproto.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libpciemgrproto.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libftestatsproto.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libdropstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/libflowstatsproto.so                      /nic/lib/
-nic/build/x86_64/iris/lib/librulestatsproto.so                       /nic/lib/
+nic/build/x86_64/iris/lib/librulestatsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                         /nic/lib/
-nic/build/x86_64/iris/lib/libftlv6.so                               /nic/lib/
+nic/build/x86_64/iris/lib/libftl.so                                 /nic/lib/
 
 nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so              /nic/lib/
 nic/sdk/third-party/libev/x86_64/lib/libev.so                    /nic/lib/

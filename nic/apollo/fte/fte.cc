@@ -54,9 +54,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/fte/fte.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
-//#include "nic/utils/ftl/ftl_structs.hpp"
-#include "nic/utils/ftl/ftlv4.hpp"
-#include "nic/utils/ftl/ftlv6.hpp"
+#include "nic/utils/ftl/ftl_base.hpp"
 #include <impl.h>
 
 namespace fte {
@@ -117,8 +115,8 @@ typedef struct fte_flow_session_id_thr_local_pool_s {
 typedef struct fte_flow_main_s {
     uint64_t no_cores;
     volatile uint32_t flow_prog_lock;
-    FtlBaseTable *table4[FTE_MAX_NUM_CORES];
-    FtlBaseTable *table6[FTE_MAX_NUM_CORES];
+    ftl_base *table4[FTE_MAX_NUM_CORES];
+    ftl_base *table6[FTE_MAX_NUM_CORES];
     fte_v4flow_params_t ip4_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
     fte_v6flow_params_t ip6_flow_params[FTE_MAX_NUM_CORES][FTE_MAX_BURST_SIZE];
     fte_flow_hw_ctx_t session_index_pool[FTE_MAX_SESSION_INDEX];
@@ -151,7 +149,7 @@ fte_ftlv4_set_key (ipv4_flow_hash_entry_t *entry, uint32_t sip, uint32_t dip,
 }
 
 static void
-fte_ftlv4_dump_hw_entry (FtlBaseTable *obj, uint32_t src, uint32_t dst,
+fte_ftlv4_dump_hw_entry (ftl_base *obj, uint32_t src, uint32_t dst,
                          uint8_t ip_proto, uint16_t sport, uint16_t dport,
                          uint16_t lookup_id, char *buf, int max_len)
 {
@@ -172,7 +170,7 @@ fte_ftlv4_dump_hw_entry (FtlBaseTable *obj, uint32_t src, uint32_t dst,
     return;
 }
 
-static FtlBaseTable *
+static ftl_base *
 fte_ftlv4_create (void *key2str, void *appdata2str, uint32_t thread_id)
 {
     sdk_table_factory_params_t factory_params = {0};
@@ -187,11 +185,11 @@ fte_ftlv4_create (void *key2str, void *appdata2str, uint32_t thread_id)
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return FtlBaseTable::factory(&factory_params);
+    return ftl_base::factory(&factory_params);
 }
 
 
-static FtlBaseTable *
+static ftl_base *
 fte_ftlv6_create (void *key2str, void *appdata2str, uint32_t thread_id)
 {
     sdk_table_factory_params_t factory_params = {0};
@@ -203,11 +201,11 @@ fte_ftlv6_create (void *key2str, void *appdata2str, uint32_t thread_id)
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return FtlBaseTable::factory(&factory_params);
+    return ftl_base::factory(&factory_params);
 }
 
 static int
-fte_ftlv4_insert (FtlBaseTable *obj, ipv4_flow_hash_entry_t *entry,
+fte_ftlv4_insert (ftl_base *obj, ipv4_flow_hash_entry_t *entry,
                   uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
@@ -345,7 +343,7 @@ static void
 fte_flow_program_hw_ipv4 (fte_v4flow_params_t *key, unsigned int lcore_id)
 {
     int ret;
-    FtlBaseTable *table = g_fte_fm.table4[lcore_id];
+    ftl_base *table = g_fte_fm.table4[lcore_id];
 
     ret = fte_ftlv4_insert(table, &key->entry, key->hash);
 

@@ -8,25 +8,25 @@
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_includes.hpp"
 
-// thread_local uint8_t HintTable::nctx_ = 0;
+// thread_local uint8_t hint_table::nctx_ = 0;
 
-HintTable *
-HintTable::factory(sdk::table::properties_t *props) {
+hint_table *
+hint_table::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
-    HintTable *table = NULL;
+    hint_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    mem = (HintTable *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_HINT_TABLE,
-                                          sizeof(HintTable));
+    mem = (hint_table *) SDK_CALLOC(SDK_MEM_ALLOC_FTL_HINT_TABLE,
+                                          sizeof(hint_table));
     if (!mem) {
         return NULL;
     }
 
-    table = new (mem) HintTable();
+    table = new (mem) hint_table();
 
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
-        table->~HintTable();
+        table->~hint_table();
         SDK_FREE(SDK_MEM_ALLOC_FTL_HINT_TABLE, mem);
     }
 
@@ -34,8 +34,8 @@ HintTable::factory(sdk::table::properties_t *props) {
 }
 
 sdk_ret_t
-HintTable::init_(sdk::table::properties_t *props) {
-    auto ret = BaseTable::init_(props->stable_id,
+hint_table::init_(sdk::table::properties_t *props) {
+    auto ret = base_table::init_(props->stable_id,
                                      props->stable_size);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -48,7 +48,7 @@ HintTable::init_(sdk::table::properties_t *props) {
     uint32_t temp = 0;
     ret = indexer_.alloc(temp);
     SDK_ASSERT(ret == SDK_RET_OK);
-    FTL_TRACE_VERBOSE("Created HintTable TableID:%d TableSize:%d "
+    FTL_TRACE_VERBOSE("Created hint_table TableID:%d TableSize:%d "
                       "NumTableIndexBits:%d",
                       table_id_, table_size_, num_table_index_bits_);
 
@@ -59,14 +59,14 @@ HintTable::init_(sdk::table::properties_t *props) {
 }
 
 void
-HintTable::destroy_(HintTable *table)
+hint_table::destroy_(hint_table *table)
 {
-    BaseTable::destroy_(table);
+    base_table::destroy_(table);
     table->indexer_.deinit();
 }
 
 inline Apictx *
-HintTable::ctxnew_(Apictx *src) {
+hint_table::ctxnew_(Apictx *src) {
     if (src->is_main()) {
         nctx_ = 0;
     } else {
@@ -79,7 +79,7 @@ HintTable::ctxnew_(Apictx *src) {
 }
 
 sdk_ret_t
-HintTable::alloc_(Apictx *ctx) {
+hint_table::alloc_(Apictx *ctx) {
 
     sdk_ret_t ret = SDK_RET_OK;
     uint16_t refill_count;
@@ -129,17 +129,17 @@ HintTable::alloc_(Apictx *ctx) {
 }
 
 sdk_ret_t
-HintTable::dealloc_(Apictx *ctx) {
+hint_table::dealloc_(Apictx *ctx) {
     spin_lock_();
     indexer_.free(ctx->table_index);
     spin_unlock_();
-    FTL_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->table_index);
+    FTL_TRACE_VERBOSE("hint_table: Freed index:%d", ctx->table_index);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-HintTable::initctx_(Apictx *ctx) {
-    // All HintTable api contexts must have parent api context.
+hint_table::initctx_(Apictx *ctx) {
+    // All hint_table api contexts must have parent api context.
     SDK_ASSERT(ctx->pctx);
 
     // Make the hint from parent context as table_index
@@ -155,7 +155,7 @@ HintTable::initctx_(Apictx *ctx) {
 }
 
 sdk_ret_t
-HintTable::insert_(Apictx *pctx) {
+hint_table::insert_(Apictx *pctx) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
     Apictx *hctx = NULL;
@@ -192,11 +192,11 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// HintTable tail_: Finds the tail node of a hint chain
+// hint_table tail_: Finds the tail node of a hint chain
 //                            and return the context
 //---------------------------------------------------------------------------
 sdk_ret_t
-HintTable::tail_(Apictx *ctx,
+hint_table::tail_(Apictx *ctx,
                            Apictx **retctx) {
     if (!HINT_IS_VALID(ctx->hint)) {
         FTL_TRACE_VERBOSE("No hints, setting TAIL = EXACT.");
@@ -248,10 +248,10 @@ HintTable::tail_(Apictx *ctx,
 }
 
 //---------------------------------------------------------------------------
-// HintTable defragment_: Defragment the hint chain
+// hint_table defragment_: Defragment the hint chain
 //---------------------------------------------------------------------------
 sdk_ret_t
-HintTable::defragment_(Apictx *ectx) {
+hint_table::defragment_(Apictx *ectx) {
     sdk_ret_t ret = SDK_RET_OK;
     Apictx *tctx = NULL;
 
@@ -292,10 +292,10 @@ HintTable::defragment_(Apictx *ectx) {
 }
 
 //---------------------------------------------------------------------------
-// HintTable remove_: Remove entry from hint table
+// hint_table remove_: Remove entry from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-HintTable::remove_(Apictx *ctx) {
+hint_table::remove_(Apictx *ctx) {
 __label__ done;
     // Initialize the context
     auto hctx = ctxnew_(ctx);
@@ -320,10 +320,10 @@ done:
 }
 
 //---------------------------------------------------------------------------
-// HintTable remove_: Remove entry from hint table
+// hint_table remove_: Remove entry from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-HintTable::find_(Apictx *ctx,
+hint_table::find_(Apictx *ctx,
                       Apictx **match_ctx) {
 __label__ done;
     // Initialize the context
@@ -352,21 +352,21 @@ done:
 // ftl_hint_table iterate_: Iterate entries from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
-HintTable::iterate_(Apictx *ctx) {
+hint_table::iterate_(Apictx *ctx) {
     // Initialize the context
     auto hctx = ctxnew_(ctx);
-    auto ret = BaseTable::iterate_(hctx);
+    auto ret = base_table::iterate_(hctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "hint table iterate r:%d", ret);
 done:
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-HintTable::clear_(Apictx *ctx) {
+hint_table::clear_(Apictx *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (ctx->clear_global_state) {
-        ret = BaseTable::clear_(ctx);
+        ret = base_table::clear_(ctx);
         FTL_RET_CHECK_AND_GOTO(ret, done, "hint table clear r:%d", ret);
         memclr(ctx->props->stable_base_mem_va,
                            ctx->props->stable_base_mem_pa,

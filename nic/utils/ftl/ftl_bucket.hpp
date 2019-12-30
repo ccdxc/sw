@@ -7,9 +7,9 @@ namespace internal {
 
 class Bucket {
 public:
-    friend BaseTable;
-    friend MainTable;
-    friend HintTable;
+    friend base_table;
+    friend main_table;
+    friend hint_table;
 
 private:
     uint8_t valid_  : 1;
