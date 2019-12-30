@@ -239,7 +239,7 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 }
 
 static hal_ret_t
-linkmgr_create_mgmt_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
+linkmgr_create_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 {
     uint32_t fp_port;
     uint32_t ifindex;
@@ -320,7 +320,7 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
         return HAL_RET_ERR;
     }
 
-    linkmgr_create_mgmt_ports(sdk_cfg);
+    linkmgr_create_ports(sdk_cfg);
 
     svc_reg((ServerBuilder *)sdk_cfg->server_builder,
             sdk_cfg->process_mode);

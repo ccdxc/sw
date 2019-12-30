@@ -89,9 +89,6 @@ linkmgr_initialize (const char c_file[])
         return;
     }
 
-    // start the linkmgr control thread
-    sdk::linkmgr::linkmgr_start();
-
     printf("LINKMGR Initialized\n");
 }
 

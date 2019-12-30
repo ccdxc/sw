@@ -5,15 +5,12 @@
 #include "port_serdes.hpp"
 #include "linkmgr_internal.hpp"
 #include "linkmgr_types.hpp"
-#include "timer_cb.hpp"
-#include "lib/periodic/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/fru/fru.hpp"
 #include "platform/pal/include/pal.h"
 #include "lib/pal/pal.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
-#include "linkmgr_periodic.hpp"
 #include "asic/rw/asicrw.hpp"
 
 namespace sdk {
@@ -25,7 +22,7 @@ serdes_fn_t serdes_fns;
 
 // Debounce timer expiration handler
 sdk_ret_t
-port::port_debounce_timer(void)
+port::port_debounce_timer_cb(void)
 {
     // Notify if link is still down
     if (port_link_status() == false) {
@@ -703,6 +700,13 @@ port::port_set_an_resolved_params (int an_hcd, int fec_enable, int rsfec_enable)
     return ret;
 }
 
+sdk_ret_t
+port::port_timer_start(sdk::event_thread::timer_t *timer, double timeout) {
+    timer->ev_watcher.repeat = timeout/1000.0;    // convert ms to secs
+    timer_again(timer);
+    return SDK_RET_OK;
+}
+
 an_ret_t
 port::port_link_sm_an_process(void)
 {
@@ -751,11 +755,7 @@ port::port_link_sm_an_process(void)
                 break;
             }
             this->bringup_timer_val_ += timeout;
-            this->link_bring_up_timer_ =
-                sdk::linkmgr::timer_schedule(
-                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
+            port_timer_start(link_bringup_timer(), timeout);
             an_ret = AN_WAIT;
             break;
         }
@@ -835,14 +835,10 @@ port::port_link_sm_dfe_process(void)
                 dfe_complete = port_serdes_dfe_complete();
 
                 if(dfe_complete == false) {
+                    // ICAL needs ~0.4 secs for 100G
+                    timeout = 500; // 500 msecs
                     this->bringup_timer_val_ += timeout;
-
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
-
+                    port_timer_start(link_bringup_timer(), timeout);
                     ret = DFE_WAIT;
                     break;
                 }
@@ -888,12 +884,7 @@ port::port_link_sm_dfe_process(void)
                 if(dfe_complete == false) {
                     timeout = MIN_PORT_TIMER_INTERVAL;
                     this->bringup_timer_val_ += timeout;
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
-
+                    port_timer_start(link_bringup_timer(), timeout);
                     ret = DFE_WAIT;
                     break;
                 }
@@ -939,16 +930,8 @@ port::port_link_sm_process(bool start_en_timer)
                 port_pb_write_control(false);
 
                 // reset timers
-
-                if (this->link_bring_up_timer_ != NULL) {
-                    sdk::linkmgr::timer_delete(this->link_bring_up_timer_);
-                    this->link_bring_up_timer_ = NULL;
-                }
-
-                if (this->link_debounce_timer_ != NULL) {
-                    sdk::linkmgr::timer_delete(this->link_debounce_timer_);
-                    this->link_debounce_timer_ = NULL;
-                }
+                timer_stop(link_bringup_timer());
+                timer_stop(link_debounce_timer());
 
                 // pull the stats and save in persist storage before bringing down
                 port_mac_stats_persist_update();
@@ -983,11 +966,7 @@ port::port_link_sm_process(bool start_en_timer)
                     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
                     timeout = MIN_PORT_TIMER_INTERVAL;
                     this->bringup_timer_val_ += timeout;
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
+                    port_timer_start(link_bringup_timer(), timeout);
                     break;
                 }
 
@@ -1047,12 +1026,7 @@ port::port_link_sm_process(bool start_en_timer)
 
                 if(serdes_rdy == false) {
                     this->bringup_timer_val_ += timeout;
-
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
+                    port_timer_start(link_bringup_timer(), timeout);
                     break;
                 }
 
@@ -1082,11 +1056,7 @@ port::port_link_sm_process(bool start_en_timer)
                             set_num_link_train_retries(0);
                             timeout = rand() % 2 == 0? 500 : MIN_PORT_TIMER_INTERVAL;
                             this->bringup_timer_val_ += timeout;
-                            this->link_bring_up_timer_ =
-                                sdk::linkmgr::timer_schedule(
-                                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                        false);
+                            port_timer_start(link_bringup_timer(), timeout);
                         } else {
                             retry_sm = true;
                         }
@@ -1110,6 +1080,8 @@ port::port_link_sm_process(bool start_en_timer)
 
                 // transition to serdes signal detect state
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
+                retry_sm = true;
+                break;
 
             case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
                 dfe_ret = port_link_sm_dfe_process();
@@ -1135,14 +1107,8 @@ port::port_link_sm_process(bool start_en_timer)
                 sig_detect = port_serdes_signal_detect();
 
                 if(sig_detect == false) {
-
                     this->bringup_timer_val_ += timeout;
-
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                false);
+                    port_timer_start(link_bringup_timer(), timeout);
                     break;
                 }
 
@@ -1194,13 +1160,7 @@ port::port_link_sm_process(bool start_en_timer)
                     }
 
                     this->bringup_timer_val_ += timeout;
-
-                    this->link_bring_up_timer_ =
-                        sdk::linkmgr::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
-
+                    port_timer_start(link_bringup_timer(), timeout);
                     break;
                 }
 
@@ -1227,11 +1187,7 @@ port::port_link_sm_process(bool start_en_timer)
                         SDK_PORT_SM_DEBUG(this, "MAC faults detected");
                         timeout = MIN_PORT_TIMER_INTERVAL;
                         this->bringup_timer_val_ += timeout;
-                        this->link_bring_up_timer_ =
-                            sdk::linkmgr::timer_schedule(
-                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                false);
+                        port_timer_start(link_bringup_timer(), timeout);
                         break;
                     } else {
                         SDK_PORT_SM_DEBUG(this,
@@ -1254,11 +1210,7 @@ port::port_link_sm_process(bool start_en_timer)
                             SDK_PORT_SM_DEBUG(this, "MAC faults check retry");
                             timeout = MIN_PORT_TIMER_INTERVAL;
                             this->bringup_timer_val_ += timeout;
-                            this->link_bring_up_timer_ =
-                                sdk::linkmgr::timer_schedule(
-                                    SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                                    (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                                    false);
+                            port_timer_start(link_bringup_timer(), timeout);
                             break;
                         }
                     }
@@ -1269,8 +1221,10 @@ port::port_link_sm_process(bool start_en_timer)
 
             case port_link_sm_t::PORT_LINK_SM_UP:
 
-                SDK_PORT_SM_DEBUG(this, "PCAL continuous");
-                port_serdes_pcal_continuous_start();
+                if (port_dfe_tuning_enabled()) {
+                    SDK_PORT_SM_DEBUG(this, "PCAL continuous");
+                    port_serdes_pcal_continuous_start();
+                }
 
                 set_last_up_ts();
 
@@ -1409,15 +1363,11 @@ port::port_link_dn_handler(void)
 {
     // start the debounce timer
     if (this->debounce_time_ != 0) {
-        this->link_debounce_timer_ =
-            sdk::linkmgr::timer_schedule(
-                SDK_TIMER_ID_LINK_DEBOUNCE, this->debounce_time_, this,
-                (sdk::lib::twheel_cb_t)link_debounce_timer_cb,
-                false);
+        port_timer_start(link_debounce_timer(), this->debounce_time_);
         return SDK_RET_OK;
     }
 
-    port_debounce_timer();
+    port_debounce_timer_cb();
 
     return SDK_RET_OK;
 }
@@ -1718,6 +1668,24 @@ port::port_pb_enable(bool enable) {
 sdk_ret_t
 port::port_mac_tx_drain(bool drain) {
     mac_fns()->mac_tx_drain(mac_id(), mac_ch(), drain);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::timers_init(void) {
+    sdk::event_thread::timer_t *timer = link_bringup_timer();
+
+    // init the bringup timer
+    timer->ctx = this;
+    timer_init(timer, port_bringup_timer_cb,
+               PORT_TIMER_INIT_TIME, 0);
+
+    // init the debounce timer
+    timer = link_debounce_timer();
+    timer->ctx = this;
+    timer_init(timer, sdk::linkmgr::port_debounce_timer_cb,
+               PORT_TIMER_INIT_TIME, 0);
+
     return SDK_RET_OK;
 }
 

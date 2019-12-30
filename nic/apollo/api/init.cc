@@ -81,9 +81,6 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
 
     // initialize the linkmgr
     sdk::linkmgr::linkmgr_init(&cfg);
-    // start the linkmgr control thread
-    sdk::linkmgr::linkmgr_start();
-
     return SDK_RET_OK;
 }
 

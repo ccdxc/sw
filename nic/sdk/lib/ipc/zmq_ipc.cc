@@ -163,6 +163,7 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
     int rc;
     zmq_ipc_msg_preamble_t preamble;
 
+    send_pointer = false;
     memset(&preamble, 0, sizeof(preamble));
     preamble.type = type;
     preamble.sender = this->id_;

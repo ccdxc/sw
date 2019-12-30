@@ -1,21 +1,24 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "lib/thread/thread.hpp"
 #include "asic/asic.hpp"
-#include "lib/periodic/periodic.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "lib/pal/pal.hpp"
+#include "lib/thread/thread.hpp"
+#include "lib/event_thread/event_thread.hpp"
+#include "lib/ipc/ipc.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_internal.hpp"
 #include "port.hpp"
-#include "timer_cb.hpp"
-#include "linkmgr_periodic.hpp"
+
+using namespace sdk::event_thread;
+using namespace sdk::ipc;
 
 namespace sdk {
 namespace linkmgr {
 
 static int aacs_server_port_num = -1;
+bool hal_cfg = false;
 
 // global log buffer
 char log_buf[MAX_LOG_SIZE];
@@ -30,49 +33,14 @@ linkmgr_cfg_t g_linkmgr_cfg;
 sdk::lib::thread *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
 
 // xcvr poll timer handle
-void *xcvr_poll_timer_handle;
+sdk::event_thread::timer_t xcvr_poll_timer_handle;
 
 // link down poll list
-void *port_link_poll_timer_handle;
+sdk::event_thread::timer_t port_link_poll_timer_handle;
 port *link_poll_timer_list[MAX_LOGICAL_PORTS];
-
-// per producer request queues
-linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
-linkmgr_sync_t  g_linkmgr_sync;
 
 // Global setting for link status poll. Default is enabled.
 bool port_link_poll_en = true;
-
-static inline void
-wait_linkmgr(void) {
-    static int log_cnt = 0;
-
-    pthread_mutex_lock(&g_linkmgr_sync.mutex);
-    while (g_linkmgr_sync.post == 0) {
-        g_linkmgr_sync.waiting = true;
-        int rc = pthread_cond_wait(&g_linkmgr_sync.cond, &g_linkmgr_sync.mutex);
-        if (rc != 0) {
-            // ETIMEDOUT/EINVAL/EPERM error condition not expected.
-            // Log the error for few times.
-            if (log_cnt++ <  100) {
-                SDK_LINKMGR_TRACE_ERR("pthread_cond_wait returned %u", rc);
-            }
-        }
-        g_linkmgr_sync.waiting = false;
-    }
-    g_linkmgr_sync.post = 0;
-    pthread_mutex_unlock(&g_linkmgr_sync.mutex);
-}
-
-static inline void
-signal_linkmgr(void) {
-    pthread_mutex_lock(&g_linkmgr_sync.mutex);
-    g_linkmgr_sync.post=1;
-    pthread_cond_signal(&g_linkmgr_sync.cond);
-    pthread_mutex_unlock(&g_linkmgr_sync.mutex);
-}
-
-bool hal_cfg = false;
 
 bool
 port_link_poll_enabled (void)
@@ -233,103 +201,54 @@ current_thread (void)
 bool
 is_linkmgr_ctrl_thread()
 {
+    bool is_ctrl_thread;
+
     sdk::lib::thread *curr_thread = current_thread();
     sdk::lib::thread *ctrl_thread = g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
 
     // TODO assert once the thread store is fixed
     if (curr_thread == NULL) {
-        return false;
+        is_ctrl_thread = false;
+        goto end;
     }
 
     // if curr_thread/ctrl_thread is NULL, then init has failed or not invoked
     if (ctrl_thread == NULL) {
-        assert(0);
-    }
-
-    // if ctrl_thread is not running, then linkmgr_event_wait hasn't been invoked
-    // and no one is waiting to handle incoming msgs
-    if (!ctrl_thread->is_running()) {
-        return true;
+        SDK_ASSERT_GOTO(0, end);
     }
 
     if (curr_thread->thread_id() == ctrl_thread->thread_id()) {
-        return true;
+        is_ctrl_thread = true;
+        goto end;
     }
 
-    return false;
-}
-
-//------------------------------------------------------------------------------
-// linkmgr thread notification by other threads
-//------------------------------------------------------------------------------
-sdk_ret_t
-linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
-                q_notify_mode_t mode)
-{
-    uint16_t            pindx = 0;
-    sdk::lib::thread    *curr_thread = current_thread();
-    uint32_t            curr_tid = 0;
-    linkmgr_entry_t     *rw_entry;
-    sdk_ret_t           ret = SDK_RET_OK;
-    const char *name = "";
-    bool can_yield = true;
-
-    if (curr_thread != NULL) {
-        name = curr_thread->name();
-        can_yield = curr_thread->can_yield();
-        curr_tid = curr_thread->thread_id();
-    }
-    if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
-        SDK_TRACE_ERR("Error: operation %d for thread %s, tid %d full",
-                      operation, name, curr_tid);
-        return SDK_RET_ERR;
-    }
-
-    // SDK_TRACE_DEBUG("Thread: %s, Notify op %d",
-    //                 current_thread()->name(), operation);
-
-    while (!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(
-               &g_linkmgr_workq[curr_tid].pindx,
-               &pindx, (pindx+1) % LINKMGR_CONTROL_Q_SIZE));
-
-    rw_entry = &g_linkmgr_workq[curr_tid].entries[pindx];
-    rw_entry->opn = operation;
-    rw_entry->status = SDK_RET_ERR;
-
-    memcpy(&rw_entry->data, data, sizeof(linkmgr_entry_data_t));
-
-    SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
-
-    switch (operation) {
-        case LINKMGR_OPERATION_PORT_ENABLE:
-        case LINKMGR_OPERATION_PORT_DISABLE:
-            SDK_ATOMIC_STORE_BOOL(&hal_cfg, true);
-            break;
-
-        default:
-            break;
-    }
-    SDK_ATOMIC_FETCH_ADD(&g_linkmgr_workq[curr_tid].nentries, 1);
-    signal_linkmgr();
-    if (mode == q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING) {
-        while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
-            if (can_yield == true) {
-                pthread_yield();
-            }
-        }
-        ret = rw_entry->status;
-    } else {
-        ret = SDK_RET_OK;
-    }
-
-    return ret;
+    is_ctrl_thread = false;
+end:
+    // SDK_TRACE_DEBUG("ctrl thread %s", is_ctrl_thread == true? "true" : "false");
+    return is_ctrl_thread;
 }
 
 void
-linkmgr_start (void)
+xcvr_poll_timer_cb (sdk::event_thread::timer_t *timer)
 {
-    int thread_id = LINKMGR_THREAD_ID_CTRL;
-    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+    sdk::platform::xcvr_poll_timer();
+}
+
+void
+port_link_poll_timer_cb (sdk::event_thread::timer_t *timer)
+{
+    if (port_link_poll_enabled() == true) {
+        for (int i = 0; i < MAX_LOGICAL_PORTS; ++i) {
+            port *port_p = link_poll_timer_list[i];
+
+            if (port_p != NULL) {
+                if(port_p->port_link_status() == false) {
+                    SDK_TRACE_DEBUG("%d: Link DOWN", port_p->port_num());
+                    port_p->port_link_dn_handler();
+                }
+            }
+        }
+    }
 }
 
 static sdk_ret_t
@@ -346,263 +265,169 @@ port_event_disable (linkmgr_entry_data_t *data)
     return port_p->port_disable();
 }
 
-static sdk_ret_t
-port_bringup_timer (linkmgr_entry_data_t *data)
+static void
+port_enable_req_handler (ipc_msg_ptr msg, const void *ctx)
+{
+    SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
+    port_event_enable((linkmgr_entry_data_t *)msg->data());
+
+    // send response back to blocked caller
+    respond(msg, NULL, 0);
+}
+
+static void
+port_rsp_handler (ipc_msg_ptr msg, const void *request_cookie)
+{
+}
+
+static void
+port_disable_req_handler (ipc_msg_ptr msg, const void *ctx)
+{
+    SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
+    port_event_disable((linkmgr_entry_data_t *)msg->data());
+
+    // send response back to blocked caller
+    respond(msg, NULL, 0);
+}
+
+void
+port_bringup_timer_cb (sdk::event_thread::timer_t *timer)
 {
     uint32_t  retries = 0;
-    sdk_ret_t ret     = SDK_RET_OK;
-    port      *port_p = (port *)data->ctxt;
+    port      *port_p = (port *)timer->ctx;
 
-    // if the timer is called back with current timer handle, reset it
-    if (port_p->link_bring_up_timer() == data->timer) {
-        port_p->set_link_bring_up_timer(NULL);
-    }
+    // stop the repeated timer since timer_again is being used
+    // to schedule timer
+    timer_stop(timer);
 
     // if the bringup timer has expired, reset and try again
     if (port_p->bringup_timer_expired() == true) {
         retries = port_p->num_retries();
 
         // port disable resets num_retries
-        ret = port_p->port_disable();
+        port_p->port_disable();
 
         // Enable port only if max retries is not reached
         if (1 || retries < MAX_PORT_LINKUP_RETRIES) {
             port_p->set_num_retries(retries + 1);
-            ret = port_p->port_enable();
+            port_p->port_enable();
         } else {
             // TODO notify upper layers?
             SDK_TRACE_DEBUG("Max retries: %d reached for port: %d",
                             MAX_PORT_LINKUP_RETRIES, port_p->port_num());
         }
     } else {
-        ret = port_p->port_link_sm_process();
+        port_p->port_link_sm_process();
+    }
+}
+
+void
+port_debounce_timer_cb (sdk::event_thread::timer_t *timer)
+{
+    port *port_p = (port *)timer->ctx;
+
+    // stop the repeated timer since timer_again is being used
+    // to schedule timer
+    timer_stop(timer);
+
+    port_p->port_debounce_timer_cb();
+}
+
+//------------------------------------------------------------------------------
+// linkmgr thread notification by other threads
+//------------------------------------------------------------------------------
+sdk_ret_t
+linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
+                q_notify_mode_t mode)
+{
+    // notify the ctrl thread about the config pending
+    switch (operation) {
+        case LINKMGR_OPERATION_PORT_ENABLE:
+        case LINKMGR_OPERATION_PORT_DISABLE:
+            SDK_ATOMIC_STORE_BOOL(&hal_cfg, true);
+            break;
+
+        default:
+            break;
     }
 
-    return ret;
+    request(LINKMGR_THREAD_ID_CTRL, operation, data,
+            sizeof(linkmgr_entry_data_t), port_rsp_handler, NULL);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
-port_debounce_timer (linkmgr_entry_data_t *data)
+linkmgr_timers_init (void)
 {
-    port *port_p = (port *)data->ctxt;
+    // init the transceiver poll timer
+    timer_init(&xcvr_poll_timer_handle, xcvr_poll_timer_cb,
+               XCVR_POLL_TIME, XCVR_POLL_TIME);
+    timer_start(&xcvr_poll_timer_handle);
 
-    // if the timer is called back with current timer handle, reset it
-    if (port_p->link_debounce_timer() == data->timer) {
-        port_p->set_link_debounce_timer(NULL);
-    }
+    // init the link poll timer
+    timer_init(&port_link_poll_timer_handle, port_link_poll_timer_cb,
+               LINKMGR_LINK_POLL_TIME, LINKMGR_LINK_POLL_TIME);
+    timer_start(&port_link_poll_timer_handle);
 
-    return port_p->port_debounce_timer();
-}
-
-sdk_ret_t
-xcvr_poll_timer_wrapper (linkmgr_entry_data_t *data)
-{
-    sdk::platform::xcvr_poll_timer();
-
-    // Reschedule the xcvr timer
-    xcvr_poll_timer_handle =
-        sdk::linkmgr::timer_schedule(
-            SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
-            (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
-            false);
+    SDK_TRACE_DEBUG("starting poll timers");
 
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-port_link_poll_timer (linkmgr_entry_data_t *data)
+static void
+linkmgr_event_thread_init (void *ctxt)
 {
-    if (port_link_poll_enabled() == true) {
-        for (int i = 0; i < MAX_LOGICAL_PORTS; ++i) {
-            port *port_p = link_poll_timer_list[i];
+    // init the linkmgr timers
+    linkmgr_timers_init();
 
-            if (port_p != NULL) {
-                if(port_p->port_link_status() == false) {
-                    SDK_TRACE_DEBUG("%d: Link DOWN", port_p->port_num());
-                    port_p->port_link_dn_handler();
-                }
-            }
-        }
-    }
+    reg_request_handler(LINKMGR_OPERATION_PORT_ENABLE,
+                        port_enable_req_handler, NULL);
+    reg_request_handler(LINKMGR_OPERATION_PORT_DISABLE,
+                        port_disable_req_handler, NULL);
+}
 
-    // reschedule the poll timer
-    port_link_poll_timer_handle =
-        sdk::linkmgr::timer_schedule(
-            SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
-            (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
-            false);
+static void
+linkmgr_event_thread_exit (void *ctxt)
+{
+}
 
+static void
+linkmgr_event_handler (void *msg, void *ctxt)
+{
+}
+
+static sdk_ret_t
+event_thread_init (linkmgr_cfg_t *cfg)
+{
     return SDK_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// linkmgr thread cleanup
-//------------------------------------------------------------------------------
-void
-linkmgr_thread_cleanup (void *arg)
-{
-    // if the cancellation request executed during pthread_conditional_wait
-    // release the lock taken by the cancellation routine.
-    //  linkmgr-timer may be poling for this lock in signal_linkmgr()
-    if (g_linkmgr_sync.waiting) {
-        pthread_mutex_unlock(&g_linkmgr_sync.mutex);
-    }
-}
-
-//------------------------------------------------------------------------------
-// linkmgr's forever loop
-//------------------------------------------------------------------------------
-void*
-linkmgr_event_loop (void* ctxt)
-{
-    uint32_t         qid         = 0;
-    uint16_t         cindx       = 0;
-    bool             work_done   = false;
-    bool             rv          = true;
-    linkmgr_entry_t  *rw_entry   = NULL;
-
-    // opting for graceful termination as pthrad_cond_wait
-    // is part of pthread_cancel list
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
-    pthread_cleanup_push(linkmgr_thread_cleanup, NULL);
-
-    while (TRUE) {
-        work_done = false;
-        for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
-            if (!g_linkmgr_workq[qid].nentries) {
-                // no read/write requests
-                continue;
-            }
-
-            // found a read/write request to serve
-            cindx = g_linkmgr_workq[qid].cindx;
-            rw_entry = &g_linkmgr_workq[qid].entries[cindx];
-
-            // SDK_TRACE_ERR("Thread: %s, op: %d",
-            //               current_thread()->name(), rw_entry->opn);
-
-            switch (rw_entry->opn) {
-            case LINKMGR_OPERATION_PORT_ENABLE:
-                SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
-                port_event_enable(&rw_entry->data);
-                break;
-
-            case LINKMGR_OPERATION_PORT_DISABLE:
-                SDK_ATOMIC_STORE_BOOL(&hal_cfg, false);
-                port_event_disable(&rw_entry->data);
-                break;
-
-            case LINKMGR_OPERATION_PORT_BRINGUP_TIMER:
-                port_bringup_timer(&rw_entry->data);
-                break;
-
-            case LINKMGR_OPERATION_PORT_DEBOUNCE_TIMER:
-                port_debounce_timer(&rw_entry->data);
-                break;
-
-            case LINKMGR_OPERATION_PORT_LINK_POLL_TIMER:
-                port_link_poll_timer(&rw_entry->data);
-                break;
-
-            case LINKMGR_OPERATION_XCVR_POLL_TIMER:
-                xcvr_poll_timer_wrapper(&rw_entry->data);
-                break;
-
-            default:
-                SDK_TRACE_ERR("Invalid operation %d", rw_entry->opn);
-                rv = false;
-                break;
-            }
-
-            // populate the results
-            rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
-            SDK_ATOMIC_STORE_BOOL(&rw_entry->done, true);
-
-            // advance to next entry in the queue
-            g_linkmgr_workq[qid].cindx++;
-            if (g_linkmgr_workq[qid].cindx >= LINKMGR_CONTROL_Q_SIZE) {
-                g_linkmgr_workq[qid].cindx = 0;
-            }
-
-            SDK_ATOMIC_FETCH_SUB(&g_linkmgr_workq[qid].nentries, 1);
-
-            work_done = true;
-        }
-
-        // all queues scanned once, check if any work was found
-        if (!work_done) {
-            wait_linkmgr(); //Wait here until any one of the producers gives work to do
-        }
-    }
-    pthread_cleanup_pop(1);
-}
-
-//------------------------------------------------------------------------------
-// starting point for the periodic thread loop
-//------------------------------------------------------------------------------
-static void *
-linkmgr_periodic_thread_start (void *ctxt)
-{
-    // initialize timer wheel
-    sdk::linkmgr::periodic_thread_init(ctxt);
-
-    // run main loop
-    sdk::linkmgr::periodic_thread_run(ctxt);
-    return NULL;
 }
 
 static sdk_ret_t
 thread_init (linkmgr_cfg_t *cfg)
 {
-    int thread_prio  = 0;
-    int thread_id    = 0;
-    int sched_policy = SCHED_OTHER;
+    int thread_id = 0;
+    sdk::event_thread::event_thread *new_thread;
 
-    thread_prio = sched_get_priority_max(sched_policy);
-    if (thread_prio < 0) {
-        return SDK_RET_ERR;
-    }
-
-    // create the linkmgr periodic thread
-    thread_id = LINKMGR_THREAD_ID_PERIODIC;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(std::string("link-timer").c_str(),
-                                  thread_id,
-                                  sdk::lib::THREAD_ROLE_CONTROL,
-                                  0x0 /* use all control cores */,
-                                  linkmgr_periodic_thread_start,
-                                  sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                                  sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                                  true);
-    SDK_ASSERT_TRACE_RETURN((g_linkmgr_threads[thread_id] != NULL), SDK_RET_ERR,
-                             "SDK linkmgr periodic thread create failure");
-
-    // start the linkmgr periodic thread
-    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
-
-    // wait until the periodic thread is ready
-    while (!sdk::linkmgr::periodic_thread_is_running()) {
-        pthread_yield();
-    }
-
-    // start the poll timer
-    port_link_poll_timer_handle =
-        sdk::linkmgr::timer_schedule(
-            SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
-            (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
-            false);
+    event_thread_init(cfg);
 
     // init the control thread
     thread_id = LINKMGR_THREAD_ID_CTRL;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(std::string("linkmgr-ctrl").c_str(),
-                                  thread_id,
-                                  sdk::lib::THREAD_ROLE_CONTROL,
-                                  0x0 /* use all control cores */,
-                                  linkmgr_event_loop,
-                                  thread_prio,
-                                  sched_policy,
-                                  true);
+    new_thread =
+        sdk::event_thread::event_thread::factory(
+            "linkmgr-ctrl", thread_id,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            linkmgr_event_thread_init,
+            linkmgr_event_thread_exit,
+            linkmgr_event_handler,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            true);
+    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                            "linkmgr-ctrl thread create failure");
+    g_linkmgr_threads[thread_id] = new_thread;
+
+    new_thread->start(new_thread);
     return SDK_RET_OK;
 }
 
@@ -629,39 +454,10 @@ linkmgr_threads_stop (void)
     }
 }
 
-static void
-linkmgr_workq_init (void)
-{
-    uint32_t qid = 0;
-    for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
-        g_linkmgr_workq[qid].nentries = 0;
-    }
-    g_linkmgr_sync.post = 0;
-    pthread_mutex_init(&g_linkmgr_sync.mutex, NULL);
-    pthread_cond_init(&g_linkmgr_sync.cond, NULL);
-
-}
-
-sdk_ret_t
+static sdk_ret_t
 xcvr_poll_init (linkmgr_cfg_t *cfg)
 {
     sdk::platform::xcvr_init(cfg->xcvr_event_cb);
-
-    xcvr_poll_timer_handle =
-        sdk::linkmgr::timer_schedule(
-            SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
-            (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
-            false);
-
-    return SDK_RET_OK;
-}
-
-static sdk_ret_t
-linkmgr_oob_init (linkmgr_cfg_t *cfg)
-{
-    for (uint32_t port = 0;
-         port < cfg->catalog->num_logical_oob_ports(); ++port) {
-    }
     return SDK_RET_OK;
 }
 
@@ -671,8 +467,6 @@ linkmgr_init (linkmgr_cfg_t *cfg)
     sdk_ret_t    ret = SDK_RET_OK;
 
     g_linkmgr_cfg = *cfg;
-
-    linkmgr_workq_init();
 
     if ((ret = thread_init(cfg)) != SDK_RET_OK) {
         SDK_TRACE_ERR("linkmgr thread init failed");
@@ -687,9 +481,6 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 
     // initialize the port mac and serdes functions
     port::port_init(cfg);
-
-    // bringup the oob ports
-    linkmgr_oob_init(cfg);
 
     // initialize xcvr polling
     xcvr_poll_init(cfg);
@@ -1006,6 +797,10 @@ port_create (port_args_t *args)
     port_init_defaults(args);
 
     port_p = (port *)g_linkmgr_state->port_slab()->alloc();
+
+    // init the bringup and debounce timers
+    port_p->timers_init();
+
     port_p->set_port_num(args->port_num);
     port_p->set_port_type(args->port_type);
     port_p->set_port_speed(args->port_speed);

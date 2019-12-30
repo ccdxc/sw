@@ -637,9 +637,6 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
             HAL_TRACE_ERR("linkmgr init failed");
             return ret;
         }
-
-        // start the linkmgr control thread
-        sdk::linkmgr::linkmgr_start();
     }
 #endif
 

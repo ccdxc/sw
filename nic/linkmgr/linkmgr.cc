@@ -218,10 +218,6 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
         return HAL_RET_ERR;
     }
 
-    // start the linkmgr control thread
-    // TODO move to linkmgr_src.cc
-    sdk::linkmgr::linkmgr_start();
-
     // register for all gRPC services
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
     svc_wait(&server_builder);

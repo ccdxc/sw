@@ -5,14 +5,15 @@
 
 #include <atomic>
 #include "lib/logger/logger.hpp"
-#include "lib/thread/thread.hpp"
+#include "lib/event_thread/event_thread.hpp"
 #include "port.hpp"
 
 namespace sdk {
 namespace linkmgr {
 
+#define PORT_TIMER_INIT_TIME    0.1 // secs
 #define MAX_PORT_LINKUP_RETRIES 100
-#define XCVR_POLL_TIME          1000 // 1000 ms = 1 s
+#define XCVR_POLL_TIME          1.0 // secs
 #define MAX_LOG_SIZE            1024
 
 // max link training fail count before starting timer
@@ -111,6 +112,10 @@ serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                uint32_t port_speed,
                                uint32_t cable_type);
 uint32_t       logical_port_to_tm_port(uint32_t logical_port);
+
+void port_bringup_timer_cb(sdk::event_thread::timer_t *timer);
+void port_debounce_timer_cb(sdk::event_thread::timer_t *timer);
+
 }    // namespace linkmgr
 }    // namespace sdk
 

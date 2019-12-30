@@ -290,7 +290,7 @@ export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
 
 export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
                                ${NIC_HAL_DLOPEN_SOLIBS} \
-                               haltestutils hal_calls
+                               haltestutils hal_calls event_thread
 
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=

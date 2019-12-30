@@ -12,7 +12,7 @@ namespace linkmgr {
 
 #define CONTROL_CORE_ID          0
 #define LINKMGR_CONTROL_Q_SIZE   128
-#define LINKMGR_LINK_POLL_TIME   1000  // 1000 msecs = 1 sec
+#define LINKMGR_LINK_POLL_TIME   1.0   // 1 sec
 #define MAX_LINK_BRINGUP_TIMEOUT 5000  // 5000 msecs = 5 secs
 
 #define MXP_BASE_HAPS           0x01d00000

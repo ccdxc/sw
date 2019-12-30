@@ -7,6 +7,7 @@
 #include "include/sdk/types.hpp"
 #include "include/sdk/eth.hpp"
 #include "include/sdk/timestamp.hpp"
+#include "lib/event_thread/event_thread.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
 #include "port_mac.hpp"
@@ -18,7 +19,7 @@
 #define MAX_PORT_MAC_FAULTS_CHECK   3
 #define MAX_PORT_MAC_NOFAULTS_CHECK 3
 #define PORT_MAC_STAT_REPORT_SIZE   1024
-#define MIN_PORT_TIMER_INTERVAL     TWHEEL_DEFAULT_SLICE_DURATION   // msecs
+#define MIN_PORT_TIMER_INTERVAL     100     // msecs
 
 namespace sdk {
 namespace linkmgr {
@@ -155,20 +156,12 @@ public:
         this->link_an_sm_ = link_sm;
     }
 
-    void *link_bring_up_timer(void) const {
-        return this->link_bring_up_timer_;
+    sdk::event_thread::timer_t *link_bringup_timer(void) {
+        return &this->link_bringup_timer_;
     }
 
-    void set_link_bring_up_timer(void *link_bring_up_timer) {
-        this->link_bring_up_timer_ = link_bring_up_timer;
-    }
-
-    void *link_debounce_timer(void) const {
-        return this->link_debounce_timer_;
-    }
-
-    void set_link_debounce_timer(void *link_debounce_timer) {
-        this->link_debounce_timer_ = link_debounce_timer;
+    sdk::event_thread::timer_t *link_debounce_timer(void) {
+        return &this->link_debounce_timer_;
     }
 
     uint32_t mtu(void) { return this->mtu_; }
@@ -242,7 +235,7 @@ public:
     sdk_ret_t port_event_notify(port_event_t event);
 
     // debounce timer expiration handler
-    sdk_ret_t port_debounce_timer(void);
+    sdk_ret_t port_debounce_timer_cb(void);
 
     bool bringup_timer_expired(void);
 
@@ -375,6 +368,12 @@ public:
     // Else trigger hal-control thread to invoke method
     static sdk_ret_t port_disable(port *port_p);
 
+    // set and start the timer
+    static sdk_ret_t port_timer_start(sdk::event_thread::timer_t *timer,
+                                      double timeout);
+    // init the bringup and debounce timers
+    sdk_ret_t timers_init(void);
+
 private:
     uint32_t                  port_num_;                  // uplink port number
     port_oper_status_t        oper_status_;               // port operational status
@@ -391,8 +390,8 @@ private:
     bool                      rx_pause_enable_;           // Enable MAC Rx Pause
     bool                      auto_neg_enable_;           // Enable AutoNeg
     bool                      auto_neg_cfg_;              // user configured AutoNeg
-    void                      *link_bring_up_timer_;      // port link bring up timer
-    void                      *link_debounce_timer_;      // port link debounce timer
+    sdk::event_thread::timer_t link_bringup_timer_;        // port link bring up timer
+    sdk::event_thread::timer_t link_debounce_timer_;       // port link debounce timer
     uint32_t                  mac_id_;                    // mac instance for this port
     uint32_t                  mac_ch_;                    // mac channel within mac instance
     uint32_t                  num_lanes_;                 // number of lanes for this port
@@ -462,7 +461,6 @@ private:
     sdk_ret_t set_last_down_ts(void);
     sdk_ret_t set_last_up_ts(void);
     sdk_ret_t set_bringup_duration(void);
-
 };
 
 }    // namespace linkmgr
