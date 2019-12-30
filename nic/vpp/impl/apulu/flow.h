@@ -38,9 +38,6 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     actiondata.action_u.session_session_info.tx_rewrite_flags =
         vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_data.nexthop) >> 16);
-    actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-                    (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
         *next0 = SESSION_PROG_NEXT_DROP;
@@ -80,9 +77,6 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     actiondata.action_u.session_session_info.tx_rewrite_flags =
         vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_data.nexthop) >> 16);
-    actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-                    (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
         next[0] = SESSION_PROG_NEXT_DROP;
@@ -220,7 +214,7 @@ pds_flow_nh_flags_add (void)
     u16 encap, mapping, nexthop, tunnel;
 
     encap = (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
-    nexthop = (TX_REWRITE_DMAC_FROM_NEXTHOP << TX_REWRITE_DMAC_START);
+    nexthop = 0;
     mapping = (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START);
     tunnel = (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START);
     fm->nh_flags = vec_new(u16, NEXTHOP_TYPE_MAX);
