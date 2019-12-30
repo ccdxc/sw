@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -6,29 +6,26 @@ import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsR
 import { Utility } from '@app/common/Utility';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
-import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
+import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { MetricsPollingQuery, MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { IClusterDistributedServiceCard, ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode,
-         ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition_type } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
-import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
-import * as _ from 'lodash';
-
 
 @Component({
   selector: 'app-naples',
@@ -247,7 +244,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   /**
-   * Watches NapDistributed Services Cards data on KV Store and fetch new nic data
+   * Watches NapDistributed Services Cards data on KV Store and fetch new DSC data
    * Generates column based search object, currently facilitates condition search
    */
   getNaples() {
@@ -593,7 +590,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.populateFieldSelector();
     this.cancelSearch = true;
     this.getDistributedServiceCards();
-    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, NICs refreshed.');
+    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, DSCs refreshed.');
   }
 
   /**
@@ -627,8 +624,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   /**
-   * Provides nic objects for nic meta.name
-   * @param entries Array of nic meta.name
+   * Provides DSC objects for DSC meta.name
+   * @param entries Array of DSC meta.name
    */
   filterNaplesByName(entries: string[]): ClusterDistributedServiceCard[] {
     const tmpMap = {};

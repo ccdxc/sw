@@ -953,7 +953,7 @@ export class Utility {
   /**
    * Gets the propinfo for the given key.
    */
-  public static getNestedPropInfo(instance: any, keys: string | Array<string>) {
+  public static getNestedPropInfo(instance: any, keys: string | Array<string>, reportMissingPropInf: boolean = true) {
     if (keys == null) {
       return null;
     }
@@ -967,8 +967,8 @@ export class Utility {
     } else {
       propInfo = instance.getPropInfo(keys[keys.length - 1]);
     }
-    if (propInfo == null) {
-      console.error('propInfo was null, supplied property path is likely invalid. Input keys: ' + keys);
+    if (propInfo == null && reportMissingPropInf) {
+      console.error('propInfo was null, supplied property path is likely invalid. Input keys and instance: ' + keys + ' ' + ((instance.kind) ? instance.kind : instance));
     }
     return propInfo;
   }

@@ -13,11 +13,11 @@ import {SearchUtil} from '@components/search/SearchUtil';
 import {Animations} from '@app/animations';
 import {TableCol} from '@components/shared/tableviewedit';
 import * as _ from 'lodash';
-import {SearchSearchRequest, SearchSearchRequest_sort_order} from '@sdk/v1/models/generated/search';
+import {SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
 import {ControllerService} from '@app/services/controller.service';
 import {Utility} from '@common/Utility';
 import * as moment from 'moment';
-import { IFieldsRequirement } from '@sdk/v1/models/generated/monitoring';
+
 
 /**
  * Advanced Search Component
@@ -42,7 +42,7 @@ import { IFieldsRequirement } from '@sdk/v1/models/generated/monitoring';
  */
 
 export interface LocalSearchRequest {
-  query: Array<IFieldsRequirement>;
+  query: Array<IFieldsRequirement | FieldsRequirement >;
   sortBy: string;
   sortOrder: SearchSearchRequest_sort_order;
 }
@@ -70,6 +70,7 @@ export class AdvancedSearchComponent implements OnInit {
   @Input() cols: TableCol[] = [];
   @Input() kind: string;
   @Input() customQueryOptions: RepeaterData[] = [];
+  @Input() maxSearchRecords: number = 4000;
 
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   @Output() searchEmitter: EventEmitter<any> = new EventEmitter();
@@ -89,7 +90,7 @@ export class AdvancedSearchComponent implements OnInit {
     const instance = SearchUtil.getModelInfo(Utility.findCategoryByKind(this.kind), this.kind);
     const key = this.valueLabelToValueMap[repeaterItem.formGroup.value[this.keyFormName]];
     const value = repeaterItem.formGroup.value[this.valueFormName];
-    const type = Utility.getNestedPropInfo(instance, key).type;
+    const type = (Utility.getNestedPropInfo(instance, key)) ? Utility.getNestedPropInfo(instance, key).type : null;
     switch (type) {
       case 'Date':
         // TODO: validator logic goes here for Date
@@ -323,7 +324,7 @@ export class AdvancedSearchComponent implements OnInit {
    * @param maxRecords
    * @returns {SearchSearchRequest}
    */
-  getSearchRequest(field, order, kind, aggregate = true, maxRecords = 8000): SearchSearchRequest {
+  getSearchRequest(field, order, kind, aggregate = true, maxRecords = this.maxSearchRecords): SearchSearchRequest {
     let sortOrder = SearchSearchRequest_sort_order.ascending;
     if (order === -1) {
       sortOrder = SearchSearchRequest_sort_order.descending;
@@ -351,7 +352,7 @@ export class AdvancedSearchComponent implements OnInit {
         }
         if (!(ele.keyFormControl in this.localSearchFields)) {
           fields.push({
-            key: ele.keyFormControl,
+            key:  ele.keyFormControl, // this.buildSearchKindFieldKey(ele) ,  // VS-774 ele.keyFormControl,
             operator: ele.operatorFormControl,
             values: processedValue
           });
@@ -395,9 +396,21 @@ export class AdvancedSearchComponent implements OnInit {
    * This is the request builder function for generating local request query
    * @param field
    * @param order
-   * @returns {LocalSearchRequest}
+   * @returns {LocalSearchResult}
    */
   getLocalSearchResult(field, order, searchObject): LocalSearchResult {
+    const localSearchRequest: LocalSearchRequest = this.getLocalSearchRequest(order, field);
+    let localSearchResult: LocalSearchResult = {
+      searchRes: null,
+      err: false
+    };
+    if (localSearchRequest.query != null && localSearchRequest.query.length > 0) {
+      localSearchResult = this.localSearch(localSearchRequest, searchObject);
+    }
+    return localSearchResult;
+  }
+
+  getLocalSearchRequest(field: any, order: any ) {
     let sortOrder = SearchSearchRequest_sort_order.ascending;
     const localQueryFields: Array<IFieldsRequirement> = [];
     if (order === -1) {
@@ -406,7 +419,6 @@ export class AdvancedSearchComponent implements OnInit {
     let localSearchRequest: LocalSearchRequest;
     const model = this.getValues();
     if (model !== null && model.length !== 0) {
-
       const instance = SearchUtil.getModelInfo(Utility.findCategoryByKind(this.kind), this.kind);
       model.forEach(ele => {
         // all value post process logic goes here
@@ -436,14 +448,7 @@ export class AdvancedSearchComponent implements OnInit {
       sortBy: field,
       sortOrder: sortOrder
     };
-    let localSearchResult: LocalSearchResult = {
-      searchRes: null,
-      err: false
-    };
-    if (localSearchRequest.query != null && localSearchRequest.query.length > 0) {
-      localSearchResult = this.localSearch(localSearchRequest, searchObject);
-    }
-    return localSearchResult;
+    return localSearchRequest;
   }
 
   /**

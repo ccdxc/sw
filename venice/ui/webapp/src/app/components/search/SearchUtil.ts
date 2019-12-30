@@ -872,7 +872,7 @@ export class SearchUtil {
       }
 
       // dynamic detect op
-      const op = SearchUtil.getOperators(kindTemp, ele.field.split('.'));
+      const op = ele.advancedSearchOperator ? ele.advancedSearchOperator : SearchUtil.getOperators(kindTemp, ele.field.split('.'));
 
       searchData.repeaterData.push({
         key: {label: ele.header, value: ele.header},

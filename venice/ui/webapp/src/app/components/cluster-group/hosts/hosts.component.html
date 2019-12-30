@@ -34,12 +34,25 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems" title="Hosts"
-                   [total]="dataObjects.length" [icon]="headerIcon"
-                   [enableColumnSelect]="true"
-                   [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
-    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
-  </app-tableheader>
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+      <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems" title="Hosts"
+                       [total]="dataObjects.length" [icon]="headerIcon"
+                       [enableColumnSelect]="true"
+                       [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+      </app-tableheader>
+    </div>
+
+    <div fxLayout="row">
+      <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
+                           [cols]="advSearchCols"
+                           (cancelEmitter)="onCancelSearch($event)"
+                           (searchEmitter)="onSearchHosts()" kind="Host" fxFlex="grow">
+      </app-advanced-search>
+    </div>
+  </div>
+
 </ng-template>
 
 <ng-template #createTemplate>

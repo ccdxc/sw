@@ -7,7 +7,7 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
-import { IApiStatus } from '@sdk/v1/models/generated/search';
+import { IApiStatus, FieldsRequirement, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
@@ -16,6 +16,7 @@ import { RowClickEvent, TableCol, CustomExportMap  } from '.';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
+import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
 
 
 /**
@@ -662,6 +663,38 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     const selectedDataObjects = this.getSelectedDataObjects();
     this.deleteMultipleRecords(selectedDataObjects, allSuccessSummary, partialSuccessSummary, msg);
   }
+
+  /**
+   * This is API execute table search. See how Hosts and Workload components use it.
+   * @param field
+   * @param order
+   * @param kind
+   * @param maxSearchRecords
+   * @param advSearchCols
+   * @param dataObjects
+   * @param advancedSearchComponent
+   * @param isShowToasterOnSearchHasResult default is false.
+   * @param isShowToasterOnSearchNoResult default is true.
+   */
+  onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent: AdvancedSearchComponent,
+     isShowToasterOnSearchHasResult: boolean = false,
+     isShowToasterOnSearchNoResult: boolean = true ): any[] | ReadonlyArray<any> {
+    const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
+    const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
+    const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
+    const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
+
+    const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
+    const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
+    if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
+      this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
+    } else {
+      if (isShowToasterOnSearchHasResult) {
+          this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
+      }
+    }
+    return searchResults;
+  }
 }
 
 export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -832,5 +865,6 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
         Eventtypes.COMPONENT_DESTROY
     });
   }
+
 
 }

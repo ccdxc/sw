@@ -18,6 +18,7 @@ import { MatIconRegistry } from '@angular/material';
 import { MessageService } from '@app/services/message.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { BehaviorSubject } from 'rxjs';
+import { SearchService } from '@app/services/generated/search.service';
 import { By } from '@angular/platform-browser';
 import { RouterLinkStubDirective } from '@common/RouterLinkStub.directive.spec';
 import { TestingUtility } from '@common/TestingUtility';
@@ -252,7 +253,8 @@ describe('HostsComponent', () => {
         MatIconRegistry,
         ClusterService,
         MessageService,
-        WorkloadService
+        WorkloadService,
+        SearchService
       ]
     });
   });

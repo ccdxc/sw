@@ -46,6 +46,7 @@ import { AuthService } from '@app/services/auth.service';
 import { NewworkloadComponent } from './newworkload/newworkload.component';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { SecurityService } from '@app/services/generated/security.service';
+import { SearchService } from '@app/services/generated/search.service';
 
 
 @Component({
@@ -195,7 +196,8 @@ describe('WorkloadComponent', () => {
         MessageService,
         AuthService,
         ClusterService,
-        SecurityService
+        SecurityService,
+        SearchService
       ]
     });
 

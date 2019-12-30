@@ -18,19 +18,30 @@
                      [bodyTemplate]="bodyTemplate"
                      [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
                      [expandTemplate]="expandTemplate"
-                     [enableCheckbox]="true"
-                     [tableLoading]="tableLoading"
+                     [enableCheckbox]="true" [tableLoading]="tableLoading"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon" [enableColumnSelect]="true"
-                   fxFlex="auto"
-                   fxLayout="row" [tableMenuItems]="tableMenuItems" [cols]="cols"
-                   (columnSelectChange)="onColumnSelectChange($event)">
-    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
-  </app-tableheader>
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+      <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon"
+                       [enableColumnSelect]="true" fxFlex="auto"
+                       fxLayout="row" [tableMenuItems]="tableMenuItems" [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)">
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+      </app-tableheader>
+    </div>
+
+    <div fxLayout="row">
+      <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
+                           [cols]="advSearchCols"
+                           (cancelEmitter)="onCancelSearch($event)"
+                           (searchEmitter)="onSearchWorkloads()" kind="Workload" fxFlex="grow">
+      </app-advanced-search>
+    </div>
+  </div>
 </ng-template>
 
 <ng-template #createTemplate>
@@ -131,8 +142,8 @@
     </mat-icon>
     <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
                      (saveEmitter)="handleEditSave($event)"
-                     (cancelEmitter)="handleEditCancel($event)" [objects]="getSelectedDataObjects()"
-                     [nameKey]="'meta.name'">
+                     (cancelEmitter)="handleEditCancel($event)"
+                     [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
     </app-labeleditor>
     <mat-icon class="global-multi-records-delete-icon" *ngIf="hasSelectedRows()"
               [matTooltip]="'Delete selected workloads'" (click)="onDeleteSelectedRows($event)">

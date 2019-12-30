@@ -1,3 +1,4 @@
+import { FieldsRequirement } from '@sdk/v1/models/generated/search';
 
 export interface TableCol {
   field: string;
@@ -12,6 +13,8 @@ export interface TableCol {
   kind?: string;
   roleGuard?: string;
   notReorderable?: boolean ;
+  filterfunction?: (reqLocal: FieldsRequirement, data: any) => any[] ;
+  advancedSearchOperator?: any[];
 }
 
 export interface CustomExportFunctionOpts {

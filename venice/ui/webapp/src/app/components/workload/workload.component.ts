@@ -1,30 +1,47 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormArray } from '@angular/forms';
 import { MatDialog } from '@angular/material';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ObjectsRelationsUtility, WorkloadDSCHostSecurityTuple } from '@app/common/ObjectsRelationsUtility';
 import { Utility } from '@app/common/Utility';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { WorkloadService } from '@app/services/generated/workload.service';
-import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
-import { WorkloadWorkload, IWorkloadWorkload, IApiStatus } from '@sdk/v1/models/generated/workload';
-import { Table } from 'primeng/table';
-import { Subscription, Observable } from 'rxjs';
-import { TableCol, CustomExportMap } from '../shared/tableviewedit';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { ObjectsRelationsUtility, WorkloadDSCHostSecurityTuple } from '@app/common/ObjectsRelationsUtility';
-import { LabelEditorMetadataModel } from '../shared/labeleditor';
-import { SelectItem } from 'primeng/primeng';
-import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
+import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { FieldsRequirement, SearchSearchRequest, SearchSearchResponse, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { IApiStatus, IWorkloadWorkload, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import * as _ from 'lodash';
+import { SelectItem } from 'primeng/primeng';
+import { Table } from 'primeng/table';
+import { Observable, Subscription } from 'rxjs';
+import { SearchUtil } from '../search/SearchUtil';
+import { AdvancedSearchComponent, LocalSearchRequest } from '../shared/advanced-search/advanced-search.component';
+import { LabelEditorMetadataModel } from '../shared/labeleditor';
+import { CustomExportMap, TableCol } from '../shared/tableviewedit';
+import { TableUtility } from '../shared/tableviewedit/tableutility';
+import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
  * section and a PrimeNG data table to list the workloads.
+ *
+ * There is a AdvancedSearchComponent widget included in this page. User can specify search criteria.
+ * As workload page has all the workload records, this.onSearchWorkloads() searches records locally.  It uses TableUtlity.ts searchTable() api
+ *
+ * Pay attention to  this.buildAdvSearchCols()
+ *
+ * buildAdvSearchCols() specifis how to feed data advance-search widget and search types. User can these 3 types of search
+ *
+ *  a. search with table meta data  (e.g search workload.meta.name = xxx)
+ *  b. customize search  (e.g workload table contains DSC record which is not in workload object.  We must use customize search)
+ *  c. text search  (free form text search)
  */
 @Component({
   selector: 'app-workload',
@@ -41,6 +58,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
   @ViewChild('workloadTable') workloadTable: Table;
+  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
+  maxSearchRecords: number = 8000;
 
   subscriptions: Subscription[] = [];
   // Workload Widget vars
@@ -89,6 +108,10 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: true, width: '180px' },
   ];
 
+  // advance search variables
+  advSearchCols: TableCol[] = [];
+  fieldFormArray = new FormArray([]);
+
   // Name of the row we are hovering over
   // When we hover over a row we expand it to show more interface data
   rowHoverName: string;
@@ -99,6 +122,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
+  dataObjectsBackUp: ReadonlyArray<WorkloadWorkload> = null;
   exportFilename: string = 'Venice-workloads';
   exportMap: CustomExportMap = {};
 
@@ -116,6 +140,28 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   securitygroupsEventUtility: HttpEventUtility<SecuritySecurityGroup>;
   securitygroups: ReadonlyArray<SecuritySecurityGroup>;
 
+  /**
+   * This API is to assist searchWorkloadInterfaces().  We use public static function is to avoid "this" keyword confusion
+   * @param requirement
+   */
+  public static getsearchWorkloadInterfaceKey(requirement: FieldsRequirement): string [] {
+    const key = requirement.key;
+    if (key === 'interface.mac') {
+        return ['mac-address'];
+    }
+    if (key === 'interface.micro_seg_vlan') {
+      return [ 'micro-seg-vlan'];
+    }
+    if (key === 'interface.external_vlan') {
+      return [ 'external-vlan'];
+    }
+    if (key === 'interface.ipaddress') {
+      return [ 'ip-addresses'];
+    }
+ }
+
+
+
   constructor(
     private workloadService: WorkloadService,
     protected _controllerService: ControllerService,
@@ -123,7 +169,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     protected dialog: MatDialog,
     protected cdr: ChangeDetectorRef,
     private clusterService: ClusterService,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    protected searchService: SearchService
   ) {
     super(_controllerService, cdr, uiconfigsService);
   }
@@ -132,7 +179,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * Fetch data.
    */
   postNgInit() {
-    this.getHosts() ; // prepare hostOptions needed by newworkload component.
+    this.buildAdvSearchCols();
+    this.getHosts(); // prepare hostOptions needed by newworkload component.
     this.getNaples(); // get DSC cards
     this.getSecuritygroups(); // get security groups
     this.getWorkloads(); // Once workloads are available, it will build object-maps
@@ -143,7 +191,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     this.hostObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
     const subscription = this.clusterService.WatchHost().subscribe(
       response => {
-        this.hostOptions = this.hostsEventUtility.processEvents(response).map( x => {
+        this.hostOptions = this.hostsEventUtility.processEvents(response).map(x => {
           return { label: x.meta.name, value: x.meta.name };
         });
       },
@@ -190,6 +238,47 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       buttons: buttons,
       breadcrumb: [{ label: 'Workloads Overview', url: Utility.getBaseUIUrl() + 'workload' }]
     });
+  }
+
+  buildAdvSearchCols() {
+    this.advSearchCols = this.cols.filter((col: TableCol) => {
+      return (col.field !== 'meta.mod-time' && col.field !== 'meta.creation-time' && col.field !== 'spec.interfaces');
+    });
+    this.advSearchCols.push(
+      {
+        field: 'DSC', header: 'DSC Name', localSearch: true, kind: 'DistributedServiceCard',
+        filterfunction: this.searchDSC,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
+    this.advSearchCols.push(
+      {
+        field: 'interface.mac', header: 'Interface MAC', localSearch: true, kind: 'Workload',
+        filterfunction: this.searchWorkloadInterfaces,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
+    this.advSearchCols.push(
+      {
+        field: 'interface.micro_seg_vlan', header: 'Interface Micro Seg-VLAN', localSearch: true, kind: 'Workload',
+        filterfunction: this.searchWorkloadInterfaces,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
+    this.advSearchCols.push(
+      {
+        field: 'interface.external_vlan', header: 'Interface External-VLAN', localSearch: true, kind: 'Workload',
+        filterfunction: this.searchWorkloadInterfaces,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
+    this.advSearchCols.push(
+      {
+        field: 'interface.ipaddress', header: 'Interface IP Address', localSearch: true, kind: 'Workload',
+        filterfunction: this.searchWorkloadInterfaces,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
   }
 
   // Commenting out as modal isn't part of 2018-August release
@@ -307,6 +396,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
         this.workloadEventUtility.processEvents(response);
         this.buildObjectsMap();
         this.tableLoading = false;
+        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
       },
       (error) => {
         this.tableLoading = false;
@@ -356,7 +446,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     }
   }
 
-  getLinkedSecuritygroups(workload: WorkloadWorkload): SecuritySecurityGroup [] {
+  getLinkedSecuritygroups(workload: WorkloadWorkload): SecuritySecurityGroup[] {
     if (this.workloadDSCHostTupleMap[workload.meta.name]) {
       return this.workloadDSCHostTupleMap[workload.meta.name].securitygroups;
     } else {
@@ -365,14 +455,14 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   }
 
   buildWorkloadDSCS() {
-    this.dataObjects.forEach( (workload) => {
+    this.dataObjects.forEach((workload) => {
       const dscs = this.getDSCs(workload);
       workload[WorkloadComponent.WORKLOAD_FIELD_DSCS] = (dscs || dscs.length > 0) ? dscs : [];
     });
   }
 
   buildWorkloadSecurityGroups() {
-    this.dataObjects.forEach( (workload) => {
+    this.dataObjects.forEach((workload) => {
       const linkedSecuritygroups = this.getLinkedSecuritygroups(workload);
       workload[WorkloadComponent.WORKLOAD_FIELD_SECURITYGROUPS] = (linkedSecuritygroups && linkedSecuritygroups.length > 0) ? linkedSecuritygroups : [];
     });
@@ -400,8 +490,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
 
   updateWithForkjoin(updatedWorkloads: WorkloadWorkload[]) {
-     const observables = this.getObservables(updatedWorkloads);
-     if (observables.length > 0 ) {
+    const observables = this.getObservables(updatedWorkloads);
+    if (observables.length > 0) {
       const allSuccessSummary = 'Update';
       const partialSuccessSummary = 'Partially update';
       const msg = 'Marked selected ' + updatedWorkloads.length + '  updated.';
@@ -412,16 +502,16 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
         }, // onSuccess callback
         () => {
           self.handleEditCancel(null);
-         }  // onFailure call back
+        }  // onFailure call back
       );
-     }
+    }
   }
 
   getObservables(updatedWorkloads: WorkloadWorkload[]): Observable<any>[] {
     const observables: Observable<any>[] = [];
     for (const workloadObj of updatedWorkloads) {
       const name = workloadObj.meta.name;
-      delete  workloadObj[WorkloadComponent.WORKLOAD_FIELD_DSCS];  // Remove the workload.dscs field as it is only needed in UI.
+      delete workloadObj[WorkloadComponent.WORKLOAD_FIELD_DSCS];  // Remove the workload.dscs field as it is only needed in UI.
       const sub = this.workloadService.UpdateWorkload(name, workloadObj);
       observables.push(sub);
     }
@@ -432,4 +522,97 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   handleEditCancel($event) {
     this.inLabelEditMode = false;
   }
+
+  // advance search APIs
+  onCancelSearch($event) {
+    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
+    this.dataObjects = this.dataObjectsBackUp;
+  }
+
+  /**
+   * Execute table search
+   * @param field
+   * @param order
+   */
+  onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
+    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent) ;
+    if (searchResults && searchResults.length > 0) {
+      this.dataObjects = [];
+      this.dataObjects = searchResults;
+    }
+  }
+
+
+  /* commont it out for now
+    private _callSearchRESTAPI(searchSearchRequest: SearchSearchRequest) {
+
+    // TODO: search on workload has problem.
+    // request JSON
+    //    {"query-string":null,"from":0,"max-results":8000,"sort-by":"meta.mod-time","sort-order":"descending","mode":null,"query":{"texts":[{"text":[]}],"categories":[],"kinds":["Workload"],"fields":{"requirements":[{"key":"meta.name","operator":"in","values":["wl2"]}]},"labels":{"requirements":[]}},"tenants":[],"aggregate":true}
+    //    return nothing
+    //    If I change "operator": "in", to "operator": In",
+    //    it returns  "/venice/config/workload/workloads/default/vcenter-vm-53".  Should return "wl2"
+
+    const subscription = this.searchService.PostQuery(searchSearchRequest).subscribe(
+      response => {
+        const data: SearchSearchResponse = response.body as SearchSearchResponse;
+        let objects = data.entries;
+        if (!objects || objects.length === 0) {
+          this.controllerService.invokeInfoToaster('Information', 'No workload found. Please change search criteria.');
+          objects = [];
+        }
+        const entries = [];
+        const remoteSearchResult = [];
+        for (let k = 0; k < objects.length; k++) {
+          entries.push(objects[k].object); // objects[k] is a SearchEntry object
+          remoteSearchResult.push(entries[k].meta.name);
+        }
+      },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Failed to search workloads', error);
+      }
+    );
+    this.subscriptions.push(subscription);
+  } */
+
+  searchDSC(requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      const dscs = data[i]['dscs'];
+      for (let k = 0; k < dscs.length; k++) {
+        const recordValue = _.get(dscs[k], ['spec', 'id']);
+        const searchValues = requirement.values;
+        let operator = String(requirement.operator);
+        operator = TableUtility.convertOperator(operator);
+        for (let j = 0; j < searchValues.length; j++) {
+          const activateFunc = TableUtility.filterConstraints[operator];
+          if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+            outputs.push(data[i]);
+          }
+        }
+      }
+    }
+    return outputs;
+  }
+
+  searchWorkloadInterfaces (requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      const interfaces = data[i].spec.interfaces;
+      for (let k = 0; k < interfaces.length; k++) {
+        const recordValue = _.get(interfaces[k], WorkloadComponent.getsearchWorkloadInterfaceKey(requirement));
+        const searchValues = requirement.values;
+        let operator = String(requirement.operator);
+        operator = TableUtility.convertOperator(operator);
+        for (let j = 0; j < searchValues.length; j++) {
+          const activateFunc = TableUtility.filterConstraints[operator];
+          if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+            outputs.push(data[i]);
+          }
+        }
+      }
+    }
+    return outputs;
+  }
+
 }

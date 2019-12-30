@@ -28,6 +28,10 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 import { ApiObjectMeta, IApiObjectMeta } from '@sdk/v1/models/generated/auth';
 import { FormGroup, FormsModule } from '@angular/forms';
+import { AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
+import {WidgetsModule} from 'web-app-framework';
+
+
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
@@ -373,7 +377,8 @@ describe('TablevieweditComponent', () => {
         TablevieweditHTMLComponent,
         LazyrenderComponent,
         SorticonComponent,
-        RoleGuardDirective
+        RoleGuardDirective,
+        AdvancedSearchComponent
       ],
       imports: [
         NoopAnimationsModule,
@@ -382,7 +387,8 @@ describe('TablevieweditComponent', () => {
         RouterTestingModule,
         HttpClientTestingModule,
         FlexLayoutModule,
-        FormsModule
+        FormsModule,
+        WidgetsModule
       ],
       providers: [
         ControllerService,
