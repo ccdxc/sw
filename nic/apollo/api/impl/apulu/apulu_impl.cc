@@ -268,78 +268,6 @@ apulu_impl::nacl_init_(void) {
         return ret;
     }
 
-#if 0 //Disable these protection nacls for now, they need to handle flow-miss case
-
-    // allow encapped TCP traffic from uplinks
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    key.control_metadata_rx_packet = 1;
-    key.key_metadata_ktype = KEY_TYPE_IPV4;
-    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
-    key.control_metadata_tunneled_packet = 1;
-    key.key_metadata_proto = IP_PROTO_TCP;
-    mask.control_metadata_rx_packet_mask = ~0;
-    mask.key_metadata_ktype_mask = ~0;
-    mask.control_metadata_lif_type_mask = ~0;
-    mask.control_metadata_tunneled_packet_mask = ~0;
-    mask.key_metadata_proto_mask = ~0;
-    data.action_id = NACL_NACL_PERMIT_ID;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_PERMIT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped TCP, "
-                      "err %u", ret);
-        goto error;
-    }
-
-    // allow encapped UDP traffic from uplinks
-    key.key_metadata_proto = IP_PROTO_UDP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_PERMIT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped UDP, "
-                      "err %u", ret);
-        goto error;
-    }
-
-    // allow encapped ICMP traffic from uplinks
-    key.key_metadata_proto = IP_PROTO_ICMP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_PERMIT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to allow encapped ICMP, "
-                      "err %u", ret);
-        goto error;
-    }
-
-    // drop all non-TCP/UDP/ICMP encapped traffic
-    memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
-    memset(&data, 0, sizeof(data));
-    key.control_metadata_rx_packet = 1;
-    key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
-    key.control_metadata_tunneled_packet = 1;
-    mask.control_metadata_rx_packet_mask = ~0;
-    mask.control_metadata_lif_type_mask = ~0;
-    mask.control_metadata_tunneled_packet_mask = ~0;
-    data.action_id = NACL_NACL_DROP_ID;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_DROP_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program drop entry for nonTCP/UDP/ICMP "
-                      "encapped traffic, err %u", ret);
-        goto error;
-    }
-
 #if 0
     // TODO: we need this for EP aging probes !!!
     // drop all ARP responses seen coming on host lifs
@@ -368,7 +296,6 @@ apulu_impl::nacl_init_(void) {
                       "host lifs, err %u", ret);
         goto error;
     }
-#endif
 #endif
 
     // drop all DHCP responses from host lifs to prevent DHCP server spoofing
