@@ -46,7 +46,7 @@ func NewMockStateManager() (*Statemgr, *MockInstanceManager, error) {
 }
 
 // CreateNetwork utility function to create a network
-func CreateNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid uint32, labels map[string]string, orch *orchestration.Orchestrator) (*network.Network, error) {
+func CreateNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid uint32, labels map[string]string, orchInfo []*network.OrchestratorInfo) (*network.Network, error) {
 	// network params
 	np := network.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -57,16 +57,11 @@ func CreateNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid ui
 			Labels:    labels,
 		},
 		Spec: network.NetworkSpec{
-			Type:        network.NetworkType_Bridged.String(),
-			IPv4Subnet:  subnet,
-			IPv4Gateway: gw,
-			VlanID:      vlanid,
-			Orchestrators: []*network.OrchestratorInfo{
-				{
-					Name:      orch.ObjectMeta.Name,
-					Namespace: orch.ObjectMeta.Namespace,
-				},
-			},
+			Type:          network.NetworkType_Bridged.String(),
+			IPv4Subnet:    subnet,
+			IPv4Gateway:   gw,
+			VlanID:        vlanid,
+			Orchestrators: orchInfo,
 		},
 		Status: network.NetworkStatus{},
 	}

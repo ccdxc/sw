@@ -10,6 +10,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
 )
 
 const (
@@ -32,7 +33,8 @@ type itemKey struct {
 // in sync using the REST interface. It assumes single
 // thread
 type tagsProbe struct {
-	vcInst
+	*defs.State
+	*session.Session
 	tc       *tags.Manager
 	outbox   chan<- defs.Probe2StoreMsg
 	vmsOnKey map[itemKey]*DeltaStrSet // vms that have catID:tagID
@@ -43,12 +45,10 @@ type tagsProbe struct {
 
 // newTagsProbe creates a new instance of tagsProbe
 func (v *VCProbe) newTagsProbe() {
-	restCl := rest.NewClient(v.client.Client)
-	tagCl := tags.NewManager(restCl)
 	v.tp = &tagsProbe{
-		vcInst:   v.vcInst,
+		State:    v.State,
+		Session:  v.Session,
 		outbox:   v.outbox,
-		tc:       tagCl,
 		vmsOnKey: make(map[itemKey]*DeltaStrSet),
 		vmInfo:   make(map[string]*DeltaStrSet),
 		tagMap:   make(map[string]*tagEntry),
@@ -58,7 +58,13 @@ func (v *VCProbe) newTagsProbe() {
 
 // Start starts the client
 func (t *tagsProbe) Start() {
-	err := t.tc.Login(t.watcherCtx, t.vcURL.User)
+	ctx := t.ClientCtx
+	client, _, _ := t.GetClientWithRLock()
+	t.ReleaseClientRLock()
+	restCl := rest.NewClient(client.Client)
+	tagCl := tags.NewManager(restCl)
+	t.tc = tagCl
+	err := t.tc.Login(ctx, t.VcURL.User)
 	if err != nil {
 		t.Log.Errorf("Tags client failed to login, %s", err.Error())
 		return
@@ -70,31 +76,31 @@ func (t *tagsProbe) Start() {
 func (t *tagsProbe) pollTags() {
 	for {
 		select {
-		case <-t.watcherCtx.Done():
+		case <-t.ClientCtx.Done():
 			// delete session using another ctx
 			doneCtx, cancel := context.WithTimeout(context.Background(), deleteDelay)
 			t.tc.Logout(doneCtx)
 			cancel()
 			return
 		case <-time.After(tagsPollDelay):
-			t.fetchTags()
+			// t.fetchTags()
 		}
 	}
 }
 
 func (t *tagsProbe) fetchTags() error {
-	tagList, err := t.tc.ListTags(t.watcherCtx)
+	tagList, err := t.tc.ListTags(t.ClientCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list tags failed, %s", err.Error())
 		if strings.Contains(err.Error(), "code: 401") { // auth error
-			loginErr := t.tc.Login(t.watcherCtx, t.vcURL.User)
+			loginErr := t.tc.Login(t.ClientCtx, t.VcURL.User)
 			if loginErr != nil {
 				t.Log.Errorf("Tags client attempted to re-login but failed, %s", loginErr.Error())
 			}
 		}
 		return err
 	}
-	catList, err := t.tc.GetCategories(t.watcherCtx)
+	catList, err := t.tc.GetCategories(t.ClientCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list categories failed, %s", err.Error())
 		return err
@@ -132,7 +138,7 @@ func (t *tagsProbe) fetchTags() error {
 }
 
 func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
-	objs, err := t.tc.GetAttachedObjectsOnTags(t.watcherCtx, []string{tagID})
+	objs, err := t.tc.GetAttachedObjectsOnTags(t.ClientCtx, []string{tagID})
 	if err != nil {
 		t.Log.Errorf("tag: %s error: %v", tagID, err)
 		return

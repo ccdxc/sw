@@ -1,7 +1,8 @@
-package store
+package vchub
 
 import (
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -14,6 +15,15 @@ type vnicStruct struct {
 	PG       string
 	Port     string
 	Workload string
+}
+
+func (v *VCHub) setupPCache() {
+	pCache := pcache.NewPCache(v.StateMgr, v.Log)
+	pCache.SetValidator(workloadKind, v.validateWorkload)
+	pCache.SetValidator(vnicKind, validateVNIC)
+	v.pCache = pCache
+	v.Wg.Add(1)
+	go pCache.Run(v.Ctx, v.Wg)
 }
 
 func validateVNIC(in interface{}) (bool, bool) {
@@ -32,7 +42,7 @@ func createVNICMeta(macAddress string) *api.ObjectMeta {
 }
 
 // GetVNIC retrieves a vnic
-func (v *VCHStore) getVNIC(macAddress string) *vnicStruct {
+func (v *VCHub) getVNIC(macAddress string) *vnicStruct {
 	p := v.pCache
 	meta := createVNICMeta(macAddress)
 	obj := p.Get(vnicKind, meta)
@@ -48,13 +58,13 @@ func (v *VCHStore) getVNIC(macAddress string) *vnicStruct {
 	return nil
 }
 
-func (v *VCHStore) setVNIC(in *vnicStruct) {
+func (v *VCHub) setVNIC(in *vnicStruct) {
 	// Since we are only setting locally
 	// we don't have to worry about errors
 	v.pCache.Set(vnicKind, in)
 }
 
-func (v *VCHStore) deleteVNIC(macAddress string) {
+func (v *VCHub) deleteVNIC(macAddress string) {
 	meta := createVNICMeta(macAddress)
 	v.pCache.Delete(vnicKind, meta)
 }

@@ -1,8 +1,22 @@
 package defs
 
 import (
+	"context"
+	"net/url"
+	"sync"
+
 	"github.com/vmware/govmomi/vim25/types"
+
+	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/utils/log"
 )
+
+// DefaultDVSName is the name DVS objects created by venice will be given
+const DefaultDVSName = "Pen-DVS"
+
+// DefaultPGPrefix is the prefix given to PG objects created by Venice
+const DefaultPGPrefix = "Pen-"
 
 const (
 	// VCEvent indicates a vc event
@@ -28,6 +42,16 @@ const (
 	VirtualMachine = VCObject("VirtualMachine")
 	// HostSystem identifies the VCenter Host object type
 	HostSystem = VCObject("HostSystem")
+	// VmwareDistributedVirtualSwitch identifies the VCenter Host object type
+	VmwareDistributedVirtualSwitch = VCObject("VmwareDistributedVirtualSwitch")
+	// DistributedVirtualSwitch identifies the VCenter Host object type
+	// In VCSim, the type is DistributedVirtualSwitch not vmwareDistributedVirtualSwitch
+	// DistributedVirtualSwitch = VCObject("DistributedVirtualSwitch")
+
+	// DistributedVirtualPortgroup identifies the VCenter PG object type
+	DistributedVirtualPortgroup = VCObject("DistributedVirtualPortgroup")
+	// Datacenter identifies the VCenter Host object type
+	Datacenter = VCObject("Datacenter")
 )
 
 // VCOp defines the object operations
@@ -65,46 +89,8 @@ type VCEventMsg struct {
 	VcObject   VCObject
 	Key        string // vSphere key for the object
 	Changes    []types.PropertyChange
+	DC         string
 	Originator string // Identifier for the VC that originated the update
-}
-
-// WorkloadInfMsg specifies a vlan override that is complete
-type WorkloadInfMsg struct {
-	WorkloadName string
-	MACAddress   string
-	Useg         int
-}
-
-// Store2ProbeMsgType defines the store to probe message types
-type Store2ProbeMsgType string
-
-const (
-	// CreatePG indicates a PG create
-	CreatePG = Store2ProbeMsgType("createPG")
-	// DeletePG indicates a PG delete
-	DeletePG = Store2ProbeMsgType("deletePG")
-	// Useg indicates a useg override needs to be set
-	Useg = Store2ProbeMsgType("useg")
-	// ProbeMsgResync indicates the probe should resync it's inventory
-	ProbeMsgResync = Store2ProbeMsgType("resync")
-)
-
-// Store2ProbeMsg specifies a store to probe message
-type Store2ProbeMsg struct {
-	MsgType Store2ProbeMsgType
-	// Based on ProbeMsg type, receiver should know
-	// what to cast val to.
-	Val interface{}
-}
-
-// UsegMsg is the message to request the probe to override the port vlan
-type UsegMsg struct {
-	// Name in venice
-	WorkloadName string
-	MACAddress   string
-	PG           string
-	Port         string
-	Useg         int
 }
 
 // TagEntry is an item of a TagMsg
@@ -118,4 +104,15 @@ type TagEntry struct {
 // TagMsg specifies the tag probe to store object
 type TagMsg struct {
 	Tags []TagEntry
+}
+
+// State is shared state between VCHub objects
+type State struct {
+	VcURL      *url.URL
+	VcID       string
+	Ctx        context.Context
+	Log        log.Logger
+	StateMgr   *statemgr.Statemgr
+	OrchConfig *orchestration.Orchestrator
+	Wg         *sync.WaitGroup
 }

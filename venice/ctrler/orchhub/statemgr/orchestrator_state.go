@@ -37,7 +37,7 @@ func (sm *Statemgr) OnOrchestratorCreate(w *ctkit.Orchestrator) error {
 
 	probeChannel := make(chan *kvstore.WatchEvent, probeChannelMax)
 
-	err := sm.AddProbeChannel(w.Orchestrator.GetKey(), probeChannel)
+	err := sm.AddProbeChannel(w.Orchestrator.GetName(), probeChannel)
 	if err != nil {
 		return err
 	}

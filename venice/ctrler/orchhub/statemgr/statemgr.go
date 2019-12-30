@@ -132,7 +132,8 @@ func (s *Statemgr) SendNetworkProbeEvent(obj runtime.Object, evtType kvstore.Wat
 	}
 
 	for _, orch := range nw.Spec.Orchestrators {
-		orchKey := fmt.Sprintf("%s/%s/%s", nw.ObjectMeta.Tenant, orch.Namespace, orch.Name)
+		// orchKey := fmt.Sprintf("%s/%s/%s", nw.ObjectMeta.Tenant, orch.Namespace, orch.Name)
+		orchKey := orch.Name
 		if len(orchKey) == 0 {
 			return fmt.Errorf("could not get orchestrator name")
 		}

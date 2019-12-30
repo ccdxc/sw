@@ -1,8 +1,10 @@
 package vcprobe
 
 import (
+	"context"
 	"fmt"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 
@@ -10,310 +12,90 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
-	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func TestNetworkCreate(t *testing.T) {
-	vcID := "127.0.0.1:8990"
-	user := "user"
-	password := "pass"
+func TestListAndWatch(t *testing.T) {
+	testParams := &testutils.TestParams{
+		TestHostName: "127.0.0.1:8989",
+		TestUser:     "user",
+		TestPassword: "pass",
 
-	sm, _, err := smmock.NewMockStateManager()
+		TestDCName:             "PenTestDC",
+		TestDVSName:            "PenTestDVS",
+		TestPGNameBase:         "PenTestPG",
+		TestMaxPorts:           4096,
+		TestNumStandalonePorts: 512,
+		TestNumPVLANPair:       5,
+		StartPVLAN:             500,
+		TestNumPG:              5,
+		TestNumPortsPerPG:      20,
+	}
+
+	err := testutils.ValidateParams(testParams)
 	if err != nil {
-		t.Fatalf("Failed to create state manager. Err : %v", err)
-		return
+		t.Fatalf("Failed at validating test parameters")
 	}
 
-	url := fmt.Sprintf("%s:%s@%s/sdk", user, password, vcID)
-
-	s, err := sim.NewVcSim(sim.Config{Addr: url})
-	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
-
-	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
-
-	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
-
-	fmt.Println("Creating orchestrator")
-	err = sm.Controller().Orchestrator().Create(orchConfig)
-	Assert(t, err == nil, "Failed to create orch")
-	time.Sleep(1 * time.Second)
-
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
-	err = vcp.Start()
-	AssertOk(t, err, "Failed to start probe")
-	defer vcp.Stop()
-
-	labels := map[string]string{"orch-name": fmt.Sprintf("%v", orchConfig.GetKey())}
-	np, err := smmock.CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, labels, orchConfig)
-	Assert(t, err == nil, "network not created")
-
-	err = sm.SendNetworkProbeEvent(np, kvstore.Deleted)
-	Assert(t, err == nil, fmt.Sprintf("failed to delete network. Err : %v", err))
-}
-
-func TestMessages(t *testing.T) {
-	vcID := "127.0.0.1:8990"
-	user := "user"
-	password := "pass"
-
-	sm, _, err := smmock.NewMockStateManager()
-	if err != nil {
-		t.Fatalf("Failed to create state manager. Err : %v", err)
-		return
+	u := &url.URL{
+		Scheme: "http",
+		Host:   testParams.TestHostName,
+		Path:   "/sdk",
 	}
+	u.User = url.UserPassword(testParams.TestUser, testParams.TestPassword)
 
-	url := fmt.Sprintf("%s:%s@%s/sdk", user, password, vcID)
-	expectedMsgs := map[defs.VCObject][]defs.Probe2StoreMsg{
-		// The changes property is not checked currently
-		defs.VirtualMachine: []defs.Probe2StoreMsg{
-			defs.Probe2StoreMsg{
-				MsgType: defs.VCEvent,
-				Val: defs.VCEventMsg{
-					VcObject:   defs.VirtualMachine,
-					Key:        "vm-19",
-					Originator: vcID,
-				},
-			},
-			defs.Probe2StoreMsg{
-				MsgType: defs.VCEvent,
-				Val: defs.VCEventMsg{
-					VcObject:   defs.VirtualMachine,
-					Key:        "vm-21",
-					Originator: vcID,
-				},
-			},
-		},
-		defs.HostSystem: []defs.Probe2StoreMsg{
-			defs.Probe2StoreMsg{
-				MsgType: defs.VCEvent,
-				Val: defs.VCEventMsg{
-					VcObject:   defs.HostSystem,
-					Key:        "host-14",
-					Originator: vcID,
-				},
-			},
-		},
-	}
-	config := log.GetDefaultConfig("vcprobe_test")
+	config := log.GetDefaultConfig("vcprobe_testDVS")
 	config.LogToStdout = true
-	debugMode := false
-	if debugMode {
-		config.Filter = log.AllowAllFilter
-	}
-	logger := log.SetConfig(config)
-
-	s, err := sim.NewVcSim(sim.Config{Addr: url})
-	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
-
-	dc, err := s.AddDC("test-dc-1")
-	AssertOk(t, err, "Failed to create DC")
-	_, err = dc.AddHost("host1")
-	AssertOk(t, err, "failed to create host")
-	_, err = dc.AddVM("vm1", "host1")
-	AssertOk(t, err, "failed to create vm")
-	_, err = dc.AddVM("vm2", "host1")
-	AssertOk(t, err, "failed to create vm")
-
-	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
-	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
-	err = sm.Controller().Orchestrator().Create(orchConfig)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
-	vcp.Start()
-	defer vcp.Stop()
-
-	eventMap := make(map[defs.VCObject][]defs.VCEventMsg)
-	doneCh := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-doneCh:
-				return
-			case m := <-storeCh:
-				item := m.Val.(defs.VCEventMsg)
-				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
-
-				if len(eventMap[defs.HostSystem]) >= 1 &&
-					len(eventMap[defs.VirtualMachine]) >= 2 {
-					doneCh <- true
-				}
-			}
-		}
-	}()
-	select {
-	case <-doneCh:
-	case <-time.After(3 * time.Second):
-		doneCh <- false
-		t.Logf("Failed to receive all messages. ")
-		t.Logf("Expected: ")
-		for k, v := range expectedMsgs {
-			t.Logf("%d %s but got %d %s", len(v), k, len(eventMap[k]), k)
-		}
-		t.FailNow()
-	}
-	for objType, events := range expectedMsgs {
-		recvEvents := eventMap[objType]
-		for _, expE := range events {
-			foundMatch := false
-			for _, recvE := range recvEvents {
-				expItem := expE.Val.(defs.VCEventMsg)
-				if expItem.Key == recvE.Key &&
-					expItem.Originator == recvE.Originator {
-					foundMatch = true
-					break
-				}
-			}
-			Assert(t, foundMatch, "could not find matching event for %v", expE)
-		}
-	}
-}
-
-func TestReconnect(t *testing.T) {
-	t.Skipf("Test intermittently fails. VCSim is suspected to be the cause, but debugging offline and skipping for now")
-	vcID := "user:pass@127.0.0.1:8990"
-	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
-	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
-	dc, err := s.AddDC("test-dc-1")
-	AssertOk(t, err, "failed dc create")
-	dc.AddHost("host1")
-	dc.AddVM("vm1", "host1")
-
-	fmt.Printf("starting on %s\n", s.GetURL())
-
-	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
-
-	config := log.GetDefaultConfig("vcprobe_test")
 	config.Filter = log.AllowAllFilter
-	config.LogToStdout = true
 	logger := log.SetConfig(config)
-
-	sm, _, err := smmock.NewMockStateManager()
-	if err != nil {
-		t.Fatalf("Failed to create state manager. Err : %v", err)
-		return
-	}
-
-	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
-	err = sm.Controller().Orchestrator().Create(orchConfig)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
-	err = vcp.Start()
-	AssertOk(t, err, "Failed to start probe")
-	defer vcp.Stop()
-
-	eventMap := make(map[defs.VCObject][]defs.VCEventMsg)
-	doneCh := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-doneCh:
-				return
-			case m := <-storeCh:
-				item := m.Val.(defs.VCEventMsg)
-				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
-
-				if len(eventMap[defs.HostSystem]) >= 1 &&
-					len(eventMap[defs.VirtualMachine]) >= 1 {
-					doneCh <- true
-				}
-			}
-		}
-	}()
-	select {
-	case <-doneCh:
-	case <-time.After(3 * time.Second):
-		doneCh <- false
-		t.Logf("Failed to receive all messages.")
-		t.Logf("host events: %v", eventMap[defs.HostSystem])
-		t.Logf("vm events: %v", eventMap[defs.VirtualMachine])
-		t.FailNow()
-	}
-
-	// Reset values and break connection
-	eventMap = make(map[defs.VCObject][]defs.VCEventMsg)
-
-	go func() {
-		for {
-			select {
-			case <-doneCh:
-				return
-			case m := <-storeCh:
-				item := m.Val.(defs.VCEventMsg)
-				eventMap[item.VcObject] = append(eventMap[item.VcObject], item)
-
-				if len(eventMap[defs.HostSystem]) >= 1 &&
-					len(eventMap[defs.VirtualMachine]) >= 1 {
-					doneCh <- true
-				}
-			}
-		}
-	}()
-
-	s.Server.CloseClientConnections()
-
-	select {
-	case <-doneCh:
-	case <-time.After(10 * time.Second):
-		doneCh <- false
-		t.Logf("Failed to receive all messages.")
-		t.Logf("host events: %v", eventMap[defs.HostSystem])
-		t.Logf("vm events: %v", eventMap[defs.VirtualMachine])
-		t.FailNow()
-	}
-}
-
-func TestLoginRetry(t *testing.T) {
-	t.Skip("Watch currently does not process events for objects that have been created after the watch has started")
-
-	// If the probe is started before the vcenter instance is up, it should
-	// keep retrying to create the client
-
-	vcID := "user:pass@127.0.0.1:8990"
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
-	config := log.GetDefaultConfig("vcprobe_test")
-	config.LogToStdout = true
-	logger := log.SetConfig(config)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+	dc, err := s.AddDC(testParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+	_, err = dc.AddHost("host1")
+	AssertOk(t, err, "failed host create")
+	_, err = dc.AddVM("vm1", "host1")
+	AssertOk(t, err, "failed vm create")
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 
-	orchConfig := smmock.GetOrchestratorConfig("127.0.0.1:8990/sdk", "user", "pass")
+	orchConfig := smmock.GetOrchestratorConfig(testParams.TestHostName, testParams.TestUser, testParams.TestPassword)
 	err = sm.Controller().Orchestrator().Create(orchConfig)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
-	err = vcp.Start()
-	AssertOk(t, err, "Failed to start probe")
-	defer vcp.Stop()
+	state := &defs.State{
+		VcURL:      u,
+		VcID:       "vcenter",
+		Ctx:        ctx,
+		Log:        logger,
+		StateMgr:   sm,
+		OrchConfig: orchConfig,
+		Wg:         &sync.WaitGroup{},
+	}
+	vcp := NewVCProbe(storeCh, state)
+	vcp.Start()
 
-	time.Sleep(time.Second)
+	defer func() {
+		cancel()
+		state.Wg.Wait()
+	}()
 
-	fmt.Printf("starting sim %s\n", vcID)
-
-	s, err := sim.NewVcSim(sim.Config{Addr: vcID})
-	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
-
-	dc, err := s.AddDC("test-dc-1")
-	AssertOk(t, err, "failed dc create")
-	dc.AddHost("host1")
-	dc.AddVM("vm1", "host1")
+	// Start test
+	state.Wg.Add(1)
+	go vcp.StartWatchers()
 
 	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
 	doneCh := make(chan bool)
-
 	go func() {
 		for {
 			select {
@@ -324,60 +106,119 @@ func TestLoginRetry(t *testing.T) {
 				eventMap[item.VcObject] = append(eventMap[item.VcObject], m)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
+					len(eventMap[defs.Datacenter]) >= 1 &&
 					len(eventMap[defs.VirtualMachine]) >= 1 {
 					doneCh <- true
 				}
 			}
 		}
 	}()
+
 	select {
 	case <-doneCh:
-	case <-time.After(3 * time.Second):
+	case <-time.After(10 * time.Second):
 		doneCh <- false
 		t.Logf("Failed to receive all messages.")
+		t.Logf("%+v", eventMap)
 		t.FailNow()
 	}
-}
 
-func TestDVS(t *testing.T) {
-	testParams := &vcprobeTestParams{
-		testHostName:           "127.0.0.1:8990",
-		testUser:               "user",
-		testPassword:           "pass",
-		testDCName:             "PenTestDC",
-		testDVSName:            "PenTestDVS",
-		testPGNameBase:         "PenTestPG",
-		testMaxPorts:           4096,
-		testNumStandalonePorts: 512,
-		testNumPVLANPair:       5,
-		startPVLAN:             500,
-		testNumPG:              5,
-		testNumPortsPerPG:      20,
+	// Testing list
+	s.AddDC("DC2")
+
+	dcs := vcp.ListDC()
+	AssertEquals(t, 2, len(dcs), "List DC response length did not match exp")
+	vms := vcp.ListVM(nil)
+	AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
+	// Listing in DC2 should be 0
+	for _, dc := range dcs {
+		ref := dc.Reference()
+		if dc.Name == "DC2" {
+			vms := vcp.ListVM(&ref)
+			AssertEquals(t, 0, len(vms), "List VM response length did not match exp")
+		} else {
+			vms := vcp.ListVM(&ref)
+			AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
+		}
 	}
 
-	err := TestValidateParams(testParams)
+	// Create DVS for listing
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
+
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
+	AssertOk(t, err, "Failed to add DVS")
+
+	time.Sleep(1 * time.Second)
+
+	// There is a bug with the simulator where the type of the object
+	// is distributedVirtualSwitch when with a real VCenter it is
+	// VmwareDistributedVirtualSwitch
+	// // List DVS
+	// dvsObjs := vcp.ListDVS(nil)
+	// AssertEquals(t, 1, len(dvsObjs), "List DVS response length did not match exp")
+
+	// Create PG for listing
+
+	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
+
+	for i := 0; i < testParams.TestNumPG; i++ {
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		AssertOk(t, err, "Failed to add new PG")
+	}
+
+	// List PGs
+
+	pgs := vcp.ListPG(nil)
+	// 1 extra PG for the uplink PG
+	AssertEquals(t, testParams.TestNumPG+1, len(pgs), "List PG response length did not match exp")
+
+}
+
+func TestDVSAndPG(t *testing.T) {
+	// TestHostName: "jingyiz-vcsa67new.pensando.io",
+	// TestUser:     "administrator@vsphere.local",
+	// TestPassword: "N0isystem$",
+
+	testParams := &testutils.TestParams{
+		TestHostName: "127.0.0.1:8989",
+		TestUser:     "user",
+		TestPassword: "pass",
+
+		TestDCName:             "PenTestDC",
+		TestDVSName:            "PenTestDVS",
+		TestPGNameBase:         "PenTestPG",
+		TestMaxPorts:           4096,
+		TestNumStandalonePorts: 512,
+		TestNumPVLANPair:       5,
+		StartPVLAN:             500,
+		TestNumPG:              5,
+		TestNumPortsPerPG:      20,
+	}
+
+	err := testutils.ValidateParams(testParams)
 	if err != nil {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
 	u := &url.URL{
 		Scheme: "http",
-		Host:   testParams.testHostName,
+		Host:   testParams.TestHostName,
 		Path:   "/sdk",
 	}
-	u.User = url.UserPassword(testParams.testUser, testParams.testPassword)
+	u.User = url.UserPassword(testParams.TestUser, testParams.TestPassword)
 
 	config := log.GetDefaultConfig("vcprobe_testDVS")
 	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
-	_, err = s.AddDC(testParams.testDCName)
+	_, err = s.AddDC(testParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -385,51 +226,61 @@ func TestDVS(t *testing.T) {
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 
-	orchConfig := smmock.GetOrchestratorConfig(testParams.testHostName, testParams.testUser, testParams.testPassword)
+	orchConfig := smmock.GetOrchestratorConfig(testParams.TestHostName, testParams.TestUser, testParams.TestPassword)
 	err = sm.Controller().Orchestrator().Create(orchConfig)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, u.Scheme)
-	err = vcp.Start()
-	AssertOk(t, err, "Failed to start probe")
-	defer vcp.Stop()
+	state := &defs.State{
+		VcURL:      u,
+		VcID:       "vcenter",
+		Ctx:        ctx,
+		Log:        logger,
+		StateMgr:   sm,
+		OrchConfig: orchConfig,
+		Wg:         &sync.WaitGroup{},
+	}
+	vcp := NewVCProbe(storeCh, state)
+	vcp.Start()
+
+	defer func() {
+
+		cancel()
+		state.Wg.Wait()
+	}()
 
 	time.Sleep(time.Second * 3)
 
 	// Trigger the test
 	//var mapPortsSetting *PenDVSPortSettings
-	penPGArray := make([]*PenPG, testParams.testNumPG)
-	pvlanConfigSpecArray := GenPVLANConfigSpecArray(testParams, "add")
-	dvsCreateSpec := GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
+	// penPGArray := make([]*object.DistributedVirtualPortgroup, testParams.TestNumPG)
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
 
-	penDVS, err := vcp.AddPenDVS(testParams.testDCName, dvsCreateSpec)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
 	AssertOk(t, err, "Failed to add DVS")
 
-	pgConfigSpecArray := GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
-	//startMicroSegVlanID := testParams.startPVLAN + int32(testParams.testNumPVLANPair*2)
-	var isPassed bool
+	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
+	// startMicroSegVlanID := testParams.StartPVLAN + int32(testParams.TestNumPVLANPair*2)
 	var numPG int
 	var mapPGNamesWithIndex *map[string]int
-	var dvs *mo.DistributedVirtualSwitch
 
-	var events []defs.Store2ProbeMsg
+	for i := 0; i < testParams.TestNumPG; i++ {
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		AssertOk(t, err, "Failed to add new PG")
 
-	for i := 0; i < testParams.testNumPG; i++ {
-		penPGArray[i], err = penDVS.AddPenPG(&pgConfigSpecArray[i])
-		if err != nil {
-			t.Logf("Failed at adding new portgroup, err: %s", err)
-			isPassed = false
-			goto exitDvsTest
-		}
+		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
+		pgObj, err := vcp.GetPenPG(testParams.TestDCName, pgName)
+		AssertOk(t, err, "Failed to find created PG %s", pgName)
+		Assert(t, pgObj != nil, "Couldn't find created PG %s", pgName)
 	}
 	/*
-		for i := 0; i < testParams.testNumPG; i++ {
+		for i := 0; i < testParams.TestNumPG; i++ {
 			mapPortsSetting, err = GenMicroSegVlanMappingPerPG(testParams, penPGArray[i], &startMicroSegVlanID)
 			if err != nil {
 				t.Logf("Failed at generating useg vlans, err: %s", err)
 				isPassed = false
 				goto exitDvsTest
 			}
-
 			_, err = penDVS.UpdatePorts(mapPortsSetting)
 			if err != nil {
 				t.Logf("Failed at updating ports on DVS, err: %s", err)
@@ -439,69 +290,40 @@ func TestDVS(t *testing.T) {
 		}
 	*/
 
-	events = []defs.Store2ProbeMsg{
-		defs.Store2ProbeMsg{
-			MsgType: defs.Useg,
-			Val: defs.UsegMsg{
-				WorkloadName: "test",
-				PG:           fmt.Sprint(testParams.testPGNameBase, 0),
-				Port:         "1",
-			},
-		},
-		defs.Store2ProbeMsg{
-			// Unknown event should no-op
-			MsgType: "RandomEvent",
-			Val: defs.UsegMsg{
-				WorkloadName: "test",
-				PG:           fmt.Sprint(testParams.testPGNameBase, 0),
-				Port:         "1",
-			},
-		},
-	}
-
-	for _, e := range events {
-		probeCh <- e
-	}
-	// Don't verify any results from pushing these events
-	// as updatePorts doesn't work with the simulator currently
-	// added for now to make sure probe fails gracefully / test coverage
-
 	// Verify the results
-	dvs, err = penDVS.getMoDVSRef()
-	if err != nil {
-		t.Logf("Failed at converting to mo.DistributedVirtualSwitch, err: %s", err)
-		isPassed = false
-		goto exitDvsTest
-	}
+	dvsObj, err := vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName)
+	AssertOk(t, err, "Failed to get DVS %s", testParams.TestDVSName)
+
+	var dvs mo.DistributedVirtualSwitch
+	err = dvsObj.Properties(ctx, dvsObj.Reference(), nil, &dvs)
+	AssertOk(t, err, "Failed to get properties for DVS")
 
 	numPG = len(dvs.Summary.PortgroupName)
-	if numPG != (testParams.testNumPG + 1) {
-		t.Logf("Incorrect number of portgroup: %d, expected value is: %d", numPG, testParams.testNumPG+1)
-		isPassed = false
-		goto exitDvsTest
-	}
+	AssertEquals(t, testParams.TestNumPG+1, numPG, "Incorrect number of portgroups")
 
-	mapPGNamesWithIndex = GenPGNamesForComp(testParams)
+	mapPGNamesWithIndex = testutils.GenPGNamesForComp(testParams)
 
 	for i := 0; i < numPG; i++ {
 		delete(*mapPGNamesWithIndex, dvs.Summary.PortgroupName[i])
 	}
 
-	if len(*mapPGNamesWithIndex) == 0 {
-		isPassed = true
-	} else {
-		isPassed = false
+	AssertEquals(t, 0, len(*mapPGNamesWithIndex), "No entries should remain")
+
+	// List and Delete all PGs
+	for i := 0; i < testParams.TestNumPG; i++ {
+		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
+		err = vcp.RemovePenPG(testParams.TestDCName, pgName)
+		AssertOk(t, err, "Failed to delete PG")
+
+		_, err := vcp.GetPenPG(testParams.TestDCName, pgName)
+		Assert(t, err != nil, "Found deleted PG %s", pgName)
 	}
 
-exitDvsTest:
-	// Teardown the configuration
-	err = vcp.RemovePenDVS(testParams.testDVSName)
-	if err != nil {
-		t.Logf("Failed at tearing down DVS: %s from datacenter: %s, err: %s", penDVS.DvsName, penDVS.DcName, err)
-		isPassed = false
-	}
+	// Delete DVS
+	err = vcp.RemovePenDVS(testParams.TestDCName, testParams.TestDVSName)
+	AssertOk(t, err, "Failed to delete DVS")
 
-	if !isPassed {
-		t.Fatal("Failed at validating test results")
-	}
+	_, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName)
+	Assert(t, err != nil, "Found deleted DVS %s", testParams.TestDVSName)
+
 }

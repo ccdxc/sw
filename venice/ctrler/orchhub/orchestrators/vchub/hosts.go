@@ -1,4 +1,4 @@
-package store
+package vchub
 
 import (
 	"reflect"
@@ -14,12 +14,12 @@ import (
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
-func (v *VCHStore) handleHost(m defs.VCEventMsg) {
+func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	meta := &api.ObjectMeta{
-		Name: utils.CreateGlobalKey(m.Originator, m.Key),
+		Name: utils.CreateGlobalKey(m.Originator, m.DC, m.Key),
 	}
 	var existingHost, hostObj *cluster.Host
-	ctkitHost, err := v.stateMgr.Controller().Host().Find(meta)
+	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
 	if err != nil {
 		existingHost = nil
 	} else {
@@ -87,7 +87,7 @@ func (v *VCHStore) handleHost(m defs.VCEventMsg) {
 			return
 		}
 		// Delete from apiserver
-		v.stateMgr.Controller().Host().Delete(hostObj)
+		v.StateMgr.Controller().Host().Delete(hostObj)
 		return
 	}
 	// If different, write to apiserver
@@ -100,13 +100,13 @@ func (v *VCHStore) handleHost(m defs.VCEventMsg) {
 		hostObj.Labels = make(map[string]string)
 	}
 
-	if v.orchConfig != nil {
-		utils.AddOrchNameLabel(hostObj.Labels, v.orchConfig.Name)
+	if v.OrchConfig != nil {
+		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
 	}
 
 	if existingHost == nil {
-		v.stateMgr.Controller().Host().Create(hostObj)
+		v.StateMgr.Controller().Host().Create(hostObj)
 	} else {
-		v.stateMgr.Controller().Host().Update(hostObj)
+		v.StateMgr.Controller().Host().Update(hostObj)
 	}
 }

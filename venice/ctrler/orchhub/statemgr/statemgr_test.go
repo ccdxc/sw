@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/log"
@@ -44,15 +45,21 @@ func TestNetworkCreateList(t *testing.T) {
 	defer im.watchCancel()
 
 	orch := GetOrchestratorConfig("myorchestrator", "user", "pass")
+	orchInfo := []*network.OrchestratorInfo{
+		{
+			Name:      orch.Name,
+			Namespace: orch.Namespace,
+		},
+	}
 
-	_, err = CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil, orch)
+	_, err = CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 	Assert(t, (err == nil), "network could not be created")
 
-	_, err = CreateNetwork(sm, "default", "prod-bebe-vlan200", "10.2.1.0/24", "10.2.1.1", 200, nil, orch)
+	_, err = CreateNetwork(sm, "default", "prod-bebe-vlan200", "10.2.1.0/24", "10.2.1.1", 200, nil, orchInfo)
 	Assert(t, (err == nil), "network could not be created")
 
 	labels := map[string]string{"color": "green"}
-	_, err = CreateNetwork(sm, "default", "dev-caca-vlan300", "10.3.1.0/24", "10.3.1.1", 300, labels, orch)
+	_, err = CreateNetwork(sm, "default", "dev-caca-vlan300", "10.3.1.0/24", "10.3.1.1", 300, labels, orchInfo)
 	Assert(t, (err == nil), "network could not be created")
 
 	nw, err := sm.ctrler.Network().List(context.Background(), &api.ListWatchOptions{})

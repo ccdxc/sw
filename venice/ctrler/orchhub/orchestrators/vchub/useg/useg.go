@@ -52,10 +52,12 @@ type Inf interface {
 	AssignVlanForVnic(vnicKey string, host string) (int, error)
 	ReleaseVlanForVnic(vnicKey string, host string) error
 	GetVlanForVnic(vnicKey string, host string) (int, error)
+	SetVlanForVnic(vnicKey string, host string, vlan int) error
 	// TODO: support workload migration
 	// MigrationEvent(key string, oldHost string, newHost string)
 	AssignVlansForPG(pg string) (int, int, error)
 	GetVlansForPG(pg string) (int, int, error)
+	SetVlansForPG(pg string, primary int, secondary int) error
 	ReleaseVlansForPG(pg string) error
 }
 
@@ -76,9 +78,11 @@ func NewUsegAllocator() (Inf, error) {
 	return allocator, err
 }
 
-// 0 is not a valid vlan
+// ReservedPGVlanCount is the first vlan value
+// that is used for vnics
+// 0 and 1  are not used
 // for 500 PGs, we need the first 1000 vlans
-const reservedPGVlanCount = 1001
+const ReservedPGVlanCount = 1002
 
 // AssignVlanForVnic assings a vlan for the given vnic
 func (u *Allocator) AssignVlanForVnic(vnicKey string, host string) (int, error) {
@@ -104,6 +108,20 @@ func (u *Allocator) ReleaseVlanForVnic(vnicKey string, host string) error {
 	}
 
 	return vlanMgr.ReleaseVlanOwner(vnicKey)
+}
+
+// SetVlanForVnic assings a vlan for the given vnic
+func (u *Allocator) SetVlanForVnic(vnicKey string, host string, vlan int) error {
+	u.hostLock.Lock()
+	defer u.hostLock.Unlock()
+	vlanMgr, ok := u.hostMgrs[host]
+	if !ok {
+		if err := u.newHostVlanAllocator(host); err != nil {
+			return err
+		}
+		vlanMgr = u.hostMgrs[host]
+	}
+	return vlanMgr.SetVlanOwner(vnicKey, vlan)
 }
 
 // GetVlanForVnic returns the vlan for the given vnic
@@ -155,6 +173,32 @@ func (u *Allocator) AssignVlansForPG(pg string) (int, int, error) {
 	return out1, out2, nil
 }
 
+// SetVlansForPG sets the vlans as belonging to the given PG
+func (u *Allocator) SetVlansForPG(pg string, primary int, secondary int) error {
+	key1, key2 := createPGKeys(pg)
+
+	var err error
+
+	u.pgLock.Lock()
+	defer u.pgLock.Unlock()
+
+	// Set primary
+	err = u.pgVlanMgr.SetVlanOwner(key1, primary)
+	if err != nil {
+		return err
+	}
+
+	// Set secondary
+	err = u.pgVlanMgr.SetVlanOwner(key2, secondary)
+	if err != nil {
+		// Clean up other
+		u.pgVlanMgr.ReleaseVlan(primary)
+		return err
+	}
+
+	return err
+}
+
 // GetVlansForPG returns the assigned primary and secondary pvlans
 func (u *Allocator) GetVlansForPG(pg string) (int, int, error) {
 	key1, key2 := createPGKeys(pg)
@@ -197,7 +241,7 @@ func (u *Allocator) newHostVlanAllocator(host string) error {
 	if _, ok := u.hostMgrs[host]; ok {
 		return nil
 	}
-	vlanMgr := usegvlanmgr.NewVlanManager(reservedPGVlanCount, usegvlanmgr.VlanMax)
+	vlanMgr := usegvlanmgr.NewVlanManager(ReservedPGVlanCount, usegvlanmgr.VlanMax, true)
 	u.hostMgrs[host] = vlanMgr
 	return nil
 }
@@ -206,7 +250,7 @@ func (u *Allocator) newHostVlanAllocator(host string) error {
 // allocations for PGs.
 // Caller must have the lock
 func (u *Allocator) newPGVlanAllocator() error {
-	mgr := usegvlanmgr.NewVlanManager(1, reservedPGVlanCount)
+	mgr := usegvlanmgr.NewVlanManager(2, ReservedPGVlanCount, false)
 	u.pgVlanMgr = mgr
 	return nil
 }

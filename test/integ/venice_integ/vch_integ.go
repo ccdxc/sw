@@ -6,14 +6,12 @@ import (
 	check "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	vchstore "github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/store"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 )
 
 type vchSuite struct {
-	vchStore *vchstore.VCHStore
-	storeCh  chan defs.Probe2StoreMsg
-	vcp      *vcprobe.VCProbe
+	storeCh chan defs.Probe2StoreMsg
+	vcp     *vcprobe.VCProbe
 }
 
 func (vt *vchSuite) SetUp(c *check.C, numAgents int) {

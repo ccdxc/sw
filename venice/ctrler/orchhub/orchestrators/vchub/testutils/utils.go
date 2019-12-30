@@ -1,4 +1,4 @@
-package vcprobe
+package testutils
 
 import (
 	"errors"
@@ -13,39 +13,40 @@ type testPVLANPair struct {
 	pvlanType       string
 }
 
-type vcprobeTestParams struct {
-	testHostName           string
-	testUser               string
-	testPassword           string
-	testDCName             string
-	testDVSName            string
-	testPGNameBase         string
-	testMaxPorts           int32
-	testNumStandalonePorts int32
-	testNumPVLANPair       int
-	startPVLAN             int32
-	testNumPG              int
-	testNumPortsPerPG      int
+// TestParams specifies the params for vchub tests
+type TestParams struct {
+	TestHostName           string
+	TestUser               string
+	TestPassword           string
+	TestDCName             string
+	TestDVSName            string
+	TestPGNameBase         string
+	TestMaxPorts           int32
+	TestNumStandalonePorts int32
+	TestNumPVLANPair       int
+	StartPVLAN             int32
+	TestNumPG              int
+	TestNumPortsPerPG      int
 }
 
-// TestValidateParams validates input test parameters
-func TestValidateParams(testParams *vcprobeTestParams) error {
+// ValidateParams validates input test parameters
+func ValidateParams(testParams *TestParams) error {
 	var err string
-	if testParams.testNumPG != testParams.testNumPVLANPair {
-		err = fmt.Sprintf("testNumPG: %d, testNumPVLANPair: %d. testNumPG must equal to testNumPVLANPair",
-			testParams.testNumPG, testParams.testNumPVLANPair)
+	if testParams.TestNumPG != testParams.TestNumPVLANPair {
+		err = fmt.Sprintf("TestNumPG: %d, TestNumPVLANPair: %d. TestNumPG must equal to TestNumPVLANPair",
+			testParams.TestNumPG, testParams.TestNumPVLANPair)
 		return errors.New(err)
 	}
 
-	if int32(testParams.testNumPG*testParams.testNumPortsPerPG) > (testParams.testMaxPorts - testParams.testNumStandalonePorts) {
+	if int32(testParams.TestNumPG*testParams.TestNumPortsPerPG) > (testParams.TestMaxPorts - testParams.TestNumStandalonePorts) {
 		err = fmt.Sprintf("Test is trying to create: %d which is larger than the max ports supported: %d",
-			testParams.testNumPG*testParams.testNumPortsPerPG, testParams.testMaxPorts-testParams.testNumStandalonePorts)
+			testParams.TestNumPG*testParams.TestNumPortsPerPG, testParams.TestMaxPorts-testParams.TestNumStandalonePorts)
 		return errors.New(err)
 	}
 
-	if (testParams.startPVLAN + int32(testParams.testNumPVLANPair*2) + int32(testParams.testNumPortsPerPG*testParams.testNumPG)) > 4094 {
+	if (testParams.StartPVLAN + int32(testParams.TestNumPVLANPair*2) + int32(testParams.TestNumPortsPerPG*testParams.TestNumPG)) > 4094 {
 		err = fmt.Sprintf("Test is trying to use max vlan id: %d which is greater than 4094",
-			testParams.startPVLAN+int32(testParams.testNumPVLANPair*2)+int32(testParams.testNumPortsPerPG*testParams.testNumPG))
+			testParams.StartPVLAN+int32(testParams.TestNumPVLANPair*2)+int32(testParams.TestNumPortsPerPG*testParams.TestNumPG))
 		return errors.New(err)
 	}
 
@@ -53,9 +54,9 @@ func TestValidateParams(testParams *vcprobeTestParams) error {
 }
 
 // genPVLANPairArray generates testPVLANPair array
-func genPVLANPairArray(numPVLANPair int, startPVLAN int32) []testPVLANPair {
+func genPVLANPairArray(numPVLANPair int, StartPVLAN int32) []testPVLANPair {
 	testPVLANPairArray := make([]testPVLANPair, numPVLANPair*2)
-	currentVLAN := startPVLAN
+	currentVLAN := StartPVLAN
 	isPromisc := true
 
 	for i := 0; i < numPVLANPair*2; i++ {
@@ -76,12 +77,12 @@ func genPVLANPairArray(numPVLANPair int, startPVLAN int32) []testPVLANPair {
 }
 
 // GenPVLANConfigSpecArray generates Pvlan configuration array
-func GenPVLANConfigSpecArray(testParams *vcprobeTestParams, opType string) []types.VMwareDVSPvlanConfigSpec {
-	numPVLANPair := testParams.testNumPVLANPair
+func GenPVLANConfigSpecArray(testParams *TestParams, opType string) []types.VMwareDVSPvlanConfigSpec {
+	numPVLANPair := testParams.TestNumPVLANPair
 	pvlanConfigSpecArray := make([]types.VMwareDVSPvlanConfigSpec, numPVLANPair*2)
 	pvlanMapEntryArray := make([]*types.VMwareDVSPvlanMapEntry, numPVLANPair*2)
 
-	testPVLANPairArray := genPVLANPairArray(numPVLANPair, testParams.startPVLAN)
+	testPVLANPairArray := genPVLANPairArray(numPVLANPair, testParams.StartPVLAN)
 
 	for i := 0; i < numPVLANPair*2; i++ {
 		pvlanMapEntryArray[i] = &types.VMwareDVSPvlanMapEntry{
@@ -100,12 +101,12 @@ func GenPVLANConfigSpecArray(testParams *vcprobeTestParams, opType string) []typ
 }
 
 // GenDVSCreateSpec generates DVS create specification
-func GenDVSCreateSpec(testParams *vcprobeTestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) *types.DVSCreateSpec {
+func GenDVSCreateSpec(testParams *TestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) *types.DVSCreateSpec {
 	var dvsCreateSpec types.DVSCreateSpec
 	var dvsConfigSpec types.DVSConfigSpec
-	dvsConfigSpec.GetDVSConfigSpec().Name = testParams.testDVSName
-	dvsConfigSpec.GetDVSConfigSpec().NumStandalonePorts = testParams.testNumStandalonePorts
-	dvsConfigSpec.GetDVSConfigSpec().MaxPorts = testParams.testMaxPorts
+	dvsConfigSpec.GetDVSConfigSpec().Name = testParams.TestDVSName
+	dvsConfigSpec.GetDVSConfigSpec().NumStandalonePorts = testParams.TestNumStandalonePorts
+	dvsConfigSpec.GetDVSConfigSpec().MaxPorts = testParams.TestMaxPorts
 
 	dvsCreateSpec.ConfigSpec = &types.VMwareDVSConfigSpec{
 		DVSConfigSpec:   dvsConfigSpec,
@@ -116,18 +117,18 @@ func GenDVSCreateSpec(testParams *vcprobeTestParams, pvlanConfigSpecArray []type
 }
 
 // GenPGConfigSpecArray generates port group configuration array
-func GenPGConfigSpecArray(testParams *vcprobeTestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) []types.DVPortgroupConfigSpec {
-	pgConfigSpecArray := make([]types.DVPortgroupConfigSpec, testParams.testNumPG)
-	pvlanPGConfigSpecArray := make([]types.VmwareDistributedVirtualSwitchPvlanSpec, testParams.testNumPG)
-	pgDefaultPortSettingArray := make([]types.VMwareDVSPortSetting, testParams.testNumPG)
+func GenPGConfigSpecArray(testParams *TestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) []types.DVPortgroupConfigSpec {
+	pgConfigSpecArray := make([]types.DVPortgroupConfigSpec, testParams.TestNumPG)
+	pvlanPGConfigSpecArray := make([]types.VmwareDistributedVirtualSwitchPvlanSpec, testParams.TestNumPG)
+	pgDefaultPortSettingArray := make([]types.VMwareDVSPortSetting, testParams.TestNumPG)
 
 	j := 1
 
 	// We have validated before, the number of port group equals to number of PVLAN pair at testDVSSetup()
-	for i := 0; i < testParams.testNumPG; i++ {
-		pgConfigSpecArray[i].Name = fmt.Sprint(testParams.testPGNameBase, i)
+	for i := 0; i < testParams.TestNumPG; i++ {
+		pgConfigSpecArray[i].Name = fmt.Sprint(testParams.TestPGNameBase, i)
 		pgConfigSpecArray[i].Type = string(types.DistributedVirtualPortgroupPortgroupTypeEarlyBinding)
-		pgConfigSpecArray[i].NumPorts = int32(testParams.testNumPortsPerPG)
+		pgConfigSpecArray[i].NumPorts = int32(testParams.TestNumPortsPerPG)
 		pgConfigSpecArray[i].Policy = &types.VMwareDVSPortgroupPolicy{
 			DVPortgroupPolicy: types.DVPortgroupPolicy{
 				BlockOverrideAllowed:               true,
@@ -157,9 +158,9 @@ func GenPGConfigSpecArray(testParams *vcprobeTestParams, pvlanConfigSpecArray []
 // GenMicroSegVlanMappingPerPG generates map setting of micro segmentation vlan. The key of this map represents port key,
 // the value of this map represents the setting
 func GenMicroSegVlanMappingPerPG(testParams *vcprobeTestParams, penPG *PenPG, startMicroSegVlanID *int32) (*PenDVSPortSettings, error) {
-	mapPortsSetting := make(PenDVSPortSettings, testParams.testNumPortsPerPG)
-	portsSetting := make([]types.VMwareDVSPortSetting, testParams.testNumPortsPerPG)
-	microSegVlanConfigSpecArray := make([]types.VmwareDistributedVirtualSwitchVlanIdSpec, testParams.testNumPortsPerPG)
+	mapPortsSetting := make(PenDVSPortSettings, testParams.TestNumPortsPerPG)
+	portsSetting := make([]types.VMwareDVSPortSetting, testParams.TestNumPortsPerPG)
+	microSegVlanConfigSpecArray := make([]types.VmwareDistributedVirtualSwitchVlanIdSpec, testParams.TestNumPortsPerPG)
 
 	pg, err := penPG.getMoPGRef()
 	if err != nil {
@@ -167,7 +168,7 @@ func GenMicroSegVlanMappingPerPG(testParams *vcprobeTestParams, penPG *PenPG, st
 		return nil, err
 	}
 
-	for i := 0; i < testParams.testNumPortsPerPG; i++ {
+	for i := 0; i < testParams.TestNumPortsPerPG; i++ {
 		microSegVlanConfigSpecArray[i].VlanId = *startMicroSegVlanID
 		portsSetting[i].Vlan = &microSegVlanConfigSpecArray[i]
 		mapPortsSetting[pg.PortKeys[i]] = &portsSetting[i]
@@ -179,10 +180,10 @@ func GenMicroSegVlanMappingPerPG(testParams *vcprobeTestParams, penPG *PenPG, st
 */
 
 // GenPGNamesForComp generates a group of string for verification purpose
-func GenPGNamesForComp(testParams *vcprobeTestParams) *map[string]int {
-	mapPGNamesWithIndex := make(map[string]int, testParams.testNumPG)
-	for i := 0; i < testParams.testNumPG; i++ {
-		mapPGNamesWithIndex[fmt.Sprint(testParams.testPGNameBase, i)] = i
+func GenPGNamesForComp(testParams *TestParams) *map[string]int {
+	mapPGNamesWithIndex := make(map[string]int, testParams.TestNumPG)
+	for i := 0; i < testParams.TestNumPG; i++ {
+		mapPGNamesWithIndex[fmt.Sprint(testParams.TestPGNameBase, i)] = i
 	}
 
 	return &mapPGNamesWithIndex

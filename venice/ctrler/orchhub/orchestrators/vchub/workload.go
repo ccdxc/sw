@@ -1,4 +1,4 @@
-package store
+package vchub
 
 import (
 	"reflect"
@@ -6,6 +6,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
@@ -16,7 +17,7 @@ import (
 
 const workloadKind = "Workload"
 
-func (v *VCHStore) validateWorkload(in interface{}) (bool, bool) {
+func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 	obj, ok := in.(*workload.Workload)
 	if !ok {
 		return false, false
@@ -28,7 +29,7 @@ func (v *VCHStore) validateWorkload(in interface{}) (bool, bool) {
 		Name: obj.Spec.HostName,
 	}
 	// check that host has been created already
-	if _, err := v.stateMgr.Controller().Host().Find(hostMeta); err != nil {
+	if _, err := v.StateMgr.Controller().Host().Find(hostMeta); err != nil {
 		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
 		return false, false
 	}
@@ -42,10 +43,10 @@ func (v *VCHStore) validateWorkload(in interface{}) (bool, bool) {
 	return true, true
 }
 
-func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
+func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 	v.Log.Debugf("Got handle workload event")
 	meta := &api.ObjectMeta{
-		Name: utils.CreateGlobalKey(m.Originator, m.Key),
+		Name: utils.CreateGlobalKey(m.Originator, m.DC, m.Key),
 		// TODO: Don't use default tenant
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
@@ -73,8 +74,8 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 		workloadObj.Labels = map[string]string{}
 	}
 
-	if v.orchConfig != nil {
-		utils.AddOrchNameLabel(workloadObj.Labels, v.orchConfig.GetKey())
+	if v.OrchConfig != nil {
+		utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 	}
 
 	toDelete := false
@@ -86,13 +87,13 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 		case defs.VCOpSet:
 			switch defs.VCProp(prop.Name) {
 			case defs.VMPropConfig:
-				v.processVMConfig(workloadObj, prop)
+				v.processVMConfig(prop, m.Originator, m.DC, workloadObj)
 			case defs.VMPropName:
-				v.processVMName(workloadObj, prop)
+				v.processVMName(prop, m.Originator, m.DC, workloadObj)
 			case defs.VMPropRT:
-				v.processVMRuntime(workloadObj, prop, m.Originator)
+				v.processVMRuntime(prop, m.Originator, m.DC, workloadObj)
 			case defs.VMPropTag:
-				v.processTags(workloadObj, prop, m.Originator)
+				v.processTags(prop, m.Originator, m.DC, workloadObj)
 			case defs.VMPropOverallStatus:
 			case defs.VMPropCustom:
 			default:
@@ -108,7 +109,17 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 			// Check if workload has assignment
 			if inf.MicroSegVlan != 0 {
 				// TODO: send notification to probe to reset override
-				err := v.usegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
+				// dc := v.DcMap[m.DC]
+				dc := v.GetDC(m.DC)
+				if dc == nil {
+					v.Log.Errorf("Got Workload delete %s for a DC we don't have state for %s", workloadObj.Name, m.DC)
+					continue
+				}
+
+				// TODO: Remove hardcoded dvs name
+				dc.Lock()
+				err := dc.DvsMap[defs.DefaultDVSName].UsegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
+				dc.Unlock()
 				if err != nil {
 					v.Log.Errorf("Failed to release vlan %v", err)
 				}
@@ -121,14 +132,14 @@ func (v *VCHStore) handleWorkload(m defs.VCEventMsg) {
 		return
 	}
 
-	v.assignUsegs(m.Key, workloadObj)
+	v.assignUsegs(m.DC, m.Key, workloadObj)
 
 	v.pCache.Set(workloadKind, workloadObj)
 }
 
 // assignUsegs will set usegs for the workload, and send a message to
 // the probe to override the ports
-func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
+func (v *VCHub) assignUsegs(dcName, vmName string, workload *workload.Workload) {
 	if len(workload.Spec.HostName) == 0 {
 		return
 	}
@@ -146,9 +157,19 @@ func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
 			return
 		}
 
-		pg := entry.PG
-		port := entry.Port
-		vlan, err := v.usegMgr.AssignVlanForVnic(inf.MACAddress, host)
+		// pg := entry.PG
+		// port := entry.Port
+		dc := v.GetDC(dcName)
+		if dc == nil {
+			v.Log.Errorf("Got workload %s create for DC we don't have state for: %s", vmName, dcName)
+			continue
+		}
+
+		// TODO: Remove hardcoded dvs name
+		dc.Lock()
+		vlan, err := dc.DvsMap[defs.DefaultDVSName].UsegMgr.AssignVlanForVnic(inf.MACAddress, host)
+		dc.Unlock()
+
 		if err != nil {
 			// TODO: if vlans are full, raise event
 			v.Log.Errorf("Failed to assign vlan %v", err)
@@ -157,40 +178,29 @@ func (v *VCHStore) assignUsegs(vmName string, workload *workload.Workload) {
 		// Set useg
 		workload.Spec.Interfaces[i].MicroSegVlan = uint32(vlan)
 
-		// Send request to check its dvport
-		v.Log.Debugf("sending useg msg to probe, mac %s, useg %d", inf.MACAddress, vlan)
-		v.outbox <- defs.Store2ProbeMsg{
-			MsgType: defs.Useg,
-			Val: defs.UsegMsg{
-				WorkloadName: workload.Name,
-				MACAddress:   inf.MACAddress,
-				PG:           pg,
-				Port:         port,
-				Useg:         vlan,
-			},
-		}
-		// Event sent so we can delete temp data
+		// TODO: Send request to check its dvport
+
 		v.deleteVNIC(inf.MACAddress)
 	}
 
 }
 
-func (v *VCHStore) processTags(workload *workload.Workload, prop types.PropertyChange, vcID string) {
+func (v *VCHub) processTags(prop types.PropertyChange, vcID string, dcName string, workload *workload.Workload) {
 	// Ovewrite old labels with new tags. API hook will ensure we don't overwrite user added tags.
 	tagMsg := prop.Val.(defs.TagMsg)
 	workload.Labels = generateLabelsFromTags(workload.Labels, tagMsg)
 }
 
-func (v *VCHStore) processVMRuntime(workload *workload.Workload, prop types.PropertyChange, vcID string) {
+func (v *VCHub) processVMRuntime(prop types.PropertyChange, vcID string, dcName string, workload *workload.Workload) {
 	if prop.Val == nil {
 		return
 	}
 	rt := prop.Val.(types.VirtualMachineRuntimeInfo)
-	host := utils.CreateGlobalKey(vcID, rt.Host.Value)
+	host := utils.CreateGlobalKey(vcID, dcName, rt.Host.Value)
 	workload.Spec.HostName = host
 }
 
-func (v *VCHStore) processVMName(workload *workload.Workload, prop types.PropertyChange) {
+func (v *VCHub) processVMName(prop types.PropertyChange, vcID string, dcName string, workload *workload.Workload) {
 	if prop.Val == nil {
 		return
 	}
@@ -202,7 +212,7 @@ func (v *VCHStore) processVMName(workload *workload.Workload, prop types.Propert
 	addVMNameLabel(workload.Labels, name)
 }
 
-func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.PropertyChange) {
+func (v *VCHub) processVMConfig(prop types.PropertyChange, vcID string, dcName string, workload *workload.Workload) {
 	if prop.Val == nil {
 		return
 	}
@@ -211,7 +221,7 @@ func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.Prope
 		v.Log.Errorf("Expected VirtualMachineConfigInfo, got %s", reflect.TypeOf(prop.Val).Name())
 		return
 	}
-	interfaces := v.extractInterfaces(workload.Name, vmConfig)
+	interfaces := v.extractInterfaces(workload.Name, dcName, vmConfig)
 	workload.Spec.Interfaces = interfaces
 	if len(vmConfig.Name) == 0 {
 		return
@@ -219,7 +229,7 @@ func (v *VCHStore) processVMConfig(workload *workload.Workload, prop types.Prope
 	addVMNameLabel(workload.Labels, vmConfig.Name)
 }
 
-func (v *VCHStore) extractInterfaces(workloadName string, vmConfig types.VirtualMachineConfigInfo) []workload.WorkloadIntfSpec {
+func (v *VCHub) extractInterfaces(workloadName string, dcName string, vmConfig types.VirtualMachineConfigInfo) []workload.WorkloadIntfSpec {
 	var res []workload.WorkloadIntfSpec
 	for _, d := range vmConfig.Hardware.Device {
 		vec := v.GetVeth(d)
@@ -245,10 +255,30 @@ func (v *VCHStore) extractInterfaces(workloadName string, vmConfig types.Virtual
 			}
 			v.setVNIC(entry)
 
+			var externalVlan uint32
+			var pgObj *PenPG
+			var nw *ctkit.Network
+			dc := v.GetDC(dcName)
+			if dc != nil {
+				pgObj = dc.GetPG(pg, "")
+				if pgObj != nil {
+					nw, err = v.StateMgr.Controller().Network().Find(&pgObj.NetworkMeta)
+					if err == nil {
+						externalVlan = nw.Spec.VlanID
+						v.Log.Debugf("Setting vlan %v for vnic %s", externalVlan, macStr)
+					} else {
+						v.Log.Errorf("Received EP with no corresponding venice network: PG: %s DC: %s Network meta %+v, err %s", pg, dcName, pgObj.NetworkMeta, err)
+					}
+				} else {
+					v.Log.Errorf("Received EP with PG we don't have state for: PG: %s DC: %s", pg, dcName)
+				}
+			} else {
+				v.Log.Errorf("Received EP for DC we don't have state for: %s", dcName)
+			}
+
 			vnic := workload.WorkloadIntfSpec{
-				MACAddress: macStr,
-				// TODO: fill once network info is available
-				// ExternalVlan: ,
+				MACAddress:   macStr,
+				ExternalVlan: externalVlan,
 			}
 			res = append(res, vnic)
 		}
@@ -258,7 +288,7 @@ func (v *VCHStore) extractInterfaces(workloadName string, vmConfig types.Virtual
 
 // GetVeth checks if the base virtual device is a vnic and returns a pointer to
 // VirtualEthernetCard
-func (v *VCHStore) GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
+func (v *VCHub) GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
 	dKind := reflect.TypeOf(d).Elem()
 
 	switch dKind {

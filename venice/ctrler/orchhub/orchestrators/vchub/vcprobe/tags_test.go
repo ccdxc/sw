@@ -1,9 +1,12 @@
 package vcprobe
 
 import (
+	"context"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,17 +20,24 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-var (
-	logConfig = log.GetDefaultConfig("tags-test")
-	logger    = log.SetConfig(logConfig)
-)
-
 func TestTags(t *testing.T) {
+	config := log.GetDefaultConfig("vcprobe_testDVS")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
 	vcID := "127.0.0.1:8990"
 	user := "user"
 	password := "pass"
-	url := fmt.Sprintf("%s:%s@%s", user, password, vcID)
-	s, err := sim.NewVcSim(sim.Config{Addr: url})
+
+	u := &url.URL{
+		Scheme: "http",
+		Host:   vcID,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(user, password)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 	dc, err := s.AddDC("dc1")
@@ -41,19 +51,37 @@ func TestTags(t *testing.T) {
 	vm3, err := dc.AddVM("vm3", "host1")
 	AssertOk(t, err, "Failed to create vm3")
 
-	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	probeCh := make(chan defs.Store2ProbeMsg, 24)
+	storeCh := make(chan defs.Probe2StoreMsg, 100)
 
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. ERR : %v", err)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
 	err = sm.Controller().Orchestrator().Create(orchConfig)
-	vcp := NewVCProbe(orchConfig, storeCh, probeCh, sm, logger, "http")
+	state := &defs.State{
+		VcURL:      u,
+		VcID:       vcID,
+		Ctx:        ctx,
+		Log:        logger,
+		StateMgr:   sm,
+		OrchConfig: orchConfig,
+		Wg:         &sync.WaitGroup{},
+	}
+	vcp := NewVCProbe(storeCh, state)
 	vcp.Start()
-	defer vcp.Stop()
 
-	time.Sleep(time.Second)
+	defer func() {
+		cancel()
+		vcp.WatcherWg.Wait()
+		state.Wg.Wait()
+	}()
+
+	// Start test
+	state.Wg.Add(1)
+	go vcp.StartWatchers()
+
+	time.Sleep(3 * time.Second)
 
 	th := &testHelper{
 		t:       t,
@@ -87,13 +115,14 @@ func TestTags(t *testing.T) {
 		Cardinality:     "10",
 		AssociableTypes: []string{"VirtualMachine"},
 	}
-	th.tp.tc.CreateCategory(th.tp.ctx, defaultCat)
-	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone1)
+	th.tp.tc.CreateCategory(th.tp.Ctx, defaultCat)
+	_, err = th.tp.tc.CreateTag(th.tp.Ctx, tagZone1)
 	AssertOk(t, err, "CreateTag failed")
-	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone2)
+	_, err = th.tp.tc.CreateTag(th.tp.Ctx, tagZone2)
 	AssertOk(t, err, "CreateTag failed")
-	_, err = th.tp.tc.CreateTag(th.tp.ctx, tagZone3)
+	_, err = th.tp.tc.CreateTag(th.tp.Ctx, tagZone3)
 	AssertOk(t, err, "CreateTag failed")
+	logger.Info("R E A C H 1")
 
 	// Attach some VMs
 	th.attachTag("tagZone1", vm1)
@@ -167,35 +196,35 @@ type testHelper struct {
 }
 
 func (h *testHelper) attachTag(tagID string, vm *simulator.VirtualMachine) {
-	err := h.tp.tc.AttachTag(h.tp.ctx, tagID, vm.Reference())
+	err := h.tp.tc.AttachTag(h.tp.Ctx, tagID, vm.Reference())
 	AssertOk(h.t, err, "AttachTag failed")
 }
 
 func (h *testHelper) detachTag(tagID string, vm *simulator.VirtualMachine) {
-	err := h.tp.tc.DetachTag(h.tp.ctx, tagID, vm.Reference())
+	err := h.tp.tc.DetachTag(h.tp.Ctx, tagID, vm.Reference())
 	AssertOk(h.t, err, "AttachTag failed")
 }
 
 func (h *testHelper) deleteTag(tagID string) {
-	tag, err := h.tp.tc.GetTag(h.tp.ctx, tagID)
+	tag, err := h.tp.tc.GetTag(h.tp.Ctx, tagID)
 	AssertOk(h.t, err, "GetTagByName failed")
-	err = h.tp.tc.DeleteTag(h.tp.ctx, tag)
+	err = h.tp.tc.DeleteTag(h.tp.Ctx, tag)
 	AssertOk(h.t, err, "deleteTag failed")
 }
 
 func (h *testHelper) renameTag(tagName string, newName string) {
-	tag, err := h.tp.tc.GetTag(h.tp.ctx, tagName)
+	tag, err := h.tp.tc.GetTag(h.tp.Ctx, tagName)
 	AssertOk(h.t, err, "GetTagByName failed")
 	tag.Name = newName
-	err = h.tp.tc.UpdateTag(h.tp.ctx, tag)
+	err = h.tp.tc.UpdateTag(h.tp.Ctx, tag)
 	AssertOk(h.t, err, "UpdateTag failed")
 }
 
 func (h *testHelper) renameCategory(catName string, newName string) {
-	cat, err := h.tp.tc.GetCategory(h.tp.ctx, catName)
+	cat, err := h.tp.tc.GetCategory(h.tp.Ctx, catName)
 	AssertOk(h.t, err, "GetTagByName failed")
 	cat.Name = newName
-	err = h.tp.tc.UpdateCategory(h.tp.ctx, cat)
+	err = h.tp.tc.UpdateCategory(h.tp.Ctx, cat)
 	AssertOk(h.t, err, "UpdateTag failed")
 }
 
@@ -218,9 +247,6 @@ func (h *testHelper) verifyTags(expMap map[string][]string) {
 }
 
 func (h *testHelper) fetchTags() {
-	fmt.Printf("FETCH TAGS")
-	log.Infof("TP : %v", h.tp)
-	log.Infof("H : %v", h)
 	err := h.tp.fetchTags()
 	AssertOk(h.t, err, "Fetch tags failed")
 }

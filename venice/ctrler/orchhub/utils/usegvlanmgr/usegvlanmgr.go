@@ -9,7 +9,8 @@ import (
 )
 
 // VlanMax is the highest allowed VLAN + 1
-const VlanMax int = 4096
+// Vlans of 0 and 4095 are reserved
+const VlanMax int = 4095
 
 // Inf defines the vlan manager interface
 type Inf interface {
@@ -28,11 +29,13 @@ type VlanMgr struct {
 	// index is vlan - v.StartingIndex
 	// value is the owner
 	vlans []string
+	// Whether vlan assignments should be random or sequential
+	assignRandom bool
 	// Doubly linked list of indexes in vlans array
-	randList *list.List
+	itemList *list.List
 	// Maps from index to a linked list element
 	// Used for removing an item efficiently
-	randMap map[int]*list.Element
+	indexMap map[int]*list.Element
 	// map from owner to vlan
 	ownerMap     map[string]int
 	StartingVlan int
@@ -42,7 +45,7 @@ type VlanMgr struct {
 
 // NewVlanManager creates a vlan manager
 // Only vlans from startingVlan (inclusive) to endingVlan (exclusive) are available
-func NewVlanManager(startingVlan, endingVlan int) Inf {
+func NewVlanManager(startingVlan, endingVlan int, assignRandom bool) Inf {
 	if startingVlan < 0 || endingVlan < startingVlan {
 		return nil
 	}
@@ -58,40 +61,49 @@ func NewVlanManager(startingVlan, endingVlan int) Inf {
 		EndingVlan:   endingVlan,
 		ownerMap:     make(map[string]int),
 		randSource:   r,
+		assignRandom: assignRandom,
 	}
-	mgr.genRandList()
+	mgr.genItemList()
 	return mgr
 }
 
 // Walks the vlan array and generates a random
 // linked list of indexes that are available
-func (v *VlanMgr) genRandList() {
+func (v *VlanMgr) genItemList() {
 	v.Lock()
 	defer v.Unlock()
 
 	l := list.New()
-	v.randMap = map[int]*list.Element{}
-
-	for _, i := range v.randSource.Perm(len(v.vlans)) {
-		if len(v.vlans[i]) == 0 {
-			// Unassigned index
-			l.PushFront(i)
-			v.randMap[i] = l.Front()
+	v.indexMap = map[int]*list.Element{}
+	var intList []int
+	if v.assignRandom {
+		intList = v.randSource.Perm(len(v.vlans))
+	} else {
+		for i := range v.vlans {
+			intList = append(intList, i)
 		}
 	}
 
-	v.randList = l
+	for _, i := range intList {
+		if len(v.vlans[i]) == 0 {
+			// Unassigned index
+			l.PushBack(i)
+			v.indexMap[i] = l.Back()
+		}
+	}
+
+	v.itemList = l
 }
 
 // Walks the rand linked list and removes the item
 // with the given index
-func (v *VlanMgr) removeFromRandList(index int) {
+func (v *VlanMgr) removeFromitemList(index int) {
 	v.Lock()
 	defer v.Unlock()
 
-	l := v.randList
-	l.Remove(v.randMap[index])
-	delete(v.randMap, index)
+	l := v.itemList
+	l.Remove(v.indexMap[index])
+	delete(v.indexMap, index)
 }
 
 func (v *VlanMgr) validateVlan(vlan int) error {
@@ -133,7 +145,7 @@ func (v *VlanMgr) SetVlanOwner(owner string, vlan int) error {
 	}
 
 	v.Unlock()
-	v.removeFromRandList(index)
+	v.removeFromitemList(index)
 	return nil
 }
 
@@ -161,12 +173,12 @@ func (v *VlanMgr) AssignVlan(owner string) (int, error) {
 		return -1, fmt.Errorf("owner is already assigned to vlan %d", assignment)
 	}
 
-	if v.randList.Len() == 0 {
+	if v.itemList.Len() == 0 {
 		return -1, fmt.Errorf("no vlans available")
 	}
 
 	// Pick one at random
-	index := v.randList.Remove(v.randList.Front()).(int)
+	index := v.itemList.Remove(v.itemList.Front()).(int)
 	nextVlan := index + v.StartingVlan
 
 	if err := v.assignVlan(owner, nextVlan, index); err != nil {
@@ -226,8 +238,8 @@ func (v *VlanMgr) ReleaseVlan(vlan int) error {
 		v.vlans[index] = ""
 		delete(v.ownerMap, owner)
 		// Add back into rand list
-		v.randList.PushBack(index)
-		v.randMap[index] = v.randList.Back()
+		v.itemList.PushBack(index)
+		v.indexMap[index] = v.itemList.Back()
 	}
 	return nil
 }
@@ -237,5 +249,5 @@ func (v *VlanMgr) GetFreeVlanCount() int {
 	v.RLock()
 	defer v.RUnlock()
 
-	return v.randList.Len()
+	return v.itemList.Len()
 }

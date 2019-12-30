@@ -1,297 +1,220 @@
 package vcprobe
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"net/url"
 	"sync"
 	"time"
 
-	"github.com/vmware/govmomi"
-	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/property"
-	"github.com/vmware/govmomi/view"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
-	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
-	"github.com/pensando/sw/venice/utils/kvstore"
-	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
 )
 
 const (
 	retryDelay = time.Second
-	retryCount = 3
 )
-
-// Shared fields with the tags client
-type vcInst struct {
-	vcURL            *url.URL
-	VcID             string
-	ctx              context.Context
-	cancel           context.CancelFunc
-	finder           *find.Finder
-	Log              log.Logger
-	wg               *sync.WaitGroup
-	watcherWg        *sync.WaitGroup
-	watcherCtx       context.Context
-	watcherCancel    context.CancelFunc
-	checkSession     bool
-	checkSessionLock *sync.Mutex
-}
 
 // VCProbe represents an instance of a vCenter Interface
 // This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
-	vcInst
-	client      *govmomi.Client
+	*defs.State
+	*session.Session
 	outbox      chan<- defs.Probe2StoreMsg
-	inbox       <-chan defs.Store2ProbeMsg
-	viewMgr     *view.Manager
 	tp          *tagsProbe
-	stateMgr    *statemgr.Statemgr
-	orchConfig  *orchestration.Orchestrator
-	dvsMap      map[string]*PenDVS
+	Started     bool
 	vcProbeLock sync.Mutex
 }
 
-// NewVCProbe returns a new instance of VCProbe
-func NewVCProbe(orchConfig *orchestration.Orchestrator, hOutbox chan<- defs.Probe2StoreMsg, inbox <-chan defs.Store2ProbeMsg, stateMgr *statemgr.Statemgr, l log.Logger, scheme string) *VCProbe {
-	vcURL := &url.URL{
-		Scheme: scheme,
-		Host:   orchConfig.Spec.URI,
-		Path:   "/sdk",
+// NewVCProbe returns a new probe
+func NewVCProbe(hOutbox chan<- defs.Probe2StoreMsg, state *defs.State) *VCProbe {
+	probe := &VCProbe{
+		State:   state,
+		Started: false,
+		outbox:  hOutbox,
+		Session: session.NewSession(state.Ctx, state.VcURL, state.Log),
 	}
-
-	vcURL.User = url.UserPassword(orchConfig.Spec.Credentials.UserName, orchConfig.Spec.Credentials.Password)
-
-	return &VCProbe{
-		vcInst: vcInst{
-			VcID:             orchConfig.GetName(),
-			vcURL:            vcURL,
-			Log:              l.WithContext("submodule", fmt.Sprintf("VCProbe-%s", orchConfig.GetName())),
-			wg:               &sync.WaitGroup{},
-			watcherWg:        &sync.WaitGroup{},
-			checkSessionLock: &sync.Mutex{},
-		},
-		orchConfig: orchConfig,
-		outbox:     hOutbox,
-		inbox:      inbox,
-		stateMgr:   stateMgr,
-		dvsMap:     make(map[string]*PenDVS),
-	}
-	// Check we have correct permissions when we connect.
+	probe.newTagsProbe()
+	return probe
+	// TODO: Check we have correct permissions when we connect.
 }
 
 // Start creates a client and view manager
 func (v *VCProbe) Start() error {
-	if v.cancel != nil {
-		return errors.New("Already started")
-	}
+	v.Log.Info("Starting probe")
 	v.vcProbeLock.Lock()
-	v.ctx, v.cancel = context.WithCancel(context.Background())
-	v.wg.Add(1)
-	go v.storeListen()
-	v.wg.Add(1)
-	go v.startStatemgrWatch()
-	// Connect and log in to vCenter
-	v.wg.Add(1)
+	if v.Started {
+		v.vcProbeLock.Unlock()
+		return errors.New("Already Started")
+	}
+	v.Started = true
+	v.Wg.Add(1)
+	go v.PeriodicSessionCheck(v.Wg)
+
+	v.Wg.Add(1)
 	go v.run()
 	v.vcProbeLock.Unlock()
+
 	return nil
 }
 
-// Stop stops the sessions
-func (v *VCProbe) Stop() {
+func (v *VCProbe) run() {
+	defer v.Wg.Done()
+	v.Log.Infof("Probe Run Started")
+	// Listen for session updates
+	v.connectionListen()
+
+	// Context must have been cancelled
+	v.waitForExit()
+
+}
+
+// WaitForExit stops the sessions
+func (v *VCProbe) waitForExit() {
 	v.Log.Info("Stopping vcprobe")
 	v.vcProbeLock.Lock()
-	if v.cancel != nil {
-		v.cancel()
-		v.wg.Wait()
-		v.cancel = nil
-	}
-	v.watcherWg.Wait()
-	v.watcherCancel = nil
-	if v.client != nil {
-		v.client.Logout(v.ctx)
-		v.client = nil
-	}
+	v.WatcherWg.Wait()
+	v.Started = false
+	v.vcProbeLock.Unlock()
+}
+
+// ClearState tears down Session state
+func (v *VCProbe) ClearState() {
+	v.vcProbeLock.Lock()
+	v.ClearClientCtx()
+	v.ClearSession()
 	v.vcProbeLock.Unlock()
 }
 
 // Run runs the probe
-func (v *VCProbe) run() {
-	defer v.wg.Done()
-	// Connect and log in to vCenter
-	var c *govmomi.Client
-
+func (v *VCProbe) connectionListen() {
+	v.Log.Infof("Connection listen Started")
+	// Listen to the session connection and update orch object
 	for {
-		if v.ctx.Err() != nil {
+		select {
+		case <-v.Ctx.Done():
 			return
-		}
-		// derive from ctx
-		v.watcherCtx, v.watcherCancel = context.WithCancel(v.ctx)
-		// Forever try to login until it succeeds
-		for {
-			o, err := v.stateMgr.Controller().Orchestrator().Find(&v.orchConfig.ObjectMeta)
+		case connected := <-v.ConnUpdate:
+			o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
 			if err != nil {
 				// orchestrator object does not exists anymore, not need to run the probe
 				v.Log.Infof("Orchestrator Object %v does not exist, no need to start the probe",
-					v.orchConfig.GetKey())
+					v.OrchConfig.GetKey())
 				return
 			}
-			v.Log.Infof("Starting VCProbe : %v", v.vcURL)
-			c, err = govmomi.NewClient(v.watcherCtx, v.vcURL, true)
-			if err == nil {
+			if connected {
 				v.Log.Infof("Updating orchestrator connection status to %v",
 					orchestration.OrchestratorStatus_Success.String())
 				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
 				o.Write()
-				break
-			}
-			v.Log.Infof("Updating orchestrator connection status to %v",
-				orchestration.OrchestratorStatus_Failure.String())
-			o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
-			o.Write()
-
-			v.Log.Errorf("Login failed: %v", err)
-			select {
-			case <-v.ctx.Done():
-				return
-			case <-time.After(5 * retryDelay):
+			} else {
+				v.Log.Infof("Updating orchestrator connection status to %v",
+					orchestration.OrchestratorStatus_Failure.String())
+				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
+				o.Write()
 			}
 		}
+	}
+}
 
-		v.client = c
-		v.finder = find.NewFinder(v.client.Client, true)
-		v.viewMgr = view.NewManager(v.client.Client)
-		v.newTagsProbe()
+// StartWatchers starts the watches for vCenter objects
+func (v *VCProbe) StartWatchers() {
+	defer v.Wg.Done()
 
-		// Perform a List and reconciliation of all the VCProbe objects synchronously
-		// before starting all the watchers
-		// TODO: return if sync failed (lost connection to vCenter etc)
-		v.Sync()
+	for !v.Started {
+		if v.Ctx.Err() != nil {
+			return
+		}
+		time.Sleep(1 * time.Second)
+	}
+	v.Log.Debugf("Start Watchers starting")
 
-		// start watchers on vCenter objects/events
-		v.startWatchers()
+	for v.Ctx.Err() == nil {
 
-		// Run periodic check on the session, if session is dead, Stop and Restart
-		v.Log.Infof("Session check starting...")
-		count := retryCount
-		for count > 0 {
-			select {
-			case <-v.ctx.Done():
-				return
-			case <-time.After(retryDelay):
-				// if any of the watchers is experiencing the problem, check the session state
-				if v.checkSession {
-					active, err := v.client.SessionManager.SessionIsActive(v.watcherCtx)
-					if err != nil {
-						v.Log.Errorf("Received err %v while testing session", err)
-						count--
-					} else if active {
-						count = retryCount
-						v.checkSessionLock.Lock()
-						v.checkSession = false
-						v.checkSessionLock.Unlock()
-					} else {
-						v.Log.Infof("Session is not active .. retry")
-						count--
-					}
+		tryForever := func(fn func()) {
+			for !v.SessionReady {
+				select {
+				case <-v.Ctx.Done():
+					return
+				case <-time.After(50 * time.Millisecond):
 				}
 			}
+			v.WatcherWg.Add(1)
+			go func() {
+				defer v.WatcherWg.Done()
+				for {
+					if v.ClientCtx.Err() != nil {
+						return
+					}
+					fn()
+					time.Sleep(retryDelay)
+				}
+			}()
 		}
-		// Logout, stop watchers and retry
-		if v.watcherCancel != nil {
-			v.watcherCancel()
-		}
-		v.watcherWg.Wait()
-		if v.client != nil {
-			v.client.Logout(v.watcherCtx)
-		}
-		v.client = nil
-		v.watcherCancel = nil
-	}
-}
 
-func (v *VCProbe) startWatchers() {
-	v.checkSession = false
-	tryForever := func(fn func()) {
-		v.watcherWg.Add(1)
-		go func() {
-			defer v.watcherWg.Done()
-			for v.watcherCtx.Err() == nil {
-				fn()
-				time.Sleep(retryDelay)
-			}
-		}()
-	}
+		// DC watch
+		tryForever(func() {
+			v.Log.Debugf("DC watch Started")
+			v.startWatch(defs.Datacenter, []string{"name"},
+				func(update types.ObjectUpdate, kind defs.VCObject) {
+					// Sending dc event
+					v.sendVCEvent(update, kind)
 
-	tryForever(func() {
-		v.startWatch(defs.HostSystem, []string{"config"}, v.sendVCEvent)
-	})
+					// Starting watches on objects inside the given DC
+					go tryForever(func() {
+						v.Log.Debugf("Host watch Started")
+						v.startWatch(defs.HostSystem, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value), &update.Obj)
+					})
 
-	tryForever(func() {
-		vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
-		v.startWatch(defs.VirtualMachine, vmProps, v.sendVCEvent)
-	})
+					go tryForever(func() {
+						v.Log.Debugf("VM watch Started")
+						vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
+						v.startWatch(defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(update.Obj.Value), &update.Obj)
+					})
+				}, nil)
+		})
 
-	tryForever(func() {
-		err := v.tp.tc.Login(v.tp.ctx, v.vcURL.User)
-		if err != nil {
-			return
-		}
-		v.tp.Start()
-	})
-}
+		tryForever(func() {
+			v.tp.Start()
+			v.Log.Infof("tag probe finished")
+		})
+		// tryForever(func() {
+		// 	// Should create hosts from this event
+		// 	v.startWatch(defs.VmwareDistributedVirtualSwitch, []string{"config"}, v.processDVSEvent)
+		// })
 
-func (v *VCProbe) storeListen() {
-	defer v.wg.Done()
-
-	for {
+		// If watcher context ends, we restart the watches
 		select {
-		case <-v.ctx.Done():
-			return
-
-		case m, active := <-v.inbox:
-			if !active {
-				return
-			}
-
-			v.Log.Debugf("Store listen received %s, %v", m.MsgType, m.Val)
-			switch m.MsgType {
-			case defs.Useg:
-				v.handleUseg(m.Val.(defs.UsegMsg))
-			default:
-				v.Log.Errorf("Unknown msg type %s", m.MsgType)
-				continue
-			}
+		case <-v.ClientCtx.Done():
 		}
+
 	}
+
+	return
 }
 
-func (v *VCProbe) handleUseg(msg defs.UsegMsg) {
-	// TODO: implement
-}
-
-func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(key string, obj defs.VCObject, pc []types.PropertyChange)) {
+func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(objUpdate types.ObjectUpdate, kind defs.VCObject), container *types.ManagedObjectReference) {
+	v.Log.Debugf("Start watch called for %s", vcKind)
 	kind := string(vcKind)
 
 	var err error
-	root := v.client.ServiceContent.RootFolder
+	client, _, viewMgr := v.GetClientWithRLock()
+	v.ReleaseClientRLock()
+
+	root := client.ServiceContent.RootFolder
+	if container == nil {
+		container = &root
+	}
 	kinds := []string{}
 
-	cView, err := v.viewMgr.CreateContainerView(v.watcherCtx, root, kinds, true)
+	cView, err := viewMgr.CreateContainerView(v.ClientCtx, *container, kinds, true)
 	if err != nil {
 		v.Log.Errorf("CreateContainerView returned %v", err)
-		v.checkSessionLock.Lock()
-		v.checkSession = true
-		v.checkSessionLock.Unlock()
+		v.CheckSession = true
+		time.Sleep(1 * time.Second)
 		return
 	}
 
@@ -304,107 +227,129 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 				v.Log.Errorf("Expected %s, got %+v", kind, update.Obj)
 				continue
 			}
-			key := update.Obj.Value
-			updateFn(key, vcKind, update.ChangeSet)
+			updateFn(update, vcKind)
 		}
 		// Must return false, returning true will cause waitForUpdates to exit.
 		return false
 	}
 
 	for {
-		err = property.WaitForUpdates(v.watcherCtx, property.DefaultCollector(v.client.Client), filter, updFunc)
+		err = property.WaitForUpdates(v.ClientCtx, property.DefaultCollector(client.Client), filter, updFunc)
 
 		if err != nil {
 			v.Log.Errorf("property.WaitForView returned %v", err)
 		}
 
-		if v.watcherCtx.Err() != nil {
+		if v.ClientCtx.Err() != nil {
 			return
 		}
 		v.Log.Infof("%s property.WaitForView exited", kind)
-		v.checkSessionLock.Lock()
-		v.checkSession = true
-		v.checkSessionLock.Unlock()
+		v.CheckSession = true
+		time.Sleep(1 * time.Second)
 	}
 }
 
-func (v *VCProbe) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
-	v.Log.Infof("Handling network event. %v", nw)
+func (v *VCProbe) sendVCEvent(update types.ObjectUpdate, kind defs.VCObject) {
 
-	switch evtType {
-	case kvstore.Created:
-		v.Log.Info("Create network event")
-	case kvstore.Updated:
-		v.Log.Info("Update network event")
-	case kvstore.Deleted:
-		v.Log.Info("Delete network event")
-	}
-}
-
-func (v *VCProbe) startStatemgrWatch() {
-	defer v.wg.Done()
-	v.Log.Infof("Starting network objects watch for %s", v.orchConfig.Name)
-	probeChannel, err := v.stateMgr.GetProbeChannel(v.orchConfig.GetKey())
-	if err != nil {
-		v.Log.Errorf("Could not get probe channel for %s. Err : %v", v.orchConfig.GetKey(), err)
-		return
-	}
-
-	for {
-		select {
-		case <-v.ctx.Done():
-			v.Log.Info("Network watch done")
-			return
-		case evt, ok := <-probeChannel:
-			if ok {
-				nw := evt.Object.(*network.Network)
-				v.handleNetworkEvent(evt.Type, nw)
-			}
-		}
-	}
-}
-
-func (v *VCProbe) sendVCEvent(key string, obj defs.VCObject, pc []types.PropertyChange) {
+	key := update.Obj.Value
 	m := defs.Probe2StoreMsg{
 		MsgType: defs.VCEvent,
 		Val: defs.VCEventMsg{
-			VcObject:   obj,
+			VcObject:   kind,
 			Key:        key,
-			Changes:    pc,
+			Changes:    update.ChangeSet,
 			Originator: v.VcID,
 		},
 	}
-	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, obj, pc)
+	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, kind)
 	v.outbox <- m
 }
 
-// Sync triggers the probe to sync its inventory
-func (v *VCProbe) Sync() {
-	v.Log.Infof("VCProbe %v synching.", v)
-	opts := api.ListWatchOptions{}
-	opts.LabelSelector = fmt.Sprintf("%s=%s", utils.OrchNameKey, v.orchConfig.GetKey())
-	// By the time this is called, the statemanager would have setup watchers to the API server
-	// and synched the local cache with the API server
-	nw, err := v.stateMgr.Controller().Network().List(context.Background(), &opts)
-	if err != nil {
-		v.Log.Errorf("Failed to get network list. Err : %v", err)
+func (v *VCProbe) vcEventHandlerForDC(dc string) func(update types.ObjectUpdate, kind defs.VCObject) {
+	return func(update types.ObjectUpdate, kind defs.VCObject) {
+		key := update.Obj.Value
+		m := defs.Probe2StoreMsg{
+			MsgType: defs.VCEvent,
+			Val: defs.VCEventMsg{
+				VcObject:   kind,
+				DC:         dc,
+				Key:        key,
+				Changes:    update.ChangeSet,
+				Originator: v.VcID,
+			},
+		}
+		v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, kind)
+		v.outbox <- m
 	}
+}
 
-	hosts, err := v.stateMgr.Controller().Host().List(context.Background(), &opts)
-	if err != nil {
-		v.Log.Errorf("Failed to get host list. Err : %v", err)
+// func (v *VCProbe) processDVSEvent(key string, obj defs.VCObject, pc []types.PropertyChange) {
+// for _, prop := range pc {
+// 	val := prop.Val.(types.VMwareDVSConfigInfo)
+// 	for _, hostConfig := range val.Host {
+// 		// TODO: handle host removal
+// 		v.Log.Infof("DVS EVENT %s %s %v", key, obj, hostConfig)
+// 		ref := hostConfig.Config.Host.Reference()
+// 		var hostMO mo.HostSystem
+// 		host := object.NewHostSystem(v.client.Client, ref)
+// 		err := host.Properties(v.Ctx, ref, []string{"config"}, hostMO)
+// 		if err == nil {
+// 			v.Log.Errorf("Failed to get host ")
+// 		}
+// 		hostPc := []types.PropertyChange{
+// 			{
+// 				Op:  types.PropertyChangeOpAssign,
+// 				Val: hostMO.Config,
+// 			},
+// 		}
+// 		v.sendVCEvent(ref.Value, defs.HostSystem, hostPc)
+// 	}
+// }
+// }
+
+func (v *VCProbe) listObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
+	client, _, viewMgr := v.GetClientWithRLock()
+	defer v.ReleaseClientRLock()
+
+	root := client.ServiceContent.RootFolder
+
+	if container == nil {
+		container = &root
 	}
-
-	workloads, err := v.stateMgr.Controller().Workload().List(context.Background(), &opts)
+	kinds := []string{}
+	cView, err := viewMgr.CreateContainerView(v.Ctx, *container, kinds, true)
 	if err != nil {
-		v.Log.Errorf("Failed to get workload list. Err : %v", err)
+		return err
 	}
+	defer cView.Destroy(v.Ctx)
+	err = cView.Retrieve(v.Ctx, []string{string(vcKind)}, props, dst)
+	return err
+}
 
-	// TODO remove the prints below. Added to calm down go fmt
-	v.Log.Infof("Got Networks : %v", nw)
-	v.Log.Infof("Got Workloads : %v", workloads)
-	v.Log.Infof("Got Hosts : %v", hosts)
-	// TODO get all the vcenter objects
+// ListVM returns a list of vms
+func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
+	var vms []mo.VirtualMachine
+	v.listObj(defs.VirtualMachine, []string{"config", "name", "runtime", "overallStatus", "customValue"}, &vms, dcRef)
+	return vms
+}
 
-	v.Log.Infof("Sync done for VCProbe. %v", v)
+// ListDC returns a list of DCs
+func (v *VCProbe) ListDC() []mo.Datacenter {
+	var dcs []mo.Datacenter
+	v.listObj(defs.Datacenter, []string{"name"}, &dcs, nil)
+	return dcs
+}
+
+// ListDVS returns a list of DVS objects
+func (v *VCProbe) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
+	var dcs []mo.VmwareDistributedVirtualSwitch
+	v.listObj(defs.VmwareDistributedVirtualSwitch, []string{"name"}, &dcs, dcRef)
+	return dcs
+}
+
+// ListPG returns a list of PGs
+func (v *VCProbe) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
+	var dcs []mo.DistributedVirtualPortgroup
+	v.listObj(defs.DistributedVirtualPortgroup, []string{"config", "name"}, &dcs, dcRef)
+	return dcs
 }

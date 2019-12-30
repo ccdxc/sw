@@ -20,7 +20,7 @@ type testCase struct {
 }
 
 func TestVlanManager(t *testing.T) {
-	vMgr := NewVlanManager(500, 3596)
+	vMgr := NewVlanManager(500, 3596, false)
 	tu.AssertEquals(t, 3096, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
 	// Dummy release shouldn't affect count
@@ -453,7 +453,7 @@ func testHelper(t *testing.T, testCases []testCase, testFunction func(*VlanMgr, 
 			EndingVlan: 4096,
 			randSource: r,
 		}
-		vMgr.genRandList()
+		vMgr.genItemList()
 
 		err := testFunction(vMgr, tc)
 		checkError(t, tc, err)

@@ -1,7 +1,8 @@
-package store
+package vchub
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
@@ -42,4 +43,16 @@ func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg
 
 func addVMNameLabel(labels map[string]string, name string) {
 	labels[vmNameKey] = name
+}
+
+func createPGName(networkName string) string {
+	return fmt.Sprintf("%s%s", defs.DefaultPGPrefix, networkName)
+}
+
+func createNetworkName(name string) string {
+	return strings.TrimPrefix(name, defs.DefaultPGPrefix)
+}
+
+func isPensandoDVS(name string) bool {
+	return strings.HasPrefix(name, defs.DefaultDVSName)
 }

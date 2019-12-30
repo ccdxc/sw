@@ -54,22 +54,16 @@ type PCache struct {
 	stateMgr   *statemgr.Statemgr
 	kinds      map[string]*kindEntry
 	validators map[string]ValidatorFn
-	waitGrp    sync.WaitGroup
-	ctx        context.Context
-	cancel     context.CancelFunc
 }
 
 // NewPCache creates a new instance of pcache
 func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
 	logger.Debugf("Creating pcache")
-	ctx, cancel := context.WithCancel(context.Background())
 	return &PCache{
 		stateMgr:   stateMgr,
 		Log:        logger,
 		kinds:      make(map[string]*kindEntry),
 		validators: make(map[string]ValidatorFn),
-		ctx:        ctx,
-		cancel:     cancel,
 	}
 }
 
@@ -277,47 +271,35 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 }
 
 // Run runs loop to periodically push pending objects to apiserver
-func (p *PCache) Run() {
-	p.waitGrp.Add(1)
-	go func() {
-		defer p.waitGrp.Done()
-		ticker := time.NewTicker(PCacheRetryInterval * time.Second)
-		inProgress := false
+func (p *PCache) Run(ctx context.Context, wg *sync.WaitGroup) {
+	ticker := time.NewTicker(PCacheRetryInterval * time.Second)
+	inProgress := false
+	defer wg.Done()
 
-		for {
-			select {
-			case <-p.ctx.Done():
-				return
-			case <-ticker.C:
-				if !inProgress {
-					inProgress = true
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if !inProgress {
+				inProgress = true
 
-					p.RLock()
-					for kind, m := range p.kinds {
-						validateFn := p.validators[kind]
-						m.Lock()
-						for _, in := range m.entries {
-							err := p.validateAndPush(m, in, validateFn)
-							if err != nil {
-								p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
-							}
+				p.RLock()
+				for kind, m := range p.kinds {
+					validateFn := p.validators[kind]
+					m.Lock()
+					for _, in := range m.entries {
+						err := p.validateAndPush(m, in, validateFn)
+						if err != nil {
+							p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
 						}
-						m.Unlock()
 					}
-					p.RUnlock()
-
-					inProgress = false
+					m.Unlock()
 				}
+				p.RUnlock()
+
+				inProgress = false
 			}
 		}
-	}()
-}
-
-// Stop stops pcache goroutines
-func (p *PCache) Stop() {
-	p.Lock()
-	defer p.Unlock()
-
-	p.cancel()
-	p.waitGrp.Wait()
+	}
 }

@@ -1,12 +1,26 @@
-package vcprobe
+package vchub
 
 import (
-	"errors"
+	"sync"
 
-	"github.com/vmware/govmomi/find"
-	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
+
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 )
+
+// PenDVS represents an instance of a Distributed Virtual Switch
+type PenDVS struct {
+	sync.Mutex
+	*defs.State
+	DcName  string
+	DvsName string
+	// Map from PG display name to PenPG
+	Pgs     map[string]*PenPG
+	UsegMgr useg.Inf
+	probe   *vcprobe.VCProbe
+}
 
 // PenDVSPortSettings represents a group of DVS port settings
 // The key of this map represents the key of port on a DVS
@@ -14,100 +28,78 @@ import (
 type PenDVSPortSettings map[string]*types.VMwareDVSPortSetting
 
 // AddPenDVS adds a new PenDVS to the given vcprobe instance
-func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error {
+func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
+	d.Lock()
+	defer d.Unlock()
+	dcName := d.Name
 	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
 
-	// Check if it exists first
-	if _, err := v.getPenDVS(dcName, dvsName, finder); err == nil {
-		// PenDVS exists
-		// TODO: check error isn't intermittent
+	if d.getPenDVS(dvsName) != nil {
 		return nil
 	}
 
-	dc, err := finder.Datacenter(v.ClientCtx, dcName)
+	err := d.probe.AddPenDVS(dcName, dvsCreateSpec)
 	if err != nil {
-		v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
+		d.Log.Errorf("Failed to create %s in DC %s: %s", dvsName, dcName, err)
 		return err
 	}
 
-	finder.SetDatacenter(dc)
-
-	folders, err := dc.Folders(v.ClientCtx)
+	useg, err := useg.NewUsegAllocator()
 	if err != nil {
+		d.Log.Errorf("Creating useg mgr for DC %s - penDVS %s failed, %v", dcName, dvsName, err)
 		return err
 	}
-
-	task, err := folders.NetworkFolder.CreateDVS(v.ClientCtx, *dvsCreateSpec)
-	if err != nil {
-		v.Log.Errorf("Failed at creating dvs: %s, err: %s", dvsName, err)
-		return err
+	penDVS := &PenDVS{
+		State:   d.State,
+		probe:   d.probe,
+		DcName:  dcName,
+		DvsName: dvsName,
+		UsegMgr: useg,
+		Pgs:     map[string]*PenPG{},
 	}
 
-	_, err = task.WaitForResult(v.ClientCtx, nil)
-	if err != nil {
-		v.Log.Errorf("Failed at waiting results of creating dvs: %s, err: %s", dvsName, err)
-		return err
-	}
-
+	d.DvsMap[dvsName] = penDVS
 	return nil
 }
 
-// GetPenDVS returns the DVS if it exists or an error
-func (v *VCProbe) GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error) {
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
-	return v.getPenDVS(dcName, dvsName, finder)
+// GetPenDVS returns the PenDVS with the given name
+func (d *PenDC) GetPenDVS(dvsName string) *PenDVS {
+	d.Lock()
+	defer d.Unlock()
+	return d.getPenDVS(dvsName)
 }
 
-func (v *VCProbe) getPenDVS(dcName, dvsName string, finder *find.Finder) (*object.DistributedVirtualSwitch, error) {
-	dc, err := finder.Datacenter(v.ClientCtx, dcName)
-	if err != nil {
-		v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
-		return nil, err
-	}
-
-	finder.SetDatacenter(dc)
-
-	net, err := finder.Network(v.ClientCtx, dvsName)
-	if err != nil {
-		v.Log.Errorf("Failed at finding network: %s, err: %s", dvsName, err)
-		return nil, err
-	}
-
-	objDvs, ok := net.(*object.DistributedVirtualSwitch)
+func (d *PenDC) getPenDVS(dvsName string) *PenDVS {
+	dvs, ok := d.DvsMap[dvsName]
 	if !ok {
-		v.Log.Errorf("Failed at getting DVS object")
-		return nil, errors.New("Failed at getting DVS object")
+		return nil
 	}
-	return objDvs, nil
+	return dvs
 }
 
-// RemovePenDVS removes the DVS
-func (v *VCProbe) RemovePenDVS(dcName, dvsName string) error {
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
+// Commenting out for now as this function isn't called by anyone
+// RemovePenDVS removes PenDVS from the DC
+// func (d *PenDC) RemovePenDVS(dvsName string) error {
 
-	objDvs, err := v.getPenDVS(dcName, dvsName, finder)
-	if err != nil {
-		return err
-	}
+// 	d.Lock()
+// 	defer d.Unlock()
 
-	task, err := objDvs.Destroy(v.ClientCtx)
-	if err != nil {
-		v.Log.Errorf("Failed at destroying DVS: %s from datacenter: %s, err: %s", dvsName, dcName, err)
-		return err
-	}
+// 	if _, ok := d.DvsMap[dvsName]; ok {
 
-	err = task.Wait(v.ClientCtx)
-	if err != nil {
-		v.Log.Errorf("Failed at destroying DVS: %s from datacenter: %s, err: %s", dvsName, dcName, err)
-		return err
-	}
+// 		err := d.probe.RemovePenDVS(d.Name, dvsName)
+// 		if err != nil {
+// 			return err
+// 		}
 
-	return nil
-}
+// 		delete(d.DvsMap, dvsName)
+// 	} else {
+// 		err := fmt.Errorf("Received remove dvs call for DVS we don't have state for: %s", dvsName)
+// 		d.Log.Errorf("%s", err)
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 /*
 // TODO: Need to re-enable it.

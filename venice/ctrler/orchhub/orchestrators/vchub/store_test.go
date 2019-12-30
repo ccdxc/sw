@@ -1,6 +1,7 @@
-package store
+package vchub
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -25,11 +26,11 @@ var (
 	logger    = log.SetConfig(logConfig)
 )
 
-func TestStoreRun(t *testing.T) {
+func TestStore(t *testing.T) {
 	// If supplied, will only run the test with the matching name
 	forceTestName := ""
 	// If set, logger will output to console
-	debugMode := false
+	debugMode := true
 	if debugMode {
 		logConfig.LogToStdout = true
 		logConfig.Filter = log.AllowAllFilter
@@ -38,7 +39,7 @@ func TestStoreRun(t *testing.T) {
 	testCases := []struct {
 		name   string
 		events []defs.Probe2StoreMsg
-		verify func(*VCHStore, chan defs.Store2ProbeMsg)
+		verify func(*VCHub)
 	}{
 		{
 			name: "basic workload create without host",
@@ -49,12 +50,13 @@ func TestStoreRun(t *testing.T) {
 						VcObject:   defs.VirtualMachine,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
+						DC:         "DC1",
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -72,9 +74,9 @@ func TestStoreRun(t *testing.T) {
 				}, "Workload not in pcache/statemgr")
 
 				item := v.pCache.GetWorkload(expMeta)
-				workloadAPI := v.stateMgr.Controller().Workload()
+				workloadAPI := v.StateMgr.Controller().Workload()
 				_, err := workloadAPI.Find(expMeta)
-				Assert(t, err != nil, "Workload unexpectedly in stateMgr. Err: %v", err)
+				Assert(t, err != nil, "Workload unexpectedly in StateMgr. Err: %v", err)
 				Assert(t, item.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 			},
 		},
@@ -85,6 +87,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -108,6 +111,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -125,9 +129,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -143,12 +147,12 @@ func TestStoreRun(t *testing.T) {
 				}
 
 				AssertEventually(t, func() (bool, interface{}) {
-					workloadAPI := v.stateMgr.Controller().Workload()
+					workloadAPI := v.StateMgr.Controller().Workload()
 					_, err := workloadAPI.Find(expMeta)
 					return err == nil, err
 				}, "Failed to get workload")
 
-				workloadAPI := v.stateMgr.Controller().Workload()
+				workloadAPI := v.StateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
@@ -161,6 +165,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -206,9 +211,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -248,61 +253,6 @@ func TestStoreRun(t *testing.T) {
 					expWorkload.Spec.Interfaces[i].MicroSegVlan = inf.MicroSegVlan
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
-
-				expMsgs := []defs.UsegMsg{
-					defs.UsegMsg{
-						WorkloadName: "127.0.0.1:8990-virtualmachine-41",
-						MACAddress:   "aabb.ccdd.eeff",
-						PG:           "PG1",
-						Port:         "10",
-					},
-					defs.UsegMsg{
-						WorkloadName: "127.0.0.1:8990-virtualmachine-41",
-						MACAddress:   "aabb.ccdd.ddff",
-						PG:           "PG2",
-						Port:         "11",
-					},
-					defs.UsegMsg{
-						WorkloadName: "127.0.0.1:8990-virtualmachine-41",
-						MACAddress:   "aabb.ccdd.ddee",
-						PG:           "PG3",
-						Port:         "100",
-					},
-					defs.UsegMsg{
-						WorkloadName: "127.0.0.1:8990-virtualmachine-41",
-						MACAddress:   "aabb.ccdd.ccee",
-						PG:           "PG4",
-						Port:         "5000",
-					},
-				}
-
-				// Check outbox info
-				expMsgCount := 4
-				currCount := 0
-				for currCount < expMsgCount {
-					select {
-					case msg := <-outbox:
-						AssertEquals(t, defs.Useg, msg.MsgType, "msg type was incorrect")
-						usegMsg := msg.Val.(defs.UsegMsg)
-
-						Assert(t, usegMsg.Useg > 0 && usegMsg.Useg < 4096, "useg value was invalid %d", usegMsg.Useg)
-						for _, v := range expMsgs {
-							if usegMsg.MACAddress == v.MACAddress {
-								v.Useg = usegMsg.Useg
-								AssertEquals(t, v, usegMsg, "useg msg did not match")
-							}
-						}
-						currCount++
-					default:
-						t.Fatalf("Outbox missing items. Only got %d", currCount)
-					}
-				}
-				// Expect no more messages sitting in outbox
-				select {
-				case msg := <-outbox:
-					t.Fatalf("Outbox had extra item %v", msg)
-				default:
-				}
 			},
 		},
 		{
@@ -312,6 +262,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -335,6 +286,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -367,6 +319,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -378,9 +331,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -399,6 +352,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -422,6 +376,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-40",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -446,9 +401,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-40",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-40",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -458,9 +413,10 @@ func TestStoreRun(t *testing.T) {
 						APIVersion: "v1",
 					},
 					ObjectMeta: api.ObjectMeta{
-						Name: "127.0.0.1:8990-virtualmachine-40",
+						Name: "127.0.0.1:8990-DC1-virtualmachine-40",
 						Labels: map[string]string{
 							"vcenter.vm-name": "test-vm",
+							"orch-name":       "127.0.0.1:8990",
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -486,6 +442,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -509,6 +466,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -517,6 +475,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -534,9 +493,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -555,19 +514,19 @@ func TestStoreRun(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 					Spec: workload.WorkloadSpec{
-						HostName: "127.0.0.1:8990-hostsystem-21",
+						HostName: "127.0.0.1:8990-DC1-hostsystem-21",
 					},
 				}
 
 				time.Sleep(50 * time.Millisecond)
 
 				AssertEventually(t, func() (bool, interface{}) {
-					workloadAPI := v.stateMgr.Controller().Workload()
+					workloadAPI := v.StateMgr.Controller().Workload()
 					_, err := workloadAPI.Find(expMeta)
 					return err == nil, err
 				}, "Workload not in statemgr")
 
-				workloadAPI := v.stateMgr.Controller().Workload()
+				workloadAPI := v.StateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				AssertOk(t, err, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
@@ -582,6 +541,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -605,6 +565,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -622,9 +583,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -640,12 +601,12 @@ func TestStoreRun(t *testing.T) {
 				}
 
 				AssertEventually(t, func() (bool, interface{}) {
-					workloadAPI := v.stateMgr.Controller().Workload()
+					workloadAPI := v.StateMgr.Controller().Workload()
 					_, err := workloadAPI.Find(expMeta)
 					return err == nil, err
 				}, "Workload not in statemgr")
 
-				workloadAPI := v.stateMgr.Controller().Workload()
+				workloadAPI := v.StateMgr.Controller().Workload()
 				w, err := workloadAPI.Find(expMeta)
 				AssertOk(t, err, "Failed to get workload")
 				Assert(t, w.ObjectMeta.Name == existingWorkload.ObjectMeta.Name, "workloads are not same")
@@ -658,6 +619,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -666,6 +628,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -677,9 +640,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -698,6 +661,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
+						DC:         "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -732,15 +696,16 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-virtualmachine-41",
+					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 					Labels: map[string]string{
 						"vcenter.cat1":    "tag1:tag2",
 						"vcenter.cat2":    "tag1",
 						"vcenter.vm-name": "test-vm",
+						"orch-name":       "127.0.0.1:8990",
 					},
 				}
 				expWorkload := &workload.Workload{
@@ -768,6 +733,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-44",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -788,9 +754,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-44",
+					Name: "127.0.0.1:8990-DC1-hostsystem-44",
 				}
 				expHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -808,12 +774,12 @@ func TestStoreRun(t *testing.T) {
 				}
 
 				AssertEventually(t, func() (bool, interface{}) {
-					hostAPI := v.stateMgr.Controller().Host()
+					hostAPI := v.StateMgr.Controller().Host()
 					_, err := hostAPI.Find(expMeta)
 					return err == nil, err
 				}, "Host not in statemgr")
 
-				hostAPI := v.stateMgr.Controller().Host()
+				hostAPI := v.StateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host: err %v", err)
 				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
@@ -826,6 +792,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -849,6 +816,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -869,9 +837,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-41",
+					Name: "127.0.0.1:8990-DC1-hostsystem-41",
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -905,12 +873,12 @@ func TestStoreRun(t *testing.T) {
 				time.Sleep(50 * time.Millisecond)
 
 				AssertEventually(t, func() (bool, interface{}) {
-					hostAPI := v.stateMgr.Controller().Host()
+					hostAPI := v.StateMgr.Controller().Host()
 					_, err := hostAPI.Find(expMeta)
 					return err == nil, err
 				}, "Host not in statemgr")
 
-				hostAPI := v.stateMgr.Controller().Host()
+				hostAPI := v.StateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
 				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
@@ -924,6 +892,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -944,9 +913,9 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-41",
+					Name: "127.0.0.1:8990-DC1-hostsystem-41",
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -964,12 +933,12 @@ func TestStoreRun(t *testing.T) {
 				}
 
 				AssertEventually(t, func() (bool, interface{}) {
-					hostAPI := v.stateMgr.Controller().Host()
+					hostAPI := v.StateMgr.Controller().Host()
 					_, err := hostAPI.Find(expMeta)
 					return err == nil, err
 				}, "Host not in statemgr")
 
-				hostAPI := v.stateMgr.Controller().Host()
+				hostAPI := v.StateMgr.Controller().Host()
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host")
 				Assert(t, h.ObjectMeta.Name == existingHost.ObjectMeta.Name, "hosts are not same")
@@ -982,6 +951,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1005,6 +975,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1016,15 +987,15 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-41",
+					Name: "127.0.0.1:8990-DC1-hostsystem-41",
 				}
 
 				time.Sleep(50 * time.Millisecond)
 
 				AssertEventually(t, func() (bool, interface{}) {
-					hostAPI := v.stateMgr.Controller().Host()
+					hostAPI := v.StateMgr.Controller().Host()
 					_, err := hostAPI.Find(expMeta)
 					return err != nil, nil
 				}, "Host should not be in statemgr")
@@ -1037,6 +1008,7 @@ func TestStoreRun(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
+						DC:         "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1048,15 +1020,15 @@ func TestStoreRun(t *testing.T) {
 					},
 				},
 			},
-			verify: func(v *VCHStore, outbox chan defs.Store2ProbeMsg) {
+			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-hostsystem-41",
+					Name: "127.0.0.1:8990-DC1-hostsystem-41",
 				}
 
 				time.Sleep(50 * time.Millisecond)
 
 				AssertEventually(t, func() (bool, interface{}) {
-					hostAPI := v.stateMgr.Controller().Host()
+					hostAPI := v.StateMgr.Controller().Host()
 					_, err := hostAPI.Find(expMeta)
 					return err != nil, nil
 				}, "Host should not be in statemgr")
@@ -1066,9 +1038,9 @@ func TestStoreRun(t *testing.T) {
 
 	tsdb.Init(context.Background(), &tsdb.Opts{})
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-
 	for _, tc := range testCases {
+		ctx, cancelFn := context.WithCancel(context.Background())
+
 		if len(forceTestName) != 0 && tc.name != forceTestName {
 			continue
 		}
@@ -1079,37 +1051,68 @@ func TestStoreRun(t *testing.T) {
 			return
 		}
 
+		orchConfig := statemgr.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+		err = sm.Controller().Orchestrator().Create(orchConfig)
+
 		pCache := pcache.NewPCache(sm, logger)
-		useg, err := useg.NewUsegAllocator()
 		AssertOk(t, err, "failed to create useg mgr")
-		store := &VCHStore{
-			ctx:      ctx,
-			Log:      logger,
-			stateMgr: sm,
-			pCache:   pCache,
-			usegMgr:  useg,
+		state := &defs.State{
+			VcID:       "127.0.0.1:8990",
+			Ctx:        ctx,
+			Log:        logger,
+			StateMgr:   sm,
+			OrchConfig: orchConfig,
+			Wg:         &sync.WaitGroup{},
 		}
-		pCache.SetValidator("Workload", store.validateWorkload)
+
+		vchub := &VCHub{
+			State:  state,
+			pCache: pCache,
+			DcMap:  map[string]*PenDC{},
+		}
+		pCache.SetValidator("Workload", vchub.validateWorkload)
 		pCache.SetValidator(vnicKind, validateVNIC)
 
-		store.stateMgr.SetAPIClient(nil)
+		vchub.StateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
-		outbox := make(chan defs.Store2ProbeMsg, 100)
-		store.inbox = inbox
-		store.outbox = outbox
-		store.Start()
+		vchub.vcReadCh = inbox
+
+		// Setup state for DC1
+		dcName := "DC1"
+		dvsName := defs.DefaultDVSName
+		useg, err := useg.NewUsegAllocator()
+		AssertOk(t, err, "Failed to create useg")
+		penDVS := &PenDVS{
+			State:   vchub.State,
+			DcName:  dcName,
+			DvsName: dvsName,
+			UsegMgr: useg,
+			Pgs:     map[string]*PenPG{},
+		}
+		vchub.DcMap[dcName] = &PenDC{
+			State: vchub.State,
+			// probe:  v.probe,
+			Name: dcName,
+			DvsMap: map[string]*PenDVS{
+				defs.DefaultDVSName: penDVS,
+			},
+		}
+
+		vchub.Wg.Add(1)
+		go vchub.startEventsListener()
+
 		// Push events
 		for _, e := range tc.events {
 			inbox <- e
 		}
 		// Time for events to process
-		tc.verify(store, outbox)
+		tc.verify(vchub)
 
 		// Terminating store instance
 		cancelFn()
 		doneCh := make(chan bool)
 		go func() {
-			store.Stop()
+			vchub.Wg.Wait()
 			doneCh <- true
 		}()
 		select {
