@@ -276,6 +276,22 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
         data = data.concat(currData);
       }
       this.activeFlows.data = data;
+      if (data.length > 1) {
+        const start = data[0].t;
+        const end = data[data.length - 1].t;
+        const moment = Utility.getMomentJS();
+        const startUtc = moment(start).utc();
+        const endUtc = moment(end).utc();
+        const startDay = startUtc.dayOfYear();
+        const endDay = endUtc.dayOfYear();
+        const formatOpts = startDay !== endDay ? 'ddd HH:mm z' : 'HH:mm z';
+        const startStr = startUtc.format(formatOpts);
+        const endStr = endUtc.format(formatOpts);
+
+        this.activeFlows.title = `ACTIVE SESSIONS (${startStr} - ${endStr})`;
+      } else {
+        this.activeFlows.title = 'ACTIVE SESSIONS';
+      }
     }
 
     if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
