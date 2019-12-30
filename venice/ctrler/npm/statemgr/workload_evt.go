@@ -186,6 +186,7 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 	err = ws.deleteEndpoints()
 	if err != nil {
 		log.Errorf("Error deleting old endpoint. Err: %v", err)
+		return err
 	}
 
 	// update the spec
@@ -427,6 +428,7 @@ func (ws *WorkloadState) deleteEndpoints() error {
 				err = ws.stateMgr.ctrler.Endpoint().Delete(&epInfo)
 				if err != nil {
 					log.Errorf("Error deleting the endpoint. Err: %v", err)
+					return kvstore.NewTxnFailedError()
 				}
 			}
 		}
