@@ -88,7 +88,7 @@ extern void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
 ///
 
 extern void reg_request_handler(uint32_t msg_code, request_cb callback,
-                                const void *ctx);
+                                const void *ctx, bool serialize = false);
 
 
 extern void reg_response_handler(uint32_t msg_code, response_cb callback,

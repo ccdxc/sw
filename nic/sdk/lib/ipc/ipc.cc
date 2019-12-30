@@ -11,11 +11,16 @@
 
 #include <map>
 #include <memory>
+#include <queue>
 #include <string>
 #include <vector>
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/eventfd.h>
+#include <unistd.h>
 
 namespace sdk {
 namespace ipc {
@@ -45,13 +50,14 @@ public:
     void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
     void broadcast(uint32_t msg_code, const void *data, size_t data_length);
     void reg_request_handler(uint32_t msg_code, request_cb callback,
-                             const void *ctx);
+                             const void *ctx, bool serialize);
     void reg_response_handler(uint32_t msg_code, response_cb callback,
                               const void *ctx);
     void subscribe(uint32_t msg_code, subscription_cb callback,
                    const void *ctx);
     void receive(void);
     void server_receive(void);
+    void eventfd_receive(void);
 protected: 
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) = 0;
     uint32_t get_id_(void);
@@ -59,6 +65,11 @@ protected:
     void handle_response_(ipc_msg_ptr msg, response_oneshot_cb cb,
                           const void *cookie);
     zmq_ipc_client_ptr get_client_(uint32_t recipient);
+    bool should_serialize_(ipc_msg_ptr msg);
+    void serialize_(ipc_msg_ptr msg);
+    void deserialize_(uint32_t msg_code);
+    void deliver_(ipc_msg_ptr msg);
+    int get_eventfd_(void);
 private:
     uint32_t id_;
     zmq_ipc_server_ptr ipc_server_;
@@ -66,6 +77,17 @@ private:
     std::map<uint32_t, req_callback_t> req_cbs_;
     std::map<uint32_t, rsp_callback_t> rsp_cbs_;
     std::map<uint32_t, sub_callback_t> sub_cbs_;
+    // the fields below are used for serialized delivery
+    std::map<uint32_t, bool> serializing_enabled_;
+    std::map<uint32_t, bool> message_in_flight_;
+    // hold queues are used to serialize messages
+    std::map<uint32_t, std::queue<ipc_msg_ptr> > hold_queues_;
+    // deliver queue is used to actually deliver held messages to
+    // the client at the next tick
+    std::queue<ipc_msg_ptr> delivery_queue_;
+    // eventfd is used to notify the client that things are ready in
+    // delivery_queue_
+    int eventfd_;
 };
 typedef std::shared_ptr<ipc_service> ipc_service_ptr;
 
@@ -111,6 +133,13 @@ server_receive (int fd, const void *ctx)
 }
 
 static void
+eventfd_receive (int fd, const void *ctx)
+{
+    assert(t_ipc_service != nullptr);
+    t_ipc_service->eventfd_receive();
+}
+
+static void
 server_receive_ms (int fd, int, void *ctx)
 {
     assert(t_ipc_service != nullptr);
@@ -138,9 +167,10 @@ client_receive_ms (int fd, int, void *ctx)
 ipc_service::ipc_service() : ipc_service(IPC_MAX_ID + 1) {};
 
 ipc_service::ipc_service(uint32_t id) {
-
     this->id_ = id;
     this->ipc_server_ = nullptr;
+    this->eventfd_ = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+    assert(this->eventfd_ != -1);
     
     for (int i = 0; i < IPC_MAX_ID + 1; i++) {
         this->ipc_clients_[i] = nullptr;
@@ -172,7 +202,10 @@ ipc_service::get_client_(uint32_t recipient) {
 
 void
 ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
+    assert(msg != nullptr);
     this->ipc_server_->reply(msg, data, data_length);
+    this->message_in_flight_[msg->code()] = false;
+    this->deserialize_(msg->code());
 }
 
 void
@@ -231,11 +264,13 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
     this->set_server_(server);
     if (this->fd_watch_ms_cb_) {
         this->fd_watch_ms_cb_(server->fd(), sdk::ipc::server_receive_ms, NULL);
+        // todo: enable serialized messages for ms thread maybe??
     } else {
         this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive, NULL,
                            this->fd_watch_cb_ctx_);
-    }
-    
+        this->fd_watch_cb_(this->get_eventfd_(), sdk::ipc::eventfd_receive, NULL,
+                           this->fd_watch_cb_ctx_);
+    }    
 }
 
 
@@ -296,6 +331,60 @@ ipc_service_async::client_receive(uint32_t sender) {
     this->handle_response_(msg, msg->response_cb(), msg->cookie());
 }
 
+
+bool
+ipc_service::should_serialize_(ipc_msg_ptr msg) {
+    if (this->serializing_enabled_.count(msg->code()) != 0 &&
+        this->serializing_enabled_[msg->code()] &&
+        this->message_in_flight_.count(msg->code()) != 0 &&
+        this->message_in_flight_[msg->code()]) {
+        return true;
+    }
+    return false;
+}
+
+void
+ipc_service::serialize_(ipc_msg_ptr msg) {
+    SDK_TRACE_DEBUG("Serializing message with msg_code: %u", msg->code());
+    this->hold_queues_[msg->code()].push(msg);
+}
+
+void
+ipc_service::deserialize_(uint32_t msg_code) {
+    uint64_t buffer = 1;
+    
+    if (this->hold_queues_[msg_code].size() == 0) {
+        return;
+    }
+
+    SDK_TRACE_DEBUG("Messages waiting: %i", this->hold_queues_.count(msg_code));
+    ipc_msg_ptr msg = this->hold_queues_[msg_code].front();
+    SDK_TRACE_DEBUG("Deserializing for msg_code: %u", msg->code());
+    this->delivery_queue_.push(msg);
+    this->hold_queues_[msg_code].pop();
+    
+    // Notify the client we have stuff for delivery
+    write(this->eventfd_, &buffer, sizeof(buffer));
+}
+
+void
+ipc_service::deliver_(ipc_msg_ptr msg) {
+    // We received an IPC message but don't have a handler
+    assert(this->req_cbs_.count(msg->code()) > 0);
+                
+    req_callback_t req_cb = this->req_cbs_[msg->code()];
+                
+    if (req_cb.cb != NULL) {
+        this->message_in_flight_[msg->code()] = true;
+        req_cb.cb(msg, req_cb.ctx);
+    }
+}
+
+int
+ipc_service::get_eventfd_(void) {
+    return this->eventfd_;
+}
+
 void
 ipc_service::server_receive(void) {
     while (true) {
@@ -304,15 +393,11 @@ ipc_service::server_receive(void) {
             return;
         }
         if (msg->type() == sdk::ipc::DIRECT) {
-            // We received an IPC message but don't have a handler
-            assert(this->req_cbs_.count(msg->code()) > 0);
-
-            req_callback_t req_cb = this->req_cbs_[msg->code()];
-            
-            if (req_cb.cb != NULL) {
-                req_cb.cb(msg, req_cb.ctx);
+            if (this->should_serialize_(msg)) {
+                this->serialize_(msg);
+            } else {
+                this->deliver_(msg);
             }
-            
         } else if (msg->type() == sdk::ipc::BROADCAST) {
             // We shouldn't be receiving this if we don't have a handler
             assert(this->sub_cbs_.count(msg->code()) > 0);
@@ -325,6 +410,22 @@ ipc_service::server_receive(void) {
         } else {
             assert(0);
         }
+    }
+}
+
+void
+ipc_service::eventfd_receive(void) {
+    uint64_t buffer;
+
+    // Clear the eventfd flag
+    read(this->eventfd_, &buffer, sizeof(buffer));;
+    
+    while(!this->delivery_queue_.empty()) {
+        ipc_msg_ptr msg = this->delivery_queue_.front();
+        this->delivery_queue_.pop();
+        SDK_TRACE_DEBUG("Delivering postponed message for msg_code: %u",
+                        msg->code());
+        this->deliver_(msg);
     }
 }
 
@@ -343,9 +444,10 @@ ipc_service::broadcast(uint32_t msg_code, const void *data,
 
 void
 ipc_service::reg_request_handler(uint32_t msg_code, request_cb callback,
-                                 const void *ctx) {
+                                 const void *ctx, bool serialize) {
     assert(this->req_cbs_.count(msg_code) == 0);
     this->req_cbs_[msg_code] = {.cb = callback, .ctx = ctx};
+    this->serializing_enabled_[msg_code] = serialize;
 }
 
 void
@@ -422,10 +524,11 @@ broadcast (uint32_t msg_code, const void *data, size_t data_length)
 
 // We need to call init or init_async before using this method
 void
-reg_request_handler (uint32_t msg_code, request_cb callback, const void *ctx)
+reg_request_handler (uint32_t msg_code, request_cb callback, const void *ctx,
+                     bool serialize)
 {
     assert(t_ipc_service != nullptr);
-    t_ipc_service->reg_request_handler(msg_code, callback, ctx);
+    t_ipc_service->reg_request_handler(msg_code, callback, ctx, serialize);
 }
 
 void

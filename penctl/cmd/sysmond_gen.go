@@ -14,13 +14,13 @@ import (
 
 //cmd - frequency
 //rootCmd = system
-//longHelpStr = System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n
+//longHelpStr = System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\nFrequency	: Frequency of the system in MHz\n
 //shortHelpStr = System frequency information
 var frequencysystemShowCmd = &cobra.Command{
 	Use:   "frequency",
 	Short: "System frequency information",
-	Long:  "\n---------------------------------\n System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n\n---------------------------------\n",
-	RunE:  frequencysystemShowCmdHandler,
+	Long: "\n---------------------------------\n System frequency information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\nFrequency	: Frequency of the system in MHz\n\n---------------------------------\n",
+	RunE: frequencysystemShowCmdHandler,
 }
 
 func frequencysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
@@ -62,13 +62,13 @@ func memorysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - power
 //rootCmd = system
-//longHelpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n
+//longHelpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\nPin	: Input power to the system\nPout1	: Core output power\nPout2	: ARM output power\n
 //shortHelpStr = System power information
 var powersystemShowCmd = &cobra.Command{
 	Use:   "power",
 	Short: "System power information",
-	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n\n---------------------------------\n",
-	RunE:  powersystemShowCmdHandler,
+	Long: "\n---------------------------------\n System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\nPin	: Input power to the system\nPout1	: Core output power\nPout2	: ARM output power\n\n---------------------------------\n",
+	RunE: powersystemShowCmdHandler,
 }
 
 func powersystemShowCmdHandler(cmd *cobra.Command, args []string) error {
@@ -86,13 +86,13 @@ func powersystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - temp
 //rootCmd = system
-//longHelpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n
+//longHelpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\n
 //shortHelpStr = System temperature information
 var tempsystemShowCmd = &cobra.Command{
 	Use:   "temp",
 	Short: "System temperature information",
-	Long:  "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n\n---------------------------------\n",
-	RunE:  tempsystemShowCmdHandler,
+	Long: "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\n\n---------------------------------\n",
+	RunE: tempsystemShowCmdHandler,
 }
 
 func tempsystemShowCmdHandler(cmd *cobra.Command, args []string) error {

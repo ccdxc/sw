@@ -36,6 +36,8 @@ struct poll_s {
     nfds_t nfds;
 };
 
+static ipc_msg_ptr g_async_thread_pending_message = nullptr;
+
 void
 poll_fd_watch_cb (int fd, handler_cb cb, const void *ctx,
                   const void *fd_watch_cb_ctx)
@@ -54,9 +56,9 @@ poll_fd_watch_cb (int fd, handler_cb cb, const void *ctx,
 
 void req_1_callback (ipc_msg_ptr msg, const void *ctx)
 {
-    const char rsp[] = "pong";
     printf("Got message: %s\n", (char *)msg->data());
-    respond(msg, rsp, sizeof(rsp));
+    assert(g_async_thread_pending_message == nullptr);
+    g_async_thread_pending_message = msg;
 }
 
 void req_99_callback (ipc_msg_ptr msg, const void *ctx)
@@ -71,6 +73,9 @@ void req_99_callback (ipc_msg_ptr msg, const void *ctx)
 void sub_2_callback (ipc_msg_ptr msg, const void *ctx)
 {
     printf("Got notification 2: %s\n", (char *)msg->data());
+    const char rsp[] = "pong";
+    respond(g_async_thread_pending_message, rsp, sizeof(rsp));
+    g_async_thread_pending_message = nullptr;
 }
 
 void *async_thread_run (void *arg)
@@ -82,7 +87,7 @@ void *async_thread_run (void *arg)
 
     ipc_init_async(T_CLIENT_1, poll_fd_watch_cb, &poll_fds);
 
-    reg_request_handler(1, req_1_callback, NULL);
+    reg_request_handler(1, req_1_callback, NULL, true);
     reg_request_handler(99, req_99_callback, &exit);
 
     subscribe(2, sub_2_callback, NULL);
@@ -93,7 +98,8 @@ void *async_thread_run (void *arg)
         if (event_count > 0) {
             for (nfds_t i = 0; i < poll_fds.nfds; i++) {
                 if (poll_fds.fds[i].revents & POLLIN) {
-                    printf("Calling callback for fd %i\n", poll_fds.fds[i].fd);
+                    printf("Calling callback for fd %i\n",
+                           poll_fds.fds[i].fd);
                     poll_fds.cbs[i](poll_fds.fds[i].fd, poll_fds.ctxs[i]);
                 }
             }
@@ -116,13 +122,39 @@ rsp_99_callback (ipc_msg_ptr msg, const void *cookie, const void *ctx)
     printf("got response to 99. Will exit now\n");
 }
 
-void *sync_thread_run (void *arg)
+void *
+sync_thread1_run (void *arg)
 {
-    const char msg[] = "ping";
+    const char msg[] = "ping1";
     
     reg_response_handler(1, rsp_1_callback, NULL);    
     request(T_CLIENT_1, 1, msg, sizeof(msg), NULL);
 
+    return NULL;
+}
+
+void *
+sync_thread2_run (void *arg)
+{
+    const char msg[] = "ping2";
+    
+    reg_response_handler(1, rsp_1_callback, NULL);    
+    request(T_CLIENT_1, 1, msg, sizeof(msg), NULL);
+
+    return NULL;
+}
+
+void *
+sync_thread3_run (void *arg)
+{
+    const char msg[] = "process the last message";
+
+    sleep(2);
+    
+    broadcast(2, msg, sizeof(msg));
+
+    sleep(1);
+    
     broadcast(2, msg, sizeof(msg));
     
     reg_response_handler(99, rsp_99_callback, NULL);    
@@ -133,12 +165,18 @@ void *sync_thread_run (void *arg)
 
 TEST_F (ipc_test, ping) {
     pthread_t async_thread_id;
-    pthread_t sync_thread_id;
+    pthread_t sync_thread1_id;
+    pthread_t sync_thread2_id;
+    pthread_t sync_thread3_id;
     
     pthread_create(&async_thread_id, NULL, async_thread_run, NULL);
-    pthread_create(&sync_thread_id, NULL, sync_thread_run, NULL);
+    pthread_create(&sync_thread1_id, NULL, sync_thread1_run, NULL);
+    pthread_create(&sync_thread2_id, NULL, sync_thread2_run, NULL);
+    pthread_create(&sync_thread3_id, NULL, sync_thread3_run, NULL);
 
-    pthread_join(sync_thread_id, NULL);
+    pthread_join(sync_thread1_id, NULL);
+    pthread_join(sync_thread2_id, NULL);
+    pthread_join(sync_thread3_id, NULL);
     pthread_join(async_thread_id, NULL);
 }
 
