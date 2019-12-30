@@ -80,15 +80,19 @@ resp_rx_rqwqe_opt_process:
     seq         c1, d.num_sges, 0
 
     bcf         [c1], len_err_nak
-    seq         c1, d.wqe_format, RQWQE_FORMAT_DEFAULT // BD Slot
+    seq         c1, d.wqe_format, RQWQE_FORMAT_DEFAULT  // BD Slot
     // c1: num_sges <= 2
     bcf         [c1], decode_2x4
 
     seq         c1, d.wqe_format, RQWQE_FORMAT_8x4   //BD Slot
     // c1: 2 < num_sges <= 8
+    sle.c1      c3, d.num_sges, 8
+    sle.!c1     c3, d.num_sges, 16
+    bcf         [!c3], qp_oper_err_nak
 
     // below steps are common to 8x4 and 16x2 WQE formats
-    add         LEN_SUM, r0, r0
+    add         LEN_SUM, r0, r0     // BD Slot
+    add         r1, r0, r0
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]
 
@@ -130,8 +134,10 @@ decode_wqe_opt:
      *    -------------------------
      */
 
+    slt         c2, SGE_ID, d.num_sges
+    bcf         [!c2], len_err_nak
     // move SGE_P to point to the next len
-    sub.c1      SGE_P, SGE_P, 1, LOG_SIZEOF_WQE_8x4_T_BITS
+    sub.c1      SGE_P, SGE_P, 1, LOG_SIZEOF_WQE_8x4_T_BITS  // BD Slot
     sub.!c1     SGE_P, SGE_P, 1, LOG_SIZEOF_WQE_16x2_T_BITS
 
     // curr_sge_offset = transfer_bytes - len_sum
