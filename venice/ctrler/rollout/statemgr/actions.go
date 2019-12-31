@@ -87,7 +87,16 @@ func verifyAdmittedDSCState(dscState *SmartNICState, ros *RolloutState, op proto
 			//setting the phase to FAIL so that rollout retry counter is incremented
 			//roFSM is not triggered for skipped DSC so set the failed counter
 			atomic.AddUint32(&ros.numSkipped, 1)
-			ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC Unreachable", roproto.RolloutPhase_FAIL)
+			//take care of the case where status become unreachable after the precheck
+			updateState := false
+			for _, dscStatus := range ros.Status.DSCsStatus {
+				if dscStatus.Name == dscState.Name && dscStatus.Phase == roproto.RolloutPhase_WAITING_FOR_TURN.String() {
+					updateState = true
+				}
+			}
+			if phase == roproto.RolloutPhase_PRE_CHECK || updateState {
+				ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC Unreachable", roproto.RolloutPhase_FAIL)
+			}
 			return false
 		}
 	}
@@ -690,6 +699,7 @@ func (ros *RolloutState) computeProgressDelta() {
 	for _, s := range sn {
 		log.Infof("Status %s", spew.Sdump(s))
 		numNaples += len(s)
+		numNaples += int(ros.numSkipped) //include the skipped ones
 	}
 
 	ros.completionDelta = float32(100 / (2*numVenice + 2*numNaples + 2))

@@ -484,14 +484,12 @@ func (ros *RolloutState) setStartTime() {
 }
 
 func (ros *RolloutState) setEndTime() {
-	if ros.Status.EndTime == nil {
-		t := api.Timestamp{}
-		ros.Mutex.Lock()
-		t.SetTime(time.Now())
-		ros.Status.EndTime = &t
-		ros.saveStatus()
-		ros.Mutex.Unlock()
-	}
+	t := api.Timestamp{}
+	ros.Mutex.Lock()
+	t.SetTime(time.Now())
+	ros.Status.EndTime = &t
+	ros.saveStatus()
+	ros.Mutex.Unlock()
 }
 
 func (ros *RolloutState) setVenicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
