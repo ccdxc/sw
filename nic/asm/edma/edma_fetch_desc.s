@@ -67,7 +67,7 @@ edma_fetch_desc_done:
   nop
 
 edma_spurious_db:
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
+  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1
 
 edma_fetch_desc_eval_db:
