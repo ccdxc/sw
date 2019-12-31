@@ -63,7 +63,6 @@ def __generate(topospec):
 
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
-
     return
 
 def __create():

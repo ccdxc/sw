@@ -1,0 +1,55 @@
+meta:
+    name        : apulu_networking
+    description : Apulu Networking Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.apulu
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
+    config  :
+        #- step : utils.naples_workloads
+        - step : verif.config.verify_oob
+        - step : config.set_max_mtu
+        - step : config.generator
+          args :
+             spec : 2naples_bm_static_node1.cfgyml
+             node : node1
+        - step : config.generator
+          args :
+             spec : 2naples_bm_static_node2.cfgyml
+             node : node2
+        - step : config.bringup_workloads
+        - step : config.add_static_arp
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_links
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        #-   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/apulu/testbundles/
+        - networking/connectivity.testbundle
+
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
+    #- step      : testcases.frequency.clock_settings_td

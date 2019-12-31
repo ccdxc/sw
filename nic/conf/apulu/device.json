@@ -9,7 +9,7 @@
 
     "mnic_dev" : [
         {
-            "name" : "oob0",
+            "name" : "oob_mnic0",
             "dev_uuid" : 11,
             "type": "oob_mgmt",
             "lif_count" : 1,

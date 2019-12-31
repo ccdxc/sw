@@ -241,7 +241,7 @@ class _Testbed:
                         cmd.extend(["--naples-only-setup"])
 
                     mem_size = None
-                    if GlobalOptions.pipeline in [ "iris", "apollo", "artemis" ]:
+                    if GlobalOptions.pipeline in [ "iris", "apollo", "artemis", "apulu" ]:
                         mem_size = "8g"
                     mem_size = getattr(instance, "NicMemorySize", mem_size)
                     if mem_size is not None:

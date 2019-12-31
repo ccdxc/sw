@@ -137,7 +137,8 @@ class Node(object):
                     data = json.load(json_file)
                     for node in data:
                         if node["NicConsoleIP"] == self.__nic_console_ip and \
-                            node["NicConsolePort"] == self.__nic_console_port:
+                            node["NicConsolePort"] == self.__nic_console_port and \
+                            node["NicMgmtIP"] not in [ "N/A", "" ]:
                             self.__nic_mgmt_ip = node["NicMgmtIP"]
                             ip_read = True
                 if not ip_read:
@@ -231,6 +232,8 @@ class Node(object):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_BITW
     def IsNaplesHwWithBumpInTheWirePerf(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_BITW_PERF
+    def IsNaplesCloudPipeline(self):
+        return GlobalOptions.pipeline in [ "apulu" ]
 
     def IsNaples(self):
         return self.IsNaplesSim() or self.IsNaplesHw() or self.IsNaplesHwWithBumpInTheWire()
@@ -341,7 +344,10 @@ class Node(object):
                     msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
                 #msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
-                msg.naples_config.naples_ip_address = self.__nic_int_mgmt_ip
+                if self.__nic_int_mgmt_ip == "N/A" or self.IsNaplesCloudPipeline():
+                    msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+                else:
+                    msg.naples_config.naples_ip_address = self.__nic_int_mgmt_ip
 
                 msg.naples_config.naples_username = "root"
                 msg.naples_config.naples_password = "pen123"
