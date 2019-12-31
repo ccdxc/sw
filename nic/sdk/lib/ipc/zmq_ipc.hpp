@@ -94,6 +94,7 @@ typedef std::shared_ptr<zmq_ipc_server> zmq_ipc_server_ptr;
 
 class zmq_ipc_client : public zmq_ipc_endpoint {
 public:
+    zmq_ipc_client(uint32_t id);
     zmq_ipc_client();
     ~zmq_ipc_client();
     virtual void create_socket(void) = 0;
@@ -109,7 +110,7 @@ typedef std::shared_ptr<zmq_ipc_client> zmq_ipc_client_ptr;
 
 class zmq_ipc_client_async : public zmq_ipc_client {
 public:
-    zmq_ipc_client_async(uint32_t recipient);
+    zmq_ipc_client_async(uint32_t id, uint32_t recipient);
     ~zmq_ipc_client_async();
     virtual void create_socket(void) override;
     virtual void broadcast(uint32_t msg_code, const void *data,

@@ -7,6 +7,7 @@
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/test/base/vpp_mock.hpp"
 #include "nic/apollo/test/base/base.hpp"
 
 //----------------------------------------------------------------------------
@@ -78,6 +79,8 @@ pds_test_base::SetUpTestCase(test_case_params_t& params)
 {
     pds_init_params_t init_params;
 
+    vpp_thread_create();
+
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = trace_cb;
@@ -107,7 +110,7 @@ pds_test_base::TearDownTestCase(void)
 //----------------------------------------------------------------------------
 
 void
-dump_packet (std::vector<uint8_t> data) 
+dump_packet (std::vector<uint8_t> data)
 {
     int count = 0;
     std::cout << "Packet length : " << data.size() << "\n";

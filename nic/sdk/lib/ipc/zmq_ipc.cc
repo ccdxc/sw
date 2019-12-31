@@ -324,11 +324,13 @@ zmq_ipc_client::~zmq_ipc_client() {
     zmq_close(this->zsocket_);
 }
 
-zmq_ipc_client::zmq_ipc_client() {
-    /// All clients have the same id
-    this->id_ = IPC_MAX_ID + 1;
+zmq_ipc_client::zmq_ipc_client(uint32_t id) {
+    this->id_ = id;
     this->recipient_ = 0;
     this->is_recipient_internal_ = true;
+}
+
+zmq_ipc_client::zmq_ipc_client() : zmq_ipc_client(IPC_MAX_ID + 1) {
 }
 
 void
@@ -352,7 +354,8 @@ zmq_ipc_client::connect_(uint32_t recipient) {
     assert(rc != -1);
 }
 
-zmq_ipc_client_async::zmq_ipc_client_async(uint32_t recipient) {
+zmq_ipc_client_async::zmq_ipc_client_async(uint32_t id, uint32_t recipient)
+    : zmq_ipc_client(id) {
     this->connect_(recipient);
 }
 

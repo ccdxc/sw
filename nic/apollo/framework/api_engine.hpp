@@ -29,6 +29,7 @@
 using std::vector;
 using std::unordered_map;
 using std::list;
+using sdk::ipc::ipc_msg_ptr;
 
 namespace api {
 
@@ -108,6 +109,7 @@ typedef list<api_base *> dep_obj_list_t;
 
 /// \brief    batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
+    ipc_msg_ptr             ipc_msg;         ///< API msg of the current API batch
     pds_epoch_t             epoch;           ///< epoch in progress, passed in
                                              ///< pds_batch_begin()
     api_batch_stage_t       stage;           ///< phase of the batch processing
@@ -129,6 +131,7 @@ typedef struct api_batch_ctxt_s {
     }
 
     void clear(void) {
+        ipc_msg.reset();
         epoch = PDS_EPOCH_INVALID;
         stage = API_BATCH_STAGE_NONE;
         api_ctxts = NULL;
@@ -293,9 +296,15 @@ public:
     /// \brief Commit all the APIs in this batch
     /// Release any temporary state or resources like memory, per API context
     /// info etc.
-    /// param[in] batch    batch of APIs to process
+    /// param[in] ipc_msg  IPC msg that delivered the API batch message
+    /// param[in] api_msg  API message corresponding to the API batch
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t batch_commit(batch_info_t *batch);
+    sdk_ret_t batch_commit(api_msg_t *api_msg, ipc_msg_ptr ipc_msg);
+
+    /// \brief    return the IPC msg that delivered the current batch of API
+    ///           calls
+    /// \return    pointer to the IPC message
+    ipc_msg_ptr ipc_msg(void) const { return batch_ctxt_.ipc_msg; }
 
     /// \brief    given an object, return its cloned object, if the object is
     ///           found in the dirty object map and cloned
@@ -523,6 +532,14 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_config_stage_(void);
 
+    /// \brief    perform 1st phase of batch commit process
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t batch_commit_phase1_(void);
+
+    /// \brief    perform 2nd phase of batch commit process
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t batch_commit_phase2_(void);
+
     /// \brief Abort all the APIs in this batch
     /// Release any temporary state or resources like memory, per API context
     /// info etc.
@@ -563,16 +580,13 @@ private:
     ///           response is received from other components like VPP
     ///           for the config messages
     /// \param[in] msg     ipc response message received
-    /// \param[out] ret    pointer to response code that will be filled in from
-    ///                    the IPC response received
-    static void process_ipc_sync_result_(sdk::ipc::ipc_msg_ptr msg,
-                                         const void *ret);
+    /// \param[in] ctxt    opaque context passed back to the callback
+    static void process_ipc_async_result_(ipc_msg_ptr msg, const void *ctxt);
 
     /// \brief    helper function to send batch of config messages to other
     ///           components (e.g., VPP) and receive a response
     /// \param[in] msgs    batched msg to be sent
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t pds_msg_send_(pds_msg_list_t *msgs);
+    static void pds_msg_send_(pds_msg_list_t *msgs);
 
 private:
     friend api_obj_ctxt_t;

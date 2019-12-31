@@ -286,7 +286,7 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
 zmq_ipc_client_ptr
 ipc_service_async::new_client_(uint32_t recipient) {
     zmq_ipc_client_async_ptr client =
-        std::make_shared<zmq_ipc_client_async>(recipient);
+        std::make_shared<zmq_ipc_client_async>(this->get_id_(), recipient);
 
     if (this->fd_watch_ms_cb_) {
         this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
@@ -323,12 +323,14 @@ ipc_service_async::client_receive(uint32_t sender) {
         std::dynamic_pointer_cast<zmq_ipc_client_async>(
             this->get_client_(sender));
 
-    zmq_ipc_user_msg_ptr msg = client->recv();
-    if (msg == nullptr) {
-        return;
-    }
+    while (client->is_event_pending()) {
+        zmq_ipc_user_msg_ptr msg = client->recv();
+        if (msg == nullptr) {
+            return;
+        }
 
-    this->handle_response_(msg, msg->response_cb(), msg->cookie());
+        this->handle_response_(msg, msg->response_cb(), msg->cookie());
+    }
 }
 
 

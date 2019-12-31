@@ -23,7 +23,7 @@ api_thread_init_fn (void *ctxt)
 {
     api_engine_init();
     sdk::ipc::reg_request_handler(API_MSG_ID_BATCH, api_thread_ipc_batch_cb,
-                                  NULL);
+                                  NULL, true);
 }
 
 void
@@ -46,8 +46,11 @@ api_thread_ipc_batch_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     // basic validation
     assert(likely(api_msg != NULL));
     assert(likely(api_msg->msg_id == API_MSG_ID_BATCH));
-    ret = api_engine_get()->batch_commit(&api_msg->batch);
-    sdk::ipc::respond(msg, &ret, sizeof(ret));
+    ret = api_engine_get()->batch_commit(api_msg, msg);
+    // if batch is still in progress, don't send response back yet
+    if (ret != sdk::SDK_RET_IN_PROGRESS) {
+        sdk::ipc::respond(msg, &ret, sizeof(ret));
+    }
 }
 
 bool

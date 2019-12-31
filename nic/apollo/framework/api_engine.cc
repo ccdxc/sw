@@ -135,27 +135,6 @@ api_obj_add_to_deps (obj_id_t obj_id, api_op_t api_op,
     return SDK_RET_OK;
 }
 
-void
-api_engine::process_ipc_sync_result_(sdk::ipc::ipc_msg_ptr msg,
-                                     const void *ret) {
-    *(sdk_ret_t *)ret = *(sdk_ret_t *)msg->data();
-}
-
-sdk_ret_t
-api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
-    // TODO: uncomment once ipc lib issue is fixed
-#if 0
-    sdk_ret_t ret;
-
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG,
-                      msgs, core::pds_msg_list_size(msgs),
-                      process_ipc_sync_result_, &ret);
-    PDS_TRACE_DEBUG("IPC sent, result %u", ret);
-    return ret;
-#endif
-    return SDK_RET_OK;
-}
-
 api_op_t
 api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
     return dedup_api_op_[old_op][new_op];
@@ -165,7 +144,7 @@ sdk_ret_t
 api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
     sdk_ret_t ret;
     api_base *api_obj;
-    api_obj_ctxt_t *obj_ctxt;
+    api_obj_ctxt_t *octxt;
 
     api_obj = api_base::find_obj(api_ctxt);
     if (api_obj == NULL) {
@@ -178,11 +157,11 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         PDS_TRACE_VERBOSE("Allocated api obj %p, api op %u, obj id %u",
                           api_obj, api_ctxt->api_op, api_ctxt->obj_id);
         // add it to dirty object list
-        obj_ctxt = api_obj_ctxt_alloc_();
-        obj_ctxt->api_op = API_OP_CREATE;
-        obj_ctxt->obj_id = api_ctxt->obj_id;
-        obj_ctxt->api_params = api_ctxt->api_params;
-        add_to_dirty_list_(api_obj, obj_ctxt);
+        octxt = api_obj_ctxt_alloc_();
+        octxt->api_op = API_OP_CREATE;
+        octxt->obj_id = api_ctxt->obj_id;
+        octxt->api_params = api_ctxt->api_params;
+        add_to_dirty_list_(api_obj, octxt);
         // initialize the object with the given config
         ret = api_obj->init_config(api_ctxt);
         if (unlikely(ret != SDK_RET_OK)) {
@@ -311,8 +290,8 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
-    api_obj_ctxt_t    *obj_ctxt;
-    api_base      *api_obj;
+    api_base *api_obj;
+    api_obj_ctxt_t *obj_ctxt;
 
     // look for the object in the cfg db
     api_obj = api_base::find_obj(api_ctxt);
@@ -459,6 +438,8 @@ sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
     sdk_ret_t     ret = SDK_RET_OK;
 
+    PDS_TRACE_DEBUG("Performing api op %u on api object %u",
+                    api_ctxt->api_op, api_ctxt->obj_id);
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                        sdk::SDK_RET_INVALID_OP);
     switch (api_ctxt->api_op) {
@@ -1059,12 +1040,8 @@ api_engine::batch_abort_(void) {
 }
 
 sdk_ret_t
-api_engine::batch_commit(batch_info_t *batch) {
-    sdk_ret_t    ret;
-
-    batch_ctxt_.epoch = batch->epoch;
-    batch_ctxt_.stage = API_BATCH_STAGE_INIT;
-    batch_ctxt_.api_ctxts = &batch->apis;
+api_engine::batch_commit_phase1_(void) {
+    sdk_ret_t ret;
 
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
@@ -1107,18 +1084,17 @@ api_engine::batch_commit(batch_info_t *batch) {
     PDS_TRACE_INFO("Dependency object list size %u, map size %u",
                    batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
     PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
+    return SDK_RET_OK;
 
-    if (batch_ctxt_.pds_msgs) {
-        // if this API batch contains any config messages that are of interest
-        // to other components, send a batched config msg now
-        ret = pds_msg_send_(batch_ctxt_.pds_msgs);
-        if (ret != SDK_RET_OK) {
-            PDS_API_COMMIT_COUNTER_INC(ipc_err, 1);
-            PDS_TRACE_ERR("Failed to send cfg batch to %u over ipc, err %u",
-                          PDS_IPC_ID_VPP, ret);
-            goto error;
-        }
-    }
+error:
+
+    PDS_TRACE_ERR("Batch commit phase 1 failed, err %u", ret);
+    return ret;
+}
+
+sdk_ret_t
+api_engine::batch_commit_phase2_(void) {
+    sdk_ret_t ret;
 
     // walk over the dirty object list, performe the de-duped operation on
     // each object including allocating resources and h/w programming (with the
@@ -1148,7 +1124,7 @@ api_engine::batch_commit(batch_info_t *batch) {
     impl_base::pipeline_impl()->table_transaction_end();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
-        return ret;
+        // fall thru
     }
 
     // update the epoch to current epoch
@@ -1160,6 +1136,76 @@ api_engine::batch_commit(batch_info_t *batch) {
     SDK_ASSERT(batch_ctxt_.aol.size() == 0);
     SDK_ASSERT(batch_ctxt_.aom.size() == 0);
     batch_ctxt_.clear();
+    return ret;
+
+error:
+
+    PDS_TRACE_ERR("Batch commit phase 2 failed, err %u", ret);
+    return ret;
+}
+
+void
+api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
+                                      const void *ctx) {
+    ipc_msg_ptr ipc_msg;
+    sdk_ret_t ret = *(sdk_ret_t *)msg->data();
+
+    SDK_TRACE_DEBUG("Received response to PDS_MSG_TYPE_CFG");
+    ipc_msg = api_engine_get()->ipc_msg();
+    if (ret == SDK_RET_OK) {
+        // resume processing the API batch
+        ret = api_engine_get()->batch_commit_phase2_();
+        if (ret != SDK_RET_OK) {
+            // abort the batch
+            api_engine_get()->batch_abort_();
+        }
+    } else {
+        // abort the batch
+        api_engine_get()->batch_abort_();
+    }
+
+    // send the response back to the caller
+    sdk::ipc::respond(ipc_msg, &ret, sizeof(ret));
+}
+
+void
+api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG,
+                      msgs, core::pds_msg_list_size(msgs),
+                      process_ipc_async_result_, NULL);
+}
+
+sdk_ret_t
+api_engine::batch_commit(api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg) {
+    sdk_ret_t    ret;
+    batch_info_t *batch = &api_msg->batch;
+
+    // init batch context
+    batch_ctxt_.ipc_msg = ipc_msg;
+    batch_ctxt_.epoch = batch->epoch;
+    batch_ctxt_.stage = API_BATCH_STAGE_INIT;
+    batch_ctxt_.api_ctxts = &batch->apis;
+
+    ret = batch_commit_phase1_();
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
+
+#if 0
+    // if this API batch contains any config messages that are of interest
+    // to other components, send a batched config msg now
+    if (batch_ctxt_.pds_msgs) {
+        pds_msg_send_(batch_ctxt_.pds_msgs);
+        return sdk::SDK_RET_IN_PROGRESS;
+    }
+#endif
+
+    // this batch of APIs can be processed further as we don't need to wait to
+    // hear from other components
+    ret = batch_commit_phase2_();
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
     return SDK_RET_OK;
 
 error:
