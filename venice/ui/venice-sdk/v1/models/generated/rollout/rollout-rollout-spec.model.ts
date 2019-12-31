@@ -40,14 +40,14 @@ Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:0
 This setting is applicable only to DistributedServiceCards.
 Controller nodes are always upgraded one after another. */
     'max-parallel': number = null;
-    /** After these many failures are observed during NIC upgrade, the rollout process stops
-This setting applies to smartNICs only.
+    /** After these many failures are observed during DSC upgrade, the rollout process stops
+This setting applies to DSCs only.
 The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards. */
     'max-nic-failures-before-abort': number = null;
     /** If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
 if a DistributedServiceCard matches multiple constraints, the first one is used.
  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
-This order is mainly for the smartNICs on Hosts
+This order is mainly for the DSCs on Hosts
 Controller nodes are always rollout one after other. */
     'order-constraints': Array<LabelsSelector> = null;
     /** When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
@@ -55,7 +55,7 @@ Controller nodes are always rollout one after other. */
     'suspend': boolean = null;
     /** Dont upgrade Controller but only upgrade DistributedServiceCards. */
     'dscs-only': boolean = null;
-    /** When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout. */
+    /** When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout. */
     'dsc-must-match-constraint': boolean = null;
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
     /** If enabled, will retry rollout of failed naples within the maintenance window upto a max of 5 times. */
@@ -89,12 +89,12 @@ Controller nodes are always rollout one after other. */
             type: 'number'
         },
         'max-nic-failures-before-abort': {
-            description:  `After these many failures are observed during NIC upgrade, the rollout process stops This setting applies to smartNICs only. The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.`,
+            description:  `After these many failures are observed during DSC upgrade, the rollout process stops This setting applies to DSCs only. The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.`,
             required: false,
             type: 'number'
         },
         'order-constraints': {
-            description:  `If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used.  Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the smartNICs on Hosts Controller nodes are always rollout one after other.`,
+            description:  `If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used.  Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the DSCs on Hosts Controller nodes are always rollout one after other.`,
             required: false,
             type: 'object'
         },
@@ -109,7 +109,7 @@ Controller nodes are always rollout one after other. */
             type: 'boolean'
         },
         'dsc-must-match-constraint': {
-            description:  `When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.`,
+            description:  `When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout.`,
             required: false,
             type: 'boolean'
         },

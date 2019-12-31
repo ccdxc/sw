@@ -45,15 +45,15 @@ message RolloutSpec {
     // Controller nodes are always upgraded one after another.
     uint32 MaxParallel                          = 5 [(venice.default)="2", (gogoproto.jsontag) = "max-parallel"];
 
-    // After these many failures are observed during NIC upgrade, the rollout process stops
-    // This setting applies to smartNICs only.
+    // After these many failures are observed during DSC upgrade, the rollout process stops
+    // This setting applies to DSCs only.
     // The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.
     uint32 MaxNICFailuresBeforeAbort           = 6 [(gogoproto.jsontag) = "max-nic-failures-before-abort"];
 
     // If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
     // if a DistributedServiceCard matches multiple constraints, the first one is used.
     //  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
-    // This order is mainly for the smartNICs on Hosts
+    // This order is mainly for the DSCs on Hosts
     // Controller nodes are always rollout one after other.
     repeated labels.Selector OrderConstraints   = 7 [(gogoproto.jsontag) = "order-constraints,omitempty"];
 
@@ -64,7 +64,7 @@ message RolloutSpec {
     // Dont upgrade Controller but only upgrade DistributedServiceCards.
     bool DSCsOnly                          = 9 [(gogoproto.jsontag) = "dscs-only,omitempty"];
 
-    // When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.
+    // When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout.
     bool DSCMustMatchConstraint            = 10 [(gogoproto.jsontag) = "dsc-must-match-constraint,omitempty"];
 
     // By default the upgrade is Disruptive. However the API can specify the type of upgrade.

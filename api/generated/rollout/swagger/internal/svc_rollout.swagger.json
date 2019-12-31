@@ -601,7 +601,7 @@
           },
           {
             "name": "spec.max-nic-failures-before-abort",
-            "description": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.",
+            "description": "After these many failures are observed during DSC upgrade, the rollout process stops\nThis setting applies to DSCs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -625,7 +625,7 @@
           },
           {
             "name": "spec.dsc-must-match-constraint",
-            "description": "When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.",
+            "description": "When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -1501,14 +1501,14 @@
         "max-nic-failures-before-abort": {
           "type": "integer",
           "format": "int64",
-          "description": "After these many failures are observed during NIC upgrade, the rollout process stops\nThis setting applies to smartNICs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards."
+          "description": "After these many failures are observed during DSC upgrade, the rollout process stops\nThis setting applies to DSCs only.\nThe controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards."
         },
         "order-constraints": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/labelsSelector"
           },
-          "description": "If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.\nif a DistributedServiceCard matches multiple constraints, the first one is used.\n Any DistributedServiceCard which does not match the constraints is upgraded at the end.\nThis order is mainly for the smartNICs on Hosts\nController nodes are always rollout one after other."
+          "description": "If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.\nif a DistributedServiceCard matches multiple constraints, the first one is used.\n Any DistributedServiceCard which does not match the constraints is upgraded at the end.\nThis order is mainly for the DSCs on Hosts\nController nodes are always rollout one after other."
         },
         "suspend": {
           "type": "boolean",
@@ -1523,7 +1523,7 @@
         "dsc-must-match-constraint": {
           "type": "boolean",
           "format": "boolean",
-          "description": "When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout."
+          "description": "When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout."
         },
         "upgrade-type": {
           "type": "string",

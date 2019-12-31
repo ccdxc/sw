@@ -397,14 +397,14 @@ type RolloutSpec struct {
 	// This setting is applicable only to DistributedServiceCards.
 	// Controller nodes are always upgraded one after another.
 	MaxParallel uint32 `protobuf:"varint,5,opt,name=MaxParallel,json=max-parallel,proto3" json:"max-parallel"`
-	// After these many failures are observed during NIC upgrade, the rollout process stops
-	// This setting applies to smartNICs only.
+	// After these many failures are observed during DSC upgrade, the rollout process stops
+	// This setting applies to DSCs only.
 	// The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards.
 	MaxNICFailuresBeforeAbort uint32 `protobuf:"varint,6,opt,name=MaxNICFailuresBeforeAbort,json=max-nic-failures-before-abort,proto3" json:"max-nic-failures-before-abort"`
 	// If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
 	// if a DistributedServiceCard matches multiple constraints, the first one is used.
 	//  Any DistributedServiceCard which does not match the constraints is upgraded at the end.
-	// This order is mainly for the smartNICs on Hosts
+	// This order is mainly for the DSCs on Hosts
 	// Controller nodes are always rollout one after other.
 	OrderConstraints []*labels.Selector `protobuf:"bytes,7,rep,name=OrderConstraints,json=order-constraints,omitempty" json:"order-constraints,omitempty"`
 	// When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
@@ -412,7 +412,7 @@ type RolloutSpec struct {
 	Suspend bool `protobuf:"varint,8,opt,name=Suspend,json=suspend,omitempty,proto3" json:"suspend,omitempty"`
 	// Dont upgrade Controller but only upgrade DistributedServiceCards.
 	DSCsOnly bool `protobuf:"varint,9,opt,name=DSCsOnly,json=dscs-only,omitempty,proto3" json:"dscs-only,omitempty"`
-	// When DSCMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout.
+	// When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout.
 	DSCMustMatchConstraint bool `protobuf:"varint,10,opt,name=DSCMustMatchConstraint,json=dsc-must-match-constraint,omitempty,proto3" json:"dsc-must-match-constraint,omitempty"`
 	//
 	UpgradeType string `protobuf:"bytes,11,opt,name=UpgradeType,json=upgrade-type,proto3" json:"upgrade-type"`
