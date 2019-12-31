@@ -6,7 +6,9 @@
             "gw-ip-addr": "1.0.0.1",
             "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "dual-stack": "true"
+            "dual-stack": "true",
+            "encap": "vxlan",
+            "host-mode": "true"
         },
         {
             "kind" : "tep",
@@ -48,6 +50,15 @@
             "locals" : "8",
             "nat-prefix" : "3.0.0.0/8",
             "v6-nat-prefix": "2020::/96"
+        },
+        {
+            "kind" : "svc-mappings",
+            "v4-vip-prefix" : "5.0.0.0/8",
+            "v6-vip-prefix" : "2022::/96"
+        },
+        {
+            "kind" : "napt",
+            "napt-prefix" : "6.0.0.0/8"
         },
         {
             "kind" : "mirror",

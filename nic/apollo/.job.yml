@@ -238,6 +238,15 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/valgrind:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtests-valgrind"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
   metaswitch/hals_test:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/metaswitch_hals_test"]
     owners: ["email:vijasrin@pensando.io"]
