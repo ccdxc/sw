@@ -240,6 +240,7 @@ event_thread::~event_thread() {
 
 void*
 event_thread::event_thread_entry_(void *ctx) {
+    SDK_THREAD_DFRD_TERM_INIT(ctx);
     ((event_thread *)ctx)->run_();
     return NULL;
 }
@@ -332,7 +333,7 @@ event_thread::run_(void) {
     t_event_thread_ = this;
 
     sdk::ipc::ipc_init_async(this->thread_id(), create_ipc_watcher, this);
-    
+
     if (this->init_func_) {
         this->init_func_(this->user_ctx_);
     }

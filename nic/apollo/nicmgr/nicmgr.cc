@@ -47,10 +47,6 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     sdk::event_thread::event_thread *curr_thread;
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
 
-    // opting for graceful termination as fd wait used by evpoll
-    // is part of pthread_cancel list
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
-
     // get pds state
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
     curr_thread = (sdk::event_thread::event_thread *)ctxt;
