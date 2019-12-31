@@ -829,7 +829,7 @@ func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "NBB_PUT_LONG"
 	}
-	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
+	if (protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES || protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING) && camInfoFieldTypeName == "byteArray" {
 		if f.SetKeyOidLenIndex != "" || f.FieldHasLen == true {
 			return "pds_ms_set_string_in_byte_array_with_len"
 		}
@@ -842,7 +842,7 @@ func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "pds_ms_nbb_get_long"
 	}
-	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING && camInfoFieldTypeName == "byteArray" {
+	if (protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES || protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING) && camInfoFieldTypeName == "byteArray" {
 		if f.GetKeyOidLenIndex != "" || f.FieldHasLen == true {
 			return "pds_ms_get_string_in_byte_array_with_len"
 		}
