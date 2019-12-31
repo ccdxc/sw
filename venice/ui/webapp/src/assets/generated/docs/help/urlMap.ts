@@ -12,7 +12,7 @@ export const UrlMap: { [url: string]: string } = {
   '/monitoring/fwlogs': 'fwlogs',
   '/monitoring/fwlogs/fwlogpolicies': 'fwlogs',
   '/troubleshoot/flowexport': 'flowexport',
-  '/cluster/host': 'hosts',
+  '/cluster/hosts': 'hosts',
   '/monitoring/metrics': 'metrics',
   '/workload': 'workload',
   '/admin/upgrade/rollouts': 'systemupgrade',
