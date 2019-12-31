@@ -118,6 +118,9 @@ typedef int accel_status_code_t;
 
 typedef struct seq_queue_init_cmd seq_queue_init_cmd_t;
 typedef struct seq_queue_control_cmd seq_queue_control_cmd_t;
+typedef struct dev_cmd_db_s {
+    uint32_t    v;
+} dev_cmd_db_t;
 
 const char *accel_dev_opcode_str(uint32_t opcode);
 

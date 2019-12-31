@@ -185,15 +185,15 @@ AccelDev::AccelDev(devapi *dapi,
         cmb_mem_addr = ACCEL_DEV_ADDR_ALIGN(cmb_mem_addr, cmb_mem_size);
     }
 
+    NIC_LOG_DEBUG("{}: cmb_mem_addr: {:#x} cmb_mem_size: {}",
+                  DevNameGet(), cmb_mem_addr, cmb_mem_size);
+
     if (platform_is_hw(pd->platform_) &&
         (cmb_mem_size < ACCEL_DEV_SEQ_HBM_SIZE_MIN)) {
         NIC_LOG_ERR("{}: HBM aligned size {} is too small for {}",
                     DevNameGet(), cmb_mem_size, STORAGE_SEQ_HBM_HANDLE);
         throw;
     }
-
-    NIC_LOG_DEBUG("{}: cmb_mem_addr: {:#x} cmb_mem_size: {}",
-                  DevNameGet(), cmb_mem_addr, cmb_mem_size);
 
     // Create the device
     if (spec->pcie_port == 0xff) {

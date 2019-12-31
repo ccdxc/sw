@@ -56,6 +56,7 @@ public:
     void DevcmdHandler();
     void HalEventHandler(bool status);
     void SetHalClient(devapi *dapi);
+    void DelphiMountEventHandler(bool mounted);
 
     std::string GetName() { return spec->name; }
     const std::string& DevNameGet(void) { return spec->name; }

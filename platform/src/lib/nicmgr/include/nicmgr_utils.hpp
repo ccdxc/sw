@@ -5,6 +5,10 @@
 
 #define NIC_ASSERT(x)  assert(x)
 
+#define CASE(type)                                                            \
+    case type:                                                                \
+        return #type
+
 /* Offset of the field in the structure. */
 #define	fldoff(type, field) \
 	((int)&(((type *)0)->field))
@@ -17,10 +21,10 @@
 #define	strbase(type, addr, field) \
 	((type *)((char *)(addr) - fldoff(type, field)))
 
-#define DEVAPI_CHECK                                                    \
-    if (!dev_api) {                                                     \
-        NIC_LOG_ERR("{}: Uninitialized devapi", name);    \
-        return (IONIC_RC_EAGAIN);                                        \
+#define DEVAPI_CHECK                                                          \
+    if (!dev_api) {                                                           \
+        NIC_LOG_ERR("{}: Uninitialized devapi", name);                        \
+        return (IONIC_RC_EAGAIN);                                             \
     }
 
 

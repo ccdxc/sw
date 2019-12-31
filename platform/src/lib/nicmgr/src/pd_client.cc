@@ -4,6 +4,8 @@
 
 #include <cstring>
 
+#include "gen/platform/mem_regions.hpp"
+
 #include "nic/p4/common/defines.h"
 
 #include "logger.hpp"
@@ -16,9 +18,6 @@ using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
 #define ENTRY_TRACE_EN          true
-#define QSTATE_INFO_FILE_NAME  "lif_qstate_info.json"
-
-const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN            P4_P4PLUS_RXDMA_TBL_ID_INDEX_MIN
@@ -32,13 +31,15 @@ const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS    P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_PARAMS
 #endif
 
+const static char *kLif2QstateHBMLabel = MEM_REGION_NICMGRQSTATE_MAP_NAME;
+
 const static char *kNicmgrHBMLabel = MEM_REGION_NICMGR_NAME;
 const static uint32_t kNicmgrAllocUnit = 64;
 
 const static char *kDevcmdHBMLabel = MEM_REGION_DEVCMD_NAME;
 const static uint32_t kDevcmdAllocUnit = 4096;
 
-static uint8_t *memrev(uint8_t *block, size_t elnum)
+uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
 
@@ -70,7 +71,7 @@ PdClient::p4plus_rxdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
+#ifdef IRIS
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
@@ -128,7 +129,7 @@ PdClient::p4plus_txdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
+#ifdef IRIS
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
@@ -379,7 +380,7 @@ PdClient::create_dirs() {
         hal_cfg_path_ = "./";
         gen_dir_path_ = "./";
     } else {
-        gen_dir_path_ = string(hal_cfg_path_ + "gen/");
+        gen_dir_path_ = string(hal_cfg_path_ + "/gen");
         // check if the gen dir exists
         if (stat(gen_dir_path_.c_str(), &st) == -1) {
             // doesn't exist, try to create
@@ -401,43 +402,71 @@ PdClient::create_dirs() {
     return 0;
 }
 
-void PdClient::init(fwd_mode_t fwd_mode)
+static std::string
+hal_cfg_path()
 {
+    std::string hal_cfg_path;
+    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
+        hal_cfg_path = "/nic/conf/";
+    } else {
+        hal_cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    }
+
+    return hal_cfg_path;
+}
+
+static std::string
+mpart_cfg_path(std::string hal_cfg_path, sdk::lib::dev_forwarding_mode_t fwd_mode)
+{
+    std::string mpart_json;
+
     // WARNING -- this must be picked based on profile, this is guaranteed to be
     // broken soon
 #if defined(APOLLO)
-    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
+    mpart_json = hal_cfg_path + "/apollo/hbm_mem.json";
 #elif defined(ARTEMIS)
-    std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
+    mpart_json = hal_cfg_path + "/artemis/hbm_mem.json";
 #elif defined(APULU)
-    std::string mpart_json = hal_cfg_path_ + "/apulu/8g/hbm_mem.json";
+    mpart_json = hal_cfg_path + "/apulu/8g/hbm_mem.json";
 #elif defined(ATHENA)
-    std::string mpart_json = hal_cfg_path_ + "/athena/hbm_mem.json";
+    mpart_json = hal_cfg_path + "/athena/hbm_mem.json";
 #else
-    std::string mpart_json = fwd_mode == sdk::platform::FWD_MODE_CLASSIC ?
-            hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
-            hal_cfg_path_ + "/iris/hbm_mem.json";
+    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
+        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH)
+        mpart_json = hal_cfg_path + "/iris/hbm_mem.json";
+    else
+        mpart_json = hal_cfg_path + "/iris/hbm_classic_mem.json" ;
+#endif
+
+    return mpart_json;
+}
+
+void
+PdClient::init()
+{
+#ifdef IRIS
+    // initialize capri_state_pd
+    sdk::platform::capri::capri_state_pd_init(NULL);
 #endif
 
     int ret;
     NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
+
     NIC_LOG_DEBUG("Loading p4plus TxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
+
     NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
-    mp_ = mpartition::factory(mpart_json.c_str());
+    mp_ = mpartition::factory(mpart_cfg_path_.c_str());
     assert(mp_);
-#if defined(ARTEMIS)
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
-    SDK_ASSERT(ret == 0);
-#endif
+
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
+#ifdef IRIS
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
@@ -457,18 +486,27 @@ void PdClient::update(void)
     set_program_info();
 }
 
-PdClient* PdClient::factory(sdk::platform::platform_type_t platform, fwd_mode_t fwd_mode)
+PdClient* PdClient::factory(sdk::platform::platform_type_t platform,
+                            sdk::lib::dev_forwarding_mode_t fwd_mode)
 {
     int ret;
     PdClient *pdc = new PdClient();
 
     assert(pdc);
     pdc->platform_ = platform;
-    pdc->fwd_mode_ = fwd_mode;
-    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH")) + "/";
+
+    pdc->hal_cfg_path_ = hal_cfg_path();
+    NIC_LOG_INFO("HAL config path {}", pdc->hal_cfg_path_);
+
+    pdc->gen_dir_path_ = pdc->hal_cfg_path_ + "/gen";
+    NIC_LOG_INFO("GEN directory path {}", pdc->gen_dir_path_);
+
+    pdc->mpart_cfg_path_ = mpart_cfg_path(pdc->hal_cfg_path_, fwd_mode);
+    NIC_LOG_INFO("MPART config path {}", pdc->mpart_cfg_path_);
+
     ret = pdc->create_dirs();
     assert(ret == 0);
-    pdc->init(fwd_mode);
+    pdc->init();
 
     return pdc;
 }
@@ -626,7 +664,7 @@ PdClient::program_qstate(struct queue_info* queue_info,
 uint8_t
 PdClient::get_iq(uint8_t pcp_or_dscp)
 {
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
+#ifdef IRIS
     typedef struct pd_qos_dscp_cos_map_s {
         bool        is_dscp : 1 ;
         uint8_t     no_drop : 1;
@@ -842,7 +880,7 @@ PdClient::set_program_info()
 {
     NIC_LOG_DEBUG("Initializing Program Info ...");
     pinfo_ = program_info::factory((gen_dir_path_ +
-                                    "mpu_prog_info.json").c_str());
+                                    "/mpu_prog_info.json").c_str());
     assert(pinfo_);
     // lm_->set_program_info(pinfo_);
 }

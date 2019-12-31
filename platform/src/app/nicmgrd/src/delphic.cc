@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 
 #include "platform/src/lib/nicmgr/include/dev.hpp"
+#include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 
 #include "delphic.hpp"
 #include "nicmgrd.hpp"
@@ -24,7 +25,9 @@ using dobj::HalStatus;
 using sdk::types::port_oper_status_t;
 
 extern DeviceManager *devmgr;
+extern UpgradeMode upg_mode;
 extern const char* nicmgr_upgrade_state_file;
+extern const char* nicmgr_rollback_state_file;
 
 namespace nicmgr {
 
@@ -46,111 +49,120 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
 }
 
-static void retrieve_devices(std::vector <struct EthDevInfo *> &eth_info)
+static void restore_devices()
 {
-    std::vector <delphi::objects::EthDeviceInfoPtr> EthDevProtoObjs = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
+    std::vector <delphi::objects::EthDeviceInfoPtr> eth_proto_list =
+        delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
 
-    NIC_FUNC_DEBUG("Retrieving {} EthDevProto objects from Delphi", EthDevProtoObjs.size());
-    for (uint32_t idx = 0; idx < EthDevProtoObjs.size(); idx++) {
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return;
+    }
+
+    NIC_FUNC_DEBUG("Retreiving {} EthDevProto objects from Delphi", eth_proto_list.size());
+    for (auto it = eth_proto_list.begin(); it != eth_proto_list.end(); ++it) {
+
+        auto eth_proto_obj = *it;
         struct EthDevInfo *eth_dev_info = new EthDevInfo();
         struct eth_devspec *eth_spec = new eth_devspec();
         struct eth_dev_res *eth_res = new eth_dev_res();
 
         //populate the eth_res
-        eth_res->lif_base = EthDevProtoObjs[idx]->eth_dev_res().lif_base();
-        eth_res->intr_base = EthDevProtoObjs[idx]->eth_dev_res().intr_base();
-        eth_res->regs_mem_addr = EthDevProtoObjs[idx]->eth_dev_res().regs_mem_addr();
-        eth_res->port_info_addr = EthDevProtoObjs[idx]->eth_dev_res().port_info_addr();
-        eth_res->cmb_mem_addr = EthDevProtoObjs[idx]->eth_dev_res().cmb_mem_addr();
-        eth_res->cmb_mem_size = EthDevProtoObjs[idx]->eth_dev_res().cmb_mem_size();
-        eth_res->rom_mem_addr = EthDevProtoObjs[idx]->eth_dev_res().rom_mem_addr();
-        eth_res->rom_mem_size = EthDevProtoObjs[idx]->eth_dev_res().rom_mem_size();
+        eth_res->lif_base = eth_proto_obj->eth_dev_res().lif_base();
+        eth_res->intr_base = eth_proto_obj->eth_dev_res().intr_base();
+        eth_res->regs_mem_addr = eth_proto_obj->eth_dev_res().regs_mem_addr();
+        eth_res->port_info_addr = eth_proto_obj->eth_dev_res().port_info_addr();
+        eth_res->cmb_mem_addr = eth_proto_obj->eth_dev_res().cmb_mem_addr();
+        eth_res->cmb_mem_size = eth_proto_obj->eth_dev_res().cmb_mem_size();
+        eth_res->rom_mem_addr = eth_proto_obj->eth_dev_res().rom_mem_addr();
+        eth_res->rom_mem_size = eth_proto_obj->eth_dev_res().rom_mem_size();
 
         //populate the eth_spec
-        eth_spec->dev_uuid = EthDevProtoObjs[idx]->eth_dev_spec().dev_uuid();
-        eth_spec->eth_type = (EthDevType)EthDevProtoObjs[idx]->eth_dev_spec().eth_type();
-        eth_spec->name = EthDevProtoObjs[idx]->eth_dev_spec().name();
-        eth_spec->oprom = (OpromType)EthDevProtoObjs[idx]->eth_dev_spec().oprom();
-        eth_spec->pcie_port = EthDevProtoObjs[idx]->eth_dev_spec().pcie_port();
-        eth_spec->pcie_total_vfs = EthDevProtoObjs[idx]->eth_dev_spec().pcie_total_vfs();
-        eth_spec->host_dev = EthDevProtoObjs[idx]->eth_dev_spec().host_dev();
-        eth_spec->uplink_port_num = EthDevProtoObjs[idx]->eth_dev_spec().uplink_port_num();
-        eth_spec->qos_group = EthDevProtoObjs[idx]->eth_dev_spec().qos_group();
-        eth_spec->lif_count = EthDevProtoObjs[idx]->eth_dev_spec().lif_count();
-        eth_spec->rxq_count = EthDevProtoObjs[idx]->eth_dev_spec().rxq_count();
-        eth_spec->txq_count = EthDevProtoObjs[idx]->eth_dev_spec().txq_count();
-        eth_spec->adminq_count = EthDevProtoObjs[idx]->eth_dev_spec().adminq_count();
-        eth_spec->eq_count = EthDevProtoObjs[idx]->eth_dev_spec().eq_count();
+        eth_spec->dev_uuid = eth_proto_obj->eth_dev_spec().dev_uuid();
+        eth_spec->eth_type = (EthDevType)eth_proto_obj->eth_dev_spec().eth_type();
+        eth_spec->name = eth_proto_obj->eth_dev_spec().name();
+        eth_spec->oprom = (OpromType)eth_proto_obj->eth_dev_spec().oprom();
+        eth_spec->pcie_port = eth_proto_obj->eth_dev_spec().pcie_port();
+        eth_spec->pcie_total_vfs = eth_proto_obj->eth_dev_spec().pcie_total_vfs();
+        eth_spec->host_dev = eth_proto_obj->eth_dev_spec().host_dev();
+        eth_spec->uplink_port_num = eth_proto_obj->eth_dev_spec().uplink_port_num();
+        eth_spec->qos_group = eth_proto_obj->eth_dev_spec().qos_group();
+        eth_spec->lif_count = eth_proto_obj->eth_dev_spec().lif_count();
+        eth_spec->rxq_count = eth_proto_obj->eth_dev_spec().rxq_count();
+        eth_spec->txq_count = eth_proto_obj->eth_dev_spec().txq_count();
+        eth_spec->adminq_count = eth_proto_obj->eth_dev_spec().adminq_count();
+        eth_spec->eq_count = eth_proto_obj->eth_dev_spec().eq_count();
 
-        eth_spec->intr_count = EthDevProtoObjs[idx]->eth_dev_spec().intr_count();
-        eth_spec->mac_addr = EthDevProtoObjs[idx]->eth_dev_spec().mac_addr();
-        eth_spec->enable_rdma = EthDevProtoObjs[idx]->eth_dev_spec().enable_rdma();
-        eth_spec->pte_count = EthDevProtoObjs[idx]->eth_dev_spec().pte_count();
-        eth_spec->key_count = EthDevProtoObjs[idx]->eth_dev_spec().key_count();
-        eth_spec->ah_count = EthDevProtoObjs[idx]->eth_dev_spec().ah_count();
-        eth_spec->rdma_sq_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_sq_count();
-        eth_spec->rdma_rq_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_rq_count();
-        eth_spec->rdma_cq_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_cq_count();
-        eth_spec->rdma_eq_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_eq_count();
-        eth_spec->rdma_aq_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_aq_count();
-        eth_spec->rdma_pid_count = EthDevProtoObjs[idx]->eth_dev_spec().rdma_pid_count();
-        eth_spec->barmap_size = EthDevProtoObjs[idx]->eth_dev_spec().barmap_size();
+        eth_spec->intr_count = eth_proto_obj->eth_dev_spec().intr_count();
+        eth_spec->mac_addr = eth_proto_obj->eth_dev_spec().mac_addr();
+        eth_spec->enable_rdma = eth_proto_obj->eth_dev_spec().enable_rdma();
+        eth_spec->pte_count = eth_proto_obj->eth_dev_spec().pte_count();
+        eth_spec->key_count = eth_proto_obj->eth_dev_spec().key_count();
+        eth_spec->ah_count = eth_proto_obj->eth_dev_spec().ah_count();
+        eth_spec->rdma_sq_count = eth_proto_obj->eth_dev_spec().rdma_sq_count();
+        eth_spec->rdma_rq_count = eth_proto_obj->eth_dev_spec().rdma_rq_count();
+        eth_spec->rdma_cq_count = eth_proto_obj->eth_dev_spec().rdma_cq_count();
+        eth_spec->rdma_eq_count = eth_proto_obj->eth_dev_spec().rdma_eq_count();
+        eth_spec->rdma_aq_count = eth_proto_obj->eth_dev_spec().rdma_aq_count();
+        eth_spec->rdma_pid_count = eth_proto_obj->eth_dev_spec().rdma_pid_count();
+        eth_spec->barmap_size = eth_proto_obj->eth_dev_spec().barmap_size();
 
         eth_dev_info->eth_res = eth_res;
         eth_dev_info->eth_spec = eth_spec;
 
-        eth_info.push_back(eth_dev_info);
+        devmgr->RestoreDevice(ETH, eth_dev_info);
     }
 
 }
 
 static void restore_uplinks()
 {
-    std::vector <delphi::objects::UplinkInfoPtr> UplinkProtoObjs = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
+    std::vector <delphi::objects::UplinkInfoPtr> uplink_proto_list =
+        delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
 
-    NIC_FUNC_DEBUG("Retrieving {} UplinkProto objects from Delphi", UplinkProtoObjs.size());
-    for (uint32_t idx = 0; idx < UplinkProtoObjs.size(); idx++) {
-        devmgr->CreateUplinks(UplinkProtoObjs[idx]->id(), UplinkProtoObjs[idx]->port(), UplinkProtoObjs[idx]->is_oob());
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return;
+    }
+
+    NIC_FUNC_DEBUG("Retreiving {} UplinkProto objects from Delphi", uplink_proto_list.size());
+    for (auto it = uplink_proto_list.begin(); it != uplink_proto_list.end(); ++it) {
+        auto uplink_proto_obj = *it;
+        devmgr->CreateUplink(uplink_proto_obj->id(), uplink_proto_obj->port(),
+            uplink_proto_obj->is_oob());
     }
 }
 
 // OnMountComplete() gets called after all delphi objects are mounted
 void NicMgrService::OnMountComplete() {
-    std::vector <struct EthDevInfo *> eth_info;
-
     NIC_LOG_DEBUG("On mount complete got called");
 
     this->sysmgr_->init_done();
 
-    restore_uplinks();
-    retrieve_devices(eth_info);
-    NIC_FUNC_DEBUG("Retrieved {} eth_info objects from Delphi", eth_info.size());
-
-    // Restore eth devices retrieved from delphi db
-    if (eth_info.size()) {
-        //if we see the delphi object in normal boot then we should not use it and clean it up
-        if (devmgr->GetUpgradeMode() == FW_MODE_NORMAL_BOOT) {
-            // walk all objects and delete them
-            vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
-            for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
-                g_nicmgr_svc->sdk()->DeleteObject(*obj);
-            }
-        }
-        else {
-            devmgr->RestoreDevicesState(eth_info);
-
-            // All nicmgr objects are restored now so we can delete the file if exists
-            unlink(nicmgr_upgrade_state_file);
-        }
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return;
     }
 
-    // walk all port status objects and handle them
-    vector <delphi::objects::PortStatusPtr> list =
+    if (upg_mode == FW_MODE_UPGRADE) {
+        restore_uplinks();
+        restore_devices();
+    }
+
+    // handle hal status
+    std::vector <delphi::objects::HalStatusPtr> halstatus_list =
+        delphi::objects::HalStatus::List(sdk_);
+    for (auto it = halstatus_list.begin(); it != halstatus_list.end(); ++it) {
+        g_hal_status_handler->update_hal_status(*it);
+    }
+
+    // handle port status
+    std::vector <delphi::objects::PortStatusPtr> portstatus_list =
         delphi::objects::PortStatus::List(sdk_);
-    for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
-         port!=list.end(); ++port) {
-        g_port_status_handler->update_port_status(*port);
+    for (auto it = portstatus_list.begin(); it != portstatus_list.end(); ++it) {
+        g_port_status_handler->update_port_status(*it);
     }
+
     devmgr->DelphiMountEventHandler(true);
 }
 
@@ -181,15 +193,13 @@ Status init_port_status_handler (delphi::SdkPtr sdk) {
 // OnPortStatusCreate gets called when PortStatus object is created
 error port_status_handler::OnPortStatusCreate(PortStatusPtr portStatus) {
     NIC_LOG_DEBUG("Rcvd port status create");
-    update_port_status(portStatus);
-    return error::OK();
+    return update_port_status(portStatus);
 }
 
 // OnPortStatusUpdate gets called when PortStatus object is updated
 error port_status_handler::OnPortStatusUpdate(PortStatusPtr portStatus) {
     NIC_LOG_DEBUG("Rcvd port status update");
-    update_port_status(portStatus);
-    return error::OK();
+    return update_port_status(portStatus);
 }
 
 // OnPortStatusDelete gets called when PortStatus object is deleted
@@ -200,7 +210,6 @@ error port_status_handler::OnPortStatusDelete(PortStatusPtr portStatus) {
 
 // update_port_status_handler updates port status in delphi
 error port_status_handler::update_port_status(PortStatusPtr port) {
-    // create port status object
     if (!devmgr) {
         NIC_LOG_ERR("devmgr ptr is null");
         return error::OK();
@@ -208,6 +217,7 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
 
     // ignore if there is no link/xcvr event
     if (!port->has_link_status() && !port->has_xcvr_status()) {
+        NIC_LOG_ERR("Rcvd port status without link & xcvr status");
         return error::OK();
     }
 
@@ -320,18 +330,33 @@ Status init_hal_status_handler (delphi::SdkPtr sdk) {
     return Status::OK;
 }
 
+error hal_status_handler::update_hal_status(HalStatusPtr halStatus) {
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    if (!status && halStatus->state() == ::hal::HAL_STATE_UP) {
+        status = true;
+        devmgr->HalEventHandler(status);
+    } else if (status && halStatus->state() != ::hal::HAL_STATE_UP) {
+        status = false;
+        devmgr->HalEventHandler(status);
+    }
+
+    return error::OK();
+}
+
 // OnHalStatusCreate gets called when HalStatus object is created
 error hal_status_handler::OnHalStatusCreate(HalStatusPtr halStatus) {
     NIC_LOG_DEBUG("Rcvd OnHalStatusCreate notification for {}", halStatus->ShortDebugString());
-    devmgr->HalEventHandler(halStatus->state() == ::hal::HAL_STATE_UP);
-    return error::OK();
+    return update_hal_status(halStatus);
 }
 
 // OnHalStatusUpdate gets called when HalStatus object is updated
 error hal_status_handler::OnHalStatusUpdate(HalStatusPtr halStatus) {
     NIC_LOG_DEBUG("Rcvd OnHalStatusUpdate notification for {}", halStatus->ShortDebugString());
-    devmgr->HalEventHandler(halStatus->state() == ::hal::HAL_STATE_UP);
-    return error::OK();
+    return update_hal_status(halStatus);
 }
 
 // init_accel_objects mounts accelerator objects

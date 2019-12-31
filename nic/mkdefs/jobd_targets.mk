@@ -376,10 +376,8 @@ jobd/gtests: ${JOBD_PREREQS}
 .PHONY: jobd/gtests/platform
 jobd/gtests/platform: ${JOBD_PREREQS}
 	${NICDIR}/tools/trace_valid.py ${NICDIR}/../platform
-	./run.py ${COVERAGE_OPTS} --nicmgr_gtest --classic --testcase test1,test2
-	./run.py ${COVERAGE_OPTS} --nicmgr_gtest --classic --testcase test3
-	./run.py ${COVERAGE_OPTS} --nicmgr_gtest --testcase test1,test2
-	./run.py ${COVERAGE_OPTS} --nicmgr_gtest --testcase test3
+	./run.py ${COVERAGE_OPTS} --nicmgr_gtest --classic
+	./run.py ${COVERAGE_OPTS} --nicmgr_gtest
 
 .PHONY: jobd/gtests-valgrind
 jobd/gtests-valgrind: ${JOBD_PREREQS}

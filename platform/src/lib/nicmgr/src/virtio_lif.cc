@@ -18,15 +18,16 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
-
 #include "nic/asm/eth/virtio_defines.h"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/include/edmaq.h"
+
 #include "logger.hpp"
+#include "nicmgr_utils.hpp"
 #include "virtio_dev.hpp"
 #include "virtio_lif.hpp"
 #include "pd_client.hpp"
 #include "adminq.hpp"
-#include "nic/include/edmaq.h"
 
 using namespace std;
 

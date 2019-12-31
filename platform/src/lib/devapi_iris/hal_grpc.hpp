@@ -165,7 +165,6 @@ class hal_grpc {
 private:
     static hal_grpc *hal_;
     bool micro_seg_en_;
-    // fwd_mode_t fwd_mode_;
     // API stubs
     std::unique_ptr<vrf::Vrf::Stub> vrf_stub_;
     std::unique_ptr<intf::Interface::Stub> interface_stub_;
@@ -193,11 +192,6 @@ public:
 
     // Make GRPC connection to HAL
     sdk_ret_t connect_hal(void);
-
-#if 0
-    void set_fwd_mode(fwd_mode_t fwd_mode) { fwd_mode_ = fwd_mode; }
-    fwd_mode_t get_fwd_mode(void) { return fwd_mode_; }
-#endif
 
     void set_micro_seg_en(bool en) { micro_seg_en_ = en; }
     bool get_micro_seg_en(void) { return micro_seg_en_; }

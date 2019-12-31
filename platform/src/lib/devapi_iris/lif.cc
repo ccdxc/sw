@@ -230,13 +230,6 @@ devapi_lif::get_max_filters(uint32_t *ucast_filters,
                             uint32_t *mcast_filters)
 {
     *ucast_filters = *mcast_filters = MAX_FILTERS;
-#if 0
-    if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC) {
-        *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
-    } else {
-        *ucast_filters = *mcast_filters = MAX_FILTERS_SMART;
-    }
-#endif
     return SDK_RET_OK;
 }
 
@@ -1406,7 +1399,7 @@ devapi_lif::is_classicfwd(vlan_t vlan)
     //   - ARM OOB - All traffic
     //   TODO: This is causing vlans to be created in GS case.
     // if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ||
-    if (!hal->get_micro_seg_en() || 
+    if (!hal->get_micro_seg_en() ||
         (is_hostmgmt() || is_intmgmtmnic() ||
          is_oobmnic() || vlan == NATIVE_VLAN_ID)) {
         return true;

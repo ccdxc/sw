@@ -3,7 +3,6 @@
 #ifndef __SDK_DEVICE_HPP__
 #define __SDK_DEVICE_HPP__
 
-#include <map>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "include/sdk/base.hpp"

@@ -69,20 +69,23 @@ nicmgr_if_init(void)
     /*
      * Initializations needed by libnicmgr
      */
-    utils::logger::init(true);
+    utils::logger::init(false);
     sdk_init();
-    sdk::platform::capri::capri_state_pd_init(NULL);
+    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
+                    sdk::lib::FORWARDING_MODE_NONE, false);
+    if (!devmgr) {
+        fprintf(stderr, "Failed to init device manager\n");
+        return -1;
+    }
+    devmgr->LoadProfile(FLAGS_nicmgr_config_file, false);
+    devmgr->HalEventHandler(true);
 
     /*
      * Interface with the Accel device directly
      */
-    devmgr = new DeviceManager(FLAGS_nicmgr_config_file,
-                               sdk::platform::FWD_MODE_CLASSIC, false, platform_type_t::PLATFORM_TYPE_SIM);
-    devmgr->LoadConfig(FLAGS_nicmgr_config_file);
-    devmgr->HalEventHandler(true);
     accel_dev = (AccelDev *)devmgr->GetDevice(DEVMGR_ACCEL_DEV_NAME);
     if (!accel_dev) {
-        printf("Failed to locate Accel device\n");
+        fprintf(stderr, "Failed to locate Accel device\n");
         return -1;
     }
     qstate_if::set_nicmgr_pd_client(devmgr->GetPdClient());

@@ -19,6 +19,8 @@
 #include <iostream>
 #include <fstream>
 #include <dirent.h>
+
+#include "include/sdk/platform.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/base.hpp"
 

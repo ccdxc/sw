@@ -18,6 +18,8 @@ struct pciehcfg_s;
 typedef struct pciehcfg_s pciehcfg_t;
 struct pciehbars_s;
 typedef struct pciehbars_s pciehbars_t;
+struct pciemgr_params_s;
+typedef struct pciemgr_params_s pciemgr_params_t;
 
 typedef enum pciehdev_event_e {
     PCIEHDEV_EV_NONE,

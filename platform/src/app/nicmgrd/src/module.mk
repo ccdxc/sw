@@ -27,7 +27,8 @@ MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
                     ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                     ${NIC_CAPSIM_LDLIBS}
 MODULE_INCS     := ${BLD_PROTOGEN_DIR}/ \
-	               ${TOPDIR}/nic/sdk/platform/devapi \
-				   ${BLD_P4GEN_DIR}/common_rxdma_actions/include  \
-				   ${BLD_P4GEN_DIR}/common_txdma_actions/include
+                    ${TOPDIR}/nic/sdk/platform/devapi \
+                    ${TOPDIR}/platform/src/lib/nicmgr/include \
+                    ${BLD_P4GEN_DIR}/common_rxdma_actions/include  \
+                    ${BLD_P4GEN_DIR}/common_txdma_actions/include
 include ${MKDEFS}/post.mk

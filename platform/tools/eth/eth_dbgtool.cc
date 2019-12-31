@@ -24,6 +24,7 @@
 #include "platform/src/lib/nicmgr/include/virtio_if.h"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"
 #include "platform/src/lib/nicmgr/include/rdma_dev.hpp"
@@ -1980,7 +1981,7 @@ hal_cfg_path()
 {
     std::string hal_cfg_path_;
     if (std::getenv("HAL_CONFIG_PATH") == NULL) {
-        hal_cfg_path_ = "/nic/conf";
+        hal_cfg_path_ = "/nic/conf/";
     } else {
         hal_cfg_path_ = std::string(std::getenv("HAL_CONFIG_PATH"));
     }
@@ -1988,32 +1989,31 @@ hal_cfg_path()
     return hal_cfg_path_;
 }
 
-int
-fwd_mode()
-{
-    boost::property_tree::ptree spec;
-    boost::property_tree::read_json("/sysconfig/config0/device.conf", spec);
-
-    return spec.get<int>("forwarding-mode");
-}
-
 std::string
 mpart_cfg_path()
 {
+    std::string mpart_json;
     std::string hal_cfg_path_ = hal_cfg_path();
+    sdk::lib::device *device =
+        sdk::lib::device::factory("/sysconfig/config0/device.conf");
+    sdk::lib::dev_forwarding_mode_t fwd_mode = device->get_forwarding_mode();
 
+    // WARNING -- this must be picked based on profile, this is guaranteed to be
+    // broken soon
 #if defined(APOLLO)
-    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
+    mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #elif defined(ARTEMIS)
-    std::string mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
+    mpart_json = hal_cfg_path_ + "/artemis/hbm_mem.json";
 #elif defined(APULU)
-    std::string mpart_json = hal_cfg_path_ + "/apulu/hbm_mem.json";
+    mpart_json = hal_cfg_path_ + "/apulu/8g/hbm_mem.json";
 #elif defined(ATHENA)
-    std::string mpart_json = hal_cfg_path_ + "/athena/hbm_mem.json";
+    mpart_json = hal_cfg_path_ + "/athena/hbm_mem.json";
 #else
-    std::string mpart_json = fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ?
-            hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
-            hal_cfg_path_ + "/iris/hbm_mem.json";
+    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
+        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH)
+        mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
+    else
+        mpart_json = hal_cfg_path_ + "/iris/hbm_classic_mem.json" ;
 #endif
 
     return mpart_json;

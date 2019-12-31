@@ -1,41 +1,42 @@
 /*
-* Copyright (c) 2018, Pensando Systems Inc.
-*/
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
 
 #ifndef __ETH_DEV_HPP__
 #define __ETH_DEV_HPP__
 
-#include <map>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <map>
 
-#include "nic/include/notify.hpp"
 #include "nic/include/eth_common.h"
+#include "nic/include/notify.hpp"
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #endif
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "device.hpp"
-#include "pd_client.hpp"
 #include "eth_lif.hpp"
+#include "pd_client.hpp"
 
 namespace pt = boost::property_tree;
 
 // Doorbell address
-#define UPD_BITS_POSITION   (17)
-#define LIF_BITS_POSITION   (6)
+#define UPD_BITS_POSITION (17)
+#define LIF_BITS_POSITION (6)
 
-#define DOORBELL_ADDR(lif_num) \
+#define DOORBELL_ADDR(lif_num)                                                                    \
     ((0x8400000) | (0xb << UPD_BITS_POSITION) | (lif_num << LIF_BITS_POSITION))
 
 #define DEVCMD_TIMEOUT 5
+
 /**
  * ETH Device type
  */
@@ -49,8 +50,6 @@ typedef enum EthDevType_s {
     ETH_MNIC_CPU,
     ETH_MNIC_LEARN,
 } EthDevType;
-
-const char *eth_dev_type_to_str(EthDevType type);
 
 struct eth_dev_res {
     uint32_t lif_base;
@@ -105,7 +104,7 @@ struct eth_devspec {
     uint32_t rdma_aq_count;
     uint32_t rdma_num_dcqcn_profiles;
     uint32_t rdma_pid_count;
-    uint32_t barmap_size;    // in 8MB units
+    uint32_t barmap_size; // in 8MB units
 };
 
 struct EthDevInfo {
@@ -116,28 +115,19 @@ struct EthDevInfo {
 /**
  * ETH PF Device
  */
-class Eth : public Device {
-public:
-    Eth(devapi *dev_api,
-         void *dev_spec,
-         PdClient *pd_client,
-         EV_P);
-    Eth(devapi *dev_api,
-        struct EthDevInfo *dev_info,
-        PdClient *pd_client,
-        EV_P);
-    static std::vector<Eth*> factory(enum DeviceType type, devapi *dev_api,
-         void *dev_spec,
-         PdClient *pd_client,
-         EV_P);
+class Eth : public Device
+{
+  public:
+    Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
+    Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P);
+    static std::vector<Eth *> factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
 
     std::string GetName() { return spec->name; }
-    EthDevType GetType() { return spec->eth_type; }
+    EthDevType GetEthType() { return spec->eth_type; }
 
     void DevcmdHandler();
     status_code_t CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t CmdHandler(void *req, void *req_data,
-                                 void *resp, void *resp_data);
+    status_code_t CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
     static struct eth_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
 
     static lif_type_t ConvertDevTypeToLifType(EthDevType dev_type);
@@ -146,6 +136,7 @@ public:
     void XcvrEventHandler(port_status_t *evd);
     void QuiesceEventHandler(bool quiesce);
     void HalEventHandler(bool status);
+    void DelphiMountEventHandler(bool mounted);
     status_code_t Reset();
     void PcieResetEventHandler(uint32_t rsttype);
 
@@ -163,7 +154,7 @@ public:
     int SendFWDownEvent();
     void GetEthDevInfo(struct EthDevInfo *dev_info);
 
-private:
+  private:
     // Device Spec
     const struct eth_devspec *spec;
     // Info
@@ -210,10 +201,8 @@ private:
 
     void DevcmdRegsReset();
 
-    //Lif ref cnt
+    // Lif ref cnt
     uint32_t active_lif_ref_cnt;
-
-    static EthDevType eth_dev_type_str_to_type(std::string const& s);
 
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
@@ -243,6 +232,9 @@ private:
     static void StatsUpdateComplete(void *obj);
     static void PortConfigUpdate(void *obj);
     static void PortStatusUpdate(void *obj);
+
+    static std::string eth_type_to_str(EthDevType type);
+    static EthDevType str_to_eth_type(std::string const &s);
 
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);

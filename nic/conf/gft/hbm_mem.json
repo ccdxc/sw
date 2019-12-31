@@ -19,6 +19,10 @@
             "cache": "p4plus-all"
         },
         {
+            "name": "nicmgrqstate_map",
+            "size": "32768K"
+        },
+        {
             "name": "arq-rx",
             "size": "64K"
         },

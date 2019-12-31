@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 
-#include "nic/sdk/platform/capri/capri_state.hpp"
-#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
@@ -29,15 +28,12 @@ using namespace std::chrono;
 
 using namespace std;
 
-class pciemgr *pciemgr;
-
-fwd_mode_t g_fwd_mode = sdk::platform::FWD_MODE_SMART;
-
 namespace nicmgr {
 shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
 }
 
 DeviceManager *devmgr = NULL;
+sdk::lib::dev_forwarding_mode_t g_fwd_mode;
 
 void
 create_uplinks()
@@ -100,38 +96,6 @@ create_uplinks()
 #endif
 }
 
-void
-nicmgr_init()
-{
-    // initialize capri_state_pd
-    sdk::platform::capri::capri_state_pd_init(NULL);
-
-    // DeviceManager *devmgr;
-    if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
-        devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
-                              g_fwd_mode, false,
-                              platform_type_t::PLATFORM_TYPE_HW);
-    } else {
-        devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
-                              g_fwd_mode, true,
-                              platform_type_t::PLATFORM_TYPE_HW);
-    }
-    EXPECT_TRUE(devmgr != NULL);
-
-    devmgr->SetUpgradeMode(FW_MODE_NORMAL_BOOT);
-
-    // load config
-    if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
-    } else {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
-    }
-
-    devmgr->HalEventHandler(true);
-}
-
 static int
 sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
@@ -150,6 +114,18 @@ static void
 sdk_init (void)
 {
     sdk::lib::logger::init(sdk_trace_cb);
+}
+
+void
+nicmgr_init()
+{
+    utils::logger::init(false);
+    sdk_init();
+    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
+                    sdk::lib::FORWARDING_MODE_NONE, false);
+    EXPECT_TRUE(devmgr != NULL);
+    devmgr->LoadProfile("../platform/src/app/nicmgrd/etc/eth.json", false);
+    devmgr->HalEventHandler(true);
 }
 
 class nicmgr_test : public ::testing::Test {
@@ -521,16 +497,14 @@ TEST_F(nicmgr_test, test3)
 
 int main(int argc, char **argv) {
     printf("In main test.....");
-    utils::logger::init(false);
-    sdk_init();
     // sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--classic") == 0) {
-            g_fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
+            g_fwd_mode = sdk::lib::FORWARDING_MODE_CLASSIC;
         }
     }
     printf("\n------------------ Executing tests in mode: %s ---------------------\n",
-           (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) ? "CLASSIC" : "SMART");
+           (g_fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC) ? "CLASSIC" : "SMART");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

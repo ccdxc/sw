@@ -6,6 +6,7 @@
  * @brief   RFC tree related helper APIs
  */
 
+#include "include/sdk/platform.hpp"
 #include "nic/apollo/api/impl/rfc/rfc.hpp"
 #include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
 #include "nic/apollo/api/impl/rfc/rfc_impl.hpp"

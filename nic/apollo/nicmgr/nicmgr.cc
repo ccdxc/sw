@@ -24,7 +24,6 @@
 /// \defgroup PDS_NICMGR
 /// @{
 
-pciemgr *pciemgr;
 DeviceManager *g_devmgr;
 sdk::event_thread::prepare_t g_ev_prepare;
 
@@ -45,7 +44,6 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     pds_state *state;
     string config_file;
     sdk::event_thread::event_thread *curr_thread;
-    fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
 
     // get pds state
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
@@ -62,23 +60,10 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     // initialize device manager
     PDS_TRACE_INFO("Initializing device manager ...");
-    g_devmgr = new DeviceManager(config_file, fwd_mode, false,
-                                 state->platform_type(),
+    g_devmgr = new DeviceManager(state->platform_type(),
+                                 sdk::lib::FORWARDING_MODE_NONE, false,
                                  curr_thread->ev_loop());
-
-    // initialize pciemgr
-    if (platform_is_hw(state->platform_type())) {
-        PDS_TRACE_INFO("initializing pciemgr");
-        pciemgr = new class pciemgr("nicmgrd", g_devmgr->pcie_evhandler,
-                                    curr_thread->ev_loop());
-        pciemgr->initialize();
-    }
-
-    g_devmgr->LoadConfig(config_file);
-
-    if (pciemgr) {
-        pciemgr->finalize();
-    }
+    g_devmgr->LoadProfile(config_file, true);
 
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
@@ -95,9 +80,6 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 void
 nicmgrapi::nicmgr_thread_exit(void *ctxt) {
     delete g_devmgr;
-    if (pciemgr) {
-        delete pciemgr;
-    }
     sdk::event_thread::prepare_stop(&g_ev_prepare);
 }
 

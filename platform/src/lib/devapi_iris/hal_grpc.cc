@@ -67,8 +67,7 @@ hal_grpc::connect_hal(void)
 
     channel = grpc::CreateChannel(svc_url, grpc::InsecureChannelCredentials());
 
-    // cout << "[INFO] Waiting for HAL to be ready ..." << endl;
-    NIC_LOG_DEBUG("Waiting for HAL to be ready at: {}", svc_url);
+    NIC_LOG_DEBUG("Connecting to HAL at: {}", svc_url);
     auto state = channel->GetState(true);
     while (state != GRPC_CHANNEL_READY) {
         // Wait for State change or deadline
@@ -76,6 +75,7 @@ hal_grpc::connect_hal(void)
         state = channel->GetState(true);
         // cout << "[INFO] Connecting to HAL, channel status = " << channel->GetState(true) << endl;
     }
+    NIC_LOG_DEBUG("Connected to HAL at: {}", svc_url);
 
     vrf_stub_ = vrf::Vrf::NewStub(channel);
     interface_stub_ = intf::Interface::NewStub(channel);
@@ -109,9 +109,6 @@ hal_grpc::get_hal_grpc(void)
 
 #define SET_TIMEOUT()                                                       \
     uint8_t timeout = HAL_GRPC_API_TIMEOUT;                                 \
-    /*if (fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) {                   \
-        timeout = HAL_GRPC_CLASSIC_API_TIMEOUT;                             \
-    } */                                                                    \
     std::chrono::system_clock::time_point deadline =                        \
         std::chrono::system_clock::now() + seconds(timeout);                \
     context.set_deadline(deadline);

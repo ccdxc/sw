@@ -1,55 +1,44 @@
 /*
-* Copyright (c) 2018, Pensando Systems Inc.
-*/
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <endian.h>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <sys/param.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
 #include "cap_ms_c_hdr.h"
+#include "cap_pics_c_hdr.h"
+#include "cap_top_csr_defines.h"
+#include "cap_wa_c_hdr.h"
 
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
-#include "gen/proto/nicmgr/nicmgr.pb.h"
-#include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "gen/proto/common/nicmgr_status_msgs.pb.h"
-#include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
-#endif
-
-#include "nic/sdk/lib/thread/thread.hpp"
-#include "nic/sdk/platform/mnet/include/mnet.h"
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/intrutils/include/intrutils.h"
-#include "nic/sdk/platform/fru/fru.hpp"
-#include "nic/sdk/platform/misc/include/maclib.h"
-#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
-
+#include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/platform/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/misc/include/maclib.h"
+#include "nic/sdk/platform/mnet/include/mnet.h"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 
-#include "nicmgr_utils.hpp"
-#include "logger.hpp"
-#include "eth_if.h"
-#include "eth_dev.hpp"
-#include "rdma_dev.hpp"
-#include "pd_client.hpp"
-#include "edmaq.hpp"
 #include "dev.hpp"
+#include "edmaq.hpp"
+#include "eth_dev.hpp"
+#include "eth_if.h"
+#include "logger.hpp"
+#include "nicmgr_utils.hpp"
+#include "pd_client.hpp"
+#include "rdma_dev.hpp"
 
 extern class pciemgr *pciemgr;
-
-
 
 void
 Eth::GetEthDevInfo(struct EthDevInfo *dev_info)
@@ -58,8 +47,25 @@ Eth::GetEthDevInfo(struct EthDevInfo *dev_info)
     dev_info->eth_spec = const_cast<struct eth_devspec *>(spec);
 }
 
+std::string
+Eth::eth_type_to_str(EthDevType type)
+{
+    switch (type) {
+        CASE(ETH_UNKNOWN);
+        CASE(ETH_HOST);
+        CASE(ETH_HOST_MGMT);
+        CASE(ETH_MNIC_OOB_MGMT);
+        CASE(ETH_MNIC_INTERNAL_MGMT);
+        CASE(ETH_MNIC_INBAND_MGMT);
+        CASE(ETH_MNIC_CPU);
+        CASE(ETH_MNIC_LEARN);
+    default:
+        return "Unknown";
+    }
+}
+
 EthDevType
-Eth::eth_dev_type_str_to_type(std::string const& s)
+Eth::str_to_eth_type(std::string const &s)
 {
     if (s == "host") {
         return ETH_HOST;
@@ -81,10 +87,7 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
     }
 }
 
-Eth::Eth(devapi *dev_api,
-         struct EthDevInfo *dev_info,
-         PdClient *pd_client,
-         EV_P)
+Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P)
 {
     sdk_ret_t ret;
     int err = 0;
@@ -92,7 +95,7 @@ Eth::Eth(devapi *dev_api,
     Eth::spec = dev_info->eth_spec;
     Eth::pd = pd_client;
     dev_resources = *(dev_info->eth_res);
-    sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
+    sdk::types::mem_addr_t stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
     this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
@@ -104,8 +107,8 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to reserve lifs. ret: {}", spec->name, ret);
         throw;
     }
-    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name,
-        dev_resources.lif_base, spec->lif_count);
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, dev_resources.lif_base,
+                  spec->lif_count);
 
     // Reserve interrupts
     err = pd->intr_reserve(dev_resources.intr_base, spec->intr_count);
@@ -113,19 +116,21 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to reserve interrupt with error: {}", spec->name, err);
         throw;
     }
-    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
-        dev_resources.intr_base, spec->intr_count);
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, dev_resources.intr_base,
+                  spec->intr_count);
 
     // Reserve or allocate EQ states
     if (spec->eq_count) {
         if (dev_resources.rx_eq_base) {
-            err = pd->nicmgr_mem_reserve(dev_resources.rx_eq_base, spec->eq_count * sizeof(eth_eq_qstate_t));
+            err = pd->nicmgr_mem_reserve(dev_resources.rx_eq_base,
+                                         spec->eq_count * sizeof(eth_eq_qstate_t));
             if (err) {
                 NIC_LOG_ERR("{}: Failed to reserve rx eq states with error: {}", spec->name, err);
                 throw;
             }
         } else {
-            dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+            dev_resources.rx_eq_base =
+                pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
             if (dev_resources.rx_eq_base == 0) {
                 NIC_LOG_ERR("{}: Failed to allocate rx eq states", spec->name);
                 throw;
@@ -133,13 +138,15 @@ Eth::Eth(devapi *dev_api,
         }
 
         if (dev_resources.tx_eq_base) {
-            err = pd->nicmgr_mem_reserve(dev_resources.tx_eq_base, spec->eq_count * sizeof(eth_eq_qstate_t));
+            err = pd->nicmgr_mem_reserve(dev_resources.tx_eq_base,
+                                         spec->eq_count * sizeof(eth_eq_qstate_t));
             if (err) {
                 NIC_LOG_ERR("{}: Failed to reserve tx eq states with error: {}", spec->name, err);
                 throw;
             }
         } else {
-            dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+            dev_resources.tx_eq_base =
+                pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
             if (dev_resources.tx_eq_base == 0) {
                 NIC_LOG_ERR("{}: Failed to allocate tx eq states", spec->name);
                 throw;
@@ -155,10 +162,11 @@ Eth::Eth(devapi *dev_api,
     }
     devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
 
-    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}",
-        spec->name, dev_resources.regs_mem_addr, devcmd_mem_addr);
+    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
+                  dev_resources.regs_mem_addr, devcmd_mem_addr);
 
-    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);;
+    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);
+    ;
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
@@ -171,10 +179,10 @@ Eth::Eth(devapi *dev_api,
         regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
         regs->info.version = 0x1;
 
-        const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                            CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+        const uint32_t sta_ver =
+            READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
         regs->info.asic_type = sta_ver & 0xf;
-        regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+        regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
         std::string sn;
         sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
@@ -194,8 +202,7 @@ Eth::Eth(devapi *dev_api,
     if (spec->barmap_size) {
         dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
         if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
-            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name,
-                dev_resources.cmb_mem_size);
+            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name, dev_resources.cmb_mem_size);
             throw;
         }
 
@@ -204,8 +211,8 @@ Eth::Eth(devapi *dev_api,
             NIC_LOG_ERR("{}: Failed to reserve cmb mem with error: {}", spec->name, err);
             throw;
         }
-        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}",
-                      spec->name, dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}", spec->name,
+                      dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
     } else {
         dev_resources.cmb_mem_addr = 0;
         dev_resources.cmb_mem_size = 0;
@@ -224,8 +231,7 @@ Eth::Eth(devapi *dev_api,
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
-        EthLif *eth_lif = new EthLif(this, dev_api,
-            dev_info->eth_spec, pd_client, lif_res, loop);
+        EthLif *eth_lif = new EthLif(this, dev_api, dev_info->eth_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
 
@@ -235,30 +241,26 @@ Eth::Eth(devapi *dev_api,
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
     host_port_config_addr = 0;
-    port_config = (union port_config *)MEM_MAP(port_config_addr,
-                                        sizeof(union port_config), 0);
+    port_config = (union port_config *)MEM_MAP(port_config_addr, sizeof(union port_config), 0);
     if (port_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
     MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
 
-    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
-        port_config_addr);
+    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
 
     // Port Status
     port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
     host_port_status_addr = 0;
-    port_status = (struct port_status *)MEM_MAP(port_status_addr,
-                                        sizeof(struct port_status), 0);
+    port_status = (struct port_status *)MEM_MAP(port_status_addr, sizeof(struct port_status), 0);
     if (port_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
     MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
 
-    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
-        port_status_addr);
+    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
     // use_hbm when port_stats region is carved in HBM.
     // else old approach
@@ -276,12 +278,11 @@ Eth::Eth(devapi *dev_api,
         stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
         if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
             use_hbm = false;
-            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!",
-                spec->name);
+            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
         }
 
-        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}",
-            spec->name, spec->uplink_port_num, stats_hbm_base_addr);
+        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
+                     stats_hbm_base_addr);
     }
 
     /*
@@ -307,29 +308,25 @@ Eth::Eth(devapi *dev_api,
         port_stats_size = sizeof(struct mgmt_port_stats);
     }
 
-    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}",
-        spec->name, spec->uplink_port_num, port_stats_addr, port_stats_size);
+    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
+                 port_stats_addr, port_stats_size);
 
     // Enable Devcmd Handling
-    evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
-    evutil_add_check(EV_A_ &devcmd_check, Eth::DevcmdPoll, this);
-    evutil_timer_start(EV_A_ &devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
+    evutil_add_check(EV_A_ & devcmd_check, Eth::DevcmdPoll, this);
+    evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
-    //reset the active_lif_ref_cnt to 0
+    // reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
-
 }
 
-Eth::Eth(devapi *dev_api,
-         void *dev_spec,
-         PdClient *pd_client,
-         EV_P)
+Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 {
     sdk_ret_t ret = SDK_RET_OK;
     Eth::dev_api = dev_api;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
-    sdk::types::mem_addr_t  stats_hbm_base_addr = INVALID_MEM_ADDRESS;
+    sdk::types::mem_addr_t stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
     this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
@@ -340,8 +337,8 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
         throw;
     }
-    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name,
-            dev_resources.lif_base, spec->lif_count);
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, dev_resources.lif_base,
+                  spec->lif_count);
 
     // Allocate interrupts
     dev_resources.intr_base = pd->intr_alloc(spec->intr_count);
@@ -349,8 +346,8 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
         throw;
     }
-    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
-        dev_resources.intr_base, spec->intr_count);
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, dev_resources.intr_base,
+                  spec->intr_count);
 
     // Allocate EQ states
     if (spec->eq_count) {
@@ -370,10 +367,11 @@ Eth::Eth(devapi *dev_api,
     }
     devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
 
-    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}",
-        spec->name, dev_resources.regs_mem_addr, devcmd_mem_addr);
+    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
+                  dev_resources.regs_mem_addr, devcmd_mem_addr);
 
-    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);;
+    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);
+    ;
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
@@ -386,10 +384,10 @@ Eth::Eth(devapi *dev_api,
         regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
         regs->info.version = 0x1;
 
-        const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                            CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+        const uint32_t sta_ver =
+            READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
         regs->info.asic_type = sta_ver & 0xf;
-        regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+        regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
         std::string sn;
         sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
@@ -409,18 +407,17 @@ Eth::Eth(devapi *dev_api,
     if (spec->barmap_size) {
         dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
         if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
-            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name,
-                dev_resources.cmb_mem_size);
+            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name, dev_resources.cmb_mem_size);
             throw;
         }
 
         dev_resources.cmb_mem_addr = pd->rdma_mem_bar_alloc(dev_resources.cmb_mem_size);
-        assert (dev_resources.cmb_mem_addr != 0);
+        assert(dev_resources.cmb_mem_addr != 0);
         // bar address must be aligned to bar size
-        assert ((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);
+        assert((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);
 
-        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}",
-                      spec->name, dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}", spec->name,
+                      dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
     } else {
         dev_resources.cmb_mem_addr = 0;
         dev_resources.cmb_mem_size = 0;
@@ -439,8 +436,7 @@ Eth::Eth(devapi *dev_api,
         lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
         lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
 
-        EthLif *eth_lif = new EthLif(this, dev_api,
-            dev_spec, pd_client, lif_res, loop);
+        EthLif *eth_lif = new EthLif(this, dev_api, dev_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
 
@@ -450,30 +446,26 @@ Eth::Eth(devapi *dev_api,
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
     host_port_config_addr = 0;
-    port_config = (union port_config *)MEM_MAP(port_config_addr,
-                                        sizeof(union port_config), 0);
+    port_config = (union port_config *)MEM_MAP(port_config_addr, sizeof(union port_config), 0);
     if (port_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
     MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
 
-    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
-        port_config_addr);
+    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
 
     // Port Status
     port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
     host_port_status_addr = 0;
-    port_status = (struct port_status *)MEM_MAP(port_status_addr,
-                                        sizeof(struct port_status), 0);
+    port_status = (struct port_status *)MEM_MAP(port_status_addr, sizeof(struct port_status), 0);
     if (port_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
     MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
 
-    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
-        port_status_addr);
+    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
     // use_hbm when port_stats region is carved in HBM.
     // else old approach
@@ -491,12 +483,11 @@ Eth::Eth(devapi *dev_api,
         stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
         if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
             use_hbm = false;
-            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!",
-                spec->name);
+            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
         }
 
-        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}",
-            spec->name, spec->uplink_port_num, stats_hbm_base_addr);
+        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
+                     stats_hbm_base_addr);
     }
 
     /*
@@ -522,43 +513,38 @@ Eth::Eth(devapi *dev_api,
         port_stats_size = sizeof(struct mgmt_port_stats);
     }
 
-    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}",
-        spec->name, spec->uplink_port_num, port_stats_addr, port_stats_size);
+    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
+                 port_stats_addr, port_stats_size);
 
     // Enable Devcmd Handling
-    evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
-    evutil_add_check(EV_A_ &devcmd_check, Eth::DevcmdPoll, this);
-    evutil_timer_start(EV_A_ &devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
+    evutil_add_check(EV_A_ & devcmd_check, Eth::DevcmdPoll, this);
+    evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
-    //initialize heartbeat as 0 when device got created.
+    // initialize heartbeat as 0 when device got created.
     regs->info.fw_heartbeat = 0;
 
-    //reset the active_lif_ref_cnt to 0
+    // reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
-
 }
 
-std::vector<Eth*>
-Eth::factory(enum DeviceType type, devapi *dev_api,
-         void *dev_spec,
-         PdClient *pd_client,
-         EV_P)
+std::vector<Eth *>
+Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 {
-    std::vector<Eth*> eth_devs;
+    std::vector<Eth *> eth_devs;
     Eth *dev_obj;
     struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
 
-    // Create object for PF
+    // Create object for PF device
     dev_obj = new Eth(dev_api, spec, pd_client, EV_A);
-    dev_obj->SetType(type);
     eth_devs.push_back(dev_obj);
 
-    NIC_LOG_DEBUG("{}: pcie_total_vfs: {}", spec->name, spec->pcie_total_vfs);
+    NIC_LOG_DEBUG("{}: num_vfs: {}", spec->name, spec->pcie_total_vfs);
 
     // Create objects for all VFs within this PF
-    for (uint32_t dev=0; dev < spec->pcie_total_vfs; dev++) {
-        struct eth_devspec *vf_spec = new struct eth_devspec;
-        *vf_spec = *(struct eth_devspec *)spec;
+    for (uint32_t dev = 0; dev < spec->pcie_total_vfs; dev++) {
+        // Copy the PF's spec and modify it
+        struct eth_devspec *vf_spec = new struct eth_devspec(*spec);
         vf_spec->name = vf_spec->name + "_vf_" + std::to_string(dev);
         // Keeping the mac for VF as 0
         vf_spec->mac_addr = 0;
@@ -568,12 +554,11 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
         vf_spec->enable_rdma = 0;
         // TODO: no cmb bar for now
         vf_spec->barmap_size = 0;
+        // Create object for VF device
         dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
-        dev_obj->SetType(type);
         eth_devs.push_back(dev_obj);
     }
 
-    NIC_LOG_DEBUG("returning from factory");
     return eth_devs;
 }
 
@@ -586,8 +571,7 @@ create_mnet(void *obj)
 
     int ret = create_mnet(req);
     if (ret) {
-        NIC_LOG_ERR("{}: Failed to create MNIC device. ret: {}",
-            req->iface_name, ret);
+        NIC_LOG_ERR("{}: Failed to create MNIC device. ret: {}", req->iface_name, ret);
         free(obj);
         return NULL;
     }
@@ -599,7 +583,7 @@ create_mnet(void *obj)
 struct eth_devspec *
 Eth::ParseConfig(boost::property_tree::ptree::value_type node)
 {
-    eth_devspec* eth_spec;
+    eth_devspec *eth_spec;
     auto val = node.second;
 
     eth_spec = new struct eth_devspec;
@@ -643,11 +627,11 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     eth_spec->pcie_total_vfs = val.get<uint8_t>("pcie.total_vfs", 0);
 
     if (val.get_optional<string>("pcie.oprom")) {
-        eth_spec->oprom = Device::oprom_type_str_to_type(val.get<string>("pcie.oprom"));
+        eth_spec->oprom = str_to_oprom_type(val.get<string>("pcie.oprom"));
     }
 
     if (val.get_optional<string>("type")) {
-        eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
+        eth_spec->eth_type = str_to_eth_type(val.get<string>("type"));
     } else {
         eth_spec->eth_type = ETH_UNKNOWN;
     }
@@ -655,11 +639,9 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
 
     NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, "
-            "pinned_uplink: {}, qos_group {}",
-            eth_spec->name,
-            eth_dev_type_to_str(eth_spec->eth_type),
-            eth_spec->uplink_port_num,
-            eth_spec->qos_group);
+                  "pinned_uplink: {}, qos_group {}",
+                  eth_spec->name, eth_type_to_str(eth_spec->eth_type),
+                  eth_spec->uplink_port_num, eth_spec->qos_group);
 
     return eth_spec;
 }
@@ -677,8 +659,7 @@ Eth::CreateLocalDevice()
     if (skip_init) {
         NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
         if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
-            WRITE_DEVINFO(spec->name.c_str(), dev_resources.regs_mem_addr,
-                          dev_resources.lif_base);
+            WRITE_DEVINFO(spec->name.c_str(), dev_resources.regs_mem_addr, dev_resources.lif_base);
         }
         return true;
     }
@@ -699,11 +680,8 @@ Eth::CreateLocalDevice()
 
     NIC_LOG_DEBUG("{}: regs_pa: {:#x}, "
                   "drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, doorbell_pa: {:#x}",
-                  mnet_req->iface_name,
-                  mnet_req->regs_pa,
-                  mnet_req->drvcfg_pa,
-                  mnet_req->msixcfg_pa,
-                  mnet_req->doorbell_pa);
+                  mnet_req->iface_name, mnet_req->regs_pa, mnet_req->drvcfg_pa,
+                  mnet_req->msixcfg_pa, mnet_req->doorbell_pa);
 
     // pba is unused by mnic, but config anyway
     intr_pba_cfg(dev_resources.lif_base, dev_resources.intr_base, spec->intr_count);
@@ -719,13 +697,9 @@ Eth::CreateLocalDevice()
     sdk::lib::thread *mnet_thread = NULL;
 
     sdk::lib::thread::control_cores_mask_set(0x8);
-    mnet_thread = sdk::lib::thread::factory(spec->name.c_str(),
-                                            NICMGRD_THREAD_ID_MNET,
-                                            sdk::lib::THREAD_ROLE_CONTROL,
-                                            0x8,
-                                            create_mnet,
-                                            sched_get_priority_max(SCHED_OTHER),
-                                            SCHED_OTHER,
+    mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), NICMGRD_THREAD_ID_MNET,
+                                            sdk::lib::THREAD_ROLE_CONTROL, 0x8, create_mnet,
+                                            sched_get_priority_max(SCHED_OTHER), SCHED_OTHER,
                                             false); // yield
     if (mnet_thread == NULL) {
         NIC_LOG_ERR("{}: Unable to start mnet thread. Exiting!!", spec->name);
@@ -753,18 +727,18 @@ Eth::LoadOprom()
     rom_file_path = "/sw/platform/gen/";
 #endif
     switch (spec->oprom) {
-        case OPROM_LEGACY:
-            rom_file_path += "ionic.rom";
-            break;
-        case OPROM_UEFI:
-            rom_file_path += "ionic.efirom";
-            break;
-        case OPROM_UNIFIED:
-            NIC_LOG_ERR("Not implemented!");
-            return true;
-        case OPROM_UNKNOWN:
-            NIC_LOG_DEBUG("{}: No oprom configured", spec->name);
-            return true;
+    case OPROM_LEGACY:
+        rom_file_path += "ionic.rom";
+        break;
+    case OPROM_UEFI:
+        rom_file_path += "ionic.efirom";
+        break;
+    case OPROM_UNIFIED:
+        NIC_LOG_ERR("Not implemented!");
+        return true;
+    case OPROM_UNKNOWN:
+        NIC_LOG_DEBUG("{}: No oprom configured", spec->name);
+        return true;
     };
 
     // FIXME: The same ROM bar can be shared by all ethernet devices. We
@@ -784,11 +758,11 @@ Eth::LoadOprom()
     // FIXME: Create a new memory region and allocator for OPROMs.
     dev_resources.rom_mem_size = roundup_power2(rom_file_size);
     rom_bar_size = roundup_power2(rom_file_size);
-    dev_resources.rom_mem_addr = roundup(pd->nicmgr_mem_alloc(2*rom_bar_size), rom_bar_size);
+    dev_resources.rom_mem_addr = roundup(pd->nicmgr_mem_alloc(2 * rom_bar_size), rom_bar_size);
     NIC_LOG_INFO("{}: rom_mem_addr {:#x} rom_mem_size {}"
-                " rom_file_size {} rom_bar_size {}",
-                spec->name, dev_resources.rom_mem_addr, dev_resources.rom_mem_size,
-                rom_file_size, rom_bar_size);
+                 " rom_file_size {} rom_bar_size {}",
+                 spec->name, dev_resources.rom_mem_addr, dev_resources.rom_mem_size, rom_file_size,
+                 rom_bar_size);
     // Must be naturally aligned
     if ((dev_resources.rom_mem_addr % rom_bar_size) != 0) {
         NIC_LOG_ERR("{}: rom_mem_addr is not naturally aligned", spec->name);
@@ -866,13 +840,14 @@ Eth::CreateHostDevice()
 
     // Create PCI device
     if (spec->eth_type == ETH_HOST) {
-        NIC_LOG_DEBUG("{}: Creating Host device with total_vfs: {}", spec->name, pres.pfres.totalvfs);
+        NIC_LOG_DEBUG("{}: Creating Host device with total_vfs: {}", spec->name,
+                      pres.pfres.totalvfs);
         pres.type = PCIEHDEVICE_ETH;
     } else if (spec->eth_type == ETH_HOST_MGMT) {
         NIC_LOG_DEBUG("{}: Creating Host Management device", spec->name);
         pres.type = PCIEHDEVICE_MGMTETH;
     } else {
-        assert(0); // NOT REACHABLE
+        return false;
     }
 
     // Add device to PCI topology
@@ -895,26 +870,25 @@ Eth::DevcmdRegsReset()
 {
     memset((uint8_t *)devcmd, 0, sizeof(union dev_cmd_regs));
 #ifndef __aarch64__
-    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd,
-              sizeof(union dev_cmd_regs), 0);
+    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union dev_cmd_regs), 0);
 #endif
 }
 
 void
 Eth::DevcmdPoll(void *obj)
 {
-    Eth             *dev = (Eth *)obj;
+    Eth *dev = (Eth *)obj;
 
 #ifndef __aarch64__
     READ_MEM(dev->devcmd_mem_addr, (uint8_t *)&dev->devcmd->doorbell,
-        sizeof(dev->devcmd->doorbell), 0);
+             sizeof(dev->devcmd->doorbell), 0);
 #endif
     if (dev->devcmd->doorbell & 0x1) {
         NIC_LOG_INFO("{}: Devcmd doorbell", dev->spec->name);
         dev->devcmd->doorbell = 0x0;
 #ifndef __aarch64__
         WRITE_MEM(dev->devcmd_mem_addr, (uint8_t *)&dev->devcmd->doorbell,
-            sizeof(dev->devcmd->doorbell), 0);
+                  sizeof(dev->devcmd->doorbell), 0);
 #endif
         dev->DevcmdHandler();
     }
@@ -930,13 +904,11 @@ Eth::DevcmdHandler()
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
 #ifndef __aarch64__
     // read devcmd region
-    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd,
-             sizeof(union dev_cmd_regs), 0);
+    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union dev_cmd_regs), 0);
 #endif
     if (devcmd->done != 0) {
-        NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}",
-            spec->name,
-            opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
+        NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}", spec->name,
+                    opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
         status = IONIC_RC_ERROR;
         goto devcmd_done;
     }
@@ -947,8 +919,7 @@ Eth::DevcmdHandler()
     if (status == IONIC_RC_SUCCESS) {
 #ifndef __aarch64__
         WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, data),
-                  (uint8_t *)devcmd + offsetof(union dev_cmd_regs, data),
-                  sizeof(devcmd->data), 0);
+                  (uint8_t *)devcmd + offsetof(union dev_cmd_regs, data), sizeof(devcmd->data), 0);
 #endif
     }
 
@@ -959,30 +930,25 @@ devcmd_done:
 #ifndef __aarch64__
     // write completion
     WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, comp),
-              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, comp),
-              sizeof(devcmd->comp), 0);
+              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, comp), sizeof(devcmd->comp), 0);
 
     // write done
     WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, done),
-              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, done),
-              sizeof(devcmd->done), 0);
+              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, done), sizeof(devcmd->done), 0);
 #endif
     clock_gettime(CLOCK_MONOTONIC, &end_ts);
     ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
-    NIC_LOG_DEBUG("DevCmd Time taken: {}s.{}ns",
-                  ts_diff.tv_sec, ts_diff.tv_nsec);
+    NIC_LOG_DEBUG("DevCmd Time taken: {}s.{}ns", ts_diff.tv_sec, ts_diff.tv_nsec);
     if (ts_diff.tv_sec >= DEVCMD_TIMEOUT) {
         NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
     }
     NIC_HEADER_TRACE("Devcmd End");
 }
 
-#define CASE(opcode) case opcode: return #opcode
-
-const char*
+const char *
 Eth::opcode_to_str(cmd_opcode_t opcode)
 {
-    switch(opcode) {
+    switch (opcode) {
         CASE(CMD_OPCODE_NOP);
         CASE(CMD_OPCODE_IDENTIFY);
         CASE(CMD_OPCODE_INIT);
@@ -1018,7 +984,7 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
         NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
-            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+                      opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
     }
 
     switch ((cmd_opcode_t)cmd->cmd.opcode) {
@@ -1105,7 +1071,7 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
         NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
-            opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
+                      opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
     }
 
     return (status);
@@ -1181,8 +1147,7 @@ Eth::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct dev_getattr_cmd *cmd = (struct dev_getattr_cmd *)req;
 
-    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->attr);
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1192,8 +1157,7 @@ Eth::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct dev_setattr_cmd *cmd = (struct dev_setattr_cmd *)req;
 
-    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->attr);
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1254,16 +1218,13 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: host_port_info_addr {:#x}", spec->name, cmd->info_pa);
 
         host_port_config_addr = cmd->info_pa + offsetof(struct port_info, config);
-        NIC_LOG_INFO("{}: host_port_config_addr {:#x}",
-                    spec->name, host_port_config_addr);
+        NIC_LOG_INFO("{}: host_port_config_addr {:#x}", spec->name, host_port_config_addr);
 
         host_port_status_addr = cmd->info_pa + offsetof(struct port_info, status);
-        NIC_LOG_INFO("{}: host_port_status_addr {:#x}",
-                    spec->name, host_port_status_addr);
+        NIC_LOG_INFO("{}: host_port_status_addr {:#x}", spec->name, host_port_status_addr);
 
         host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
-        NIC_LOG_INFO("{}: host_port_stats_addr {:#x}",
-                    spec->name, host_port_stats_addr);
+        NIC_LOG_INFO("{}: host_port_stats_addr {:#x}", spec->name, host_port_stats_addr);
     } else {
         host_port_info_addr = 0;
         host_port_config_addr = 0;
@@ -1304,8 +1265,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     struct port_setattr_cmd *cmd = (struct port_setattr_cmd *)req;
     bool pause_config = FALSE;
 
-    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->attr);
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
     if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
@@ -1343,14 +1303,15 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         cfg.loopback_mode = cmd->loopback_mode;
         break;
     case IONIC_PORT_ATTR_STATS_CTRL:
-            switch (cmd->stats_ctl) {
-                case STATS_CTL_RESET:
-                    cfg.reset_mac_stats = 1;
-                    break;
-                default:
-                    NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_PORT_ATTR_STATS_CTRL", spec->name, cmd->stats_ctl);
-                    return (IONIC_RC_ENOSUPP);
-                }
+        switch (cmd->stats_ctl) {
+        case STATS_CTL_RESET:
+            cfg.reset_mac_stats = 1;
+            break;
+        default:
+            NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_PORT_ATTR_STATS_CTRL", spec->name,
+                        cmd->stats_ctl);
+            return (IONIC_RC_ENOSUPP);
+        }
 
         break;
     default:
@@ -1366,13 +1327,12 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 
     // if there is a change in the pause config between LINK-LEVEL and PFC,
     // update the global_pause_type
-    if(pause_config) {
-        NIC_LOG_DEBUG("Invoking dev_api call to set global pause_type {}",
-                      cmd->pause_type);
+    if (pause_config) {
+        NIC_LOG_DEBUG("Invoking dev_api call to set global pause_type {}", cmd->pause_type);
         ret = dev_api->qos_class_set_global_pause_type(cmd->pause_type);
         if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("{}: failed to set global_pause_type to {} ret {}", 
-                        spec->name, cmd->pause_type, ret);
+            NIC_LOG_ERR("{}: failed to set global_pause_type to {} ret {}", spec->name,
+                        cmd->pause_type, ret);
         } else {
             NIC_LOG_DEBUG("set global pause_type to {}", cmd->pause_type);
         }
@@ -1392,8 +1352,7 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     struct port_getattr_cmd *cmd = (struct port_getattr_cmd *)req;
     struct port_getattr_comp *comp = (struct port_getattr_comp *)resp;
 
-    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->attr);
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
     if (spec->uplink_port_num == 0) {
         return (IONIC_RC_SUCCESS);
@@ -1439,18 +1398,19 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-const char*
+const char *
 Eth::qos_class_to_str(u8 qos_class)
 {
     switch (qos_class) {
-    CASE(QOS_CLASS_DEFAULT);
-    CASE(QOS_CLASS_USER_DEFINED_1);
-    CASE(QOS_CLASS_USER_DEFINED_2);
-    CASE(QOS_CLASS_USER_DEFINED_3);
-    CASE(QOS_CLASS_USER_DEFINED_4);
-    CASE(QOS_CLASS_USER_DEFINED_5);
-    CASE(QOS_CLASS_USER_DEFINED_6);
-    default: return "QOS_CLASS_UNKNOWN";
+        CASE(QOS_CLASS_DEFAULT);
+        CASE(QOS_CLASS_USER_DEFINED_1);
+        CASE(QOS_CLASS_USER_DEFINED_2);
+        CASE(QOS_CLASS_USER_DEFINED_3);
+        CASE(QOS_CLASS_USER_DEFINED_4);
+        CASE(QOS_CLASS_USER_DEFINED_5);
+        CASE(QOS_CLASS_USER_DEFINED_6);
+    default:
+        return "QOS_CLASS_UNKNOWN";
     }
 }
 
@@ -1474,7 +1434,6 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     /* convert qos class info to qos config */
     auto to_config = [](qos_class_info_t *info, union qos_config *cfg) {
-
         cfg->flags = IONIC_QOS_CONFIG_F_ENABLE;
 
         cfg->mtu = info->mtu;
@@ -1508,7 +1467,7 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
         if (info->rewrite_ip_dscp_en) {
             cfg->flags |= IONIC_QOS_CONFIG_F_RW_IP_DSCP;
-            cfg->rw_ip_dscp= info->rewrite_ip_dscp;
+            cfg->rw_ip_dscp = info->rewrite_ip_dscp;
         }
     };
 
@@ -1536,7 +1495,7 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
     qos_class_info_t info = {0};
 
     NIC_LOG_DEBUG("{}: {} qos group {}", spec->name, opcode_to_str(cmd->opcode),
-        qos_class_to_str(cmd->group));
+                  qos_class_to_str(cmd->group));
 
     DEVAPI_CHECK
 
@@ -1599,7 +1558,7 @@ Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
     struct qos_reset_cmd *cmd = (struct qos_reset_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {} {}", spec->name, opcode_to_str(cmd->opcode),
-        qos_class_to_str(cmd->group));
+                  qos_class_to_str(cmd->group));
 
     DEVAPI_CHECK
 
@@ -1626,18 +1585,17 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
     ident->capabilities = IONIC_LIF_CAP_ETH;
 
     ident->eth.version = 1;
-    dev_api->lif_get_max_filters(&ident->eth.max_ucast_filters,
-                                 &ident->eth.max_mcast_filters);
+    dev_api->lif_get_max_filters(&ident->eth.max_ucast_filters, &ident->eth.max_mcast_filters);
     ident->eth.rss_ind_tbl_sz = RSS_IND_TBL_SIZE;
     ident->eth.min_frame_size = 64;
     ident->eth.max_frame_size = 9216;
 
     ident->eth.config.features = 0;
-    ident->eth.config.queue_count[IONIC_QTYPE_ADMINQ] = 1; //spec->adminq_count;
+    ident->eth.config.queue_count[IONIC_QTYPE_ADMINQ] = 1; // spec->adminq_count;
     ident->eth.config.queue_count[IONIC_QTYPE_NOTIFYQ] = 1;
     ident->eth.config.queue_count[IONIC_QTYPE_TXQ] = spec->txq_count;
     ident->eth.config.queue_count[IONIC_QTYPE_RXQ] = spec->rxq_count;
-    ident->eth.config.queue_count[IONIC_QTYPE_EQ] = 0; //spec->eq_count in device identify
+    ident->eth.config.queue_count[IONIC_QTYPE_EQ] = 0; // spec->eq_count in device identify
 
     if (spec->enable_rdma) {
         ident->capabilities |= IONIC_LIF_CAP_RDMA;
@@ -1692,14 +1650,12 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     status_code_t ret = IONIC_RC_SUCCESS;
     sdk_ret_t rs = SDK_RET_OK;
 
-    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->index);
+    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode), cmd->index);
 
     DEVAPI_CHECK
 
     if (spec->enable_rdma && cmd->index > 0) {
-        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
-            spec->name);
+        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device", spec->name);
         lif_id = dev_resources.lif_base;
         comp->hw_index = 0;
     } else {
@@ -1733,16 +1689,14 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         port_status->status = PORT_OPER_STATUS_UP;
     } else {
         // Update port config
-        rs = dev_api->port_get_config(spec->uplink_port_num,
-                (port_config_t *)port_config);
+        rs = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)port_config);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port config {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
         }
 
         // Update port status
-        rs = dev_api->port_get_status(spec->uplink_port_num,
-                (port_status_t *)port_status);
+        rs = dev_api->port_get_status(spec->uplink_port_num, (port_status_t *)port_status);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port status {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
@@ -1753,7 +1707,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: port{}: Starting stats update to "
                      "host_port_stats_addr {:#x}",
                      spec->name, spec->uplink_port_num, host_port_stats_addr);
-        evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.5);
+        evutil_timer_start(EV_A_ & stats_timer, &Eth::StatsUpdate, this, 0.0, 0.5);
     }
 
     // TODO: Workaround for linkmgr not setting port id
@@ -1782,14 +1736,12 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
 
-    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
-        cmd->index);
+    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode), cmd->index);
 
     DEVAPI_CHECK
 
     if (spec->enable_rdma && cmd->index > 0) {
-        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
-            spec->name);
+        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device", spec->name);
         lif_id = dev_resources.lif_base;
     } else {
         if (cmd->index >= spec->lif_count) {
@@ -1808,7 +1760,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Stopping stats update", spec->name, spec->uplink_port_num);
-        evutil_timer_stop(EV_A_ &stats_timer);
+        evutil_timer_stop(EV_A_ & stats_timer);
     }
 
     ret = eth_lif->Reset();
@@ -1863,15 +1815,9 @@ Eth::StatsUpdate(void *obj)
     }
     eth_lif = it->second;
 
-    struct edmaq_ctx ctx = {
-        .cb = NULL,
-        .obj = obj
-    };
+    struct edmaq_ctx ctx = {.cb = NULL, .obj = obj};
 
-    struct edmaq_ctx last_ctx = {
-        .cb = &Eth::StatsUpdateComplete,
-        .obj = obj
-    };
+    struct edmaq_ctx last_ctx = {.cb = &Eth::StatsUpdateComplete, .obj = obj};
 
     if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
         /* MS cannot handle > 64B transfers. */
@@ -1880,13 +1826,10 @@ Eth::StatsUpdate(void *obj)
         while (bytes_left > 0) {
             auto end = bytes_left <= 64;
             auto transfer_sz = end ? bytes_left : 64;
-            eth_lif->EdmaProxy(
-                eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                eth->port_stats_addr + offset,
-                eth->host_port_stats_addr + offset,
-                transfer_sz,
-                end ? &last_ctx : &ctx
-            );
+            eth_lif->EdmaProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST
+                                                   : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                               eth->port_stats_addr + offset, eth->host_port_stats_addr + offset,
+                               transfer_sz, end ? &last_ctx : &ctx);
             offset += transfer_sz;
             bytes_left -= transfer_sz;
         };
@@ -1918,11 +1861,7 @@ Eth::PortConfigUpdate(void *obj)
     if (eth->host_port_config_addr) {
         eth_lif->EdmaProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_config_addr,
-            eth->host_port_config_addr,
-            sizeof(union port_config),
-            NULL
-        );
+            eth->port_config_addr, eth->host_port_config_addr, sizeof(union port_config), NULL);
     }
 }
 
@@ -1942,11 +1881,7 @@ Eth::PortStatusUpdate(void *obj)
     if (eth->host_port_status_addr) {
         eth_lif->EdmaProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_status_addr,
-            eth->host_port_status_addr,
-            sizeof(struct port_status),
-            NULL
-        );
+            eth->port_status_addr, eth->host_port_status_addr, sizeof(struct port_status), NULL);
     }
 }
 
@@ -1958,10 +1893,8 @@ Eth::HalEventHandler(bool status)
 {
     if (status) {
         // Create the MNIC devices
-        if (spec->eth_type == ETH_MNIC_OOB_MGMT ||
-            spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
-            spec->eth_type == ETH_MNIC_INBAND_MGMT ||
-            spec->eth_type == ETH_MNIC_CPU ||
+        if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
+            spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
             spec->eth_type == ETH_MNIC_LEARN) {
             if (!CreateLocalDevice()) {
                 NIC_LOG_ERR("{}: Failed to create device", spec->name);
@@ -1972,6 +1905,19 @@ Eth::HalEventHandler(bool status)
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->HalEventHandler(status);
+    }
+}
+
+void
+Eth::DelphiMountEventHandler(bool mounted)
+{
+    if (!mounted) {
+        return;
+    }
+
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+        eth_lif->DelphiMountEventHandler(mounted);
     }
 }
 
@@ -2039,19 +1985,18 @@ Eth::PcieResetEventHandler(uint32_t rsttype)
     status_code_t status;
 
     switch (rsttype) {
-        case PCIEHDEV_RSTTYPE_BUS:
-            rsttype_str = "BUS Reset";
-            break;
-        case PCIEHDEV_RSTTYPE_FLR:
-            rsttype_str = "FLR Reset";
-            break;
-        case PCIEHDEV_RSTTYPE_VF:
-            rsttype_str = "VF Reset";
-            break;
-        default:
-            NIC_LOG_ERR("{}: received invalid reset type {}", spec->name,
-                    rsttype);
-            return;
+    case PCIEHDEV_RSTTYPE_BUS:
+        rsttype_str = "BUS Reset";
+        break;
+    case PCIEHDEV_RSTTYPE_FLR:
+        rsttype_str = "FLR Reset";
+        break;
+    case PCIEHDEV_RSTTYPE_VF:
+        rsttype_str = "VF Reset";
+        break;
+    default:
+        NIC_LOG_ERR("{}: received invalid reset type {}", spec->name, rsttype);
+        return;
     }
 
     NIC_LOG_INFO("{}: received {}", spec->name, rsttype_str);
@@ -2076,7 +2021,7 @@ Eth::Reset()
         status = eth_lif->Reset();
         if (status != IONIC_RC_SUCCESS) {
             NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
-            //TODO: Handle lif reset fail
+            // TODO: Handle lif reset fail
         }
     }
 
@@ -2166,8 +2111,8 @@ Eth::SetFwStatus(uint8_t fw_status)
 {
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr +  offsetof(union dev_regs, info) +
-              offsetof(union dev_info_regs, fw_status),
+    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union dev_regs, info) +
+                  offsetof(union dev_info_regs, fw_status),
               (uint8_t *)&regs->info.fw_status, sizeof(regs->info.fw_status), 0);
 #endif
 }
@@ -2177,8 +2122,8 @@ Eth::HeartbeatEventHandler()
 {
     regs->info.fw_heartbeat = regs->info.fw_heartbeat + 1;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr +  offsetof(union dev_regs, info) +
-              offsetof(union dev_info_regs, fw_heartbeat),
+    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union dev_regs, info) +
+                  offsetof(union dev_info_regs, fw_heartbeat),
               (uint8_t *)&regs->info.fw_heartbeat, sizeof(regs->info.fw_heartbeat), 0);
 #endif
 }
@@ -2187,13 +2132,21 @@ lif_type_t
 Eth::ConvertDevTypeToLifType(EthDevType dev_type)
 {
     switch (dev_type) {
-        case ETH_HOST: return sdk::platform::LIF_TYPE_HOST;
-        case ETH_HOST_MGMT: return sdk::platform::LIF_TYPE_HOST_MGMT;
-        case ETH_MNIC_OOB_MGMT: return sdk::platform::LIF_TYPE_MNIC_OOB_MGMT;
-        case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
-        case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT;
-        case ETH_MNIC_CPU: return sdk::platform::LIF_TYPE_MNIC_CPU;
-        case ETH_MNIC_LEARN: return sdk::platform::LIF_TYPE_LEARN;
-        default: return sdk::platform::LIF_TYPE_NONE;
+    case ETH_HOST:
+        return sdk::platform::LIF_TYPE_HOST;
+    case ETH_HOST_MGMT:
+        return sdk::platform::LIF_TYPE_HOST_MGMT;
+    case ETH_MNIC_OOB_MGMT:
+        return sdk::platform::LIF_TYPE_MNIC_OOB_MGMT;
+    case ETH_MNIC_INTERNAL_MGMT:
+        return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT;
+    case ETH_MNIC_INBAND_MGMT:
+        return sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT;
+    case ETH_MNIC_CPU:
+        return sdk::platform::LIF_TYPE_MNIC_CPU;
+    case ETH_MNIC_LEARN:
+        return sdk::platform::LIF_TYPE_LEARN;
+    default:
+        return sdk::platform::LIF_TYPE_NONE;
     }
 }

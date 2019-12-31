@@ -151,7 +151,7 @@ save_files() {
     # Platform includes used by nicmgr
     platform_inc='pciemgr_if/include/pciemgr_if.hpp '
     platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
-    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp '
+    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp nicmgr/include/nicmgr_utils.hpp'
 
     mkdir -p $LIBDIR
     cd $DST/nic/build

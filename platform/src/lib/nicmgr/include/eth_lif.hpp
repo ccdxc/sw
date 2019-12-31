@@ -1,15 +1,15 @@
 /*
-* Copyright (c) 2019, Pensando Systems Inc.
-*/
+ * Copyright (c) 2019, Pensando Systems Inc.
+ */
 
 #ifndef __ETH_LIF_HPP__
 #define __ETH_LIF_HPP__
 
 using namespace std;
 
-#include "pd_client.hpp"
 #include "nic/include/edmaq.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
+#include "pd_client.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -34,41 +34,41 @@ enum eth_hw_qtype {
     ETH_HW_QTYPE_NONE = 15,
 };
 
-#define IONIC_IFNAMSIZ  16
+#define IONIC_IFNAMSIZ 16
 
-#define BIT_MASK(n)                     ((1ULL << n) - 1)
+#define BIT_MASK(n) ((1ULL << n) - 1)
 
-#define LG2_LIF_STATS_SIZE              10
-#define LIF_STATS_SIZE                  (1 << LG2_LIF_STATS_SIZE)
+#define LG2_LIF_STATS_SIZE 10
+#define LIF_STATS_SIZE (1 << LG2_LIF_STATS_SIZE)
 
-#define ETH_NOTIFYQ_QTYPE               7
-#define ETH_NOTIFYQ_QID                 0
-#define LG2_ETH_NOTIFYQ_RING_SIZE       4
-#define ETH_NOTIFYQ_RING_SIZE           (1 << LG2_ETH_NOTIFYQ_RING_SIZE)
+#define ETH_NOTIFYQ_QTYPE 7
+#define ETH_NOTIFYQ_QID 0
+#define LG2_ETH_NOTIFYQ_RING_SIZE 4
+#define ETH_NOTIFYQ_RING_SIZE (1 << LG2_ETH_NOTIFYQ_RING_SIZE)
 
-#define ETH_EDMAQ_QTYPE                 7
-#define ETH_EDMAQ_QID                   1
-#define LG2_ETH_EDMAQ_RING_SIZE         6
-#define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
+#define ETH_EDMAQ_QTYPE 7
+#define ETH_EDMAQ_QID 1
+#define LG2_ETH_EDMAQ_RING_SIZE 6
+#define ETH_EDMAQ_RING_SIZE (1 << LG2_ETH_EDMAQ_RING_SIZE)
 
-#define ETH_ADMINQ_REQ_QTYPE            7
-#define ETH_ADMINQ_REQ_QID              2
-#define LG2_ETH_ADMINQ_REQ_RING_SIZE    4
-#define ETH_ADMINQ_REQ_RING_SIZE        (1 << LG2_ETH_ADMINQ_REQ_RING_SIZE)
+#define ETH_ADMINQ_REQ_QTYPE 7
+#define ETH_ADMINQ_REQ_QID 2
+#define LG2_ETH_ADMINQ_REQ_RING_SIZE 4
+#define ETH_ADMINQ_REQ_RING_SIZE (1 << LG2_ETH_ADMINQ_REQ_RING_SIZE)
 
-#define ETH_ADMINQ_RESP_QTYPE           7
-#define ETH_ADMINQ_RESP_QID             3
-#define LG2_ETH_ADMINQ_RESP_RING_SIZE   4
-#define ETH_ADMINQ_RESP_RING_SIZE       (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
+#define ETH_ADMINQ_RESP_QTYPE 7
+#define ETH_ADMINQ_RESP_QID 3
+#define LG2_ETH_ADMINQ_RESP_RING_SIZE 4
+#define ETH_ADMINQ_RESP_RING_SIZE (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
 
-#define RXDMA_Q_QUIESCE_WAIT_S         0.001  //1 ms
-#define RXDMA_LIF_QUIESCE_WAIT_S       0.01   //10 ms
+#define RXDMA_Q_QUIESCE_WAIT_S 0.001  // 1 ms
+#define RXDMA_LIF_QUIESCE_WAIT_S 0.01 // 10 ms
 
-#define RSS_HASH_KEY_SIZE	40
-#define RSS_IND_TBL_SIZE	128
+#define RSS_HASH_KEY_SIZE 40
+#define RSS_IND_TBL_SIZE 128
 
-#define FW_MAX_SZ           ((900 << 20))       // 900 MiB
-#define FW_FILEPATH         "/update/firmware.tar"
+#define FW_MAX_SZ ((900 << 20)) // 900 MiB
+#define FW_FILEPATH "/update/firmware.tar"
 
 /**
  * LIF Resource structure
@@ -97,31 +97,27 @@ enum eth_lif_state {
     LIF_STATE_DOWN,
 };
 
-class EthLif {
-public:
-    EthLif(Eth *dev,
-           devapi *dev_api,
-           void *dev_spec,
-           PdClient *pd_client,
-           eth_lif_res_t *res,
+class EthLif
+{
+  public:
+    EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, eth_lif_res_t *res,
            EV_P);
 
     status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t Reset();
     bool EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
-        struct edmaq_ctx *ctx);
+                   struct edmaq_ctx *ctx);
 
     // Command Handlers
-    status_code_t CmdProxyHandler(void *req, void *req_data,
-                                  void *resp, void *resp_data);
-    status_code_t CmdHandler(void *req, void *req_data,
-                             void *resp, void *resp_data);
+    status_code_t CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
 
     static const char *opcode_to_str(cmd_opcode_t opcode);
 
     // Event Handlers
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
+    void DelphiMountEventHandler(bool mounted);
     void SendFWDownEvent();
     void HalEventHandler(bool status);
 
@@ -133,7 +129,7 @@ public:
 
     EV_P;
 
-private:
+  private:
     Eth *dev;
     static sdk::lib::indexer *fltr_allocator;
     // Info
@@ -175,8 +171,8 @@ private:
     uint8_t *fw_buf;
     // RSS config
     uint16_t rss_type;
-    uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
-    uint8_t  rss_indir[RSS_IND_TBL_SIZE]; // 128B
+    uint8_t rss_key[RSS_HASH_KEY_SIZE];  // 40B
+    uint8_t rss_indir[RSS_IND_TBL_SIZE]; // 128B
     // Network info
     map<uint64_t, uint64_t> mac_addrs;
     map<uint64_t, uint16_t> vlans;
@@ -184,7 +180,7 @@ private:
     // Tasks
     evutil_timer stats_timer = {0};
 
-    //ref_cnt for queues for this lif
+    // ref_cnt for queues for this lif
     uint32_t active_q_ref_cnt;
 
     // Services
@@ -192,8 +188,7 @@ private:
     EdmaQ *edmaq;
 
     /* AdminQ Commands */
-    static void AdminCmdHandler(void *obj,
-        void *req, void *req_data, void *resp, void *resp_data);
+    static void AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t SetFeatures(void *req, void *req_data, void *resp, void *resp_data);
@@ -241,4 +236,4 @@ private:
     static lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
 };
 
-#endif   /* __ETH_LIF_HPP__ */
+#endif /* __ETH_LIF_HPP__ */

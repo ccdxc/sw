@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include "rdmamgr_iris.hpp"
-#include "rdmamgr_mem.hpp"
+#include "rdmamgr_iris_mem.hpp"
 #include "platform/src/lib/nicmgr/include/rdma_dev.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/p4/common/defines.h"

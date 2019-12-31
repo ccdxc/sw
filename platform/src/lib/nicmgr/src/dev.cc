@@ -2,105 +2,61 @@
  * Copyright (c) 2018, Pensando Systems Inc.
  */
 
-#include <cstdio>
-#include <cstring>
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstring>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
-#include "gen/proto/device.pb.h"
-#include "accel_dev.hpp"
-#endif
-
+#include "nic/sdk/lib/device/device.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
-#include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
-#include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 
 #include "logger.hpp"
 
-#include "pd_client.hpp"
-#include "adminq.hpp"
 #include "dev.hpp"
 #include "eth_dev.hpp"
-#include "nicmgr_init.hpp"
+#ifdef IRIS
+#include "accel_dev.hpp"
 #include "nvme_dev.hpp"
 #include "virtio_dev.hpp"
+#endif  // IRIS
+#include "nicmgr_init.hpp"
+#include "nicmgr_utils.hpp"
+#include "pd_client.hpp"
 
 using namespace std;
 
 namespace pt = boost::property_tree;
 
-evutil_timer heartbeat_timer;
 DeviceManager *DeviceManager::instance;
-
-#define CASE(type) case type: return #type
-
-const char *
-eth_dev_type_to_str(EthDevType type)
-{
-    switch(type) {
-        CASE(ETH_UNKNOWN);
-        CASE(ETH_HOST);
-        CASE(ETH_HOST_MGMT);
-        CASE(ETH_MNIC_OOB_MGMT);
-        CASE(ETH_MNIC_INTERNAL_MGMT);
-        CASE(ETH_MNIC_INBAND_MGMT);
-        CASE(ETH_MNIC_CPU);
-        CASE(ETH_MNIC_LEARN);
-        default: return "Unknown";
-    }
-}
-
-#define CASE(type) case type: return #type
-
-const char *
-oprom_type_to_str(OpromType type)
-{
-    switch(type) {
-        CASE(OPROM_UNKNOWN);
-        CASE(OPROM_LEGACY);
-        CASE(OPROM_UEFI);
-        CASE(OPROM_UNIFIED);
-        default: return "unknown";
-    }
-}
+pciemgr *pciemgr;
 
 /*
  * DeviceManger's pcie event handlers
  */
 
 void
-DevPcieEvHandler::memrd(const int port,
-                          const uint32_t lif,
-                          const pciehdev_memrw_notify_t *n)
+DevPcieEvHandler::memrd(const int port, const uint32_t lif, const pciehdev_memrw_notify_t *n)
 {
-    NIC_LOG_INFO("memrd: port {} lif {}\n"
-            "    bar {} baraddr {:#x} baroffset {:#x} "
-            "size {} localpa {:#x} data {:#x}",
-            port, lif,
-            n->cfgidx, n->baraddr, n->baroffset,
-            n->size, n->localpa, n->data);
+    NIC_LOG_INFO("memrd: port {} lif {}"
+                 " bar {} baraddr {:#x} baroffset {:#x}"
+                 " size {} localpa {:#x} data {:#x}",
+                 port, lif, n->cfgidx, n->baraddr, n->baroffset, n->size, n->localpa, n->data);
 }
 
 void
-DevPcieEvHandler::memwr(const int port,
-                          const uint32_t lif,
-                          const pciehdev_memrw_notify_t *n)
+DevPcieEvHandler::memwr(const int port, const uint32_t lif, const pciehdev_memrw_notify_t *n)
 {
-    NIC_LOG_INFO("memwr: port {} lif {}\n"
-            "    bar {} baraddr {:#x} baroffset {:#x} "
-            "size {} localpa {:#x} data {:#x}",
-            port, lif,
-            n->cfgidx, n->baraddr, n->baroffset,
-            n->size, n->localpa, n->data);
+    NIC_LOG_INFO("memwr: port {} lif {}"
+                 " bar {} baraddr {:#x} baroffset {:#x} "
+                 " size {} localpa {:#x} data {:#x}",
+                 port, lif, n->cfgidx, n->baraddr, n->baroffset, n->size, n->localpa, n->data);
 }
 
 void
@@ -110,30 +66,24 @@ DevPcieEvHandler::hostup(const int port)
 }
 
 void
-DevPcieEvHandler::hostdn(const int port) {
+DevPcieEvHandler::hostdn(const int port)
+{
     NIC_LOG_INFO("hostdn: port {}", port);
 }
 
 void
-DevPcieEvHandler::sriov_numvfs(const int port,
-                                 const uint32_t lif,
-                                 const uint16_t numvfs)
+DevPcieEvHandler::sriov_numvfs(const int port, const uint32_t lif, const uint16_t numvfs)
 {
-    NIC_LOG_INFO("sriov_numvfs: port {} lif {} numvfs {}",
-            port, lif, numvfs);
+    NIC_LOG_INFO("sriov_numvfs: port {} lif {} numvfs {}", port, lif, numvfs);
 }
 
 void
-DevPcieEvHandler::reset(const int port,
-                          uint32_t rsttype,
-                          const uint32_t lifb,
-                          const uint32_t lifc)
+DevPcieEvHandler::reset(const int port, uint32_t rsttype, const uint32_t lifb, const uint32_t lifc)
 {
     DeviceManager *devmgr;
     Eth *eth_dev;
 
-    NIC_LOG_DEBUG("reset: port {} rsttype {} lifb {} lifc {}",
-                 port, rsttype, lifb, lifc);
+    NIC_LOG_DEBUG("reset: port {} rsttype {} lifb {} lifc {}", port, rsttype, lifb, lifc);
 
     devmgr = DeviceManager::GetInstance();
     if (devmgr == NULL) {
@@ -141,7 +91,7 @@ DevPcieEvHandler::reset(const int port,
         return;
     }
 
-    eth_dev = devmgr->GetEthDeviceByLif(lifb);
+    eth_dev = (Eth *)devmgr->GetDeviceByLif(lifb);
     if (eth_dev == NULL) {
         NIC_LOG_ERR("{}: No Eth device found for lif {}", __func__, lifb);
         return;
@@ -150,104 +100,54 @@ DevPcieEvHandler::reset(const int port,
     eth_dev->PcieResetEventHandler(rsttype);
 }
 
-DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                             bool micro_seg_en,
-                             sdk::platform::platform_type_t platform, EV_P)
+/**
+ * Device Manager
+ */
+DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
+                             sdk::lib::dev_forwarding_mode_t fwd_mode,
+                             bool micro_seg_en, EV_P)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
     instance = this;
-#ifdef __x86_64__
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
-                sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
-    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
-                sdk::lib::PAL_RET_OK);
-#endif
-#endif
-    if (loop == NULL) {
-        this->loop = EV_DEFAULT;
-    } else {
-        this->loop = loop;
-    }
+
+    this->platform = platform;
+    NIC_LOG_DEBUG("Platform {}", platform);
+
+    sdk::lib::pal_init(platform);
+
+    this->loop = (loop == NULL) ? EV_DEFAULT : loop;
     this->fwd_mode = fwd_mode;
-    this->micro_seg_en_ = micro_seg_en;
-    this->config_file = config_file;
+    this->micro_seg_en = micro_seg_en;
     this->dev_api = NULL;
+
     pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
     this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
 
-    printf("Nicmgr forwarding mode: %s\n", FWD_MODE_TYPES_str(fwd_mode));
-    NIC_LOG_DEBUG("Event loop: {:#x}", (uint64_t)this->loop);
-
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
     // int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
-    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN,
-                                  (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
+    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
     if (!skip_hwinit) {
-        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF,
-                                                    NICMGR_LIF_MAX);
+        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF, NICMGR_LIF_MAX);
         if (ret != sdk::SDK_RET_OK) {
             throw runtime_error("Failed to reset LIFs");
         }
     }
     upg_state = UNKNOWN_STATE;
-}
 
-string
-DeviceManager::ParseDeviceConf(string filename, fwd_mode_t *fw_mode,
-                               bool *micro_seg_en)
-{
-#if !defined(APOLLO) && !defined(ARTEMIS) && !defined(APULU) && !defined(ATHENA)
-    sdk::lib::device *device = NULL;
-    sdk::lib::dev_forwarding_mode_t fwd_mode;
-    sdk::lib::dev_feature_profile_t feature_profile;
-
-    cout << "Parsing Device conf file: " << filename << endl;
-    device = sdk::lib::device::factory(filename);
-
-    fwd_mode = device->get_forwarding_mode();
-    feature_profile = device->get_feature_profile();
-
-    printf("forwarding mode: %s, feature_profile: %d\n",
-           FWD_MODE_TYPES_str(*fw_mode),
-           feature_profile);
-
-    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
-        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH) {
-        *fw_mode = sdk::platform::FWD_MODE_SMART;
-        return string("/platform/etc/nicmgrd/eth_smart.json");
-    } else if (fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
-        *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
-        if (feature_profile == sdk::lib::FEATURE_PROFILE_CLASSIC_DEFAULT) {
-            return string("/platform/etc/nicmgrd/device.json");
-        } else if (feature_profile == sdk::lib::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
-            return string("/platform/etc/nicmgrd/eth_scale.json");
-        } else {
-            return string("/platform/etc/nicmgrd/device.json");
-        }
-    } else {
-        cout << "Unknown mode, returning classic default" << endl;
-        *fw_mode = sdk::platform::FWD_MODE_CLASSIC;
-        return string("/platform/etc/nicmgrd/device.json");
+    // initialize pciemgr
+    if (platform_is_hw(platform)) {
+        pciemgr = new class pciemgr("nicmgrd", pcie_evhandler, EV_A);
     }
-
-    // Determine micro-seg 
-    *micro_seg_en = (device->get_micro_seg_en() == 
-                     device::MICRO_SEG_ENABLE); 
-
-#endif
-    return string("");
 }
 
 void
-DeviceManager::CreateUplinks(uint32_t id, uint32_t port, bool is_oob)
+DeviceManager::CreateUplink(uint32_t id, uint32_t port, bool is_oob)
 {
     uplink_t *up = NULL;
     NIC_LOG_DEBUG("Creating uplink: id: {} port: {}, oob: {}", id, port, is_oob);
@@ -257,7 +157,6 @@ DeviceManager::CreateUplinks(uint32_t id, uint32_t port, bool is_oob)
     up->port = port;
     up->is_oob = is_oob;
     uplinks[up->id] = up;
-
 }
 
 static bool
@@ -360,7 +259,7 @@ deadbeef_mac_base(uint64_t &mac_base, uint32_t &mac_count)
 }
 
 int
-DeviceManager::LoadConfig(string path)
+DeviceManager::LoadProfile(string path, bool init_pci)
 {
     struct eth_devspec *eth_spec;
 
@@ -393,7 +292,13 @@ DeviceManager::LoadConfig(string path)
     NIC_LOG_INFO("Number of Macs: {}", sys_mac_count);
     NIC_LOG_INFO("Base mac address {}", mac_to_str(&sys_mac_base, sys_mac_str, sizeof(sys_mac_str)));
     NIC_LOG_INFO("Host Base: {}", mac_to_str(&host_mac_base, sys_mac_str, sizeof(sys_mac_str)));
-    NIC_LOG_INFO("Mnic Base: {}",mac_to_str(&mnic_mac_base, sys_mac_str, sizeof(sys_mac_str)));
+    NIC_LOG_INFO("Mnic Base: {}", mac_to_str(&mnic_mac_base, sys_mac_str, sizeof(sys_mac_str)));
+
+    //
+    if (platform_is_hw(platform) && pciemgr && init_pci) {
+        NIC_LOG_INFO("Initializing PCI configuration");
+        pciemgr->initialize();
+    }
 
     // Create Network
     if (spec.get_child_optional("network")) {
@@ -401,8 +306,8 @@ DeviceManager::LoadConfig(string path)
         if (spec.get_child_optional("network.uplink")) {
             for (const auto &node : spec.get_child("network.uplink")) {
                 auto val = node.second;
-
-                CreateUplinks(val.get<uint64_t>("id"), val.get<uint64_t>("port"), val.get<bool>("oob", false));
+                CreateUplink(val.get<uint64_t>("id"), val.get<uint64_t>("port"),
+                             val.get<bool>("oob", false));
             }
         }
     }
@@ -491,137 +396,88 @@ DeviceManager::LoadConfig(string path)
     // Create Pciestress devices
     if (spec.get_child_optional("pciestress")) {
         for (const auto &node : spec.get_child("pciestress")) {
-            if (0) Eth::ParseConfig(node); // XXX
+            if (0)
+                Eth::ParseConfig(node); // XXX
             AddDevice(PCIESTRESS, NULL);
         }
     }
-#endif //IRIS
+#endif // IRIS
 
-    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, 1);
+    if (platform_is_hw(platform) && pciemgr && init_pci) {
+        NIC_LOG_INFO("Finalizing PCI configuration");
+        pciemgr->finalize();
+    }
+
+    NIC_LOG_INFO("Starting Heartbeat timer");
+    evutil_timer_start(EV_A_ & heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0,
+                       1);
     upg_state = DEVICES_ACTIVE_STATE;
 
     return 0;
 }
 
-Device *
+void
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
-#ifdef IRIS
-    AccelDev *accel_dev;
-    NvmeDev *nvme_dev;
-    VirtIODev *virtio_dev;
-#endif //IRIS
-
     switch (type) {
-        case MNIC:
-            {
-                std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A);
-                for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
-                    devices[eth_devices[idx]->GetName()] = eth_devices[idx];
-                return (Device *)eth_devices[0];
+    case DEBUG:
+        NIC_LOG_ERR("Unsupported Device Type DEBUG");
+        break;
+    case ETH: {
+        std::vector<Eth *> eth_devices = Eth::factory(dev_api, dev_spec, pd, EV_A);
+        for (auto it = eth_devices.begin(); it != eth_devices.end(); it++) {
+            Eth *eth_dev = *it;
+            eth_dev->SetType(type);
+            devices[eth_dev->GetName()] = eth_dev;
+        }
+
+        // Create the host device
+        if (eth_devices[0]->GetEthType() == ETH_HOST_MGMT ||
+            eth_devices[0]->GetEthType() == ETH_HOST) {
+            if (!eth_devices[0]->CreateHostDevice()) {
+                NIC_LOG_ERR("{}: CreateHostDevice() failed", eth_devices[0]->GetName());
             }
-        case DEBUG:
-            NIC_LOG_ERR("Unsupported Device Type DEBUG");
-            return NULL;
-        case ETH:
-            {
-                std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A);
+        }
 
-                for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
-                    devices[eth_devices[idx]->GetName()] = eth_devices[idx];
-                }
-
-                if (upgrade_mode == FW_MODE_NORMAL_BOOT) {
-                    // Create the host device
-                    if (eth_devices[0]->GetType() == ETH_HOST_MGMT || eth_devices[0]->GetType() == ETH_HOST) {
-                        if (!eth_devices[0]->CreateHostDevice()) {
-                            NIC_LOG_ERR("{}: CreateHostDevice() failed", eth_devices[0]->GetName());
-                            return NULL;
-                        }
-                    }
-                    else {
-                        NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[0]->GetName());
-                    }
-                }
-
-                return (Device *)eth_devices[0];
-            }
+        break;
+    }
 #ifdef IRIS
-        case ACCEL:
-            accel_dev = new AccelDev(dev_api, dev_spec, pd, EV_A);
-            accel_dev->SetType(type);
-            devices[accel_dev->GetName()] = accel_dev;
-            return (Device *)accel_dev;
-        case NVME:
-            nvme_dev = new NvmeDev(dev_api, dev_spec, pd, EV_A);
-            nvme_dev->SetType(type);
-            devices[nvme_dev->GetName()] = nvme_dev;
-            return (Device *)nvme_dev;
-        case VIRTIO:
-            virtio_dev = new VirtIODev(dev_api, dev_spec, pd, EV_A);
-            virtio_dev->SetType(type);
-            devices[virtio_dev->GetName()] = virtio_dev;
-            return (Device *)virtio_dev;
-        case PCIESTRESS:
-            extern class pciemgr *pciemgr;
-
-            if (pciemgr) {
-                pciehdevice_resources_t pres;
-                static int instance;
-
-                memset(&pres, 0, sizeof(pres));
-                pres.type = PCIEHDEVICE_PCIESTRESS;
-                snprintf(pres.pfres.name, sizeof(pres.pfres.name),
-                         "pciestress%d", instance++);
-                int ret = pciemgr->add_devres(&pres);
-                if (ret != 0) {
-                    NIC_LOG_ERR("pciestress add failed {}", ret);
-                    return NULL;
-                }
-            }
-            return NULL;
-#endif //IRIS
-        default:
-            return NULL;
+    case ACCEL: {
+        AccelDev *accel_dev = new AccelDev(dev_api, dev_spec, pd, EV_A);
+        accel_dev->SetType(type);
+        devices[accel_dev->GetName()] = accel_dev;
+        break;
     }
-
-    return NULL;
-}
-
-void
-DeviceManager::RestoreDevicesState(std::vector <struct EthDevInfo *> eth_dev_list)
-{
-
-    NIC_LOG_DEBUG("Restoring total {} ETH devices after upgrade", eth_dev_list.size());
-    for (uint32_t idx = 0; idx < eth_dev_list.size(); idx++) {
-        Eth *eth_dev = new Eth(dev_api, eth_dev_list[idx], pd, EV_A);
-        eth_dev->SetType(ETH);
-        devices[eth_dev->GetName()] = eth_dev;
+    case NVME: {
+        NvmeDev *nvme_dev = new NvmeDev(dev_api, dev_spec, pd, EV_A);
+        nvme_dev->SetType(type);
+        devices[nvme_dev->GetName()] = nvme_dev;
+        break;
     }
+    case VIRTIO: {
+        VirtIODev *virtio_dev = new VirtIODev(dev_api, dev_spec, pd, EV_A);
+        virtio_dev->SetType(type);
+        devices[virtio_dev->GetName()] = virtio_dev;
+        break;
+    }
+    case PCIESTRESS: {
+        if (pciemgr) {
+            pciehdevice_resources_t pres;
+            static int instance;
 
-    upg_state = DEVICES_ACTIVE_STATE;
-}
-
-Device *
-DeviceManager::GetDevice(std::string name)
-{
-    return devices[name];
-}
-
-Eth *
-DeviceManager::GetEthDeviceByLif(uint32_t lif_id)
-{
-    for (auto it = devices.begin(); it != devices.end(); it++ ) {
-        Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
-            if (eth_dev->IsDevLif(lif_id)) {
-                return eth_dev;
+            memset(&pres, 0, sizeof(pres));
+            pres.type = PCIEHDEVICE_PCIESTRESS;
+            snprintf(pres.pfres.name, sizeof(pres.pfres.name), "pciestress%d", instance++);
+            int ret = pciemgr->add_devres(&pres);
+            if (ret != 0) {
+                NIC_LOG_ERR("pciestress add failed {}", ret);
             }
         }
     }
-
-    return NULL;
+#endif // IRIS
+    default:
+        break;
+    }
 }
 
 void
@@ -635,15 +491,53 @@ DeviceManager::DeleteDevice(std::string name)
 }
 
 void
+DeviceManager::RestoreDevice(enum DeviceType type, void *dev_state)
+{
+    switch (type) {
+    case ETH: {
+        Eth *eth_dev = new Eth(dev_api, (struct EthDevInfo *)dev_state, pd, EV_A);
+        eth_dev->SetType(ETH);
+        devices[eth_dev->GetName()] = eth_dev;
+        break;
+    }
+    default:
+        break;
+    }
+
+    upg_state = DEVICES_ACTIVE_STATE;
+}
+
+Device *
+DeviceManager::GetDevice(std::string name)
+{
+    return devices[name];
+}
+
+Device *
+DeviceManager::GetDeviceByLif(uint32_t lif_id)
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
+            if (eth_dev->IsDevLif(lif_id)) {
+                return dev;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+void
 DeviceManager::SetHalClient(devapi *dev_api)
 {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+        if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *)dev;
             eth_dev->SetHalClient(dev_api);
         }
-
 #ifdef IRIS
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
@@ -657,8 +551,7 @@ DeviceManager::SetHalClient(devapi *dev_api)
             VirtIODev *virtio_dev = (VirtIODev *)dev;
             virtio_dev->SetHalClient(dev_api);
         }
-#endif //IRIS
-
+#endif // IRIS
     }
 }
 
@@ -670,10 +563,10 @@ DeviceManager::HalEventHandler(bool status)
     // Hal UP
     if (status && !init_done) {
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
+
         // Instantiate HAL client
         dev_api = devapi_init();
-        dev_api->set_micro_seg_en(micro_seg_en_);
-        // dev_api->set_fwd_mode(fwd_mode);
+        dev_api->set_micro_seg_en(micro_seg_en);
         pd->update();
 
         // Create uplinks
@@ -683,37 +576,32 @@ DeviceManager::HalEventHandler(bool status)
                 dev_api->uplink_create(up->id, up->port, up->is_oob);
             }
         }
+
         // Setting hal clients in all devices
         SetHalClient(dev_api);
 
         init_done = true;
-
-        // Setup swm on native vlan
-        // swm_update(true, 1, 10, 0x00AECD00113F);
     }
 
-    // Bringup OOB first
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *)dev;
-            if (eth_dev->GetType() == ETH_MNIC_OOB_MGMT) {
+            if (eth_dev->GetEthType() == ETH_MNIC_OOB_MGMT) {
                 eth_dev->HalEventHandler(status);
                 break;
             }
         }
     }
 
-    // Bringup other devices
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+        if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *)dev;
-            if (eth_dev->GetType() != ETH_MNIC_OOB_MGMT) {
+            if (eth_dev->GetEthType() != ETH_MNIC_OOB_MGMT) {
                 eth_dev->HalEventHandler(status);
             }
         }
-
 #ifdef IRIS
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
@@ -727,13 +615,19 @@ DeviceManager::HalEventHandler(bool status)
             VirtIODev *virtio_dev = (VirtIODev *)dev;
             virtio_dev->HalEventHandler(status);
         }
-#endif //IRIS
+#endif // IRIS
     }
 }
 
 void
 DeviceManager::SystemSpecEventHandler(bool micro_seg_en)
 {
+    if (this->micro_seg_en != micro_seg_en) {
+        NIC_LOG_ERR("Micro-segmentation mode changed: {} > {}",
+            this->micro_seg_en, micro_seg_en);
+    }
+
+    this->micro_seg_en = micro_seg_en;
     dev_api->set_micro_seg_en(micro_seg_en);
 }
 
@@ -766,55 +660,11 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
             eth_dev->LinkEventHandler(evd);
         }
     }
-}
-
-bool
-DeviceManager::IsDataPathQuiesced()
-{
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
-            if (!eth_dev->IsDevQuiesced())
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-DeviceManager::CheckAllDevsDisabled()
-{
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
-            if (!eth_dev->IsDevReset())
-                return false;
-        }
-    }
-
-    return true;
-}
-
-int
-DeviceManager::SendFWDownEvent()
-{
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
-            eth_dev->SendFWDownEvent();
-        }
-    }
-
-    return 0;
 }
 
 void
@@ -824,8 +674,8 @@ DeviceManager::XcvrEventHandler(port_status_t *evd)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
             eth_dev->XcvrEventHandler(evd);
         }
     }
@@ -838,8 +688,8 @@ DeviceManager::HeartbeatEventHandler(void *obj)
 
     for (auto it = devmgr->devices.begin(); it != devmgr->devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
             eth_dev->HeartbeatEventHandler();
         }
     }
@@ -852,7 +702,24 @@ DeviceManager::DelphiMountEventHandler(bool mounted)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        dev->DelphiMountEventHandler(mounted);
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
+            eth_dev->DelphiMountEventHandler(mounted);
+        }
+#ifdef IRIS
+        if (dev->GetType() == ACCEL) {
+            AccelDev *accel_dev = (AccelDev *)dev;
+            accel_dev->DelphiMountEventHandler(mounted);
+        }
+        if (dev->GetType() == NVME) {
+            NvmeDev *nvme_dev = (NvmeDev *)dev;
+            nvme_dev->DelphiMountEventHandler(mounted);
+        }
+        if (dev->GetType() == VIRTIO) {
+            VirtIODev *virtio_dev = (VirtIODev *)dev;
+            virtio_dev->DelphiMountEventHandler(mounted);
+        }
+#endif // IRIS
     }
 }
 
@@ -863,8 +730,8 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
-            Eth *eth_dev = (Eth *) dev;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
             eth_dev->GenerateQstateInfoJson(lifs);
         }
     }
@@ -905,7 +772,7 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
         case UPG_EVENT_QUIESCE:
             for (auto it = devices.begin(); it != devices.end(); it++) {
                 Device *dev = it->second;
-                if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+                if (dev->GetType() == ETH) {
                     Eth *eth_dev = (Eth *) dev;
                     eth_dev->QuiesceEventHandler(true);
                 }
@@ -926,6 +793,51 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
 
     return 0;
 }
+
+bool
+DeviceManager::IsDataPathQuiesced()
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *) dev;
+            if (!eth_dev->IsDevQuiesced())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+DeviceManager::CheckAllDevsDisabled()
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *) dev;
+            if (!eth_dev->IsDevReset())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+int
+DeviceManager::SendFWDownEvent()
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *) dev;
+            eth_dev->SendFWDownEvent();
+        }
+    }
+
+    return 0;
+}
+
 
 UpgradeState
 DeviceManager::GetUpgradeState()
@@ -951,15 +863,15 @@ DeviceManager::GetUpgradeState()
     return upg_state;
 }
 
-std::vector <struct EthDevInfo *>
+std::vector<struct EthDevInfo *>
 DeviceManager::GetEthDevStateInfo()
 {
-    std::vector <struct EthDevInfo *> eth_dev_info_list;
+    std::vector<struct EthDevInfo *> eth_dev_info_list;
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
-            Eth *eth_dev = (Eth *) dev;
+            Eth *eth_dev = (Eth *)dev;
             struct EthDevInfo *info = new EthDevInfo();
 
             eth_dev->GetEthDevInfo(info);
@@ -978,28 +890,28 @@ DeviceManager::UpgradeCompatCheck()
         Device *dev = it->second;
         // Upgrade is not possible for non-ETH devices
         if (dev->GetType() != ETH) {
-            NIC_LOG_DEBUG("Upgrade is not possible with non-ETH device {}. "
-                    "compat check failed for Upgrade", it->first);
+            NIC_LOG_ERR("Upgrade is not possible with non-ETH device {}. "
+                        "compat check failed for Upgrade",
+                        it->first);
             return false;
-        }
-        else {
+        } else {
             // If RDMA is enabled in ETH device then also upgrade is not feasible
-            Eth *eth_dev = (Eth *) dev;
+            Eth *eth_dev = (Eth *)dev;
             struct EthDevInfo *info = new EthDevInfo();
 
             eth_dev->GetEthDevInfo(info);
             if (info->eth_spec->enable_rdma) {
                 NIC_LOG_WARN("RDMA enabled ETH device {} will not function "
-                        "after upgrade", it->first);
+                             "after upgrade",
+                             it->first);
                 /*
                  * TODO: as of now we need to ignore RDMA check since
                  * smart-nic profile has RDMA default enabled
                  */
-                //return false;
+                // return false;
             }
         }
     }
 
     return true;
 }
-

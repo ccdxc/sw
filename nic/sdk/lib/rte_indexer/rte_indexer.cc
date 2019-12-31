@@ -6,6 +6,7 @@
 #include <rte_memory.h>
 #include <rte_common.h>
 #include <rte_bitmap.h>
+#include "include/sdk/platform.hpp"
 #include "lib/rte_indexer/rte_indexer.hpp"
 #include "lib/rte_indexer/rte_slab_op.hpp"
 

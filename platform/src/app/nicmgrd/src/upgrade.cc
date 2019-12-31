@@ -6,7 +6,10 @@
 
 #include "nic/include/trace.hpp"
 #include "nic/include/base.hpp"
+
 #include "platform/src/lib/nicmgr/include/dev.hpp"
+#include "platform/src/lib/nicmgr/include/eth_dev.hpp"
+
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "upgrade.hpp"
@@ -126,21 +129,30 @@ nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
     return resp;
 }
 
-// Handle upgrade success
+// Wipeout state
 void
-nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
+nicmgr_upg_hndlr::ResetState(UpgCtx& upgCtx)
 {
     NIC_LOG_INFO("Upgrade: Success");
 
     NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
-    // walk all objects and delete them
     vector<delphi::objects::EthDeviceInfoPtr> objlist = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
     for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj=objlist.begin(); obj !=objlist.end(); ++obj) {
         g_nicmgr_svc->sdk()->DeleteObject(*obj);
     }
-    
-    unlink(nicmgr_upgrade_state_file);
-    unlink(nicmgr_rollback_state_file);
+
+    NIC_FUNC_DEBUG("Deleting all objects of UplinkInfo from Delphi");
+    vector<delphi::objects::UplinkInfoPtr> UplinkList = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
+    for (vector<delphi::objects::UplinkInfoPtr>::iterator obj = UplinkList.begin(); obj != UplinkList.end(); ++obj) {
+        g_nicmgr_svc->sdk()->DeleteObject(*obj);
+    }
+}
+
+// Handle upgrade success
+void
+nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
+{
+    ResetState(upgCtx);
 }
 
 // Handle upgrade failure
@@ -152,18 +164,7 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 
     NIC_LOG_INFO("Upgrade: Failed");
 
-    // walk all objects and delete them
-    NIC_FUNC_DEBUG("Deleting all objects of EthDevInfo from Delphi");
-    vector<delphi::objects::EthDeviceInfoPtr> EthDevList = delphi::objects::EthDeviceInfo::List(g_nicmgr_svc->sdk());
-    for (vector<delphi::objects::EthDeviceInfoPtr>::iterator obj = EthDevList.begin(); obj != EthDevList.end(); ++obj) {
-        g_nicmgr_svc->sdk()->DeleteObject(*obj);
-    }
-
-    NIC_FUNC_DEBUG("Deleting all objects of UplinkInfo from Delphi");
-    vector<delphi::objects::UplinkInfoPtr> UplinkList = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
-    for (vector<delphi::objects::UplinkInfoPtr>::iterator obj = UplinkList.begin(); obj != UplinkList.end(); ++obj) {
-        g_nicmgr_svc->sdk()->DeleteObject(*obj);
-    }
+    ResetState(upgCtx);
 
     unlink(nicmgr_upgrade_state_file); 
 
@@ -178,7 +179,6 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 
     // we will run through all the state machine for nicmgr upgrade if somehow upgrade failed
     NIC_FUNC_DEBUG("Sending LinkDown event to eth drivers");
-
     if (devmgr->HandleUpgradeEvent(UPG_EVENT_QUIESCE)) {
         NIC_FUNC_DEBUG("UPG_EVENT_QUIESCE event Failed! Cannot continue upgrade FSM");
         resp.resp = FAIL;
@@ -203,7 +203,8 @@ nicmgr_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
     NIC_LOG_INFO("Upgrade: Abort");
 }
 
-void SaveUplinkInfo(uplink_t *up, delphi::objects::UplinkInfoPtr proto_obj)
+void
+SaveUplinkInfo(uplink_t *up, delphi::objects::UplinkInfoPtr proto_obj)
 {
     proto_obj->set_key(up->id);
     proto_obj->set_id(up->id);
@@ -259,7 +260,6 @@ SaveEthDevInfo(struct EthDevInfo *eth_dev_info, delphi::objects::EthDeviceInfoPt
     proto_obj->mutable_eth_dev_spec()->set_barmap_size(eth_dev_info->eth_spec->barmap_size);
 
     g_nicmgr_svc->sdk()->SetObject(proto_obj);
-    return;
 }
 
 HdlrResp
@@ -273,7 +273,6 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
 
     dev_info = devmgr->GetEthDevStateInfo();
     NIC_FUNC_DEBUG("Saving {} objects of EthDevInfo to delphi", dev_info.size());
-    //for each element in dev_info convert it to protobuf and then setobject to delphi
     for (uint32_t eth_dev_idx = 0; eth_dev_idx < dev_info.size(); eth_dev_idx++) {
         delphi::objects::EthDeviceInfoPtr eth_dev_info = make_shared<delphi::objects::EthDeviceInfo>();
         NIC_FUNC_DEBUG("Saving EthDevInfo for eth_dev_idx {}", eth_dev_idx);
@@ -287,8 +286,7 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
         NIC_FUNC_DEBUG("Saving Uplink info for uplink id: {}", up->id);
         SaveUplinkInfo(up, uplink_info);
     }
-    std::vector <delphi::objects::UplinkInfoPtr> UplinkProtoObjs = delphi::objects::UplinkInfo::List(g_nicmgr_svc->sdk());
-    NIC_FUNC_DEBUG("Retrieved {} UplinkProto objects from Delphi", UplinkProtoObjs.size());
+
     return resp;
 }
 

@@ -53,6 +53,7 @@ public:
     void DevcmdHandler();
     void HalEventHandler(bool status);
     void SetHalClient(devapi *dapi);
+    void DelphiMountEventHandler(bool mounted);
 
     void IntrReset(void);
 

@@ -97,11 +97,14 @@ class hal_status_handler : public dobj::HalStatusReactor {
 public:
     hal_status_handler(delphi::SdkPtr sdk) {
         this->sdk_ = sdk;
+        status = false;
     }
-    virtual error OnHalStatusCreate(HalStatusPtr port);
-    virtual error OnHalStatusUpdate(HalStatusPtr port);
+    virtual error OnHalStatusCreate(HalStatusPtr status);
+    virtual error OnHalStatusUpdate(HalStatusPtr status);
+    error update_hal_status(HalStatusPtr status);
 private:
     delphi::SdkPtr    sdk_;
+    bool status;
 };
 typedef std::shared_ptr<hal_status_handler> hal_status_handler_ptr_t;
 // init_hal_status_handler creates a reactor for HAL status

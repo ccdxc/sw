@@ -1,8 +1,0 @@
--I ../../../..
--I ../../../../nic/hal/third-party/spdlog/include
--I ../../../../nic/sdk
--I ../../../../nic/sdk/platform/devapi
--I ../../../../nic/build/aarch64/iris
--I ../../../../nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/include
--I ../../../../nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/include
--std=c++11

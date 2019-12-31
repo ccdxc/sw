@@ -227,15 +227,9 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     //       to physical port as we can lose venice connectivity.
     //       So in this scenario we should not propogate the IF down.
     if (hal->get_micro_seg_en()) {
-        NIC_FUNC_DEBUG("Not allowd in classic nic mode ... ignoring!");
+        NIC_FUNC_DEBUG("Not allowed in classic nic mode ... ignoring!");
         return (SDK_RET_OK);
     }
-#if 0
-    if (hal->get_fwd_mode() != sdk::platform::FWD_MODE_CLASSIC) {
-        NIC_FUNC_DEBUG("Not allowd in classic nic mode ... ignoring!");
-        return (SDK_RET_OK);
-    }
-#endif
 
     req = req_msg.add_request();
     req->CopyFrom(rsp.spec());

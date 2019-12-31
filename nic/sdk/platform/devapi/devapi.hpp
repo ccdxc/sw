@@ -63,7 +63,7 @@ public:
                                       port_config_t *config) = 0;
 
     // generic APIs
-    virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) {
+    virtual sdk_ret_t set_fwd_mode(sdk::lib::dev_forwarding_mode_t fwd_mode) {
         return SDK_RET_INVALID_OP;
     }
     virtual sdk_ret_t set_micro_seg_en(bool en) {

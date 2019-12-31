@@ -4,6 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsnicmgr.so
 MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_INCS     := ${MODULE_SRC_DIR} \
-                   ${TOPDIR}/nic/sdk/platform/devapi
+                   ${TOPDIR}/nic/sdk/platform/devapi \
+                   ${TOPDIR}/platform/src/lib/nicmgr/include
 MODULE_DEPS     = hal.memrgns
 include ${MKDEFS}/post.mk

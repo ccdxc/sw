@@ -74,7 +74,7 @@ init(bool log_to_console)
     }
 
     spdlog::set_level(level);
-    spdlog::set_pattern(LOG_PATTERN);
+    // spdlog::set_pattern(LOG_PATTERN);
 
     std::vector<spdlog::sink_ptr> sinks;
     if (log_to_console) {

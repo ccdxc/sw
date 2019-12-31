@@ -1,15 +1,11 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 
-#include "platform/src/lib/devapi_iris/devapi_iris.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
-#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
-pciemgr *pciemgr;
-namespace nicmgr {
-// shared_ptr<NicMgrService> g_nicmgr_svc;
-}
 using namespace std;
 
 class devapi_iris_test : public ::testing::Test {
@@ -30,17 +26,6 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-
-#if 0
-      HalGRPCClient::Factory(FWD_MODE_CLASSIC);
-
-      // Create Uplinks
-      Uplink::Factory(128, 1);
-      Uplink::Factory(128, 2);
-
-      NIC_LOG_DEBUG("Creating VRFs for uplinks");
-      Uplink::CreateVrfs();
-#endif
   }
 
 };
@@ -52,8 +37,6 @@ TEST_F(devapi_iris_test, test1)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi *dev_api = devapi_iris::factory();
-
-    // dev_api->set_fwd_mode(sdk::platform::FWD_MODE_CLASSIC);
 
     // uplink
     dev_api->uplink_create(128, 1, false);
@@ -77,7 +60,6 @@ TEST_F(devapi_iris_test, test2)
 
     devapi *dev_api = devapi_iris::factory();
 
-    // dev_api->set_fwd_mode(sdk::platform::FWD_MODE_SMART);
     dev_api->set_micro_seg_en(true);
 
     // uplink

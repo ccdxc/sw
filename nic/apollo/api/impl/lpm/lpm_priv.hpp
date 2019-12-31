@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 
 /**< invalid nexthop */
 #define LPM_NEXTHOP_INVALID            -1

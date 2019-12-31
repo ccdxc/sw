@@ -86,15 +86,6 @@ typedef struct lif_info_s {
     mac_addr_t mac;
 } __PACK__ lif_info_t;
 
-
-#define FWD_MODE_TYPES(ENTRY)                                   \
-    ENTRY(FWD_MODE_NONE,            0, "FWD_MODE_NONE")         \
-    ENTRY(FWD_MODE_CLASSIC,         1, "FWD_MODE_CLASSIC")      \
-    ENTRY(FWD_MODE_SMART,           2, "FWD_MODE_SMART")
-SDK_DEFINE_ENUM(fwd_mode_t, FWD_MODE_TYPES)
-SDK_DEFINE_ENUM_TO_STR(fwd_mode_t, FWD_MODE_TYPES)
-#undef FWD_MODE_TYPES
-
 typedef struct port_config_s {
     uint32_t    speed;      // Mbps
     uint32_t    mtu;
@@ -236,7 +227,6 @@ using sdk::platform::vlan_t;
 using sdk::platform::lif_queue_info_t;
 using sdk::platform::lif_info_t;
 using sdk::platform::lif_type_t;
-using sdk::platform::fwd_mode_t;
 using sdk::platform::port_config_t;
 using sdk::platform::port_status_t;
 using sdk::platform::xcvr_status_t;

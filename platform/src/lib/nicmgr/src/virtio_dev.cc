@@ -28,8 +28,8 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 
-
 #include "logger.hpp"
+#include "nicmgr_utils.hpp"
 #include "virtio_if.h"
 #include "virtio_dev.hpp"
 #include "virtio_lif.hpp"
@@ -174,6 +174,12 @@ VirtIODev::SetHalClient(devapi *dapi)
     if (lif) {
         lif->SetHalClient(dapi);
     }
+    return;
+}
+
+void
+VirtIODev::DelphiMountEventHandler(bool mounted)
+{
     return;
 }
 

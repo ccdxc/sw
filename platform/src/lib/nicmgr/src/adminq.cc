@@ -1,29 +1,18 @@
 /*
-* Copyright (c) 2019, Pensando Systems Inc.
-*/
+ * Copyright (c) 2019, Pensando Systems Inc.
+ */
 
 #include "adminq.hpp"
 #include "logger.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 
-
-AdminQ::AdminQ(
-    const char *name,
-    PdClient *pd,
-    uint16_t lif,
-    uint8_t req_qtype, uint32_t req_qid, uint16_t req_ring_size,
-    uint8_t resp_qtype, uint32_t resp_qid, uint16_t resp_ring_size,
-    adminq_cb_t handler, void *handler_obj, EV_P_
-    bool response_enabled
-) :
-    name(name),
-    pd(pd),
-    lif(lif),
-    req_qtype(req_qtype), resp_qtype(resp_qtype),
-    req_qid(req_qid), resp_qid(resp_qid),
-    req_ring_size(req_ring_size), resp_ring_size(resp_ring_size),
-    handler(handler), handler_obj(handler_obj),
-    response_enabled(response_enabled)
+AdminQ::AdminQ(const char *name, PdClient *pd, uint16_t lif, uint8_t req_qtype, uint32_t req_qid,
+               uint16_t req_ring_size, uint8_t resp_qtype, uint32_t resp_qid,
+               uint16_t resp_ring_size, adminq_cb_t handler, void *handler_obj,
+               EV_P_ bool response_enabled)
+    : name(name), pd(pd), lif(lif), req_qtype(req_qtype), resp_qtype(resp_qtype), req_qid(req_qid),
+      resp_qid(resp_qid), req_ring_size(req_ring_size), resp_ring_size(resp_ring_size),
+      handler(handler), handler_obj(handler_obj), response_enabled(response_enabled)
 {
     this->loop = loop;
 
@@ -81,9 +70,9 @@ AdminQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
         return false;
     }
 
-    evutil_add_prepare(EV_A_ &adminq_prepare, AdminQ::Poll, this);
-    evutil_add_check(EV_A_ &adminq_check, AdminQ::Poll, this);
-    evutil_timer_start(EV_A_ &adminq_timer, AdminQ::Poll, this, 0.0, 0.001);
+    evutil_add_prepare(EV_A_ & adminq_prepare, AdminQ::Poll, this);
+    evutil_add_check(EV_A_ & adminq_check, AdminQ::Poll, this);
+    evutil_timer_start(EV_A_ & adminq_timer, AdminQ::Poll, this, 0.0, 0.001);
 
     return true;
 }
@@ -112,7 +101,8 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 
     uint8_t off;
     if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_req_stage0", &off, NULL) < 0) {
-        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_req_stage0");
+        NIC_LOG_ERR(
+            "Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_req_stage0");
         return false;
     }
     qstate.pc_offset = off;
@@ -135,7 +125,7 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 
     PAL_barrier();
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
-        P4PLUS_CACHE_INVALIDATE_TXDMA);
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return true;
 }
@@ -164,7 +154,8 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 
     uint8_t off;
     if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_resp_stage0", &off, NULL) < 0) {
-        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_resp_stage0");
+        NIC_LOG_ERR(
+            "Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_resp_stage0");
         return false;
     }
     qstate.pc_offset = off;
@@ -187,7 +178,7 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 
     PAL_barrier();
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
-        P4PLUS_CACHE_INVALIDATE_TXDMA);
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return true;
 }
@@ -205,9 +196,9 @@ AdminQ::Reset()
         return false;
     }
 
-    evutil_remove_prepare(EV_A_ &adminq_prepare);
-    evutil_remove_check(EV_A_ &adminq_check);
-    evutil_timer_stop(EV_A_ &adminq_timer);
+    evutil_remove_prepare(EV_A_ & adminq_prepare);
+    evutil_remove_check(EV_A_ & adminq_check);
+    evutil_timer_stop(EV_A_ & adminq_timer);
 
     return true;
 }
@@ -227,16 +218,13 @@ AdminQ::AdminRequestQReset()
     MEM_SET(req_qstate_addr, 0, fldsiz(nicmgr_req_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
-        P4PLUS_CACHE_INVALIDATE_TXDMA);
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     req_db_addr =
 #ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
+        CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b0 << 17) +
-                (lif << 6) +
-                (req_qtype << 3);
+        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b0 << 17) + (lif << 6) + (req_qtype << 3);
 
     WRITE_DB64(req_db_addr, req_qid << 24);
 
@@ -258,16 +246,13 @@ AdminQ::AdminResponseQReset()
     MEM_SET(resp_qstate_addr, 0, fldsiz(nicmgr_resp_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
-        P4PLUS_CACHE_INVALIDATE_TXDMA);
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     resp_db_addr =
 #ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
+        CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b0 << 17) +
-                (lif << 6) +
-                (resp_qtype << 3);
+        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b0 << 17) + (lif << 6) + (resp_qtype << 3);
 
     WRITE_DB64(resp_db_addr, resp_qid << 24);
 
@@ -278,7 +263,7 @@ bool
 AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
 {
     uint64_t addr;
-    struct nicmgr_req_comp_desc comp = { 0 };
+    struct nicmgr_req_comp_desc comp = {0};
 
     addr = req_comp_base + req_comp_tail * sizeof(struct nicmgr_req_comp_desc);
     READ_MEM(addr, (uint8_t *)&comp, sizeof(struct nicmgr_req_comp_desc), 0);
@@ -296,11 +281,9 @@ AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
         READ_MEM(req_desc_addr, (uint8_t *)req_desc, sizeof(*req_desc), 0);
 
         NIC_LOG_DEBUG("{}: request lif {} qtype {} qid {} comp_index {}"
-            " adminq_qstate_addr {:#x} desc_addr {:#x} req_head: {:#x} req_tail: {:#x}",
-            name,
-            req_desc->lif, req_desc->qtype, req_desc->qid,
-            req_desc->comp_index, req_desc->adminq_qstate_addr,
-            req_desc_addr, req_head, req_tail);
+                      " adminq_qstate_addr {:#x} desc_addr {:#x} req_head: {:#x} req_tail: {:#x}",
+                      name, req_desc->lif, req_desc->qtype, req_desc->qid, req_desc->comp_index,
+                      req_desc->adminq_qstate_addr, req_desc_addr, req_head, req_tail);
 
         req_head = (req_head + 1) & (req_ring_size - 1);
         req_tail = (req_tail + 1) & (req_ring_size - 1);
@@ -308,15 +291,12 @@ AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
         // Ring doorbell to update the PI
         uint64_t req_db_addr =
 #ifdef __aarch64__
-                    CAP_ADDR_BASE_DB_WA_OFFSET +
+            CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
-                    CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                    (0b1000 /* PI_UPD + NO_SCHED */ << 17) +
-                    (lif << 6) +
-                    (req_qtype << 3);
+            CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1000 /* PI_UPD + NO_SCHED */ << 17) +
+            (lif << 6) + (req_qtype << 3);
         uint64_t req_db_data = (req_qid << 24) | (0 << 16) | req_head;
-        NIC_LOG_DEBUG("{}: req_db_addr {:#x} req_db_data {:#x}",
-            name, req_db_addr, req_db_data);
+        NIC_LOG_DEBUG("{}: req_db_addr {:#x} req_db_data {:#x}", name, req_db_addr, req_db_data);
         PAL_barrier();
         WRITE_DB64(req_db_addr, req_db_data);
 
@@ -334,26 +314,21 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
     WRITE_MEM(resp_desc_addr, (uint8_t *)resp_desc, sizeof(*resp_desc), 0);
 
     NIC_LOG_DEBUG("{}: response lif {} qtype {} qid {} comp_index {}"
-        " adminq_qstate_addr {:#x} desc_addr {:#x} resp_tail: {:#x}",
-        name,
-        resp_desc->lif, resp_desc->qtype, resp_desc->qid,
-        resp_desc->comp_index, resp_desc->adminq_qstate_addr,
-        resp_desc_addr, resp_tail);
+                  " adminq_qstate_addr {:#x} desc_addr {:#x} resp_tail: {:#x}",
+                  name, resp_desc->lif, resp_desc->qtype, resp_desc->qid, resp_desc->comp_index,
+                  resp_desc->adminq_qstate_addr, resp_desc_addr, resp_tail);
 
     resp_tail = (resp_tail + 1) & (resp_ring_size - 1);
 
     // Ring doorbell to update the PI and run response program
     uint64_t resp_db_addr =
 #ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
+        CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1011 /* PI_UPD + SCHED_COSB */ << 17) +
-                (lif << 6) +
-                (resp_qtype << 3);
+        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1011 /* PI_UPD + SCHED_COSB */ << 17) +
+        (lif << 6) + (resp_qtype << 3);
     uint64_t resp_db_data = (resp_qid << 24) | (0 << 16) | resp_tail;
-    NIC_LOG_DEBUG("{}: resp_db_addr {:#x} resp_db_data {:#x}",
-        name, resp_db_addr, resp_db_data);
+    NIC_LOG_DEBUG("{}: resp_db_addr {:#x} resp_db_data {:#x}", name, resp_db_addr, resp_db_data);
     PAL_barrier();
     WRITE_DB64(resp_db_addr, resp_db_data);
 
@@ -366,10 +341,10 @@ AdminQ::Poll(void *obj)
     timespec_t start_ts, end_ts, ts_diff;
     AdminQ *adminq = (AdminQ *)obj;
 
-    struct nicmgr_req_desc req_desc = { 0 };
-    uint8_t req_data[4096] = { 0 };
-    struct nicmgr_resp_desc resp_desc = { 0 };
-    uint8_t resp_data[4096] = { 0 };
+    struct nicmgr_req_desc req_desc = {0};
+    uint8_t req_data[4096] = {0};
+    struct nicmgr_resp_desc resp_desc = {0};
+    uint8_t resp_data[4096] = {0};
 
     if (adminq->PollRequest(&req_desc)) {
 
@@ -382,17 +357,15 @@ AdminQ::Poll(void *obj)
         clock_gettime(CLOCK_MONOTONIC, &start_ts);
 
         if (adminq->handler) {
-            adminq->handler(adminq->handler_obj,
-                &req_desc.cmd, &req_data,
-                &resp_desc.comp, &resp_data);
+            adminq->handler(adminq->handler_obj, &req_desc.cmd, &req_data, &resp_desc.comp,
+                            &resp_data);
         }
 
         clock_gettime(CLOCK_MONOTONIC, &end_ts);
         ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
-        NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns",
-                      ts_diff.tv_sec, ts_diff.tv_nsec);
+        NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns", ts_diff.tv_sec, ts_diff.tv_nsec);
         if (ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
-            NIC_LOG_ERR("Fatal Error: Devmd took more than 2 secs");
+            NIC_LOG_WARN("Devcmd took more than 2 secs");
         }
         NIC_HEADER_TRACE("AdminCmd End");
 

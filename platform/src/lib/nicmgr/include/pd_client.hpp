@@ -18,6 +18,7 @@
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "platform/utils/mpartition.hpp"
+#include "nic/sdk/platform/capri/capri_state.hpp"
 
 // TODO: what was done here was clearly a hack, please clean up !!!
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
@@ -26,7 +27,6 @@
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd_table.h"
 #else
-#include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
@@ -68,6 +68,8 @@ platform_is_hw(sdk::platform::platform_type_t platform)
            (platform == platform_type_t::PLATFORM_TYPE_HAPS);
 }
 
+uint8_t *memrev(uint8_t *block, size_t elnum);
+
 /**
  * Queue info structure for LifCreate
  */
@@ -85,14 +87,15 @@ const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
 public:
-    static PdClient* factory(sdk::platform::platform_type_t platform, fwd_mode_t fwd_mode);
+    static PdClient* factory(sdk::platform::platform_type_t platform,
+                             sdk::lib::dev_forwarding_mode_t fwd_mode);
     void update(void);
     void destroy(PdClient *pdc);
 
     std::string hal_cfg_path_;
     std::string gen_dir_path_;
+    std::string mpart_cfg_path_;
     sdk::platform::platform_type_t platform_;
-    fwd_mode_t fwd_mode_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;
     sdk::platform::utils::lif_mgr *lm_;
@@ -165,7 +168,7 @@ public:
 private:
     PdClient(){}
     ~PdClient(){}
-    void init(fwd_mode_t fwd_mode);
+    void init();
 
     rdmamgr *rdma_mgr_;
 

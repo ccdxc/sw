@@ -54,7 +54,7 @@ public:
     sdk_ret_t uplink_destroy(uint32_t port);
 
     // Generic APIs
-    sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
+    sdk_ret_t set_fwd_mode(sdk::lib::dev_forwarding_mode_t fwd_mode);
 
     // Generic APIs
     sdk_ret_t set_micro_seg_en(bool en);
@@ -124,10 +124,9 @@ private:
     sdk_ret_t micro_seg_halupdate_(bool en);
 
 private:
-    // fwd_mode_t fwd_mode_;
     bool mirco_seg_en_;
+    sdk::lib::dev_forwarding_mode_t fwd_mode_;
     sdk_spinlock_t slock_;
-
 };
 
 } // namespace iris
