@@ -21,14 +21,14 @@ arp_proxy_next_node_fill (u8 idx, u16 *next, u32 *counters, u16 node,
 }
 
 always_inline void
-arp_proxy_trace_add (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
-                     mac_addr_t mac, u32 id)
+arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
+                      mac_addr_t mac, u32 id)
 {
     clib_memcpy(&trace->src, &arp->ip4_over_ethernet[0].ip4,
                 sizeof(ip4_address_t));
     clib_memcpy(&trace->dst, &arp->ip4_over_ethernet[1].ip4,
                 sizeof(ip4_address_t));
-    clib_memcpy(&trace->smac, &arp->ip4_over_ethernet[0].mac,
+    clib_memcpy(trace->smac, &arp->ip4_over_ethernet[1].mac,
                 ETH_ADDR_LEN);
     clib_memcpy(trace->vr_mac, mac, ETH_ADDR_LEN);
     trace->bd = id;
@@ -49,18 +49,18 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     u32 dst_addr;
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
-    bd_id = pds_ingress_bd_id_get(p4_rx_meta);
+    bd_id = clib_net_to_host_u16(pds_ingress_bd_id_get(p4_rx_meta));
     if (PREDICT_FALSE(!(offset = pds_arp_pkt_offset_get(p4_rx_meta))))
         goto error;
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
-    dst_addr = arp->ip4_over_ethernet[1].ip4.data_u32;
+    dst_addr = clib_net_to_host_u32(arp->ip4_over_ethernet[1].ip4.data_u32);
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
         pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst_addr);
 
         // Ethernet
-        e0 = vlib_buffer_get_current(p0 + sizeof(p4_rx_cpu_hdr_t));
+        e0 = vlib_buffer_get_current(p0) + VPP_P4_TO_ARM_HDR_SZ;
         clib_memcpy(&e0->dst_address, &e0->src_address, ETH_ADDR_LEN);
         clib_memcpy(&e0->src_address, vr_mac, ETH_ADDR_LEN);
 
@@ -80,7 +80,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
         if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                           p0->flags & VLIB_BUFFER_IS_TRACED)) {
             trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-            arp_proxy_trace_add(trace, arp, vr_mac, bd_id);
+            arp_proxy_trace_fill(trace, arp, vr_mac, bd_id);
         }
     } else {
         // TODO
@@ -90,13 +90,13 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
 
 error:
     arp_proxy_next_node_fill(*next_idx, nexts, counter,
-                             ARP_PROXY_NEXT_EXIT,
+                             ARP_PROXY_NEXT_DROP,
                              ARP_PROXY_COUNTER_REPLY_FAILED);
     (*next_idx)++;
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-        arp_proxy_trace_add(trace, arp, vr_mac, bd_id);
+        arp_proxy_trace_fill(trace, arp, vr_mac, bd_id);
     }
     return;
 }
@@ -148,7 +148,16 @@ arp_proxy (vlib_main_t * vm,
 static u8 *
 arp_proxy_trace (u8 * s, va_list * args)
 {
-    return format(0, "Not Implemented");
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
+    arp_proxy_trace_t *t = va_arg (*args, arp_proxy_trace_t *);
+
+    s = format(s, "%U %U -> %U %U %d",
+               format_ip4_address, &t->src,
+               format_mac_address_t, &t->smac,
+               format_ip4_address, &t->dst,
+               format_mac_address_t, &t->vr_mac, t->bd);
+    return s;
 }
 
 static char * arp_proxy_error_strings[] = {
@@ -196,16 +205,22 @@ arp_proxy_exit_internal_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                             u16* next0, u16 *next1, u32 *counter)
 {
     // TODO add the header to p4
-    *next0 = *next1 = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-    counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 2;
+    // *next0 = *next1 = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+    // counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 2;
+    // TODO enqueue to drop node for now
+    *next0 = *next1 = ARP_PROXY_EXIT_NEXT_DROP;
+    counter[ARP_PROXY_EXIT_COUNTER_DROP] += 2;
 }
 
 always_inline void
 arp_proxy_exit_internal_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     // TODO add the header to p4
-    *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-    counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 1;
+    // *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+    // counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 1;
+    // TODO enqueue to drop node for now
+    *next = ARP_PROXY_EXIT_NEXT_DROP;
+    counter[ARP_PROXY_EXIT_COUNTER_DROP] += 1;
 }
 
 static uword
@@ -245,7 +260,8 @@ arp_proxy_exit (vlib_main_t * vm,
 static u8 *
 arp_proxy_exit_trace (u8 * s, va_list * args)
 {
-    return format(0, "Not Implemented");
+    s = format(s, "exit trace");
+    return s;
 }
 
 static char * arp_proxy_exit_error_strings[] = {

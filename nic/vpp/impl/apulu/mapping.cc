@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 //
 
+#include <arpa/inet.h>
 #include <nic/sdk/include/sdk/ip.hpp>
 #include <nic/sdk/include/sdk/table.hpp>
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
@@ -38,6 +39,7 @@ using namespace table;
     (api_params)->appdata = (data);                                          \
     (api_params)->action_id = (action);                                      \
     (api_params)->handle = (hdl);                                            \
+    (api_params)->force_hwread = TRUE;                                       \
 }
 
 extern "C" {
@@ -126,11 +128,10 @@ pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, bool remote,
     uint16_t bd_id;
 
     if (remote) {
-        // vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
-        vpc_id = 1;
+        vpc_id = ntohs(((p4_rx_cpu_hdr_t *)hdr)->vpc_id);
         pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id);
     } else {
-        bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
+        bd_id = ntohs(((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id);
         pds_bd_vr_mac_get(mac_addr, bd_id);
     }
     return SDK_RET_OK;

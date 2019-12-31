@@ -14,4 +14,4 @@ modules:
         name    : IPV4_ARP_PROXY
         spec    : arp_proxy.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,FwdMode=L2L,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING

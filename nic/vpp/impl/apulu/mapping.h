@@ -22,7 +22,8 @@ pds_ingress_bd_id_get (void *hdr)
 static inline int
 pds_arp_pkt_offset_get (void *hdr)
 {
-    return (((p4_rx_cpu_hdr_t*)hdr)->l2_offset);
+    // TODO: figure out from vnic if there is a vlan tag
+    return (sizeof(p4_rx_cpu_hdr_t) + ETH_HDR_LEN);
 }
 
 // Function prototypes

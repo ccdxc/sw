@@ -53,20 +53,51 @@ buffers:
            size : ref://testcase/packets/id=FROM_HOST_PKT/size
            data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
 
+    - buffer:
+        id       : BUF2  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
+    - buffer:
+        id          : BUF3  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields      :
+            bind    : True
+            size    : 1518
+            data    : None
+
 descriptors:
     - descriptor:
-        id      : DESC1
-        template: ref://factory/templates/id=DESCR_ETH_TX
-        fields:
-            _buf  : ref://testcase/buffers/id=BUF1
-            addr  : ref://testcase/buffers/id=BUF1/addr
-            len   : ref://testcase/buffers/id=BUF1/size
+        id          : DESC1
+        template    : ref://factory/templates/id=DESCR_ETH_TX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF1
+            addr    : ref://testcase/buffers/id=BUF1/addr
+            len     : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2 # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
-        fields:
-            status     : 0x0
+        id          : DESC2 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields      :
+            status  : 0x0
+
+    - descriptor:
+        id          : DESC3 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF3
+            addr    : ref://testcase/buffers/id=BUF3/addr
+            len     : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor:
+        id          : DESC4 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF2
+            len     : ref://testcase/buffers/id=BUF2/size
 
 session:
     - step:
@@ -75,13 +106,17 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
         expect:
-            delay    :    1
-            packets:
-                - packet:
-                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_HOST_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            delay: 1
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
+                    object  : ref://testcase/descriptors/id=DESC4
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

@@ -10,10 +10,11 @@
 // ARP Proxy node
 #define foreach_arp_proxy_counter                           \
     _(REPLY_SUCCESS, "Reply success" )                      \
-    _(REPLY_FAILED, "Reply failed" )                        \
+    _(REPLY_FAILED, "Reply failed, drop" )                  \
 
 #define foreach_arp_proxy_next                              \
-    _(EXIT, "pds-arp-proxy-exit")
+    _(EXIT, "pds-arp-proxy-exit")                           \
+    _(DROP, "error-drop")
 
 typedef enum
 {
@@ -33,7 +34,8 @@ typedef enum
 
 // ARP proxy exit node
 #define foreach_arp_proxy_exit_counter                      \
-    _(FILL_HDR, "Filled header" )                           \
+    _(BUILD_P4_HDR, "Build P4 header" )                     \
+    _(DROP, "error" )                                       \
 
 #define foreach_arp_proxy_exit_next                         \
     _(INTF_OUT, "interface-tx" )                            \

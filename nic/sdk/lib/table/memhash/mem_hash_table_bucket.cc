@@ -47,7 +47,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
 
     if (v) {
         MEMHASH_API_CONTEXT_PRINT_SW_FIELDS(ctx);
-        if (valid_ != v) {
+        if (valid_ != v && !ctx->params->force_hwread) {
             MEMHASH_TRACE_ERR("SW and HW data are out of sync !!");
             SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
         }
