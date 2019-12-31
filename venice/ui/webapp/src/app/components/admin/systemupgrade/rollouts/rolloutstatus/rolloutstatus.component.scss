@@ -102,7 +102,7 @@
 
 // We need this CSS for MAC Laptop screen
 .rolloutstatus-table-div .lazyrender-container {
-  min-height: 450px;
+  min-height: 250px; // VS-1037.  We have support different browsers (Safari, Chrome, Firefox, etc) and screen size (large, desktop monitors). 250px is works for all.
   max-height: 800px;
 }
 
