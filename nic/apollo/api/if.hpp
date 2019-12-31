@@ -12,6 +12,7 @@
 #define __API_IF_HPP__
 
 #include <string.h>
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -211,9 +212,18 @@ public:
         if (type_ == PDS_IF_TYPE_UPLINK) {
             return if_info_.uplink_.port_;
         } else if (type_ == PDS_IF_TYPE_L3) {
-            return if_info_.l3_.eth_ifindex_;
+            return ETH_IFINDEX_TO_PARENT_PORT(if_info_.l3_.eth_ifindex_) - 1;
         }
         return PDS_PORT_INVALID;
+    }
+
+    /// \brief    return the ethernet interface index of this interface
+    /// \return   ethernet interface index or 0x0 if invalid
+    pds_ifindex_t eth_ifindex(void) const {
+        if (type_ == PDS_IF_TYPE_L3) {
+            return if_info_.l3_.eth_ifindex_;
+        }
+        return IFINDEX_INVALID;
     }
 
     /// \brief    return the wire encap of this (L3) interface

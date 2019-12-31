@@ -574,7 +574,7 @@ def GetExpectedEgressUplinkPort(testcase, args=None):
     if nh is None:
         return None
     l3if = nh.L3Interface
-    port = l3if.IfInfo.port_num + 1
+    port = topo.EthIfIdx2Port(l3if.IfInfo.ethifidx)
     return port
 
 def GetUplinkPortMac(testcase, args=None):
