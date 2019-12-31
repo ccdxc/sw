@@ -72,7 +72,7 @@ periodic_thread_start (void *ctxt)
 static void *
 fte_pkt_loop_start (void *ctxt)
 {
-    SDK_THREAD_INIT(ctxt);
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
     sdk::lib::thread *curr_thread = (sdk::lib::thread *)ctxt;
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(ctxt);
@@ -267,7 +267,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     hal_thread->set_data(hal_thread);
     hal_thread->set_pthread_id(pthread_self());
     hal_thread->set_running(true);
-    SDK_THREAD_INIT(hal_thread);
+    SDK_THREAD_DFRD_TERM_INIT(hal_thread);
 
     return HAL_RET_OK;
 }
@@ -556,7 +556,7 @@ static const std::string
 get_logfile (const char *env, const char *base, const char *alt)
 {
     const char *logdir = NULL;
-    
+
     logdir = std::getenv(env);
     if (!logdir) {
         return std::string(alt);
@@ -652,11 +652,11 @@ hal_vmotion_init (hal_cfg_t *hal_cfg)
     hal_ret_t ret = HAL_RET_OK;
     vmotion   *vm;
 
-    if (hal_cfg->device_cfg.forwarding_mode == 
+    if (hal_cfg->device_cfg.forwarding_mode ==
         HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
         HAL_TRACE_DEBUG("vmotion init");
         vm = vmotion::factory(HAL_VMOTION_MAX_THREADS,
-                              stoi(hal_cfg->vmotion_port) ? 
+                              stoi(hal_cfg->vmotion_port) ?
                               stoi(hal_cfg->vmotion_port) : HAL_VMOTION_PORT);
     }
     g_hal_state->set_vmotion(vm);

@@ -244,7 +244,7 @@ fte_ftl_init (void)
         g_fte_fm.session_id_thr_local_pool[i].pool_count = -1;
     }
 
-    return;    	
+    return;
 }
 
 #define IP_PROTOCOL_TCP 0x06
@@ -268,7 +268,7 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
         fte_ftlv4_set_session_index(local_entry, session_id);
 
         // APOLLO_P4_TO_ARM_HDR_SZ + L2_HDR_OFFSET = 35
-        ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, 35); 
+        ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, 35);
 
         src_ip = rte_be_to_cpu_32(ip40->src_addr);
         dst_ip = rte_be_to_cpu_32(ip40->dst_addr);
@@ -287,7 +287,7 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m,
         fte_ftlv4_set_key(local_entry, src_ip, dst_ip,
                           protocol, sport, dport, 0 /* TODO: lkp_id */);
 
-	// TODO: To be reomved. Debug purpose 
+	// TODO: To be reomved. Debug purpose
         dump_src_ip = src_ip;
         dump_dst_ip = dst_ip;
         dump_protocol = protocol;
@@ -372,7 +372,7 @@ fte_flow_dump (void)
 static void
 fte_flow_prog_ipv4 (struct rte_mbuf *m)
 {
-    uint32_t session_id; 
+    uint32_t session_id;
     unsigned int lcore_id;
     fte_v4flow_params_t *params;
 
@@ -386,7 +386,7 @@ fte_flow_prog_ipv4 (struct rte_mbuf *m)
     fte_flow_program_hw_ipv4(params, lcore_id);
 
     fte_flow_dump();
-    return;    
+    return;
 }
 
 static void
@@ -431,7 +431,7 @@ fte_rx_loop (void)
             }
             _process(m);
         }
-//#ifndef FTE_REINJECT_DISABLE 
+//#ifndef FTE_REINJECT_DISABLE
         numtx = rte_eth_tx_buffer_flush(0, 0, gls.txbf);
         if (numtx) {
             // TODO: Duplicate increment? Check _process as well.
@@ -449,7 +449,7 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 }
 
 static void
-_init_gls (void) 
+_init_gls (void)
 {
     uint16_t nports = 0;
     uint32_t nmbfs = 0;
@@ -600,10 +600,10 @@ fte_main(void)
 void *
 fte_thread_start (void *ctxt)
 {
-    SDK_THREAD_INIT(ctxt);
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
     sleep(10);
-    
+
     fte_ftl_init();
     PDS_TRACE_DEBUG("FTE entering forever loop ...");
 

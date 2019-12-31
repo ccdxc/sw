@@ -479,7 +479,7 @@ asicrw_loop (void *ctxt)
 void *
 asicrw_start (void *ctxt)
 {
-    SDK_THREAD_INIT(ctxt);
+    SDK_THREAD_DFRD_TERM_INIT(ctxt);
 
     // announce asic-rw thread as ready
     SDK_ATOMIC_STORE_BOOL(&g_asicrw_ready_, true);
