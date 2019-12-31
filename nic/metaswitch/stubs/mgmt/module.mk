@@ -13,4 +13,5 @@ MODULE_FLAGS	= $(addprefix -D,$(MS_COMPILATION_SWITCH))
 MODULE_SOLIBS   = logger pdsproto thread
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/gen/mgmt/*.cc)
+MODULE_CLEAN_DIRS  = ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen
 include ${MKDEFS}/post.mk
