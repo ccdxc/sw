@@ -120,7 +120,7 @@ func (client *NpmClient) runWatchLoop(ctx context.Context) {
 		go nimbusClient.WatchAggregate(client.watchCtx, []string{"App", "NetworkSecurityPolicy"}, client.agent)
 		go nimbusClient.WatchAggregate(client.watchCtx, []string{"Network", "Endpoint"}, client.agent)
 		go nimbusClient.WatchAggregate(client.watchCtx, []string{"SecurityProfile"}, client.agent)
-
+		go nimbusClient.WatchAggregate(client.watchCtx, []string{"RoutingConfig"}, client.agent)
 		go nimbusClient.WatchIPAMPolicys(client.watchCtx, client.agent)
 
 		// spawn worker thread to update network interface status to npm and watch for updates

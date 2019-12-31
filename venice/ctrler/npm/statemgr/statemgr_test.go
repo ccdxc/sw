@@ -23,6 +23,41 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
+// createRoutingConfig utility function to create a routing config
+func createRoutingConfig(stateMgr *Statemgr, tenant, name, IP string) (*network.RoutingConfig, error) {
+	rtcfg := network.RoutingConfig{
+		TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+			Tenant:    tenant,
+		},
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				RouterId: "1.1.1.1",
+				ASNumber: 100,
+			},
+			EVPNConfig: &network.EVPNConfig{
+				Shutdown: false,
+			},
+		},
+		Status: network.RoutingConfigStatus{},
+	}
+
+	cfg := &network.BGPNeighbor{
+		Shutdown:              false,
+		IPAddress:             IP,
+		RemoteAS:              1,
+		MultiHop:              1,
+		EnableAddressFamilies: []string{"IPV4", "EVPN"},
+	}
+
+	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, cfg)
+
+	err := stateMgr.ctrler.RoutingConfig().Create(&rtcfg)
+	return &rtcfg, err
+}
+
 // createIPAMPolicy utility function to create an IPAM Policy
 func createIPAMPolicy(stateMgr *Statemgr, tenant, name, dhcpIP string) (*network.IPAMPolicy, error) {
 	policy := network.IPAMPolicy{
@@ -2621,6 +2656,72 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 		fmt.Printf("IPAMPolicy still found after deleting %v\n", err)
 		return false, nil
 	}, "ipampolicy still foud", "1ms", "1s")
+}
+
+func TestRoutingConfigCreateDelete(t *testing.T) {
+	name := "testCfg"
+	// create network state manager
+	stateMgr, err := newStatemgr1()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	obj := &RoutingConfigState{}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// create virtual router
+	_, err = createVirtualRouter(t, stateMgr, "default", "default")
+	AssertOk(t, err, "Error creating the virtual router")
+
+	// create routingconfig
+	rtcfg, err := createRoutingConfig(stateMgr, "default", name, "100.1.1.1")
+	AssertOk(t, err, "Error creating RoutingConfig")
+
+	// verify we can find the routingconfig
+	AssertEventually(t, func() (bool, interface{}) {
+		obj, err = smgrRoute.FindRoutingConfig("", "default", name)
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error finding routingconfig %v\n", err)
+		return false, nil
+	}, "routingconfig not foud", "1ms", "1s")
+	AssertEquals(t, obj.RoutingConfig.Spec.BGPConfig.Neighbors[0].IPAddress, rtcfg.Spec.BGPConfig.Neighbors[0].IPAddress, "routingconfig params did not match")
+
+	// update the routingconfig
+	version, _ := strconv.Atoi(obj.RoutingConfig.GenerationID)
+	//version := 1
+	rtcfg.GenerationID = strconv.Itoa(version + 1)
+	rtcfg.Spec.BGPConfig.Neighbors[0].IPAddress = "101.1.1.1"
+	err = stateMgr.ctrler.RoutingConfig().Update(rtcfg)
+	AssertOk(t, err, "Error updating routingconfig")
+
+	// verify update went through
+	AssertEventually(t, func() (bool, interface{}) {
+		obj, err = smgrRoute.FindRoutingConfig("", "default", name)
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error finding routingconfig %v\n", err)
+		return false, nil
+	}, "routingconfig not foud", "1ms", "1s")
+	AssertEquals(t, obj.RoutingConfig.Spec.BGPConfig.Neighbors[0].IPAddress, rtcfg.Spec.BGPConfig.Neighbors[0].IPAddress, "routingconfig params did not match")
+
+	// delete the routingconfig
+	err = stateMgr.ctrler.RoutingConfig().Delete(rtcfg)
+	AssertOk(t, err, "Error deleting routingconfig")
+
+	// verify the routingconfig is deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrRoute.FindRoutingConfig("", "default", name)
+		if err != nil {
+			return true, nil
+		}
+		fmt.Printf("Routingconfig still found after deleting %v\n", err)
+		return false, nil
+	}, "routingconfig still foud", "1ms", "1s")
 }
 
 func TestMain(m *testing.M) {

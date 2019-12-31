@@ -48,6 +48,7 @@ type Topics struct {
 	NetworkInterfaceTopic      *nimbus.InterfaceTopic
 	AggregateTopic             *nimbus.AggregateTopic
 	IPAMPolicyTopic            *nimbus.IPAMPolicyTopic
+	RoutingConfigTopic         *nimbus.RoutingConfigTopic
 }
 
 // Statemgr is the object state manager
@@ -73,6 +74,7 @@ type Statemgr struct {
 	WorkloadReactor               ctkit.WorkloadHandler
 	NetworkInterfaceReactor       ctkit.NetworkInterfaceHandler
 	IPAMPolicyReactor             ctkit.IPAMPolicyHandler
+	RoutingConfigReactor          ctkit.RoutingConfigHandler
 
 	SecurityProfileStatusReactor       nimbus.SecurityProfileStatusReactor
 	AppStatusReactor                   nimbus.AppStatusReactor
@@ -82,6 +84,7 @@ type Statemgr struct {
 	NetworkSecurityPolicyStatusReactor nimbus.NetworkSecurityPolicyStatusReactor
 	IPAMPolicyStatusReactor            nimbus.IPAMPolicyStatusReactor
 	AggregateStatusReactor             nimbus.AggStatusReactor
+	RoutingConfigStatusReactor         nimbus.RoutingConfigStatusReactor
 }
 
 // SetSecurityProfileStatusReactor sets the SecurityProfileStatusReactor
@@ -122,6 +125,11 @@ func (sm *Statemgr) SetNetworkSecurityPolicyStatusReactor(handler nimbus.Network
 // SetEndpointStatusReactor sets the EndpointStatusReactor
 func (sm *Statemgr) SetEndpointStatusReactor(handler nimbus.EndpointStatusReactor) {
 	sm.EndpointStatusReactor = handler
+}
+
+// SetRoutingConfigStatusReactor sets the RoutingConfigStatusReactor
+func (sm *Statemgr) SetRoutingConfigStatusReactor(handler nimbus.RoutingConfigStatusReactor) {
+	sm.RoutingConfigStatusReactor = handler
 }
 
 // SetIPAMPolicyReactor sets the IPAMPolicy reactor
@@ -192,6 +200,11 @@ func (sm *Statemgr) SetWorkloadReactor(handler ctkit.WorkloadHandler) {
 // SetNetworkInterfaceReactor sets the NetworkInterface reactor
 func (sm *Statemgr) SetNetworkInterfaceReactor(handler ctkit.NetworkInterfaceHandler) {
 	sm.NetworkInterfaceReactor = handler
+}
+
+// SetRoutingConfigReactor sets the RoutingConfig reactor
+func (sm *Statemgr) SetRoutingConfigReactor(handler ctkit.RoutingConfigHandler) {
+	sm.RoutingConfigReactor = handler
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
@@ -311,6 +324,8 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 
 	sm.SetIPAMPolicyReactor(reactor)
 
+	sm.SetRoutingConfigReactor(reactor)
+
 }
 
 // Run calls the feature statemgr callbacks and eastablishes the Watches
@@ -412,6 +427,11 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	err = ctrler.IPAMPolicy().Watch(sm.IPAMPolicyReactor)
 	if err != nil {
 		logger.Fatalf("Error watching ipam-policy")
+	}
+
+	err = ctrler.RoutingConfig().Watch(sm.RoutingConfigReactor)
+	if err != nil {
+		logger.Fatalf("Error watching routing-config")
 	}
 
 	//Remove state endpoints after we start the watch

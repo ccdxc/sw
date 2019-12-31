@@ -3,11 +3,11 @@ NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/nim
 RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restclient
 
 # all the sources for which .pb.go is generated
-SRC := app.proto agg_watch.proto endpoint.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto vrf.proto
-NIMBUS_SRC := app.proto endpoint.proto ipam.proto network.proto sgpolicy.proto secprofile.proto interface.proto
+SRC := app.proto agg_watch.proto endpoint.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto route.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto vrf.proto
+NIMBUS_SRC := app.proto endpoint.proto ipam.proto network.proto route.proto sgpolicy.proto secprofile.proto interface.proto
 
 #these wont have _api.go generated
-FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto mirror.proto namespace.proto tenant.proto
+FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto mirror.proto namespace.proto route.proto tenant.proto
 
 #additionally these wont have swagger spec generated
 FILTER_OUT_SWAGGER := qos.proto copp.proto

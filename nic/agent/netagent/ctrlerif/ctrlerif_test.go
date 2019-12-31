@@ -1421,3 +1421,28 @@ func (ag *fakeAgent) ListIPAMPolicy() []*netproto.IPAMPolicy {
 func (ag *fakeAgent) UpdateIPAMPolicy(tn *netproto.IPAMPolicy) error {
 	return nil
 }
+
+// CreateRoutingConfig creates a RoutingConfig. Stubbed out to satisfy the interface
+func (ag *fakeAgent) CreateRoutingConfig(tn *netproto.RoutingConfig) error {
+	return nil
+}
+
+// DeleteRoutingConfig deletes a RoutingConfig. Stubbed out to satisfy the interface
+func (ag *fakeAgent) DeleteRoutingConfig(tn, ns, name string) error {
+	return nil
+}
+
+// FindRoutingConfig finds an RoutingConfig. Stubbed out to satisfy the interface
+func (ag *fakeAgent) FindRoutingConfig(meta api.ObjectMeta) (*netproto.RoutingConfig, error) {
+	return nil, nil
+}
+
+// ListRoutingConfig lists RoutingConfig. Stubbed out to satisfy the interface
+func (ag *fakeAgent) ListRoutingConfig() []*netproto.RoutingConfig {
+	return nil
+}
+
+// UpdateRoutingConfig updates a RoutingConfig. Stubbed out to satisfy the interface
+func (ag *fakeAgent) UpdateRoutingConfig(tn *netproto.RoutingConfig) error {
+	return nil
+}

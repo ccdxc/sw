@@ -1,0 +1,21 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IPAMPolicy
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/route.proto";
+import "delphi.proto";
+
+
+// RoutingConfig object
+message RoutingConfig {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta       Meta            = 1;
+    string                  Key             = 2;
+    netproto.RoutingConfig  RoutingConfig   = 3;
+}

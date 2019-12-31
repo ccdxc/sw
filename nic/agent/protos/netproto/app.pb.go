@@ -15,6 +15,7 @@
 		namespace.proto
 		network.proto
 		port.proto
+		route.proto
 		sgpolicy.proto
 		secprofile.proto
 		tenant.proto
@@ -95,6 +96,21 @@
 		PortStatus
 		PortList
 		PortEvent
+		RouteDistinguisher
+		RDSpec
+		Route
+		RouteTableSpec
+		RouteTableStatus
+		RouteTable
+		EVPNConfig
+		BGPNeighbor
+		BGPConfig
+		RoutingConfigSpec
+		RoutingConfigStatus
+		RoutingConfigEvent
+		RoutingConfigEventList
+		RoutingConfigList
+		RoutingConfig
 		NetworkSecurityPolicy
 		NetworkSecurityPolicySpec
 		PolicyRule

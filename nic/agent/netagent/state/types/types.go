@@ -139,6 +139,7 @@ type NetAgent struct {
 	VrfDB                   map[string]*netproto.Vrf
 	SecurityProfileDB       map[string]*netproto.SecurityProfile //Security Profile DB
 	IPAMPolicyDB            map[string]*netproto.IPAMPolicy      // IPAM Policy DB
+	RoutingConfigDB         map[string]*netproto.RoutingConfig   // RoutingConfig DB
 	ControllerIPs           []string                             // Controller IPs that NetAgent is using
 	Mode                    string                               // Netagent Mode
 	NetAgentStartTime       time.Time                            // Time when NetAgent was started
@@ -237,6 +238,12 @@ type CtrlerIntf interface {
 	DeleteIPAMPolicy(tn, ns, name string) error                       // delete an IPAM policy
 	ListIPAMPolicy() []*netproto.IPAMPolicy                           // lists all IPAM policies
 	FindIPAMPolicy(meta api.ObjectMeta) (*netproto.IPAMPolicy, error) // finds an IPAM Policy
+
+	CreateRoutingConfig(nt *netproto.RoutingConfig) error                   // create a RoutingConfig
+	UpdateRoutingConfig(nt *netproto.RoutingConfig) error                   // update a RoutingConfig
+	DeleteRoutingConfig(tn, ns, name string) error                          // delete a RoutingConfig
+	ListRoutingConfig() []*netproto.RoutingConfig                           // lists all RoutingConfigs
+	FindRoutingConfig(meta api.ObjectMeta) (*netproto.RoutingConfig, error) // finds a RoutingConfig
 
 	GetHwInterfaces() error              // Gets all the uplinks created on the hal by nic mgr
 	GetNaplesInfo() (*NaplesInfo, error) // Returns Naples information

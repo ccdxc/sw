@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto6 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto7 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type SecurityProfile struct {
 	Meta            *delphi.ObjectMeta         `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key             string                     `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	SecurityProfile *netproto6.SecurityProfile `protobuf:"bytes,3,opt,name=SecurityProfile" json:"SecurityProfile,omitempty"`
+	SecurityProfile *netproto7.SecurityProfile `protobuf:"bytes,3,opt,name=SecurityProfile" json:"SecurityProfile,omitempty"`
 }
 
 func (m *SecurityProfile) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type SecurityProfileReactor interface {
 func (m *SecurityProfile) Reset()                    { *m = SecurityProfile{} }
 func (m *SecurityProfile) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfile) ProtoMessage()               {}
-func (*SecurityProfile) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
+func (*SecurityProfile) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *SecurityProfile) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *SecurityProfile) GetKey() string {
 	return ""
 }
 
-func (m *SecurityProfile) GetSecurityProfile() *netproto6.SecurityProfile {
+func (m *SecurityProfile) GetSecurityProfile() *netproto7.SecurityProfile {
 	if m != nil {
 		return m.SecurityProfile
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*SecurityProfile)(nil), "dnetproto.SecurityProfile")
 }
 
-func init() { proto.RegisterFile("delphi/secprofile.proto", fileDescriptor5) }
+func init() { proto.RegisterFile("delphi/secprofile.proto", fileDescriptor6) }
 
-var fileDescriptor5 = []byte{
+var fileDescriptor6 = []byte{
 	// 198 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4f, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0x4e, 0x4d, 0x2e, 0x28, 0xca, 0x4f, 0xcb, 0xcc, 0x49, 0xd5, 0x2b, 0x28,

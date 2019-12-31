@@ -151,6 +151,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "NetworkSecurityPolicy":
 		err = client.processNetworkSecurityPolicyDynamic(evt.EventType, object.Message.(*netproto.NetworkSecurityPolicy), reactor.(NetworkSecurityPolicyReactor))
 
+	case "RoutingConfig":
+		err = client.processRoutingConfigDynamic(evt.EventType, object.Message.(*netproto.RoutingConfig), reactor.(RoutingConfigReactor))
+
 	case "SecurityProfile":
 		err = client.processSecurityProfileDynamic(evt.EventType, object.Message.(*netproto.SecurityProfile), reactor.(SecurityProfileReactor))
 
@@ -540,6 +543,67 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 	}
 }
 
+// diffRoutingConfigsDynamic diffs local state with controller state
+func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingConfigList, reactor RoutingConfigReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.RoutingConfig)
+	for _, obj := range objList.RoutingConfigs {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	localObjs := reactor.ListRoutingConfig()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.RoutingConfigEvent{
+					EventType:     api.EventType_DeleteEvent,
+					RoutingConfig: *lobj,
+				}
+				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
+				client.processRoutingConfigEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.RoutingConfigs {
+		evt := netproto.RoutingConfigEvent{
+			EventType:     api.EventType_UpdateEvent,
+			RoutingConfig: *obj,
+		}
+		client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
+		err := client.processRoutingConfigEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := types.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "RoutingConfig", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
 // diffSecurityProfilesDynamic diffs local state with controller state
 func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor,
 	ostream *AggWatchOStream) {
@@ -648,6 +712,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
 					return
 
+				case "RoutingConfig":
+					msglist := lobj.objects.(*netproto.RoutingConfigList)
+					msglist.RoutingConfigs = append(msglist.RoutingConfigs, obj.Message.(*netproto.RoutingConfig))
+					return
+
 				case "SecurityProfile":
 					msglist := lobj.objects.(*netproto.SecurityProfileList)
 					msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
@@ -690,6 +759,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			msglist := listObj.objects.(*netproto.NetworkSecurityPolicyList)
 			msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
 
+		case "RoutingConfig":
+			listObj.objects = &netproto.RoutingConfigList{}
+			msglist := listObj.objects.(*netproto.RoutingConfigList)
+			msglist.RoutingConfigs = append(msglist.RoutingConfigs, obj.Message.(*netproto.RoutingConfig))
+
 		case "SecurityProfile":
 			listObj.objects = &netproto.SecurityProfileList{}
 			msglist := listObj.objects.(*netproto.SecurityProfileList)
@@ -728,6 +802,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 
 		case "NetworkSecurityPolicy":
 			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream)
+
+		case "RoutingConfig":
+			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream)
 
 		case "SecurityProfile":
 			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream)
@@ -785,6 +862,11 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 		case "NetworkSecurityPolicy":
 			if _, ok := reactor.(NetworkSecurityPolicyReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "NetworkSecurityPolicyReactor")
+			}
+
+		case "RoutingConfig":
+			if _, ok := reactor.(RoutingConfigReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "RoutingConfigReactor")
 			}
 
 		case "SecurityProfile":

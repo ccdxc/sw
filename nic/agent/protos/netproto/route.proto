@@ -1,0 +1,120 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for route
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// routingconfig controller api
+service RoutingConfigApiV1 {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "RoutingConfig",
+        Method: ["list"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/routing-configs"
+    };
+
+    rpc ListRoutingConfigs (api.ListWatchOptions) returns (RoutingConfigList) {};
+    rpc WatchRoutingConfigs (api.ListWatchOptions) returns (stream RoutingConfigEventList) {};
+    rpc RoutingConfigOperUpdate (stream RoutingConfigEvent) returns (api.TypeMeta) {};
+}
+
+message RouteDistinguisher {
+    enum RDType {
+        Type0 = 0;
+        Type1 = 1;
+        Type2 = 2;
+    }
+
+    string Type             = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(RouteDistinguisher.RDType)"];
+    uint32 AdminValue       = 2 [(gogoproto.jsontag) = "admin-value,omitempty"];
+    uint32 AssignedValue    = 3 [(gogoproto.jsontag) = "assigned-value,omitempty"];
+}
+
+message RDSpec {
+    string AddressFamily        = 1 [(gogoproto.jsontag) = "address-family,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
+    bool RDAuto                 = 2 [(gogoproto.jsontag) = "rd-auto,omitempty"];
+    RouteDistinguisher RD       = 3 [(gogoproto.jsontag) = "rd,omitempty"];
+    repeated RouteDistinguisher ExportRDs   = 4 [(gogoproto.jsontag) = "rd-export,omitempty"];
+    repeated RouteDistinguisher ImportRDs   = 5 [(gogoproto.jsontag) = "rd-import,omitempty"];
+}
+
+message Route {
+    string Prefix = 1 [(gogoproto.jsontag) = "prefix,omitempty", (venice.check) = "CIDR()"];
+    string NexhHop = 2 [(gogoproto.jsontag) = "next-hop,omitempty", (venice.check) = "CIDR()"];
+    string TargetVirtualRouter = 3 [(gogoproto.jsontag) = "target-virtual-router,omitempty", (venice.objRelation) = {Type: "WeakRef", To: "network/VirtualRouter"}];
+}
+
+message RouteTableSpec {
+}
+
+message RouteTableStatus {
+    repeated Route Routes = 1 [(gogoproto.jsontag) = "routes,omitempty"];
+}
+
+message RouteTable {
+    api.TypeMeta     TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta   ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    RouteTableSpec   Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    RouteTableStatus Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message EVPNConfig {
+    bool Shutdown = 1 [(gogoproto.jsontag) = "shutdown,omitempty"];
+}
+
+enum BGPAddressFamily {
+    IPv4Unicast = 0 [(venice.enumValueStr) = "ipv4-unicast"];
+    EVPN        = 1;
+}
+
+message BGPNeighbor {
+    bool Shutdown                           = 1 [(gogoproto.jsontag) = "shutdown,omitempty"];
+    string IPAddress                        = 2 [(gogoproto.jsontag) = "ip-address,omitempty", (venice.check) = "IPAddr()"];
+    uint32 RemoteAS                         = 3 [(gogoproto.jsontag) = "remote-as,omitempty"];
+    uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty", (venice.check) = "IntRange(0, 256)"];
+    repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
+}
+
+message BGPConfig {
+    string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "IPAddr()"];
+    uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
+    repeated BGPNeighbor Neighbors = 3 [(gogoproto.jsontag) = "neighbors,omitempty"];
+}
+
+message RoutingConfigSpec {
+    BGPConfig BGPConfig = 1 [(gogoproto.jsontag) = "bgp-config,omitempty"];
+    EVPNConfig EVPNConfig = 2 [(gogoproto.jsontag) = "evpn-config,omitempty"];
+}
+
+message RoutingConfigStatus {
+    // Empty
+}
+
+message RoutingConfigEvent {
+    api.EventType    EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    RoutingConfig    RoutingConfig   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipam-policy,omitempty"];
+}
+
+message RoutingConfigEventList {
+    repeated RoutingConfigEvent routingConfigEvents = 1;
+}
+message RoutingConfigList {
+    repeated RoutingConfig routingConfigs = 1;
+}
+
+message RoutingConfig {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    RoutingConfigSpec   Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    RoutingConfigStatus Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
