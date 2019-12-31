@@ -434,6 +434,17 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 		default:
 			return fmt.Errorf("unsupported node personality %v for Type: %v", personality, node.instParams.Type)
 		}
+	case iota.TestBedNodeType_TESTBED_NODE_TYPE_VENICE_BM:
+		switch personality {
+		case iota.PersonalityType_PERSONALITY_VENICE_BM:
+			node.VeniceConfig = iota.VeniceConfig{
+				ControlIntf: "eth1",
+				ControlIp:   fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+				VenicePeers: []*iota.VenicePeer{},
+			}
+		default:
+			return fmt.Errorf("unsupported node personality %v", personality)
+		}
 	default:
 		return fmt.Errorf("invalid testbed node type %v", nodeType)
 	}
@@ -451,7 +462,8 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 	case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
 		var veniceIps []string
 		for _, vn := range tb.Nodes {
-			if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE ||
+				vn.Personality == iota.PersonalityType_PERSONALITY_VENICE_BM {
 				veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
 			}
 		}
@@ -461,9 +473,12 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 			node.NaplesConfig.VeniceIps = veniceIps
 		}
 	case iota.PersonalityType_PERSONALITY_VENICE:
+		fallthrough
+	case iota.PersonalityType_PERSONALITY_VENICE_BM:
 		if tb.hasNaplesSim {
 			for _, vn := range tb.Nodes {
-				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE ||
+					vn.Personality == iota.PersonalityType_PERSONALITY_VENICE_BM {
 					peer := iota.VenicePeer{
 						HostName:  vn.NodeName,
 						IpAddress: vn.VeniceConfig.ControlIp, // in Sim setups venice-naples use control network
@@ -473,7 +488,8 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 			}
 		} else {
 			for _, vn := range tb.Nodes {
-				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+				if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE ||
+					vn.Personality == iota.PersonalityType_PERSONALITY_VENICE_BM {
 					peer := iota.VenicePeer{
 						HostName:  vn.NodeName,
 						IpAddress: vn.NodeMgmtIP, // HACK: in HW setups, Venice-Naples use mgmt network
@@ -649,7 +665,8 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 		if personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_HW
 			pinst = tb.getNaplesInstanceByName(name)
-		} else if personality == iota.PersonalityType_PERSONALITY_VENICE {
+		} else if personality == iota.PersonalityType_PERSONALITY_VENICE ||
+			personality == iota.PersonalityType_PERSONALITY_VENICE_BM {
 			nodeType = iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM
 			pinst = tb.getAvailableInstance(iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM)
 		}
@@ -908,6 +925,8 @@ func (tb *TestBed) getIotaNode(node *TestNode) *iota.Node {
 		}
 	case iota.PersonalityType_PERSONALITY_VENICE:
 		tbn.Image = filepath.Base(tb.Topo.VeniceImage)
+		fallthrough
+	case iota.PersonalityType_PERSONALITY_VENICE_BM:
 		tbn.NodeInfo = &iota.Node_VeniceConfig{
 			VeniceConfig: &node.VeniceConfig,
 		}
@@ -1162,6 +1181,16 @@ func (tb *TestBed) setupTestBed() error {
 			}
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			tbn.Image = filepath.Base(tb.Topo.VeniceImage)
+			tbn.NodeInfo = &iota.Node_VeniceConfig{
+				VeniceConfig: &node.VeniceConfig,
+			}
+			tbn.Entities = []*iota.Entity{
+				{
+					Type: iota.EntityType_ENTITY_TYPE_HOST,
+					Name: node.NodeName + "_venice",
+				},
+			}
+		case iota.PersonalityType_PERSONALITY_VENICE_BM:
 			tbn.NodeInfo = &iota.Node_VeniceConfig{
 				VeniceConfig: &node.VeniceConfig,
 			}
