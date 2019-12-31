@@ -9,9 +9,8 @@
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_base.hpp"
 
-// sdk::table::properties_t * ftl_base::props_ = NULL;
-// void * ftl_base::main_table_                = NULL;
-// uint32_t hw_entry_count_                    = 0;
+std::map<int, sdk::table::ftl_table_info *> 
+            sdk::table::ftl_base::table_info_cache;
 
 #define FTL_API_BEGIN(_name) {\
     FTL_TRACE_VERBOSE("%s %s begin: %s %s", \
@@ -77,15 +76,44 @@ ftl_base::factory(sdk_table_factory_params_t *params) {
     return f;
 }
 
+void
+ftl_base::add_table_to_cache_(uint32_t table_id,
+                              sdk::table::properties_t *props,
+                              void *table) {
+    ftl_table_info *info = NULL;
+
+    if (table_info_cache.find(table_id) != table_info_cache.end()) {
+        info = table_info_cache[table_id];
+    } else {
+        info = new ftl_table_info();
+    }
+    SDK_ASSERT(info);
+    info->set_table(table);
+    info->set_props(props);
+    table_info_cache[table_id] = info;
+}
+
+sdk::table::ftl_table_info *
+ftl_base::get_cached_table_(uint32_t table_id) {
+    if (table_info_cache.find(table_id) == table_info_cache.end()) {
+        return NULL;
+    }
+    return table_info_cache[table_id];
+}
+
 sdk_ret_t
 ftl_base::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
     Apictx *apictx;
     p4pd_table_properties_t tinfo, ctinfo;
     thread_id_ = params->thread_id;
-
-    if (props_) {
-        goto skip_props;
+    ftl_table_info *info = NULL;
+    
+    info = get_cached_table_(params->table_id);
+    if (info) {
+        props_ = info->get_props();
+        main_table_ = info->get_table();
+        goto skip_tables;
     }
 
     props_ = (sdk::table::properties_t *)SDK_CALLOC(SDK_MEM_ALLOC_FTL_PROPERTIES,
@@ -130,11 +158,6 @@ ftl_base::init_(sdk_table_factory_params_t *params) {
     props_->stable_size = ctinfo.tabledepth;
     SDK_ASSERT(props_->stable_size);
 
-skip_props:
-    if (main_table_) {
-        goto skip_tables;
-    }
-
     main_table_ = main_table::factory(props_);
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
 
@@ -149,6 +172,8 @@ skip_props:
                    props_->ptable_base_mem_pa, props_->ptable_base_mem_va);
     FTL_TRACE_INFO("- stable base_mem_pa:%#lx base_mem_va:%#lx",
                    props_->stable_base_mem_pa, props_->stable_base_mem_va);
+
+    add_table_to_cache_(params->table_id, props_, main_table_);
 
 skip_tables:
 

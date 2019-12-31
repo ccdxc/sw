@@ -1,0 +1,87 @@
+# Test Spec for local2remote scenarios from Host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=ICMP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : ref://testcase/config/remotemapping/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            icmp:
+                code    : 0
+                type    : 0
+                id      : 10000
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMac
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://networking/packets/GetTunnelIPFromMapping
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX

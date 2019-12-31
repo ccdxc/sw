@@ -6,10 +6,23 @@
 #define __FTL_BASE_HPP__
 
 // #undef __FTL_INCLUDES_HPP__
+#include <map>
 #include "ftl_includes.hpp"
 
 namespace sdk {
 namespace table {
+
+class ftl_table_info {
+private:
+    sdk::table::properties_t *props_;
+    void *table_;
+
+public:
+    sdk::table::properties_t * get_props(void) { return props_; }
+    void set_props(sdk::table::properties_t *val) { props_ = val; }
+    void * get_table(void) { return table_; }
+    void set_table(void *val) { table_ = val; }
+};
 
 class ftl_base {
 private:
@@ -19,12 +32,17 @@ private:
     tablestats tstats_;
     Apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
     uint32_t thread_id_;
+    static std::map<int, ftl_table_info *> table_info_cache;
 
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
     sdk_ret_t genhash_(sdk_table_api_params_t *params);
     sdk_ret_t ctxinit_(sdk_table_api_op_t op,
                        sdk_table_api_params_t *params);
+    void add_table_to_cache_(uint32_t table_id,
+                             sdk::table::properties_t *props,
+                             void *table);
+    ftl_table_info *get_cached_table_(uint32_t table_id);
 
 public:
     static ftl_base *factory(sdk_table_factory_params_t *params);

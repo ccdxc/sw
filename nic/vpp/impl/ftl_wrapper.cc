@@ -274,6 +274,7 @@ ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
         params.hash_valid = 1;
     }
     params.entry = entry;
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -327,7 +328,7 @@ ftlv4_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
         ftlv4_entry_count++;
         buf[FTL_ENTRY_STR_MAX - 1] = 0;
         hwentry->key2str(buf, FTL_ENTRY_STR_MAX - 1);
-        fprintf(fp, "%s", buf);
+        fprintf(fp, "%s\n", buf);
     }
 }
 
@@ -344,7 +345,7 @@ ftlv4_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
         ftlv4_entry_count++;
         buf[FTL_ENTRY_STR_MAX - 1] = 0;
         hwentry->tostr(buf, FTL_ENTRY_STR_MAX - 1);
-        fprintf(fp, "%s", buf);
+        fprintf(fp, "%s\n", buf);
         session_get_addr(hwentry->get_session_index(), &entry, &size);
         fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
@@ -374,11 +375,12 @@ ftlv4_dump_hw_entries(ftlv4 *obj, char *logfile, uint8_t detail)
                     ftlv4_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
     params.force_hwread = false;
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     ftlv4_entry_count = 0;
 
     if (!detail) {
         // ipv4_flow_hash_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
-        fprintf(logfp, "%s", buf);
+        // fprintf(logfp, "%s", buf);
     }
 
     ret = obj->iterate(&params);
@@ -411,6 +413,7 @@ ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
     entry.clear();
     ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
     params.entry = &entry;
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
 
     ret = obj->get(&params);
     if (ret != SDK_RET_OK) {
@@ -453,7 +456,8 @@ ftlv4_get_flow_count(ftlv4 *obj)
 
     params.itercb = ftlv4_hw_entry_count_cb;
     params.cbdata = &count;
-    params.force_hwread = true;
+    params.force_hwread = false;
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
 
     ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {
@@ -649,6 +653,7 @@ ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
         params.hash_valid = 1;
     }
     params.entry = entry;
+    params.entry_size = flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -704,7 +709,7 @@ ftlv6_dump_hw_entry_iter_cb(sdk_table_api_params_t *params)
         ftlv6_entry_count++;
         buf[FTL_ENTRY_STR_MAX - 1] = 0;
         hwentry->key2str(buf, FTL_ENTRY_STR_MAX - 1);
-        fprintf(fp, "%s", buf);
+        fprintf(fp, "%s\n", buf);
     }
 }
 
@@ -721,7 +726,7 @@ ftlv6_dump_hw_entry_detail_iter_cb(sdk_table_api_params_t *params)
         ftlv6_entry_count++;
         buf[FTL_ENTRY_STR_MAX - 1] = 0;
         hwentry->tostr(buf, FTL_ENTRY_STR_MAX - 1);
-        fprintf(fp, "%s", buf);
+        fprintf(fp, "%s\n", buf);
         session_get_addr(hwentry->get_session_index(), &entry, &size);
         fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
@@ -751,10 +756,11 @@ ftlv6_dump_hw_entries(ftlv6 *obj, char *logfile, uint8_t detail)
                     ftlv6_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
     params.force_hwread = false;
+    params.entry_size = flow_hash_entry_t::entry_size();
     ftlv6_entry_count = 0;
 
     // flow_hash_entry_t::keyheader2str(buf, FTL_ENTRY_STR_MAX - 1);
-    fprintf(logfp, "%s", buf);
+    // fprintf(logfp, "%s", buf);
 
     ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {
@@ -784,6 +790,7 @@ ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
     entry.clear();
     ftlv6_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id, 0);
     params.entry = &entry;
+    params.entry_size = flow_hash_entry_t::entry_size();
 
     ret = obj->get(&params);
     if (ret != SDK_RET_OK) {
@@ -816,7 +823,8 @@ ftlv6_get_flow_count(ftlv6 *obj)
 
     params.itercb = ftlv6_hw_entry_count_cb;
     params.cbdata = &count;
-    params.force_hwread = true;
+    params.force_hwread = false;
+    params.entry_size = flow_hash_entry_t::entry_size();
 
     ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {

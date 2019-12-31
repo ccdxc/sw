@@ -17,11 +17,15 @@ IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
 
 def __get_packet_template_impl(obj, args):
+    af = obj.AddrFamily
     template = 'ETH'
-    template += "_%s" % (obj.AddrFamily)
+    template += "_%s" % (af)
 
     if args is not None:
-        template += "_%s" % (args.proto)
+        proto = args.proto
+        if af == "IPV6" and proto == "icmp":
+            proto = "icmpv6"
+        template += "_%s" % (proto)
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromMapping(testcase, packet, args=None):

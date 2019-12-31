@@ -65,3 +65,60 @@ modules:
         enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_ICMP_ECHO_QTAG
+        spec    : local2remote_icmp_echo_request.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_ICMP_ECHO_QTAG
+        spec    : local2remote_icmp6_echo_request.testspec
+        enable  : False
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_ICMP_ECHO_REPLY_QTAG
+        spec    : local2remote_icmp_echo_reply.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_ICMP_ECHO_REPLY_QTAG
+        spec    : local2remote_icmp6_echo_reply.testspec
+        enable  : False
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_ICMP_ECHO_QTAG
+        spec    : local2remote_icmp_echo_request.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_ICMP_ECHO_QTAG
+        spec    : local2remote_icmp6_echo_request.testspec
+        enable  : False
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_ICMP_ECHO_REPLY_QTAG
+        spec    : local2remote_icmp_echo_reply.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_ICMP_ECHO_REPLY_QTAG
+        spec    : local2remote_icmp6_echo_reply.testspec
+        enable  : False
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+
