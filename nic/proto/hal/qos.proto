@@ -116,6 +116,7 @@ message QosClassSpec {
   QosSched             sched            = 4 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
   QosClassMap          class_map        = 5;    // Class map for class derivation on uplinks
   QosMarking           marking          = 6;    // Marking policy for host-to-network traffic
+  bool                 no_drop          = 7;    // drop/ no-drop class
 }
 
 // QosClassRequestMsg is batched request to create/update the QosClasss

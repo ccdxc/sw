@@ -174,6 +174,8 @@ typedef struct qos_class_info_s {
     uint8_t     rewrite_dot1q_pcp;
     uint8_t     rewrite_ip_dscp_en;
     uint8_t     rewrite_ip_dscp;
+
+    bool        no_drop;
 } qos_class_info_t;
 
 typedef struct {

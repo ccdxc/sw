@@ -1256,7 +1256,7 @@ func qosClassHeaderPrint() {
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Printf("PFC: Xon/Xoff\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-30s%-6s%-14s%-8s%-18s%-10s%-10s\n",
+	fmt.Printf("%-30s%-6s%-18s%-8s%-18s%-10s%-10s\n",
 		"QoS-Group", "MTU", "PFC", "PFC-Cos", "QoS-Sched", "Dot1q-PCP", "DSCP")
 	fmt.Println(hdrLine)
 }
@@ -1284,7 +1284,7 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 	if resp.GetClassMap().GetDot1QPcp() > 0 {
 		dot1qPcpStr = fmt.Sprintf("%d", resp.GetClassMap().GetDot1QPcp())
 	}
-	fmt.Printf("%-30s%-6d%-14s%-8d%-18s%-10s%-10s\n",
+	fmt.Printf("%-30s%-6d%-18s%-8d%-18s%-10s%-10s\n",
 		qosGroup, resp.GetMtu(), pfcStr, resp.GetPause().GetPfcCos(),
 		scheduleStr, dot1qPcpStr, dscpStr)
 }

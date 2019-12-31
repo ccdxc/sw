@@ -503,15 +503,13 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_qos_group(qos_group_to_qos_spec_qos_group(qos_class->key.qos_group));
     spec->set_mtu(qos_class->mtu);
-    // set pause params only if pause is enabled on this class
-    if (qos_class->no_drop == true) {
-        spec->mutable_pause()->set_xon_threshold(qos_class->pause.xon_threshold);
-        spec->mutable_pause()->set_xoff_threshold(qos_class->pause.xoff_threshold);
-        spec->mutable_pause()->set_pfc_cos(qos_class->pause.pfc_cos);
-        spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
-        if (qos_class->pause.pfc_enable == true) {
-            spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_PFC);
-        }
+    spec->set_no_drop(qos_class->no_drop);
+    spec->mutable_pause()->set_xon_threshold(qos_class->pause.xon_threshold);
+    spec->mutable_pause()->set_xoff_threshold(qos_class->pause.xoff_threshold);
+    spec->mutable_pause()->set_pfc_cos(qos_class->pause.pfc_cos);
+    spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
+    if (qos_class->pause.pfc_enable == true) {
+        spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_PFC);
     }
     if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
         spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
@@ -941,7 +939,8 @@ qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
 static hal_ret_t
 update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
-    if (spec.has_pause()) {
+    //if (spec.has_pause()) {
+    if (spec.no_drop()) {
         qos_class->pause.xon_threshold = spec.pause().xon_threshold();
         qos_class->pause.xoff_threshold = spec.pause().xoff_threshold();
         qos_class->pause.pfc_cos = spec.pause().pfc_cos();
@@ -950,7 +949,13 @@ update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
         }
         // no_drop is always true for pause
         qos_class->no_drop = true;
+    } else {
+        qos_class->no_drop = false;
     }
+    HAL_TRACE_DEBUG("no_drop {} xon_thr {} xoff_thr {} pfc_cos {} pfc_enable {}", 
+                    qos_class->no_drop, qos_class->pause.xon_threshold, 
+                    qos_class->pause.xoff_threshold, qos_class->pause.pfc_cos, 
+                    qos_class->pause.pfc_enable);
     return HAL_RET_OK;
 }
 
@@ -1426,7 +1431,8 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
         }
     }
     // allow no_drop<->drop change only for default class
-    if (qos_class->no_drop != spec.has_pause() &&
+    //if (qos_class->no_drop != spec.has_pause() &&
+    if (qos_class->no_drop != spec.no_drop() &&
         qos_class->key.qos_group != QOS_GROUP_DEFAULT) {
         HAL_TRACE_ERR("{} class cannot be changed to {} class",
                       qos_class->no_drop ? "No drop" : "Drop",

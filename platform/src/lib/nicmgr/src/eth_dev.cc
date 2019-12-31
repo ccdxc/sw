@@ -1557,6 +1557,8 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
         info.pause_type = sdk::platform::PAUSE_TYPE_LINK_LEVEL;
     } else if (cfg->pause_type == PORT_PAUSE_TYPE_PFC) {
         info.pause_type = sdk::platform::PAUSE_TYPE_PFC;
+    } else {
+        info.pause_type = sdk::platform::PAUSE_TYPE_NONE;
     }
     info.pause_dot1q_pcp = cfg->pfc_cos;
 
@@ -1573,6 +1575,12 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (cfg->flags & IONIC_QOS_CONFIG_F_RW_IP_DSCP) {
         info.rewrite_ip_dscp = cfg->rw_ip_dscp;
+    }
+
+    if (cfg->flags & IONIC_QOS_CONFIG_F_DROP) {
+        info.no_drop = false;
+    } else {
+        info.no_drop = true;
     }
 
     rs = dev_api->qos_class_create(&info);

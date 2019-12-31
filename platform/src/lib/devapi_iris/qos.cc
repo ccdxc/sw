@@ -121,6 +121,7 @@ devapi_qos::qos_class_create(qos_class_info_t *info)
     auto req = req_msg.add_request();
     req->mutable_key_or_handle()->set_qos_group((kh::QosGroup)info->group);
     req->set_mtu(info->mtu);
+    req->set_no_drop(info->no_drop);
 
     /* flowcontrol configuration */
     req->mutable_pause()->set_type((qos::QosPauseType)info->pause_type);
