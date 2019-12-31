@@ -88,7 +88,7 @@ var _ = Describe("events test", func() {
 					}
 
 					if res.TotalHits() == 0 {
-						return fmt.Errorf("could not find any %s event", service)
+						return fmt.Errorf("could not find any %s event, query {%+v}", service, query)
 					}
 					return nil
 				}, 30, 1).Should(BeNil(), fmt.Sprintf("ts: %s could not find requested event(s) in elasticsearch", time.Now().String()))
