@@ -17,9 +17,6 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pds_ms::Error;
-using pds_ms::ms_to_pds_ipaddr;
-
 void li_vxlan_tnl::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.tun_if_obj = state->if_store().get(ips_info_.if_index);
     if (op_delete_) {
@@ -27,10 +24,10 @@ void li_vxlan_tnl::fetch_store_info_(pds_ms::state_t* state) {
             throw Error("VXLAN Tunnel delete for unknown IfIndex " + std::to_string(ips_info_.if_index));
         }
         auto& tun_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
-        store_info_.tep_obj = state->tep_store().get(tun_prop.tep_ip.addr.v4_addr);
+        store_info_.tep_obj = state->tep_store().get(tun_prop.tep_ip);
         SDK_ASSERT (store_info_.tep_obj != nullptr);
     } else {
-        store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip.addr.v4_addr);
+        store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip);
     }
 }
 
@@ -361,7 +358,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
         // Deletes are synchronous - Delete the store entry immediately 
-        state_ctxt.state()->tep_store().erase(tep_ip.addr.v4_addr);
+        state_ctxt.state()->tep_store().erase(tep_ip);
         state_ctxt.state()->if_store().erase(ips_info_.if_index);
     }
 }

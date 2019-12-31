@@ -62,9 +62,6 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pds_ms::Error;
-using pds_ms::vrfname_2_vrfid;
-
 void li_vrf_t::parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     ips_info_.vrf_id = vrfname_2_vrfid(vrf_add_upd_ips->vrf_name, vrf_add_upd_ips->vrf_name_len);
 }

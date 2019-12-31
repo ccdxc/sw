@@ -15,6 +15,7 @@ extern "C" {
 }
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -142,6 +143,18 @@ public:
     }
 private:
     pds_batch_ctxt_t bctxt_ = 0;
+};
+
+class ip_hash {
+public:
+    std::size_t operator()(const ip_addr_t &ip_addr) const {
+        if (ip_addr.af == IP_AF_IPV4) {
+            // For v4 hash only the v4 part
+            return hash_algo::fnv_hash((void *)&ip_addr.addr.v4_addr,
+                                       sizeof(ip_addr.addr.v4_addr));
+        }
+        return hash_algo::fnv_hash((void *)&ip_addr, sizeof(ip_addr));
+    }
 };
 
 } // End namespace

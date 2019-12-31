@@ -7,9 +7,6 @@
 #include "nic/metaswitch/stubs/common/pds_ms_state_init.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pds_ms {
@@ -24,8 +21,10 @@ state_t::state_t(void)
     tep_slab_init(slabs_, PDS_MS_TEP_SLAB_ID);
     if_slab_init(slabs_, PDS_MS_IF_SLAB_ID);
     host_lif_slab_init(slabs_, PDS_MS_HOST_LIF_SLAB_ID);
+    subnet_slab_init(slabs_, PDS_MS_SUBNET_SLAB_ID);
     bd_slab_init(slabs_, PDS_MS_BD_SLAB_ID);
     vpc_slab_init (slabs_, PDS_MS_VPC_SLAB_ID);
+    mac_slab_init (slabs_, PDS_MS_MAC_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE", 

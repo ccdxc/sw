@@ -17,6 +17,11 @@
 #include <cstdint>
 #include <map>
 
+static inline bool operator==(const ip_addr_t& a,
+                              const ip_addr_t& b) {
+    return (ip_addr_is_equal(&a, &b));
+}
+
 namespace pds_ms {
 
 struct tep_dmac_t {
@@ -69,7 +74,7 @@ public:
     const tep_dmac_t* dmac_info(const mac_addr_wr_t& mac) const;
     // return copy
     bool dmac_info(const mac_addr_wr_t& mac, tep_dmac_t* tep_dmac) const;
-    uint32_t key(void) const {return prop_.tep_ip.addr.v4_addr;}
+    ip_addr_t key(void) const {return prop_.tep_ip;}
 
     void update_store(state_t* state, bool op_delete) override;
 
@@ -85,8 +90,7 @@ private:
     std::map<mac_addr_wr_t, tep_dmac_t> dmacs_;  
 };
 
-// TODO: Need hash function for ip_addr_t to support ipv6
-class tep_store_t : public obj_store_t<uint32_t, tep_obj_t> 
+class tep_store_t : public obj_store_t<ip_addr_t, tep_obj_t, ip_hash> 
 {
 };
 

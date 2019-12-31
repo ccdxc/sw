@@ -19,10 +19,6 @@ extern NBB_ULONG li_proc_id;
 
 namespace pds_ms {
 
-using pds_ms::ms_ifindex_t;
-using pds_ms::Error;
-using pds_ms::get_linux_intf_params;
-
 static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     sdk_ret_t ret;
     pds_if_key_t key = {0};
@@ -93,7 +89,6 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         // This is the first time we are seeing this uplink interface
         auto port_prop = if_obj_t::phy_port_properties_t {0};
         port_prop.ifindex = ips_info_.ifindex;
-        port_prop.fri_worker = fw;
         new_if_obj.reset(new if_obj_t(port_prop));
 
         // TODO: Move Linux Intf param fetch to the Mgmt Stub
@@ -117,9 +112,11 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
                          ips_info_.ifindex, ips_info_.admin_state,
                          ips_info_.switchport);
+
         // Create the FRI worker
         ntl::Frl &frl = li::Fte::get().get_frl();
         fw = frl.create_fri_worker(ips_info_.ifindex);
+        phy_port_prop.fri_worker = fw;
         SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
         // Set the initial interface state. The port event subscribe is already
         // done by this point. Any events after creating worker and setting
@@ -127,6 +124,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         frl.init_fault_state(&fault_state);
         fault_state.hw_link_faults = fetch_port_fault_status(ips_info_.ifindex);
         frl.send_fault_ind(fw, &fault_state);
+
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
             SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 

@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_subnet_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
@@ -25,12 +26,14 @@
 
 namespace pds_ms {
 
-enum pds_ms_tep_slab_id_e {
+enum slab_id_e {
     PDS_MS_TEP_SLAB_ID = 1,
     PDS_MS_IF_SLAB_ID,
     PDS_MS_HOST_LIF_SLAB_ID,
+    PDS_MS_SUBNET_SLAB_ID,
     PDS_MS_BD_SLAB_ID,
     PDS_MS_VPC_SLAB_ID,
+    PDS_MS_MAC_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
@@ -90,8 +93,9 @@ public:
     if_store_t&  if_store(void) {return if_store_;}
     host_lif_store_t&  host_lif_store(void) {return host_lif_store_;}
     vpc_store_t& vpc_store(void) {return vpc_store_;}
+    subnet_store_t& subnet_store(void) {return subnet_store_;}
 
-    uint32_t get_slab_in_use(pds_ms_tep_slab_id_e slab_id) {
+    uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
     } 
     uint32_t lnx_ifindex(uint32_t pds_ifindex) {
@@ -119,6 +123,7 @@ private:
     if_store_t if_store_; 
     host_lif_store_t host_lif_store_;
     vpc_store_t vpc_store_;
+    subnet_store_t subnet_store_;
 
     static state_t* g_state_;
     static std::mutex g_mtx_;
@@ -130,6 +135,7 @@ private:
 };
 
 using tep_obj_uptr_t = std::unique_ptr<tep_obj_t>;
+using subnet_obj_uptr_t = std::unique_ptr<subnet_obj_t>;
 using bd_obj_uptr_t = std::unique_ptr<bd_obj_t>;
 using if_obj_uptr_t = std::unique_ptr<if_obj_t>;
 

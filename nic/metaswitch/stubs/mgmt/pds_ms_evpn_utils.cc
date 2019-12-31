@@ -169,6 +169,15 @@ pds_ms_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)
     data->row_status = conf->row_status;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_ROW_STATUS);
 
+    if (conf->row_status != AMB_ROW_DESTROY) {
+        // Reduce the interval required to turn around and issue MAI Delete
+        // in case of the EVPN Remote to Local MAC/IP move scenario
+        data->mac_withdraw_delay = AMB_EVPN_MIN_MAC_DELAY;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_MAC_DELAY);
+
+        data->irb_mode = AMB_EVPN_IRB_ASYMMETRIC;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_IRB_MODE);
+    }
     NBB_TRC_EXIT ();
     return;
 }

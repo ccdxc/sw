@@ -6,6 +6,7 @@
 #ifndef __PDS_MS_BD_STORE_HPP__
 #define __PDS_MS_BD_STORE_HPP__
 
+#include "nic/metaswitch/stubs/common/pds_ms_mac_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
@@ -19,24 +20,26 @@ class bd_obj_t : public slab_obj_t<bd_obj_t>,
                  public base_obj_t {
 public:
     struct properties_t {
-        pds_subnet_spec_t  pds_spec;        // PDS owned
-        pds_encap_t        fabric_encap;    // MS owned
-        pds_ifindex_t      host_ifindex;    // MS owned
-        bool               hal_created = false;
-        properties_t(const pds_subnet_spec_t& pds_spec_) 
-            : pds_spec(pds_spec_) {};
+        ms_bd_id_t         bd_id;
+        pds_vpc_id_t       vpc_id;
+        pds_encap_t        fabric_encap;
+        pds_ifindex_t      host_ifindex = 0;
+        properties_t(ms_bd_id_t b, pds_vpc_id_t v) 
+            : bd_id(b), vpc_id(v) {};
     };
 
-    bd_obj_t(const pds_subnet_spec_t& spec) : prop_(spec) {};
-    void set_properties(const properties_t& prop) {prop_ = prop;}
+    bd_obj_t(ms_bd_id_t b, pds_vpc_id_t v) : prop_(b, v) {};
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
-    ms_bd_id_t key(void) const {return prop_.pds_spec.key.id;}
+    ms_bd_id_t key(void) const {return prop_.bd_id;}
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};
+    mac_store_t& mac_store(void) {return mac_store_;}
+    void walk_macs(std::function<bool(const mac_addr_t& mac)>);
 
 private:  
-    properties_t prop_;
+    properties_t   prop_;
+    mac_store_t    mac_store_;
 };
 
 class bd_store_t : public obj_store_t <ms_bd_id_t, bd_obj_t> {
@@ -44,6 +47,6 @@ class bd_store_t : public obj_store_t <ms_bd_id_t, bd_obj_t> {
 
 void bd_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 
-}
+} // End namespace
 
 #endif

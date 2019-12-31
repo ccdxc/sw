@@ -40,20 +40,16 @@ protected:
 public:
     state_t::context_t state_thr_ctxt;
 };
+const char* g_pds_ms_store_ip_str = "172.17.0.6";
 
 TEST_F(tep_store_test, create) {
     auto state = state_thr_ctxt.state();
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 0);
-    ipv4_addr_t tep_ip;
-    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
-
-    ip_addr_t tep_ip_prop;
-    tep_ip_prop.af = IP_AF_IPV4;
-    tep_ip_prop.addr.v4_addr = tep_ip; 
-
+    ip_addr_t tep_ip;
+    str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
     state->tep_store().add_upd (tep_ip,   // TEP IP
                                tep_obj_uptr_t (new tep_obj_t (
-                               tep_ip_prop, // MS bd id
+                               tep_ip, // TEP IP
                                11,     // Underlay ECMP Idx
                                501009, // PDS TEP Idx
                                501009  // PDS Overlay ECMP index
@@ -65,11 +61,11 @@ TEST_F(tep_store_test, create) {
 TEST_F(tep_store_test, get) {
     // Test the BD store
     auto state = state_thr_ctxt.state();
-    ipv4_addr_t tep_ip;
-    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    ip_addr_t tep_ip;
+    str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
     auto tep_obj = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj != nullptr);
-    ASSERT_TRUE (tep_obj->properties().tep_ip.addr.v4_addr == tep_ip);
+    ASSERT_TRUE (tep_obj->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 11);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
@@ -78,8 +74,8 @@ TEST_F(tep_store_test, get) {
 TEST_F(tep_store_test, update) {
     // Update existing entry
     auto state = state_thr_ctxt.state();
-    ipv4_addr_t tep_ip;
-    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    ip_addr_t tep_ip;
+    str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
     auto tep_old = state->tep_store().get (tep_ip);
 
     // Make a new copy of the old object and update a field
@@ -94,7 +90,7 @@ TEST_F(tep_store_test, update) {
     // Test the BD store
     auto tep_obj_test = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj_test != nullptr);
-    ASSERT_TRUE (tep_obj_test->properties().tep_ip.addr.v4_addr == tep_ip);
+    ASSERT_TRUE (tep_obj_test->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 12);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
@@ -103,8 +99,8 @@ TEST_F(tep_store_test, update) {
 TEST_F(tep_store_test, delete_store) {
     // Delete entry
     auto state = state_thr_ctxt.state();
-    ipv4_addr_t tep_ip;
-    str2ipv4addr((char*) "10.1.2.54", &tep_ip);
+    ip_addr_t tep_ip;
+    str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
     state->tep_store().erase (tep_ip);
     auto tep_obj = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj == nullptr);

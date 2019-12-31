@@ -43,8 +43,8 @@ public:
     subnet_spec.tos = 5;
 
     auto state_ctxt = pds_ms::state_t::thread_context(); 
-    state_ctxt.state()->bd_store().add_upd (bd_id,
-                                            new pds_ms::bd_obj_t(subnet_spec));
+    state_ctxt.state()->subnet_store().add_upd (bd_id,
+                                            new pds_ms::subnet_obj_t(subnet_spec));
    }
 
    void modify(void) override {
@@ -69,12 +69,12 @@ public:
        str2ipv4addr("24.4.10.1", &subnet_spec.v4_prefix.v4_addr);
        subnet_spec.fabric_encap.val.vnid  += 100;
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->bd_store().add_upd (bd_id,
-                                               new pds_ms::bd_obj_t(subnet_spec));
+       state_ctxt.state()->subnet_store().add_upd (bd_id,
+                                               new pds_ms::subnet_obj_t(subnet_spec));
    }
    void trigger_delete(void) override { 
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->bd_store().erase (subnet_spec.key.id);
+       state_ctxt.state()->subnet_store().erase (subnet_spec.key.id);
    }
    virtual ~bd_input_params_t(void) {};
    virtual void init_direct_update() {
@@ -83,8 +83,8 @@ public:
        subnet_spec.fabric_encap.val.vnid  += 100;
        str2ipv4addr("33.3.10.1", &subnet_spec.v4_prefix.v4_addr);
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->bd_store().add_upd (bd_id,
-                                               new pds_ms::bd_obj_t(subnet_spec));
+       state_ctxt.state()->subnet_store().add_upd (bd_id,
+                                               new pds_ms::subnet_obj_t(subnet_spec));
 
        // And then change it to simulate Direct Update
        subnet_spec.num_ing_v4_policy = 3;

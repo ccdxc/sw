@@ -42,10 +42,10 @@ void bd_pds_mock_t::validate_()
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
         ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_));
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_SUBNET_SLAB_ID) == (num_subnet_objs_));
         ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
         auto bd_obj = state->bd_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
-        ASSERT_FALSE(bd_obj == nullptr);
-        ASSERT_FALSE(bd_obj->properties().hal_created);
+        ASSERT_TRUE(bd_obj == nullptr);
         return;
     }
 
@@ -56,8 +56,10 @@ void bd_pds_mock_t::validate_()
         auto state = state_ctxt.state();
         if (op_delete_) {
             // Object is removed from store synchronously for deletes
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_-1));
+            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_SUBNET_SLAB_ID) == (num_subnet_objs_));
+            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_));
         } else if (op_create_) {
+            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_SUBNET_SLAB_ID) == (num_subnet_objs_));
             ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == (num_bd_objs_));
         }
     }
@@ -76,25 +78,26 @@ void bd_pds_mock_t::validate_()
     }
     if (mock_pds_batch_async_fail_) {
         // Verify no change to slab - all temporary objects released
+        --num_bd_objs_;
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
+        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_SUBNET_SLAB_ID) == num_subnet_objs_);
         ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == num_bd_objs_);
         ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        auto subnet_obj = state->subnet_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
+        ASSERT_FALSE(subnet_obj == nullptr);
+        // BD should be deleted upon async failure
         auto bd_obj = state->bd_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
-        ASSERT_FALSE(bd_obj == nullptr);
-        ASSERT_FALSE(bd_obj->properties().hal_created);
+        ASSERT_TRUE(bd_obj == nullptr);
 
         return;
     }
 
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
-    if (op_delete_) { 
-        --num_bd_objs_;
-    } else { 
+    if (!op_delete_) { 
         auto bd_obj = state->bd_store().get(((bd_input_params_t*)test_params()->test_input)->bd_id);
         ASSERT_FALSE(bd_obj == nullptr);
-        ASSERT_TRUE(bd_obj->properties().hal_created);
     }
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_BD_SLAB_ID) == num_bd_objs_);
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);

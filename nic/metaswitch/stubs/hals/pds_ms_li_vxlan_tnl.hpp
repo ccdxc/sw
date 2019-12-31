@@ -24,13 +24,6 @@ extern "C"
 
 namespace pds_ms {
 
-using pds_ms::ms_ifindex_t;
-using pds_ms::mac_addr_wr_t;
-using pds_ms::cookie_t;
-using pds_ms::pds_batch_ctxt_guard_t;
-using pds_ms::tep_obj_t;
-using pds_ms::if_obj_t;
-
 class li_vxlan_tnl {
 public:    
    void handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);

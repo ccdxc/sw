@@ -35,5 +35,10 @@ void bd_obj_t::update_store (state_t* state, bool op_delete)
     }
 }
 
+void bd_obj_t::walk_macs(std::function<bool(const mac_addr_t& mac)> fn) {
+    mac_store_.walk([&fn] (const mac_obj_t::key_t& key, mac_obj_t&) {
+        return fn(key.mac);
+    });
+}
 } // End namespace
 

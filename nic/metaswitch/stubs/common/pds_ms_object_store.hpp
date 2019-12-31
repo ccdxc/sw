@@ -36,14 +36,14 @@ public:
         auto it = store_.find(k);
         if (it == store_.end()) {return nullptr;}
         return it->second.get();
-    };
+    }
 
     bool get_copy(const KEY& k, OBJECT* copy_out) {
         auto it = store_.find(k);
         if (it == store_.end()) {return false;}
         *copy_out = *(it->second);
         return true;
-    };
+    }
 
     // Takes a function or lambda callback as argument. 
     // Return false from callback to abort walk
@@ -61,8 +61,8 @@ class state_t;
 class base_obj_t {
 public:
     virtual ~base_obj_t(void) {};
-    virtual void update_store(state_t* state, bool op_delete) = 0;
-    virtual void print_debug_str(void) = 0;
+    virtual void update_store(state_t* state, bool op_delete) {};
+    virtual void print_debug_str(void) {};
 };
 
 }

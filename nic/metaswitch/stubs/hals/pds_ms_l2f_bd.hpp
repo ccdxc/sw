@@ -18,13 +18,6 @@ extern "C"
 
 namespace pds_ms {
 
-using pds_ms::ms_ifindex_t;
-using pds_ms::ms_bd_id_t;
-using pds_ms::cookie_t;
-using pds_ms::pds_batch_ctxt_guard_t;
-using pds_ms::bd_obj_t;
-using pds_ms::state_t;
-
 class l2f_bd_t {
 public:    
    void handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd);
@@ -33,7 +26,7 @@ public:
    void handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex);
    // Synchronous HAL update completion
    sdk_ret_t update_pds_synch(state_t::context_t&& state_ctxt,
-                              bd_obj_t* bd_obj);
+                              subnet_obj_t* subnet_obj);
 
 private:
     struct ips_info_t {
@@ -41,7 +34,8 @@ private:
         pds_vnid_id_t vnid;
     };
     struct store_info_t {
-        bd_obj_t*    bd_obj = nullptr;
+        subnet_obj_t*    subnet_obj = nullptr;
+        bd_obj_t*        bd_obj = nullptr;
     };
 
 private:
@@ -53,11 +47,12 @@ private:
     bool op_delete_ = false;
 
 private:
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(bool async);
-    void fetch_store_info_(pds_ms::state_t* state);
+    pds_batch_ctxt_guard_t make_batch_pds_spec_(state_t::context_t& state_ctxt,
+                                                bool async);
+    void fetch_store_info_(state_t* state);
     void parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd);
     pds_subnet_spec_t make_pds_subnet_spec_(void);
-    pds_subnet_key_t make_pds_subnet_key_(void);
+    pds_subnet_key_t  make_pds_subnet_key_(void);
     pds_batch_ctxt_guard_t prepare_pds(state_t::context_t& state_ctxt,
                                        bool async);
 };
@@ -65,7 +60,7 @@ private:
 // API to update HAL directly bypassing Metaswitch
 // Synchronous HAL update completion
 sdk_ret_t l2f_bd_update_pds_synch(state_t::context_t&& state_ctxt,
-                                  bd_obj_t* bd_obj);
+                                  subnet_obj_t* subnet_obj);
 
 } // End namespace
 #endif

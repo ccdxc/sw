@@ -287,20 +287,16 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
-using pds_ms::bd_obj_t;
-using pds_ms::bd_obj_uptr_t;
-using pds_ms::state_t;
-
 static void 
 cache_subnet_spec(pds_subnet_spec_t* spec, bool op_delete) 
 {
     auto state_ctxt = state_t::thread_context();
     if (op_delete) {
-        state_ctxt.state()->bd_store().erase(spec->key.id);
+        state_ctxt.state()->subnet_store().erase(spec->key.id);
         return;
     }
-    bd_obj_uptr_t bd_obj_uptr (new bd_obj_t(*spec));
-    state_ctxt.state()->bd_store().add_upd(spec->key.id, std::move(bd_obj_uptr));
+    subnet_obj_uptr_t subnet_obj_uptr (new subnet_obj_t(*spec));
+    state_ctxt.state()->subnet_store().add_upd(spec->key.id, std::move(subnet_obj_uptr));
 }
 
 sdk_ret_t
@@ -348,43 +344,44 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
-        auto bd_obj = state_ctxt.state()->bd_store().get(spec->key.id);
-        if (bd_obj == nullptr) {
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(spec->key.id);
+        if (subnet_obj == nullptr) {
             SDK_TRACE_ERR("Update for unknown subnet %d", spec->key.id);
             return SDK_RET_ENTRY_NOT_FOUND;
         }
 
-        auto& bd_pds_spec = bd_obj->properties().pds_spec;
-        if (memcmp (&bd_pds_spec.fabric_encap, &spec->fabric_encap, 
-                    sizeof(bd_pds_spec.fabric_encap)) != 0) {
+        auto& state_pds_spec = subnet_obj->spec();
+        if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap, 
+                    sizeof(state_pds_spec.fabric_encap)) != 0) {
             ms_upd_flags.bd = true;
             SDK_TRACE_INFO("Subnet %d VNI change - Old %d New %d", spec->key.id,
-                           bd_pds_spec.fabric_encap.val.vnid,
+                           state_pds_spec.fabric_encap.val.vnid,
                            spec->fabric_encap.val.vnid);
-            bd_obj->properties().pds_spec.fabric_encap = spec->fabric_encap;
+            state_pds_spec.fabric_encap = spec->fabric_encap;
         }
-        if (bd_pds_spec.host_ifindex != spec->host_ifindex) {
+        if (state_pds_spec.host_ifindex != spec->host_ifindex) {
             ms_upd_flags.bd_if = true;
             SDK_TRACE_INFO("Subnet %d Host If change - Old 0x%x New 0x%x",
-                           spec->key.id, bd_pds_spec.host_ifindex, 
+                           spec->key.id, state_pds_spec.host_ifindex, 
                            spec->host_ifindex);
-            bd_pds_spec.host_ifindex = spec->host_ifindex;
+            state_pds_spec.host_ifindex = spec->host_ifindex;
         }
-        if (bd_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
+        if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
             ms_upd_flags.irb = true;
+            // Diff in IP address needs to be driven through fast and slowpath
         }
         // Diff in any other property needs to be driven through fastpath
-        if (memcmp(&bd_pds_spec, spec, sizeof(*spec)) != 0) {
+        if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
             SDK_TRACE_INFO("Subnet %d fastpath parameter change", spec->key.id);
             fastpath = true;
         }
         // Update the cached subnet spec with the new info
-        bd_obj->properties().pds_spec = *spec;
+        state_pds_spec = *spec;
 
         if (fastpath) {
             // Stub takes care of sequencing if create has not yet been
             // received from MS.
-            auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt), bd_obj);
+            auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt), subnet_obj);
             // Do not state_ctxt has been released above 
             // Do not access global state beyond this
             if (ret != SDK_RET_OK) {

@@ -63,7 +63,7 @@ void l2f_integ_subcomp_t::delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_i
 
 sdk_ret_t
 l2f_bd_update_pds_synch (state_t::context_t&& state_ctxt,
-                         bd_obj_t* bd_obj)
+                         subnet_obj_t* subnet_obj)
 {
     return SDK_RET_OK;
 }

@@ -23,11 +23,6 @@ extern "C"
 
 namespace pds_ms {
 
-using pds_ms::cookie_t;
-using pds_ms::pds_batch_ctxt_guard_t;
-using pds_ms::state_t;
-using pds_ms::vpc_obj_t;
-
 class li_vrf_t {
 public:    
    void handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);

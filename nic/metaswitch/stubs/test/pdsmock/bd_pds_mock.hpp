@@ -16,7 +16,7 @@ public:
         reset_mock_fail();
     }
     void expect_create() override {
-        ++num_bd_objs_;
+        ++num_subnet_objs_; ++num_bd_objs_;
         op_create_ = true; op_delete_ = false;
         clear_batches();
         auto bd_input = dynamic_cast<bd_input_params_t*>
@@ -31,6 +31,7 @@ public:
         generate_addupd_specs(*bd_input, expected_pds);
     }
     void expect_delete() override {
+        --num_subnet_objs_; --num_bd_objs_;
         op_create_ = false; op_delete_ = true;
         clear_batches();
         auto bd_input = dynamic_cast<bd_input_params_t*>
@@ -44,17 +45,19 @@ public:
     void cleanup(void) override {
         pds_mock_t::cleanup();
         num_bd_objs_ = 0;
+        num_subnet_objs_ = 0;
     }
     void expect_pds_spec_op_fail(void) override {
         pds_mock_t::expect_pds_spec_op_fail();
-        ++num_bd_objs_;
+        ++num_subnet_objs_;
     }
     void expect_pds_batch_commit_fail(void) override {
         pds_mock_t::expect_pds_batch_commit_fail();
-        ++num_bd_objs_;
+        ++num_subnet_objs_;
     }
 private:
     int           num_bd_objs_ = 0;
+    int           num_subnet_objs_ = 0;
     void generate_addupd_specs(const bd_input_params_t& input,
                                batch_spec_t& pds_batch);
     void generate_del_specs(const bd_input_params_t& input,
