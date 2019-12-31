@@ -2,8 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_IPC_HPP__
-#define __VPP_IPC_HPP__
+#ifndef __VPP_INFRA_IPC_HPP__
+#define __VPP_INFRA_IPC_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/msg.h"
@@ -24,9 +24,10 @@ typedef enum pds_ipc_msg_op_e {
 // callback function prototype
 typedef sdk::sdk_ret_t (*pds_ipc_msg_cb)(const pds_msg_t *msg, pds_msg_t *ret);
 
+// function prototypes
 int pds_vpp_ipc_init(void);
 int pds_ipc_register_callback(pds_msg_id_t msgid,
                               pds_ipc_msg_op_t operation,
                               pds_ipc_msg_cb cb_fn);
 
-#endif    // __VPP_IPC_HPP__
+#endif    // __VPP_INFRA_IPC_HPP__

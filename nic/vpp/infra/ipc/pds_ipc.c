@@ -13,7 +13,7 @@
 #include "ipc_internal.h"
 
 // logging class
-static vlib_log_class_t ipc_log_default = 0;
+static vlib_log_class_t pds_ipc_log = 0;
 
 // callback function called from the main VPP poll loop.  Called when there's
 // data in the IPC fd
@@ -51,35 +51,34 @@ ipc_log_notice (const char *fmt, ...) {
     ret = vsnprintf(buf, sizeof(buf), fmt, va);
     va_end(va);
 
-    vlib_log(VLIB_LOG_LEVEL_NOTICE, ipc_log_default, buf);
+    vlib_log(VLIB_LOG_LEVEL_NOTICE, pds_ipc_log, buf);
     return ret;
 }
 
 // wrapper over vlib_log callable from C++
 int
 ipc_log_error (const char *fmt, ...) {
-    va_list va;
     int ret;
+    va_list va;
     static char buf[128];
 
     va_start(va, fmt);
     ret = vsnprintf(buf, sizeof(buf), fmt, va);
     va_end(va);
 
-    vlib_log(VLIB_LOG_LEVEL_ERR, ipc_log_default, buf);
+    vlib_log(VLIB_LOG_LEVEL_ERR, pds_ipc_log, buf);
     return ret;
 }
 
-// Initialize the IPC server to receive messages
+// initialize the IPC server to receive messages
 int
 pds_vpp_ipc_init (void)
 {
-    ipc_log_default = vlib_log_register_class("ipc", 0);
-    assert(ipc_log_default != 0);
+    pds_ipc_log = vlib_log_register_class("pds-ipc", 0);
+    assert(pds_ipc_log != 0);
 
     ipc_log_notice("IPC request handler registered");
 
-    ipcshim_init();
+    ipc_shim_init();
     return 0;
 }
-

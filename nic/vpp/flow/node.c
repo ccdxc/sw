@@ -3,6 +3,7 @@
  */
 
 #include "includes.h"
+#include "pdsa_hdlr.h"
 
 pds_flow_main_t pds_flow_main;
 
@@ -18,12 +19,12 @@ u8 g_dis_reinject = 0;
 static u8 *
 format_pds_fwd_flow_trace (u8 * s, va_list * args)
 {
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
-    fwd_flow_trace_t *t = va_arg (*args, fwd_flow_trace_t *);
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    fwd_flow_trace_t *t = va_arg(*args, fwd_flow_trace_t *);
 
-    s = format (s, "Out Interface %U",
-        format_vnet_hw_if_index_name, vnet_get_main(), t->hw_index);
+    s = format(s, "Out Interface %U",
+               format_vnet_hw_if_index_name, vnet_get_main(), t->hw_index);
     return s;
 }
 
@@ -41,12 +42,12 @@ pds_fwd_flow_trace_add (vlib_main_t *vm,
             b1 = PDS_PACKET_BUFFER(1);
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->hw_index = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->hw_index = vnet_buffer(b0)->sw_if_index[VLIB_TX];
             }
             if (b1->flags & VLIB_BUFFER_IS_TRACED) {
-                t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
-                t1->hw_index = vnet_buffer (b1)->sw_if_index[VLIB_TX];
+                t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
+                t1->hw_index = vnet_buffer(b1)->sw_if_index[VLIB_TX];
             }
         } PDS_PACKET_TRACE_DUAL_LOOP_END;
         PDS_PACKET_TRACE_SINGLE_LOOP_START {
@@ -56,19 +57,18 @@ pds_fwd_flow_trace_add (vlib_main_t *vm,
             b0 = PDS_PACKET_BUFFER(0);
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->hw_index = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->hw_index = vnet_buffer(b0)->sw_if_index[VLIB_TX];
             }
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
     } PDS_PACKET_TRACE_LOOP_END;
 }
 
 static uword
-pds_fwd_flow (vlib_main_t * vm,
-              vlib_node_runtime_t * node,
+pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
               vlib_frame_t * from_frame)
 {
-    vnet_main_t *vnm = vnet_get_main ();
+    vnet_main_t *vnm = vnet_get_main();
     vnet_interface_main_t *im = &vnm->interface_main;
     u32 thread_index = vm->thread_index;
     u64 pkt_bytes = 0, pkt_count = 0;
@@ -81,9 +81,9 @@ pds_fwd_flow (vlib_main_t * vm,
     PDS_PACKET_LOOP_START {
         if (PREDICT_FALSE(g_dis_reinject)) {
             vlib_node_t *node = vlib_get_node_by_name(vm, (u8 *) "error-drop");
-            to_frame = vlib_get_frame_to_node (vm, node->index);
+            to_frame = vlib_get_frame_to_node(vm, node->index);
             to_frame->n_vectors = from_frame->n_vectors;
-            vlib_put_frame_to_node (vm, node->index, to_frame);
+            vlib_put_frame_to_node(vm, node->index, to_frame);
             break;
         }
         PDS_PACKET_DUAL_LOOP_START(WRITE, WRITE) {
@@ -91,23 +91,25 @@ pds_fwd_flow (vlib_main_t * vm,
 
             p0 = PDS_PACKET_BUFFER(0);
             p1 = PDS_PACKET_BUFFER(1);
-            vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
-            vnet_buffer (p1)->sw_if_index[VLIB_TX] = vnet_buffer (p1)->sw_if_index[VLIB_RX];
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
+                vnet_buffer(p0)->sw_if_index[VLIB_RX];
+            vnet_buffer(p1)->sw_if_index[VLIB_TX] =
+                vnet_buffer(p1)->sw_if_index[VLIB_RX];
 
             pds_flow_add_tx_hdrs_x2(p0, p1);
-            if (PREDICT_FALSE((sw_if_index != vnet_buffer (p0)->sw_if_index[VLIB_TX]) || !to_frame)) {
+            if (PREDICT_FALSE((sw_if_index !=
+                               vnet_buffer(p0)->sw_if_index[VLIB_TX]) ||
+                              !to_frame)) {
                 if (to_frame) {
-                    hw = vnet_get_sup_hw_interface (vnm, sw_if_index);
-                    vlib_put_frame_to_node (vm, hw->tx_node_index, to_frame);
-                    vlib_increment_combined_counter(im->combined_sw_if_counters
-                            + VNET_INTERFACE_COUNTER_TX,
-                            thread_index,
-                            sw_if_index,
-                            pkt_count, pkt_bytes);
+                    hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
+                    vlib_put_frame_to_node(vm, hw->tx_node_index, to_frame);
+                    vlib_increment_combined_counter(
+                        im->combined_sw_if_counters + VNET_INTERFACE_COUNTER_TX,
+                        thread_index, sw_if_index, pkt_count, pkt_bytes);
                     pkt_bytes = 0;
                     pkt_count = 0;
                 }
-                sw_if_index = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+                sw_if_index = vnet_buffer(p0)->sw_if_index[VLIB_TX];
                 hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
                 to_frame = vlib_get_frame_to_node(vm, hw->tx_node_index);
                 to_next = vlib_frame_vector_args(to_frame);
@@ -116,19 +118,19 @@ pds_fwd_flow (vlib_main_t * vm,
             pkt_count++;
             to_frame->n_vectors++;
 
-            if (PREDICT_FALSE((sw_if_index != vnet_buffer (p1)->sw_if_index[VLIB_TX]) || !to_frame)) {
+            if (PREDICT_FALSE((sw_if_index !=
+                               vnet_buffer(p1)->sw_if_index[VLIB_TX]) ||
+                              !to_frame)) {
                 if (to_frame) {
-                    hw = vnet_get_sup_hw_interface (vnm, sw_if_index);
-                    vlib_put_frame_to_node (vm, hw->tx_node_index, to_frame);
-                    vlib_increment_combined_counter(im->combined_sw_if_counters
-                            + VNET_INTERFACE_COUNTER_TX,
-                            thread_index,
-                            sw_if_index,
-                            pkt_count, pkt_bytes);
+                    hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
+                    vlib_put_frame_to_node(vm, hw->tx_node_index, to_frame);
+                    vlib_increment_combined_counter(
+                        im->combined_sw_if_counters + VNET_INTERFACE_COUNTER_TX,
+                        thread_index, sw_if_index, pkt_count, pkt_bytes);
                     pkt_bytes = 0;
                     pkt_count = 0;
                 }
-                sw_if_index = vnet_buffer (p1)->sw_if_index[VLIB_TX];
+                sw_if_index = vnet_buffer(p1)->sw_if_index[VLIB_TX];
                 hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
                 to_frame = vlib_get_frame_to_node(vm, hw->tx_node_index);
                 to_next = vlib_frame_vector_args(to_frame);
@@ -144,23 +146,24 @@ pds_fwd_flow (vlib_main_t * vm,
             vlib_buffer_t *p0;
 
             p0 = PDS_PACKET_BUFFER(0);
-            vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
+                vnet_buffer(p0)->sw_if_index[VLIB_RX];
 
             pds_flow_add_tx_hdrs_x1(p0);
 
-            if (PREDICT_FALSE((sw_if_index != vnet_buffer (p0)->sw_if_index[VLIB_TX]) || !to_frame)) {
+            if (PREDICT_FALSE((sw_if_index !=
+                               vnet_buffer(p0)->sw_if_index[VLIB_TX]) ||
+                              !to_frame)) {
                 if (to_frame) {
-                    hw = vnet_get_sup_hw_interface (vnm, sw_if_index);
-                    vlib_put_frame_to_node (vm, hw->tx_node_index, to_frame);
-                    vlib_increment_combined_counter(im->combined_sw_if_counters
-                            + VNET_INTERFACE_COUNTER_TX,
-                            thread_index,
-                            sw_if_index,
-                            pkt_count, pkt_bytes);
+                    hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
+                    vlib_put_frame_to_node(vm, hw->tx_node_index, to_frame);
+                    vlib_increment_combined_counter(
+                        im->combined_sw_if_counters + VNET_INTERFACE_COUNTER_TX,
+                        thread_index, sw_if_index, pkt_count, pkt_bytes);
                     pkt_bytes = 0;
                     pkt_count = 0;
                 }
-                sw_if_index = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+                sw_if_index = vnet_buffer(p0)->sw_if_index[VLIB_TX];
                 hw = vnet_get_sup_hw_interface(vnm, sw_if_index);
                 to_frame = vlib_get_frame_to_node(vm, hw->tx_node_index);
                 to_next = vlib_frame_vector_args(to_frame);
@@ -171,16 +174,14 @@ pds_fwd_flow (vlib_main_t * vm,
             to_next[0] = *PDS_PACKET_BUFFER_INDEX_PTR(pak_count);
             pak_count++;
         } PDS_PACKET_SINGLE_LOOP_END;
-        vlib_put_frame_to_node (vm, hw->tx_node_index, to_frame);
-        vlib_increment_combined_counter(im->combined_sw_if_counters
-                + VNET_INTERFACE_COUNTER_TX,
-                thread_index,
-                sw_if_index,
-                pkt_count, pkt_bytes);
+        vlib_put_frame_to_node(vm, hw->tx_node_index, to_frame);
+        vlib_increment_combined_counter(
+            im->combined_sw_if_counters + VNET_INTERFACE_COUNTER_TX,
+            thread_index, sw_if_index, pkt_count, pkt_bytes);
     } PDS_PACKET_LOOP_END_NO_ENQUEUE;
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pds_fwd_flow_trace_add (vm, node, from_frame);
+        pds_fwd_flow_trace_add(vm, node, from_frame);
     }
 
     return from_frame->n_vectors;
@@ -195,8 +196,7 @@ static char * fwd_flow_error_strings[] = {
 VLIB_REGISTER_NODE (pds_fwd_flow_node) = {
     .function = pds_fwd_flow,
     .name = "pds-fwd-flow",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FWD_FLOW_COUNTER_LAST,
     .error_strings = fwd_flow_error_strings,
@@ -214,12 +214,12 @@ VLIB_REGISTER_NODE (pds_fwd_flow_node) = {
 static u8 *
 format_pds_session_prog_trace (u8 * s, va_list * args)
 {
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
-    session_prog_trace_t *t = va_arg (*args, session_prog_trace_t *);
+    CLIB_UNUSED(vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED(vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    session_prog_trace_t *t = va_arg(*args, session_prog_trace_t *);
 
-    s = format (s, "Session ID %u,\nData: %U", t->session_id,
-                format_hex_bytes, t->data, sizeof(t->data));
+    s = format(s, "Session ID %u,\nData: %U", t->session_id,
+               format_hex_bytes, t->data, sizeof(t->data));
     return s;
 }
 
@@ -236,38 +236,39 @@ pds_session_prog_trace_add (vlib_main_t *vm,
             b0 = PDS_PACKET_BUFFER(0);
             b1 = PDS_PACKET_BUFFER(1);
 
-            if (b0->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->session_id = vnet_buffer (b0)->pds_data.ses_id;
+            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->session_id = vnet_buffer(b0)->pds_data.ses_id;
                 clib_memcpy(t0->data,
-                        (vlib_buffer_get_current(b0) - pds_session_get_advance_offset()),
-                        sizeof(t0->data));
+                            (vlib_buffer_get_current(b0) -
+                             pds_session_get_advance_offset()),
+                            sizeof(t0->data));
             }
-            if (b1->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
-                t1->session_id = vnet_buffer (b1)->pds_data.ses_id;
+
+            if (b1->flags & VLIB_BUFFER_IS_TRACED) {
+                t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
+                t1->session_id = vnet_buffer(b1)->pds_data.ses_id;
                 clib_memcpy(t1->data,
-                        (vlib_buffer_get_current(b1) - pds_session_get_advance_offset()),
-                        sizeof(t0->data));
+                            (vlib_buffer_get_current(b1) -
+                             pds_session_get_advance_offset()),
+                            sizeof(t0->data));
             }
 
         } PDS_PACKET_TRACE_DUAL_LOOP_END;
 
-        PDS_PACKET_TRACE_SINGLE_LOOP_START{
+        PDS_PACKET_TRACE_SINGLE_LOOP_START {
             vlib_buffer_t *b0;
             session_prog_trace_t *t0;
 
             b0 = PDS_PACKET_BUFFER(0);
 
-            if (b0->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->session_id = vnet_buffer (b0)->pds_data.ses_id;
+            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->session_id = vnet_buffer(b0)->pds_data.ses_id;
                 clib_memcpy(t0->data,
-                        (vlib_buffer_get_current(b0) - pds_session_get_advance_offset()),
-                        sizeof(t0->data));
+                            (vlib_buffer_get_current(b0) -
+                             pds_session_get_advance_offset()),
+                            sizeof(t0->data));
             }
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
     } PDS_PACKET_TRACE_LOOP_END;
@@ -334,7 +335,7 @@ VLIB_REGISTER_NODE (pds_session_prog_node) = {
     .function = pds_session_prog,
     .name = "pds-session-program",
     /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+    .vector_size = sizeof(u32),
 
     .n_errors = SESSION_PROG_COUNTER_LAST,
     .error_strings = session_prog_error_strings,
@@ -352,22 +353,22 @@ VLIB_REGISTER_NODE (pds_session_prog_node) = {
 static u8 *
 format_pds_flow_prog_trace (u8 * s, va_list * args)
 {
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
-    flow_prog_trace_t *t = va_arg (*args, flow_prog_trace_t *);
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    flow_prog_trace_t *t = va_arg(*args, flow_prog_trace_t *);
 
-    s = format (s, "iFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
-            "dst_port[%d]\n", format_ip46_address, &t->isrc, IP46_TYPE_ANY,
-            format_ip46_address, &t->idst, IP46_TYPE_ANY,
-            format_ip_protocol, t->iprotocol,
-            clib_net_to_host_u16(t->isrc_port),
-            clib_net_to_host_u16(t->idst_port));
-    s = format (s, "rFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
-                "dst_port[%d]", format_ip46_address, &t->rsrc, IP46_TYPE_ANY,
-                format_ip46_address, &t->rdst, IP46_TYPE_ANY,
-                format_ip_protocol, t->rprotocol,
-                clib_net_to_host_u16(t->rsrc_port),
-                clib_net_to_host_u16(t->rdst_port));
+    s = format(s, "iFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
+               "dst_port[%d]\n", format_ip46_address, &t->isrc, IP46_TYPE_ANY,
+               format_ip46_address, &t->idst, IP46_TYPE_ANY,
+               format_ip_protocol, t->iprotocol,
+               clib_net_to_host_u16(t->isrc_port),
+               clib_net_to_host_u16(t->idst_port));
+    s = format(s, "rFlow: src[%U], dst[%U], IP_Proto[%U], src_port[%d], "
+               "dst_port[%d]", format_ip46_address, &t->rsrc, IP46_TYPE_ANY,
+               format_ip46_address, &t->rdst, IP46_TYPE_ANY,
+               format_ip_protocol, t->rprotocol,
+               clib_net_to_host_u16(t->rsrc_port),
+               clib_net_to_host_u16(t->rdst_port));
     return s;
 }
 
@@ -377,7 +378,7 @@ pds_flow_prog_populate_trace (vlib_buffer_t *CLIB_UNUSED(b0),
                               void *data, u8 is_ip4)
 {
     if (is_ip4) {
-       ip4_header_t *ip40 = data;
+        ip4_header_t *ip40 = data;
 
         ip46_address_set_ip4(&t0->isrc, &ip40->src_address);
         ip46_address_set_ip4(&t0->rdst, &ip40->src_address);
@@ -397,11 +398,13 @@ pds_flow_prog_populate_trace (vlib_buffer_t *CLIB_UNUSED(b0),
 
         t0->iprotocol = t0->rprotocol = ip60->protocol;
     }
-    if (PREDICT_TRUE(((t0->iprotocol == IP_PROTOCOL_TCP)
-                    || (t0->iprotocol == IP_PROTOCOL_UDP)))) {
-        udp_header_t *udp0 = (udp_header_t *) (((u8 *) data) +
-                             (vnet_buffer (b0)->l4_hdr_offset -
-                             vnet_buffer (b0)->l3_hdr_offset));
+
+    if (PREDICT_TRUE(((t0->iprotocol == IP_PROTOCOL_TCP) ||
+                      (t0->iprotocol == IP_PROTOCOL_UDP)))) {
+        udp_header_t *udp0 =
+            (udp_header_t *)(((u8 *) data) +
+                             (vnet_buffer(b0)->l4_hdr_offset -
+                              vnet_buffer(b0)->l3_hdr_offset));
         t0->isrc_port = t0->rdst_port = udp0->src_port;
         t0->idst_port = t0->rsrc_port = udp0->dst_port;
     }
@@ -428,14 +431,12 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
             data0 = vlib_buffer_get_current(b0) - offset0;
             data1 = vlib_buffer_get_current(b1) - offset1;
 
-            if (b0->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
+            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
                 pds_flow_prog_populate_trace(b0, t0, data0, is_ip4);
             }
-            if (b1->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
+            if (b1->flags & VLIB_BUFFER_IS_TRACED) {
+                t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
                 pds_flow_prog_populate_trace(b1, t1, data1, is_ip4);
             }
         } PDS_PACKET_TRACE_DUAL_LOOP_END;
@@ -451,9 +452,8 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
             offset0 = pds_flow_prog_get_next_offset(b0);
             data0 = vlib_buffer_get_current(b0) - offset0;
 
-            if (b0->flags & VLIB_BUFFER_IS_TRACED)
-            {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
+            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
                 pds_flow_prog_populate_trace(b0, t0, data0, is_ip4);
             }
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
@@ -482,20 +482,20 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         src_ip = clib_net_to_host_u32(ip40->src_address.as_u32);
         dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
         protocol = ip40->protocol;
-        lkp_id = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+        lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
 
-        if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP)
-                || (ip40->protocol == IP_PROTOCOL_UDP)))) {
-            udp0 = (udp_header_t *) (((u8 *) ip40) +
-                    (vnet_buffer (p0)->l4_hdr_offset -
-                            vnet_buffer (p0)->l3_hdr_offset));
+        if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP) ||
+                          (ip40->protocol == IP_PROTOCOL_UDP)))) {
+            udp0 = (udp_header_t *)(((u8 *) ip40) +
+                    (vnet_buffer(p0)->l4_hdr_offset -
+                            vnet_buffer(p0)->l3_hdr_offset));
             r_dport = sport = clib_net_to_host_u16(udp0->src_port);
             r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
         } else if (ip40->protocol == IP_PROTOCOL_ICMP) {
-            icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
-                    (vnet_buffer (p0)->l4_hdr_offset -
-                    vnet_buffer (p0)->l3_hdr_offset));
-            sport = ((u16) (icmp0->type << 8)) | icmp0->code;
+            icmp0 = (icmp46_header_t *)(((u8 *) ip40) +
+                    (vnet_buffer(p0)->l4_hdr_offset -
+                    vnet_buffer(p0)->l3_hdr_offset));
+            sport = ((u16)(icmp0->type << 8)) | icmp0->code;
             dport = r_dport = 0;
             if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
                 r_sport = (ICMP4_echo_reply << 8) | icmp0->code;
@@ -532,19 +532,19 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         src_ip = ip60->src_address.as_u8;
         dst_ip = ip60->dst_address.as_u8;
         protocol = ip60->protocol;
-        lkp_id = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+        lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
 
-        if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP)
-                || (ip60->protocol == IP_PROTOCOL_UDP)))) {
-            udp0 = (udp_header_t *) (((u8 *) ip60) +
-                    (vnet_buffer (p0)->l4_hdr_offset -
-                            vnet_buffer (p0)->l3_hdr_offset));
+        if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP) ||
+                          (ip60->protocol == IP_PROTOCOL_UDP)))) {
+            udp0 = (udp_header_t *)(((u8 *) ip60) +
+                                    (vnet_buffer(p0)->l4_hdr_offset -
+                                     vnet_buffer(p0)->l3_hdr_offset));
             r_dport = sport = clib_net_to_host_u16(udp0->src_port);
             r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
         } else if (ip60->protocol == IP_PROTOCOL_ICMP6) {
-            icmp0 = (icmp46_header_t *) (((u8 *) ip60) +
-                    (vnet_buffer (p0)->l4_hdr_offset -
-                    vnet_buffer (p0)->l3_hdr_offset));
+            icmp0 = (icmp46_header_t *)(((u8 *) ip60) +
+                                        (vnet_buffer(p0)->l4_hdr_offset -
+                                         vnet_buffer(p0)->l3_hdr_offset));
             sport = ((u16) (icmp0->type << 8)) | icmp0->code;
             dport = r_dport = 0;
             if (PREDICT_TRUE(icmp0->type == ICMP6_echo_request)) {
@@ -557,15 +557,13 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         } else {
             sport = dport = r_sport = r_dport = 0;
         }
-        ftlv6_cache_set_key(src_ip, dst_ip,
-                      protocol, sport, dport, lkp_id);
+        ftlv6_cache_set_key(src_ip, dst_ip, protocol, sport, dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         pds_flow_extract_nexthop_info(p0, 0);
         ftlv6_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
         ftlv6_cache_advance_count(1);
-        ftlv6_cache_set_key(dst_ip, src_ip,
-                            protocol, r_sport, r_dport, lkp_id);
+        ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         ftlv6_cache_set_hash(0);
@@ -688,11 +686,9 @@ pds_flow_prog (vlib_main_t * vm,
     } PDS_PACKET_LOOP_END_NO_ENQUEUE;
 
     if (is_ip4) {
-        pds_flow_program_hw_ip4(PDS_PACKET_NEXT_NODE_ARR,
-                                counter);
+        pds_flow_program_hw_ip4(PDS_PACKET_NEXT_NODE_ARR, counter);
     } else {
-        pds_flow_program_hw_ip6(PDS_PACKET_NEXT_NODE_ARR,
-                                counter);
+        pds_flow_program_hw_ip6(PDS_PACKET_NEXT_NODE_ARR, counter);
     }
     vlib_buffer_enqueue_to_next(vm, node,
                                 PDS_PACKET_BUFFER_INDEX_PTR(0),
@@ -707,7 +703,7 @@ pds_flow_prog (vlib_main_t * vm,
 #undef _
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pds_flow_prog_trace_add (vm, node, from_frame, is_ip4);
+        pds_flow_prog_trace_add(vm, node, from_frame, is_ip4);
     }
 
     return from_frame->n_vectors;
@@ -730,8 +726,8 @@ static char * flow_prog_error_strings[] = {
 VLIB_REGISTER_NODE (pds_ip6_flow_prog_node) = {
     .function = pds_ip6_flow_prog,
     .name = "pds-ip6-flow-program",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FLOW_PROG_COUNTER_LAST,
     .error_strings = flow_prog_error_strings,
@@ -757,8 +753,8 @@ pds_ip4_flow_prog (vlib_main_t * vm,
 VLIB_REGISTER_NODE (pds_ip4_flow_prog_node) = {
     .function = pds_ip4_flow_prog,
     .name = "pds-ip4-flow-program",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FLOW_PROG_COUNTER_LAST,
     .error_strings = flow_prog_error_strings,
@@ -784,8 +780,8 @@ pds_tunnel_ip6_flow_prog (vlib_main_t * vm,
 VLIB_REGISTER_NODE (pds_tun_ip6_flow_prog_node) = {
     .function = pds_tunnel_ip6_flow_prog,
     .name = "pds-tunnel-ip6-flow-program",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FLOW_PROG_COUNTER_LAST,
     .error_strings = flow_prog_error_strings,
@@ -811,8 +807,8 @@ pds_tunnel_ip4_flow_prog (vlib_main_t * vm,
 VLIB_REGISTER_NODE (pds_tun_ip4_flow_prog_node) = {
     .function = pds_tunnel_ip4_flow_prog,
     .name = "pds-tunnel-ip4-flow-program",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FLOW_PROG_COUNTER_LAST,
     .error_strings = flow_prog_error_strings,
@@ -830,14 +826,14 @@ VLIB_REGISTER_NODE (pds_tun_ip4_flow_prog_node) = {
 static u8 *
 format_pds_flow_classify_trace (u8 * s, va_list * args)
 {
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
-    flow_classify_trace_t *t = va_arg (*args, flow_classify_trace_t *);
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    flow_classify_trace_t *t = va_arg(*args, flow_classify_trace_t *);
 
-    s = format (s, "Flags[0x%x], flow_hash[0x%x], l2_offset[%d], "
-            "l3_offset[%d] l4_offset[%d], vnic[%d]",
-            t->flags, t->flow_hash, t->l2_offset, t->l3_offset,
-            t->l4_offset, t->vnic);
+    s = format(s, "Flags[0x%x], flow_hash[0x%x], l2_offset[%d], "
+               "l3_offset[%d] l4_offset[%d], vnic[%d]",
+               t->flags, t->flow_hash, t->l2_offset, t->l3_offset,
+               t->l4_offset, t->vnic);
     return s;
 }
 
@@ -856,24 +852,24 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
             b1 = PDS_PACKET_BUFFER(1);
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->flow_hash = vnet_buffer (b0)->pds_data.flow_hash;
-                flag0 = vnet_buffer (b0)->pds_data.flags;
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->flow_hash = vnet_buffer(b0)->pds_data.flow_hash;
+                flag0 = vnet_buffer(b0)->pds_data.flags;
                 t0->flags = flag0;
-                t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
-                t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
-                t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
-                t0->vnic = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+                t0->l2_offset = vnet_buffer(b0)->l2_hdr_offset;
+                t0->l3_offset = vnet_buffer(b0)->l3_hdr_offset;
+                t0->l4_offset = vnet_buffer(b0)->l4_hdr_offset;
+                t0->vnic = vnet_buffer(b0)->sw_if_index[VLIB_TX];
             }
             if (b1->flags & VLIB_BUFFER_IS_TRACED) {
-                t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
-                t1->flow_hash = vnet_buffer (b1)->pds_data.flow_hash;
-                flag1 = vnet_buffer (b1)->pds_data.flags;
+                t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
+                t1->flow_hash = vnet_buffer(b1)->pds_data.flow_hash;
+                flag1 = vnet_buffer(b1)->pds_data.flags;
                 t1->flags = flag1;
-                t1->l2_offset = vnet_buffer (b1)->l2_hdr_offset;
-                t1->l3_offset = vnet_buffer (b1)->l3_hdr_offset;
-                t1->l4_offset = vnet_buffer (b1)->l4_hdr_offset;
-                t1->vnic = vnet_buffer (b1)->sw_if_index[VLIB_TX];
+                t1->l2_offset = vnet_buffer(b1)->l2_hdr_offset;
+                t1->l3_offset = vnet_buffer(b1)->l3_hdr_offset;
+                t1->l4_offset = vnet_buffer(b1)->l4_hdr_offset;
+                t1->vnic = vnet_buffer(b1)->sw_if_index[VLIB_TX];
             }
         } PDS_PACKET_TRACE_DUAL_LOOP_END;
 
@@ -885,14 +881,14 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
             b0 = PDS_PACKET_BUFFER(0);
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
-                t0->flow_hash = vnet_buffer (b0)->pds_data.flow_hash;
-                flag0 = vnet_buffer (b0)->pds_data.flags;
+                t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
+                t0->flow_hash = vnet_buffer(b0)->pds_data.flow_hash;
+                flag0 = vnet_buffer(b0)->pds_data.flags;
                 t0->flags = flag0;
-                t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
-                t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
-                t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
-                t0->vnic = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+                t0->l2_offset = vnet_buffer(b0)->l2_hdr_offset;
+                t0->l3_offset = vnet_buffer(b0)->l3_hdr_offset;
+                t0->l4_offset = vnet_buffer(b0)->l4_hdr_offset;
+                t0->vnic = vnet_buffer(b0)->sw_if_index[VLIB_TX];
             }
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
     } PDS_PACKET_TRACE_LOOP_END;
@@ -943,8 +939,8 @@ static char * flow_classify_error_strings[] = {
 VLIB_REGISTER_NODE (pds_flow_classify_node) = {
     .function = pds_flow_classify,
     .name = "pds-flow-classify",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
 
     .n_errors = FLOW_CLASSIFY_COUNTER_LAST,
     .error_strings = flow_classify_error_strings,
@@ -958,20 +954,6 @@ VLIB_REGISTER_NODE (pds_flow_classify_node) = {
 
     .format_trace = format_pds_flow_classify_trace,
 };
-
-void
-pds_flow_idle_timeout_get(uint32_t *flow_idle_timeout, size_t sz) {
-    pds_flow_main_t *fm = &pds_flow_main;
-
-    clib_memcpy(flow_idle_timeout, fm->flow_idle_timeout, sz);
-}
-
-void
-pds_flow_idle_timeout_set(const uint32_t *flow_idle_timeout, size_t sz) {
-    pds_flow_main_t *fm = &pds_flow_main;
-
-    clib_memcpy(fm->flow_idle_timeout, flow_idle_timeout, sz);
-}
 
 static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
@@ -998,27 +980,26 @@ pds_flow_init (vlib_main_t * vm)
 
     fm->flow_prog_lock = clib_mem_alloc_aligned(CLIB_CACHE_LINE_BYTES,
                                                 CLIB_CACHE_LINE_BYTES);
-    clib_atomic_release (fm->flow_prog_lock);
+    clib_atomic_release(fm->flow_prog_lock);
 
     for (i = 0; i < no_of_threads; i++) {
         fm->table4[i] = ftlv4_create((void *) pds_flow4_key2str,
-                                     (void *) pds_flow_appdata2str,
-                                     i);
+                                     (void *) pds_flow_appdata2str, i);
         fm->table6[i] = ftlv6_create((void *) pds_flow6_key2str,
-                                     (void *) pds_flow_appdata2str,
-                                     i);
+                                     (void *) pds_flow_appdata2str, i);
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
 
     vec_validate(fm->flow_idle_timeout, IPPROTO_MAX - 1);
 
+    pdsa_flow_hdlr_init();
     pds_flow_cfg_init();
 
     pds_flow_pipeline_init();
     return 0;
 }
 
-VLIB_INIT_FUNCTION (pds_flow_init) = 
+VLIB_INIT_FUNCTION (pds_flow_init) =
 {
     .runs_after = VLIB_INITS("pds_infra_init"),
 };

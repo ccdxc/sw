@@ -347,7 +347,7 @@ error:
 // VPP IPC initialization. Register VPP with IPC infra, and install callbacks
 // for handling base message types
 void
-ipcshim_init (void)
+ipc_shim_init (void)
 {
     sdk::ipc::ipc_init_async(PDS_IPC_ID_VPP, pds_vpp_fd_watch_cb,
                              (const void *)pds_vpp_fd_watch_cb);
@@ -362,17 +362,14 @@ ipcshim_init (void)
                                   (const void *)PDS_MSG_TYPE_EVENT);
 
     // register handler for configuration singletons
-    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG, pds_ipc_cfg_msg_cb,
-                                  NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG, pds_ipc_cfg_msg_cb, NULL);
 #if 0
     // register handler for configuration batch
-    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_BATCH, pds_ipc_msglist_cb,
-                                  NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_BATCH, pds_ipc_msglist_cb, NULL);
 #endif
+
     // register handler for command messages
-    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CMD, pds_ipc_cmd_msg_cb,
-                                  NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CMD, pds_ipc_cmd_msg_cb, NULL);
 
     ipc_log_notice("Registered callbacks for IPC messages");
 }
-

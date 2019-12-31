@@ -280,7 +280,7 @@ always_inline u32 pds_session_id_alloc(void)
 always_inline void pds_session_id_dealloc(u32 ses_id)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-            
+
     pds_flow_prog_lock();
     pool_put_index(fm->session_index_pool, (ses_id - 1));
     pds_flow_prog_unlock();
@@ -302,7 +302,5 @@ always_inline void pds_session_id_flush(void)
     pds_flow_prog_unlock();
     return;
 }
-
-void pds_flow_cfg_init(void);
 
 #endif    // __VPP_FLOW_NODE_H__

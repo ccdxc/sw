@@ -93,14 +93,10 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_read) {
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_TRUE(reply.is_msg);
     EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.key.id == 9999);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout ==
-                PDS_DEFAULT_TCP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout ==
-                PDS_DEFAULT_UDP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout ==
-                PDS_DEFAULT_ICMP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout ==
-                PDS_DEFAULT_OTHER_IDLE_TIMEOUT);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout == 0);
 }
 
 /// \brief configure flow plugin using a security profile and a CREATE op.
@@ -270,14 +266,10 @@ TEST_F(ipc_flow_test, ipc_flow_delete) {
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_TRUE(reply.is_msg);
     EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.key.id == 4321);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout ==
-                PDS_DEFAULT_TCP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout ==
-                PDS_DEFAULT_UDP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout ==
-                PDS_DEFAULT_ICMP_IDLE_TIMEOUT);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout ==
-                PDS_DEFAULT_OTHER_IDLE_TIMEOUT);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout == 0);
+    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout == 0);
 }
 
 
