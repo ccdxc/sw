@@ -3373,14 +3373,6 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
 
     key = proto_spec.id();
     switch (key.keyinfo_case()) {
-    case pds::MappingKey::kMACKey:
-        local_spec->key.type = PDS_MAPPING_TYPE_L2;
-        local_spec->key.subnet.id = key.mackey().subnetid();
-        MAC_UINT64_TO_ADDR(local_spec->key.mac_addr,
-                           key.mackey().macaddr());
-        local_spec->subnet.id = local_spec->key.subnet.id;
-        break;
-
     case pds::MappingKey::kIPKey:
         local_spec->key.type = PDS_MAPPING_TYPE_L3;
         local_spec->key.vpc.id = key.ipkey().vpcid();
@@ -3389,7 +3381,14 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
         local_spec->subnet.id = proto_spec.subnetid();
         break;
 
+    case pds::MappingKey::kMACKey:
     default:
+        PDS_TRACE_ERR("Unsupported local mapping key type %u, local mappings "
+                      "can only be L3 mappings", key.keyinfo_case());
+        return SDK_RET_INVALID_ARG;
+    }
+    if (proto_spec.dstinfo_case() != pds::MappingSpec::kVnicId) {
+        PDS_TRACE_ERR("Mandatory vnic attribute not set for local mapping");
         return SDK_RET_INVALID_ARG;
     }
     local_spec->vnic.id = proto_spec.vnicid();
@@ -3556,7 +3555,9 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
         remote_spec->nh_group.id = proto_spec.nexthopgroupid();
         break;
 
+    case pds::MappingSpec::kVnicId:
     default:
+        PDS_TRACE_ERR("Usage of vnic attribute is invalid for remote mappings");
         return SDK_RET_INVALID_ARG;
     }
     MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());

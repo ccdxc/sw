@@ -51,17 +51,17 @@ message MappingSpec {
   uint32              SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // dstinfo is expected to empty for local mappings
   oneof dstinfo {
-      // Tunnel ID of the remote TEP
-      uint32          TunnelId       = 3;
-      // overlay nexthop/TEP group
-      uint32          NexthopGroupId = 4;
+      // if IP is that of local vnic, corresponding vnic id
+      uint32          VnicId         = 3;
+      // Tunnel ID of the remote TEP for remote mapping
+      uint32          TunnelId       = 4;
+      // overlay nexthop/TEP group for remote mappings
+      uint32          NexthopGroupId = 5;
   }
   // overlay MAC address of this mapping
-  uint64              MACAddr        = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64              MACAddr        = 6 [(gogoproto.moretags) = "meta:mandatory"];
   // fabric encap information specific to this mapping, if any
-  types.Encap         Encap          = 6 [(gogoproto.moretags) = "meta:mandatory"];
-  // if IP is that of local vnic, corresponding vnic id
-  uint32              VnicId         = 7;
+  types.Encap         Encap          = 7 [(gogoproto.moretags) = "meta:mandatory"];
   // public IP, if overlay IP has corresponding public IP
   types.IPAddress     PublicIP       = 8;
   // provider/underlay IP corresponding to the overlay IP, if any
