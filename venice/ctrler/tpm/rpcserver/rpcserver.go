@@ -455,11 +455,14 @@ func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval st
 }
 
 func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) tpmProtos.FlowExportPolicySpec {
-	var matchRules []netproto.MatchRule
+	var (
+		matchRules                 []netproto.MatchRule
+		srcAddresses, dstAddresses []string
+	)
 
 	for _, r := range fePolicySpec.MatchRules {
 		var protoPorts []*netproto.ProtoPort
-		if r.AppProtoSel.ProtoPorts != nil {
+		if r.AppProtoSel != nil {
 			for _, pp := range r.AppProtoSel.ProtoPorts {
 				var protoPort netproto.ProtoPort
 				components := strings.Split(pp, "/")
@@ -479,12 +482,20 @@ func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) t
 			}
 		}
 
+		if r.Src != nil && r.Src.IPAddresses != nil {
+			srcAddresses = r.Src.IPAddresses
+		}
+
+		if r.Dst != nil && r.Dst.IPAddresses != nil {
+			dstAddresses = r.Dst.IPAddresses
+		}
+
 		m := netproto.MatchRule{
 			Src: &netproto.MatchSelector{
-				Addresses: r.Src.IPAddresses,
+				Addresses: srcAddresses,
 			},
 			Dst: &netproto.MatchSelector{
-				Addresses:  r.Dst.IPAddresses,
+				Addresses:  dstAddresses,
 				ProtoPorts: protoPorts,
 			},
 		}

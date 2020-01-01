@@ -62,22 +62,24 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *netproto.MirrorSes
 		if mr.Dst != nil {
 			tmr.Dst = &netproto.MatchSelector{}
 			tmr.Dst.Addresses = mr.Dst.IPAddresses
-			for _, pp := range mr.AppProtoSel.ProtoPorts {
-				var protoPort netproto.ProtoPort
-				components := strings.Split(pp, "/")
-				switch len(components) {
-				case 1:
-					protoPort.Protocol = components[0]
-				case 2:
-					protoPort.Protocol = components[0]
-					protoPort.Port = components[1]
-				case 3:
-					protoPort.Protocol = components[0]
-					protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
-				default:
-					continue
+			if mr.AppProtoSel != nil {
+				for _, pp := range mr.AppProtoSel.ProtoPorts {
+					var protoPort netproto.ProtoPort
+					components := strings.Split(pp, "/")
+					switch len(components) {
+					case 1:
+						protoPort.Protocol = components[0]
+					case 2:
+						protoPort.Protocol = components[0]
+						protoPort.Port = components[1]
+					case 3:
+						protoPort.Protocol = components[0]
+						protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+					default:
+						continue
+					}
+					tmr.Dst.ProtoPorts = append(tmr.Dst.ProtoPorts, &protoPort)
 				}
-				tmr.Dst.ProtoPorts = append(tmr.Dst.ProtoPorts, &protoPort)
 			}
 			//tmr.Dst.MACAddresses = mr.Dst.MACAddresses
 		}
