@@ -40,6 +40,7 @@ def curl_send(**data):
     elif ( data["method"] == "GET" ):
         c.setopt(c.HTTPHEADER, ["Accept: application/json"]) 
     start_time = int(time.time())
+    req_error = ""
     while True:
         if ( ( int(time.time()) - start_time ) > opts.timeout ):
             break
@@ -48,12 +49,22 @@ def curl_send(**data):
             code = c.getinfo(pycurl.HTTP_CODE)
             break
         except Exception, e:
-            write_log("* error: " + str(e), 1) 
+            req_error = str(e)
+            write_log("* error sending request to " + data["url"] +": " + str(e), 1)
         write_log("* retrying....", 1)
         time.sleep(opts.waittime)
-    header = hdr.getvalue()
-    body = buf.getvalue()
-    write_log("* receiving: " + header + body, 1)
+    if req_error == "":
+        # we were able to contact server
+        header = hdr.getvalue()
+        body = buf.getvalue()
+        write_log("* receiving: " + header + body, 1)
+        if code not in ( 200, 409 ):
+            # server returned an unexpected error
+            write_log("* error performing REST operation: " + data["method"] + " " + data["url"])
+            write_log("* server returned: " + str(code) + " " + str(body))
+    else:
+       # we were not able to contact server, log exact error
+       write_log("* error sending request to " + data["url"] +": " + req_error)
     return code
 
 def is_apigw_running():
