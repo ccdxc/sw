@@ -5,18 +5,6 @@ meta:
     nics    : [ pensando ]
 
 testcases:
-    -   name    : Ping_Local_Workloads
-        testcase: testcases.networking.ping
-        stress  : True
-        args    :
-            type: local_only
-        iterators :
-            type    : nested
-            #ipaf    : [ ipv4, ipv6 ]
-            ipaf    : [ ipv4 ]
-            #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
-            pktsize : [ 64 ]
-
     -   name    : Ping_Remote_Workloads
         testcase: testcases.networking.ping
         stress  : True
@@ -27,5 +15,5 @@ testcases:
             #ipaf    : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
-            pktsize : [ 64 ]
+            pktsize : [ 64, 128, 256, 512, 1024, 2048 ]
 
