@@ -94,6 +94,7 @@ typedef enum cli_cmd_e {
     CLI_CMD_MAPPING_DUMP = CLI_CMD_START,
     CLI_CMD_INTR_DUMP,
     CLI_CMD_INTR_CLEAR,
+    CLI_CMD_API_ENGINE_STATS_DUMP,
     CLI_CMD_MAX = 255,
 } cli_cmd_t;
 

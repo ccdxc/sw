@@ -620,6 +620,8 @@ pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
         return CLI_CMD_INTR_DUMP;
     case pds::CMD_INTR_CLEAR:
         return CLI_CMD_INTR_CLEAR;
+    case pds::CMD_API_ENGINE_STATS_DUMP:
+        return CLI_CMD_API_ENGINE_STATS_DUMP;
     default:
         return CLI_CMD_MAX;
     }

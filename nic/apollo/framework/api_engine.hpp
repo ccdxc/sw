@@ -151,8 +151,6 @@ typedef struct api_batch_ctxt_s {
 typedef struct api_counters_s {
     // pre-process stage specific counters
     struct {
-        // common counters
-        uint32_t invalid_op_err;
         // CREATE specific counters
         struct {
             uint32_t ok;
@@ -408,6 +406,10 @@ public:
                         api_obj->key2str(), upd_bmap);
         return octxt;
     }
+
+    /// \brief Dump api engine counters
+    /// \param[in] fd     file descriptor to print counters to
+    sdk_ret_t dump_api_counters(int fd);
 
 private:
 

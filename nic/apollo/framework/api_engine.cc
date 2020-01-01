@@ -78,7 +78,7 @@ namespace api {
 static slab *g_api_ctxt_slab_ = NULL;
 static slab *g_api_msg_slab_ = NULL;
 static pds_epoch_t g_current_epoch_ = PDS_EPOCH_INVALID;
-static thread_local api_engine g_api_engine;
+static api_engine g_api_engine;
 
 api_engine *
 api_engine_get (void) {
@@ -456,7 +456,6 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
         break;
 
     default:
-        PDS_API_PREPROCESS_COUNTER_INC(invalid_op_err, 1);
         ret = sdk::SDK_RET_INVALID_OP;
         break;
     }
@@ -1212,6 +1211,166 @@ error:
 
     batch_abort_();
     return ret;
+}
+
+sdk_ret_t
+api_engine::dump_api_counters (int fd) {
+    std::string stats;
+    dprintf(fd, "%s\n", std::string(50, '-').c_str());
+    dprintf(fd, "%-15s%-25s%-10s\n",
+            "Stage", "Statistic", "Count");
+    dprintf(fd, "%s\n", std::string(50, '-').c_str());
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-ok",
+            counters_.preprocess.create.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-oom-err",
+            counters_.preprocess.create.oom_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-init-cfg-err",
+            counters_.preprocess.create.init_cfg_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-obj-clone-err",
+            counters_.preprocess.create.obj_clone_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-obj-exists-err",
+            counters_.preprocess.create.obj_exists_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-invalid-op-err",
+            counters_.preprocess.create.invalid_op_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "create-invalid-upd-err",
+            counters_.preprocess.create.invalid_upd_err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "delete-ok",
+            counters_.preprocess.del.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "delete-obj-build-err",
+            counters_.preprocess.del.obj_build_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "delete-not-found-err",
+            counters_.preprocess.del.not_found_err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-ok",
+            counters_.preprocess.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-obj-build-err",
+            counters_.preprocess.upd.obj_build_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-init-cfg-err",
+            counters_.preprocess.upd.init_cfg_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-obj-clone-err",
+            counters_.preprocess.upd.obj_clone_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-not-found-err",
+            counters_.preprocess.upd.not_found_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-invalid-op-err",
+            counters_.preprocess.upd.invalid_op_err);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "PreProcess", "update-invalid-upd-err",
+            counters_.preprocess.upd.invalid_upd_err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "create-ok",
+            counters_.rsv_rsc.create.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "create-err",
+            counters_.rsv_rsc.create.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "delete-ok",
+            counters_.rsv_rsc.del.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "delete-err",
+            counters_.rsv_rsc.del.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "update-ok",
+            counters_.rsv_rsc.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ResourceResv", "update-err",
+            counters_.rsv_rsc.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ObjectDep", "update-ok",
+            counters_.obj_dep.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ObjectDep", "update-err",
+            counters_.obj_dep.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "create-ok",
+            counters_.pgm_cfg.create.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "create-err",
+            counters_.pgm_cfg.create.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "delete-ok",
+            counters_.pgm_cfg.del.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "delete-err",
+            counters_.pgm_cfg.del.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "update-ok",
+            counters_.pgm_cfg.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ProgramCfg", "update-err",
+            counters_.pgm_cfg.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "create-ok",
+            counters_.act_cfg.create.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "create-err",
+            counters_.act_cfg.create.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "delete-ok",
+            counters_.act_cfg.del.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "delete-err",
+            counters_.act_cfg.del.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "update-ok",
+            counters_.act_cfg.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ActivateCfg", "update-err",
+            counters_.act_cfg.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ReprogramCfg", "update-ok",
+            counters_.re_pgm_cfg.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ReprogramCfg", "update-err",
+            counters_.re_pgm_cfg.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ReactivateCfg", "update-ok",
+            counters_.re_act_cfg.upd.ok);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "ReactivateCfg", "update-err",
+            counters_.re_act_cfg.upd.err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "Commit", "ipc-err",
+            counters_.commit.ipc_err);
+
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "Abort", "abort-err",
+            counters_.abort.abort);
+    dprintf(fd, "%-15s%-25s%-10d\n",
+            "Abort", "txn-end-err",
+            counters_.abort.txn_end_err);
+
+    return SDK_RET_OK; 
 }
 
 sdk_ret_t

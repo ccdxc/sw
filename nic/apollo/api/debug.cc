@@ -12,6 +12,7 @@
 #include "nic/sdk/platform/asicerror/interrupts.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -108,6 +109,9 @@ pds_handle_cmd (cmd_ctxt_t *ctxt)
         break;
     case CLI_CMD_INTR_CLEAR:
         clear_interrupts(ctxt->fd);
+        break;
+    case CLI_CMD_API_ENGINE_STATS_DUMP:
+        api::api_engine_get()->dump_api_counters(ctxt->fd);
         break;
     default:
         return SDK_RET_INVALID_ARG;

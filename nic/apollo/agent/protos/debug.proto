@@ -395,10 +395,11 @@ message QueueCreditsGetResponse {
 }
 
 enum Command {
-  CMD_NONE         = 0;
-  CMD_MAPPING_DUMP = 1;
-  CMD_INTR_DUMP    = 2;
-  CMD_INTR_CLEAR   = 3;
+  CMD_NONE                  = 0;
+  CMD_MAPPING_DUMP          = 1;
+  CMD_INTR_DUMP             = 2;
+  CMD_INTR_CLEAR            = 3;
+  CMD_API_ENGINE_STATS_DUMP = 4;
 }
 
 enum MappingDumpType {
