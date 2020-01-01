@@ -143,7 +143,7 @@ class EthLif
     bool skip_hwinit;
     // LIF Info
     eth_lif_res_t *res;
-    uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
+    uint8_t cosA, cosB, admin_cosA, admin_cosB;
     // Spec
     const struct eth_devspec *spec;
     struct queue_info qinfo[NUM_QUEUE_TYPES];

@@ -117,8 +117,8 @@ NotifyQ::NotifyQ(const std::string& name,
                  uint32_t tx_qtype,
                  uint32_t tx_qid,
                  uint64_t intr_base,
-                 uint8_t  ctl_cosA,
-                 uint8_t  ctl_cosB,
+                 uint8_t  admin_cosA,
+                 uint8_t  admin_cosB,
                  bool host_dev) :
     name(name),
     pd(pd),
@@ -126,8 +126,8 @@ NotifyQ::NotifyQ(const std::string& name,
     tx_qtype(tx_qtype),
     tx_qid(tx_qid),
     intr_base(intr_base),
-    ctl_cosA(ctl_cosA),
-    ctl_cosB(ctl_cosB),
+    admin_cosA(admin_cosA),
+    admin_cosB(admin_cosB),
     host_dev(host_dev),
     tx_ring_size(0),
     tx_alloc_size(0)
@@ -194,8 +194,8 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
     }
 
     qstate.pc_offset = pc_offs;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
+    qstate.cosA = admin_cosA;
+    qstate.cosB = admin_cosB;
     qstate.total = 1;
     qstate.cfg.enable = 1;
     qstate.cfg.host_queue = host_dev;

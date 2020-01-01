@@ -459,16 +459,10 @@ VirtIOLif::virtio_lif_hal_up_action(virtio_lif_event_t event)
     VIRTIO_LIF_FSM_LOG();
 
     // Resolve class of service configuration
-    cosA = 1;
+    cosA = 0;
     cosB = 0;
-    ctl_cosA = 1;
-    dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
-    if (ctl_cosB < 0) {
-        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
-                    LifNameGet(), "CONTROL", 1);
-        ctl_cosB = 0;
-        fsm_ctx.devcmd.status = VIRTIO_RC_ERROR;
-    }
+    admin_cosA = 1;
+    admin_cosB = 1;
 
     // Resolve the data path programs PC
     if (pd->get_pc_offset("rxdma_stage0.bin", "virtio_rx_stage0", &pc_rx, NULL) < 0) {

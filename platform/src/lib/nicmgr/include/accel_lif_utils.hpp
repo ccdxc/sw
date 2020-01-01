@@ -59,8 +59,8 @@ public:
             uint32_t tx_qtype,
             uint32_t tx_qid,
             uint64_t intr_base,
-            uint8_t  ctl_cosA,
-            uint8_t  ctl_cosB,
+            uint8_t  admin_cosA,
+            uint8_t  admin_cosB,
             bool host_dev = true);
     ~NotifyQ();
 
@@ -77,8 +77,8 @@ private:
     uint32_t            tx_qtype;
     uint32_t            tx_qid;
     uint32_t            intr_base;
-    uint8_t             ctl_cosA;
-    uint8_t             ctl_cosB;
+    uint8_t             admin_cosA;
+    uint8_t             admin_cosB;
     bool                host_dev;
 
     /*

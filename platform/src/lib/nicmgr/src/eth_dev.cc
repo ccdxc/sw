@@ -636,7 +636,14 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->eth_type = ETH_UNKNOWN;
     }
 
-    eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
+    if (eth_spec->eth_type == ETH_HOST_MGMT ||
+        eth_spec->eth_type == ETH_MNIC_OOB_MGMT ||
+        eth_spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
+        eth_spec->eth_type == ETH_MNIC_INBAND_MGMT) {
+        eth_spec->qos_group = val.get<string>("qos_group", "CONTROL");
+    } else {
+        eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
+    }
 
     NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, "
                   "pinned_uplink: {}, qos_group {}",

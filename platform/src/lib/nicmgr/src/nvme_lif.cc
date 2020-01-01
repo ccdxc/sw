@@ -684,16 +684,12 @@ nvme_lif_event_t
 NvmeLif::nvme_lif_hal_up_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_LOG();
-    cosA = 1;
+
+    cosA = 0;
     cosB = 0;
-    ctl_cosA = 1;
-    dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
-    if (ctl_cosB < 0) {
-        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
-                    LifNameGet(), "CONTROL", 1);
-        ctl_cosB = 0;
-        fsm_ctx.devcmd.status = NVME_RC_ERROR;
-    }
+    admin_cosA = 1;
+    admin_cosB = 1;
+
     return NVME_LIF_EV_NULL;
 }
 
@@ -781,8 +777,8 @@ NvmeLif::nvme_lif_edmaq_init_action(nvme_lif_event_t event)
 
     dq_qstate.pc_offset = off;
     dq_qstate.cos_sel = 0;
-    dq_qstate.cosA = ctl_cosA;
-    dq_qstate.cosB = ctl_cosB;
+    dq_qstate.cosA = admin_cosA;
+    dq_qstate.cosB = admin_cosB;
     dq_qstate.host = 0;
     dq_qstate.total = 1;
     dq_qstate.pid = 0;
@@ -853,8 +849,8 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
 
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
+    qstate.cosA = admin_cosA;
+    qstate.cosB = admin_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = 0; //XXX
@@ -895,7 +891,7 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
                         false);
 
     // Initialize AdminQ service
-    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
+    if (!adminq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize AdminQ service",
                     LifNameGet());
         fsm_ctx.devcmd.status = NVME_RC_ERROR;

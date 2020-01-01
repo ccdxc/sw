@@ -231,7 +231,7 @@ private:
     PdClient                    *pd;
     // HAL Info
     devapi                      *dev_api;
-    uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB, pc_rx, pc_tx;
+    uint8_t                     cosA, cosB, admin_cosA, admin_cosB, pc_rx, pc_tx;
     // Resources
     uint32_t                    intr_base;
     virtio_lif_fsm_ctx_t         fsm_ctx;

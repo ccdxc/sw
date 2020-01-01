@@ -223,7 +223,7 @@ private:
     PdClient                    *pd;
     // HAL Info
     devapi                      *dev_api;
-    uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB;
+    uint8_t                     cosA, cosB, admin_cosA, admin_cosB;
     // Resources
     uint32_t                    intr_base;
     nvme_lif_fsm_ctx_t         fsm_ctx;

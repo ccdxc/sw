@@ -321,7 +321,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         NIC_LOG_INFO("{}: created", hal_lif_info_.name);
 
-        cosA = 1;
+        cosA = 0;
         cosB = 0;
         dev_api->qos_get_txtc_cos(spec->qos_group, spec->uplink_port_num, &cosB);
         if (cosB < 0) {
@@ -330,14 +330,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
             return (IONIC_RC_ERROR);
         }
 
-        ctl_cosA = 1;
-        ctl_cosB = 0;
-        dev_api->qos_get_txtc_cos("CONTROL", spec->uplink_port_num, &ctl_cosB);
-        if (ctl_cosB < 0) {
-            NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}", hal_lif_info_.name,
-                        "CONTROL", spec->uplink_port_num);
-            return (IONIC_RC_ERROR);
-        }
+        admin_cosA = 1;
+        admin_cosB = 1;
 
         if (spec->enable_rdma) {
             NIC_LOG_DEBUG("prefetch_count: {}", spec->prefetch_count);
@@ -402,13 +396,13 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
 
     // Initialize EDMA service
-    if (!edmaq->Init(0, ctl_cosA, ctl_cosB)) {
+    if (!edmaq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize EdmaQ service", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
 
     // Initialize ADMINQ service
-    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
+    if (!adminq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize AdminQ service", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1624,8 +1618,8 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
+    qstate.cosA = admin_cosA;
+    qstate.cosB = admin_cosB;
     qstate.host = 0;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1739,8 +1733,8 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
+    qstate.cosA = admin_cosA;
+    qstate.cosB = admin_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;

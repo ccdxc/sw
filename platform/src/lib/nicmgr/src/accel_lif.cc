@@ -1048,9 +1048,12 @@ accel_lif_event_t
 AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
-    cosA = 1;
+
+    cosA = 0;
     cosB = 0;
-    ctl_cosA = 1;
+
+    admin_cosA = 1;
+    admin_cosB = 1;
 
     ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
     dev_api->qos_get_txtc_cos("INTERNAL_TX_PROXY_DROP", 1, &cosB);
@@ -1060,19 +1063,12 @@ AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
         cosB = 0;
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
     }
-    dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
-    if ((int)ctl_cosB < 0) {
-        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
-                    LifNameGet(), "CONTROL", 1);
-        ctl_cosB = 0;
-        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
-    }
 
-    NIC_LOG_DEBUG("{}: cosA: {} cosB: {} ctl_cosA: {} ctl_cosB: {}",
-                  LifNameGet(), cosA, cosB, ctl_cosA, ctl_cosB);
+    NIC_LOG_DEBUG("{}: cosA: {} cosB: {} admin_cosA: {} admin_cosB: {}",
+                  LifNameGet(), cosA, cosB, admin_cosA, admin_cosB);
     notifyq = new AccelLifUtils::NotifyQ(LifNameGet(), pd, LifIdGet(),
                                  ACCEL_NOTIFYQ_TX_QTYPE, ACCEL_NOTIFYQ_TX_QID,
-                                 intr_base, ctl_cosA, ctl_cosB);
+                                 intr_base, admin_cosA, admin_cosB);
     if (!notifyq) {
         NIC_LOG_ERR("{}: Failed to create NotifyQ", LifNameGet());
         throw;
@@ -1218,7 +1214,7 @@ AccelLif::accel_lif_init_action(accel_lif_event_t event)
     }
 
     // Initialize AdminQ service
-    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
+    if (!adminq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize AdminQ service",
                     LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
@@ -1516,8 +1512,8 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
         return ACCEL_LIF_EV_NULL;
     }
     qstate.pc_offset = off;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
+    qstate.cosA = admin_cosA;
+    qstate.cosB = admin_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1547,7 +1543,7 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
     NIC_LOG_DEBUG("{}: qid {} qtype {}", LifNameGet(), cpl->qid, cpl->qtype);
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
 
-    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
+    if (!adminq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to reinitialize AdminQ service",
                     LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;

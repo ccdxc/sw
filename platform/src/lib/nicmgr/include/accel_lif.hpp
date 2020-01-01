@@ -345,7 +345,7 @@ private:
     // HAL Info
     devapi                      *dev_api;
     uint32_t                    index;
-    uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB;
+    uint8_t                     cosA, cosB, admin_cosA, admin_cosB;
 
     // Resources
     AccelLifUtils::DetectionLogControl hang_detect_log;
