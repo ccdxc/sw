@@ -70,7 +70,7 @@ message EvpnEviSpec {
 
   uint32      EVIId       = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
   EvpnCfg     AutoRD      = 2 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}, (gogoproto.moretags) = "meta:mandatory"];
-  string      RD          = 3 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
+  bytes       RD          = 3 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
   EvpnCfg     AutoRT      = 4 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}, (gogoproto.moretags) = "meta:mandatory"];
   EvpnRtType  RTType      = 5 [(venice.pdsaFields) = {Field:"auto_rt_type"}, (gogoproto.moretags) = "meta:mandatory"];
   EvpnEncaps  Encap       = 6 [(venice.pdsaFields) = {Field:"encapsulation"}, (gogoproto.moretags) = "meta.default=EVPN_ENCAPS_VXLAN"];
@@ -90,7 +90,7 @@ message EvpnIpVrfSpec {
 
   uint32 VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_fill_name_oid", GetFieldFn: "evpn_ip_vrf_get_name_field", GetKeyOidFn: "evpn_ip_vrf_fill_name_oid"}, (gogoproto.moretags) = "meta:mandatory"]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
   uint32 VNI      = 2 [(venice.pdsaFields) = {Field:"vni"}, (gogoproto.moretags) = "meta:mandatory"];
-  string RD       = 3 [(venice.pdsaFields) = {Field:"route_distinguisher"}, (gogoproto.moretags) = "meta:mandatory"];
+  bytes  RD       = 3 [(venice.pdsaFields) = {Field:"route_distinguisher"}, (gogoproto.moretags) = "meta:mandatory"];
 }
 
 // EVPN EVI RT Configuration
@@ -106,7 +106,7 @@ message EvpnEviRtSpec {
   };
 
   uint32      EVIId   = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
-  string      RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}, (gogoproto.moretags) = "meta:mandatory"];
+  bytes       RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}, (gogoproto.moretags) = "meta:mandatory"];
   EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}, (gogoproto.moretags) = "meta:mandatory"];
 }
 
@@ -123,7 +123,7 @@ message EvpnIpVrfRtSpec {
   };
 
   uint32      VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_rt_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid", GetFieldFn: "evpn_ip_vrf_rt_get_name_field", GetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid"}, (gogoproto.moretags) = "meta:mandatory"]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
-  string      RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  bytes       RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
   EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}, (gogoproto.moretags) = "meta:mandatory"];
 }
 

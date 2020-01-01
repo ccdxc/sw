@@ -89,6 +89,23 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     value                   = pt.get <std::string>("route.prefix","");
     conf->route_prefix_len  = strtol (value.c_str(), NULL, 0);
 
+    // RD and RT config parsing
+    conf->manual_rd         = pt.get <uint8_t>("manual-rd",0);
+    conf->manual_rt         = pt.get <uint8_t>("manual-rt",0);
+    if (conf->manual_rd) {
+        uint8_t i = 0;
+        for (ptree::value_type &rd : pt.get_child("route-distinguisher")) {
+            conf->rd[i++] = rd.second.get_value<uint8_t>();
+        }
+        printf ("Using Manual RD\n");
+    }
+    if (conf->manual_rt) {
+        uint8_t i = 0;
+        for (ptree::value_type &rt : pt.get_child("route-target")) {
+            conf->rt[i++] = rt.second.get_value<uint8_t>();
+        }
+        printf ("Using Manual RT\n");
+    }
     return 0;
 }
 

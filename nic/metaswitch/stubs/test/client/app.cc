@@ -128,13 +128,43 @@ static void create_evpn_evi_proto_grpc () {
 
     auto proto_spec = request.add_request ();
     proto_spec->set_eviid (1);
-    proto_spec->set_autord (pds::EVPN_CFG_AUTO);
-    proto_spec->set_autort (pds::EVPN_CFG_AUTO);
+    if (g_test_conf_.manual_rd) {
+        proto_spec->set_autord (pds::EVPN_CFG_MANUAL);
+        proto_spec->set_rd((const char *)g_test_conf_.rd, 8);
+    } else {
+        proto_spec->set_autord (pds::EVPN_CFG_AUTO);
+    }
+    if (g_test_conf_.manual_rt) {
+        proto_spec->set_autort (pds::EVPN_CFG_MANUAL);
+    } else {
+        proto_spec->set_autort (pds::EVPN_CFG_AUTO);
+    }
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
     proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
 
     printf ("Pushing EVPN Evi proto...\n");
     ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_evpn_evi_rt_proto_grpc () {
+    EvpnEviRtRequest    request;
+    EvpnResponse        response;
+    ClientContext       context;
+    Status              ret_status;
+
+    auto proto_spec = request.add_request ();
+    proto_spec->set_eviid (1);
+    proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
+    proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
+
+    printf ("Pushing EVPN Evi RT proto...\n");
+    ret_status = g_evpn_stub_->EvpnEviRtSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -331,6 +361,9 @@ int main(int argc, char** argv)
     create_bgp_peer_proto_grpc();
     create_vpc_proto_grpc();
     create_evpn_evi_proto_grpc();
+    if (g_test_conf_.manual_rt) {
+        create_evpn_evi_rt_proto_grpc();
+    }
     create_subnet_proto_grpc();
     create_route_proto_grpc();
     create_loopback_proto_grpc();
