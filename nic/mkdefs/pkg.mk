@@ -19,7 +19,7 @@ ifeq ($(FWTYPE),gold)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	$(eval STRIP := )
-    ifeq ($(PIPELINE),$(filter $(PIPELINE),iris apollo artemis apulu))
+    ifeq ($(PIPELINE),$(filter $(PIPELINE),apollo artemis apulu))
 	    $(eval STRIP := --no-strip)
     endif
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
