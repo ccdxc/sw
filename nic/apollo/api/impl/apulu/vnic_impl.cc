@@ -99,8 +99,8 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
         subnet = subnet_find(&spec->subnet);
         if (subnet == NULL) {
-            PDS_TRACE_ERR("Unable to find subnet %u, vpc %u", spec->subnet.id,
-                          spec->vpc.id);
+            PDS_TRACE_ERR("Unable to find subnet %u for vnic %u",
+                          spec->subnet.id, spec->key.id);
             return sdk::SDK_RET_INVALID_ARG;
         }
 
@@ -788,6 +788,7 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
+    pds_vpc_key_t vpc_key;
 
     // fetch the subnet of this vnic
     subnet = subnet_find(&spec->subnet);
@@ -796,7 +797,8 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     }
 
     // fetch the vpc of this vnic
-    vpc = vpc_find(&spec->vpc);
+    vpc_key = subnet->vpc();
+    vpc = vpc_find(&vpc_key);
     if (unlikely(vpc == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
@@ -896,6 +898,7 @@ vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
     subnet_entry *subnet;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
+    pds_vpc_key_t vpc_key;
     vlan_actiondata_t vlan_data;
 
     spec = &obj_ctxt->api_params->vnic_spec;
@@ -922,7 +925,8 @@ vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
             }
 
             // fetch the vpc of this vnic
-            vpc = vpc_find(&spec->vpc);
+            vpc_key = subnet->vpc();
+            vpc = vpc_find(&vpc_key);
             if (unlikely(vpc == NULL)) {
                 return SDK_RET_INVALID_ARG;
             }

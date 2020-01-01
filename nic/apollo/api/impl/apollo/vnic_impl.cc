@@ -192,8 +192,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
-        PDS_TRACE_ERR("Unable to find subnet %u, vpc %u",
-                      spec->subnet.id, spec->vpc.id);
+        PDS_TRACE_ERR("Unable to find subnet %u, for vnic %u",
+                      spec->subnet.id, spec->key.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -865,7 +865,6 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
                       "vnic %u, err %u", vkey->id, ret);
         return ret;
     }
-    spec->vpc.id = vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vpc_id;
     tx_src_dst_check =
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 == true
             ? false : true;

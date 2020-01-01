@@ -26,59 +26,57 @@ message VnicSpec {
   uint32          VnicId                = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // id of the subnet this vnic belongs to
   uint32          SubnetId              = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // id of the VPC this vnic belongs to
-  uint32          VPCId                 = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // vnic encap information to be used while sending packets to this vnic
-  types.Encap     VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.Encap     VnicEncap             = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // overlay MAC of this VNIC
-  uint64          MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint64          MACAddress            = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
-  bool            SourceGuardEnable     = 6;
+  bool            SourceGuardEnable     = 5;
   // fabric encap information to be used for traffic originated from this vnic
-  types.Encap     FabricEncap           = 7 [(gogoproto.moretags) = "meta:immutable"];
+  types.Encap     FabricEncap           = 6 [(gogoproto.moretags) = "meta:immutable"];
   // Tx/egress mirror session id list, if any
-  repeated uint32 TxMirrorSessionId     = 8;
+  repeated uint32 TxMirrorSessionId     = 7;
   // Rx/ingress mirror session id list, if any
-  repeated uint32 RxMirrorSessionId     = 9;
+  repeated uint32 RxMirrorSessionId     = 8;
   // switch vnic is router/bridge/appliance sitting behind the VLAN of this VNIC
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
-  bool            SwitchVnic            = 10;
+  bool            SwitchVnic            = 9;
   // metering policy to apply for IPv4 traffic coming in and going out of vnic
-  uint32          V4MeterId             = 11;
+  uint32          V4MeterId             = 10;
   // metering policy to apply for IPv6 traffic coming in and going out of vnic
-  uint32          V6MeterId             = 12;
+  uint32          V6MeterId             = 11;
   // identifier of ingress IPv4 security policy to be enforced
-  repeated uint32 IngV4SecurityPolicyId = 13;
+  repeated uint32 IngV4SecurityPolicyId = 12;
   // identifier of ingress IPv6 security policy to be enforced
-  repeated uint32 IngV6SecurityPolicyId = 14;
+  repeated uint32 IngV6SecurityPolicyId = 13;
   // identifier of egress IPv4 security policy to be enforced
-  repeated uint32 EgV4SecurityPolicyId  = 15;
+  repeated uint32 EgV4SecurityPolicyId  = 14;
   // identifier of egress IPv6 security policy to be enforced
-  repeated uint32 EgV6SecurityPolicyId  = 16;
+  repeated uint32 EgV6SecurityPolicyId  = 15;
   // when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
   // present, vnic needs to be attached to a PF/VF (aka. lif or host interface)
   // HostIfIndex is the interface index of such VF/PF
-  uint32          HostIfIndex           = 17;
+  uint32          HostIfIndex           = 16;
   // policer to be applied on the traffic coming from vnic
-  uint32          TxPolicerId           = 18;
+  uint32          TxPolicerId           = 17;
   // policer to be applied on the traffic going to vnic
-  uint32          RxPolicerId           = 19;
+  uint32          RxPolicerId           = 18;
   // if a vnic is not marked as primary, DHCP offer sent to such vnics
   // will not have gateway IP, hostname options filled in the DHCP offer
-  bool            Primary               = 20 [(gogoproto.moretags) = "meta:immutable"];
+  bool            Primary               = 19 [(gogoproto.moretags) = "meta:immutable"];
   // hostname of the vnic to be returned in the DHCP offer when DHCP policy
   // is enabled on the vnic's subnet
-  string          HostName              = 21;
+  string          HostName              = 20;
   // MaxSessions, if set, is number of active sessions allowed from/to this vnic
   // if MaxSessions is 0, no limit is enforced
   // NOTE: no active sessions will be pruned if the value changes, but once the
   //       session count comes down to a value below this limit, new sessions
   //       won't be installed in h/w (packet will be dropped)
   //       1 session = forward flow + reverse flow
-  uint32          MaxSessions           = 22;
+  uint32          MaxSessions           = 21;
   // enable or disable flow learning on per vnic basis
-  bool            FlowLearnEn           = 23;
+  bool            FlowLearnEn           = 22;
 }
 
 // operational status of Vnic, if any

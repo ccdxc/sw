@@ -28,7 +28,6 @@ typedef struct pds_vnic_spec_s {
     char hostname[PDS_MAX_HOST_NAME_LEN + 1];  ///< hostname of this workload,
                                                ///< if any (expected to be empty
                                                ///< for 2nd-ary vnics)
-    pds_vpc_key_t vpc;                         ///< vpc of this vnic
     pds_subnet_key_t subnet;                   ///< subnet of this vnic
     pds_encap_t vnic_encap;                    ///< vnic encap for this vnic
     pds_encap_t fabric_encap;                  ///< fabric encap for this vnic

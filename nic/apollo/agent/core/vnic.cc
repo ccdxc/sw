@@ -12,12 +12,6 @@ namespace core {
 static inline sdk_ret_t
 vnic_create_validate (pds_vnic_spec_t *spec)
 {
-    // check if VPC exists
-    if (agent_state::state()->find_in_vpc_db(&spec->vpc) == NULL) {
-        PDS_TRACE_ERR("Failed to create vnic {}, vpc {} not found",
-                      spec->key.id, spec->key.id);
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
     // check if subnet exists
     if (agent_state::state()->find_in_subnet_db(&spec->subnet) == NULL) {
         PDS_TRACE_ERR("Failed to create vnic {}, subnet {} not found",
@@ -64,12 +58,6 @@ vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
 static inline sdk_ret_t
 vnic_update_validate (pds_vnic_spec_t *spec)
 {
-    // check if VPC exists
-    if (agent_state::state()->find_in_vpc_db(&spec->vpc) == NULL) {
-        PDS_TRACE_ERR("Failed to update vnic {}, vpc {} not found",
-                      spec->key.id, spec->key.id);
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
     // check if subnet exists
     if (agent_state::state()->find_in_subnet_db(&spec->subnet) == NULL) {
         PDS_TRACE_ERR("Failed to update vnic {}, subnet {} not found",

@@ -494,7 +494,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&pds_vnic, 0, sizeof(pds_vnic));
-                pds_vnic.vpc.id = i;
                 pds_vnic.subnet.id = PDS_SUBNET_ID((i - 1), num_subnets, j);
                 pds_vnic.key.id = vnic_key;
                 if (g_test_params.tag_vnics) {
@@ -565,7 +564,6 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     if (artemis()) {
         // create a bridge vnic in the infra/provider/public vrf
         memset(&pds_vnic, 0, sizeof(pds_vnic));
-        pds_vnic.vpc.id = num_vpcs + 1;
         pds_vnic.subnet.id = PDS_SUBNET_ID(((num_vpcs + 1) - 1), 1, 1);
         pds_vnic.key.id = vnic_key;
         pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
@@ -573,7 +571,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_DOT1Q;
         pds_vnic.fabric_encap.val.value = TESTAPP_SWITCH_VNIC_VLAN;
         MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
-                           (((((uint64_t)pds_vnic.vpc.id & 0x7FF) << 22) |
+                           (((((uint64_t)(num_vpcs + 1) & 0x7FF) << 22) |
                              ((1 & 0x7FF) << 11) | (1 & 0x7FF))));
         pds_vnic.switch_vnic = true;
         rv = create_vnic(&pds_vnic);

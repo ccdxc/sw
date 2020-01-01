@@ -135,7 +135,6 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_vnic_spec_t));
     this->key_build(&spec->key);
 
-    spec->vpc.id = vpc_id;
     spec->subnet.id = subnet_id;
     spec->vnic_encap = vnic_encap;
     spec->fabric_encap = fabric_encap;

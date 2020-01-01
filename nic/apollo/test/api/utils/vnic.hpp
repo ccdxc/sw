@@ -69,7 +69,6 @@ operator<<(std::ostream& os, const pds_vnic_key_t *key) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
     os << &spec->key
-       << " vpc id: " << spec->vpc.id
        << " subnet id: " << spec->subnet.id
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)

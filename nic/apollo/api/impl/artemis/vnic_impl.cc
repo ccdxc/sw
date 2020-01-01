@@ -289,8 +289,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     // get the subnet of the vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
-        PDS_TRACE_ERR("Unable to find subnet : %u, vpc : %u",
-                      spec->subnet.id, spec->vpc.id);
+        PDS_TRACE_ERR("Unable to find subnet %u for vnic %u",
+                      spec->subnet.id, spec->key.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
