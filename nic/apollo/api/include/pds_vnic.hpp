@@ -13,7 +13,6 @@
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 
 /// \defgroup PDS_VNIC VNIC API

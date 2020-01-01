@@ -175,8 +175,6 @@ class VnicObject(base.ConfigObjectBase):
             if self.SUBNET.HostIf:
                 if spec['hostifindex'] != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
-        if spec['vpcid'] != self.SUBNET.VPC.VPCId:
-            return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False
         if spec['sourceguardenable'] != self.SourceGuard:
