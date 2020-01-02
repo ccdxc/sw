@@ -404,23 +404,28 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
-    buff->type = BUFF_TYPE_MEM_WRITE;
-    buff->addr = addr;
-    buff->size = size;
-    memcpy(buff->data, data, size);
-    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    assert(rc != -1);
-    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    assert(rc != -1);
+    do {
+        auto tmp_size = size < MODEL_ZMQ_MEM_BUFF_SIZE-offsetof(buffer_hdr_t,data) ?
+                               size : MODEL_ZMQ_MEM_BUFF_SIZE-offsetof(buffer_hdr_t,data);
+        buff->type = BUFF_TYPE_MEM_WRITE;
+        buff->addr = addr;
+        buff->size = tmp_size;
+        memcpy(buff->data, data, tmp_size);
+        rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+        assert(rc != -1);
+        rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+        assert(rc != -1);
 
-    if (!__write_verify_enable)
-        return true;
-
-    uint8_t obuff[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
-    read_mem(addr, obuff, size);
-    if (memcmp(obuff, data, size))
-        assert(0);
-
+        if (__write_verify_enable) {
+            uint8_t obuff[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
+            read_mem(addr, obuff, tmp_size);
+            if (memcmp(obuff, data, tmp_size))
+                assert(0);
+        }
+        size -= tmp_size;
+        data += tmp_size;
+        addr += tmp_size;
+    } while (size);
     return true;
 }
 
