@@ -586,6 +586,7 @@ pull-assets-venice:
 
 pull-assets:
 	bash scripts/pull-assets.sh
+	$(MAKE) ws-tools
 
 dind-cluster:
 	$(MAKE) dind-cluster-stop
