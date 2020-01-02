@@ -14,3 +14,10 @@ modules:
         spec    : local2igw.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : IPV4_SNAT
+        spec    : local2igw.testspec
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING

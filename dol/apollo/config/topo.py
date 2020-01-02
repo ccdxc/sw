@@ -45,6 +45,11 @@ class NhType(enum.IntEnum):
     UNDERLAY_ECMP = 5
     IP = 8
 
+class NatActionTypes(enum.IntEnum):
+    NONE = 0
+    STATIC = 1
+    NAPT = 2
+
 class L3MatchType(enum.IntEnum):
     PFX = 0
     PFXRANGE = 1

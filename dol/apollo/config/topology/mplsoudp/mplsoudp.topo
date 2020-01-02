@@ -92,7 +92,8 @@ vpc:
              - type: base
                routetype: adjacent_max
                count : 1
-               nat : true # tunnel with nat flag set will be used as next-hop
+               nat:
+                   level : tunnel # tunnel with nat flag set will be used as next-hop
                v4base: '75.0.0.0\16'
                v4prefixlen : 28
                nv4routes   : 1023

@@ -13,12 +13,6 @@ import apollo.config.topo as topo
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
 
-def IsNatEnabled(routetblobj):
-    tunnel = routetblobj.TUNNEL
-    if tunnel is not None:
-        return tunnel.Nat
-    return False
-
 def IsAlreadySelected(obj, objs):
     if topo.ChosenFlowObjs.use_selected_objs is True and obj in objs:
         return True
@@ -161,7 +155,7 @@ class FlowMapObjectHelper:
             rmappings = rmapping.GetMatchingObjects(mapsel)
             lmappings = lmapping.GetMatchingObjects(mapsel)
             for routetblobj in routetable.GetAllMatchingObjects(mapsel):
-                if IsNatEnabled(routetblobj) is True:
+                if routetblobj.IsNatEnabled():
                     # Skip IGWs with nat flag set to True
                     continue
                 lmappingobjs = filter(lambda x: self.__is_lmapping_match(routetblobj, x), lmappings)
@@ -176,7 +170,7 @@ class FlowMapObjectHelper:
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    if IsNatEnabled(routetblobj) is True:
+                    if routetblobj.IsNatEnabled():
                         # Skip IGWs with nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
@@ -189,7 +183,7 @@ class FlowMapObjectHelper:
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    if IsNatEnabled(routetblobj) is False:
+                    if not routetblobj.IsNatEnabled():
                         # Skip IGWs without nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
@@ -211,7 +205,7 @@ class FlowMapObjectHelper:
                     dmappingobjs = filter(lambda x: self.__is_lmapping_extract(routetblobj.PeerVPCId, x), lobjs)
                     for s in smappingobjs:
                         for d in dmappingobjs:
-                            obj = FlowMapObject(s, d, fwdmode, None, None)
+                            obj = FlowMapObject(s, d, fwdmode)
                             if IsAlreadySelected(obj, selected_objs): continue
                             objs.append(obj)
                 objs = utils.GetFilteredObjects(objs, maxlimits)
@@ -243,7 +237,7 @@ class FlowMapObjectHelper:
                         if s.VNIC.SUBNET.VPC.VPCId != d.VNIC.SUBNET.VPC.VPCId:
                             continue
 
-                    obj = FlowMapObject(s, d, fwdmode, None, None)
+                    obj = FlowMapObject(s, d, fwdmode)
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         else:
@@ -260,7 +254,7 @@ class FlowMapObjectHelper:
                     else:
                         if lobj.VNIC.SUBNET.SubnetId == robj.SUBNET.SubnetId:
                             continue
-                    obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TUNNEL)
+                    obj = FlowMapObject(lobj, robj, fwdmode, tunobj=robj.TUNNEL)
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         objs = utils.GetFilteredObjects(objs, maxlimits)

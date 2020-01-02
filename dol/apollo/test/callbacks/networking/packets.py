@@ -548,21 +548,19 @@ def IsNegativeTestCase(testcase):
         return True
     return False
 
-def __get_ip_localmapping_impl(localmapping, tunnel):
-    if tunnel is not None:
-        if tunnel.Nat is True:
-            if hasattr(localmapping, "PublicIP"):
-                return localmapping.PublicIP
-        else:
-            # If TEP does not have nat flag set, then no translation occurs.
-            return localmapping.IP
+def __is_nat_enabled(routeTable):
+    return routeTable.IsNatEnabled()
+
+def __get_ip_localmapping_impl(localmapping, natEnabled):
+    if natEnabled:
+        publicIP = getattr(localmapping, "PublicIP", None)
+        if publicIP:
+            return localmapping.PublicIP
+    return localmapping.IP
 
 def GetIPFromLocalMapping(testcase, packet, args=None):
-    if testcase.config.route is not None and testcase.config.route.TUNNEL is not None:
-        tunnel = testcase.config.route.TUNNEL
-    else:
-        tunnel = None
-    return __get_ip_localmapping_impl(testcase.config.localmapping, tunnel)
+    natEnabled = __is_nat_enabled(testcase.config.route)
+    return __get_ip_localmapping_impl(testcase.config.localmapping, natEnabled)
 
 def __get_expected_nexthop(cfg):
     tunnel = cfg.tunnel

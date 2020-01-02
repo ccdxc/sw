@@ -89,7 +89,8 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         if self.SUBNET.HostIf:
-            logger.info("- HostInterface:%s|%s", self.SUBNET.HostIf.Ifname, self.SUBNET.HostIf.lif.GID())
+            logger.info("- HostInterface:%s|%s" %\
+                (self.SUBNET.HostIf.Ifname, self.SUBNET.HostIf.lif.GID()))
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
