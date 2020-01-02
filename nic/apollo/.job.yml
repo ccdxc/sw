@@ -107,14 +107,14 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
-  apollo/valgrind:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtests-valgrind"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/valgrind:
+    #commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtests-valgrind"]
+    #owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-apollo-x86
 
   apollo/doc:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/doc"]
@@ -166,14 +166,14 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
-  artemis/valgrind:
-    commands: ["make", "PIPELINE=artemis", "jobd/artemis/gtests-valgrind"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-artemis-x86
+  #artemis/valgrind:
+    #commands: ["make", "PIPELINE=artemis", "jobd/artemis/gtests-valgrind"]
+    #owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-artemis-x86
 
   artemis/dol/vxlan:
     commands: ["make", "PIPELINE=artemis", "jobd/dol/artemis/vxlan"]
