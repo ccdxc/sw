@@ -325,6 +325,24 @@ apulu_impl::nacl_init_(void) {
                       "host lifs, err %u", ret);
         goto error;
     }
+
+    // install a NACL to use nexthop information from the ARM header for packets
+    // that are re-injected by vpp or learn thread
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.arm_to_p4i_nexthop_valid = 1;
+    mask.arm_to_p4i_nexthop_valid_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program redirect entry for re-injected pkts "
+                      "from s/w datapath, err %u", ret);
+        goto error;
+    }
     return SDK_RET_OK;
 
 error:
