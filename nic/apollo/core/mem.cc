@@ -104,6 +104,22 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         policer_entry::destroy((policer_entry *)elem);
         break;
 
+    case PDS_SLAB_ID_NAT_PORT_BLOCK:
+        nat_port_block::destroy((nat_port_block *)elem);
+        break;
+
+    case PDS_SLAB_ID_DHCP_RELAY:
+        dhcp_relay::destroy((dhcp_relay *)elem);
+        break;
+
+    case PDS_SLAB_ID_DHCP_POLICY:
+        dhcp_policy::destroy((dhcp_policy *)elem);
+        break;
+
+    case PDS_SLAB_ID_SECURITY_PROFILE:
+        security_profile::destroy((security_profile *)elem);
+        break;
+
     default:
         PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
