@@ -846,12 +846,19 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   changeUserPassword() {
     const changePasswordRequest = this.authPasswordChangeRequest.getFormGroupValues();
+    const userName = Utility.getInstance().getLoginName();
 
     // Remove the confirmation-new-password field , we are not storing in back-end , only used in UI
     delete changePasswordRequest['confirm-new-password'];
     this._authService.PasswordChange(this.selectedAuthUser.meta.name, changePasswordRequest).subscribe(
       response => {
         this._controllerService.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
+        if (this.selectedAuthUser.meta.name === userName) {
+          this._controllerService.invokeInfoToaster('Logging Out', 'You will be logged out in 3 seconds.');
+          setTimeout(() => {
+            this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
+          }, 3000);
+        }
         const updatedAuthUser: AuthUser = response.body as AuthUser;
         this.selectedAuthUser = updatedAuthUser;
         this.userEditAction = null;
