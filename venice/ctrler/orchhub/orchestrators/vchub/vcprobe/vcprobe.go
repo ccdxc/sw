@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
@@ -27,6 +28,27 @@ type VCProbe struct {
 	tp          *tagsProbe
 	Started     bool
 	vcProbeLock sync.Mutex
+}
+
+// ProbeInf is the interface Probe implements
+type ProbeInf interface {
+	Start() error
+	IsSessionReady() bool
+	ClearState()
+	StartWatchers()
+	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
+	ListDC() []mo.Datacenter
+	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
+	ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup
+
+	// port_group.go functions
+	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error
+	GetPenPG(dcName string, pgName string) (*object.DistributedVirtualPortgroup, error)
+	RemovePenPG(dcName, pgName string) error
+
+	// distributed_vswitch.go functions
+	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error
+	GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error)
 }
 
 // NewVCProbe returns a new probe
@@ -307,7 +329,8 @@ func (v *VCProbe) vcEventHandlerForDC(dc string) func(update types.ObjectUpdate,
 // }
 // }
 
-func (v *VCProbe) listObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
+// ListObj performs a list operation in vCenter
+func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
 	client, _, viewMgr := v.GetClientWithRLock()
 	defer v.ReleaseClientRLock()
 
@@ -329,27 +352,27 @@ func (v *VCProbe) listObj(vcKind defs.VCObject, props []string, dst interface{},
 // ListVM returns a list of vms
 func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
 	var vms []mo.VirtualMachine
-	v.listObj(defs.VirtualMachine, []string{"config", "name", "runtime", "overallStatus", "customValue"}, &vms, dcRef)
+	v.ListObj(defs.VirtualMachine, []string{"config", "name", "runtime", "overallStatus", "customValue"}, &vms, dcRef)
 	return vms
 }
 
 // ListDC returns a list of DCs
 func (v *VCProbe) ListDC() []mo.Datacenter {
 	var dcs []mo.Datacenter
-	v.listObj(defs.Datacenter, []string{"name"}, &dcs, nil)
+	v.ListObj(defs.Datacenter, []string{"name"}, &dcs, nil)
 	return dcs
 }
 
 // ListDVS returns a list of DVS objects
 func (v *VCProbe) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
 	var dcs []mo.VmwareDistributedVirtualSwitch
-	v.listObj(defs.VmwareDistributedVirtualSwitch, []string{"name"}, &dcs, dcRef)
+	v.ListObj(defs.VmwareDistributedVirtualSwitch, []string{"name"}, &dcs, dcRef)
 	return dcs
 }
 
 // ListPG returns a list of PGs
 func (v *VCProbe) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
 	var dcs []mo.DistributedVirtualPortgroup
-	v.listObj(defs.DistributedVirtualPortgroup, []string{"config", "name"}, &dcs, dcRef)
+	v.ListObj(defs.DistributedVirtualPortgroup, []string{"config", "name"}, &dcs, dcRef)
 	return dcs
 }

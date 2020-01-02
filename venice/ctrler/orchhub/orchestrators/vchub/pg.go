@@ -13,8 +13,7 @@ import (
 // PenPG represents an instance of a port group on a DVS
 type PenPG struct {
 	*defs.State
-	probe *vcprobe.VCProbe
-	// ObjPg       *object.DistributedVirtualPortgroup
+	probe       vcprobe.ProbeInf
 	PgName      string
 	NetworkMeta api.ObjectMeta
 	PgMutex     sync.Mutex

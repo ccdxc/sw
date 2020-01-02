@@ -65,6 +65,11 @@ func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger) *Session
 	}
 }
 
+// IsSessionReady returns whether the session is connected and ready for use
+func (s *Session) IsSessionReady() bool {
+	return s.SessionReady
+}
+
 // ClearClientCtx sets the watcher ctx to be nil
 func (s *Session) ClearClientCtx() {
 	s.logger.Info("Clearing watcher ctx")

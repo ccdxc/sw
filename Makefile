@@ -32,6 +32,7 @@ venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \
 venice/citadel/broker/mock \
+venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock \
 venice/utils/diagnostics/protos \
 metrics
 

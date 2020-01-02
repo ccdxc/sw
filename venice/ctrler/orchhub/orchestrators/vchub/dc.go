@@ -18,7 +18,7 @@ type PenDC struct {
 	Name string
 	// Map from dvs display name to PenDVS inside this DC
 	DvsMap map[string]*PenDVS
-	probe  *vcprobe.VCProbe
+	probe  vcprobe.ProbeInf
 }
 
 // NewPenDC creates a new penDC object

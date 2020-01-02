@@ -16,7 +16,7 @@ func (v *VCHub) sync() {
 	v.Log.Infof("VCHub %v synching.", v)
 	// Check that probe session is connected
 	count := 3
-	for !v.probe.SessionReady && count > 0 {
+	for !v.probe.IsSessionReady() && count > 0 {
 		select {
 		case <-v.Ctx.Done():
 			return

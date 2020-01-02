@@ -26,7 +26,7 @@ type VCHub struct {
 	vcOpsChannel chan *kvstore.WatchEvent
 	vcReadCh     chan defs.Probe2StoreMsg
 	pCache       *pcache.PCache
-	probe        *vcprobe.VCProbe
+	probe        vcprobe.ProbeInf
 	DcMapLock    sync.Mutex
 	// TODO: don't use DC display name as key, use ID instead
 	DcMap map[string]*PenDC

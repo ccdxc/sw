@@ -8,18 +8,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	. "github.com/pensando/sw/venice/utils/testutils"
 
-	// need tsdb
-	// _ "github.com/pensando/sw/venice/utils/tsdb"
-
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
+	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -28,7 +30,6 @@ import (
 // and creation/deletion of networks in venice
 // trigger respective events in VC
 func TestVCSyncPG(t *testing.T) {
-	t.Skipf("Test does not work with vcsim since vcsim returns different object types for PG and DVS objects")
 	// Stale PGs should be deleted
 	// New PGs should be created
 	err := testutils.ValidateParams(defaultTestParams)
@@ -36,89 +37,42 @@ func TestVCSyncPG(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
+	// SETTING UP LOGGER
 	config := log.GetDefaultConfig("sync_test")
 	config.LogToStdout = true
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
 
-	u := &url.URL{
-		Scheme: "http",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
-
+	// SETTING UP STATE MANAGER
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
 
+	// CREATING ORCH CONFIG
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	// SETTING UP VCSIM
+	vcURL := &url.URL{
+		Scheme: "http",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	vcURL.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
-	dc2Name := "DC2"
-	dc2, err := s.AddDC(dc2Name)
-	AssertOk(t, err, "failed dc create")
-
-	state := &defs.State{
-		VcURL:      u,
-		VcID:       "vcenter",
-		Ctx:        context.Background(),
-		Log:        logger,
-		StateMgr:   sm,
-		OrchConfig: orchConfig,
-		Wg:         &sync.WaitGroup{},
-	}
-	storeCh := make(chan defs.Probe2StoreMsg, 24)
-	vcp := vcprobe.NewVCProbe(storeCh, state)
-	vcp.Start()
 
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 	_, err = dc1.AddDVS(dvsCreateSpec)
 	AssertOk(t, err, "failed dvs create")
-
-	_, err = dc2.AddDVS(dvsCreateSpec)
-	AssertOk(t, err, "failed dvs create")
-	// 1 stale, 1 correct pg, 1 missing PG
-	pgConfigSpec0 := []types.DVPortgroupConfigSpec{
-		types.DVPortgroupConfigSpec{
-			Name:     createPGName("dvs1-stalePG1"),
-			NumPorts: 10,
-		},
-		types.DVPortgroupConfigSpec{
-			Name:     createPGName("pg1"),
-			NumPorts: 10,
-		},
-	}
-
-	vcp.AddPenPG(defaultTestParams.TestDCName, defaultTestParams.TestDVSName, &pgConfigSpec0[0])
-	vcp.AddPenPG(defaultTestParams.TestDCName, defaultTestParams.TestDVSName, &pgConfigSpec0[1])
-
-	// _, err = dvs1.AddPortgroup(pgConfigSpec0)
-	AssertOk(t, err, "failed pg create")
-
-	// All stale
-
-	pgConfigSpec1 := []types.DVPortgroupConfigSpec{
-		types.DVPortgroupConfigSpec{
-			Name:     createPGName("dvs2-stalePG1"),
-			NumPorts: 10,
-		},
-		types.DVPortgroupConfigSpec{
-			Name:     createPGName("dvs2-stalePG2"),
-			NumPorts: 10,
-		},
-	}
-	vcp.AddPenPG(dc2Name, defaultTestParams.TestDVSName, &pgConfigSpec1[0])
-	vcp.AddPenPG(defaultTestParams.TestDCName, defaultTestParams.TestDVSName, &pgConfigSpec1[1])
 
 	orchInfo1 := []*network.OrchestratorInfo{
 		{
@@ -126,13 +80,93 @@ func TestVCSyncPG(t *testing.T) {
 			Namespace: defaultTestParams.TestDCName,
 		},
 	}
+
+	// CREATING VENICE NETWORKS
 	smmock.CreateNetwork(sm, "default", "pg1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
 	smmock.CreateNetwork(sm, "default", "pg2", "10.1.2.0/24", "10.1.1.2", 101, nil, orchInfo1)
 
 	time.Sleep(1 * time.Second)
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithScheme("http"))
 
+	// SETTING UP MOCK
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockProbe := mock.NewMockProbeInf(mockCtrl)
+
+	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub.probe = mockProbe
 	defer vchub.Destroy()
+
+	// Real probe that will be used my mock probe when possible
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp.Start()
+
+	mockProbe.EXPECT().IsSessionReady().DoAndReturn(func() bool {
+		return vcp.IsSessionReady()
+	}).AnyTimes()
+
+	mockProbe.EXPECT().ClearState().Return()
+
+	var ref types.ManagedObjectReference
+
+	mockProbe.EXPECT().ListDC().DoAndReturn(func() []mo.Datacenter {
+		dcs := vcp.ListDC()
+		ref = dcs[0].Reference()
+		return dcs
+	})
+
+	mockProbe.EXPECT().AddPenDVS(defaultTestParams.TestDCName, gomock.Any()).DoAndReturn(
+		func(dcName, dvsCreateSpec interface{}) error {
+			return vcp.AddPenDVS(dcName.(string), dvsCreateSpec.(*types.DVSCreateSpec))
+		})
+
+	// Overriding default probe behavior to work correctly with vcsim
+	mockProbe.EXPECT().ListDVS(gomock.Any()).DoAndReturn(func(_ interface{}) []mo.VmwareDistributedVirtualSwitch {
+		var dvsObjs []mo.DistributedVirtualSwitch
+		var ret []mo.VmwareDistributedVirtualSwitch
+		vcp.ListObj("DistributedVirtualSwitch", []string{"name"}, &dvsObjs, &ref)
+		for _, obj := range dvsObjs {
+			ret = append(ret, mo.VmwareDistributedVirtualSwitch{
+				DistributedVirtualSwitch: obj,
+			})
+		}
+		return ret
+	})
+
+	// Overriding probe to return a PG with PVLAN config since vcsim doesn't support it currently
+	mockProbe.EXPECT().ListPG(gomock.Any()).DoAndReturn(
+		func(dcRef interface{}) []mo.DistributedVirtualPortgroup {
+			// stale pg
+			pg1 := mo.DistributedVirtualPortgroup{
+				Network: mo.Network{
+					Name: createPGName("stalePG1"),
+				},
+				Config: types.DVPortgroupConfigInfo{
+					DefaultPortConfig: &types.VMwareDVSPortSetting{
+						Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+							PvlanId: 10,
+						},
+					},
+				},
+			}
+			pg2 := mo.DistributedVirtualPortgroup{
+				Network: mo.Network{
+					Name: createPGName("pg1"),
+				},
+				Config: types.DVPortgroupConfigInfo{
+					DefaultPortConfig: &types.VMwareDVSPortSetting{
+						Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+							PvlanId: 12,
+						},
+					},
+				},
+			}
+			return []mo.DistributedVirtualPortgroup{pg1, pg2}
+		})
+
+	mockProbe.EXPECT().AddPenPG(defaultTestParams.TestDCName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockProbe.EXPECT().RemovePenPG(defaultTestParams.TestDCName, gomock.Any()).Return(nil).AnyTimes()
+
+	vchub.Sync()
 
 	verifyPg := func(dcPgMap map[string][]string) {
 		AssertEventually(t, func() (bool, interface{}) {
@@ -171,9 +205,30 @@ func TestVCSyncPG(t *testing.T) {
 
 	dcPgMap := map[string][]string{
 		defaultTestParams.TestDCName: []string{pg1, pg2},
-		dc2Name:                      []string{},
 	}
 
 	verifyPg(dcPgMap)
 
+}
+
+func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	state := defs.State{
+		VcURL:      vcURL,
+		VcID:       config.GetName(),
+		Ctx:        ctx,
+		Log:        logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
+		StateMgr:   stateMgr,
+		OrchConfig: config,
+		Wg:         &sync.WaitGroup{},
+	}
+	vchub := &VCHub{}
+	vchub.State = &state
+	vchub.cancel = cancel
+	vchub.DcMap = map[string]*PenDC{}
+	vchub.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
+	vchub.setupPCache()
+
+	return vchub
 }

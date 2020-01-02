@@ -19,7 +19,7 @@ type PenDVS struct {
 	// Map from PG display name to PenPG
 	Pgs     map[string]*PenPG
 	UsegMgr useg.Inf
-	probe   *vcprobe.VCProbe
+	probe   vcprobe.ProbeInf
 }
 
 // PenDVSPortSettings represents a group of DVS port settings
