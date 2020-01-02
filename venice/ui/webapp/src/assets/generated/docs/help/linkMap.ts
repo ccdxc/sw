@@ -2,6 +2,7 @@ export const HelpLinkMap: { [id: string]: string } = {
   "alertsevents" : "/assets/generated/docs/help/alertsevents.html",
   "apps" : "/assets/generated/docs/help/apps.html",
   "authpolicy" : "/assets/generated/docs/help/authpolicy.html",
+  "dashboard" : "/assets/generated/docs/help/dashboard.html",
   "fwlogs" : "/assets/generated/docs/help/firewalllogs.html",
   "flowexport" : "/assets/generated/docs/help/flowexport.html",
   "hosts" : "/assets/generated/docs/help/hosts.html",
