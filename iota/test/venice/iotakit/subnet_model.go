@@ -31,11 +31,11 @@ type NetworkCollection struct {
 	subnets []*Network
 }
 
-func (sm *SysModel) createNetwork(vlanID uint32, ipPrefix string) error {
+func (sm *SysModel) createNetwork(nw *network.Network) error {
 	// parse the subnet
-	_, ipnet, err := net.ParseCIDR(ipPrefix)
+	_, ipnet, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 	if err != nil {
-		log.Errorf("Error parsing subnet %v. Err: %v", ipPrefix, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", nw.Spec.IPv4Subnet, err)
 		return err
 	}
 
@@ -45,9 +45,9 @@ func (sm *SysModel) createNetwork(vlanID uint32, ipPrefix string) error {
 	bs := bitset.New(uint(subnetSize))
 	bs.Set(0)
 	snet := Network{
-		Name:       fmt.Sprintf("Network-Vlan-%d", vlanID),
-		vlan:       vlanID,
-		ipPrefix:   ipPrefix,
+		Name:       fmt.Sprintf("Network-Vlan-%d", nw.Spec.VlanID),
+		vlan:       nw.Spec.VlanID,
+		ipPrefix:   nw.Spec.IPv4Subnet,
 		subnetSize: subnetSize,
 		bitmask:    bs,
 		sm:         sm,

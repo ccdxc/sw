@@ -312,4 +312,6 @@ func (vm *vmESXWorkload) TearDown() {
 	vm.workloadBase.TearDown()
 	//Power off VM in ESX, Deploy is expensive
 	vm.vm.PowerOff()
+
+	vm.vm.Destroy()
 }

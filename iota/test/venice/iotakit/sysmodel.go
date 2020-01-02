@@ -944,11 +944,12 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		done <- fmt.Errorf("Config push incomplete")
 	}
 
-	setupConfigs := func() {
+	setupConfigs := func() error {
 		for _, o := range cfg.ConfigItems.Hosts {
 			h := &Host{veniceHost: o}
 			sm.fakeHosts[o.ObjectMeta.Name] = h
 		}
+
 		for _, pol := range cfg.ConfigItems.SGPolicies {
 			sm.fakeSGPolicies[pol.ObjectMeta.Name] = &NetworkSecurityPolicy{venicePolicy: pol}
 		}
@@ -959,6 +960,20 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 		tbVlans := make([]uint32, len(sm.tb.allocatedVlans))
 		copy(tbVlans, sm.tb.allocatedVlans)
 
+		for _, o := range cfg.ConfigItems.Networks {
+			if len(tbVlans) == 0 {
+				return errors.New("Not enough vlans in the testbed for the config")
+			}
+			nwMap[o.Spec.VlanID] = tbVlans[0]
+			//Change the network vlan to use the vlan ID allocated by testbed
+			o.Spec.VlanID = tbVlans[0]
+			tbVlans = tbVlans[1:]
+			err := sm.createNetwork(o)
+			if err != nil {
+				return err
+			}
+
+		}
 		for _, o := range cfg.ConfigItems.Workloads {
 			w := &Workload{veniceWorkload: o}
 			if _, ok := realHostNames[o.Spec.HostName]; ok {
@@ -971,18 +986,16 @@ func (sm *SysModel) populateConfig(ctx context.Context, scale bool) error {
 			if wireVlan, ok := nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan]; ok {
 				w.veniceWorkload.Spec.Interfaces[0].ExternalVlan = wireVlan
 			} else {
-				if len(tbVlans) == 0 {
-					//continue
-					//return errors.New("Not enough vlans in the testbed for the config")
-				} else {
-					nwMap[w.veniceWorkload.Spec.Interfaces[0].ExternalVlan] = tbVlans[0]
-					tbVlans = tbVlans[1:]
-				}
+				return fmt.Errorf("No testbed vlan found for external vlan %v", w.veniceWorkload.Spec.Interfaces[0].ExternalVlan)
 			}
 		}
+
+		return nil
 	}
 
-	setupConfigs()
+	if err := setupConfigs(); err != nil {
+		return err
+	}
 
 	pushConfigUsingStagingBuffer := func() error {
 		defer timeTrack(time.Now(), "Committing Via Config buffer")

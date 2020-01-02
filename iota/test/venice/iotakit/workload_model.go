@@ -102,10 +102,8 @@ func (sm *SysModel) deleteWorkload(wr *Workload) error {
 	// FIXME: free ip address for the workload
 
 	// delete venice workload
-	err := sm.DeleteWorkload(wr.veniceWorkload)
-	if err != nil {
-		return err
-	}
+	sm.DeleteWorkload(wr.veniceWorkload)
+	//Ignore the error as we don't care
 
 	wrkLd := &iota.WorkloadMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
@@ -141,8 +139,8 @@ func (sm *SysModel) Workloads() *WorkloadCollection {
 // GetSingleWorkloadPair gets a single pair collection based on index
 func (wlpc *WorkloadPairCollection) GetSingleWorkloadPair(i int) *WorkloadPairCollection {
 	collection := WorkloadPairCollection{}
-    collection.pairs = append(collection.pairs, wlpc.pairs[i])
-    return &collection
+	collection.pairs = append(collection.pairs, wlpc.pairs[i])
+	return &collection
 }
 
 // WorkloadPairs creates full mesh of workload pairs
@@ -275,6 +273,22 @@ func (wc *WorkloadCollection) Bringup() error {
 	return nil
 }
 
+//Teardown bring down workload
+func (wc *WorkloadCollection) Teardown() error {
+
+	// Teardown the workloads
+	for _, wrk := range wc.workloads {
+		err := wrk.sm.deleteWorkload(wrk)
+		if err != nil {
+			log.Infof("Delete workload failed : %v", err.Error())
+			return err
+		}
+	}
+
+	log.Info("Delete workload successful")
+	return nil
+}
+
 // Delete deletes each workload in the collection
 func (wc *WorkloadCollection) Delete() error {
 	if wc.HasError() {
@@ -290,7 +304,6 @@ func (wc *WorkloadCollection) Delete() error {
 
 	return nil
 }
-
 func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurityPolicyCollection, action, proto string) *WorkloadPairCollection {
 	if wpc.err != nil {
 		return wpc

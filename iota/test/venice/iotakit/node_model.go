@@ -65,6 +65,7 @@ type HostCollection struct {
 	err       error
 	hosts     []*Host
 	fakeHosts []*Host
+	sm        *SysModel // pointer back to the model
 }
 
 // SwitchPortCollection ports
@@ -197,6 +198,7 @@ func (sm *SysModel) Hosts() *HostCollection {
 		hc.fakeHosts = append(hc.fakeHosts, hst)
 	}
 
+	hc.sm = sm
 	return &hc
 }
 
@@ -232,6 +234,66 @@ func (hst *Host) allocUsegVlan() (uint32, error) {
 
 	hst.vlanBitmask.Set(uint(vlanBit))
 	return uint32(vlanBit), nil
+}
+
+//BringUpNewWorkloads brings up new workload on the host
+func (hc *HostCollection) BringUpNewWorkloads(snc *NetworkCollection, count int) *WorkloadCollection {
+
+	wc := &WorkloadCollection{}
+	newWloads := []*workload.Workload{}
+	hosts := []*Host{}
+	for _, nw := range snc.subnets {
+		for _, host := range hc.hosts {
+			hostWorkloads := 0
+			wloads, err := hc.sm.ListWorkloadsOnHost(host.veniceHost)
+			if err != nil {
+				wc.err = fmt.Errorf("Error finding workloads on host")
+				return wc
+			}
+		hostL:
+			for _, wload := range wloads {
+				vlan := wload.GetSpec().Interfaces[0].GetExternalVlan()
+				if _, ok := hc.sm.workloads[wload.Name]; ok {
+					//Workload already added.
+					continue
+				}
+				if nw.vlan == vlan {
+					log.Infof("Workload being added to sm  on host %+v %+v %+v", host.veniceHost.Name, wload.Name, vlan)
+					newWloads = append(newWloads, wload)
+					hosts = append(hosts, host)
+					hostWorkloads++
+					if hostWorkloads == count {
+						//Found enough workloads to create on this host
+						break hostL
+					}
+				}
+
+			}
+		}
+	}
+
+	if len(newWloads) != count*len(hc.hosts) {
+		wc.err = fmt.Errorf("Not enough workloads (%v) to bring up on host expected %v", len(wc.workloads), count*len(hc.hosts))
+		return wc
+	}
+	//Now add the workload info to IOTA
+	for i, wload := range newWloads {
+		wrk, err := hc.sm.createWorkload(wload, hc.sm.tb.Topo.WorkloadType, hc.sm.tb.Topo.WorkloadImage, hosts[i])
+		if err != nil {
+			log.Errorf("Error creating workload %v. Err: %v", wload.GetName(), err)
+			wc.err = fmt.Errorf("Error finding workloads on host")
+			return wc
+		}
+		wc.workloads = append(wc.workloads, wrk)
+	}
+
+	// bringup the workloads
+	err := wc.Bringup()
+	if err != nil {
+		return &WorkloadCollection{err: err}
+	}
+
+	return wc
 }
 
 /*
