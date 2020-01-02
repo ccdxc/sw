@@ -1107,6 +1107,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
     api_spec->flow_learn_en = proto_spec.flowlearnen();
+    api_spec->tx_policer.id = proto_spec.txpolicerid();
+    api_spec->rx_policer.id = proto_spec.rxpolicerid();
     return SDK_RET_OK;
 }
 
@@ -1162,6 +1164,8 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     proto_spec->set_primary(api_spec->primary);
     proto_spec->set_maxsessions(api_spec->max_sessions);
     proto_spec->set_flowlearnen(api_spec->flow_learn_en);
+    proto_spec->set_txpolicerid(api_spec->tx_policer.id);
+    proto_spec->set_rxpolicerid(api_spec->rx_policer.id);
 }
 
 // populate proto buf status from vnic API status
