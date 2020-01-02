@@ -2,7 +2,7 @@ package copier
 
 import (
 	"errors"
-	"io/ioutil"
+    "io"
 	"os"
 	"path/filepath"
 	"time"
@@ -143,27 +143,58 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 			}
 		}
 
-		// Check for the validity of source file
-		out, err := ioutil.ReadFile(absSrcFile)
-		if err != nil {
-			log.Errorf("Copier | CopyTo could not read the source file. | SrcFile: %v, Node: %v, Err: %v", absSrcFile, ipPort, err)
-			return err
-		}
+        fileInfo, err := os.Stat(absSrcFile);
+        if err != nil {
+            log.Infof("failed to get filesize for file %s",absSrcFile)
+            return err
+        }
+        log.Infof("Copier | CopyTo | input file %s size: %d bytes", absSrcFile, fileInfo.Size())
 
-		log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
-		f, err := sftpClient.Create(absDstFile)
-		if err != nil {
-			log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
-			return err
-		}
-		f.Chmod(0766)
+        inFile, err := os.Open(absSrcFile)
+        if err != nil {
+            log.Errorf("Copier | CopyTo | failed to open source file %",absSrcFile)
+            return err
+        }
 
-		if _, err := f.Write(out); err != nil {
-			log.Errorf("Copier | CopyTo failed to write the remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
-			return err
-		}
-		f.Close()
-		sftpClient.Chtimes(absDstFile, sInfo.ModTime(), sInfo.ModTime())
+        outFile, err := sftpClient.Create(absDstFile)
+        if err != nil {
+            log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
+            return err
+        }
+        outFile.Chmod(0766)
+
+        log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
+        if _, err = io.Copy(outFile, inFile); err != nil {
+            log.Errorf("Copier | CopyTo | failed to copy file %s to %s",absSrcFile,absDstFile)
+            return err
+        }
+        //outFile.Sync()
+        outFile.Close()
+        sftpClient.Chtimes(absDstFile, sInfo.ModTime(), sInfo.ModTime())
+
+/*
+        // Check for the validity of source file
+        out, err := ioutil.ReadFile(absSrcFile)
+        if err != nil {
+            log.Errorf("Copier | CopyTo could not read the source file. | SrcFile: %v, Node: %v, Err: %v", absSrcFile, ipPort, err)
+            return err
+        }
+
+        log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
+        f, err := sftpClient.Create(absDstFile)
+        if err != nil {
+            log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
+            return err
+        }
+        f.Chmod(0766)
+
+        if _, err := f.Write(out); err != nil {
+            log.Errorf("Copier | CopyTo failed to write the remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
+            return err
+        }
+        f.Close()
+        sftpClient.Chtimes(absDstFile, sInfo.ModTime(), sInfo.ModTime())
+*/
 	}
 
 	return nil
