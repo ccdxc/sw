@@ -2661,7 +2661,7 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 func TestRoutingConfigCreateDelete(t *testing.T) {
 	name := "testCfg"
 	// create network state manager
-	stateMgr, err := newStatemgr1()
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return

@@ -25,7 +25,7 @@ type SmRoute struct {
 
 // CompleteRegistration is the callback function statemgr calls after init is done
 func (sma *SmRoute) CompleteRegistration(flags uint32) {
-	if flags&0x1 == 0 {
+	if flags&0x1 != 0 {
 		return
 	}
 	sma.sm.SetRoutingConfigReactor(smgrRoute)
@@ -79,26 +79,31 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 	}
 
 	obj.Spec = netproto.RoutingConfigSpec{}
-	obj.Spec.EVPNConfig = &netproto.EVPNConfig{
-		Shutdown: rtcfg.RoutingConfig.Spec.EVPNConfig.Shutdown,
-	}
-	obj.Spec.BGPConfig = &netproto.BGPConfig{
-		RouterId: rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,
-		ASNumber: rtcfg.RoutingConfig.Spec.BGPConfig.ASNumber,
+
+	if rtcfg.RoutingConfig.Spec.EVPNConfig != nil {
+		obj.Spec.EVPNConfig = &netproto.EVPNConfig{
+			Shutdown: rtcfg.RoutingConfig.Spec.EVPNConfig.Shutdown,
+		}
 	}
 
-	for _, nbr := range rtcfg.RoutingConfig.Spec.BGPConfig.Neighbors {
-		neighbor.Shutdown = nbr.Shutdown
-		neighbor.IPAddress = nbr.IPAddress
-		neighbor.RemoteAS = nbr.RemoteAS
-		neighbor.MultiHop = nbr.MultiHop
-		for _, addr := range nbr.EnableAddressFamilies {
-			neighbor.EnableAddressFamilies = append(neighbor.EnableAddressFamilies, addr)
+	if rtcfg.RoutingConfig.Spec.BGPConfig != nil {
+		obj.Spec.BGPConfig = &netproto.BGPConfig{
+			RouterId: rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,
+			ASNumber: rtcfg.RoutingConfig.Spec.BGPConfig.ASNumber,
 		}
 
-		obj.Spec.BGPConfig.Neighbors = append(obj.Spec.BGPConfig.Neighbors, neighbor)
-	}
+		for _, nbr := range rtcfg.RoutingConfig.Spec.BGPConfig.Neighbors {
+			neighbor.Shutdown = nbr.Shutdown
+			neighbor.IPAddress = nbr.IPAddress
+			neighbor.RemoteAS = nbr.RemoteAS
+			neighbor.MultiHop = nbr.MultiHop
+			for _, addr := range nbr.EnableAddressFamilies {
+				neighbor.EnableAddressFamilies = append(neighbor.EnableAddressFamilies, addr)
+			}
 
+			obj.Spec.BGPConfig.Neighbors = append(obj.Spec.BGPConfig.Neighbors, neighbor)
+		}
+	}
 	return obj
 }
 
