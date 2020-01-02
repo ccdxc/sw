@@ -227,11 +227,13 @@ enum LifType {
 
 // types of NAT actions supported
 enum NatAction {
-  NAT_ACTION_NONE   = 0;
+  NAT_ACTION_NONE        = 0;
   // Address only static NAT
-  NAT_ACTION_STATIC = 1;
-  // NAPT - Address and Port Translation
-  NAT_ACTION_NAPT   = 2;
+  NAT_ACTION_STATIC      = 1;
+  // address and port translation to public (aka. Internet) address space
+  NAT_ACTION_NAPT_PUBLIC = 2;
+  // address and port translation to internal service address space
+  NAT_ACTION_NAPT_SVC    = 3;
 }
 
 // BatchCtxt is opaque to application(s) and is expected to be passed

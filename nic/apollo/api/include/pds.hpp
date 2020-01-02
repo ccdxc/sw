@@ -123,9 +123,13 @@ pds_encap2str (const pds_encap_t *encap)
 
 /// \brief NAT type
 typedef enum pds_nat_type_e {
-    PDS_NAT_TYPE_NONE         = 0,
-    PDS_NAT_TYPE_STATIC       = 1,
-    PDS_NAT_TYPE_DYNAMIC_NAPT = 2,
+    PDS_NAT_TYPE_NONE        = 0,
+    /// static 1:1 NAT
+    PDS_NAT_TYPE_STATIC      = 1,
+    /// (dynamic) NAPT to public (i.e., Internet) address space
+    PDS_NAT_TYPE_NAPT_PUBLIC = 2,
+    /// (dynamic) NAPT to internal service address space
+    PDS_NAT_TYPE_NAPT_SVC    = 3,
 } pds_nat_type_t;
 
 /// \brief NAT action

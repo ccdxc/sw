@@ -28,7 +28,6 @@
 /// \brief route
 typedef struct pds_route_s {
     ip_prefix_t                 prefix;   ///< prefix
-    pds_nh_type_t               nh_type;  ///< nexthop type
     /// NOTE:
     /// 1. priority value must be non-zero
     /// 2. lower the numerical value, higher the priority
@@ -38,6 +37,7 @@ typedef struct pds_route_s {
     ///    as 128 - <prefix length>, so longer prefixes will have higher
     ///    precedence over shorter ones giving regular LPM semantics
     uint32_t                    prio;     ///< priority of the route
+    pds_nh_type_t               nh_type;  ///< nexthop type
     union {
         /// PDS_NH_TYPE_OVERLAY specific data
         pds_tep_key_t           tep;      ///< nexthop TEP
@@ -105,7 +105,6 @@ typedef struct pds_route_table_status_s {
 
 /// \brief route table statistics
 typedef struct pds_route_table_stats_s {
-
 } pds_route_table_stats_t;
 
 /// \brief route table information

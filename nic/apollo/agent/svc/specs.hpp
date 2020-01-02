@@ -2507,8 +2507,11 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
             case types::NAT_ACTION_STATIC:
                 api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_STATIC;
                 break;
-            case types::NAT_ACTION_NAPT:
-                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_DYNAMIC_NAPT;
+            case types::NAT_ACTION_NAPT_PUBLIC:
+                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NAPT_PUBLIC;
+                break;
+            case types::NAT_ACTION_NAPT_SVC:
+                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NAPT_SVC;
                 break;
             case types::NAT_ACTION_NONE:
             default:
@@ -2576,8 +2579,11 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         case PDS_NAT_TYPE_STATIC:
             route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_STATIC);
             break;
-        case PDS_NAT_TYPE_DYNAMIC_NAPT:
-            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NAPT);
+        case PDS_NAT_TYPE_NAPT_PUBLIC:
+            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NAPT_PUBLIC);
+            break;
+        case PDS_NAT_TYPE_NAPT_SVC:
+            route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NAPT_SVC);
             break;
         case PDS_NAT_TYPE_NONE:
         default:

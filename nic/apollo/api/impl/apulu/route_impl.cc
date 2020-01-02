@@ -23,10 +23,20 @@
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 
-#define PDS_IMPL_ROUTE_NH_ID(type_, val_)                        \
-            (((type_) << ROUTE_RESULT_NHTYPE_SHIFT) | (val_))
-
-#define PDS_IMPL_SRC_NAT_TYPE_SHIFT        4
+#define PDS_IMPL_NH_VAL_SET_METER_EN(nh_val_)                                \
+            ((nh_val_) |= 0x80000000)
+#define PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val_, snat_type_)                   \
+            ((nh_val_) |= (snat_type_ & 0x3) << 29)
+#define PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val_, dnat_en_, dnat_idx_)          \
+{                                                                            \
+    if ((dnat_en_)) {                                                        \
+        (nh_val_) |= ((1 << 28) | (dnat_idx_ & 0x0FFFFFFF));                 \
+    } else {                                                                 \
+        (nh_val_) &= ~(1 << 28);                                             \
+    }                                                                        \
+}
+#define PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val_, type_, nh_id_)                  \
+            (nh_val_) |= (((type_ & 0x3) << 26) | (nh_id_ & 0x3FFFFFF));
 
 namespace api {
 namespace impl {
@@ -130,14 +140,16 @@ route_table_impl::nuke_resources(api_base *api_obj) {
 
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t                 ret;
-    pds_route_table_spec_t    *spec;
-    pds_vpc_key_t             vpc_key;
-    route_table_t             *rtable;
-    nexthop_group             *nh_group;
-    tep_entry                 *tep;
-    vpc_entry                 *vpc;
-    vnic_entry                *vnic;
+    sdk_ret_t              ret;
+    tep_entry              *tep;
+    vpc_entry              *vpc;
+    vnic_entry             *vnic;
+    pds_route_table_spec_t *spec;
+    uint32_t               nh_val;
+    pds_vpc_key_t          vpc_key;
+    route_table_t          *rtable;
+    nexthop_group          *nh_group;
+    pds_route_t            *route_spec;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     // allocate memory for the library to build route table
@@ -159,13 +171,30 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix = spec->routes[i].prefix;
+        nh_val = 0;
+        route_spec = &spec->routes[i];
+        rtable->routes[i].prefix = route_spec->prefix;
         if (rtable->pbr_enabled) {
-            rtable->routes[i].prio = spec->routes[i].prio;
+            rtable->routes[i].prio = route_spec->prio;
         } else {
-            rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
+            rtable->routes[i].prio = 128 - route_spec->prefix.len;
         }
-        switch (spec->routes[i].nh_type) {
+
+#if 0
+        if (route_spec->meter) {
+            PDS_IMPL_NH_VAL_SET_METER_EN(nh_val);
+        }
+#endif
+        PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val, route_spec->nat.src_nat_type);
+        if (!ip_addr_is_zero(&route_spec->nat.dst_nat_ip)) {
+            // DNAT is enabled on this route
+            // TODO: allocate idx from DNAT table
+            //PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, TRUE, dnat_idx);
+        } else {
+            PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, FALSE, 0);
+        }
+
+        switch (route_spec->nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> blackhole "
@@ -184,13 +213,13 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid =
-                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_TUNNEL,
-                                     ((tep_impl *)(tep->impl()))->hw_id());
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_TUNNEL,
+                                        ((tep_impl *)(tep->impl()))->hw_id());
+            rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %u, route %s -> TEP %s, "
                             "nh id 0x%x", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
-                            tep->key2str().c_str(), rtable->routes[i].nhid);
+                            tep->key2str().c_str(), nh_val);
             break;
 
         case PDS_NH_TYPE_OVERLAY_ECMP:
@@ -204,9 +233,13 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid =
-                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_ECMP,
-                    ((nexthop_group_impl *)nh_group->impl())->hw_id());
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_ECMP,
+                ((nexthop_group_impl *)nh_group->impl())->hw_id());
+            rtable->routes[i].nhid = nh_val;
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> "
+                            "nh group %s, nh id 0x%x", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            nh_group->key2str().c_str(), nh_val);
             break;
 
         case PDS_NH_TYPE_PEER_VPC:
@@ -219,26 +252,13 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid = PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_VPC,
-                                                          vpc->hw_id());
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
-                            "id 0x%x, ", spec->key.id,
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_VPC, vpc->hw_id());
+            rtable->routes[i].nhid = nh_val;
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc %s, "
+                            "nh id 0x%x, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].nhid);
+                            vpc->key2str().c_str(), nh_val);
             break;
-
-#if 0
-        case PDS_NH_TYPE_NAT:
-            rtable->routes[i].nhid =
-                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_NAT,
-                    ((spec->routes[i].nat.src_nat << PDS_IMPL_SRC_NAT_TYPE_SHIFT) |
-                     spec->routes[i].nat.dst_nat));
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> NAT, "
-                            "id 0x%x, ", spec->key.id,
-                            ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].nhid);
-            break;
-#endif
 
         case PDS_NH_TYPE_VNIC:
             vnic = vnic_db()->find(&spec->routes[i].vnic);
@@ -249,13 +269,17 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                spec->key.id);
                  break;
             }
-            rtable->routes[i].nhid =
-                PDS_IMPL_ROUTE_NH_ID(NEXTHOP_TYPE_NEXTHOP,
-                                     ((vnic_impl *)vnic->impl())->nh_idx());
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
+                                        ((vnic_impl *)vnic->impl())->nh_idx());
+            rtable->routes[i].nhid = nh_val;
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vnic %s, "
+                            "nh id 0x%x, ", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            vnic->key2str().c_str(), nh_val);
             break;
 
         default:
-            PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
+            PDS_TRACE_ERR("Unsupported nh type %u while processing route %s in "
                           "route table %u", spec->routes[i].nh_type,
                           ippfx2str(&spec->routes[i].prefix), spec->key.id);
             ret = SDK_RET_INVALID_ARG;
