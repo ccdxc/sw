@@ -9,6 +9,13 @@ __gl_testbed = None
 __gl_topology = None
 __gl_workloads = {}
 __gl_spl_workloads = defaultdict(lambda: dict())
+__gl_primary_int_nic_mgmt_ip = "169.254.0.1"
+
+def GetPrimaryIntNicMgmtIp():
+    return __gl_primary_int_nic_mgmt_ip
+
+def SetPrimaryIntNicMgmtIp(ip):
+    __gl_primary_int_nic_mgmt_ip = ip
 
 def SetTestbed(tb):
     global __gl_testbed

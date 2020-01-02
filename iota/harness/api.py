@@ -2,6 +2,7 @@
 import grpc
 import pdb
 import os
+import re
 import sys
 import time
 import threading
@@ -259,6 +260,14 @@ def MakeCluster(req):
     global gl_cfg_svc_stub
     Logger.debug("Make Cluster:")
     return __rpc(req, gl_cfg_svc_stub.MakeCluster)
+
+def GetPrimaryIntNicMgmtIp():
+    return store.GetPrimaryIntNicMgmtIp()
+
+def GetPrimaryIntNicMgmtIpNext():
+    ip=store.GetPrimaryIntNicMgmtIp()
+    ip=re.sub('\.1$','.2',ip)
+    return ip
 
 def GetVeniceMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()

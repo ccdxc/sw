@@ -1,11 +1,16 @@
 #! /bin/bash
 set -e
 
+own_ip="169.254.0.2"
+trg_ip="169.254.0.1"
+
 while [[ "$#" > 0 ]]; do
     case $1 in
         -c|--cleanup) cleanup=1;;
         --no-mgmt) no_mgmt=1;;
         --skip-install) skip_install=1;;
+        --own_ip) own_ip=$2; shift;;
+        --trg_ip) trg_ip=$2; shift;;
         *) echo "Unknown parameter passed: $1"; exit 1;;
     esac; shift;
 done
@@ -83,12 +88,12 @@ else
         echo "Internal mgmt interface $intmgmt detected at $bdf."
 
         dhcp_disable
-        ifconfig $intmgmt 169.254.0.2/24
+        ifconfig $intmgmt $own_ip/24
         if [ -n "$no_mgmt" ]; then
             echo "Skip ping test of internal mgmt interface on host"
             exit 0
         fi
-        if ! (ping -c 5 169.254.0.1); then
+        if ! (ping -c 5 $trg_ip); then
             ./print-cores.sh
             exit 1
         fi

@@ -223,9 +223,11 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
-                instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
+                #instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
+                instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp())
 
-            instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
+            #instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
+            instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp())
             if self.__get_instance_nic_type(instance) in ["pensando", "naples"]:
                 #if instance.NodeOs == "esx":
                 #    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])

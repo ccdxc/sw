@@ -22,6 +22,12 @@ HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
 UPGRADE_TIMEOUT                 = 600
 
+def GetPrimaryIntNicMgmtIpNext():
+    return "169.254.0.2"
+
+def GetPrimaryIntNicMgmtIp():
+    return "169.254.0.1"
+
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
 parser.add_argument('--console-ip', dest='console_ip', required = True,
@@ -669,12 +675,14 @@ class HostManagement(EntityManagement):
         self.WaitForSsh()
         os.system("date")
 
-        nodeinit_args = ""
+        nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
+
         if GlobalOptions.skip_driver_install:
             nodeinit_args += " --skip-install"
 
         if cleanup:
-            nodeinit_args = "--cleanup"
+            nodeinit_args += "--cleanup"
+            print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
         if GlobalOptions.skip_driver_install:
@@ -682,9 +690,10 @@ class HostManagement(EntityManagement):
             return
 
         if driver_pkg:
-            nodeinit_args = ""
+            nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
             if GlobalOptions.no_mgmt:
                 nodeinit_args += " --no-mgmt"
+            print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
