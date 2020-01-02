@@ -3056,7 +3056,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     },
     {
       "name": "Pout2",
-      "displayName": "Input Power",
+      "displayName": "ARM Output Power",
       "description": "ARM output power",
       "units": "Count",
       "baseType": "Counter",

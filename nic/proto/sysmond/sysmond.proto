@@ -70,7 +70,7 @@ message AsicPowerMetrics {
 
     delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system" }];
     delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power" }];
-    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "Input Power" Description: "ARM output power" }];
+    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "ARM Output Power" Description: "ARM output power" }];
 }
 
 message AsicFrequencyMetrics {
