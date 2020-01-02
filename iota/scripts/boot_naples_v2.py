@@ -48,7 +48,7 @@ parser.add_argument('--username', dest='username',
 parser.add_argument('--password', dest='password',
                     default="pen123", help='Naples Password.')
 parser.add_argument('--timeout', dest='timeout',
-                    default=120, help='Naples Password.')
+                    default=180, help='Naples Password.')
 parser.add_argument('--image', dest='image',
                     default=None, help='Naples Image.')
 parser.add_argument('--drivers-pkg', dest='drivers_pkg',
@@ -272,7 +272,7 @@ class EntityManagement:
         time.sleep(120)
         print("finished 120 second sleep. Looking for prompt now...")
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                               hdl = self.hdl, timeout = 120)
+                               hdl = self.hdl, timeout = 180)
         if midx == 0: return
         # Got capri login prompt, send username/password.
         self.SendlineExpect(GlobalOptions.username, "Password:")
@@ -295,7 +295,7 @@ class EntityManagement:
     @_exceptionWrapper(_errCodes.ENTITY_NOT_UP, "Host not up")
     def WaitForSsh(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
-        for retry in range(150):
+        for retry in range(180):
             if self.IsSSHUP():
                 return
             time.sleep(5)
@@ -412,7 +412,7 @@ class NaplesManagement(EntityManagement):
     def __login(self):
         try:
             midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                                   hdl = self.hdl, timeout = 120)
+                                   hdl = self.hdl, timeout = 180)
             if midx == 0: return
             # Got capri login prompt, send username/password.
             self.SendlineExpect(GlobalOptions.username, "Password:")
@@ -623,11 +623,11 @@ class NaplesManagement(EntityManagement):
 
     def __get_capri_prompt(self):
         IpmiReset()
-        match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 120)
+        match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 180)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
             IpmiReset()
-            self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 120)
+            self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 180)
         self.hdl.sendcontrol('C')
         self.hdl.expect_exact("Capri#")
         return
@@ -637,7 +637,7 @@ class NaplesManagement(EntityManagement):
         self.__connect_to_console()
         self.__get_capri_prompt()
         self.hdl.sendline("boot goldfw")
-        self.hdl.expect_exact("capri-gold login", timeout = 120)
+        self.hdl.expect_exact("capri-gold login", timeout = 180)
         self.Login()
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
