@@ -1,6 +1,6 @@
 #!/bin/bash
 
-A=$(git status  --porcelain=v1 --ignore-submodules=all | egrep -v '^[MADRC] ' | grep -v gitmodules | egrep -v '^DD ' | awk '{print $2}')
+A=$(git status  --porcelain --ignore-submodules=all | egrep -v '^[MADRC] ' | grep -v gitmodules | egrep -v '^DD ' | awk '{print $2}')
 if [ -n "$A" ] ; then
     printf "=================================================================\n"
     printf "Failing compilation due to presence of locally modified files/conflicting changes for files : %s \n"  $A
