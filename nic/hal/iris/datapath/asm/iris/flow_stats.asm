@@ -12,8 +12,9 @@ struct phv_         p;
 %%
 
 flow_stats:
-  seq         c1, k.flow_info_metadata_flow_index, 0
-  b.c1.e      flow_stats_index_zero
+  seq         c1, k.control_metadata_skip_flow_update, TRUE
+  seq.!c1     c1, k.flow_info_metadata_flow_index, 0
+  nop.c1.e
   seq         c1, k.capri_intrinsic_drop, TRUE
   bcf         [c1], flow_stats_dropped
 #ifndef CAPRI_IGNORE_TIMESTAMP
@@ -35,9 +36,6 @@ flow_stats_dropped:
   tblor       d.flow_stats_d.drop_reason, k.control_metadata_drop_reason
   tbladd.e    d.flow_stats_d.drop_packets, 1
   tbladd.f    d.flow_stats_d.drop_bytes, k.capri_p4_intrinsic_packet_len
-
-flow_stats_index_zero:
-  nop
 
 /*****************************************************************************/
 /* error function                                                            */

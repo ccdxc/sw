@@ -262,6 +262,9 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                   drop_count1, drop_count2, drop_count3, drop_count4,
                   drop_count5, drop_count6, drop_count7, drop_count8,
                   flow_agg_index1, flow_agg_index2) {
+    if (control_metadata.skip_flow_update == TRUE) {
+        // return;
+    }
     if (capri_intrinsic.drop == TRUE) {
         // update timestamp only if drop reason is flow_hit drop
         if (control_metadata.drop_reason == (1 << DROP_FLOW_HIT)) {
