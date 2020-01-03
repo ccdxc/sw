@@ -1,7 +1,8 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDS Implementation of Metaswitch L2F MAI stub integration
+// PDS integration of Metaswitch L2F MAI stub
 //---------------------------------------------------------------
+
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
@@ -9,9 +10,11 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <l2f_integ_api.hpp>
+#include <thread>
 
 extern int l2f_proc_id;
 
@@ -179,6 +182,9 @@ pds_remote_mapping_spec_t l2f_mai_t::make_pds_mapping_spec_(void) {
 void l2f_mai_t::add_pds_mapping_spec_(pds_batch_ctxt_t bctxt) {
     auto mapping_spec = make_pds_mapping_spec_();
     sdk_ret_t ret;
+    if (PDS_MOCK_MODE()) {
+        return;
+    }
     if (op_create_) {
         ret = pds_remote_mapping_create(&mapping_spec, bctxt);
     } else {
@@ -221,7 +227,9 @@ pds_batch_ctxt_guard_t l2f_mai_t::make_batch_pds_spec_() {
 
     if (op_delete_) { // Delete
         auto key = make_pds_mapping_key_();
-        pds_remote_mapping_delete(&key, bctxt);
+        if (!PDS_MOCK_MODE()) {
+            pds_remote_mapping_delete(&key, bctxt);
+        }
     } else { // Add or update
         add_pds_mapping_spec_(bctxt);
     }
@@ -230,7 +238,7 @@ pds_batch_ctxt_guard_t l2f_mai_t::make_batch_pds_spec_() {
 
 void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-
+    cookie_t *cookie = nullptr;
     parse_ips_info_(update_fdb_mac);
 
     SDK_TRACE_INFO("L2F FDB ADD BD %d MAC %s Num TEPs %d First-TEP %s",
@@ -353,7 +361,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
 
         // All processing complete, only batch commit remains - 
         // safe to release the cookie_uptr_ unique_ptr
-        auto cookie = cookie_uptr_.release();
+        cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
@@ -371,6 +379,11 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
     update_fdb_mac->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG("MS BD %d MAC %s Add PDS Batch commit successful",
                     ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
 }
 
 void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
@@ -560,7 +573,9 @@ void l2f_mai_t::batch_pds_mapping_del_spec(bd_obj_t* bd_obj,
     MAC_ADDR_COPY(ips_info_.mac_address, mac);
     store_info_.bd_obj = bd_obj;
     auto key = make_pds_mapping_key_();
-    pds_remote_mapping_delete(&key, bctxt);
+    if (!PDS_MOCK_MODE()) {
+        pds_remote_mapping_delete(&key, bctxt);
+    }
 }
 
 void

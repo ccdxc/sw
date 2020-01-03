@@ -3,7 +3,6 @@
 // LI BD HAL integration
 //---------------------------------------------------------------
 
-#include <thread>
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
@@ -13,6 +12,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include <thread>
 
 extern NBB_ULONG l2f_proc_id;
 

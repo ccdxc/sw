@@ -217,7 +217,7 @@ static void create_bgp_peer_proto_grpc () {
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
-    localaddr->set_v4addr(htonl(g_test_conf_.local_ip_addr));
+    localaddr->set_v4addr(0);
     proto_spec->set_localport(0);
     proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);

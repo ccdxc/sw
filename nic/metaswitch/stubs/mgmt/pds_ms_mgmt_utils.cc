@@ -64,6 +64,11 @@ pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr,
             return;
     }
 
+    if (ip_addr_is_zero(&pds_ms_ip_addr)) {
+        *len = 0;
+        return;
+    }
+
     NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, *len);
     return;
 }
