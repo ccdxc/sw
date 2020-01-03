@@ -48,7 +48,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
       this.redirect();
       return;
     }
-    let sub = this.localStorage.getUserdataObservable().subscribe(
+    const subLocalstorage = this.localStorage.getUserdataObservable().subscribe(
       (data) => {
         if (this._controllerService.isUserLogin()) {
           this.redirect();
@@ -56,23 +56,23 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
         }
       },
     );
-    this.subscriptions.push(sub);
+    this.subscriptions.push(subLocalstorage);
 
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
 
     // setting up subscription
-    sub = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
+    const subLoginFailed = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
       // in auth.effect.ts (VS-302), there is a timer ticking after user clicks
       if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginFailure(payload);
     });
-    this.subscriptions.push(sub);
+    this.subscriptions.push(subLoginFailed);
 
-    sub = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+    const subLoginSucceed = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
       if (Utility.LOGIN_IDLE_SETTIME_HANDLE) { clearTimeout(Utility.LOGIN_IDLE_SETTIME_HANDLE); }
       this.onLoginSuccess(payload);
     });
-    this.subscriptions.push(sub);
+    this.subscriptions.push(subLoginSucceed);
   }
 
   /**
@@ -124,6 +124,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
   redirect() {
     const redirect = this._authService.redirectUrl;
     if (redirect && this.uiconfigService.canActivateSubRoute(redirect)) {
+      this._controllerService.publish(Eventtypes.FETCH_USER_PERMISSIONS, {'reason': 'Login redirect'});  // VS-1030, we want to refresh user permissions.
       this.router.navigateByUrl(redirect);
     } else {
       this.uiconfigService.navigateToHomepage();

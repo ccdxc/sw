@@ -92,7 +92,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   postNgInit(): void {
     this.checkAndMakeSnapshotPolicy();
     this.getSnapshots();
-  }
+    }
 
 
   setDefaultToolbar() {
