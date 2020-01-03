@@ -68,6 +68,9 @@ typedef struct pds_vnic_spec_s {
     /// session limit is not enforced, if this value is set to 0
     uint32_t max_sessions;
     /// enable or disable flow learning on per vnic basis
+    /// when flow learning is enabled, flow/session logs are generated when
+    /// session is cretaed upon processing of the 1st packet and eventually
+    /// exported to agent/controller/collector
     bool     flow_learn_en;
 } __PACK__ pds_vnic_spec_t;
 

@@ -746,7 +746,8 @@ apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
 #define lif_action              action_u.lif_lif_info
 sdk_ret_t
 program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
-                   vpc_hw_id, uint16_t bd_hw_id, uint16_t vnic_hw_id)
+                   vpc_hw_id, uint16_t bd_hw_id, uint16_t vnic_hw_id,
+                   bool learn_en)
 {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
@@ -759,10 +760,11 @@ program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
     // program the LIF table
     lif_data.action_id = LIF_LIF_INFO_ID;
     lif_data.lif_action.direction = P4_LIF_DIR_HOST;
-    //lif_data.lif_action.lif_type = P4_LIF_TYPE_HOST;
+    lif_data.lif_action.lif_type = lif_type;
     lif_data.lif_action.vnic_id = vnic_hw_id;
     lif_data.lif_action.bd_id = bd_hw_id;
     lif_data.lif_action.vpc_id = vpc_hw_id;
+    lif_data.lif_action.learn_enabled = learn_en ? TRUE : FALSE;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, lif_hw_id,
                                        NULL, NULL, &lif_data);
     if (p4pd_ret != P4PD_SUCCESS) {

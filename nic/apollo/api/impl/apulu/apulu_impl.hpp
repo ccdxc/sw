@@ -43,10 +43,11 @@
 
 // various lif types in the datapath
 #define P4_LIF_TYPE_HOST                        0  // host data (i.e non-mgmt) lifs
-#define P4_LIF_TYPE_ARM_DPDK                    1  // dpdk lifs (flow miss, learn)
-#define P4_LIF_TYPE_ARM_MGMT                    2  // inband & oob lifs on ARM
-#define P4_LIF_TYPE_UPLINK                      3  // lifs corresponding to uplink
-#define P4_LIF_TYPE_HOST_MGMT                   4  // host<->arm mgmt. lifs
+#define P4_LIF_TYPE_ARM_DPDK                    1  // dpdk s/w datapath lifs
+#define P4_LIF_TYPE_ARM_LEARN                   2  // dpdk learn lif
+#define P4_LIF_TYPE_ARM_MGMT                    3  // inband & oob lifs on ARM
+#define P4_LIF_TYPE_UPLINK                      4  // lifs corresponding to uplink
+#define P4_LIF_TYPE_HOST_MGMT                   5  // host<->arm mgmt. lifs
 
 namespace api {
 namespace impl {
@@ -323,10 +324,11 @@ private:
 /// \param[in] vpc_hw_id    hw id of the vpc for this lif
 /// \param[in] bd_hw_id     hw id of the BD for this lif
 /// \param[in] vnic_hw_id   hw id of the vnic for this lif
+/// \param[in] learn_en     enable or disable learning on this lif
 /// \return SDK_RET_OK on success, failure status code on error
 sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                             uint16_t vpc_hw_id, uint16_t bd_hw_id,
-                            uint16_t vnic_hw_id);
+                            uint16_t vnic_hw_id, bool learn_en);
 
 #define PROGRAM_POLICER_TABLE_ENTRY(policer, tbl, tid, aid, idx, upd)          \
 {                                                                              \

@@ -76,6 +76,9 @@ message VnicSpec {
   //       1 session = forward flow + reverse flow
   uint32          MaxSessions           = 21;
   // enable or disable flow learning on per vnic basis
+  // when flow learning is enabled, flow/session logs are generated when session
+  // is cretaed upon processing of the 1st packet and eventually exported to
+  // agent/controller/collector
   bool            FlowLearnEn           = 22;
 }
 

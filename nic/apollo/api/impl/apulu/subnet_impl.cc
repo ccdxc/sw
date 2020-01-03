@@ -204,6 +204,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     sdk_ret_t ret;
     lif_impl *lif;
     vpc_entry *vpc;
+    device_entry *device;
     pds_lif_key_t lif_key;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams;
@@ -234,32 +235,14 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
         return ret;
     }
 
-#if 0
-    PDS_TRACE_ERR("Programmed VNI table subnet %u, vnid %u, vni_hdl_ 0x%llx",
-                  spec->key.id, vni_key.vxlan_1_vni, vni_hdl_);
-    // read the VNI table
-    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
-    memset(&vni_data, 0, sizeof(vni_data));
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, /*&vni_key,*/ NULL, NULL,
-                                   &vni_data,
-                                   VNI_VNI_INFO_ID, vni_hdl_);
-    ret = vpc_impl_db()->vni_tbl()->get(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read VNI table for vnid %u, err %u",
-                      vni_key.vxlan_1_vni, vni_hdl_, ret);
-        return sdk::SDK_RET_HW_READ_ERR;
-    }
-    PDS_TRACE_DEBUG("vnid data read back, bd id %u, vpc id %u",
-                    vni_data.vni_info.bd_id, vni_data.vni_info.vpc_id);
-#endif
-
     // if the subnet is enabled on host interface, update the lif table with
     // subnet and vpc ids appropriately
     if (spec->host_ifindex != IFINDEX_INVALID) {
         lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         lif = lif_impl_db()->find(&lif_key);
         ret = program_lif_table(lif_key, P4_LIF_TYPE_HOST, vpc->hw_id(), hw_id_,
-                                lif->vnic_hw_id());
+                                lif->vnic_hw_id(),
+                                device_find()->learning_enabled());
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u create, "
                           "err %u", spec->host_ifindex, spec->key.id, ret);
@@ -340,7 +323,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
             lif = lif_impl_db()->find(&lif_key);
             ret = program_lif_table(lif_key, P4_LIF_TYPE_HOST, vpc->hw_id(),
-                                    hw_id_, lif->vnic_hw_id());
+                                    hw_id_, lif->vnic_hw_id(),
+                                    device_find()->learning_enabled());
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u update, "
                               "err %u", spec->host_ifindex, spec->key.id, ret);
@@ -353,7 +337,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             lif = lif_impl_db()->find(&lif_key);
             ret = program_lif_table(lif_key, P4_LIF_TYPE_HOST,
                                     PDS_IMPL_RSVD_VPC_HW_ID,
-                                    PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id());
+                                    PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
+                                    false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reset lif 0x%x on subnet %u update, "
                               "err %u", orig_subnet->host_ifindex(),
