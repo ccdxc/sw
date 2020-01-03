@@ -4,10 +4,7 @@
 #ifndef __SLTCAM_UTILS_HPP__
 #define __SLTCAM_UTILS_HPP__
 
-#define SLTCAM_TRACES_ENABLED 1
-#ifndef PERF_DBG
-#define SLTCAM_TRACES_ENABLED 1
-#endif
+//#define SLTCAM_TRACES_ENABLED 1
 
 #ifdef SLTCAM_TRACES_ENABLED
 #define SLTCAM_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)

@@ -50,7 +50,7 @@ vpc_impl::destroy(vpc_impl *impl) {
 }
 
 sdk_ret_t
-vpc_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
@@ -70,6 +70,7 @@ vpc_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         return ret;
     }
     tep1_rx_handle_ = api_params.handle;
+    api_obj->set_rsvd_rsc();
     return SDK_RET_OK;
 }
 

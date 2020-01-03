@@ -116,7 +116,7 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+vpc_entry::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
 
     switch (obj_ctxt->api_op) {
@@ -129,6 +129,8 @@ vpc_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         hw_id_ = idx & 0xFFFF;
         if (impl_) {
             impl_->reserve_resources(this, obj_ctxt);
+        } else {
+            set_rsvd_rsc();
         }
         break;
 

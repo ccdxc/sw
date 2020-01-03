@@ -143,6 +143,7 @@ api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
 sdk_ret_t
 api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
     sdk_ret_t ret;
+    api_op_t api_op;
     api_base *api_obj;
     api_obj_ctxt_t *octxt;
 
@@ -195,21 +196,21 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
             PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
             return SDK_RET_INVALID_OP;
         }
-        octxt->api_op = api_op_(octxt->api_op, API_OP_CREATE);
-        if (unlikely(octxt->api_op == API_OP_INVALID)) {
+        api_op = api_op_(octxt->api_op, API_OP_CREATE);
+        if (unlikely(api_op == API_OP_INVALID)) {
             PDS_TRACE_ERR("Invalid resultant api op on obj %s id %u with "
                           "API_OP_CREATE", api_obj->key2str().c_str(),
                           api_ctxt->obj_id);
             PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
             return SDK_RET_INVALID_OP;
         }
-
         // update the config, by cloning the object, if needed
         if (octxt->cloned_obj == NULL) {
             // XXX-DEL-XXX-ADD or ADD-XXX-DEL-XXX-ADD scenarios, we need to
             // differentiate between these two
-            if (octxt->api_op == API_OP_UPDATE) {
+            if (api_op == API_OP_UPDATE) {
                 // XXX-DEL-XXX-ADD scenario, clone & re-init cfg
+                octxt->api_op = API_OP_UPDATE;
                 octxt->api_params = api_ctxt->api_params;
                 octxt->cloned_obj = api_obj->clone(api_ctxt);
                 //ret = octxt->cloned_obj->init_config(api_ctxt);
@@ -233,13 +234,14 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                 }
             } else {
                 // ADD-XXX-DEL-XXX-ADD scenario, re-init same object
-                if (unlikely(octxt->api_op != API_OP_CREATE)) {
+                if (unlikely(api_op != API_OP_CREATE)) {
                     PDS_TRACE_ERR("Unexpected api op %u, obj %s, id %u, "
                                   "expected CREATE", octxt->api_op,
                                   api_obj->key2str().c_str(), api_ctxt->obj_id);
                     PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
                     return SDK_RET_INVALID_OP;
                 }
+                octxt->api_op = API_OP_CREATE;
                 octxt->api_params = api_ctxt->api_params;
                 ret = api_obj->init_config(api_ctxt);
                 if (unlikely(ret != SDK_RET_OK)) {
@@ -261,6 +263,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                 PDS_API_PREPROCESS_CREATE_COUNTER_INC(invalid_op_err, 1);
                 return SDK_RET_INVALID_OP;
             }
+            octxt->api_op = API_OP_UPDATE;
             octxt->api_params = api_ctxt->api_params;
             ret = octxt->cloned_obj->init_config(api_ctxt);
             if (unlikely(ret != SDK_RET_OK)) {
@@ -290,6 +293,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
+    api_op_t api_op;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
 
@@ -325,11 +329,15 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
         // (e.g., UPD-XXX-DEL), but that doesn't matter here
         // 2. if this is a stateless obj, we probably built this object, either
         //    due to ADD/UPD before and added to the db
-        batch_ctxt_.dom[api_obj]->api_op =
-            api_op_(batch_ctxt_.dom[api_obj]->api_op,
-                    API_OP_DELETE);
-        SDK_ASSERT(batch_ctxt_.dom[api_obj]->api_op !=
-                   API_OP_INVALID);
+        api_op = api_op_(batch_ctxt_.dom[api_obj]->api_op, API_OP_DELETE);
+        if (api_op == API_OP_INVALID) {
+            PDS_TRACE_ERR("Unexpected API_OP_INVALID encountered while "
+                          "processing API_OP_DELETE, obj %s, id %u",
+                          api_obj->key2str().c_str(), api_ctxt->obj_id);
+            PDS_API_PREPROCESS_DELETE_COUNTER_INC(invalid_op_err, 1);
+            return sdk::SDK_RET_INVALID_OP;
+        }
+        batch_ctxt_.dom[api_obj]->api_op = api_op;
     } else {
         // add the object to dirty list
         obj_ctxt = api_obj_ctxt_alloc_();
@@ -345,6 +353,7 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
     sdk_ret_t ret;
+    api_op_t api_op;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
 
@@ -372,14 +381,15 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
     if (api_obj->in_dirty_list()) {
         api_obj_ctxt_t *octxt =
             batch_ctxt_.dom.find(api_obj)->second;
-        octxt->api_op = api_op_(octxt->api_op, API_OP_UPDATE);
-        if (octxt->api_op == API_OP_INVALID) {
+        api_op = api_op_(octxt->api_op, API_OP_UPDATE);
+        if (api_op == API_OP_INVALID) {
             PDS_TRACE_ERR("Unexpected API_OP_INVALID encountered while "
                           "processing API_OP_UPDATE, obj %s, id %u",
                           api_obj->key2str().c_str(), api_ctxt->obj_id);
             PDS_API_PREPROCESS_UPDATE_COUNTER_INC(invalid_op_err, 1);
             return sdk::SDK_RET_INVALID_OP;
         }
+        octxt->api_op = api_op;
         if (octxt->cloned_obj == NULL) {
             // XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
             // re-init the object with new config and continue with de-duped
@@ -1214,163 +1224,167 @@ error:
 }
 
 sdk_ret_t
-api_engine::dump_api_counters (int fd) {
+api_engine::dump_api_counters(int fd) {
     std::string stats;
+
     dprintf(fd, "%s\n", std::string(50, '-').c_str());
     dprintf(fd, "%-15s%-25s%-10s\n",
             "Stage", "Statistic", "Count");
     dprintf(fd, "%s\n", std::string(50, '-').c_str());
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-ok",
             counters_.preprocess.create.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-oom-err",
             counters_.preprocess.create.oom_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-init-cfg-err",
             counters_.preprocess.create.init_cfg_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-obj-clone-err",
             counters_.preprocess.create.obj_clone_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-obj-exists-err",
             counters_.preprocess.create.obj_exists_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-invalid-op-err",
             counters_.preprocess.create.invalid_op_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "create-invalid-upd-err",
             counters_.preprocess.create.invalid_upd_err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "delete-ok",
             counters_.preprocess.del.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "delete-obj-build-err",
             counters_.preprocess.del.obj_build_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "delete-not-found-err",
             counters_.preprocess.del.not_found_err);
+    dprintf(fd, "%-15s%-25s%-10u\n",
+            "PreProcess", "delete-invalid-op-err",
+            counters_.preprocess.del.invalid_op_err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-ok",
             counters_.preprocess.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-obj-build-err",
             counters_.preprocess.upd.obj_build_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-init-cfg-err",
             counters_.preprocess.upd.init_cfg_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-obj-clone-err",
             counters_.preprocess.upd.obj_clone_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-not-found-err",
             counters_.preprocess.upd.not_found_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-invalid-op-err",
             counters_.preprocess.upd.invalid_op_err);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "PreProcess", "update-invalid-upd-err",
             counters_.preprocess.upd.invalid_upd_err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "create-ok",
             counters_.rsv_rsc.create.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "create-err",
             counters_.rsv_rsc.create.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "delete-ok",
             counters_.rsv_rsc.del.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "delete-err",
             counters_.rsv_rsc.del.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "update-ok",
             counters_.rsv_rsc.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ResourceResv", "update-err",
             counters_.rsv_rsc.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ObjectDep", "update-ok",
             counters_.obj_dep.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ObjectDep", "update-err",
             counters_.obj_dep.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "create-ok",
             counters_.pgm_cfg.create.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "create-err",
             counters_.pgm_cfg.create.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "delete-ok",
             counters_.pgm_cfg.del.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "delete-err",
             counters_.pgm_cfg.del.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "update-ok",
             counters_.pgm_cfg.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ProgramCfg", "update-err",
             counters_.pgm_cfg.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "create-ok",
             counters_.act_cfg.create.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "create-err",
             counters_.act_cfg.create.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "delete-ok",
             counters_.act_cfg.del.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "delete-err",
             counters_.act_cfg.del.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "update-ok",
             counters_.act_cfg.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ActivateCfg", "update-err",
             counters_.act_cfg.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ReprogramCfg", "update-ok",
             counters_.re_pgm_cfg.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ReprogramCfg", "update-err",
             counters_.re_pgm_cfg.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ReactivateCfg", "update-ok",
             counters_.re_act_cfg.upd.ok);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "ReactivateCfg", "update-err",
             counters_.re_act_cfg.upd.err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "Commit", "ipc-err",
             counters_.commit.ipc_err);
 
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "Abort", "abort-err",
             counters_.abort.abort);
-    dprintf(fd, "%-15s%-25s%-10d\n",
+    dprintf(fd, "%-15s%-25s%-10u\n",
             "Abort", "txn-end-err",
             counters_.abort.txn_end_err);
 
-    return SDK_RET_OK; 
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

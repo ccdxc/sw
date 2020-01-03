@@ -166,6 +166,7 @@ typedef struct api_counters_s {
             uint32_t ok;
             uint32_t obj_build_err;
             uint32_t not_found_err;
+            uint32_t invalid_op_err;
         } del;
         // UPDATE specific counters
         struct {
