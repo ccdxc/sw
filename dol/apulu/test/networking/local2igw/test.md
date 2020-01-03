@@ -1,10 +1,4 @@
-# Testcases for host to internet-gateway packet path:
-
- - NAPLES SIM is the DUT (Device Under Test) and all objects are created on DUT.
- - An object (config object/interface/port) when mentioned refers to an object
-   on the DUT unless remote is specified, in which case it refers to an object
-   on a remote node. Remote mapping is an exception which refers to an object
-   on DUT.
+# Testcases for host to internet-gateway packet path
 
 Initial setup:
     a) Configuration:
@@ -29,8 +23,8 @@ Initial setup:
     IPV4 UDP packet with VLAN tag is sent to NAPLES SIM via host interface.
 
     Expectation:
-    a) Source address of the incoming packet is swapped with public IP from local
-       mapping.
+    a) Source address of the incoming packet is swapped with public IP from
+       local mapping.
     b) A VXLAN header is added to the incoming packet and sent out on one of the
        uplink ports.
     c) The VNI info is taken from VPC.

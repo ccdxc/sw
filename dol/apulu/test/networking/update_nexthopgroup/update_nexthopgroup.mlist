@@ -1,26 +1,27 @@
 feature:
     id          : networking
-    sub         : update_subnet
+    sub         : update_nhgroup
     package     : test.networking
     module      : networking
-    runorder    : 66000
+    runorder    : 71000
+# no test case in dol as of now, to test nhgroup. adding it as a template
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : SUBNET_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : NHGROUP_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_SUBNET
-        spec    : cfg_object.testspec
+        name    : UPD_NHGROUP
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : subnet
+            - object    : nexthop_group
               operation : Update
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -33,9 +34,9 @@ modules:
 # this triggers a packet with old values which is expected to fail since hwHabitant is False
     - module:
         name    : PREPARE_ROLLBACK
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : subnet
+            - object    : nexthop_group
               operation : PrepareRollbackUpdate
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -47,9 +48,9 @@ modules:
 
     - module:
         name    : COMMIT_ROLLBACK
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : subnet
+            - object    : nexthop_group
               operation : CommitUpdate
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -60,8 +61,8 @@ modules:
         mlist   : local2remote.mlist
 
     - module:
-        name    : SUBNET_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : NHGROUP_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

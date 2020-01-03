@@ -1,26 +1,26 @@
 feature:
     id          : networking
-    sub         : update_interface
+    sub         : update_tunnel
     package     : test.networking
     module      : networking
-    runorder    : 69000
+    runorder    : 68000
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : INTERFACE_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : TUNNEL_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_INTERFACE
-        spec    : cfg_object.testspec
+        name    : UPD_TUNNEL
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : interface
+            - object    : tunnel
               operation : Update
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -33,9 +33,9 @@ modules:
 # this triggers a packet with old values which is expected to fail since hwHabitant is False
     - module:
         name    : PREPARE_ROLLBACK
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : interface
+            - object    : tunnel
               operation : PrepareRollbackUpdate
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -47,9 +47,9 @@ modules:
 
     - module:
         name    : COMMIT_ROLLBACK
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : interface
+            - object    : tunnel
               operation : CommitUpdate
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
@@ -60,8 +60,8 @@ modules:
         mlist   : local2remote.mlist
 
     - module:
-        name    : INTERFACE_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : TUNNEL_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

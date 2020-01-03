@@ -1,68 +1,56 @@
 feature:
     id          : networking
-    sub         : update_nhgroup
+    sub         : delete_nexthopgroup
     package     : test.networking
     module      : networking
-    runorder    : 71000
-# no test case in dol as of now, to test nhgroup. adding it as a template
+    runorder    : 9500
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : NHGROUP_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : NEXTHOPGROUP_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_NHGROUP
-        spec    : cfg_object.testspec
+        name    : DEL_NEXTHOPGROUP
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : nexthop_group
-              operation : Update
+            - object    : nexthopgroup
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post nexthopgroup deletion
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostNexthopGroupDelete
         mlist   : local2remote.mlist
+        ignore  : True
 
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
     - module:
-        name    : PREPARE_ROLLBACK
-        spec    : cfg_object.testspec
+        name    : RESTORE_NEXTHOPGROUP
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : nexthop_group
-              operation : PrepareRollbackUpdate
+            - object    : nexthopgroup
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post nexthopgroup restore
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostNexthopGroupRestore
         mlist   : local2remote.mlist
+        ignore  : True
 
     - module:
-        name    : COMMIT_ROLLBACK
-        spec    : cfg_object.testspec
-        args    :
-            - object    : nexthop_group
-              operation : CommitUpdate
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-
-    - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
-
-    - module:
-        name    : NHGROUP_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : NEXTHOPGROUP_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

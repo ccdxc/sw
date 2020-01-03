@@ -1,67 +1,56 @@
 feature:
     id          : networking
-    sub         : update_tunnel
+    sub         : delete_vnic
     package     : test.networking
     module      : networking
-    runorder    : 68000
-    enable      : False
+    runorder    : 20000
+    enable      : True
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : TUNNEL_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : VNIC_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_TUNNEL
-        spec    : cfg_object.testspec
+        name    : DEL_VNIC
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : tunnel
-              operation : Update
+            - object    : vnic
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post vnic deletion
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostVnicDelete
         mlist   : local2remote.mlist
+        ignore  : True
 
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
     - module:
-        name    : PREPARE_ROLLBACK
-        spec    : cfg_object.testspec
+        name    : RESTORE_VNIC
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : tunnel
-              operation : PrepareRollbackUpdate
+            - object    : vnic
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post vnic restore
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostVnicRestore
         mlist   : local2remote.mlist
+        ignore  : True
 
     - module:
-        name    : COMMIT_ROLLBACK
-        spec    : cfg_object.testspec
-        args    :
-            - object    : tunnel
-              operation : CommitUpdate
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-
-    - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
-
-    - module:
-        name    : TUNNEL_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : VNIC_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

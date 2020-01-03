@@ -1,56 +1,56 @@
 feature:
     id          : networking
-    sub         : delete_nexthop
+    sub         : delete_vpc
     package     : test.networking
     module      : networking
-    runorder    : 9000
+    runorder    : 60000
     enable      : True
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : NEXTHOP_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : VPC_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : DEL_NEXTHOP
-        spec    : cfg_object.testspec
+        name    : DEL_VPC
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : nexthop
+            - object    : vpc
               operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
-    # mlists to run post nexthop deletion
+    # mlists to run post vpc deletion
     - module:
-        name    : Local2Remote_PostNexthopDelete
+        name    : Local2Remote_PostVpcDelete
         mlist   : local2remote.mlist
         ignore  : True
 
     - module:
-        name    : RESTORE_NEXTHOP
-        spec    : cfg_object.testspec
+        name    : RESTORE_VPC
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : nexthop
+            - object    : vpc
               operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
-    # mlists to run post nexthop restore
+    # mlists to run post vpc restore
     - module:
-        name    : Local2Remote_PostNexthopRestore
+        name    : Local2Remote_PostVpcRestore
         mlist   : local2remote.mlist
         ignore  : True
 
     - module:
-        name    : NEXTHOP_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : VPC_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

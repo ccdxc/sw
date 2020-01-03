@@ -12,14 +12,14 @@ modules:
     # workflow_start - caches all the following objects
     - module:
         name    : ROUTETABLE_WORKFLOW_START
-        spec    : workflow.testspec
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
 
     # delete the routetable objects
     - module:
         name    : DEL_ROUTETABLE
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
             - object    : routetable
               operation : Delete
@@ -36,7 +36,7 @@ modules:
     # restore the deleted routetable objects
     - module:
         name    : RESTORE_ROUTETABLE
-        spec    : cfg_object.testspec
+        spec    : crud_cfg_object.testspec
         args    :
             - object    : routetable
               operation : Create
@@ -52,6 +52,6 @@ modules:
     # workflow_end - clear the cached objects
     - module:
         name    : ROUTETABLE_WORKFLOW_END
-        spec    : workflow.testspec
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING

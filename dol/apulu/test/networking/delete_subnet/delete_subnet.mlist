@@ -1,67 +1,60 @@
 feature:
     id          : networking
-    sub         : update_device
+    sub         : delete_subnet
     package     : test.networking
     module      : networking
-    runorder    : 65000
-    enable      : False
+    runorder    : 55000
+    enable      : True
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
+    # workflow_start - caches all the following objects
     - module:
-        name    : DEVICE_WORKFLOW_START
-        spec    : workflow.testspec
+        name    : SUBNET_WORKFLOW_START
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # delete the subnet objects
     - module:
-        name    : UPD_DEVICE
-        spec    : cfg_object.testspec
+        name    : DEL_SUBNET
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : device
-              operation : Update
+            - object    : subnet
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post subnet deletion
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostSubnetDelete
         mlist   : local2remote.mlist
+        ignore  : True
 
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
+    # restore the deleted subnet objects
     - module:
-        name    : PREPARE_ROLLBACK
-        spec    : cfg_object.testspec
+        name    : RESTORE_SUBNET
+        spec    : crud_cfg_object.testspec
         args    :
-            - object    : device
-              operation : PrepareRollbackUpdate
+            - object    : subnet
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post subnet restore
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostSubnetRestore
         mlist   : local2remote.mlist
+        ignore  : True
 
+    # workflow_end - clear the cached objects
     - module:
-        name    : COMMIT_ROLLBACK
-        spec    : cfg_object.testspec
-        args    :
-            - object    : device
-              operation : CommitUpdate
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-
-    - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
-
-    - module:
-        name    : DEVICE_WORKFLOW_END
-        spec    : workflow.testspec
+        name    : SUBNET_WORKFLOW_END
+        spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
