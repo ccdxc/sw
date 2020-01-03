@@ -391,8 +391,10 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_9) {
 
 /// \brief Route table WF_10
 /// \ref WF_10
-TEST_F(route_test, DISABLED_v4v6_route_table_workflow_10) {
+TEST_F(route_test, v4v6_route_table_workflow_10) {
     route_table_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
+
+    if (!apulu()) return;
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
@@ -548,7 +550,7 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
 
 /// \brief Route table WF_N_5
 /// \ref WF_N_5
-TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_5) {
+TEST_F(route_test, v4v6_route_table_workflow_neg_5) {
     route_table_feeder feeder1, feeder1A;
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4);
