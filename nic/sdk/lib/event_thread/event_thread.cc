@@ -240,7 +240,7 @@ event_thread::~event_thread() {
 
 void*
 event_thread::event_thread_entry_(void *ctx) {
-    SDK_THREAD_DFRD_TERM_INIT(ctx);
+    SDK_THREAD_INIT(ctx);
     ((event_thread *)ctx)->run_();
     return NULL;
 }

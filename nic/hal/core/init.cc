@@ -72,7 +72,7 @@ periodic_thread_start (void *ctxt)
 static void *
 fte_pkt_loop_start (void *ctxt)
 {
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
     sdk::lib::thread *curr_thread = (sdk::lib::thread *)ctxt;
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(ctxt);
@@ -267,7 +267,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     hal_thread->set_data(hal_thread);
     hal_thread->set_pthread_id(pthread_self());
     hal_thread->set_running(true);
-    SDK_THREAD_DFRD_TERM_INIT(hal_thread);
+    SDK_THREAD_INIT(hal_thread);
 
     return HAL_RET_OK;
 }

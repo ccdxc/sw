@@ -600,7 +600,7 @@ fte_main(void)
 void *
 fte_thread_start (void *ctxt)
 {
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     sleep(10);
 

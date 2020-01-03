@@ -55,7 +55,7 @@ learn_thread_start (void *ctxt)
     uint16_t recv_count = 0;
     dpdk_mbuf **packets = NULL;
 
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     // TODO: though we start this thread after is_nicmgr_ready(), still uio
     // devices are not created by the time we reach here. So this hack

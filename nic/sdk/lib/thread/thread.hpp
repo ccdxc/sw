@@ -27,19 +27,8 @@ typedef void *(*thread_entry_func_t)(void *ctxt);
 
 #define SDK_MAX_THREAD_NAME_LEN        30
 
-// call one of the below two macros from the entry function of every thread
+// all SDK threads must invoke this macro in the entry function
 #define SDK_THREAD_INIT(ctxt)                                          \
-{                                                                      \
-    int __rv__, __old_type__;                                          \
-    __rv__ = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,        \
-            &__old_type__);                                            \
-    SDK_ABORT(__rv__ == 0);                                            \
-    sdk::lib::thread::set_current_thread((sdk::lib::thread *)ctxt);    \
-    SDK_TRACE_DEBUG("Thread %s initializing ...",                      \
-                    sdk::lib::thread::current_thread()->name());       \
-}
-
-#define SDK_THREAD_DFRD_TERM_INIT(ctxt)                                \
 {                                                                      \
     sdk::lib::thread::set_current_thread((sdk::lib::thread *)ctxt);    \
     SDK_TRACE_DEBUG("Thread %s initializing ...",                      \

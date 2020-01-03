@@ -31,7 +31,7 @@ error:
 void *pds_ms_thread_init (void *ctxt)
 {
     // opting for graceful termination
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     if (pds_ms_init() < 0) {
         SDK_ASSERT("pds_ms_init failed!");

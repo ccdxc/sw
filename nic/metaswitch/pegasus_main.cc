@@ -46,7 +46,7 @@ svc_reg (void)
 void *pds_ms_nbase_thread_init (void *ctxt)
 {
     // opting for graceful termination
-    SDK_THREAD_DFRD_TERM_INIT(ctxt);
+    SDK_THREAD_INIT(ctxt);
 
     if (!pds_ms_mgmt_init()) {
         SDK_ASSERT("pdsa init failed!");
