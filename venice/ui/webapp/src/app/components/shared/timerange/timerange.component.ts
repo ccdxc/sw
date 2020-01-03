@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, ValidatorFn, AbstractControl, ValidationErrors, FormGroup } from '@angular/forms';
 import * as moment from 'moment';
 import { TimeRange, TimeRangeUtility, KeywordFactory, ParserResp, MomentTimeInstance, KeywordUtility } from './utility';
@@ -49,13 +49,21 @@ export const citadelMaxTimePeriod = moment.duration(7, 'days');
   styleUrls: ['./timerange.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
-export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
+export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+
   @ViewChild('timeRangePanel') overlayPanel: OverlayPanel;
 
   @Input() startTime: string = 'now - 24h';
   @Input() endTime: string = 'now';
   @Input() selectedTimeRange: TimeRange;
   @Input() maxTimePeriod: moment.Duration;
+
+  // min-max start and end date  // VS-1063
+  @Input() minStartSelectDateValue: Date = null;
+  @Input() maxStartSelectDateValue: Date = null;
+  @Input() minEndSelectDateValue: Date = null;
+  @Input() maxEndSelectDateValue: Date =  new Date();
+
   @Input() timeRangeOptions: TimeRangeOption[] = [
     {
       text: 'Past hour',
@@ -127,7 +135,8 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.timeRangeInputValidator(KeywordUtility.getEndKeywords())]
         ),
       },
-      { validators: [this.timeRangeGroupValidator()],
+      {
+        validators: [this.timeRangeGroupValidator()],
         updateOn: 'change',
       }
     );
@@ -146,7 +155,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
     // If a user enters an invalid time range, and then closes the
     // overlay, the next time they open the overlay it should show
     // the values for the current timerange that is in effect.
-    const sub = this.overlayPanel.onShow.subscribe( () => {
+    const sub = this.overlayPanel.onShow.subscribe(() => {
       if (this.lastSelectedTimeRange == null) {
         return;
       }
@@ -158,6 +167,12 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
     this.subscriptions.push(sub);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.maxEndSelectDateValue) {
+      this.maxEndSelectDateValue = new Date();
+    }
   }
 
   setTimeRange(opt: TimeRangeOption) {
@@ -231,6 +246,18 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
         };
       }
 
+      if (this.maxEndSelectDateValue) {
+         if (this.endTimeCalendar > this.maxEndSelectDateValue ) {
+          this.groupErrorMessage = 'End time cannot be greater than max value ' + this.maxEndSelectDateValue.toISOString();
+          return {
+            timeRangeGroup: {
+              required: true,
+              message: this.groupErrorMessage
+            }
+          };
+         }
+      }
+
       this.groupErrorMessage = '';
       this.timeRange.emit(timeRange);
       this.lastSelectedTimeRange = timeRange;
@@ -270,7 +297,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         };
       }
-      return  null;
+      return null;
     };
   }
 
@@ -278,7 +305,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
     // check keyword, and delegate.
     if (value == null || value === '') {
       return {
-        errMsg : 'Input cannot be empty'
+        errMsg: 'Input cannot be empty'
       };
     }
     const parsedString = value.trim();
@@ -304,7 +331,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscriptions.forEach( s => {
+    this.subscriptions.forEach(s => {
       s.unsubscribe();
     });
   }

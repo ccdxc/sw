@@ -294,7 +294,7 @@ export class AdvancedSearchComponent implements OnInit {
    * @param date
    */
   formatDate(date: string): string {
-    const timestamp = moment(date);
+    const timestamp = moment(date, 'yyyy-mm-dd');
 
     if (timestamp.isValid() !== false) {
       const d = new Date(date),
@@ -311,7 +311,9 @@ export class AdvancedSearchComponent implements OnInit {
 
       return [year, month, day].join('-');
     } else {
-      return date;
+      const d = Date.parse(date);
+      const myDate = new Date(d);
+      return myDate.toISOString();
     }
 
   }

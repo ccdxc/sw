@@ -1116,6 +1116,8 @@ export class Utility {
         return 'admin/upgrade/rollouts';
       case 'EventPolicy':
         return 'monitoring/alertsevents/eventpolicy';
+      case 'SnapshotRestore':
+          return 'admin/snapshots'; // VS-1059
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
