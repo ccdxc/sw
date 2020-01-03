@@ -5,6 +5,6 @@
 #define __PDS_MS_STUBS_UTILS_HPP__
 
 namespace pds_ms{
-void pds_mss_create ();
+void pds_ms_stubs_create ();
 }
 #endif /*__PDS_MS_STUBS_UTILS_HPP__*/

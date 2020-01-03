@@ -16,6 +16,7 @@
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
 #include "nbase.h"
+#include "nic/sdk/lib/logger/logger.hpp"
 
 /*****************************************************************************/
 /* Global Variables.  Use #define to include definitions from header file    */
@@ -307,3 +308,93 @@ NBB_VOID sms_cleanup_proc(NBB_CXT_T NBB_CXT)
 } /* sms_cleanup_proc */
 
 
+
+/**PROC+**********************************************************************/
+/* Name:        pds_ms_register_mib_notify_sink                              */
+/*                                                                           */
+/* Purpose:     Send a message to register the Mgmt stub as a sink for MIB   */
+/*              notifications.                                               */
+/*                                                                           */
+/* Returns:     TRUE if successful, FALSE if error.                          */
+/*                                                                           */
+/* Params:      None.                                                        */
+/*                                                                           */
+/**PROC-**********************************************************************/
+
+NBB_BOOL pds_ms_register_mib_notify_sink(NBB_CXT_T NBB_CXT)
+{
+  /***************************************************************************/
+  /* Local Variables                                                         */
+  /***************************************************************************/
+  AMB_REG_MIB_NOTIFY_SINK *reg_mib_notify_sink;
+  NBB_BOOL rc = FALSE;
+
+  /***************************************************************************/
+  /* Get the lock for the SHARED LOCAL data.                                 */
+  /***************************************************************************/
+  NBS_ENTER_SHARED_CONTEXT(sms_our_pid);
+  NBS_GET_SHARED_DATA();
+
+  NBB_TRC_ENTRY("pds_ms_register_mib_notify_sink");
+
+  /***************************************************************************/
+  /* Allocate a buffer to use for registering the JSON stub as a sink for    */
+  /* MIB notifications.                                                      */
+  /***************************************************************************/
+  reg_mib_notify_sink = (AMB_REG_MIB_NOTIFY_SINK *)
+                        NBB_GET_BUFFER(NBB_NULL_PROC_ID,
+                        sizeof(AMB_REG_MIB_NOTIFY_SINK),
+                        0,
+                        NBB_NORETRY_ACT);
+  if (reg_mib_notify_sink == NULL)
+  {
+    /*************************************************************************/
+    /* Failed to allocate buffer - exit.                                     */
+    /*************************************************************************/
+    SDK_TRACE_ERR ("Failed to allocate buffer\n");
+    goto EXIT_LABEL;
+  }
+
+  /***************************************************************************/
+  /* Fill in the buffer.                                                     */
+  /*                                                                         */
+  /* The master_mib_pid must be set to NULL because we are only interested   */
+  /* in receiving MIB traps at the JSON stub.                                */
+  /***************************************************************************/
+  NBB_ZERO_IPS(reg_mib_notify_sink);
+  reg_mib_notify_sink->ips_hdr.ips_type = IPS_AMB_REG_MIB_NOTIFY_SINK;
+  reg_mib_notify_sink->ips_hdr.sender_handle = NBB_NULL_HANDLE;
+  reg_mib_notify_sink->ips_hdr.receiver_handle = NBB_NULL_HANDLE;
+  reg_mib_notify_sink->ips_hdr.sender_fti_main_pid = sms_our_pid;
+  reg_mib_notify_sink->master_mib_pid = NBB_NULL_PROC_ID;
+  reg_mib_notify_sink->mib_trap_pid = sms_our_pid;
+  reg_mib_notify_sink->return_pid = sms_our_pid;
+  reg_mib_notify_sink->return_qid = AMB_MIB_Q;
+  reg_mib_notify_sink->return_code = ATG_OK;
+
+  /***************************************************************************/
+  /* Send the message.                                                       */
+  /***************************************************************************/
+  NBB_SEND_IPS(SHARED.sm_pid,
+               AMB_MIB_Q,
+               reg_mib_notify_sink);
+  reg_mib_notify_sink = NULL;
+
+  /***************************************************************************/
+  /* If we have got this far return success.                                 */
+  /***************************************************************************/
+  rc = TRUE;
+
+EXIT_LABEL:
+  NBB_TRC_DETAIL((NBB_FORMAT "Returning %B", rc));
+  NBB_TRC_EXIT();
+
+  /***************************************************************************/ 
+  /* Release the lock on the SHARED LOCAL data.                              */
+  /***************************************************************************/
+  NBS_RELEASE_SHARED_DATA();
+  NBS_EXIT_SHARED_CONTEXT();
+
+  return(rc);
+
+} /* amj_register_mib_notify_sink */

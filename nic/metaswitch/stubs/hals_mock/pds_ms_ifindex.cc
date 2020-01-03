@@ -35,4 +35,9 @@ port_to_ms_ifindex (uint32_t port)
     return port;
 }
 
+uint32_t
+ms_to_pds_ifindex (uint32_t ms_ifindex)
+{
+    return ms_ifindex;
+}
 }

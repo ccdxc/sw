@@ -18,6 +18,7 @@ extern "C" {
 using namespace std;
 
 extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
+extern NBB_BOOL pds_ms_register_mib_notify_sink(NBB_CXT_T NBB_CXT);
 
 static void
 nbase_init ()
@@ -193,11 +194,19 @@ nbase_init ()
     pds_ms::hal_init();
     NBS_EXIT_SHARED_CONTEXT();
 
+    /***************************************************************************/
+    /* Register for MIB trap messages                                          */
+    /***************************************************************************/
+    if (FALSE == pds_ms_register_mib_notify_sink())
+    {
+        // Failed to register for MIB trap messages
+        goto EXIT_LABEL;
+    }
 
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pds_ms::pds_mss_create();
+    pds_ms::pds_ms_stubs_create();
     
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */

@@ -12,6 +12,7 @@
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nbase.h"
 #include "nbbstub.h"
 #include "qbnmdef.h"
@@ -131,8 +132,10 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
   /***************************************************************************/
   /* Local Variables                                                         */
   /***************************************************************************/
-  ip_addr_t remote_ip;
-  AMB_BGP_TRAP_DATA *trap_data;
+  ip_addr_t                 remote_ip;
+  AMB_BGP_TRAP_DATA         *trap_data = NULL;
+  AMB_LIM_IF_STATUS_CHANGE  *if_trap_data = NULL;
+  uint32_t                   if_index = 0;
 
   NBB_TRC_ENTRY("sms_rcv_amb_trap");
 
@@ -153,14 +156,13 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
       if (remote_ip.af == IP_AF_IPV4) {
         remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
       }
-      SDK_TRACE_INFO ("BGP session to %s is Established\n", ipaddr2str(&remote_ip));
+      SDK_TRACE_INFO ("BGP session to %s is Established", ipaddr2str(&remote_ip));
       break;
 
     case AMB_BGP_TRAP_BACKWARD:
       /***********************************************************************/
       /* BGP session failed trap.                                            */
       /***********************************************************************/
-
       trap_data = (AMB_BGP_TRAP_DATA *)((NBB_BYTE *)v_amb_trap +
                                                     v_amb_trap->data_offset);
       // Log message only if the status is changing from established to Backward 
@@ -175,19 +177,41 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
           if (remote_ip.af == IP_AF_IPV4) {
               remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
           }
-          SDK_TRACE_INFO ("BGP session to %s is Failed, State: %s\n",
+          SDK_TRACE_INFO ("BGP session to %s is Failed, State: %s",
                            ipaddr2str(&remote_ip),
                            ms_bgp_conn_fsm_state_str(trap_data->fsm_state));
       }
+      break;
+
+    case AMB_TRAP_LIM_IF_STATUS_CHANGE:
+      /***********************************************************************/
+      /* IF Oper Status Change                                               */
+      /***********************************************************************/
+      if_trap_data = (AMB_LIM_IF_STATUS_CHANGE*)((NBB_BYTE *)v_amb_trap +
+                                                  v_amb_trap->data_offset);
+      if (pds_ms::ms_ifindex_to_pds_type(if_trap_data->if_index) == IF_TYPE_L3)
+      {
+          // Interested only in L3 Interface status changes
+          if_index = pds_ms::ms_to_pds_ifindex (if_trap_data->if_index);
+          SDK_TRACE_INFO 
+                 ("Interface %s [index: 0x%X] Oper Status changed to %s",
+                 if_trap_data->name, if_index,
+                 (if_trap_data->oper_status == AMB_IF_OPER_UP) ? "UP" : "DOWN");
+      }
+      break;
+
+    case AMB_CSS_TRAP_STATUS:
+      /***********************************************************************/
+      /* CSS Status Trap, this is coming without any registration            */
+      /***********************************************************************/
+      NBB_TRC_FLOW((NBB_FORMAT "AMB_CSS_TRAP_STATUS"));
       break;
 
     default:
       /***********************************************************************/
       /* Unrecognized trap type.                                             */
       /***********************************************************************/
-      NBB_TRC_FLOW((NBB_FORMAT "Unrecognized trap type %lx",
-                                                       v_amb_trap->trap_type));
-      break;
+      SDK_TRACE_DEBUG ("Unrecognized trap type 0x%lx\n", v_amb_trap->trap_type);
   }
 
   NBB_TRC_EXIT();

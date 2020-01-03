@@ -155,6 +155,11 @@ NBB_VOID sms_rcv_amb_ips(NBB_IPS *ips NBB_CCXT_T NBB_CXT)
       NBB_FREE_BUFFER(ips);
       break;
 
+    case IPS_AMB_REG_MIB_NOTIFY_SINK:
+      NBB_TRC_FLOW((NBB_FORMAT "MIB notification sink registration"));
+      NBB_FREE_BUFFER(ips);
+      break;
+
     default:
       /***********************************************************************/
       /* Received unexpected signal from AMB Queue.                          */

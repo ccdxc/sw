@@ -8,7 +8,7 @@ namespace pds_ms {
 extern NBB_VOID
 pds_ms_li_stub_create (pds_ms_config_t& conf);
 
-void pds_mss_create ()
+void pds_ms_stubs_create ()
 {
     // Local variables
     pds_ms_config_t   conf = {0};
