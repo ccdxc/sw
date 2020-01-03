@@ -17,6 +17,7 @@ import { DashboardComponent } from './dashboard.component';
 import { SystemcapacitywidgetComponent } from './widgets/systemcapacity/systemcapacity.component';
 import { dashboardRouter } from './dashboard.router';
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
+import { ForwardDropComponent } from './widgets/forwarddrop/forwarddrop.component';
 import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.component';
 import { SoftwareversionComponent } from './widgets/softwareversion/softwareversion.component';
 import { NaplesComponent } from './widgets/naples/naples.component';
@@ -38,6 +39,6 @@ import { WorkloadsComponent } from './workloads/workloads.component';
     dashboardRouter,
     SharedModule
   ],
-  declarations: [DashboardComponent, SystemcapacitywidgetComponent, DsbdworkloadComponent, PolicyhealthComponent, SoftwareversionComponent, NaplesComponent, WorkloadsComponent]
+  declarations: [DashboardComponent, SystemcapacitywidgetComponent, DsbdworkloadComponent, ForwardDropComponent, PolicyhealthComponent, SoftwareversionComponent, NaplesComponent, WorkloadsComponent]
 })
 export class DashboardModule { }

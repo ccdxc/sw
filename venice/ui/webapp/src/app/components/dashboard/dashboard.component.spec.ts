@@ -22,6 +22,7 @@ import { SystemcapacitywidgetComponent } from './widgets/systemcapacity/systemca
 import { NaplesComponent } from './widgets/naples/naples.component';
 import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.component';
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
+import { ForwardDropComponent } from './widgets/forwarddrop/forwarddrop.component';
 
 import { MatIconRegistry } from '@angular/material';
 import { ConfirmationService } from 'primeng/primeng';
@@ -32,6 +33,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -55,6 +57,7 @@ describe('DashboardComponent', () => {
         NaplesComponent,
         PolicyhealthComponent,
         DsbdworkloadComponent,
+        ForwardDropComponent,
         DummyComponent,
         WorkloadsComponent,
       ],
@@ -76,6 +79,7 @@ describe('DashboardComponent', () => {
         ControllerService,
         UIConfigsService,
         AuthService,
+        AuthServiceGen,
         ConfirmationService,
         MatIconRegistry,
         LogService,
@@ -142,6 +146,14 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
       // metrics should be hidden
       const cards = fixture.debugElement.queryAll(By.css('app-flip'));
+      expect(cards.length).toBe(1);
+    });
+
+    it('forwarded vs dropped card', () => {
+      TestingUtility.addPermissions([UIRolePermissions.adminrole]);
+      fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-forwarddrop'));
       expect(cards.length).toBe(1);
     });
 
