@@ -2,6 +2,8 @@
 import time
 import iota.harness.api as api
 import iota.test.iris.utils.naples_host as utils
+import iota.harness.infra.store as store
+import re
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -18,10 +20,14 @@ def Trigger(tc):
     api.Logger.info("Starting ping test for int_mnic0")
 
     if w1.IsNaples():
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 169.254.0.2")
+        ip = store.GetPrimaryIntNicMgmtIp()
+        ip=re.sub('\.1$','.2',ip)
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 " + ip)
 
     if w2.IsNaples():
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 169.254.0.2")
+        ip = store.GetPrimaryIntNicMgmtIp()
+        ip=re.sub('\.1$','.2',ip)
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 " + ip)
 
     trig_resp = api.Trigger(req)
 

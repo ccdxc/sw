@@ -7,6 +7,7 @@ import subprocess
 import threading
 import random
 import os
+import iota.harness.infra.store as store
 import iota.test.iris.utils.ip_rule_db.util.proto as proto
 import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
 import time
@@ -25,8 +26,8 @@ def DisableHalLogs(workload):
 def GetSecurityPolicy(workload=None, node_name=None):
     if not node_name:
         node_name = workload.node_name
-
-    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:8888/api/security/policies/'
+    mgmtIp = store.GetPrimaryIntNicMgmtIp()
+    cmd = 'curl -X GET -H "Content-Type:application/json" http://' + mgmtIp + ':8888/api/security/policies/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
 

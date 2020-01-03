@@ -13,7 +13,6 @@ _cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
 ip=api.GetPrimaryIntNicMgmtIp()
 base_url = "http://"+ip+":8888/"
-#base_url = "http://169.254.0.1:8888/"
 
 AGENT_URLS = []
 AGENT_NODES = []

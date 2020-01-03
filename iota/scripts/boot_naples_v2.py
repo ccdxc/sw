@@ -23,10 +23,10 @@ NAPLES_OOB_NIC                  = "oob_mnic0"
 UPGRADE_TIMEOUT                 = 600
 
 def GetPrimaryIntNicMgmtIpNext():
-    return "169.254.0.2"
+    return  re.sub('\.1$','.2',GlobalOptions.mnic_ip)
 
 def GetPrimaryIntNicMgmtIp():
-    return "169.254.0.1"
+    return GlobalOptions.mnic_ip
 
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
@@ -91,7 +91,7 @@ parser.add_argument('--only-init', dest='only_init',
 parser.add_argument('--no-mgmt', dest='no_mgmt',
                     action='store_true', help='Do not ping test mgmt interface on host')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
-                    default="169.254.0.1", help='Mnic IP.')
+                    default="", help='Mnic IP.')
 parser.add_argument('--oob-ip', dest='oob_ip',
                     default=None, help='Oob IP.')
 parser.add_argument('--naples-mem-size', dest='mem_size',

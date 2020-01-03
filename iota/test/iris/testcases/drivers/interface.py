@@ -6,7 +6,8 @@ import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.utils.naples_host as utils
 import ipaddress
-
+import iota.harness.infra.store as store
+import re
 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
 INTF_TEST_TYPE_IB_100G      = "inb-100g"
@@ -15,10 +16,13 @@ INTF_TEST_TYPE_HOST         = "host"
 
 ip_prefix = 24
 
+mgmtIp = store.GetPrimaryIntNicMgmtIp()
+nextIp = re.sub('\.1$','.2',mgmtIp)
+
 ip_map =  {
     INTF_TEST_TYPE_HOST: ("1.1.1.1", "1.1.1.2"),
     INTF_TEST_TYPE_OOB_1G: ("2.2.2.1", "2.2.2.2"),
-    INTF_TEST_TYPE_INT_MGMT: ("169.254.0.2", "169.254.0.1"),
+    INTF_TEST_TYPE_INT_MGMT: (nextIp, mgmtIp),
     INTF_TEST_TYPE_IB_100G: ("4.4.4.1", "4.4.4.2"),
 }
 
@@ -231,11 +235,12 @@ def RestoreIntMmgmtInterfaceConfig():
     nodes = api.GetNaplesHostnames()
     node_intfs = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    
+    mgmtIp = store.GetPrimaryIntNicMgmtIp()
+    nextIp = re.sub('\.1$','.2',mgmtIp)
     for node in nodes:
         node_if_info = GetNodeInterface(node)
         for intf in node_if_info.HostIntIntfs():
-            api.Trigger_AddHostCommand(req, node, "ifconfig %s 169.254.0.2/24" % intf.Name())
+            api.Trigger_AddHostCommand(req, node, "ifconfig %s " + nextIp + "/24" % intf.Name())
     resp = api.Trigger(req)
     if resp == None:
         api.Abort()

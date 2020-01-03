@@ -4,6 +4,7 @@ import copy
 import iota.harness.api as api
 import iota.test.iris.config.infra.main as cfg_main
 import pdb
+import iota.harness.infra.store as store
 
 def AddOneConfig(config):
     cfgObjects = (json.load(open(config)))
@@ -86,17 +87,18 @@ if __name__ == '__main__':
     #ObjectConfigStore.PrintConfigs()
     objects = QueryConfigs("Endpoint", filter="spec.useg_vlan=1001;spec.ipv4_address=192.168.100.103/32")
     PrintConfigsObjects(objects)
+    mgmtIp = store.GetPrimaryIntNicMgmtIp()
     for obj in objects:
         obj.spec.node_uuid = "myuuid"
-        print (obj.Update("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Update("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Get("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Delete("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Delete("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Get("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))
     for obj in objects:
         obj.spec.node_uuid = "myuuid"
-        print (obj.Push("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Push("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
+        print (obj.Get("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))

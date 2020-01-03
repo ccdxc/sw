@@ -8,10 +8,13 @@ import iota.test.iris.utils.naples_host as naples_host
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 import ipaddress
+import re
 
 ip_prefix = 24
+mgmtIp = store.GetPrimaryIntNicMgmtIp()
+nextIp = re.sub('\.1$','.2',mgmtIp)
 
-IntMgmtIpAllocator = resmgr.IpAddressStep("169.254.0.2", "0.0.0.1")
+IntMgmtIpAllocator = resmgr.IpAddressStep(nextIp, "0.0.0.1")
 IntMgmtIpAllocator = resmgr.IpAddressStep("192.169.1.2", "0.0.0.1")
 InbandIpAllocator = resmgr.IpAddressStep("192.170.1.2", "0.0.0.1")
 OobIpAllocator = resmgr.IpAddressStep("192.171.1.2", "0.0.0.1")
