@@ -13,16 +13,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
  import { WidgetsModule } from 'web-app-framework';
 import { TelemetryComponent } from './telemetry.component';
 import { TelemetryRoutingModule } from './telemetry.route';
-import { TelemetrychartComponent } from './telemetrychart/telemetrychart.component';
-import { TelemetrycharteditComponent } from './telemetrychart-edit/telemetrychartedit.component';
-import { TelemetrychartviewComponent } from './telemetrychart-view/telemetrychartview.component';
 
 @NgModule({
   declarations: [
-    TelemetryComponent,
-    TelemetrychartComponent,
-    TelemetrycharteditComponent,
-    TelemetrychartviewComponent
+    TelemetryComponent
   ],
   imports: [
     CommonModule,

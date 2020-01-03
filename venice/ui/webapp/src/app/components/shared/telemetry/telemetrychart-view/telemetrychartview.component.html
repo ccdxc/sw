@@ -6,11 +6,11 @@
                   [menuItems]="menuItems"
                   class="">
       <div header-options>
-        <mat-icon matTooltip="Edit chart"
+        <mat-icon *ngIf="!hideEditButtons" matTooltip="Edit chart"
                   class="telemetrychartview-action-icon "
                   (click)="editClick()">edit</mat-icon>
 
-        <mat-icon matTooltip="Delete chart"
+        <mat-icon *ngIf="hideEditButtons !== true" matTooltip="Delete chart"
                   class="telemetrychartview-action-icon "
                   (click)="deleteClick()">delete</mat-icon>
       </div>

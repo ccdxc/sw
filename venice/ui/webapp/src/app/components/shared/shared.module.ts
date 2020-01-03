@@ -41,6 +41,9 @@ import { FeatureGuardDirective } from './directives/featureGuard.directive';
 import { AlertstableComponent } from './alertsevents/alertstable/alertstable.component';
 import { EventstableComponent } from './alertsevents/eventstable/eventstable.component';
 import { SyslogComponent } from './syslog/syslog.component';
+import { TelemetrychartComponent } from './telemetry/telemetrychart/telemetrychart.component';
+import { TelemetrycharteditComponent } from './telemetry/telemetrychart-edit/telemetrychartedit.component';
+import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/telemetrychartview.component';
 
 @NgModule({
   imports: [
@@ -86,7 +89,10 @@ import { SyslogComponent } from './syslog/syslog.component';
     FormChipsComponent,
     AlertstableComponent,
     EventstableComponent,
-    SyslogComponent
+    SyslogComponent,
+    TelemetrychartComponent,
+    TelemetrycharteditComponent,
+    TelemetrychartviewComponent
   ],
   exports: [
     PagebodyComponent,
@@ -121,7 +127,10 @@ import { SyslogComponent } from './syslog/syslog.component';
     FormChipsComponent,
     AlertstableComponent,
     EventstableComponent,
-    SyslogComponent
+    SyslogComponent,
+    TelemetrychartComponent,
+    TelemetrycharteditComponent,
+    TelemetrychartviewComponent
   ],
   providers: [
     DomHandler

@@ -25,6 +25,8 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkService} from '@app/services/generated/network.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
+import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
+import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -34,6 +36,10 @@ import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 })
 export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDestroy {
   public static NAPLEDETAIL_FIELD_WORKLOADS: string = 'associatedWorkloads';
+
+  selectedTimeRange: TimeRange;
+  graphConfigs: GraphConfig[] = [];
+
   subscriptions = [];
 
   bodyicon: any = {
@@ -116,7 +122,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnInit() {
-    this.initializeData();
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NapledetailComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -128,6 +133,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this.setNapleDetailToolbar(id); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
     });
   }
+
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
       /*  This block is for test only
@@ -211,7 +217,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     // correctly parse smartNic names without it.
     const getSubscription = this.clusterService.GetDistributedServiceCard(this.selectedId + ':').subscribe(
       response => {
-        // We do nothing, and wait for the callback of the watch to populate the view
+        // after the detail loaded then load chart
+        this.initializeGraphConfigs();
       },
       error => {
         // If we receive any error code we display object is missing
@@ -273,6 +280,86 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
     );
     this.subscriptions.push(subscription);
+  }
+
+  private initializeGraphConfigs() {
+    this.selectedTimeRange = new TimeRange(new KeyOperatorValueKeyword.instance('now', '-', 24, 'h'), new KeyOperatorValueKeyword.instance('now', '', 0, ''));
+    this.graphConfigs = [{
+      id: 'dsc frequency chart',
+      graphTransforms: {
+        transforms: { GraphTitle: { title: 'Asic Frequency Chart' } }
+      },
+      dataTransforms: [{
+        transforms: {
+          ColorTransform: {
+            colors: {
+              'AsicFrequencyMetrics-Frequency': '#97b8df'
+            }
+          },
+          FieldSelector: {
+            selectedValues: [{
+              keyFormControl: 'reporterID',
+              operatorFormControl: 'in',
+              valueFormControl: [this.selectedId]
+            }]
+          }
+        },
+        measurement: 'AsicFrequencyMetrics',
+        fields: ['Frequency']
+      }]
+    },
+    {
+      id: 'dsc temperature chart',
+      graphTransforms: {
+        transforms: { GraphTitle: { title: 'Asic Temperature Chart' } }
+      },
+      dataTransforms: [{
+        transforms: {
+          ColorTransform: {
+            colors: {
+              'AsicTemperatureMetrics-LocalTemperature': '#97b8df',
+              'AsicTemperatureMetrics-DieTemperature': '#61b3a0',
+              'AsicTemperatureMetrics-HbmTemperature': '#ff9cee'
+            }
+          },
+          FieldSelector: {
+            selectedValues: [{
+              keyFormControl: 'reporterID',
+              operatorFormControl: 'in',
+              valueFormControl: [this.selectedId]
+            }]
+          }
+        },
+        measurement: 'AsicTemperatureMetrics',
+        fields: ['LocalTemperature', 'DieTemperature', 'HbmTemperature']
+      }]
+    },
+    {
+      id: 'dsc power chart',
+      graphTransforms: {
+        transforms: { GraphTitle: { title: 'Asic Power Chart' } }
+      },
+      dataTransforms: [{
+        transforms: {
+          ColorTransform: {
+            colors: {
+              'AsicPowerMetrics-Pin': '#97b8df',
+              'AsicPowerMetrics-Pout1': '#61b3a0',
+              'AsicPowerMetrics-Pout2': '#ff9cee'
+            }
+          },
+          FieldSelector: {
+            selectedValues: [{
+              keyFormControl: 'reporterID',
+              operatorFormControl: 'in',
+              valueFormControl: [this.selectedId]
+            }]
+          }
+        },
+        measurement: 'AsicPowerMetrics',
+        fields: ['Pin', 'Pout1', 'Pout2']
+      }]
+    }];
   }
 
   startMetricPolls() {

@@ -1,7 +1,7 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedObj?.spec.id">
   <div fxFlex="none" fxLayout="column">
+    <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
     <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
-      <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"
@@ -16,6 +16,16 @@
                       [lastUpdateTime]="lastUpdateTime"
                       [cardState]="cardData.cardState">
         </app-herocard>
+      </ng-container>
+    </div>
+    <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
+      <ng-container *ngFor="let item of graphConfigs">
+        <app-telemetrychartview class="naplesdetail-chart-item"
+                                fxFlex="nogrow"
+                                [hideEditButtons]="true"
+                                [selectedTimeRange]="selectedTimeRange"
+                                [chartConfig]="item">
+        </app-telemetrychartview>
       </ng-container>
     </div>
   </div>
@@ -55,10 +65,9 @@
   <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-node-table-container">
     <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-details">
       <!-- <div fxFlex="none" class="cluster-details-title"> Distributed Services Card Detail </div> -->
-      <div fxFlex="none" fxLayout="row">
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="space-around start">
         <div fxFlex="none" fxLayout="column">
           <div fxFlex="none" fxLayout="row">
-            <div fxFlex="50px"></div>
             <!-- Field titles -->
             <div fxFlex="none" fxLayout="column">
               <div fxFlex="none" fxLayout="column">
@@ -76,11 +85,11 @@
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
-                  <div>Phase</div>
+                  <div>Phase:</div>
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
-                  <div>Condition</div>
+                  <div>Condition:</div>
                 </div>
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
@@ -89,16 +98,6 @@
                 <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                      fxLayoutAlign="start center">
                   <div>Host:</div>
-                </div>
-                <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                     fxLayoutAlign="start center">
-                  <div>
-                    Labels:
-                    <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
-                              (click)="editLabels($event)"
-                              *roleGuard="'clusterdistributedservicecard_update'">edit
-                    </mat-icon>
-                  </div>
                 </div>
               </div>
             </div>
@@ -164,36 +163,9 @@
                   <a routerLink="/cluster/hosts"> {{ selectedObj?.status['host'] }}</a>
                 </div>
               </div>
-              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
-                   class="naplesdetail-node-value">
-                <div class="naplesdetail-panel-labels" fxFlex="200px">
-                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
-                           [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th>Key</th>
-                        <th>Value</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-key>
-                      <tr>
-                        <td style="word-break: break-all;">{{key}}</td>
-                        <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-                <app-labeleditor [objects]="[selectedObj]" [metadata]="labelEditorMetaData"
-                                 (saveEmitter)="handleEditSave($event)"
-                                 (cancelEmitter)="handleEditCancel($event)"
-                                 [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
-
-              </div>
             </div>
           </div>
         </div>
-        <div fxFlex="50px"></div>
 
         <div fxFlex="none" fxLayout="column" *ngIf="showExpandedDetailsCard"
              [@slideInOutHorizontal]>
@@ -214,15 +186,11 @@
               </div>
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                    fxLayoutAlign="start center">
-                <div>Kernel Release</div>
+                <div>Kernel Release:</div>
               </div>
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                    fxLayoutAlign="start center">
-                <div>Processor</div>
-              </div>
-              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                   fxLayoutAlign="start center">
-                <div>Workloads</div>
+                <div>Processor:</div>
               </div>
             </div>
             <div fxFlex="40px"></div>
@@ -258,7 +226,34 @@
                   {{ selectedObj?.status['system-info']['os-info']['processor'] }}
                 </div>
               </div>
-              <div fxFlex="" fxLayout="row" fxLayoutAlign="start start">
+            </div>
+          </div>
+        </div>
+
+        <div fxFlex fxFlex="none" fxLayout="column">
+          <!-- hide the expand and collapse icon now
+          <div fxFlex="none" fxLayout="row">
+            <div class="naplesdetail-details-toggle-expand" [@slideInOutHorizontal] fxFlex="10"
+                 (click)="toggleDetailsCard()">
+              <mat-icon fxFlex="none" matTooltip="More Details" *ngIf="!showExpandedDetailsCard">
+                chevron_right</mat-icon>
+              <mat-icon fxFlex="none" matTooltip="Less Details" *ngIf="showExpandedDetailsCard">
+                chevron_left</mat-icon>
+            </div>
+          </div>
+          -->
+          <div fxFlex="none" fxLayout="row">
+            <!-- Field titles -->
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Workloads:</div>
+              </div>
+            </div>
+            <div fxFlex="40px"></div>
+            <!-- Values -->
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
+              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center">
                 <div class="naplesdetail-panel-auto-admit-nics naplesdetail-workloads-container"
                      fxFlex="200px"
                      *ngIf="selectedObj">
@@ -274,20 +269,53 @@
             </div>
           </div>
         </div>
-        <div fxFlex="10px"></div>
 
-        <div fxFlex fxLayout="column" fxLayoutAlign="center end">
+        <div fxFlex fxFlex="none" fxLayout="column">
           <div fxFlex="none" fxLayout="row">
-            <div class="naplesdetail-details-toggle-expand" [@slideInOutHorizontal] fxFlex="10"
-                 (click)="toggleDetailsCard()">
-              <mat-icon fxFlex="none" matTooltip="More Details" *ngIf="!showExpandedDetailsCard">
-                chevron_right</mat-icon>
-              <mat-icon fxFlex="none" matTooltip="Less Details" *ngIf="showExpandedDetailsCard">
-                chevron_left</mat-icon>
+            <!-- Field titles -->
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>
+                  Labels:
+                  <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
+                            (click)="editLabels($event)"
+                            *roleGuard="'clusterdistributedservicecard_update'">edit
+                  </mat-icon>
+                </div>
+              </div>
+            </div>
+            <div fxFlex="40px"></div>
+            <!-- Values -->
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
+              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-labels" fxFlex="200px">
+                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
+                           [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-key>
+                      <tr>
+                        <td style="word-break: break-all;">{{key}}</td>
+                        <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+                <app-labeleditor [objects]="[selectedObj]" [metadata]="labelEditorMetaData"
+                                 (saveEmitter)="handleEditSave($event)"
+                                 (cancelEmitter)="handleEditCancel($event)"
+                                 [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
+
+              </div>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>

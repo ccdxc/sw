@@ -21,9 +21,6 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { TelemetrycharteditComponent } from './telemetrychart-edit/telemetrychartedit.component';
-import { TelemetrychartComponent } from './telemetrychart/telemetrychart.component';
-import { TelemetrychartviewComponent } from './telemetrychart-view/telemetrychartview.component';
 
 
 @Component({
@@ -39,9 +36,6 @@ describe('TelemetryComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         TelemetryComponent,
-        TelemetrycharteditComponent,
-        TelemetrychartComponent,
-        TelemetrychartviewComponent,
         DummyComponent,
       ],
       imports: [

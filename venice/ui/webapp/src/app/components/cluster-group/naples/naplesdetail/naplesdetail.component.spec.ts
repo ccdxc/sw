@@ -13,6 +13,7 @@ import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { AuthService } from '@app/services/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { ControllerService } from '@app/services/controller.service';
 import { EventsService } from '@app/services/events.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -105,8 +106,10 @@ describe('NaplesdetailComponent', () => {
 
   function verifyServiceCalls(naplesName) {
     expect(naplesWatchSpy).toHaveBeenCalled();
-    const calledObj = naplesWatchSpy.calls.mostRecent().args[0];
-    expect(_.isEqual({ 'field-selector': 'meta.name=' + naplesName }, calledObj)).toBeTruthy('Incorrect selector for ' + naplesName);
+    const calledObj = naplesWatchSpy.calls.mostRecent().args;
+    if (calledObj && calledObj.length > 0) {
+      expect(_.isEqual({ 'field-selector': 'meta.name=' + naplesName }, calledObj[0])).toBeTruthy('Incorrect selector for ' + naplesName);
+    }
 
     expect(naplesGetSpy).toHaveBeenCalled();
     expect(naplesGetSpy).toHaveBeenCalledWith(naplesName + ':');
@@ -157,6 +160,7 @@ describe('NaplesdetailComponent', () => {
         SearchService,
         EventsService,
         AuthService,
+        AuthServiceGen,
         MonitoringService,
         WorkloadService,
         {

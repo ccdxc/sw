@@ -1,7 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -13,7 +13,7 @@ import { SharedModule } from '@components/shared/shared.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { ConfirmationService } from 'primeng/primeng';
 import { WidgetsModule } from 'web-app-framework';
-import { TelemetrychartComponent } from './telemetrychart.component';
+import { TelemetrycharteditComponent } from './telemetrychartedit.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { ControllerService } from '@app/services/controller.service';
 import { configureTestSuite } from 'ng-bullet';
@@ -28,21 +28,21 @@ import { AuthService as AuthServiceGen } from '@app/services/generated/auth.serv
 })
 class DummyComponent { }
 
-describe('TelemetrychartComponent', () => {
-  let component: TelemetrychartComponent;
-  let fixture: ComponentFixture<TelemetrychartComponent>;
+describe('TelemetrycharteditComponent', () => {
+  let component: TelemetrycharteditComponent;
+  let fixture: ComponentFixture<TelemetrycharteditComponent>;
 
   configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
-        TelemetrychartComponent,
-        DummyComponent,
+        DummyComponent
       ],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
         ]),
         FormsModule,
+        ReactiveFormsModule,
         HttpClientTestingModule,
         WidgetsModule,
         PrimengModule,
@@ -67,7 +67,7 @@ describe('TelemetrychartComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TelemetrychartComponent);
+    fixture = TestBed.createComponent(TelemetrycharteditComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

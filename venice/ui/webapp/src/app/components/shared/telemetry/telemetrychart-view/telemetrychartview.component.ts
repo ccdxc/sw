@@ -20,6 +20,7 @@ import { Subscription } from 'rxjs';
 export class TelemetrychartviewComponent extends BaseComponent implements OnInit, OnDestroy {
   @Input() chartConfig: GraphConfig;
   @Input() inEditMode: boolean = false;
+  @Input() hideEditButtons: boolean = false;
   @Input() selectedTimeRange: TimeRange;
   @Output() editReq: EventEmitter<any> = new EventEmitter<any>();
   @Output() deleteReq: EventEmitter<any> = new EventEmitter<any>();

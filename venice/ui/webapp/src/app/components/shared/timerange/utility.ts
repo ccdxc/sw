@@ -268,7 +268,7 @@ export class MomentTimeInstance implements TimeInstance {
 
 }
 
-class KeyOperatorValueKeyword implements KeywordFactory {
+export class KeyOperatorValueKeyword implements KeywordFactory {
   // The time instance this keyword will create
   public static instance = class KeywordInstance implements TimeInstance {
 
