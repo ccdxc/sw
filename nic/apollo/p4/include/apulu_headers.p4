@@ -24,13 +24,16 @@ header_type apulu_p4i_to_rxdma_header_t {
 
 header_type apulu_txdma_to_p4e_header_t {
     fields {
-        pad             : 1;
+        meter_en        : 1;
         sacl_action     : 1;
         sacl_root_num   : 3;
         nexthop_type    : 2;
         drop            : 1;
         nexthop_id      : 16;
-        meter_id        : 16;
+        snat_type       : 2;
+        dnat_en         : 1;
+        dnat_idx        : 13;
+        dnat_ip         :128;
     }
 }
 

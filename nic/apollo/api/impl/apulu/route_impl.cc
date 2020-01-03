@@ -24,19 +24,25 @@
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 
 #define PDS_IMPL_NH_VAL_SET_METER_EN(nh_val_)                                \
-            ((nh_val_) |= 0x80000000)
+            ((nh_val_) |= ROUTE_RESULT_METER_EN_MASK)
 #define PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val_, snat_type_)                   \
-            ((nh_val_) |= (snat_type_ & 0x3) << 29)
+            ((nh_val_) |= ((snat_type_ << ROUTE_RESULT_SNAT_TYPE_SHIFT)      \
+                                        & ROUTE_RESULT_SNAT_TYPE_MASK))
 #define PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val_, dnat_en_, dnat_idx_)          \
 {                                                                            \
     if ((dnat_en_)) {                                                        \
-        (nh_val_) |= ((1 << 28) | (dnat_idx_ & 0x0FFFFFFF));                 \
+        (nh_val_) |= (ROUTE_RESULT_DNAT_EN_MASK |                            \
+                      ((dnat_idx_ << ROUTE_RESULT_DNAT_IDX_SHIFT)            \
+                                   & ROUTE_RESULT_DNAT_IDX_MASK));           \
     } else {                                                                 \
-        (nh_val_) &= ~(1 << 28);                                             \
+        (nh_val_) &= ~(ROUTE_RESULT_DNAT_EN_MASK|ROUTE_RESULT_DNAT_IDX_MASK);\
     }                                                                        \
 }
 #define PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val_, type_, nh_id_)                  \
-            (nh_val_) |= (((type_ & 0x3) << 26) | (nh_id_ & 0x3FFFFFF));
+            (nh_val_) |= (((type_ << ROUTE_RESULT_NHTYPE_SHIFT)              \
+                                   & ROUTE_RESULT_NHTYPE_MASK) |             \
+                          ((nh_id_ << ROUTE_RESULT_NEXTHOP_SHIFT)            \
+                                    & ROUTE_RESULT_NEXTHOP_MASK));
 
 namespace api {
 namespace impl {

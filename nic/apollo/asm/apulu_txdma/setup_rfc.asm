@@ -20,10 +20,7 @@ setup_rfc:
     phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr2
     seq              c1, k.txdma_control_recirc_count, 5
     bcf              [c1], load3
-    phvwrpair.c1     p.rx_to_tx_hdr_sacl_base_addr0[39:8], \
-                        k.rx_to_tx_hdr_sacl_base_addr3_s0_e31, \
-                        p.rx_to_tx_hdr_sacl_base_addr0[7:0], \
-                        k.rx_to_tx_hdr_sacl_base_addr3_s32_e39
+    phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr3
     seq              c1, k.txdma_control_recirc_count, 7
     bcf              [c1], load4
     phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr4

@@ -178,27 +178,49 @@
 /*****************************************************************************/
 /* route result type and bit position                                        */
 /*****************************************************************************/
-#define ROUTE_RESULT_NEXTHOP_SIZE            13
-#define ROUTE_RESULT_NHTYPE_SIZE             3
-#define ROUTE_RESULT_METERID_SIZE            16
-#define ROUTE_RESULT_NEXTHOP_MASK            0x1FFF
-#define ROUTE_RESULT_NHTYPE_MASK             0xE000
-#define ROUTE_RESULT_METERID_MASK            0xFFFF0000
+#define ROUTE_RESULT_METER_EN_SIZE           1
+#define ROUTE_RESULT_SNAT_TYPE_SIZE          2
+#define ROUTE_RESULT_DNAT_EN_SIZE            1
+#define ROUTE_RESULT_DNAT_IDX_SIZE           28         // DNAT_EN == 1
+#define ROUTE_RESULT_NHTYPE_SIZE             2          // DNAT_EN == 0
+#define ROUTE_RESULT_NEXTHOP_SIZE            26         // DNAT_EN == 0
 
-#define ROUTE_RESULT_NEXTHOP_START_BIT       0
-#define ROUTE_RESULT_NEXTHOP_SHIFT           ROUTE_RESULT_NEXTHOP_START_BIT
-#define ROUTE_RESULT_NEXTHOP_END_BIT         (ROUTE_RESULT_NEXTHOP_START_BIT +\
-                                              ROUTE_RESULT_NEXTHOP_SIZE - 1)
+#define ROUTE_RESULT_METER_EN_MASK           0x80000000
+#define ROUTE_RESULT_SNAT_TYPE_MASK          0x60000000
+#define ROUTE_RESULT_DNAT_EN_MASK            0x10000000
+#define ROUTE_RESULT_DNAT_IDX_MASK           0x0FFFFFFF
+#define ROUTE_RESULT_NHTYPE_MASK             0x0C000000
+#define ROUTE_RESULT_NEXTHOP_MASK            0x03FFFFFF
 
-#define ROUTE_RESULT_NHTYPE_START_BIT        (ROUTE_RESULT_NEXTHOP_END_BIT + 1)
+#define ROUTE_RESULT_METER_EN_END_BIT       31
+#define ROUTE_RESULT_METER_EN_START_BIT     (ROUTE_RESULT_METER_EN_END_BIT -\
+                                             ROUTE_RESULT_METER_EN_SIZE + 1)
+#define ROUTE_RESULT_METER_EN_SHIFT          ROUTE_RESULT_METER_EN_START_BIT
+
+#define ROUTE_RESULT_SNAT_TYPE_END_BIT      (ROUTE_RESULT_METER_EN_START_BIT - 1)
+#define ROUTE_RESULT_SNAT_TYPE_START_BIT    (ROUTE_RESULT_SNAT_TYPE_END_BIT -\
+                                             ROUTE_RESULT_SNAT_TYPE_SIZE + 1)
+#define ROUTE_RESULT_SNAT_TYPE_SHIFT         ROUTE_RESULT_SNAT_TYPE_START_BIT
+
+#define ROUTE_RESULT_DNAT_EN_END_BIT        (ROUTE_RESULT_SNAT_TYPE_START_BIT - 1)
+#define ROUTE_RESULT_DNAT_EN_START_BIT      (ROUTE_RESULT_DNAT_EN_END_BIT -\
+                                             ROUTE_RESULT_DNAT_EN_SIZE + 1)
+#define ROUTE_RESULT_DNAT_EN_SHIFT           ROUTE_RESULT_DNAT_EN_START_BIT
+
+#define ROUTE_RESULT_DNAT_IDX_END_BIT       (ROUTE_RESULT_DNAT_EN_START_BIT - 1)
+#define ROUTE_RESULT_DNAT_IDX_START_BIT     (ROUTE_RESULT_DNAT_IDX_END_BIT -\
+                                             ROUTE_RESULT_DNAT_IDX_SIZE + 1)
+#define ROUTE_RESULT_DNAT_IDX_SHIFT          ROUTE_RESULT_DNAT_IDX_START_BIT
+
+#define ROUTE_RESULT_NHTYPE_END_BIT         (ROUTE_RESULT_DNAT_EN_START_BIT - 1)
+#define ROUTE_RESULT_NHTYPE_START_BIT       (ROUTE_RESULT_NHTYPE_END_BIT -\
+                                             ROUTE_RESULT_NHTYPE_SIZE + 1)
 #define ROUTE_RESULT_NHTYPE_SHIFT            ROUTE_RESULT_NHTYPE_START_BIT
-#define ROUTE_RESULT_NHTYPE_END_BIT          (ROUTE_RESULT_NHTYPE_START_BIT +\
-                                              ROUTE_RESULT_NHTYPE_SIZE - 1)
 
-#define ROUTE_RESULT_METERID_START_BIT       (ROUTE_RESULT_NHTYPE_END_BIT + 1)
-#define ROUTE_RESULT_METERID_SHIFT           ROUTE_RESULT_METERID_START_BIT
-#define ROUTE_RESULT_METERID_END_BIT         (ROUTE_RESULT_METERID_START_BIT +\
-                                              ROUTE_RESULT_METERID_SIZE - 1)
+#define ROUTE_RESULT_NEXTHOP_END_BIT        (ROUTE_RESULT_NHTYPE_START_BIT - 1)
+#define ROUTE_RESULT_NEXTHOP_START_BIT      (ROUTE_RESULT_NEXTHOP_END_BIT -\
+                                             ROUTE_RESULT_NEXTHOP_SIZE + 1)
+#define ROUTE_RESULT_NEXTHOP_SHIFT           ROUTE_RESULT_NEXTHOP_START_BIT
 
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */

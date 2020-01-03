@@ -8,6 +8,7 @@ control local_46_mapping_txdma {}
 control route_lookup {}
 control sacl_rfc {}
 control pkt_dma {}
+control dnat {}
 
 #define txdma_predicate             app_header
 #define rfc_enable                  table0_valid

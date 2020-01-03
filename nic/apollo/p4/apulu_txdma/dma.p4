@@ -11,11 +11,15 @@ table pkt_dma_setup {
 }
 
 action pkt_dma() {
-    if (rx_to_tx_hdr.sacl_base_addr0 != 0) {
+    if ((rx_to_tx_hdr.sacl_base_addr0 != 0) or \
+        (txdma_control.dnat_en != 0)) {
+        modify_field(capri_p4_intr.recirc, TRUE);
+
         modify_field(scratch_metadata.lif, capri_intr.lif);
         modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
         modify_field(txdma_predicate.pass_two, TRUE);
-        modify_field(capri_p4_intr.recirc, TRUE);
+        // Enable DNAT Lookup (and the ensuing Route LPM lookup) if dnat_en is set
+        modify_field(txdma_predicate.lpm1_enable, txdma_control.dnat_en);
     } else {
         modify_field(capri_p4_intr.recirc, FALSE);
 

@@ -1055,6 +1055,12 @@ control ingress {
     if (txdma_predicate.cps_path_en == 1) {
         if (txdma_predicate.pass_two == 0) {
             read_qstate();
+        } else {
+            if (txdma_predicate.lpm1_enable == TRUE) {
+                // Not first iter, but route LPM is still enabled.
+                // This means dnat table should be looked up
+                dnat();
+            }
         }
 
         if (txdma_predicate.lpm1_enable == TRUE) {

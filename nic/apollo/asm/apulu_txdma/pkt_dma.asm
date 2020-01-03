@@ -13,17 +13,26 @@ pkt_dma:
     phvwr           p.capri_intr_hw_error, r0
 
     // Clear the intrinsic recirc count to prevent TTL drop
-    phvwr            p.capri_p4_intr_recirc_count, r0
+    phvwr           p.capri_p4_intr_recirc_count, r0
 
     // Increment the local_recirc_count.
-    add              r1, k.txdma_control_recirc_count, 1
-    phvwr            p.txdma_control_recirc_count, r1
+    add             r1, k.txdma_control_recirc_count, 1
+    phvwr           p.txdma_control_recirc_count, r1
+
+    // Copy txdma control dnat_en to predicate_lpm1_enable
+    phvwr           p.txdma_predicate_lpm1_enable, k.txdma_control_dnat_en
 
     /* Do we have more SACLs to process... ? */
     sne             c1, k.rx_to_tx_hdr_sacl_base_addr0, r0
     /* If so, enable Recirc, and stop */
     phvwr.c1.e      p.capri_p4_intr_recirc, TRUE
     phvwr           p.txdma_predicate_pass_two, TRUE
+
+    /* Do we have DNAT to lookup... ? */
+    sne             c1, k.txdma_control_dnat_en, r0
+    /* If so, enable Recirc, and stop */
+    phvwr.c1.e      p.capri_p4_intr_recirc, TRUE
+    nop
 
     /* Else disable Recirc. */
     phvwr           p.capri_p4_intr_recirc, FALSE
@@ -42,8 +51,8 @@ pkt_dma:
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd,
                                  capri_intr_tm_iport, \
                                  capri_txdma_intr_txdma_rsv,
-                                 txdma_to_p4e_pad,
-                                 txdma_to_p4e_meter_id)
+                                 txdma_to_p4e_meter_en,
+                                 txdma_to_p4e_dnat_ip)
 
     // 2) DMA command for payload
     // mem2pkt has an implicit fence. all subsequent dma is blocked
