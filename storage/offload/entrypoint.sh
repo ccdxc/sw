@@ -7,6 +7,6 @@ mkdir -p ${dir}
 mount -o bind /sw ${dir}
 cp -R ../../vendor/github.com/gogo/protobuf/proto/* /usr/local/include/
 echo 1>&2 building tools...
-cd $dir && make ws-tools && go install ./asset-build/... && cd /sw/storage/offload
+cd $dir && make ws-tools && go install ./asset-build/... && make pull-assets && cd /sw/storage/offload
 
 exec "$@"

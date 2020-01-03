@@ -2,73 +2,73 @@
 version: 2.0
 targets:
   test:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && /sw/bazel-bin/storage/offload/pnso_offloader -t 10 -m 0xF; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && /sw/bazel-bin/storage/offload/pnso_offloader -t 10 -m 0xF; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   osal_test:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run src/osal:osal_test; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run src/osal:osal_test; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   gtests:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel test ...; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel test ...; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_cpdc:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cpdc.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cpdc.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_cp_fail:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cp_fail.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cp_fail.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_dc_fail:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml dc_fail.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml dc_fail.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_hash:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml hash.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml hash.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_chksum:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml chksum.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml chksum.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_crypto:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto1.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto1.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_crypto_fail:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto_fail.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto_fail.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   pencake_test3:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml test3.yml; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload && bazel build ... && bazel run -- src/test:pencake_sim -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml test3.yml; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
     feature:
   smooth_lzrw1a:
-    commands: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload/third-party/sim_smooth_lzrw1a && gcc -std=c99 lzrw1-a.c 0-lzrw1-a.c main.c -o smooth_lzrw1a && ./smooth_lzrw1a; ret=$?; exit $ret" ]
+    commands: ["sh", "-c", "cd /sw && cd storage/offload/third-party/sim_smooth_lzrw1a && gcc -std=c99 lzrw1-a.c 0-lzrw1-a.c main.c -o smooth_lzrw1a && ./smooth_lzrw1a; ret=$?; exit $ret" ]
     owners: ["email:piraman@pensando.io"]
     area:
     sub-area:
