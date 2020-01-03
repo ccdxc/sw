@@ -7915,6 +7915,31 @@ type ArchiveRequestHandler interface {
 	GetArchiveRequestWatchOptions() *api.ListWatchOptions
 }
 
+// OnArchiveRequestCreate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnArchiveRequestCreate(obj *ArchiveRequest) error {
+	log.Info("OnArchiveRequestCreate is not implemented")
+	return nil
+}
+
+// OnArchiveRequestUpdate is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnArchiveRequestUpdate(oldObj *ArchiveRequest, newObj *monitoring.ArchiveRequest) error {
+	log.Info("OnArchiveRequestUpdate is not implemented")
+	return nil
+}
+
+// OnArchiveRequestDelete is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnArchiveRequestDelete(obj *ArchiveRequest) error {
+	log.Info("OnArchiveRequestDelete is not implemented")
+	return nil
+}
+
+// GetArchiveRequestWatchOptions is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) GetArchiveRequestWatchOptions() *api.ListWatchOptions {
+	log.Info("GetArchiveRequestWatchOptions is not implemented")
+	opts := &api.ListWatchOptions{}
+	return opts
+}
+
 // handleArchiveRequestEvent handles ArchiveRequest events from watcher
 func (ct *ctrlerCtx) handleArchiveRequestEvent(evt *kvstore.WatchEvent) error {
 

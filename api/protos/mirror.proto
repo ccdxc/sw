@@ -105,8 +105,8 @@ message MatchRule {
 enum MirrorSessionState {
     // ui-hint: None
     NONE                    = 0;    // Mirror session is not processed
-    // ui-hint: Running
-    RUNNING                 = 1;    // active i.e. capturing packets
+    // ui-hint: Active
+    ACTIVE                  = 1;    // active i.e. capturing packets
     // ui-hint: Stopped
     STOPPED                 = 2;    // stop condition met
     // ui-hint: Scheduled
@@ -117,7 +117,7 @@ enum MirrorSessionState {
 
 // MirrorSessionStatus
 message MirrorSessionStatus {
-    string State            = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
+    string ScheduleState            = 1 [(gogoproto.jsontag) = "schedule-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
     api.Timestamp StartedAt = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "started-at,inline"];
 }
 

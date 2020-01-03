@@ -178,11 +178,11 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 				log.Infof("Get():MirrorSession %s:%s ... Not Found", ms.Tenant, ms.Name)
 				return false, nil
 			}
-			if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() && tms.Status.State != monitoring.MirrorSessionState_STOPPED.String() {
-				log.Infof("Get():MirrorSession %s:%s ... Not Running/Stopped - %v", ms.Tenant, ms.Name, tms.Status.State)
+			if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() && tms.Status.ScheduleState != monitoring.MirrorSessionState_STOPPED.String() {
+				log.Infof("Get():MirrorSession %s:%s ... Not Running/Stopped - %v", ms.Tenant, ms.Name, tms.Status.ScheduleState)
 				return false, nil
 			}
-			log.Infof("Successful Get():MirrorSession %s:%s - %v", tms.Tenant, tms.Name, tms.Status.State)
+			log.Infof("Successful Get():MirrorSession %s:%s - %v", tms.Tenant, tms.Name, tms.Status.ScheduleState)
 		}
 		return true, nil
 	}, "All Mirror Sessions did not run in TsCtrler", intervals...)
@@ -205,11 +205,11 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 			log.Infof("Get():MirrorSession %s:%s ... Not Found", ms.Tenant, ms.Name)
 			return false, nil
 		}
-		if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() && tms.Status.State != monitoring.MirrorSessionState_STOPPED.String() {
-			log.Infof("Get():MirrorSession %s:%s ... Not Running/Stopped - %v", ms.Tenant, ms.Name, tms.Status.State)
+		if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() && tms.Status.ScheduleState != monitoring.MirrorSessionState_STOPPED.String() {
+			log.Infof("Get():MirrorSession %s:%s ... Not Running/Stopped - %v", ms.Tenant, ms.Name, tms.Status.ScheduleState)
 			return false, nil
 		}
-		log.Infof("Successful Get():MirrorSession %s:%s - %v", tms.Tenant, tms.Name, tms.Status.State)
+		log.Infof("Successful Get():MirrorSession %s:%s - %v", tms.Tenant, tms.Name, tms.Status.ScheduleState)
 		return true, nil
 	}, "Recreated Mirror Session did not run in TsCtrler", intervals...)
 
@@ -253,7 +253,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	totalSessions := len(msList)
 	Assert(c, totalSessions == mid, "All sessions were not successfully created atual %v, expected %v, %+v", totalSessions, mid, msList)
 	for _, ms := range msList {
-		log.Infof("----- MirrorSession %v state %v", ms.Name, ms.Status.State)
+		log.Infof("----- MirrorSession %v state %v", ms.Name, ms.Status.ScheduleState)
 	}
 	AssertEventually(c, func() (bool, interface{}) {
 		errSessions := 0
@@ -262,7 +262,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 			if err != nil {
 				return false, err
 			}
-			if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
+			if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
 				errSessions++
 			}
 		}
@@ -289,7 +289,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 		if err != nil {
 			return false, err
 		}
-		if tms.Status.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String() {
 			return false, "Mirror session in ERR_ state"
 		}
 		return true, nil
@@ -317,7 +317,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	ms := testMirrorSessions[1]
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_SCHEDULED.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_SCHEDULED.String() {
 			return true, nil
 		}
 		return false, "Not scheduled yet"
@@ -330,7 +330,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	intervals = []string{"1s", "8s"}
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_RUNNING.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_ACTIVE.String() {
 			return true, nil
 		}
 		return false, "Not running yet"
@@ -353,7 +353,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	time.Sleep(time.Duration(time.Second * 5))
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_SCHEDULED.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_SCHEDULED.String() {
 			return true, nil
 		}
 		return false, "Not scheduled yet"
@@ -372,7 +372,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	// wait for status update ???
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_SCHEDULED.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_SCHEDULED.String() {
 			return true, nil
 		}
 		return false, "Not scheduled yet"
@@ -390,7 +390,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	intervals = []string{"1s", "30s"}
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_RUNNING.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_ACTIVE.String() {
 			return true, nil
 		}
 		return false, "Not running yet"
@@ -406,7 +406,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	// make sure it starts running
 	AssertEventually(c, func() (bool, interface{}) {
 		tms, _ := it.restClient.MonitoringV1().MirrorSession().Get(ctx, &ms.ObjectMeta)
-		if tms.Status.State == monitoring.MirrorSessionState_RUNNING.String() {
+		if tms.Status.ScheduleState == monitoring.MirrorSessionState_ACTIVE.String() {
 			return true, nil
 		}
 		return false, "Not running yet"

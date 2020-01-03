@@ -102,11 +102,11 @@ var typesMapMirror = map[string]*api.Struct{
 			"mac-addresses":    api.CLIInfo{Path: "Spec.MatchRules[].Dst.MACAddresses", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"oper-state":       api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
 			"packet-filters":   api.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
 			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
 			"proto-ports":      api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.ProtoPorts", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"schedule-state":   api.CLIInfo{Path: "Status.ScheduleState", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
@@ -132,7 +132,7 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.MirrorSessionStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
 		Fields: map[string]api.Field{
-			"State": api.Field{Name: "State", CLITag: api.CLIInfo{ID: "oper-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ScheduleState": api.Field{Name: "ScheduleState", CLITag: api.CLIInfo{ID: "schedule-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"StartedAt": api.Field{Name: "StartedAt", CLITag: api.CLIInfo{ID: "started-at", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},

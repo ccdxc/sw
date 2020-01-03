@@ -396,7 +396,7 @@
             }
           },
           {
-            "name": "status.oper-state",
+            "name": "status.schedule-state",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5081,12 +5081,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "status.reason",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -5544,6 +5538,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5994,7 +5994,7 @@
             }
           },
           {
-            "name": "status.oper-state",
+            "name": "status.schedule-state",
             "in": "query",
             "required": false,
             "type": "string"
@@ -16130,23 +16130,23 @@
     "monitoringMirrorSessionStatus": {
       "type": "object",
       "required": [
-        "oper-state"
+        "schedule-state"
       ],
       "properties": {
-        "oper-state": {
+        "schedule-state": {
           "type": "string",
           "enum": [
             "none",
-            "running",
+            "active",
             "stopped",
             "scheduled",
             "error-no-mirror-session"
           ],
           "default": "none",
           "x-ui-hints": {
+            "active": "Active",
             "error-no-mirror-session": "Max Mirror Sessions Exceeded",
             "none": "None",
-            "running": "Running",
             "scheduled": "Scheduled",
             "stopped": "Stopped"
           }

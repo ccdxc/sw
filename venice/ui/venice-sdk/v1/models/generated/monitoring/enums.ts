@@ -126,9 +126,9 @@ export enum MonitoringMirrorSessionSpec_packet_filters {
     'firewall-policy-drop' = "firewall-policy-drop",
 }
 
-export enum MonitoringMirrorSessionStatus_oper_state {
+export enum MonitoringMirrorSessionStatus_schedule_state {
     'none' = "none",
-    'running' = "running",
+    'active' = "active",
     'stopped' = "stopped",
     'scheduled' = "scheduled",
     'error-no-mirror-session' = "error-no-mirror-session",
@@ -273,10 +273,10 @@ export enum MonitoringMirrorSessionSpec_packet_filters_uihint {
     'network-policy-drop' = "Network Policy Drops",
 }
 
-export enum MonitoringMirrorSessionStatus_oper_state_uihint {
+export enum MonitoringMirrorSessionStatus_schedule_state_uihint {
+    'active' = "Active",
     'error-no-mirror-session' = "Max Mirror Sessions Exceeded",
     'none' = "None",
-    'running' = "Running",
     'scheduled' = "Scheduled",
     'stopped' = "Stopped",
 }
@@ -363,7 +363,7 @@ export class AllEnums {
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
     MonitoringMirrorSessionSpec_packet_filters = MonitoringMirrorSessionSpec_packet_filters;
-    MonitoringMirrorSessionStatus_oper_state = MonitoringMirrorSessionStatus_oper_state;
+    MonitoringMirrorSessionStatus_schedule_state = MonitoringMirrorSessionStatus_schedule_state;
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
     MonitoringSyslogExport_format = MonitoringSyslogExport_format;
@@ -383,7 +383,7 @@ export class AllEnums {
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
-    MonitoringMirrorSessionStatus_oper_state_uihint = MonitoringMirrorSessionStatus_oper_state_uihint;
+    MonitoringMirrorSessionStatus_schedule_state_uihint = MonitoringMirrorSessionStatus_schedule_state_uihint;
     MonitoringSyslogExport_format_uihint = MonitoringSyslogExport_format_uihint;
     MonitoringSyslogExportConfig_facility_override_uihint = MonitoringSyslogExportConfig_facility_override_uihint;
     MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;

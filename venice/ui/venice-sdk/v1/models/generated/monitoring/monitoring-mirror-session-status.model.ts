@@ -7,20 +7,20 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
+import { MonitoringMirrorSessionStatus_schedule_state,  MonitoringMirrorSessionStatus_schedule_state_uihint  } from './enums';
 
 export interface IMonitoringMirrorSessionStatus {
-    'oper-state': MonitoringMirrorSessionStatus_oper_state;
+    'schedule-state': MonitoringMirrorSessionStatus_schedule_state;
     'started-at'?: Date;
 }
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
-    'oper-state': MonitoringMirrorSessionStatus_oper_state = null;
+    'schedule-state': MonitoringMirrorSessionStatus_schedule_state = null;
     'started-at': Date = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionStatus]: PropInfoItem } = {
-        'oper-state': {
-            enum: MonitoringMirrorSessionStatus_oper_state_uihint,
+        'schedule-state': {
+            enum: MonitoringMirrorSessionStatus_schedule_state_uihint,
             default: 'none',
             required: true,
             type: 'string'
@@ -62,12 +62,12 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['oper-state'] != null) {
-            this['oper-state'] = values['oper-state'];
-        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('oper-state')) {
-            this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state>  MonitoringMirrorSessionStatus.propInfo['oper-state'].default;
+        if (values && values['schedule-state'] != null) {
+            this['schedule-state'] = values['schedule-state'];
+        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('schedule-state')) {
+            this['schedule-state'] = <MonitoringMirrorSessionStatus_schedule_state>  MonitoringMirrorSessionStatus.propInfo['schedule-state'].default;
         } else {
-            this['oper-state'] = null
+            this['schedule-state'] = null
         }
         if (values && values['started-at'] != null) {
             this['started-at'] = values['started-at'];
@@ -83,7 +83,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'oper-state': CustomFormControl(new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]), MonitoringMirrorSessionStatus.propInfo['oper-state']),
+                'schedule-state': CustomFormControl(new FormControl(this['schedule-state'], [required, enumValidator(MonitoringMirrorSessionStatus_schedule_state), ]), MonitoringMirrorSessionStatus.propInfo['schedule-state']),
                 'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at']),
             });
         }
@@ -96,7 +96,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['oper-state'].setValue(this['oper-state']);
+            this._formGroup.controls['schedule-state'].setValue(this['schedule-state']);
             this._formGroup.controls['started-at'].setValue(this['started-at']);
         }
     }

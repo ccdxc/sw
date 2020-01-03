@@ -72,7 +72,7 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Updating MirrorSession %v Status %v Version %v", ms.Name, ms.Status.State, ms.ResourceVersion)
+	log.Infof("Updating MirrorSession %v Status %v Version %v", ms.Name, ms.Status.ScheduleState, ms.ResourceVersion)
 
 	// Don't clear the revision - it can endup overwriting new(updated) object, or even a newer object if delete-create
 	// is done

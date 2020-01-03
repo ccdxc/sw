@@ -33,7 +33,7 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *netproto.MirrorSes
 	tSpec := &tms.Spec
 	//tSpec.CaptureAt = netproto.MirrorSrcDst_SRC_DST
 	//tSpec.PacketDir = netproto.MirrorDir_BOTH
-	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_RUNNING)
+	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_ACTIVE)
 	//tSpec.PacketSize = ms.Spec.PacketSize
 	//tSpec.PacketFilters = ms.Spec.PacketFilters
 
@@ -221,7 +221,7 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 				EventType:     etype,
 				MirrorSession: tms,
 			}
-			log.Infof("Send Mirror session %s to agent - event %v state %v", mss.Name, etype, mss.Status.State)
+			log.Infof("Send Mirror session %s to agent - event %v state %v", mss.Name, etype, mss.Status.ScheduleState)
 			watchEvtList.MirrorSessionEvents = append(watchEvtList.MirrorSessionEvents, &watchEvt)
 			err = stream.Send(&watchEvtList)
 			if err != nil {

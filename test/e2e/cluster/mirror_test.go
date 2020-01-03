@@ -149,10 +149,10 @@ var _ = Describe("mirror session tests", func() {
 
 			// raise error if session start before scheduled time
 			// the expected state should be SCHEDULED
-			if tms.Status.State != monitoring.MirrorSessionState_SCHEDULED.String() {
-				By(fmt.Sprintf("mirror state: %v before scheduled time", tms.Status.State))
+			if tms.Status.ScheduleState != monitoring.MirrorSessionState_SCHEDULED.String() {
+				By(fmt.Sprintf("mirror state: %v before scheduled time", tms.Status.ScheduleState))
 			}
-			Expect(tms.Status.State).To(Equal(monitoring.MirrorSessionState_SCHEDULED.String()))
+			Expect(tms.Status.ScheduleState).To(Equal(monitoring.MirrorSessionState_SCHEDULED.String()))
 
 			Eventually(func() bool {
 				// get the new state
@@ -164,8 +164,8 @@ var _ = Describe("mirror session tests", func() {
 
 				// raise error if session doesn't start after scheduled time
 				// the expected state should be RUNNING
-				if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
-					By(fmt.Sprintf("mirror state: %v after scheduled time", tms.Status.State))
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
+					By(fmt.Sprintf("mirror state: %v after scheduled time", tms.Status.ScheduleState))
 					return false
 				}
 
@@ -228,8 +228,8 @@ var _ = Describe("mirror session tests", func() {
 					By(fmt.Sprintf("GET err:%s", err))
 					return false
 				}
-				if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
-					By(fmt.Sprintf("mirror state: %v", tms.Status.State))
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
 					return false
 				}
 				return true
@@ -243,8 +243,8 @@ var _ = Describe("mirror session tests", func() {
 					By(fmt.Sprintf("GET err:%s", err))
 					return false
 				}
-				if tms.Status.State != monitoring.MirrorSessionState_STOPPED.String() {
-					By(fmt.Sprintf("mirror state: %v", tms.Status.State))
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_STOPPED.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
 					return false
 				}
 				return true

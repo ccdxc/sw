@@ -73,16 +73,16 @@ func (x PacketCollectorType) String() string {
 
 // MirrorSessionState_normal is a map of normalized values for the enum
 var MirrorSessionState_normal = map[string]string{
+	"active":                  "active",
 	"error-no-mirror-session": "error-no-mirror-session",
 	"none":                    "none",
-	"running":                 "running",
 	"scheduled":               "scheduled",
 	"stopped":                 "stopped",
 }
 
 var MirrorSessionState_vname = map[int32]string{
 	0: "none",
-	1: "running",
+	1: "active",
 	2: "stopped",
 	3: "scheduled",
 	4: "error-no-mirror-session",
@@ -90,7 +90,7 @@ var MirrorSessionState_vname = map[int32]string{
 
 var MirrorSessionState_vvalue = map[string]int32{
 	"none":                    0,
-	"running":                 1,
+	"active":                  1,
 	"stopped":                 2,
 	"scheduled":               3,
 	"error-no-mirror-session": 4,
@@ -328,7 +328,7 @@ func (m *MirrorSessionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = "none"
+		m.ScheduleState = "none"
 	}
 	return ret
 }
@@ -739,7 +739,7 @@ func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool, igno
 
 func (m *MirrorSessionStatus) Normalize() {
 
-	m.State = MirrorSessionState_normal[strings.ToLower(m.State)]
+	m.ScheduleState = MirrorSessionState_normal[strings.ToLower(m.ScheduleState)]
 
 }
 
@@ -836,12 +836,12 @@ func init() {
 	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorSessionStatus)
 
-		if _, ok := MirrorSessionState_vvalue[m.State]; !ok {
+		if _, ok := MirrorSessionState_vvalue[m.ScheduleState]; !ok {
 			vals := []string{}
 			for k1, _ := range MirrorSessionState_vvalue {
 				vals = append(vals, k1)
 			}
-			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ScheduleState", vals)
 		}
 		return nil
 	})

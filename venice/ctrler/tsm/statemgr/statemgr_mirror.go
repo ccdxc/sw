@@ -77,10 +77,10 @@ func (mss *MirrorSessionState) handleExpTimer() {
 func (mss *MirrorSessionState) setMirrorSessionRunning() {
 	if !mss.Statemgr.MirrorSessionCountAllocate() {
 		mss.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION
-		mss.Status.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String()
+		mss.Status.ScheduleState = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String()
 	} else {
-		mss.State = monitoring.MirrorSessionState_RUNNING
-		mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+		mss.State = monitoring.MirrorSessionState_ACTIVE
+		mss.Status.ScheduleState = monitoring.MirrorSessionState_ACTIVE.String()
 		ts, _ := types.TimestampProto(time.Now())
 		mss.Status.StartedAt.Timestamp = *ts
 		// create PCAP file URL for sessions with venice collector
@@ -104,7 +104,7 @@ func (sm *Statemgr) UpdateMirrorSession(ms *monitoring.MirrorSession) error {
 		if mss.canUpdateMirrorSession(ms) {
 			log.Infof("UpdateMirrorSession - %s\n", ms.Name)
 			// free the mirror session count - it will be claimed again as needed
-			if mss.State == monitoring.MirrorSessionState_RUNNING {
+			if mss.State == monitoring.MirrorSessionState_ACTIVE {
 				sm.MirrorSessionCountFree()
 				mss.State = monitoring.MirrorSessionState_NONE
 			}
@@ -165,7 +165,7 @@ func (mss *MirrorSessionState) canUpdateMirrorSession(*monitoring.MirrorSession)
 	switch mss.State {
 	case monitoring.MirrorSessionState_STOPPED:
 		log.Infof("Update on STOPPED session %v: ver %v", mss.Name, mss.ResourceVersion)
-	case monitoring.MirrorSessionState_RUNNING:
+	case monitoring.MirrorSessionState_ACTIVE:
 		log.Infof("Update on RUNNING session %v: ver %v", mss.Name, mss.ResourceVersion)
 	case monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION:
 		// this session could not run earlier, try now
@@ -186,7 +186,7 @@ func (mss *MirrorSessionState) programMirrorSession(ms *monitoring.MirrorSession
 			log.Infof("Schedule time is %v", mss.schTime)
 			mss.schTimer = time.AfterFunc(time.Until(mss.schTime), mss.handleSchTimer)
 			mss.State = monitoring.MirrorSessionState_SCHEDULED
-			mss.Status.State = monitoring.MirrorSessionState_SCHEDULED.String()
+			mss.Status.ScheduleState = monitoring.MirrorSessionState_SCHEDULED.String()
 		} else {
 			// schedule time in the past, run it right-away
 			log.Warnf("Schedule time %v already passed, starting the mirror-session now - %v\n", schTime, mss.MirrorSession.Name)
@@ -195,14 +195,14 @@ func (mss *MirrorSessionState) programMirrorSession(ms *monitoring.MirrorSession
 	} else {
 		mss.schTime = time.Now()
 		mss.setMirrorSessionRunning()
-		log.Infof("Mirror Session  %v, State %v", mss.Name, mss.Status.State)
+		log.Infof("Mirror Session  %v, State %v", mss.Name, mss.Status.ScheduleState)
 	}
 	if !mss.runMsExpTimer() {
-		if mss.State == monitoring.MirrorSessionState_RUNNING {
+		if mss.State == monitoring.MirrorSessionState_ACTIVE {
 			mss.Statemgr.MirrorSessionCountFree()
 		}
 		mss.State = monitoring.MirrorSessionState_STOPPED
-		mss.Status.State = monitoring.MirrorSessionState_STOPPED.String()
+		mss.Status.ScheduleState = monitoring.MirrorSessionState_STOPPED.String()
 		mss.expTimer = nil
 	}
 }
@@ -228,8 +228,8 @@ func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
 	// If incoming object's state is not "" or NONE, it indicates that the TSM restarted
 	// Naples will already have this mirror session, but will send a new create which Naples must handle
 	// same as tsm handles apiserver restart XXX
-	if ms.Status.State != "" && (ms.Status.State != monitoring.MirrorSessionState_NONE.String()) {
-		mss.State = monitoring.MirrorSessionState(monitoring.MirrorSessionState_value[ms.Status.State])
+	if ms.Status.ScheduleState != "" && (ms.Status.ScheduleState != monitoring.MirrorSessionState_NONE.String()) {
+		mss.State = monitoring.MirrorSessionState(monitoring.MirrorSessionState_value[ms.Status.ScheduleState])
 		mss.schTime, _ = mss.Status.StartedAt.Time()
 	} else {
 		mss.State = monitoring.MirrorSessionState_NONE
@@ -268,7 +268,7 @@ func (sm *Statemgr) deleteMirrorSession(mss *MirrorSessionState) {
 		log.Infof("STOP ExpTimer for %v", mss.MirrorSession.Name)
 		mss.expTimer.Stop()
 	}
-	if mss.State == monitoring.MirrorSessionState_RUNNING {
+	if mss.State == monitoring.MirrorSessionState_ACTIVE {
 		sm.MirrorSessionCountFree()
 	}
 	mss.State = monitoring.MirrorSessionState_STOPPED
@@ -289,7 +289,7 @@ func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
 	}
 	mss.setMirrorSessionRunning()
 	sm.memDB.UpdateObject(mss)
-	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.State)
+	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.ScheduleState)
 	mss.schTimer = nil
 	sm.writer.WriteMirrorSession(mss.MirrorSession)
 }
@@ -303,11 +303,11 @@ func (sm *Statemgr) stopMirrorSession(mss *MirrorSessionState) {
 		mss.expTimer = nil
 		return
 	}
-	if mss.State == monitoring.MirrorSessionState_RUNNING {
+	if mss.State == monitoring.MirrorSessionState_ACTIVE {
 		sm.MirrorSessionCountFree()
 	}
 	mss.State = monitoring.MirrorSessionState_STOPPED
-	mss.Status.State = monitoring.MirrorSessionState_STOPPED.String()
+	mss.Status.ScheduleState = monitoring.MirrorSessionState_STOPPED.String()
 	mss.expTimer = nil
 	sm.memDB.UpdateObject(mss)
 	sm.writer.WriteMirrorSession(mss.MirrorSession)
