@@ -59,7 +59,7 @@
                                 {
                                         "Name" : "Collect Sysmgr Logs",
                                         "Method" : 0,
-                                        "Command" : "mkdir sysmgr-logs && cp /var/log/sysmgr/* /var/log/sysmgr.log sysmgr-logs/"
+                                        "Command" : "mkdir sysmgr-logs && cp /var/log/pensando/sysmgr/* sysmgr-logs/"
                                 },
                                 {
                                         "Name" : "Collect OBFL Logs",
