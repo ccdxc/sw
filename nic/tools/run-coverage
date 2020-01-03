@@ -155,7 +155,7 @@ set -o pipefail
 #Set up locale encoding for pipenv
 localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
 export LANG=en_US.UTF-8
-sudo pip3 install pandas
+python3 -m pip install pandas --user
 
 set -o pipefail
 set -ex
