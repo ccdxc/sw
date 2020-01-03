@@ -118,7 +118,7 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	log.Debugf("Fwlog: %+v", point)
 
 	// disable fwlog reporting to Venice for A release
-	//s.fwTable.Points([]*tsdb.Point{ }, ts)
+	//s.fwTable.Points([]*tsdb.Point{point}, ts)
 
 	// set src/dest vrf
 	vrfList := map[uint64]bool{
