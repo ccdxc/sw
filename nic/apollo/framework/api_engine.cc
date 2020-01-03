@@ -1200,7 +1200,7 @@ api_engine::batch_commit(api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg) {
         goto error;
     }
 
-#if 0
+#ifdef APULU
     // if this API batch contains any config messages that are of interest
     // to other components, send a batched config msg now
     if (batch_ctxt_.pds_msgs) {

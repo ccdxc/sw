@@ -8,7 +8,6 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/api/core/msg.h"
-#include "pds_ipc.h"
 
 // types for msg processing
 typedef enum pds_ipc_msg_op_e {
@@ -25,7 +24,7 @@ typedef enum pds_ipc_msg_op_e {
 typedef sdk::sdk_ret_t (*pds_ipc_msg_cb)(const pds_msg_t *msg, pds_msg_t *ret);
 
 // function prototypes
-int pds_vpp_ipc_init(void);
+//int pds_vpp_ipc_init(void);
 int pds_ipc_register_callback(pds_msg_id_t msgid,
                               pds_ipc_msg_op_t operation,
                               pds_ipc_msg_cb cb_fn);

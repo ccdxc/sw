@@ -79,7 +79,9 @@ pds_test_base::SetUpTestCase(test_case_params_t& params)
 {
     pds_init_params_t init_params;
 
-    vpp_thread_create();
+    if (!params.disable_vpp_mock) {
+        vpp_thread_create();
+    }
 
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;

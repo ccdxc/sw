@@ -18,6 +18,19 @@ trap cleanup EXIT
 $NICDIR/apollo/tools/apulu/start-agent-mock.sh > agent.log 2>&1 &
 # wait till agent opens up gRPC service port
 sleep 10
+# also need to start model and VPP
+
+$NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
+
+export CONFIG_PATH=$NICDIR/conf
+
+echo "Starting VPP"
+sudo $NICDIR/vpp/tools/start-vpp-sim.sh --pipeline apulu
+if [[ $? != 0 ]]; then
+    echo "Failed to bring up VPP"
+    exit -1
+fi
+
 $NICDIR/build/x86_64/apulu/bin/testapp -i $NICDIR/apollo/test/scale/apulu/scale_cfg.json
 linecount=`$NICDIR/build/x86_64/apulu/bin/pdsctl show vpc | grep "TENANT" | wc -l`
 if [[ $linecount -eq 0 ]]; then

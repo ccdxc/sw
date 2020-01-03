@@ -4,8 +4,8 @@
 // Handlers for all messages from PDS Agent
 
 #include <arpa/inet.h>
-#include "nic/vpp/infra/ipc/ipc.hpp"
-#include "nic/vpp/infra/ipc/pds_ipc.h"
+#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
+#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
 #include "pdsa_hdlr.h"
 
 // local cache to enable rollbacks

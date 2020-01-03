@@ -220,6 +220,38 @@ typedef struct pds_security_profile_info_s {
     pds_security_profile_status_t status; ///< status
     pds_security_profile_stats_t stats;   ///< stats
 } pds_security_profile_info_t;
+
+/// \brief    create security profile
+/// \param[in] spec  security profile configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_security_profile_create(
+    pds_security_profile_spec_t *spec,
+    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief    read security profile
+/// \param[in]  key    security profile key
+/// \param[out] info   security profile information
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_security_profile_read(pds_security_profile_key_t *key,
+                                    pds_security_profile_info_t *info);
+
+/// \brief    update security profile
+/// \param[in] spec  security profile configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_security_profile_update(
+    pds_security_profile_spec_t *spec,
+    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief    delete security profile
+/// \param[in] key   security profile key
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_security_profile_delete(
+    pds_security_profile_key_t *key,
+    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
 /// @}
 
 #endif    // __INCLUDE_API_PDS_POLICY_HPP__

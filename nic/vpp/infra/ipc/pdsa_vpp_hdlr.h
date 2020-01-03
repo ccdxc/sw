@@ -16,6 +16,11 @@ int pds_vpp_ipc_init(void);
 int ipc_log_notice(const char *fmt, ...);
 int ipc_log_error(const char *fmt, ...);
 
+// ipc infra internal functions
+void pds_vpp_fd_register(int fd);
+void pds_ipc_init(void);
+void pds_ipc_read_fd(int fd);
+
 #ifdef __cplusplus
 }
 #endif

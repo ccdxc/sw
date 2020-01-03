@@ -119,9 +119,10 @@ agent_mode (void)
 
 // test case parameters
 typedef struct test_case_params_t_ {
-    const char      *cfg_file;     ///< config file
-    bool            enable_fte;    ///< Unused
-    std::string     profile;       ///< config profile
+    const char      *cfg_file;        ///< config file
+    bool            enable_fte;       ///< Unused
+    bool            disable_vpp_mock; ///< vpp mock is not started if true
+    std::string     profile;          ///< config profile
 } test_case_params_t;
 
 // base class for all gtests.

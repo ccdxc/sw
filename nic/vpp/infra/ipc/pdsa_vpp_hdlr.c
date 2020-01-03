@@ -9,8 +9,7 @@
 #include <vnet/vnet.h>
 #include <vnet/plugin/plugin.h>
 #include <vppinfra/file.h>
-#include "pds_ipc.h"
-#include "ipc_internal.h"
+#include "pdsa_vpp_hdlr.h"
 
 // logging class
 static vlib_log_class_t pds_ipc_log = 0;
@@ -19,7 +18,7 @@ static vlib_log_class_t pds_ipc_log = 0;
 // data in the IPC fd
 static clib_error_t *
 pds_vpp_ipc_fd_read (clib_file_t * uf) {
-    ipcshim_read_fd();
+    pds_ipc_read_fd(uf->file_descriptor);
 
     return 0;
 }
@@ -37,7 +36,7 @@ pds_vpp_fd_register (int fd) {
 
     // register file desc
     clib_file_add(&file_main, &clib_file);
-    ipc_log_notice("IPC file descriptor registered with main loop");
+    ipc_log_notice("IPC file descriptor %d registered with main loop", fd);
 }
 
 // wrapper over vlib_log callable from C++
@@ -79,6 +78,6 @@ pds_vpp_ipc_init (void)
 
     ipc_log_notice("IPC request handler registered");
 
-    ipc_shim_init();
+    pds_ipc_init();
     return 0;
 }
