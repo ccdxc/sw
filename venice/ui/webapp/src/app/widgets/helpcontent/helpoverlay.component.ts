@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { Portal, TemplatePortalDirective } from '@angular/cdk/portal';
 import { HttpClient } from '@angular/common/http';
 import { HelpLinkMap } from 'assets/generated/docs/help/linkMap';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { UrlMap } from 'assets/generated/docs/help/urlMap';
 
@@ -42,6 +42,7 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(protected controllerService: ControllerService,
     protected http: HttpClient,
     protected router: Router,
+    protected route: ActivatedRoute,
     protected overlay: Overlay) {}
 
   ngOnInit() {
@@ -61,14 +62,16 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.openHelp();
     }));
 
-    this.onUrlNavigation(this.router.url);
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd))
+    this.onUrlNavigation();
+    const sub = this.router.events.pipe(filter(event => event instanceof NavigationEnd))
     .subscribe((event: NavigationEnd) => {
-      this.onUrlNavigation(event.urlAfterRedirects);
+      this.onUrlNavigation();
     });
+    this.subscriptions.push(sub);
   }
 
-  onUrlNavigation(url: string) {
+  onUrlNavigation() {
+    const url = this.generateAngularUrl();
     if (UrlMap[url]) {
       const id = UrlMap[url];
       this.replaceHelpContentByID(id);
@@ -80,6 +83,19 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       this.currentContentUrl = '';
       this.helpPortal = this.defaultHelp;
     }
+  }
+
+  generateAngularUrl() {
+    let route = this.route;
+    let url = '';
+    while (route != null) {
+      const urlItem = route.routeConfig != null ? route.routeConfig.path : '';
+      if (urlItem.length !== 0) {
+        url += '/' + urlItem;
+      }
+      route = route.firstChild;
+    }
+    return url;
   }
 
   ngAfterViewInit() {

@@ -8,6 +8,7 @@ export const UrlMap: { [url: string]: string } = {
   '/troubleshoot/mirrorsessions': 'mirrorsessions',
   '/security/securityapps': 'apps',
   '/security/sgpolicies': 'policies',
+  '/security/sgpolicies/:id': 'policies',
   '/security/securitygroups': 'securitygroups',
   '/admin/authpolicy' : 'authpolicy',
   '/monitoring/fwlogs': 'fwlogs',
