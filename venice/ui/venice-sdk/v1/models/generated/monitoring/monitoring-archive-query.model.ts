@@ -33,27 +33,27 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
     'end-time': Date = null;
     public static propInfo: { [prop in keyof IMonitoringArchiveQuery]: PropInfoItem } = {
         'texts': {
-            description:  'OR of Text-requirements to be matched, Exclude is not supported for Text search',
+            description:  `OR of Text-requirements to be matched, Exclude is not supported for Text search`,
             required: false,
             type: 'object'
         },
         'fields': {
-            description:  'Field Selector is AND of field.Requirements',
+            description:  `Field Selector is AND of field.Requirements`,
             required: false,
             type: 'object'
         },
         'labels': {
-            description:  'Label Selector is AND of label.Requirememts',
+            description:  `Label Selector is AND of label.Requirememts`,
             required: false,
             type: 'object'
         },
         'start-time': {
-            description:  'StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z',
+            description:  `StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  'EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z',
+            description:  `EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z`,
             required: false,
             type: 'Date'
         },

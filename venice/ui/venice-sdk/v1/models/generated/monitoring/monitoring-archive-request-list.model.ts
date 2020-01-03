@@ -38,7 +38,7 @@ export class MonitoringArchiveRequestList extends BaseModel implements IMonitori
             type: 'object'
         },
         'items': {
-            description:  'List of ArchiveRequest objects',
+            description:  `List of ArchiveRequest objects`,
             required: false,
             type: 'object'
         },

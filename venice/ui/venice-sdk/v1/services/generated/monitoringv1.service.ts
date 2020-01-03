@@ -422,7 +422,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create ArchiveRequest object */
-  public AddArchiveRequest_1(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+  public AddArchiveRequest_1(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests';
     const opts = {
       eventID: 'AddArchiveRequest_1',
@@ -434,7 +434,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
@@ -471,7 +471,7 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Cancel_1(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+  public Cancel_1(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests/{O.Name}/Cancel';
     url = url.replace('{O.Name}', O_Name);
     const opts = {
@@ -484,7 +484,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
@@ -1282,7 +1282,7 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Create ArchiveRequest object */
-  public AddArchiveRequest(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+  public AddArchiveRequest(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     const opts = {
@@ -1295,7 +1295,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
@@ -1334,7 +1334,7 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Cancel(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+  public Cancel(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}/Cancel';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -1348,7 +1348,7 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body))
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }

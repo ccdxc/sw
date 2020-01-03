@@ -19,7 +19,7 @@ The max text-string length is 256 byteslength of string should be between 0 and 
     'text': Array<string> = null;
     public static propInfo: { [prop in keyof ISearchTextRequirement]: PropInfoItem } = {
         'text': {
-            description:  'AND of words or phrases to be matched The max text-string length is 256 byteslength of string should be between 0 and 256',
+            description:  `AND of words or phrases to be matched The max text-string length is 256 byteslength of string should be between 0 and 256`,
             required: false,
             type: 'Array<string>'
         },
