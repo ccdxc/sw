@@ -82,7 +82,7 @@ func TestListFwlogPolicy(t *testing.T) {
 			}
 
 			if tt.Sub(ct) > 0 {
-				time.Sleep(time.Second * 2) // delay a bit
+				time.Sleep(time.Second * 5) // delay a bit
 				return true, nil
 			}
 		}

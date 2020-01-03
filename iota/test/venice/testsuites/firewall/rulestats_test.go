@@ -53,10 +53,12 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
-			// check fwlog
-			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
-			}).Should(Succeed())
+			// check fwlog, enable when fwlogs are reported to Venice
+			/*
+				Eventually(func() error {
+					return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
+				}).Should(Succeed())
+			*/
 
 			// verify TCP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "TcpHits": 1}}
@@ -86,10 +88,12 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
-			// check fwlog
-			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
-			}).Should(Succeed())
+			// check fwlog ,enable when fwlogs are reported to Venice
+			/*
+				Eventually(func() error {
+					return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
+				}).Should(Succeed())
+			*/
 
 			// verify UDP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "UdpHits": 1}}
@@ -120,10 +124,12 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
-			// check fwlog
-			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
-			}).Should(Succeed())
+			// check fwlog, enable when fwlogs are reported to Venice
+			/*
+				Eventually(func() error {
+					return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+				}).Should(Succeed())
+			*/
 
 			// verify ICMP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "IcmpHits": 1}}

@@ -39,10 +39,12 @@ var _ = Describe("metrics test", func() {
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
-			// check fwlog
-			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
-			}).Should(Succeed())
+			// check fwlog, enable when fwlogs are reported to Venice
+			/*
+				Eventually(func() error {
+					return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+				}).Should(Succeed())
+			*/
 
 			Eventually(func() error {
 				return ts.model.Action().QueryDropMetricsForWorkloadPairs(workloadPairs, startTime.String())

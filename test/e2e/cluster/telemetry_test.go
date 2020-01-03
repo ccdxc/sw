@@ -357,6 +357,7 @@ var _ = Describe("telemetry tests", func() {
 
 	Context("on restarting citadel service", func() {
 		It("fwlog query should succeed", func() {
+			Skip("skip fwlog test")
 			nodesList, err := ts.tu.APIClient.ClusterV1().Node().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			Expect(err).Should(BeNil())
 

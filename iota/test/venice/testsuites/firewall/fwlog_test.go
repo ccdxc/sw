@@ -41,6 +41,7 @@ var _ = Describe("fwlog tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short verify fwlog on traffic ", func() {
 		It("tags:sanity=true should log ICMP allow in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -72,6 +73,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("tags:sanity=true should log TCP/8000 allow in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -101,6 +103,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log UDP/9000 allow in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -132,6 +135,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log ICMP deny in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -164,6 +168,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("tags:sanity=true should log TCP/8100 deny in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -196,6 +201,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log UDP/9100 deny in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -228,6 +234,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log ICMP reject in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -258,6 +265,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log TCP/8200 reject in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -290,6 +298,7 @@ var _ = Describe("fwlog tests", func() {
 		})
 
 		It("should log UDP/9200 reject in fwlog", func() {
+			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
