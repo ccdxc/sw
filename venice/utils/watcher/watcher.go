@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -236,6 +237,12 @@ func (w *Watcher) watch(ctx context.Context, apicl apiclient.Services, kind *Kin
 		}
 		// module watcher
 		watcher, err = apicl.DiagnosticsV1().Module().Watch(ctx, kind.Options)
+	case string(monitoring.KindArchiveRequest):
+		if kind.Options == nil {
+			kind.Options = &api.ListWatchOptions{}
+		}
+		// archive request watcher
+		watcher, err = apicl.MonitoringV1().ArchiveRequest().Watch(ctx, kind.Options)
 	default:
 		return nil, fmt.Errorf("unsupported kind: %s", kind)
 	}

@@ -45,8 +45,3 @@ func registerAlertHooks(svc apigw.APIGatewayService, l log.Logger) error {
 
 	return nil
 }
-
-func init() {
-	gw := apigwpkg.MustGetAPIGateway()
-	gw.RegisterHooksCb("monitoring.MonitoringV1", registerAlertHooks)
-}

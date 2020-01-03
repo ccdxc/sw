@@ -12,6 +12,7 @@ func registerMonitoringHooks(svc apiserver.Service, l log.Logger) {
 	registerMirrorSessionHooks(svc, l)
 	registerFwlogPolicyHooks(svc, l)
 	registerFlowExpPolicyHooks(svc, l)
+	registerArchiveHooks(svc, l)
 }
 
 func init() {

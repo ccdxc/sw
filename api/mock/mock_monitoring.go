@@ -1276,6 +1276,145 @@ func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Allowed(oper 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Allowed), oper)
 }
 
+// MockMonitoringV1ArchiveRequestInterface is a mock of MonitoringV1ArchiveRequestInterface interface
+type MockMonitoringV1ArchiveRequestInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockMonitoringV1ArchiveRequestInterfaceMockRecorder
+}
+
+// MockMonitoringV1ArchiveRequestInterfaceMockRecorder is the mock recorder for MockMonitoringV1ArchiveRequestInterface
+type MockMonitoringV1ArchiveRequestInterfaceMockRecorder struct {
+	mock *MockMonitoringV1ArchiveRequestInterface
+}
+
+// NewMockMonitoringV1ArchiveRequestInterface creates a new mock instance
+func NewMockMonitoringV1ArchiveRequestInterface(ctrl *gomock.Controller) *MockMonitoringV1ArchiveRequestInterface {
+	mock := &MockMonitoringV1ArchiveRequestInterface{ctrl: ctrl}
+	mock.recorder = &MockMonitoringV1ArchiveRequestInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockMonitoringV1ArchiveRequestInterface) EXPECT() *MockMonitoringV1ArchiveRequestInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Create(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Update(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) UpdateStatus(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Allowed), oper)
+}
+
+// Cancel mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Cancel(ctx context.Context, in *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Cancel", ctx, in)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Cancel indicates an expected call of Cancel
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Cancel(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cancel", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Cancel), ctx, in)
+}
+
 // MockMonitoringV1Interface is a mock of MonitoringV1Interface interface
 type MockMonitoringV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1417,6 +1556,18 @@ func (m *MockMonitoringV1Interface) TechSupportRequest() monitoring.MonitoringV1
 // TechSupportRequest indicates an expected call of TechSupportRequest
 func (mr *MockMonitoringV1InterfaceMockRecorder) TechSupportRequest() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TechSupportRequest", reflect.TypeOf((*MockMonitoringV1Interface)(nil).TechSupportRequest))
+}
+
+// ArchiveRequest mocks base method
+func (m *MockMonitoringV1Interface) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
+	ret := m.ctrl.Call(m, "ArchiveRequest")
+	ret0, _ := ret[0].(monitoring.MonitoringV1ArchiveRequestInterface)
+	return ret0
+}
+
+// ArchiveRequest indicates an expected call of ArchiveRequest
+func (mr *MockMonitoringV1InterfaceMockRecorder) ArchiveRequest() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ArchiveRequest", reflect.TypeOf((*MockMonitoringV1Interface)(nil).ArchiveRequest))
 }
 
 // Watch mocks base method

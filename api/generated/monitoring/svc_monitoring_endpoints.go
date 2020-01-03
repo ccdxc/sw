@@ -46,6 +46,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoAddAlertEndpoint                     endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddArchiveRequestEndpoint            endpoint.Endpoint
 	AutoAddEventPolicyEndpoint               endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
@@ -56,6 +57,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoDeleteAlertEndpoint                  endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteArchiveRequestEndpoint         endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
@@ -66,6 +68,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoGetAlertEndpoint                     endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetArchiveRequestEndpoint            endpoint.Endpoint
 	AutoGetEventPolicyEndpoint               endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
@@ -76,6 +79,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListArchiveRequestEndpoint           endpoint.Endpoint
 	AutoListEventPolicyEndpoint              endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
@@ -86,6 +90,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoUpdateAlertEndpoint                  endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateArchiveRequestEndpoint         endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
@@ -93,6 +98,7 @@ type EndpointsMonitoringV1Client struct {
 	AutoUpdateStatsPolicyEndpoint            endpoint.Endpoint
 	AutoUpdateTechSupportRequestEndpoint     endpoint.Endpoint
 	AutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
+	CancelEndpoint                           endpoint.Endpoint
 }
 
 // EndpointsMonitoringV1RestClient is the REST client
@@ -105,6 +111,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoAddAlertEndpoint                     endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddArchiveRequestEndpoint            endpoint.Endpoint
 	AutoAddEventPolicyEndpoint               endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
@@ -115,6 +122,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoDeleteAlertEndpoint                  endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteArchiveRequestEndpoint         endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
@@ -125,6 +133,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoGetAlertEndpoint                     endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetArchiveRequestEndpoint            endpoint.Endpoint
 	AutoGetEventPolicyEndpoint               endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
@@ -135,6 +144,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListArchiveRequestEndpoint           endpoint.Endpoint
 	AutoListEventPolicyEndpoint              endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
@@ -145,6 +155,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoUpdateAlertEndpoint                  endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateArchiveRequestEndpoint         endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
@@ -155,6 +166,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoWatchAlertEndpoint                   endpoint.Endpoint
 	AutoWatchAlertDestinationEndpoint        endpoint.Endpoint
 	AutoWatchAlertPolicyEndpoint             endpoint.Endpoint
+	AutoWatchArchiveRequestEndpoint          endpoint.Endpoint
 	AutoWatchEventPolicyEndpoint             endpoint.Endpoint
 	AutoWatchFlowExportPolicyEndpoint        endpoint.Endpoint
 	AutoWatchFwlogPolicyEndpoint             endpoint.Endpoint
@@ -163,6 +175,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoWatchSvcMonitoringV1Endpoint         endpoint.Endpoint
 	AutoWatchTechSupportRequestEndpoint      endpoint.Endpoint
 	AutoWatchTroubleshootingSessionEndpoint  endpoint.Endpoint
+	CancelEndpoint                           endpoint.Endpoint
 }
 
 // MiddlewareMonitoringV1Server adds middle ware to the server
@@ -175,6 +188,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoAddAlertEndpoint                     endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddArchiveRequestEndpoint            endpoint.Endpoint
 	AutoAddEventPolicyEndpoint               endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
@@ -185,6 +199,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoDeleteAlertEndpoint                  endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteArchiveRequestEndpoint         endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
@@ -195,6 +210,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoGetAlertEndpoint                     endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetArchiveRequestEndpoint            endpoint.Endpoint
 	AutoGetEventPolicyEndpoint               endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
@@ -205,6 +221,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListArchiveRequestEndpoint           endpoint.Endpoint
 	AutoListEventPolicyEndpoint              endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
@@ -215,6 +232,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoUpdateAlertEndpoint                  endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateArchiveRequestEndpoint         endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
@@ -222,6 +240,7 @@ type EndpointsMonitoringV1Server struct {
 	AutoUpdateStatsPolicyEndpoint            endpoint.Endpoint
 	AutoUpdateTechSupportRequestEndpoint     endpoint.Endpoint
 	AutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
+	CancelEndpoint                           endpoint.Endpoint
 
 	watchHandlerEventPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerStatsPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -233,6 +252,7 @@ type EndpointsMonitoringV1Server struct {
 	watchHandlerMirrorSession          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTroubleshootingSession func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTechSupportRequest     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerArchiveRequest         func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddAlert is endpoint for AutoAddAlert
@@ -274,6 +294,20 @@ func (e EndpointsMonitoringV1Client) AutoAddAlertPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoAddAlertPolicy struct {
 	V   AlertPolicy
+	Err error
+}
+
+// AutoAddArchiveRequest is endpoint for AutoAddArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoAddArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	resp, err := e.AutoAddArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1AutoAddArchiveRequest struct {
+	V   ArchiveRequest
 	Err error
 }
 
@@ -417,6 +451,20 @@ type respMonitoringV1AutoDeleteAlertPolicy struct {
 	Err error
 }
 
+// AutoDeleteArchiveRequest is endpoint for AutoDeleteArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoDeleteArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	resp, err := e.AutoDeleteArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1AutoDeleteArchiveRequest struct {
+	V   ArchiveRequest
+	Err error
+}
+
 // AutoDeleteEventPolicy is endpoint for AutoDeleteEventPolicy
 func (e EndpointsMonitoringV1Client) AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	resp, err := e.AutoDeleteEventPolicyEndpoint(ctx, in)
@@ -554,6 +602,20 @@ func (e EndpointsMonitoringV1Client) AutoGetAlertPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoGetAlertPolicy struct {
 	V   AlertPolicy
+	Err error
+}
+
+// AutoGetArchiveRequest is endpoint for AutoGetArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoGetArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	resp, err := e.AutoGetArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1AutoGetArchiveRequest struct {
+	V   ArchiveRequest
 	Err error
 }
 
@@ -697,6 +759,20 @@ type respMonitoringV1AutoListAlertPolicy struct {
 	Err error
 }
 
+// AutoListArchiveRequest is endpoint for AutoListArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoListArchiveRequest(ctx context.Context, in *api.ListWatchOptions) (*ArchiveRequestList, error) {
+	resp, err := e.AutoListArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequestList{}, err
+	}
+	return resp.(*ArchiveRequestList), nil
+}
+
+type respMonitoringV1AutoListArchiveRequest struct {
+	V   ArchiveRequestList
+	Err error
+}
+
 // AutoListEventPolicy is endpoint for AutoListEventPolicy
 func (e EndpointsMonitoringV1Client) AutoListEventPolicy(ctx context.Context, in *api.ListWatchOptions) (*EventPolicyList, error) {
 	resp, err := e.AutoListEventPolicyEndpoint(ctx, in)
@@ -837,6 +913,20 @@ type respMonitoringV1AutoUpdateAlertPolicy struct {
 	Err error
 }
 
+// AutoUpdateArchiveRequest is endpoint for AutoUpdateArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoUpdateArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	resp, err := e.AutoUpdateArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1AutoUpdateArchiveRequest struct {
+	V   ArchiveRequest
+	Err error
+}
+
 // AutoUpdateEventPolicy is endpoint for AutoUpdateEventPolicy
 func (e EndpointsMonitoringV1Client) AutoUpdateEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	resp, err := e.AutoUpdateEventPolicyEndpoint(ctx, in)
@@ -935,6 +1025,20 @@ type respMonitoringV1AutoUpdateTroubleshootingSession struct {
 	Err error
 }
 
+// Cancel is endpoint for Cancel
+func (e EndpointsMonitoringV1Client) Cancel(ctx context.Context, in *CancelArchiveRequest) (*ArchiveRequest, error) {
+	resp, err := e.CancelEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1Cancel struct {
+	V   ArchiveRequest
+	Err error
+}
+
 func (e EndpointsMonitoringV1Client) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
 	return e.Client.AutoWatchSvcMonitoringV1(ctx, in)
 }
@@ -987,6 +1091,11 @@ func (e EndpointsMonitoringV1Client) AutoWatchTroubleshootingSession(ctx context
 // AutoWatchTechSupportRequest performs Watch for TechSupportRequest
 func (e EndpointsMonitoringV1Client) AutoWatchTechSupportRequest(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTechSupportRequestClient, error) {
 	return e.Client.AutoWatchTechSupportRequest(ctx, in)
+}
+
+// AutoWatchArchiveRequest performs Watch for ArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoWatchArchiveRequest(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchArchiveRequestClient, error) {
+	return e.Client.AutoWatchArchiveRequest(ctx, in)
 }
 
 // AutoAddAlert implementation on server Endpoint
@@ -1053,6 +1162,28 @@ func MakeMonitoringV1AutoAddAlertPolicyEndpoint(s ServiceMonitoringV1Server, log
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoAddAlertPolicy")(f)
+}
+
+// AutoAddArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoAddArchiveRequest(ctx context.Context, in ArchiveRequest) (ArchiveRequest, error) {
+	resp, err := e.AutoAddArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1AutoAddArchiveRequestEndpoint creates  AutoAddArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoAddArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ArchiveRequest)
+		v, err := s.AutoAddArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoAddArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoAddArchiveRequest")(f)
 }
 
 // AutoAddEventPolicy implementation on server Endpoint
@@ -1275,6 +1406,28 @@ func MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoDeleteAlertPolicy")(f)
 }
 
+// AutoDeleteArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoDeleteArchiveRequest(ctx context.Context, in ArchiveRequest) (ArchiveRequest, error) {
+	resp, err := e.AutoDeleteArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1AutoDeleteArchiveRequestEndpoint creates  AutoDeleteArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoDeleteArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ArchiveRequest)
+		v, err := s.AutoDeleteArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoDeleteArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoDeleteArchiveRequest")(f)
+}
+
 // AutoDeleteEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoDeleteEventPolicy(ctx context.Context, in EventPolicy) (EventPolicy, error) {
 	resp, err := e.AutoDeleteEventPolicyEndpoint(ctx, in)
@@ -1493,6 +1646,28 @@ func MakeMonitoringV1AutoGetAlertPolicyEndpoint(s ServiceMonitoringV1Server, log
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoGetAlertPolicy")(f)
+}
+
+// AutoGetArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoGetArchiveRequest(ctx context.Context, in ArchiveRequest) (ArchiveRequest, error) {
+	resp, err := e.AutoGetArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1AutoGetArchiveRequestEndpoint creates  AutoGetArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoGetArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ArchiveRequest)
+		v, err := s.AutoGetArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoGetArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoGetArchiveRequest")(f)
 }
 
 // AutoGetEventPolicy implementation on server Endpoint
@@ -1715,6 +1890,28 @@ func MakeMonitoringV1AutoListAlertPolicyEndpoint(s ServiceMonitoringV1Server, lo
 	return trace.ServerEndpoint("MonitoringV1:AutoListAlertPolicy")(f)
 }
 
+// AutoListArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoListArchiveRequest(ctx context.Context, in api.ListWatchOptions) (ArchiveRequestList, error) {
+	resp, err := e.AutoListArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequestList{}, err
+	}
+	return *resp.(*ArchiveRequestList), nil
+}
+
+// MakeMonitoringV1AutoListArchiveRequestEndpoint creates  AutoListArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoListArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoListArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoListArchiveRequest")(f)
+}
+
 // AutoListEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoListEventPolicy(ctx context.Context, in api.ListWatchOptions) (EventPolicyList, error) {
 	resp, err := e.AutoListEventPolicyEndpoint(ctx, in)
@@ -1935,6 +2132,28 @@ func MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateAlertPolicy")(f)
 }
 
+// AutoUpdateArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoUpdateArchiveRequest(ctx context.Context, in ArchiveRequest) (ArchiveRequest, error) {
+	resp, err := e.AutoUpdateArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1AutoUpdateArchiveRequestEndpoint creates  AutoUpdateArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoUpdateArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ArchiveRequest)
+		v, err := s.AutoUpdateArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoUpdateArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoUpdateArchiveRequest")(f)
+}
+
 // AutoUpdateEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoUpdateEventPolicy(ctx context.Context, in EventPolicy) (EventPolicy, error) {
 	resp, err := e.AutoUpdateEventPolicyEndpoint(ctx, in)
@@ -2089,6 +2308,28 @@ func MakeMonitoringV1AutoUpdateTroubleshootingSessionEndpoint(s ServiceMonitorin
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateTroubleshootingSession")(f)
 }
 
+// Cancel implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) Cancel(ctx context.Context, in CancelArchiveRequest) (ArchiveRequest, error) {
+	resp, err := e.CancelEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1CancelEndpoint creates  Cancel endpoints for the service
+func MakeMonitoringV1CancelEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*CancelArchiveRequest)
+		v, err := s.Cancel(ctx, *req)
+		return respMonitoringV1Cancel{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:Cancel")(f)
+}
+
 func (e EndpointsMonitoringV1Server) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return e.svcWatchHandlerMonitoringV1(in, stream)
 }
@@ -2231,6 +2472,19 @@ func MakeAutoWatchTechSupportRequestEndpoint(s ServiceMonitoringV1Server, logger
 	}
 }
 
+// AutoWatchArchiveRequest is the watch handler for ArchiveRequest on the server side.
+func (e EndpointsMonitoringV1Server) AutoWatchArchiveRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchArchiveRequestServer) error {
+	return e.watchHandlerArchiveRequest(in, stream)
+}
+
+// MakeAutoWatchArchiveRequestEndpoint creates the Watch endpoint
+func MakeAutoWatchArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(MonitoringV1_AutoWatchArchiveRequestServer)
+		return s.AutoWatchArchiveRequest(options, wstream)
+	}
+}
+
 // MakeMonitoringV1ServerEndpoints creates server endpoints
 func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Logger) EndpointsMonitoringV1Server {
 	return EndpointsMonitoringV1Server{
@@ -2239,6 +2493,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoAddAlertEndpoint:                     MakeMonitoringV1AutoAddAlertEndpoint(s, logger),
 		AutoAddAlertDestinationEndpoint:          MakeMonitoringV1AutoAddAlertDestinationEndpoint(s, logger),
 		AutoAddAlertPolicyEndpoint:               MakeMonitoringV1AutoAddAlertPolicyEndpoint(s, logger),
+		AutoAddArchiveRequestEndpoint:            MakeMonitoringV1AutoAddArchiveRequestEndpoint(s, logger),
 		AutoAddEventPolicyEndpoint:               MakeMonitoringV1AutoAddEventPolicyEndpoint(s, logger),
 		AutoAddFlowExportPolicyEndpoint:          MakeMonitoringV1AutoAddFlowExportPolicyEndpoint(s, logger),
 		AutoAddFwlogPolicyEndpoint:               MakeMonitoringV1AutoAddFwlogPolicyEndpoint(s, logger),
@@ -2249,6 +2504,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoDeleteAlertEndpoint:                  MakeMonitoringV1AutoDeleteAlertEndpoint(s, logger),
 		AutoDeleteAlertDestinationEndpoint:       MakeMonitoringV1AutoDeleteAlertDestinationEndpoint(s, logger),
 		AutoDeleteAlertPolicyEndpoint:            MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s, logger),
+		AutoDeleteArchiveRequestEndpoint:         MakeMonitoringV1AutoDeleteArchiveRequestEndpoint(s, logger),
 		AutoDeleteEventPolicyEndpoint:            MakeMonitoringV1AutoDeleteEventPolicyEndpoint(s, logger),
 		AutoDeleteFlowExportPolicyEndpoint:       MakeMonitoringV1AutoDeleteFlowExportPolicyEndpoint(s, logger),
 		AutoDeleteFwlogPolicyEndpoint:            MakeMonitoringV1AutoDeleteFwlogPolicyEndpoint(s, logger),
@@ -2259,6 +2515,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoGetAlertEndpoint:                     MakeMonitoringV1AutoGetAlertEndpoint(s, logger),
 		AutoGetAlertDestinationEndpoint:          MakeMonitoringV1AutoGetAlertDestinationEndpoint(s, logger),
 		AutoGetAlertPolicyEndpoint:               MakeMonitoringV1AutoGetAlertPolicyEndpoint(s, logger),
+		AutoGetArchiveRequestEndpoint:            MakeMonitoringV1AutoGetArchiveRequestEndpoint(s, logger),
 		AutoGetEventPolicyEndpoint:               MakeMonitoringV1AutoGetEventPolicyEndpoint(s, logger),
 		AutoGetFlowExportPolicyEndpoint:          MakeMonitoringV1AutoGetFlowExportPolicyEndpoint(s, logger),
 		AutoGetFwlogPolicyEndpoint:               MakeMonitoringV1AutoGetFwlogPolicyEndpoint(s, logger),
@@ -2269,6 +2526,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoListAlertEndpoint:                    MakeMonitoringV1AutoListAlertEndpoint(s, logger),
 		AutoListAlertDestinationEndpoint:         MakeMonitoringV1AutoListAlertDestinationEndpoint(s, logger),
 		AutoListAlertPolicyEndpoint:              MakeMonitoringV1AutoListAlertPolicyEndpoint(s, logger),
+		AutoListArchiveRequestEndpoint:           MakeMonitoringV1AutoListArchiveRequestEndpoint(s, logger),
 		AutoListEventPolicyEndpoint:              MakeMonitoringV1AutoListEventPolicyEndpoint(s, logger),
 		AutoListFlowExportPolicyEndpoint:         MakeMonitoringV1AutoListFlowExportPolicyEndpoint(s, logger),
 		AutoListFwlogPolicyEndpoint:              MakeMonitoringV1AutoListFwlogPolicyEndpoint(s, logger),
@@ -2279,6 +2537,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoUpdateAlertEndpoint:                  MakeMonitoringV1AutoUpdateAlertEndpoint(s, logger),
 		AutoUpdateAlertDestinationEndpoint:       MakeMonitoringV1AutoUpdateAlertDestinationEndpoint(s, logger),
 		AutoUpdateAlertPolicyEndpoint:            MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s, logger),
+		AutoUpdateArchiveRequestEndpoint:         MakeMonitoringV1AutoUpdateArchiveRequestEndpoint(s, logger),
 		AutoUpdateEventPolicyEndpoint:            MakeMonitoringV1AutoUpdateEventPolicyEndpoint(s, logger),
 		AutoUpdateFlowExportPolicyEndpoint:       MakeMonitoringV1AutoUpdateFlowExportPolicyEndpoint(s, logger),
 		AutoUpdateFwlogPolicyEndpoint:            MakeMonitoringV1AutoUpdateFwlogPolicyEndpoint(s, logger),
@@ -2286,6 +2545,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoUpdateStatsPolicyEndpoint:            MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s, logger),
 		AutoUpdateTechSupportRequestEndpoint:     MakeMonitoringV1AutoUpdateTechSupportRequestEndpoint(s, logger),
 		AutoUpdateTroubleshootingSessionEndpoint: MakeMonitoringV1AutoUpdateTroubleshootingSessionEndpoint(s, logger),
+		CancelEndpoint:                           MakeMonitoringV1CancelEndpoint(s, logger),
 
 		watchHandlerEventPolicy:            MakeAutoWatchEventPolicyEndpoint(s, logger),
 		watchHandlerStatsPolicy:            MakeAutoWatchStatsPolicyEndpoint(s, logger),
@@ -2297,6 +2557,7 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		watchHandlerMirrorSession:          MakeAutoWatchMirrorSessionEndpoint(s, logger),
 		watchHandlerTroubleshootingSession: MakeAutoWatchTroubleshootingSessionEndpoint(s, logger),
 		watchHandlerTechSupportRequest:     MakeAutoWatchTechSupportRequestEndpoint(s, logger),
+		watchHandlerArchiveRequest:         MakeAutoWatchArchiveRequestEndpoint(s, logger),
 	}
 }
 
@@ -2367,6 +2628,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoAddArchiveRequest(ctx context.Context, in *ArchiveRequest) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddArchiveRequest(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoAddEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
@@ -2499,6 +2773,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlertPolicy(ctx context.C
 	resp, err = m.next.AutoDeleteAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoDeleteArchiveRequest(ctx context.Context, in *ArchiveRequest) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2627,6 +2914,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoGetArchiveRequest(ctx context.Context, in *ArchiveRequest) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetArchiveRequest(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoGetEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
@@ -2759,6 +3059,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListAlertPolicy(ctx context.Con
 	resp, err = m.next.AutoListAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoListArchiveRequest(ctx context.Context, in *api.ListWatchOptions) (resp *ArchiveRequestList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoListEventPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *EventPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2889,6 +3202,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlertPolicy(ctx context.C
 	resp, err = m.next.AutoUpdateAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoUpdateArchiveRequest(ctx context.Context, in *ArchiveRequest) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoUpdateEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2978,6 +3304,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateTroubleshootingSession(ct
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTroubleshootingSession(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) Cancel(ctx context.Context, in *CancelArchiveRequest) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "Cancel", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.Cancel(ctx, in)
 	return
 }
 
@@ -3125,6 +3464,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchTechSupportRequest(ctx con
 	resp, err = m.next.AutoWatchTechSupportRequest(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoWatchArchiveRequest(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchArchiveRequestClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchArchiveRequest(ctx, in)
+	return
+}
 
 func (m loggingMonitoringV1MiddlewareServer) AutoAddAlert(ctx context.Context, in Alert) (resp Alert, err error) {
 	defer func(begin time.Time) {
@@ -3163,6 +3515,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoAddAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoAddArchiveRequest(ctx context.Context, in ArchiveRequest) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddArchiveRequest(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoAddEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
@@ -3295,6 +3660,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoDeleteAlertPolicy(ctx context.C
 	resp, err = m.next.AutoDeleteAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoDeleteArchiveRequest(ctx context.Context, in ArchiveRequest) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoDeleteEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3423,6 +3801,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoGetAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoGetArchiveRequest(ctx context.Context, in ArchiveRequest) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetArchiveRequest(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoGetEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
@@ -3555,6 +3946,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoListAlertPolicy(ctx context.Con
 	resp, err = m.next.AutoListAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoListArchiveRequest(ctx context.Context, in api.ListWatchOptions) (resp ArchiveRequestList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoListEventPolicy(ctx context.Context, in api.ListWatchOptions) (resp EventPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3685,6 +4089,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateAlertPolicy(ctx context.C
 	resp, err = m.next.AutoUpdateAlertPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoUpdateArchiveRequest(ctx context.Context, in ArchiveRequest) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateArchiveRequest(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoUpdateEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3774,6 +4191,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateTroubleshootingSession(ct
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTroubleshootingSession(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) Cancel(ctx context.Context, in CancelArchiveRequest) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "Cancel", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.Cancel(ctx, in)
 	return
 }
 
@@ -3921,6 +4351,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoWatchTechSupportRequest(in *api
 	err = m.next.AutoWatchTechSupportRequest(in, stream)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoWatchArchiveRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchArchiveRequestServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "MonitoringV1", "method", "AutoWatchArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchArchiveRequest(in, stream)
+	return
+}
 
 func (r *EndpointsMonitoringV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -3959,6 +4402,11 @@ func makeURIMonitoringV1AutoAddAlertDestinationCreateOper(in *AlertDestination) 
 //
 func makeURIMonitoringV1AutoAddAlertPolicyCreateOper(in *AlertPolicy) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies")
+}
+
+//
+func makeURIMonitoringV1AutoAddArchiveRequestCreateOper(in *ArchiveRequest) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/archive-requests")
 }
 
 //
@@ -4014,6 +4462,11 @@ func makeURIMonitoringV1AutoDeleteAlertPolicyDeleteOper(in *AlertPolicy) string 
 }
 
 //
+func makeURIMonitoringV1AutoDeleteArchiveRequestDeleteOper(in *ArchiveRequest) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/archive-requests/", in.Name)
+}
+
+//
 func makeURIMonitoringV1AutoDeleteEventPolicyDeleteOper(in *EventPolicy) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy/", in.Name)
 }
@@ -4062,6 +4515,11 @@ func makeURIMonitoringV1AutoGetAlertDestinationGetOper(in *AlertDestination) str
 //
 func makeURIMonitoringV1AutoGetAlertPolicyGetOper(in *AlertPolicy) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
+}
+
+//
+func makeURIMonitoringV1AutoGetArchiveRequestGetOper(in *ArchiveRequest) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/archive-requests/", in.Name)
 }
 
 //
@@ -4115,6 +4573,11 @@ func makeURIMonitoringV1AutoListAlertPolicyListOper(in *api.ListWatchOptions) st
 }
 
 //
+func makeURIMonitoringV1AutoListArchiveRequestListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/archive-requests")
+}
+
+//
 func makeURIMonitoringV1AutoListEventPolicyListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy")
 }
@@ -4162,6 +4625,12 @@ func makeURIMonitoringV1AutoUpdateAlertDestinationUpdateOper(in *AlertDestinatio
 //
 func makeURIMonitoringV1AutoUpdateAlertPolicyUpdateOper(in *AlertPolicy) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
+}
+
+//
+func makeURIMonitoringV1AutoUpdateArchiveRequestUpdateOper(in *ArchiveRequest) string {
+	return ""
+
 }
 
 //
@@ -4216,6 +4685,11 @@ func makeURIMonitoringV1AutoWatchAlertPolicyWatchOper(in *api.ListWatchOptions) 
 }
 
 //
+func makeURIMonitoringV1AutoWatchArchiveRequestWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/watch/tenant/", in.Tenant, "/archive-requests")
+}
+
+//
 func makeURIMonitoringV1AutoWatchEventPolicyWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/watch/tenant/", in.Tenant, "/event-policy")
 }
@@ -4255,6 +4729,11 @@ func makeURIMonitoringV1AutoWatchTechSupportRequestWatchOper(in *api.ListWatchOp
 func makeURIMonitoringV1AutoWatchTroubleshootingSessionWatchOper(in *api.ListWatchOptions) string {
 	return ""
 
+}
+
+//
+func makeURIMonitoringV1CancelCreateOper(in *CancelArchiveRequest) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/archive-requests/", in.Name, "/Cancel")
 }
 
 // AutoAddEventPolicy CRUD method for EventPolicy
@@ -5750,6 +6229,168 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchTechSupportRequest(ctx contex
 		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 	}()
 	return lw, nil
+}
+
+// AutoAddArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoAddArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	path := makeURIMonitoringV1AutoAddArchiveRequestCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoAddArchiveRequest(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ArchiveRequest), nil
+}
+
+// AutoUpdateArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoUpdateArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoGetArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	path := makeURIMonitoringV1AutoGetArchiveRequestGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoGetArchiveRequest(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ArchiveRequest), err
+}
+
+// AutoDeleteArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoDeleteArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	path := makeURIMonitoringV1AutoDeleteArchiveRequestDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoDeleteArchiveRequest(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ArchiveRequest), err
+}
+
+// AutoListArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoListArchiveRequest(ctx context.Context, options *api.ListWatchOptions) (*ArchiveRequestList, error) {
+	path := makeURIMonitoringV1AutoListArchiveRequestListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoListArchiveRequest(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ArchiveRequestList), err
+}
+
+// AutoWatchArchiveRequest CRUD method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoWatchArchiveRequest(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIMonitoringV1AutoWatchArchiveRequestWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgArchiveRequestWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+func (r *EndpointsMonitoringV1RestClient) CancelArchiveRequest(ctx context.Context, in *CancelArchiveRequest) (*ArchiveRequest, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIMonitoringV1CancelCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1Cancel(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ArchiveRequest), err
 }
 
 // MakeMonitoringV1RestClientEndpoints make REST client endpoints

@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IMonitoringMirrorSessionList,MonitoringMirrorSessionList,IApiStatus,ApiStatus,IMonitoringMirrorSession,MonitoringMirrorSession,IMonitoringTroubleshootingSessionList,MonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,MonitoringTroubleshootingSession,IMonitoringAlertDestinationList,MonitoringAlertDestinationList,IMonitoringAlertDestination,MonitoringAlertDestination,IMonitoringAlertPolicyList,MonitoringAlertPolicyList,IMonitoringAlertPolicy,MonitoringAlertPolicy,IMonitoringAlertList,MonitoringAlertList,IMonitoringAlert,MonitoringAlert,IMonitoringEventPolicyList,MonitoringEventPolicyList,IMonitoringEventPolicy,MonitoringEventPolicy,IMonitoringFlowExportPolicyList,MonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,MonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,MonitoringFwlogPolicyList,IMonitoringFwlogPolicy,MonitoringFwlogPolicy,IMonitoringStatsPolicyList,MonitoringStatsPolicyList,IMonitoringStatsPolicy,MonitoringStatsPolicy,IMonitoringTechSupportRequestList,MonitoringTechSupportRequestList,IMonitoringTechSupportRequest,MonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,MonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,MonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,MonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,MonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,MonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,MonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,MonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper,MonitoringAutoMsgStatsPolicyWatchHelper,IMonitoringAutoMsgTechSupportRequestWatchHelper,MonitoringAutoMsgTechSupportRequestWatchHelper } from '../../models/generated/monitoring';
+import { IMonitoringMirrorSessionList,MonitoringMirrorSessionList,IApiStatus,ApiStatus,IMonitoringMirrorSession,MonitoringMirrorSession,IMonitoringTroubleshootingSessionList,MonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,MonitoringTroubleshootingSession,IMonitoringAlertDestinationList,MonitoringAlertDestinationList,IMonitoringAlertDestination,MonitoringAlertDestination,IMonitoringAlertPolicyList,MonitoringAlertPolicyList,IMonitoringAlertPolicy,MonitoringAlertPolicy,IMonitoringAlertList,MonitoringAlertList,IMonitoringAlert,MonitoringAlert,IMonitoringArchiveRequestList,MonitoringArchiveRequestList,IMonitoringArchiveRequest,MonitoringArchiveRequest,MonitoringCancelArchiveRequest,IMonitoringCancelArchiveRequest,IMonitoringEventPolicyList,MonitoringEventPolicyList,IMonitoringEventPolicy,MonitoringEventPolicy,IMonitoringFlowExportPolicyList,MonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,MonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,MonitoringFwlogPolicyList,IMonitoringFwlogPolicy,MonitoringFwlogPolicy,IMonitoringStatsPolicyList,MonitoringStatsPolicyList,IMonitoringStatsPolicy,MonitoringStatsPolicy,IMonitoringTechSupportRequestList,MonitoringTechSupportRequestList,IMonitoringTechSupportRequest,MonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,MonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,MonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,MonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,MonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgArchiveRequestWatchHelper,MonitoringAutoMsgArchiveRequestWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,MonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,MonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,MonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper,MonitoringAutoMsgStatsPolicyWatchHelper,IMonitoringAutoMsgTechSupportRequestWatchHelper,MonitoringAutoMsgTechSupportRequestWatchHelper } from '../../models/generated/monitoring';
 
 @Injectable()
 export class Monitoringv1Service extends AbstractService {
@@ -404,6 +404,89 @@ export class Monitoringv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List ArchiveRequest objects */
+  public ListArchiveRequest_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequestList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests';
+    const opts = {
+      eventID: 'ListArchiveRequest_1',
+      objType: 'MonitoringArchiveRequestList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringArchiveRequestList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create ArchiveRequest object */
+  public AddArchiveRequest_1(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests';
+    const opts = {
+      eventID: 'AddArchiveRequest_1',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get ArchiveRequest object */
+  public GetArchiveRequest_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetArchiveRequest_1',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete ArchiveRequest object */
+  public DeleteArchiveRequest_1(O_Name, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteArchiveRequest_1',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public Cancel_1(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/archive-requests/{O.Name}/Cancel';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'Cancel_1',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List EventPolicy objects */
@@ -1182,6 +1265,94 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** List ArchiveRequest objects */
+  public ListArchiveRequest(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequestList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'ListArchiveRequest',
+      objType: 'MonitoringArchiveRequestList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringArchiveRequestList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create ArchiveRequest object */
+  public AddArchiveRequest(body: IMonitoringArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'AddArchiveRequest',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get ArchiveRequest object */
+  public GetArchiveRequest(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetArchiveRequest',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete ArchiveRequest object */
+  public DeleteArchiveRequest(O_Name, stagingID: string = ""):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteArchiveRequest',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public Cancel(O_Name, body: IMonitoringCancelArchiveRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}/Cancel';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'Cancel',
+      objType: 'MonitoringArchiveRequest',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringArchiveRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List EventPolicy objects */
   public ListEventPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringEventPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/event-policy';
@@ -1562,6 +1733,21 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch ArchiveRequest objects. Supports WebSockets or HTTP long poll */
+  public WatchArchiveRequest_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgArchiveRequestWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/archive-requests';
+    const opts = {
+      eventID: 'WatchArchiveRequest_1',
+      objType: 'MonitoringAutoMsgArchiveRequestWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgArchiveRequestWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch EventPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchEventPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/event-policy';
@@ -1699,6 +1885,22 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch ArchiveRequest objects. Supports WebSockets or HTTP long poll */
+  public WatchArchiveRequest(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgArchiveRequestWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/archive-requests';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'WatchArchiveRequest',
+      objType: 'MonitoringAutoMsgArchiveRequestWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgArchiveRequestWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch EventPolicy objects. Supports WebSockets or HTTP long poll */

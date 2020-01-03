@@ -17,6 +17,7 @@ import "eventpolicy.proto";
 import "mirror.proto";
 import "techsupport.proto";
 import "troubleshooting.proto";
+import "archive.proto";
 
 service MonitoringV1 {
 
@@ -35,6 +36,7 @@ service MonitoringV1 {
     option (venice.apiGrpcCrudService) = "MirrorSession";
     option (venice.apiGrpcCrudService) = "TroubleshootingSession";
     option (venice.apiGrpcCrudService) = "TechSupportRequest";
+    option (venice.apiGrpcCrudService) = "ArchiveRequest";
 
     option (venice.apiRestService) = {
         Object: "EventPolicy"
@@ -80,5 +82,16 @@ service MonitoringV1 {
     option (venice.apiRestService) = {
         Object: "TechSupportRequest"
         Method: [ "get", "delete", "post", "list", "watch"]
+    };
+    option (venice.apiRestService) = {
+        Object: "ArchiveRequest"
+        Method: [ "get", "delete", "post", "list", "watch"]
+    };
+    // Action to cancel archive request that is in process(scheduled or running)
+    option (venice.apiAction) = {
+        Object: "ArchiveRequest"
+        Action: "Cancel"
+        Request: "CancelArchiveRequest"
+        Response: "ArchiveRequest"
     };
 }

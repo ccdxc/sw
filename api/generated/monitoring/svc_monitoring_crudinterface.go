@@ -135,6 +135,19 @@ type MonitoringV1TechSupportRequestInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// MonitoringV1ArchiveRequestInterface exposes the CRUD methods for ArchiveRequest
+type MonitoringV1ArchiveRequestInterface interface {
+	Create(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error)
+	Update(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error)
+	UpdateStatus(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*ArchiveRequest, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*ArchiveRequest, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*ArchiveRequest, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+	Cancel(ctx context.Context, in *CancelArchiveRequest) (*ArchiveRequest, error)
+}
+
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	EventPolicy() MonitoringV1EventPolicyInterface
@@ -147,5 +160,6 @@ type MonitoringV1Interface interface {
 	MirrorSession() MonitoringV1MirrorSessionInterface
 	TroubleshootingSession() MonitoringV1TroubleshootingSessionInterface
 	TechSupportRequest() MonitoringV1TechSupportRequestInterface
+	ArchiveRequest() MonitoringV1ArchiveRequestInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

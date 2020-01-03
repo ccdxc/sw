@@ -786,6 +786,11 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 	}
 }
 
+// Scroll performs the given query and iteratively fetches the result
+func (e *Client) Scroll(ctx context.Context, index, iType string, query es.Query, size int32) (Scroller, error) {
+	return NewScroller(ctx, e, index, iType, query, size)
+}
+
 // GetClusterHealth returns cluster health info including indices health if specified
 func (e *Client) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
 	retryCount := 0

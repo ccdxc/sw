@@ -54,6 +54,21 @@ export enum MonitoringAlertStatus_severity {
     'critical' = "critical",
 }
 
+export enum MonitoringArchiveRequestSpec_type {
+    'event' = "event",
+    'auditevent' = "auditevent",
+    'fwlog' = "fwlog",
+}
+
+export enum MonitoringArchiveRequestStatus_status {
+    'scheduled' = "scheduled",
+    'running' = "running",
+    'completed' = "completed",
+    'failed' = "failed",
+    'timeout' = "timeout",
+    'canceled' = "canceled",
+}
+
 export enum MonitoringAuthConfig_algo {
     'md5' = "md5",
     'sha1' = "sha1",
@@ -337,6 +352,8 @@ export class AllEnums {
     MonitoringAlertPolicySpec_severity = MonitoringAlertPolicySpec_severity;
     MonitoringAlertSpec_state = MonitoringAlertSpec_state;
     MonitoringAlertStatus_severity = MonitoringAlertStatus_severity;
+    MonitoringArchiveRequestSpec_type = MonitoringArchiveRequestSpec_type;
+    MonitoringArchiveRequestStatus_status = MonitoringArchiveRequestStatus_status;
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
     MonitoringEventPolicySpec_format = MonitoringEventPolicySpec_format;
     MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;

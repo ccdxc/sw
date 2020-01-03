@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/monitoring"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -15,6 +16,10 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	pcache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
+	"github.com/pensando/sw/venice/utils/archive"
+	archexp "github.com/pensando/sw/venice/utils/archive/exporter"
+	archmock "github.com/pensando/sw/venice/utils/archive/mock"
+	archsvc "github.com/pensando/sw/venice/utils/archive/service"
 	elasticauditor "github.com/pensando/sw/venice/utils/audit/elastic"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -22,6 +27,9 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
+	"github.com/pensando/sw/venice/utils/objstore/memclient"
+	"github.com/pensando/sw/venice/utils/resolver"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
@@ -61,6 +69,7 @@ type tInfo struct {
 	fdrAddr           string
 	restcl            apiclient.Services
 	apicl             apiclient.Services
+	objstorecl        objstore.Client
 }
 
 // setupElastic helper function starts elasticsearch and creates elastic client
@@ -107,7 +116,19 @@ func (t *tInfo) startSpyglass() error {
 	// Create new policy cache for spyglass
 	t.pcache = pcache.NewCache(t.logger)
 	// start spyglass finder
-	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", t.rslvr, t.pcache, t.logger, t.esClient)
+	archiveService := archmock.GetMockArchiveService()
+	if t.apiServerAddr != "" {
+		t.objstorecl = memclient.NewMemObjstore()
+		expter, err := archexp.NewObjstoreExporter(monitoring.ArchiveRequestSpec_AuditEvent.String(), t.rslvr, t.logger, archexp.WithObjectstoreClient(t.objstorecl))
+		if err != nil {
+			return err
+		}
+		createJobCb := func(req *monitoring.ArchiveRequest, exporter archive.Exporter, rslvr resolver.Interface, logger log.Logger) archive.Job {
+			return finder.NewArchiveJob(req, exporter, t.esClient, rslvr, logger)
+		}
+		archiveService = archsvc.GetService("finder", t.apiServerAddr, t.rslvr, t.logger, createJobCb, archsvc.WithExporter(monitoring.ArchiveRequestSpec_AuditEvent.String(), expter))
+	}
+	fdr, fdrAddr, err := testutils.StartSpyglassWithArchiveService("finder", t.apiServerAddr, t.rslvr, t.pcache, t.logger, t.esClient, archiveService)
 	if err != nil {
 		return err
 	}

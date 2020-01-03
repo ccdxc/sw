@@ -28,6 +28,7 @@ type grpcServerMonitoringV1 struct {
 	AutoAddAlertHdlr                     grpctransport.Handler
 	AutoAddAlertDestinationHdlr          grpctransport.Handler
 	AutoAddAlertPolicyHdlr               grpctransport.Handler
+	AutoAddArchiveRequestHdlr            grpctransport.Handler
 	AutoAddEventPolicyHdlr               grpctransport.Handler
 	AutoAddFlowExportPolicyHdlr          grpctransport.Handler
 	AutoAddFwlogPolicyHdlr               grpctransport.Handler
@@ -38,6 +39,7 @@ type grpcServerMonitoringV1 struct {
 	AutoDeleteAlertHdlr                  grpctransport.Handler
 	AutoDeleteAlertDestinationHdlr       grpctransport.Handler
 	AutoDeleteAlertPolicyHdlr            grpctransport.Handler
+	AutoDeleteArchiveRequestHdlr         grpctransport.Handler
 	AutoDeleteEventPolicyHdlr            grpctransport.Handler
 	AutoDeleteFlowExportPolicyHdlr       grpctransport.Handler
 	AutoDeleteFwlogPolicyHdlr            grpctransport.Handler
@@ -48,6 +50,7 @@ type grpcServerMonitoringV1 struct {
 	AutoGetAlertHdlr                     grpctransport.Handler
 	AutoGetAlertDestinationHdlr          grpctransport.Handler
 	AutoGetAlertPolicyHdlr               grpctransport.Handler
+	AutoGetArchiveRequestHdlr            grpctransport.Handler
 	AutoGetEventPolicyHdlr               grpctransport.Handler
 	AutoGetFlowExportPolicyHdlr          grpctransport.Handler
 	AutoGetFwlogPolicyHdlr               grpctransport.Handler
@@ -58,6 +61,7 @@ type grpcServerMonitoringV1 struct {
 	AutoListAlertHdlr                    grpctransport.Handler
 	AutoListAlertDestinationHdlr         grpctransport.Handler
 	AutoListAlertPolicyHdlr              grpctransport.Handler
+	AutoListArchiveRequestHdlr           grpctransport.Handler
 	AutoListEventPolicyHdlr              grpctransport.Handler
 	AutoListFlowExportPolicyHdlr         grpctransport.Handler
 	AutoListFwlogPolicyHdlr              grpctransport.Handler
@@ -68,6 +72,7 @@ type grpcServerMonitoringV1 struct {
 	AutoUpdateAlertHdlr                  grpctransport.Handler
 	AutoUpdateAlertDestinationHdlr       grpctransport.Handler
 	AutoUpdateAlertPolicyHdlr            grpctransport.Handler
+	AutoUpdateArchiveRequestHdlr         grpctransport.Handler
 	AutoUpdateEventPolicyHdlr            grpctransport.Handler
 	AutoUpdateFlowExportPolicyHdlr       grpctransport.Handler
 	AutoUpdateFwlogPolicyHdlr            grpctransport.Handler
@@ -75,6 +80,7 @@ type grpcServerMonitoringV1 struct {
 	AutoUpdateStatsPolicyHdlr            grpctransport.Handler
 	AutoUpdateTechSupportRequestHdlr     grpctransport.Handler
 	AutoUpdateTroubleshootingSessionHdlr grpctransport.Handler
+	CancelHdlr                           grpctransport.Handler
 }
 
 // MakeGRPCServerMonitoringV1 creates a GRPC server for MonitoringV1 service
@@ -104,6 +110,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertPolicy", logger)))...,
+		),
+
+		AutoAddArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoAddArchiveRequestEndpoint,
+			DecodeGrpcReqArchiveRequest,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddArchiveRequest", logger)))...,
 		),
 
 		AutoAddEventPolicyHdlr: grpctransport.NewServer(
@@ -176,6 +189,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertPolicy", logger)))...,
 		),
 
+		AutoDeleteArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteArchiveRequestEndpoint,
+			DecodeGrpcReqArchiveRequest,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteArchiveRequest", logger)))...,
+		),
+
 		AutoDeleteEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
@@ -244,6 +264,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertPolicy", logger)))...,
+		),
+
+		AutoGetArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoGetArchiveRequestEndpoint,
+			DecodeGrpcReqArchiveRequest,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetArchiveRequest", logger)))...,
 		),
 
 		AutoGetEventPolicyHdlr: grpctransport.NewServer(
@@ -316,6 +343,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertPolicy", logger)))...,
 		),
 
+		AutoListArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoListArchiveRequestEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespArchiveRequestList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListArchiveRequest", logger)))...,
+		),
+
 		AutoListEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListEventPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -386,6 +420,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertPolicy", logger)))...,
 		),
 
+		AutoUpdateArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateArchiveRequestEndpoint,
+			DecodeGrpcReqArchiveRequest,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateArchiveRequest", logger)))...,
+		),
+
 		AutoUpdateEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
@@ -433,6 +474,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTroubleshootingSession", logger)))...,
+		),
+
+		CancelHdlr: grpctransport.NewServer(
+			endpoints.CancelEndpoint,
+			DecodeGrpcReqCancelArchiveRequest,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Cancel", logger)))...,
 		),
 	}
 }
@@ -487,6 +535,24 @@ func decodeHTTPrespMonitoringV1AutoAddAlertPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp AlertPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoAddArchiveRequest(ctx oldcontext.Context, req *ArchiveRequest) (*ArchiveRequest, error) {
+	_, resp, err := s.AutoAddArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoAddArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoAddArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoAddArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -671,6 +737,24 @@ func decodeHTTPrespMonitoringV1AutoDeleteAlertPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoDeleteArchiveRequest(ctx oldcontext.Context, req *ArchiveRequest) (*ArchiveRequest, error) {
+	_, resp, err := s.AutoDeleteArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoDeleteArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoDeleteArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoDeleteArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoDeleteEventPolicy(ctx oldcontext.Context, req *EventPolicy) (*EventPolicy, error) {
 	_, resp, err := s.AutoDeleteEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -847,6 +931,24 @@ func decodeHTTPrespMonitoringV1AutoGetAlertPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp AlertPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoGetArchiveRequest(ctx oldcontext.Context, req *ArchiveRequest) (*ArchiveRequest, error) {
+	_, resp, err := s.AutoGetArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoGetArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoGetArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoGetArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1031,6 +1133,24 @@ func decodeHTTPrespMonitoringV1AutoListAlertPolicy(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoListArchiveRequest(ctx oldcontext.Context, req *api.ListWatchOptions) (*ArchiveRequestList, error) {
+	_, resp, err := s.AutoListArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoListArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoListArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoListArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequestList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoListEventPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*EventPolicyList, error) {
 	_, resp, err := s.AutoListEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1211,6 +1331,24 @@ func decodeHTTPrespMonitoringV1AutoUpdateAlertPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoUpdateArchiveRequest(ctx oldcontext.Context, req *ArchiveRequest) (*ArchiveRequest, error) {
+	_, resp, err := s.AutoUpdateArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoUpdateArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoUpdateArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoUpdateArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoUpdateEventPolicy(ctx oldcontext.Context, req *EventPolicy) (*EventPolicy, error) {
 	_, resp, err := s.AutoUpdateEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1337,6 +1475,24 @@ func decodeHTTPrespMonitoringV1AutoUpdateTroubleshootingSession(_ context.Contex
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) Cancel(ctx oldcontext.Context, req *CancelArchiveRequest) (*ArchiveRequest, error) {
+	_, resp, err := s.CancelHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1Cancel).V
+	return &r, resp.(respMonitoringV1Cancel).Err
+}
+
+func decodeHTTPrespMonitoringV1Cancel(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return s.Endpoints.AutoWatchSvcMonitoringV1(in, stream)
 }
@@ -1379,6 +1535,10 @@ func (s *grpcServerMonitoringV1) AutoWatchTroubleshootingSession(in *api.ListWat
 
 func (s *grpcServerMonitoringV1) AutoWatchTechSupportRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTechSupportRequestServer) error {
 	return s.Endpoints.AutoWatchTechSupportRequest(in, stream)
+}
+
+func (s *grpcServerMonitoringV1) AutoWatchArchiveRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchArchiveRequestServer) error {
+	return s.Endpoints.AutoWatchArchiveRequest(in, stream)
 }
 
 func encodeHTTPAlertDestinationList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -1480,6 +1640,40 @@ func EncodeGrpcRespAlertPolicyList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespAlertPolicyList decodes the GRPC response
 func DecodeGrpcRespAlertPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPArchiveRequestList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPArchiveRequestList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ArchiveRequestList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqArchiveRequestList encodes GRPC request
+func EncodeGrpcReqArchiveRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ArchiveRequestList)
+	return req, nil
+}
+
+// DecodeGrpcReqArchiveRequestList decodes GRPC request
+func DecodeGrpcReqArchiveRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ArchiveRequestList)
+	return req, nil
+}
+
+// EncodeGrpcRespArchiveRequestList endodes the GRPC response
+func EncodeGrpcRespArchiveRequestList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespArchiveRequestList decodes the GRPC response
+func DecodeGrpcRespArchiveRequestList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

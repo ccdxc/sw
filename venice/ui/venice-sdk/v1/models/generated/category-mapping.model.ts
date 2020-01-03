@@ -22,6 +22,7 @@ import { MonitoringAlertPolicy } from './monitoring';
 import { MonitoringAlertDestination } from './monitoring';
 import { MonitoringMirrorSession } from './monitoring';
 import { MonitoringTechSupportRequest } from './monitoring';
+import { MonitoringArchiveRequest } from './monitoring';
 import { EventsEvent } from './events';
 import { AuditEvent } from './audit';
 import { NetworkNetwork } from './network';
@@ -184,6 +185,11 @@ export const CategoryMapping: CatMap  = {
       instance: new MonitoringTechSupportRequest(),
       scopes: [ 'cluster', ] ,
       actions:  [] ,
+    },
+    "ArchiveRequest" : {
+      instance: new MonitoringArchiveRequest(),
+      scopes: [ 'tenant', ] ,
+      actions:  [ 'Cancel', ] ,
     },
     "Event" : {
       instance: new EventsEvent(),

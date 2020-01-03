@@ -4,6 +4,7 @@ package elastic
 
 import (
 	"context"
+	"io"
 
 	es "github.com/olivere/elastic"
 )
@@ -53,6 +54,9 @@ type ESClient interface {
 	Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation,
 		from, size int32, sortByField string, sortAsc bool, options ...SearchOption) (*es.SearchResult, error)
 
+	// Scroll performs the given query and iteratively fetches the result
+	Scroll(ctx context.Context, index, iType string, query es.Query, size int32) (Scroller, error)
+
 	// Close the elastic client
 	Close() error
 
@@ -70,4 +74,9 @@ type ESClient interface {
 
 	// returns index level stats on different operations happening on an index
 	GetIndicesStats(ctx context.Context, indices []string) (*es.IndicesStatsResponse, error)
+}
+
+// Scroller provides io.Reader interface to scrolling in Elastic. This is not thread safe.
+type Scroller interface {
+	io.Reader
 }

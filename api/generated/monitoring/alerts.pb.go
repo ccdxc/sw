@@ -8,6 +8,7 @@
 
 	It is generated from these files:
 		alerts.proto
+		archive.proto
 		eventpolicy.proto
 		export.proto
 		mirror.proto
@@ -33,6 +34,11 @@
 		MatchedRequirement
 		SNMPExport
 		SyslogExport
+		ArchiveQuery
+		ArchiveRequest
+		ArchiveRequestSpec
+		ArchiveRequestStatus
+		CancelArchiveRequest
 		EventPolicy
 		EventPolicySpec
 		EventPolicyStatus
@@ -54,9 +60,11 @@
 		AlertDestinationList
 		AlertList
 		AlertPolicyList
+		ArchiveRequestList
 		AutoMsgAlertDestinationWatchHelper
 		AutoMsgAlertPolicyWatchHelper
 		AutoMsgAlertWatchHelper
+		AutoMsgArchiveRequestWatchHelper
 		AutoMsgEventPolicyWatchHelper
 		AutoMsgFlowExportPolicyWatchHelper
 		AutoMsgFwlogPolicyWatchHelper

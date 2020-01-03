@@ -65,7 +65,7 @@ type Services interface {
 	ClusterV1() cluster.ClusterV1Interface
 	// Package is diagnostics and len of messages is 1
 	DiagnosticsV1() diagnostics.DiagnosticsV1Interface
-	// Package is monitoring and len of messages is 10
+	// Package is monitoring and len of messages is 11
 	MonitoringV1() monitoring.MonitoringV1Interface
 	// Package is network and len of messages is 8
 	NetworkV1() network.NetworkV1Interface

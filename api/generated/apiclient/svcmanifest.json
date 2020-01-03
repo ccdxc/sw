@@ -372,7 +372,8 @@
           "AlertDestination",
           "MirrorSession",
           "TroubleshootingSession",
-          "TechSupportRequest"
+          "TechSupportRequest",
+          "ArchiveRequest"
         ],
         "Properties": {
           "Alert": {
@@ -414,6 +415,22 @@
               "watch"
             ],
             "URI": "/configs/monitoring/v1/alertPolicies"
+          },
+          "ArchiveRequest": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ],
+            "Actions": [
+              "Cancel"
+            ],
+            "URI": "/configs/monitoring/v1/archive-requests"
           },
           "EventPolicy": {
             "Scopes": [

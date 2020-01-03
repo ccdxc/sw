@@ -63,6 +63,22 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"monitoring.ArchiveRequestList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ArchiveRequestList{}) },
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{ID: "list-meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "list-meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{ID: "items", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ArchiveRequest"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"monitoring.AutoMsgAlertDestinationWatchHelper": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper{}) },
 		Fields: map[string]api.Field{
@@ -103,6 +119,20 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.Alert"},
+		},
+	},
+	"monitoring.AutoMsgArchiveRequestWatchHelper": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgArchiveRequestWatchHelper{}) },
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{ID: "events", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgArchiveRequestWatchHelper.WatchEvent"},
+		},
+	},
+	"monitoring.AutoMsgArchiveRequestWatchHelper.WatchEvent": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgArchiveRequestWatchHelper_WatchEvent{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ArchiveRequest"},
 		},
 	},
 	"monitoring.AutoMsgEventPolicyWatchHelper": &api.Struct{
@@ -325,6 +355,8 @@ var keyMapSvc_monitoring = map[string][]api.PathsMap{
 		{URI: "/configs/monitoring/v1/tenant/{Tenant}/alertDestinations/{Name}", Key: "/venice/config/monitoring/alertDestinations/{Tenant}/{Name}"}},
 	"monitoring.AlertPolicy": []api.PathsMap{
 		{URI: "/configs/monitoring/v1/tenant/{Tenant}/alertPolicies/{Name}", Key: "/venice/config/monitoring/alertPolicies/{Tenant}/{Name}"}},
+	"monitoring.ArchiveRequest": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/archive-requests/{Name}", Key: "/venice/config/monitoring/archive-requests/{Tenant}/{Name}"}},
 	"monitoring.EventPolicy": []api.PathsMap{
 		{URI: "/configs/monitoring/v1/tenant/{Tenant}/event-policy/{Name}", Key: "/venice/config/monitoring/event-policy/{Tenant}/{Name}"}},
 	"monitoring.FlowExportPolicy": []api.PathsMap{

@@ -15,6 +15,9 @@ enum Buckets {
     images          = 0;
     techsupport     = 1;
     snapshots       = 2;
+    events          = 3;
+    auditevents     = 4;
+    fwlogs          = 5;
 }
 
 message BucketSpec {

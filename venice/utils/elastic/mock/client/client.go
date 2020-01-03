@@ -206,6 +206,10 @@ func (e *mockClient) Search(ctx context.Context, index, iType string, query es.Q
 	return &es.SearchResult{Hits: &es.SearchHits{TotalHits: totalHits}}, nil
 }
 
+func (e *mockClient) Scroll(ctx context.Context, index, iType string, query es.Query, size int32) (elastic.Scroller, error) {
+	return nil, nil
+}
+
 // Close - mock client implementation
 func (e *mockClient) Close() error {
 	e.indexes = nil

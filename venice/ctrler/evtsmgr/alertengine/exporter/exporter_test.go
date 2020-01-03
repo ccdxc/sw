@@ -237,3 +237,6 @@ func (m *mockMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1Troub
 func (m *mockMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
 	return nil
 }
+func (m *mockMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
+	return nil
+}

@@ -72,6 +72,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddAlertPolicy")(lAutoAddAlertPolicyEndpoint)
 	}
+	var lAutoAddArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoAddArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoAddArchiveRequest",
+			monitoring.EncodeGrpcReqArchiveRequest,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddArchiveRequest")(lAutoAddArchiveRequestEndpoint)
+	}
 	var lAutoAddEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddEventPolicyEndpoint = grpctransport.NewClient(
@@ -211,6 +225,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteAlertPolicy")(lAutoDeleteAlertPolicyEndpoint)
+	}
+	var lAutoDeleteArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoDeleteArchiveRequest",
+			monitoring.EncodeGrpcReqArchiveRequest,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteArchiveRequest")(lAutoDeleteArchiveRequestEndpoint)
 	}
 	var lAutoDeleteEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -352,6 +380,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetAlertPolicy")(lAutoGetAlertPolicyEndpoint)
 	}
+	var lAutoGetArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoGetArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoGetArchiveRequest",
+			monitoring.EncodeGrpcReqArchiveRequest,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetArchiveRequest")(lAutoGetArchiveRequestEndpoint)
+	}
 	var lAutoGetEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetEventPolicyEndpoint = grpctransport.NewClient(
@@ -491,6 +533,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListAlertPolicy")(lAutoListAlertPolicyEndpoint)
+	}
+	var lAutoListArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoListArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoListArchiveRequest",
+			monitoring.EncodeGrpcReqListWatchOptions,
+			monitoring.DecodeGrpcRespArchiveRequestList,
+			&monitoring.ArchiveRequestList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListArchiveRequest")(lAutoListArchiveRequestEndpoint)
 	}
 	var lAutoListEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -632,6 +688,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateAlertPolicy")(lAutoUpdateAlertPolicyEndpoint)
 	}
+	var lAutoUpdateArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoUpdateArchiveRequest",
+			monitoring.EncodeGrpcReqArchiveRequest,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateArchiveRequest")(lAutoUpdateArchiveRequestEndpoint)
+	}
 	var lAutoUpdateEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateEventPolicyEndpoint = grpctransport.NewClient(
@@ -730,12 +800,27 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateTroubleshootingSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateTroubleshootingSession")(lAutoUpdateTroubleshootingSessionEndpoint)
 	}
+	var lCancelEndpoint endpoint.Endpoint
+	{
+		lCancelEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"Cancel",
+			monitoring.EncodeGrpcReqCancelArchiveRequest,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lCancelEndpoint = trace.ClientEndPoint("MonitoringV1:Cancel")(lCancelEndpoint)
+	}
 	return monitoring.EndpointsMonitoringV1Client{
 		Client: monitoring.NewMonitoringV1Client(conn),
 
 		AutoAddAlertEndpoint:                     lAutoAddAlertEndpoint,
 		AutoAddAlertDestinationEndpoint:          lAutoAddAlertDestinationEndpoint,
 		AutoAddAlertPolicyEndpoint:               lAutoAddAlertPolicyEndpoint,
+		AutoAddArchiveRequestEndpoint:            lAutoAddArchiveRequestEndpoint,
 		AutoAddEventPolicyEndpoint:               lAutoAddEventPolicyEndpoint,
 		AutoAddFlowExportPolicyEndpoint:          lAutoAddFlowExportPolicyEndpoint,
 		AutoAddFwlogPolicyEndpoint:               lAutoAddFwlogPolicyEndpoint,
@@ -746,6 +831,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteAlertEndpoint:                  lAutoDeleteAlertEndpoint,
 		AutoDeleteAlertDestinationEndpoint:       lAutoDeleteAlertDestinationEndpoint,
 		AutoDeleteAlertPolicyEndpoint:            lAutoDeleteAlertPolicyEndpoint,
+		AutoDeleteArchiveRequestEndpoint:         lAutoDeleteArchiveRequestEndpoint,
 		AutoDeleteEventPolicyEndpoint:            lAutoDeleteEventPolicyEndpoint,
 		AutoDeleteFlowExportPolicyEndpoint:       lAutoDeleteFlowExportPolicyEndpoint,
 		AutoDeleteFwlogPolicyEndpoint:            lAutoDeleteFwlogPolicyEndpoint,
@@ -756,6 +842,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetAlertEndpoint:                     lAutoGetAlertEndpoint,
 		AutoGetAlertDestinationEndpoint:          lAutoGetAlertDestinationEndpoint,
 		AutoGetAlertPolicyEndpoint:               lAutoGetAlertPolicyEndpoint,
+		AutoGetArchiveRequestEndpoint:            lAutoGetArchiveRequestEndpoint,
 		AutoGetEventPolicyEndpoint:               lAutoGetEventPolicyEndpoint,
 		AutoGetFlowExportPolicyEndpoint:          lAutoGetFlowExportPolicyEndpoint,
 		AutoGetFwlogPolicyEndpoint:               lAutoGetFwlogPolicyEndpoint,
@@ -766,6 +853,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListAlertEndpoint:                    lAutoListAlertEndpoint,
 		AutoListAlertDestinationEndpoint:         lAutoListAlertDestinationEndpoint,
 		AutoListAlertPolicyEndpoint:              lAutoListAlertPolicyEndpoint,
+		AutoListArchiveRequestEndpoint:           lAutoListArchiveRequestEndpoint,
 		AutoListEventPolicyEndpoint:              lAutoListEventPolicyEndpoint,
 		AutoListFlowExportPolicyEndpoint:         lAutoListFlowExportPolicyEndpoint,
 		AutoListFwlogPolicyEndpoint:              lAutoListFwlogPolicyEndpoint,
@@ -776,6 +864,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateAlertEndpoint:                  lAutoUpdateAlertEndpoint,
 		AutoUpdateAlertDestinationEndpoint:       lAutoUpdateAlertDestinationEndpoint,
 		AutoUpdateAlertPolicyEndpoint:            lAutoUpdateAlertPolicyEndpoint,
+		AutoUpdateArchiveRequestEndpoint:         lAutoUpdateArchiveRequestEndpoint,
 		AutoUpdateEventPolicyEndpoint:            lAutoUpdateEventPolicyEndpoint,
 		AutoUpdateFlowExportPolicyEndpoint:       lAutoUpdateFlowExportPolicyEndpoint,
 		AutoUpdateFwlogPolicyEndpoint:            lAutoUpdateFwlogPolicyEndpoint,
@@ -783,6 +872,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateStatsPolicyEndpoint:            lAutoUpdateStatsPolicyEndpoint,
 		AutoUpdateTechSupportRequestEndpoint:     lAutoUpdateTechSupportRequestEndpoint,
 		AutoUpdateTroubleshootingSessionEndpoint: lAutoUpdateTroubleshootingSessionEndpoint,
+		CancelEndpoint:                           lCancelEndpoint,
 	}
 }
 
@@ -2710,6 +2800,214 @@ func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiintf.APIOperType
 	}
 }
 
+type grpcObjMonitoringV1ArchiveRequest struct {
+	logger log.Logger
+	client monitoring.ServiceMonitoringV1Client
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Create(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddArchiveRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Update(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateArchiveRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) UpdateStatus(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateArchiveRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.ArchiveRequest{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetArchiveRequest(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.ArchiveRequest{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteArchiveRequest(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListArchiveRequest(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchArchiveRequest(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(monitoring.MonitoringV1_AutoWatchArchiveRequestClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Cancel(ctx context.Context, in *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Cancel CancelArchiveRequest ArchiveRequest}", "oper", "Cancel")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Cancel(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjMonitoringV1ArchiveRequest struct {
+	endpoints monitoring.EndpointsMonitoringV1RestClient
+	instance  string
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Create(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddArchiveRequest(ctx, in)
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Update(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateArchiveRequest(ctx, in)
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) UpdateStatus(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.ArchiveRequest{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetArchiveRequest(ctx, &in)
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.ArchiveRequest{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteArchiveRequest(ctx, &in)
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.ArchiveRequest, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListArchiveRequest(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchArchiveRequest(ctx, options)
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return true
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Cancel(ctx context.Context, in *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.CancelArchiveRequest(ctx, in)
+}
+
 type crudClientMonitoringV1 struct {
 	logger log.Logger
 	client monitoring.ServiceMonitoringV1Client
@@ -2724,6 +3022,7 @@ type crudClientMonitoringV1 struct {
 	grpcMirrorSession          monitoring.MonitoringV1MirrorSessionInterface
 	grpcTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
 	grpcTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
+	grpcArchiveRequest         monitoring.MonitoringV1ArchiveRequestInterface
 }
 
 // NewGrpcCrudClientMonitoringV1 creates a GRPC client for the service
@@ -2743,6 +3042,7 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		grpcMirrorSession:          &grpcObjMonitoringV1MirrorSession{client: client, logger: logger},
 		grpcTroubleshootingSession: &grpcObjMonitoringV1TroubleshootingSession{client: client, logger: logger},
 		grpcTechSupportRequest:     &grpcObjMonitoringV1TechSupportRequest{client: client, logger: logger},
+		grpcArchiveRequest:         &grpcObjMonitoringV1ArchiveRequest{client: client, logger: logger},
 	}
 }
 
@@ -2784,6 +3084,10 @@ func (a *crudClientMonitoringV1) TroubleshootingSession() monitoring.MonitoringV
 
 func (a *crudClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
 	return a.grpcTechSupportRequest
+}
+
+func (a *crudClientMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
+	return a.grpcArchiveRequest
 }
 
 func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -2839,6 +3143,7 @@ type crudRestClientMonitoringV1 struct {
 	restMirrorSession          monitoring.MonitoringV1MirrorSessionInterface
 	restTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
 	restTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
+	restArchiveRequest         monitoring.MonitoringV1ArchiveRequestInterface
 }
 
 // NewRestCrudClientMonitoringV1 creates a REST client for the service.
@@ -2859,6 +3164,7 @@ func NewRestCrudClientMonitoringV1(url string, httpClient *http.Client) monitori
 		restMirrorSession:          &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
 		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
+		restArchiveRequest:         &restObjMonitoringV1ArchiveRequest{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2880,6 +3186,7 @@ func NewStagedRestCrudClientMonitoringV1(url string, id string, httpClient *http
 		restMirrorSession:          &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
 		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
+		restArchiveRequest:         &restObjMonitoringV1ArchiveRequest{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2921,6 +3228,10 @@ func (a *crudRestClientMonitoringV1) TroubleshootingSession() monitoring.Monitor
 
 func (a *crudRestClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
 	return a.restTechSupportRequest
+}
+
+func (a *crudRestClientMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
+	return a.restArchiveRequest
 }
 
 func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

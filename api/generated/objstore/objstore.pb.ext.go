@@ -27,6 +27,9 @@ var _ listerwatcher.WatcherClient
 
 // Buckets_normal is a map of normalized values for the enum
 var Buckets_normal = map[string]string{
+	"auditevents": "auditevents",
+	"events":      "events",
+	"fwlogs":      "fwlogs",
 	"images":      "images",
 	"snapshots":   "snapshots",
 	"techsupport": "techsupport",
@@ -36,12 +39,18 @@ var Buckets_vname = map[int32]string{
 	0: "images",
 	1: "techsupport",
 	2: "snapshots",
+	3: "events",
+	4: "auditevents",
+	5: "fwlogs",
 }
 
 var Buckets_vvalue = map[string]int32{
 	"images":      0,
 	"techsupport": 1,
 	"snapshots":   2,
+	"events":      3,
+	"auditevents": 4,
+	"fwlogs":      5,
 }
 
 func (x Buckets) String() string {

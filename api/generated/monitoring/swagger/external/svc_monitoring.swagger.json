@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Monitoring API reference",
-    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsPolicy TechSupportRequest TroubleshootingSession ",
+    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy ArchiveRequest EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsPolicy TechSupportRequest TroubleshootingSession ",
     "version": "v1"
   },
   "schemes": [
@@ -2699,6 +2699,534 @@
         ]
       }
     },
+    "/configs/monitoring/v1/archive-requests": {
+      "get": {
+        "summary": "List ArchiveRequest objects",
+        "operationId": "ListArchiveRequest_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequestList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create ArchiveRequest object",
+        "operationId": "AddArchiveRequest_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequestCreate"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/archive-requests/{O.Name}": {
+      "get": {
+        "summary": "Get ArchiveRequest object",
+        "operationId": "GetArchiveRequest_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "query.start-time",
+            "description": "StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "query.end-time",
+            "description": "EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status.status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.uri",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete ArchiveRequest object",
+        "operationId": "DeleteArchiveRequest_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/archive-requests/{O.Name}/Cancel": {
+      "post": {
+        "operationId": "Cancel_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringCancelArchiveRequestCreate"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
     "/configs/monitoring/v1/event-policy": {
       "get": {
         "summary": "List EventPolicy objects",
@@ -4553,6 +5081,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5007,12 +5541,6 @@
           },
           {
             "name": "status.status",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.reason",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7833,6 +8361,550 @@
         ]
       }
     },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests": {
+      "get": {
+        "summary": "List ArchiveRequest objects",
+        "operationId": "ListArchiveRequest",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequestList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create ArchiveRequest object",
+        "operationId": "AddArchiveRequest",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequestCreate"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}": {
+      "get": {
+        "summary": "Get ArchiveRequest object",
+        "operationId": "GetArchiveRequest",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "query.start-time",
+            "description": "StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "query.end-time",
+            "description": "EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status.status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.reason",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.uri",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete ArchiveRequest object",
+        "operationId": "DeleteArchiveRequest",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/archive-requests/{O.Name}/Cancel": {
+      "post": {
+        "operationId": "Cancel",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringArchiveRequest"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringCancelArchiveRequestCreate"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
     "/configs/monitoring/v1/tenant/{O.Tenant}/event-policy": {
       "get": {
         "summary": "List EventPolicy objects",
@@ -10481,6 +11553,173 @@
         ]
       }
     },
+    "/configs/monitoring/v1/watch/archive-requests": {
+      "get": {
+        "summary": "Watch ArchiveRequest objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchArchiveRequest_1",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/monitoringAutoMsgArchiveRequestWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
     "/configs/monitoring/v1/watch/event-policy": {
       "get": {
         "summary": "Watch EventPolicy objects. Supports WebSockets or HTTP long poll",
@@ -11823,6 +13062,172 @@
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/monitoringAutoMsgAlertWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/watch/tenant/{O.Tenant}/archive-requests": {
+      "get": {
+        "summary": "Watch ArchiveRequest objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchArchiveRequest",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/monitoringAutoMsgArchiveRequestWatchHelper"
             }
           },
           "400": {
@@ -13543,6 +14948,144 @@
       },
       "title": "Application/protocol selector"
     },
+    "monitoringArchiveQuery": {
+      "type": "object",
+      "properties": {
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchTextRequirement"
+          },
+          "title": "OR of Text-requirements to be matched, Exclude is not supported for Text search"
+        },
+        "fields": {
+          "$ref": "#/definitions/fieldsSelector",
+          "title": "Field Selector is AND of field.Requirements"
+        },
+        "labels": {
+          "$ref": "#/definitions/labelsSelector",
+          "title": "Label Selector is AND of label.Requirememts"
+        },
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z"
+        }
+      },
+      "title": "ArchiveQuery is to archive audit logs, events and firewall logs based on time window, field values"
+    },
+    "monitoringArchiveRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/monitoringArchiveRequestSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/monitoringArchiveRequestStatus"
+        }
+      },
+      "title": "ArchiveRequest is to asynchronously archive audit logs, events and firewall logs"
+    },
+    "monitoringArchiveRequestCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/monitoringArchiveRequestSpec"
+        }
+      },
+      "title": "ArchiveRequest is to asynchronously archive audit logs, events and firewall logs"
+    },
+    "monitoringArchiveRequestList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringArchiveRequest"
+          },
+          "title": "List of ArchiveRequest objects"
+        }
+      },
+      "title": "ArchiveRequestList is a container object for list of ArchiveRequest objects"
+    },
+    "monitoringArchiveRequestSpec": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "event",
+            "auditevent",
+            "fwlog"
+          ],
+          "default": "event"
+        },
+        "query": {
+          "$ref": "#/definitions/monitoringArchiveQuery"
+        }
+      }
+    },
+    "monitoringArchiveRequestStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "scheduled",
+            "running",
+            "completed",
+            "failed",
+            "timeout",
+            "canceled"
+          ],
+          "default": "scheduled"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
     "monitoringAuditInfo": {
       "type": "object",
       "properties": {
@@ -13645,6 +15188,29 @@
         },
         "object": {
           "$ref": "#/definitions/monitoringAlert"
+        }
+      }
+    },
+    "monitoringAutoMsgArchiveRequestWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgArchiveRequestWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgArchiveRequestWatchHelper is a wrapper object for watch events for ArchiveRequest objects"
+    },
+    "monitoringAutoMsgArchiveRequestWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/monitoringArchiveRequest"
         }
       }
     },
@@ -13808,6 +15374,36 @@
           "$ref": "#/definitions/monitoringTroubleshootingSession"
         }
       }
+    },
+    "monitoringCancelArchiveRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "title": "CancelArchiveRequest is to cancel archive request that is in scheduled or running state"
+    },
+    "monitoringCancelArchiveRequestCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "title": "CancelArchiveRequest is to cancel archive request that is in scheduled or running state"
     },
     "monitoringEmailExport": {
       "type": "object",
@@ -15145,6 +16741,21 @@
           "type": "string"
         }
       }
+    },
+    "searchTextRequirement": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxLength": 256,
+          "description": "length of string should be between 0 and 256",
+          "title": "AND of words or phrases to be matched\nThe max text-string length is 256 bytes"
+        }
+      },
+      "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
     }
   }
 }

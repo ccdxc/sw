@@ -21,6 +21,8 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/archive"
+	archmock "github.com/pensando/sw/venice/utils/archive/mock"
 	"github.com/pensando/sw/venice/utils/audit"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
@@ -188,8 +190,8 @@ func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[s
 	return apiGw, localAddr, nil
 }
 
-// StartSpyglass helper function to spyglass finder and indexer
-func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache scache.Interface, logger log.Logger, esClient elastic.ESClient) (interface{}, string, error) {
+// StartSpyglassWithArchiveService helper function to start spyglass finder and indexer
+func StartSpyglassWithArchiveService(service, apiServerAddr string, mr resolver.Interface, cache scache.Interface, logger log.Logger, esClient elastic.ESClient, archiveService archive.Service) (interface{}, string, error) {
 	var err error
 	if esClient == nil {
 		esClient, err = CreateElasticClient("", mr, logger.WithContext("submodule", "elastic"), nil, nil)
@@ -205,7 +207,8 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger,
 			finder.WithElasticClient(esClient),
 			finder.WithModuleWatcher(diagmock.GetModuleWatcher()),
-			finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()))
+			finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()),
+			finder.WithArchiveService(archiveService))
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create finder, err: %v", err)
 		}
@@ -255,6 +258,11 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 	}
 
 	return nil, "", nil
+}
+
+// StartSpyglass helper function to spyglass finder and indexer
+func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache scache.Interface, logger log.Logger, esClient elastic.ESClient) (interface{}, string, error) {
+	return StartSpyglassWithArchiveService(service, apiServerAddr, mr, cache, logger, esClient, archmock.GetMockArchiveService())
 }
 
 // StartEvtsMgr helper function to start events manager

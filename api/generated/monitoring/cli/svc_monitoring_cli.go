@@ -827,6 +827,79 @@ func restPutTechSupportRequest(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for TechSupportRequest object")
 }
 
+func restGetArchiveRequest(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.ArchiveRequest); ok {
+		nv, err := restcl.MonitoringV1().ArchiveRequest().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*monitoring.ArchiveRequestList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.MonitoringV1().ArchiveRequest().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteArchiveRequest(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.ArchiveRequest); ok {
+		nv, err := restcl.MonitoringV1().ArchiveRequest().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostArchiveRequest(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.ArchiveRequest); ok {
+		nv, err := restcl.MonitoringV1().ArchiveRequest().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutArchiveRequest(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for ArchiveRequest object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -878,5 +951,10 @@ func init() {
 	cl.AddRestDeleteFunc("monitoring.TechSupportRequest", "v1", restDeleteTechSupportRequest)
 
 	cl.AddRestGetFunc("monitoring.TechSupportRequest", "v1", restGetTechSupportRequest)
+
+	cl.AddRestPostFunc("monitoring.ArchiveRequest", "v1", restPostArchiveRequest)
+	cl.AddRestDeleteFunc("monitoring.ArchiveRequest", "v1", restDeleteArchiveRequest)
+
+	cl.AddRestGetFunc("monitoring.ArchiveRequest", "v1", restGetArchiveRequest)
 
 }

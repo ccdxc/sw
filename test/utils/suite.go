@@ -107,6 +107,8 @@ type TestUtils struct {
 	APIClient         apiclient.Services
 	VOSClient         objstore.Client
 	SnapshotVOSClient objstore.Client
+	AuditVOSClient    objstore.Client
+	EventVOSClient    objstore.Client
 	Logger            log.Logger
 	VeniceConf        string                  // whole file in string format
 	DisabledModules   []string                // list of disabled venice modules
@@ -445,6 +447,14 @@ func (tu *TestUtils) SetupObjstoreClient() error {
 		ginkgo.Fail(fmt.Sprintf("cannot create client to objstore, err: %v", err))
 	}
 	tu.SnapshotVOSClient, err = objstore.NewClient("default", "snapshots", tu.resolver, objstore.WithTLSConfig(tlcConfig))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create snapshot client to objstore, err: %v", err))
+	}
+	tu.AuditVOSClient, err = objstore.NewClient("default", "auditevents", tu.resolver, objstore.WithTLSConfig(tlcConfig))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create snapshot client to objstore, err: %v", err))
+	}
+	tu.EventVOSClient, err = objstore.NewClient("default", "events", tu.resolver, objstore.WithTLSConfig(tlcConfig))
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create snapshot client to objstore, err: %v", err))
 	}
