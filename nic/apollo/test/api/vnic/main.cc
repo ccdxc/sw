@@ -262,7 +262,7 @@ TEST_F(vnic_test, vnic_workflow_neg_4) {
 
 /// \brief VNIC WF_N_5
 /// \ref WF_N_5
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
+TEST_F(vnic_test, vnic_workflow_neg_5) {
     if (artemis()) return;
 
     vnic_feeder feeder1, feeder1A;

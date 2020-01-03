@@ -344,7 +344,7 @@ TEST_F(nh_group_test, nh_group_workflow_neg_4) {
 
 /// \brief Nexthop group WF_N_5
 /// \ref WF_N_5
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_5) {
+TEST_F(nh_group_test, nh_group_workflow_neg_5) {
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,

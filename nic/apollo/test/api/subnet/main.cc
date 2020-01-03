@@ -270,7 +270,7 @@ TEST_F(subnet, subnet_workflow_neg_4) {
 
 /// \brief Subnet WF_N_5
 /// \ref WF_N_5
-TEST_F(subnet, DISABLED_subnet_workflow_neg_5) {
+TEST_F(subnet, subnet_workflow_neg_5) {
     pds_subnet_key_t key = {.id = 1};
     subnet_feeder feeder1, feeder1A;
 
