@@ -42,6 +42,7 @@ typedef struct sub_callback_ {
 
 class ipc_service {
 public:
+    ~ipc_service();
     ipc_service();
     ipc_service(uint32_t client_id);
     virtual void request(uint32_t recipient, uint32_t msg_code,
@@ -162,6 +163,10 @@ client_receive_ms (int fd, int, void *ctx)
     uint32_t recipient = (uint64_t)ctx;
     std::dynamic_pointer_cast<ipc_service_async>(t_ipc_service)->client_receive(
         recipient);
+}
+
+ipc_service::~ipc_service() {
+    close(this->eventfd_);
 }
 
 ipc_service::ipc_service() : ipc_service(IPC_MAX_ID + 1) {};
