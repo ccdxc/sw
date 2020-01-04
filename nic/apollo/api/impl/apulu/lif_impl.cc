@@ -895,12 +895,12 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
-    uint32_t idx, nacl_idx;
     sdk::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
     nexthop_actiondata_t nh_data = { 0 };
+    uint32_t idx, nacl_idx = PDS_IMPL_NACL_LEARN_MIN;
 
     snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s, key %u", name_, key_);
@@ -957,8 +957,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_ARP;
-    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx++,
+                                  &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for (learn miss, ARP "
                       "requests from host) -> lif %s", name_);
@@ -1000,14 +1000,15 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_DHCP;
-    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx++,
+                                  &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL redirect entry for "
                       "(host lif, DHCP req) -> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
+    SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_GENERIC_MIN);
     return SDK_RET_OK;
 
 error:

@@ -43,6 +43,9 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     p4pd_global_table_properties_get(P4TBL_ID_NACL, &tinfo);
     nacl_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
     SDK_ASSERT(nacl_idxr_ != NULL);
+    // pre-allocate indices for the reserved portion of NACL table
+    // and manage it separately
+    nacl_idxr_->alloc_block((uint32_t)0, PDS_IMPL_NACL_GENERIC_MIN, false);
 
     // bookkeeping for CoPP table
     p4pd_global_table_properties_get(P4TBL_ID_COPP, &tinfo);

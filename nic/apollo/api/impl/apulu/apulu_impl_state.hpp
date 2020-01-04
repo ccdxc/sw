@@ -16,6 +16,7 @@
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 
 using sdk::table::handle_t;

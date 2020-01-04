@@ -244,12 +244,12 @@ apulu_impl::stats_init_(void) {
 
 sdk_ret_t
 apulu_impl::nacl_init_(void) {
-    uint32_t idx;
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
+    uint32_t idx = PDS_IMPL_NACL_GLOBAL_MIN;
 
     // drop all IPv6 traffic
     memset(&key, 0, sizeof(key));
@@ -258,8 +258,7 @@ apulu_impl::nacl_init_(void) {
     key.key_metadata_ktype = KEY_TYPE_IPV6;
     mask.key_metadata_ktype_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
-    SDK_ASSERT((ret = apulu_impl_db()->nacl_idxr()->alloc(&idx)) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for ipv6 drop");
         return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -284,8 +283,7 @@ apulu_impl::nacl_init_(void) {
     mask.key_metadata_dport_mask = ~0;
     mask.key_metadata_sport_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
-    SDK_ASSERT((ret = apulu_impl_db()->nacl_idxr()->alloc(&idx)) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program drop entry for ARP responses "
                       "on host lifs");
@@ -312,8 +310,7 @@ apulu_impl::nacl_init_(void) {
     mask.key_metadata_sport_mask = ~0;
     mask.key_metadata_proto_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
-    SDK_ASSERT((ret = apulu_impl_db()->nacl_idxr()->alloc(&idx)) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program drop entry for DHCP responses on "
                       "host lifs");
@@ -329,14 +326,15 @@ apulu_impl::nacl_init_(void) {
     key.arm_to_p4i_nexthop_valid = 1;
     mask.arm_to_p4i_nexthop_valid_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
-    SDK_ASSERT((ret = apulu_impl_db()->nacl_idxr()->alloc(&idx)) == SDK_RET_OK);
-    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx, &key, &mask, &data);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program redirect entry for re-injected pkts "
                       "from s/w datapath");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
+    // make sure we stayed with in the global entry range in the TCAM table
+    SDK_ASSERT(idx <= PDS_IMPL_NACL_LEARN_MIN);
     return SDK_RET_OK;
 
 error:

@@ -49,6 +49,13 @@
 #define P4_LIF_TYPE_UPLINK                      4  // lifs corresponding to uplink
 #define P4_LIF_TYPE_HOST_MGMT                   5  // host<->arm mgmt. lifs
 
+// NACL table partitioning
+#define PDS_IMPL_NACL_GLOBAL_MIN                0
+#define PDS_IMPL_NACL_GLOBAL_MAX                7
+#define PDS_IMPL_NACL_LEARN_MIN                 8
+#define PDS_IMPL_NACL_LEARN_MAX                 15
+#define PDS_IMPL_NACL_GENERIC_MIN               16
+
 namespace api {
 namespace impl {
 
