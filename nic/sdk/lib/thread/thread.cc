@@ -199,13 +199,12 @@ thread::start(void *ctxt)
         break;
     }
 
-    while (mask != 0) {
-        CPU_SET(ffsl(mask) - 1, &cpu_set_);
-        mask = mask & (mask - 1);
-    }
-
     // set core affinity
     if (mask != 0) {
+        while (mask != 0) {
+            CPU_SET(ffsl(mask) - 1, &cpu_set_);
+            mask = mask & (mask - 1);
+        }
         rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_set_);
         if (rv != 0) {
             SDK_TRACE_ERR("pthread_attr_setaffinity_np failure, err : %d", rv);
