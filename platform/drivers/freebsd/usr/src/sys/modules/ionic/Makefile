@@ -21,7 +21,9 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 KERNCONF?=    GENERIC
 KERNCONFDIR=  ${SYSDIR}/${MACHINE_ARCH}/conf
 SRCS+=        .kconf/opt_global.h
+SRCS+=        .kconf/opt_rss.h
 CFLAGS+=      -include .kconf/opt_global.h
+CFLAGS+=      -include .kconf/opt_rss.h
 
 .kconf/opt_global.h: ${KERNCONFDIR}/${KERNCONF}
 	cd ${KERNCONFDIR} && config -d ${.CURDIR}/.kconf ${KERNCONF}
