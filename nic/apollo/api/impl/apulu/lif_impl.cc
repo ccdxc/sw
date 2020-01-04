@@ -1009,6 +1009,14 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         goto error;
     }
     SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_GENERIC_MIN);
+
+    // program the LIF table
+    ret = program_lif_table(key_, P4_LIF_TYPE_ARM_LEARN,
+                            PDS_IMPL_RSVD_VPC_HW_ID, PDS_IMPL_RSVD_BD_HW_ID,
+                            PDS_IMPL_RSVD_VNIC_HW_ID, false);
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
     return SDK_RET_OK;
 
 error:
