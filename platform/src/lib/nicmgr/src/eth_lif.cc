@@ -1339,7 +1339,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.tx.q.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.tx.q.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
-    qstate.tx.q.cfg.cpu_queue = hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU;
+    qstate.tx.q.cfg.cpu_queue = IsLifTypeCpu();
 
     qstate.tx.q.ring_size = cmd->ring_size;
     qstate.tx.q.lif_index = cmd->lif_index;
@@ -1508,7 +1508,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.q.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.q.cfg.debug = (cmd->flags & IONIC_QINIT_F_DEBUG) ? 1 : 0;
-    qstate.q.cfg.cpu_queue = hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU;
+    qstate.q.cfg.cpu_queue = IsLifTypeCpu();
 
     qstate.q.ring_size = cmd->ring_size;
     qstate.q.lif_index = cmd->lif_index;
@@ -2918,5 +2918,17 @@ EthLif::ConvertEthLifStateToLifState(enum eth_lif_state lif_state)
         return sdk::types::LIF_STATE_UP;
     default:
         return sdk::types::LIF_STATE_DOWN;
+    }
+}
+
+bool
+EthLif::IsLifTypeCpu()
+{
+    switch (hal_lif_info_.type) {
+    case sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU:
+    case sdk::platform::lif_type_t::LIF_TYPE_LEARN:
+        return true;
+    default:
+        return false;
     }
 }
