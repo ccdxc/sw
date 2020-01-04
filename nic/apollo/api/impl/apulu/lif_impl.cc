@@ -107,7 +107,6 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
 #define nexthop_info            action_u.nexthop_nexthop_info
 sdk_ret_t
 lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
-    uint32_t idx;
     if_impl *intf;
     sdk_ret_t ret;
     nacl_swkey_t key;
@@ -116,8 +115,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     pds_ifindex_t if_index;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
+    uint32_t idx, nacl_idx;
     static uint32_t oob_lif = 0;
-    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "oob%u", oob_lif++);
@@ -170,14 +169,12 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
     data.nacl_redirect_action.copp_policer_id = idx;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for (%s, ARP) -> "
-                      "uplink if index 0x%x, err %u", name_,
-                      pinned_if_idx_, ret);
+                      "uplink if index 0x%x", name_, pinned_if_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -190,18 +187,14 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for oob lif %u to "
-                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
+                      "uplink 0x%x", key_, pinned_if_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
-    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
-                    key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
-                    nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
 
     // TODO: fix this once block indexer starts working
     // allocate required nexthops
@@ -235,13 +228,12 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to oob "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to "
+                      "oob lif %u", pinned_if_idx_, key_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
@@ -277,14 +269,13 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     if_impl *intf;
     sdk_ret_t ret;
     nacl_swkey_t key;
-    uint32_t idx, tm_port;
     p4pd_error_t p4pd_ret;
     sdk::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     pds_ifindex_t if_index;
     static uint32_t inb_lif = 0;
-    sdk_table_api_params_t tparams;
+    uint32_t idx, nacl_idx, tm_port;
     lif_actiondata_t lif_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
     p4i_device_info_actiondata_t p4i_device_info_data;
@@ -338,14 +329,12 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
     data.nacl_redirect_action.copp_policer_id = idx;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for (%s, ARP) -> "
-                      "uplink if index 0x%x, err %u",
-                      name_, pinned_if_idx_, ret);
+                      "uplink if index 0x%x", name_, pinned_if_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -358,14 +347,13 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for inb lif %u to "
-                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
-        return ret;
+                      "uplink 0x%x", key_, pinned_if_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
@@ -407,13 +395,12 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to inb "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+                      "lif %u", pinned_if_idx_, key_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
@@ -470,15 +457,14 @@ error:
 #define nacl_redirect_to_arm_action     action_u.nacl_nacl_redirect_to_arm
 sdk_ret_t
 lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
-    uint32_t idx;
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
+    uint32_t idx, nacl_idx;
     sdk::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t dplif = 0;
-    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "swdp%u", dplif++);
@@ -534,13 +520,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_ARP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for (flow miss, ARP "
-                      "requests from host) -> lif %s, err %u", name_, ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL redirect entry for "
+                      "(flow miss, ARP requests from host) -> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -576,13 +561,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP req) "
-                      "-> lif %s, err %u", name_, ret);
+                      "-> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -613,37 +597,31 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped TCP, "
-                      "err %u", ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped TCP");
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
     // redirect flow miss encapped UDP traffic from uplinks to s/w datapath lif
     key.key_metadata_proto = IP_PROTO_UDP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped UDP, "
-                      "err %u", ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped UDP");
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
     // redirect flow miss encapped ICMP traffic from uplinks to s/w datapath lif
     key.key_metadata_proto = IP_PROTO_ICMP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_PERMIT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped ICMP, "
-                      "err %u", ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped ICMP");
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -660,13 +638,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     mask.control_metadata_flow_miss_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_DROP_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program drop entry for nonTCP/UDP/ICMP "
-                      "encapped traffic, err %u", ret);
+                      "encapped traffic");
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -682,13 +659,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for redirect to arm, "
-                      "lif %u, err %u", key_, ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry for redirect to "
+                      "arm lif %u", key_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -732,13 +708,12 @@ lif_internal_mgmt_cb_ (void *api_obj, void *ctxt) {
 
 sdk_ret_t
 lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
-    uint32_t idx;
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
+    uint32_t idx, nacl_idx;
     nacl_swkey_t key = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
-    sdk_table_api_params_t  tparams;
     static uint32_t hmlif = 0, imlif = 0;
     nexthop_actiondata_t nh_data = { 0 };
     lif_internal_mgmt_ctx_t cb_ctx = { 0 };
@@ -794,14 +769,13 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to install NACL entry for host mgmt lif %u to "
-                      "internal mgmt lif %u traffic, err %u",
-                      host_mgmt_lif->key(), int_mgmt_lif->key(), ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to install NACL redirect entry for host mgmt "
+                      "lif %u to internal mgmt lif %u traffic",
+                      host_mgmt_lif->key(), int_mgmt_lif->key());
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -838,14 +812,13 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.nacl_redirect_action.nexthop_id = nh_idx_; //nh_idx_ + 1;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to install NACL entry for internal mgmt "
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to install NACL redirect entry for internal mgmt "
                       "lif %u to host mgmt lif %u traffic, err %u",
                       int_mgmt_lif->key(), host_mgmt_lif->key(), ret);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -919,15 +892,14 @@ error:
 
 sdk_ret_t
 lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
-    uint32_t idx;
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
+    uint32_t idx, nacl_idx;
     sdk::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
-    sdk_table_api_params_t tparams;
     nexthop_actiondata_t nh_data = { 0 };
 
     snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
@@ -983,13 +955,12 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_ARP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for (learn miss, ARP "
-                      "requests from host) -> lif %s, err %u", name_, ret);
+                      "requests from host) -> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
 
@@ -1025,13 +996,12 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
     data.nacl_redirect_to_arm_action.copp_policer_id = idx;
     data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_DHCP;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
-                                   NACL_NACL_REDIRECT_TO_ARM_ID,
-                                   sdk::table::handle_t::null());
-    ret = apulu_impl_db()->nacl_tbl()->insert(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP req) "
-                      "-> lif %s, err %u", name_, ret);
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL redirect entry for "
+                      "(host lif, DHCP req) -> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
     return SDK_RET_OK;

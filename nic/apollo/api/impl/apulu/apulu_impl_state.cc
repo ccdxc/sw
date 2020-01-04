@@ -39,11 +39,10 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     egress_drop_stats_tbl_ = sltcam::factory(&table_params);
     SDK_ASSERT(egress_drop_stats_tbl() != NULL);
 
-    memset(&table_params, 0, sizeof(table_params));
-    table_params.table_id = P4TBL_ID_NACL;
-    table_params.entry_trace_en = false;
-    nacl_tbl_ = sltcam::factory(&table_params);
-    SDK_ASSERT(nacl_tbl() != NULL);
+    // allocate indexer for NACL table
+    p4pd_global_table_properties_get(P4TBL_ID_NACL, &tinfo);
+    nacl_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
+    SDK_ASSERT(nacl_idxr_ != NULL);
 
     // bookkeeping for CoPP table
     p4pd_global_table_properties_get(P4TBL_ID_COPP, &tinfo);
@@ -60,21 +59,13 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
 apulu_impl_state::~apulu_impl_state() {
     sltcam::destroy(ingress_drop_stats_tbl_);
     sltcam::destroy(egress_drop_stats_tbl_);
-    sltcam::destroy(nacl_tbl_);
+    rte_indexer::destroy(nacl_idxr_);
     rte_indexer::destroy(copp_idxr_);
     rte_indexer::destroy(nat_idxr_);
 }
 
 sdk_ret_t
 apulu_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
-    pds_table_stats_t stats;
-    p4pd_table_properties_t tinfo;
-
-    memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4TBL_ID_NACL, &tinfo);
-    stats.table_name = tinfo.tablename;
-    nacl_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
-    cb(&stats, ctxt);
     return SDK_RET_OK;
 }
 

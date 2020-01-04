@@ -48,7 +48,7 @@ public:
     /// \brief accessors
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
-    sltcam *nacl_tbl(void) { return nacl_tbl_; }
+    rte_indexer *nacl_idxr(void) { return nacl_idxr_; }
     rte_indexer *copp_idxr(void) { return copp_idxr_; }
     rte_indexer *nat_idxr(void) { return nat_idxr_; }
 
@@ -57,7 +57,7 @@ public:
 private:
     sltcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
-    sltcam *nacl_tbl_;                  ///< NACL tcam table
+    rte_indexer *nacl_idxr_;            ///< indexer for NACL table
     rte_indexer *copp_idxr_;            ///< indexer for CoPP table
     rte_indexer *nat_idxr_;             ///< indexer for NAT table
     handle_t ing_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];
