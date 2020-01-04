@@ -12,7 +12,7 @@ struct phv_         p;
 session_info:
     seq             c1, k.p4e_i2e_copp_policer_id, r0
     phvwr.!c1       p.control_metadata_copp_policer_valid, TRUE
-    seq             c1, k.p4e_i2e_session_index, r0
+    seq             c1, k.p4e_i2e_session_id, r0
     // r7 : packet length
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r7
@@ -73,7 +73,7 @@ session_stats:
     seq             c1, k.egress_recirc_valid, TRUE
     seq.!c1         c1, r5, r0
     nop.c1.e
-    add             r5, r5, k.p4e_i2e_session_index, 5
+    add             r5, r5, k.p4e_i2e_session_id, 5
     seq             c1, k.p4e_i2e_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 16
     addi            r1, r0, 0x1000001

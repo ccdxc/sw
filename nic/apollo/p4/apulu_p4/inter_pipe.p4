@@ -85,6 +85,9 @@ action ingress_to_rxdma() {
         modify_field(scratch_metadata.flag, 1);
         modify_field(p4i_to_rxdma.vnic_info_en, TRUE);
     }
+    if (control_metadata.force_flow_miss == TRUE) {
+        modify_field(p4i_to_rxdma.vnic_info_en, FALSE);
+    }
     modify_field(p4i_to_rxdma.vnic_info_key,
                  ((control_metadata.rx_packet << 10) |
                   (vnic_metadata.vnic_id << 1) | scratch_metadata.flag));

@@ -250,7 +250,7 @@
 /*****************************************************************************/
 #define APULU_P4I_TO_RXDMA_HDR_SZ       52
 #define APULU_I2E_HDR_SZ                38
-#define APULU_P4_TO_ARM_HDR_SZ          34
+#define APULU_P4_TO_ARM_HDR_SZ          40
 #define APULU_ARM_TO_P4_HDR_SZ          5
 
 #define APULU_INGRESS_MIRROR_BLOB_SZ    (CAPRI_P4_INTRINSIC_HDR_SZ + \
@@ -289,4 +289,3 @@
 /*****************************************************************************/
 #define APULU_PKT_DESC_SHIFT              7
 #define APULU_PKT_DESC_SIZE              (1 << APULU_PKT_DESC_SHIFT)
-

@@ -19,7 +19,7 @@ action nacl_redirect(nexthop_type, nexthop_id, copp_policer_id) {
     }
 
     modify_field(p4i_i2e.mapping_bypass, TRUE);
-    modify_field(p4i_i2e.session_index, -1);
+    modify_field(p4i_i2e.session_id, -1);
     modify_field(capri_intrinsic.drop, 0);
     modify_field(control_metadata.p4i_drop_reason, 0);
 }
@@ -27,7 +27,7 @@ action nacl_redirect(nexthop_type, nexthop_id, copp_policer_id) {
 action nacl_redirect_to_arm(nexthop_type, nexthop_id, copp_policer_id, data) {
     modify_field(p4i_i2e.nexthop_type, nexthop_type);
     modify_field(p4i_i2e.nexthop_id, nexthop_id);
-    modify_field(p4i_i2e.session_index, -1);
+    modify_field(p4i_i2e.session_id, -1);
     modify_field(p4i_i2e.copp_policer_id, copp_policer_id);
     modify_field(control_metadata.redirect_to_arm, TRUE);
     modify_field(p4i_to_arm.data, data);

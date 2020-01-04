@@ -4,7 +4,7 @@ header_type apulu_i2e_metadata_t {
         entropy_hash        : 32;
         mapping_lkp_type    : 2;
         flow_role           : 1;
-        session_index       : 21;
+        session_id          : 21;
         vnic_id             : 16;
         bd_id               : 16;
         vpc_id              : 16;

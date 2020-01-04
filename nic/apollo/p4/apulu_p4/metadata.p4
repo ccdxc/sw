@@ -46,6 +46,7 @@ header_type control_metadata_t {
         rx_packet               : 1;
         tunneled_packet         : 1;
         flow_miss               : 1;
+        force_flow_miss         : 1;
         local_mapping_miss      : 1;
         redirect_to_arm         : 1;
         pinned_lif              : 11;
@@ -119,6 +120,7 @@ header_type scratch_metadata_t {
         timestamp           : 48;
         tcp_flags           : 8;
         session_stats_addr  : 34;
+        session_id          : 21;
         num_nexthops        : 4;
         nexthop_id          : 16;
         ip_totallen         : 16;

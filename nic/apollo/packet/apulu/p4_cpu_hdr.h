@@ -8,11 +8,11 @@
 
 // Meta received from P4 for rx packet
 typedef struct p4_rx_cpu_hdr_s {
-    uint16_t   packet_len;
-    uint8_t    nacl_data;
-    uint8_t    flags;
-    uint16_t   ingress_bd_id;
-    uint32_t   flow_hash;
+    uint16_t packet_len;
+    uint8_t  nacl_data;
+    uint8_t  flags;
+    uint16_t ingress_bd_id;
+    uint32_t flow_hash;
 
     // offsets
     uint8_t  l2_offset;
@@ -22,7 +22,9 @@ typedef struct p4_rx_cpu_hdr_s {
     uint8_t  l3_inner_offset;
     uint8_t  l4_inner_offset;
     uint8_t  payload_offset;
+    uint8_t  pad;
 
+    uint32_t session_id;
     uint16_t lif;
     uint16_t egress_bd_id;
     uint16_t service_xlate_id;
@@ -31,19 +33,22 @@ typedef struct p4_rx_cpu_hdr_s {
     uint16_t nexthop_id;
     uint16_t vpc_id;
     uint16_t vnic_id;
+    uint8_t  tcp_flags;
     union {
         uint8_t flags_octet;
         struct {
 #if __BYTE_ORDER == __BIG_ENDIAN
-            uint8_t pad                 : 4;
             uint8_t mapping_hit         : 1;
+            uint8_t sacl_action         : 1;
+            uint8_t sacl_root           : 3;
             uint8_t nexthop_type        : 2;
             uint8_t drop                : 1;
 #else
             uint8_t drop                : 1;
             uint8_t nexthop_type        : 2;
+            uint8_t sacl_root           : 3;
+            uint8_t sacl_action         : 1;
             uint8_t mapping_hit         : 1;
-            uint8_t pad                 : 4;
 #endif
         };
     };

@@ -24,6 +24,8 @@ class P4ToARM(Packet):
             ByteField("l3_2_offset", 0),
             ByteField("l4_2_offset", 0),
             ByteField("payload_offset", 0),
+            ByteField("pad", 0),
+            IntField("session_id", 0),
             ShortField("lif", 0),
             ShortField("egress_bd_id", 0),
             ShortField("service_xlate_id", 0),
@@ -32,6 +34,7 @@ class P4ToARM(Packet):
             ShortField("nexthop_id", 0),
             ShortField("vpc_id", 0),
             ShortField("vnic_id", 0),
+            ByteField("tcp_flags", 0),
             BitField("mapping_hit", 0, 1),
             BitField("sacl_action", 0, 1),
             BitField("sacl_root", 0, 3),
@@ -83,7 +86,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0x41f250eb, l2_1_offset=0x11, l3_1_offset=0x23, \
+               flow_hash=0x1891f5c3, l2_1_offset=0x11, l3_1_offset=0x23, \
                l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
                nexthop_id=0x1ef, nexthop_type='Tunnel', \
                vpc_id=0x2ec, vnic_id=0x2fe, mapping_hit=1) / \
@@ -127,3 +130,21 @@ opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 dump_pkt(ipkt, 'g_snd_pkt5')
 dump_pkt(opkt, 'g_rcv_pkt5')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678, flags='F') / payload
+opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
+               flow_hash=0xf1919111, l2_1_offset=0x11, l3_1_offset=0x23, \
+               l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
+               session_id=0x55e51, tcp_flags=0x1, \
+               nexthop_id=0x1ef, nexthop_type='Tunnel', \
+               vpc_id=0x2ec, vnic_id=0x2ee, mapping_hit=1) / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678, flags='F') / payload
+dump_pkt(ipkt, 'g_snd_pkt6')
+dump_pkt(opkt, 'g_rcv_pkt6')

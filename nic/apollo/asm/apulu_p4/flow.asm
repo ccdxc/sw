@@ -11,13 +11,6 @@ struct phv_ p;
 
 %%
 
-.assert(offsetof(k, key_metadata_dport)  == (512 - 32 - (16)))
-.assert(offsetof(k, key_metadata_sport)  == (512 - 32 - (16 + 16)))
-.assert(offsetof(k, key_metadata_proto)  == (512 - 32 - (16 + 16 + 8)))
-.assert(offsetof(k, key_metadata_dst)    == (512 - 32 - (16 + 16 + 8 + 128)))
-.assert(offsetof(k, key_metadata_src)    == (512 - 32 - (16 + 16 + 8 + 128 + 128)))
-.assert(offsetof(k, vnic_metadata_bd_id) == (512 - 32 - (16 + 16 + 8 + 128 + 128 + 16)))
-
 flow_hash:
     bbne        d.flow_hash_d.entry_valid, TRUE, label_flow_miss
     phvwr       p.p4i_i2e_entropy_hash, r1
@@ -56,6 +49,8 @@ label_flow_hit:
     slt         c1, d.flow_hash_d.epoch, k.control_metadata_epoch
     bcf         [c1], label_flow_miss
     phvwr       p.ingress_recirc_flow_done, TRUE
+    smneb       c1, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
+    bcf         [c1], label_force_flow_miss
     seq         c1, d.flow_hash_d.nexthop_valid, TRUE
     bcf         [!c1], label_flow_hit_nexthop_done
     phvwr.c1    p.p4i_i2e_nexthop_type, d.flow_hash_d.nexthop_type
@@ -64,8 +59,20 @@ label_flow_hit:
     phvwr.!c1   p.p4i_i2e_mapping_bypass, TRUE
     phvwr.!c1   p.p4i_i2e_nexthop_id, d.flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
-    phvwr.e     p.p4i_i2e_session_index, d.flow_hash_d.session_index
+    phvwr.e     p.p4i_i2e_session_id, d.flow_hash_d.session_index
     phvwr.f     p.p4i_i2e_flow_role, d.flow_hash_d.flow_role
+
+label_force_flow_miss:
+    phvwr       p.control_metadata_flow_miss, TRUE
+    phvwr       p.control_metadata_force_flow_miss, TRUE
+    phvwr       p.p4i_to_arm_session_id, d.flow_hash_d.session_index
+    phvwr       p.p4i_to_arm_tcp_flags, k.tcp_flags
+    nop.!c1.e
+    seq         c1, d.flow_hash_d.nexthop_type, NEXTHOP_TYPE_VPC
+    phvwr.c1    p.p4i_i2e_mapping_lkp_id, d.flow_hash_d.nexthop_id
+    phvwr.!c1   p.p4i_i2e_mapping_bypass, TRUE
+    phvwr.e     p.p4i_to_arm_nexthop_type, d.flow_hash_d.nexthop_type
+    phvwr.!c1   p.p4i_to_arm_nexthop_id, d.flow_hash_d.nexthop_id
 
 label_flow_hash_hit:
     // Set bit 31 for overflow hash lookup to work

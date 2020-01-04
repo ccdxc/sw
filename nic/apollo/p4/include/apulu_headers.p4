@@ -52,7 +52,9 @@ header_type apulu_p4_to_arm_header_t {
         l3_2_offset         : 8;
         l4_2_offset         : 8;
         payload_offset      : 8;
+        pad                 : 8;
 
+        session_id          : 32;
         lif                 : 16;
         egress_bd_id        : 16;
         service_xlate_id    : 16;
@@ -61,6 +63,7 @@ header_type apulu_p4_to_arm_header_t {
         nexthop_id          : 16;
         vpc_id              : 16;
         vnic_id             : 16;
+        tcp_flags           : 8;
         mapping_hit         : 1;
         sacl_action         : 1;
         sacl_root           : 3;

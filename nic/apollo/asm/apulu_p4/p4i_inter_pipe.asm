@@ -86,6 +86,8 @@ ingress_to_rxdma:
     or.!c1          r1, 0, r1, 1
     phvwr           p.p4i_to_rxdma_vnic_info_key, r1
     seq.!c1         c1, k.key_metadata_ktype, KEY_TYPE_IPV4
+    seq             c2, k.control_metadata_force_flow_miss, FALSE
+    andcf           c1, [c2]
     phvwr.c1        p.p4i_to_rxdma_vnic_info_en, TRUE
 
     add             r1, k.capri_p4_intrinsic_packet_len, \
