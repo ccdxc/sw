@@ -20,6 +20,7 @@
 /// @{
 
 #define PDS_MAX_NAT_PORT_BLOCK    (1024 << 4)
+
 /// \brief NAT port block specification
 typedef struct pds_nat_port_block_spec_s {
     pds_nat_port_block_key_t key;            ///< NAT port block key
@@ -27,6 +28,7 @@ typedef struct pds_nat_port_block_spec_s {
     uint8_t                  ip_proto;       ///< ip protocol
     ipvx_range_t             nat_ip_range;   ///< NAT ip range
     port_range_t             nat_port_range; ///< NAT port range
+    address_type_t           address_type;   ///< Public or Service address
 } __PACK__ pds_nat_port_block_spec_t;
 
 /// \brief NAT port block status

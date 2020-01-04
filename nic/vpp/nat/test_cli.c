@@ -50,7 +50,14 @@ test_nat_add_pb (vlib_main_t *vm,
         goto done;
     }
 
-    ret = nat_port_block_add(id++, vpc_id, ip, proto, start_port, end_port,
+    ret = nat_port_block_add(id, vpc_id, ip, proto, start_port, end_port,
+                             NAT_TYPE_INTERNET);
+    if (ret != NAT_ERR_OK) {
+        vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
+        goto done;
+    }
+
+    ret = nat_port_block_commit(id++, vpc_id, ip, proto, start_port, end_port,
                              NAT_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);

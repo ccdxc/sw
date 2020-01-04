@@ -162,6 +162,7 @@ VLIB_REGISTER_NODE (nat_node) = {
 static clib_error_t *
 vpp_nat_init (vlib_main_t * vm)
 {
+    pds_nat_ipc_init();
     nat_init();
     return 0;
 }

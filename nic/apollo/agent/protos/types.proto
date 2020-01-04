@@ -243,3 +243,11 @@ message BatchCtxt {
   // opaque cookie
   uint64 BatchCookie = 1;
 }
+
+// Public/Internet or Service/Infra address
+enum AddressType {
+  ADDR_TYPE_NONE        = 0;
+  ADDR_TYPE_PUBLIC      = 1;
+  ADDR_TYPE_SERVICE     = 2;
+}
+

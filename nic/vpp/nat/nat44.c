@@ -15,20 +15,32 @@
 #define PORT_MASK 0xffff
 #define REF_COUNT_MASK 0xffff
 
+typedef enum {
+    NAT_PB_STATE_UNKNOWN,
+    NAT_PB_STATE_ADDED,
+    NAT_PB_STATE_DELETED,
+    NAT_PB_STATE_UPDATED,
+    NAT_PB_STATE_OK,
+} nat_port_block_state_t;
+
 typedef struct nat_port_block_s {
     // configured
     u32 id;
     ip4_address_t addr;
-    u8 protocol;
     u16 start_port;
     u16 end_port;
-    nat_type_t nat_type;
 
     // allocated
+    nat_port_block_state_t state;
     int num_flow_alloc;
     u32 *ref_count;
     u32 *nat_tx_hw_index;
     uword *port_bitmap;
+
+    // cache
+    ip4_address_t addr_new;
+    u16 start_port_new;
+    u16 end_port_new;
 } nat_port_block_t;
 
 typedef struct nat_vpc_config_s {
@@ -184,10 +196,9 @@ nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
     vpc->num_port_blocks++;
     pb->id = id;
     pb->addr = addr;
-    pb->protocol = protocol;
     pb->start_port = start_port;
     pb->end_port = end_port;
-    pb->nat_type = nat_type;
+    pb->state = NAT_PB_STATE_ADDED;
     clib_spinlock_unlock(&vpc->lock);
 
     return NAT_ERR_OK;
@@ -238,12 +249,28 @@ nat_port_block_update(u32 id, u32 vpc_id, ip4_address_t addr,
     }
 
     clib_spinlock_lock(&vpc->lock);
-    pb->protocol = protocol;
-    pb->start_port = start_port;
-    pb->end_port = end_port;
+    pb->state = NAT_PB_STATE_UPDATED;
+    pb->addr_new = addr;
+    pb->start_port_new = start_port;
+    pb->end_port_new = end_port;
     clib_spinlock_unlock(&vpc->lock);
 
     return NAT_ERR_OK;
+}
+
+always_inline void
+nat_port_block_del_inline(nat_vpc_config_t *vpc, nat_port_block_t *pb,
+                          nat_proto_t nat_proto, nat_type_t nat_type)
+{
+    clib_spinlock_lock(&vpc->lock);
+    pool_put(vpc->nat_pb[nat_type][nat_proto - 1], pb);
+    vpc->num_port_blocks--;
+    if (vpc->num_port_blocks == 0) {
+        hash_free(vpc->nat_flow_ht);
+        hash_free(vpc->nat_src_ht);
+        hash_free(vpc->nat_pvt_ip_ht);
+    }
+    clib_spinlock_unlock(&vpc->lock);
 }
 
 //
@@ -270,7 +297,7 @@ nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
     ({
-        if (pb->id == id) {
+        if (pb->id == id && pb->state == NAT_PB_STATE_OK) {
             found = 1;
             break;
         }
@@ -286,15 +313,92 @@ nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
         return NAT_ERR_IN_USE;
     }
 
-    clib_spinlock_lock(&vpc->lock);
-    pool_put(vpc->nat_pb[nat_type][nat_proto - 1], pb);
-    vpc->num_port_blocks--;
-    if (vpc->num_port_blocks == 0) {
-        hash_free(vpc->nat_flow_ht);
-        hash_free(vpc->nat_src_ht);
-        hash_free(vpc->nat_pvt_ip_ht);
+    pb->state = NAT_PB_STATE_DELETED;
+
+    return NAT_ERR_OK;
+}
+
+//
+// Commit SNAT port block
+//
+nat_err_t
+nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
+                      u8 protocol, u16 start_port, u16 end_port,
+                      nat_type_t nat_type)
+{
+    nat_port_block_t *pb;
+    nat_vpc_config_t *vpc;
+    nat_proto_t nat_proto;
+
+    ASSERT(vpc_id < PDS_MAX_VPC);
+    ASSERT(nat_type < NAT_TYPE_NUM);
+
+    vpc = &nat_main.vpc_config[vpc_id];
+
+    nat_proto = nat_main.proto_map[protocol];
+    if (nat_proto == NAT_PROTO_UNKNOWN) {
+        return NAT_ERR_INVALID_PROTOCOL;
     }
-    clib_spinlock_unlock(&vpc->lock);
+
+    pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
+    ({
+        if (pb->id == id) {
+            if (pb->state == NAT_PB_STATE_ADDED) {
+                pb->state = NAT_PB_STATE_OK;
+                return NAT_ERR_OK;
+            } else if (pb->state == NAT_PB_STATE_DELETED) {
+                nat_port_block_del_inline(vpc, pb, nat_proto, nat_type);
+                return NAT_ERR_OK;
+            } else if (pb->state == NAT_PB_STATE_UPDATED) {
+                pb->addr = pb->addr_new;
+                pb->start_port = pb->start_port_new;
+                pb->end_port = pb->end_port_new;
+                pb->state = NAT_PB_STATE_OK;
+                return NAT_ERR_OK;
+            }
+        }
+    }));
+
+    return NAT_ERR_OK;
+}
+
+//
+// Rollback SNAT port block
+//
+nat_err_t
+nat_port_block_rollback(u32 id, u32 vpc_id, ip4_address_t addr,
+                        u8 protocol, u16 start_port, u16 end_port,
+                        nat_type_t nat_type)
+{
+    nat_port_block_t *pb;
+    nat_vpc_config_t *vpc;
+    nat_proto_t nat_proto;
+
+    ASSERT(vpc_id < PDS_MAX_VPC);
+    ASSERT(nat_type < NAT_TYPE_NUM);
+
+    vpc = &nat_main.vpc_config[vpc_id];
+
+    nat_proto = nat_main.proto_map[protocol];
+    if (nat_proto == NAT_PROTO_UNKNOWN) {
+        return NAT_ERR_INVALID_PROTOCOL;
+    }
+
+    pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
+    ({
+        if (pb->id == id) {
+            if (pb->state == NAT_PB_STATE_ADDED) {
+                nat_port_block_del_inline(vpc, pb, nat_proto, nat_type);
+                return NAT_ERR_OK;
+            } else if (pb->state == NAT_PB_STATE_DELETED) {
+                pb->state = NAT_PB_STATE_OK;
+                return NAT_ERR_OK;
+            } else if (pb->state == NAT_PB_STATE_UPDATED) {
+                pb->state = NAT_PB_STATE_OK;
+                return NAT_ERR_OK;
+            }
+        }
+    }));
 
     return NAT_ERR_OK;
 }
@@ -447,7 +551,8 @@ always_inline nat_err_t
 nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
                       ip4_address_t pvt_ip, u16 pvt_port,
                       ip4_address_t *sip, u16 *sport,
-                      nat_port_block_t *pb, nat_vpc_config_t *vpc)
+                      nat_port_block_t *pb, nat_vpc_config_t *vpc,
+                      u8 protocol)
 {
     u16 num_ports;
     nat_flow_key_t key = { 0 };
@@ -466,7 +571,7 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
     key.dip = dip;
     key.sip = pb->addr;
     key.dport = dport;
-    key.protocol = pb->protocol;
+    key.protocol = protocol;
 
     for (try_sport = pb->start_port; try_sport <= pb->end_port; try_sport++) {
         key.sport = try_sport;
@@ -519,7 +624,7 @@ nat_get_random_pool(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb)
     i = 0;
     pool_foreach (pb, nat_pb,
     ({
-        if (i == elt) {
+        if (i == elt && pb->state == NAT_PB_STATE_OK) {
             return pb;
         }
         i++;
@@ -574,16 +679,16 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
         }
         if (pb) {
             ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip, pvt_port,
-                    sip, sport, pb, vpc);
+                    sip, sport, pb, vpc, protocol);
         }
         if (!pb || ret != NAT_ERR_OK) {
             // random pool did not work, try all pools
             u8 allocated = 0;
             pool_foreach (pb, nat_pb,
             ({
-                if (allocated) continue;
+                if (allocated || pb->state != NAT_PB_STATE_OK) continue;
                 ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip, pvt_port,
-                                            sip, sport, pb, vpc);
+                                            sip, sport, pb, vpc, protocol);
                 if (ret == NAT_ERR_OK) allocated = 1;
             }));
         }
@@ -592,7 +697,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
         // src endpoint found, reuse public ip, port mapping
         pool_foreach (pb, nat_pb,
         ({
-            if (pb->addr.as_u32 == sip->as_u32) {
+            if (pb->addr.as_u32 == sip->as_u32 && pb->state == NAT_PB_STATE_OK) {
                 nat_flow_key_t key = { 0 };
                 key.dip = dip;
                 key.sip = *sip;

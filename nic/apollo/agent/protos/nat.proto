@@ -108,15 +108,17 @@ message NatPolicyDeleteResponse {
 // NAT port block specification
 message NatPortBlockSpec {
   // unique key identifying the port block
-  uint32          Id         = 1;
+  uint32            Id          = 1;
   // VPC identifier this port block is tied to
-  uint32          VpcId      = 2;
+  uint32            VpcId       = 2;
   // IP protocol this port block is to be used for
-  uint32          Protocol   = 3;
+  uint32            Protocol    = 3;
   // NAT address to be used with this port block
-  types.Address   NatAddress = 4;
+  types.Address     NatAddress  = 4;
   // range of ports to be use for NAT
-  types.PortRange Ports      = 5;
+  types.PortRange   Ports       = 5;
+  // NAT address is from Internet or Cloud Infra space
+  types.AddressType AddressType = 6;
 }
 
 // operational status of NAT port block

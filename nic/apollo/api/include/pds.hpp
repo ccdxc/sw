@@ -280,5 +280,12 @@ typedef struct pds_security_profile_key_s {
     pds_security_profile_id_t id;    ///< security profile id
 } __PACK__ pds_security_profile_key_t;
 
+/// \brief address type (Public/Internet or Service)
+typedef enum address_type_s {
+    ADDR_TYPE_NONE          = 0,
+    ADDR_TYPE_PUBLIC        = 1,            ///< Public/Internet address space
+    ADDR_TYPE_SERVICE       = 2             ///< Service/Infra address space
+} address_type_t;
+
 /// @}
 #endif    // __INCLUDE_API_PDS_HPP__
