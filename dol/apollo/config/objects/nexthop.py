@@ -308,6 +308,7 @@ class NexthopObjectClient(base.ConfigClientBase):
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs.values()))
         else:
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+        logger.info(f"Creating {self.ObjType.name} Objects in agent")
         api.client.Create(self.ObjType, msgs)
         return
 

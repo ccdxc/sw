@@ -279,16 +279,27 @@ dpdk_device::destroy(dpdk_device *dev) {
     SDK_FREE(SDK_MEM_ALLOC_LIB_DPDK_DEVICE, dev);
 }
 
+char *
+dpdk_device::remove_header(dpdk_mbuf *packet, uint16_t len) {
+    return rte_pktmbuf_adj((struct rte_mbuf *)packet, len);
+}
+
+char *
+dpdk_device::add_header(dpdk_mbuf *packet, uint16_t len) {
+    return rte_pktmbuf_prepend((struct rte_mbuf *)packet, len);
+}
+
 dpdk_mbuf **
-dpdk_device::recieve_packets(uint16_t rx_queue_id, uint16_t max_packets,
+dpdk_device::receive_packets(uint16_t rx_queue_id, uint16_t max_packets,
                              uint16_t *recv_count) {
     int n_rx_packets = 0, n;
+    struct rte_mbuf **rx_pkts = (struct rte_mbuf**)mbufs[rx_queue_id];
     max_packets = (max_packets > DPDK_MAX_BURST_SIZE) ?
                   DPDK_MAX_BURST_SIZE : max_packets;
 
     while (n_rx_packets < max_packets) {
         n = rte_eth_rx_burst(portid, rx_queue_id,
-                             mbufs[rx_queue_id] + n_rx_packets,
+                             rx_pkts + n_rx_packets,
                              max_packets - n_rx_packets);
         n_rx_packets += n;
 
@@ -299,17 +310,18 @@ dpdk_device::recieve_packets(uint16_t rx_queue_id, uint16_t max_packets,
     }
 
     *recv_count = n_rx_packets;
-    return ((*recv_count) ? mbufs[rx_queue_id] : NULL);
+    return ((*recv_count) ? (dpdk_mbuf **)rx_pkts : NULL);
 }
 
-int
+uint16_t
 dpdk_device::transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
                               uint16_t n_left) {
     int n_sent = 0;
     int n_retry = 16;
+    struct rte_mbuf **tx_pkts = (struct rte_mbuf**)packets;
 
     do {
-        n_sent = rte_eth_tx_burst(portid, tx_queue_id, packets, n_left);
+        n_sent = rte_eth_tx_burst(portid, tx_queue_id, tx_pkts, n_left);
         if (n_sent < 0) {
             // can't send anymore
             break;

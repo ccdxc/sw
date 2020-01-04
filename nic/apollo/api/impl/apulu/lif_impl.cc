@@ -939,6 +939,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_learn_enabled = 1;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_local_mapping_miss = 1;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
@@ -946,6 +947,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_local_mapping_miss_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;
@@ -978,6 +980,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_learn_enabled = 1;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_local_mapping_miss = 1;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = 67;
@@ -986,6 +989,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_local_mapping_miss_mask = ~0;
     mask.control_metadata_tunneled_packet_mask = ~0;
     mask.key_metadata_dport_mask = ~0;

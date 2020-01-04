@@ -347,10 +347,11 @@ class ConfigClientBase(base.ConfigClientBase):
 
         # return if there is no fixed object
         if len(fixed) == 0:
+            logger.info(f"Skip Creating {self.ObjType.name} Objects in agent")
             return
 
         self.ShowObjects()
-        logger.info("Creating %s Objects in agent" % (self.ObjType.name))
+        logger.info(f"Creating {self.ObjType.name} Objects in agent")
         cookie = utils.GetBatchCookie()
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
         api.client.Create(self.ObjType, msgs)

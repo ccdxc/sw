@@ -77,8 +77,8 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "VnicID:%d|SubnetID:%d|VPCId:%d" %\
-               (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
+        return "VnicID:%d|SubnetID:%d|VPCId:%d|Origin:%s" %\
+               (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId, self.Origin)
 
     def Show(self):
         logger.info("VNIC object:", self)

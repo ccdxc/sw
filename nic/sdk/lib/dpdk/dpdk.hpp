@@ -67,7 +67,9 @@ typedef struct dpdk_global_config_s {
 
 sdk_ret_t dpdk_init(sdk_dpdk_params_t *args);
 
-typedef struct rte_mbuf dpdk_mbuf;
+typedef union dpdk_mbuf_ {
+     struct rte_mbuf;
+} dpdk_mbuf;
 
 class dpdk_device {
 private:
@@ -85,11 +87,13 @@ private:
 public:
     static dpdk_device *factory(sdk_dpdk_device_params_t *args);
     static void destroy(dpdk_device *dev);
-    dpdk_mbuf ** recieve_packets(uint16_t rx_queue_id, uint16_t max_packets,
-                             uint16_t *recv_count);
+    static char * remove_header(dpdk_mbuf *packet, uint16_t len);
+    static char * add_header(dpdk_mbuf *packet, uint16_t len);
+    dpdk_mbuf ** receive_packets(uint16_t rx_queue_id, uint16_t max_packets,
+                                 uint16_t *recv_count);
     //Returns number of untransmitted packets
-    int transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
-                         uint16_t num_packets);
+    uint16_t transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
+                              uint16_t num_packets);
 };
 
 }    // namespace dpdk

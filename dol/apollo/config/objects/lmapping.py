@@ -66,8 +66,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|VPCId:%d" %\
-               (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.VPC.VPCId)
+        return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|VPCId:%d|Origin:%s" %\
+               (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.VPC.VPCId, self.Origin)
 
     def Show(self):
         logger.info("LocalMapping Object:", self)

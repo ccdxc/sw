@@ -8,18 +8,20 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <string.h>
+#include <unistd.h>
+#include "nic/sdk/lib/dpdk/dpdk.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/learn.hpp"
-#include "nic/sdk/lib/dpdk/dpdk.hpp"
-#include <learn_utils.hpp>
-#include <vector>
-#include <unistd.h>
-#include <string.h>
+#include "learn_utils.hpp"
 
 using namespace std;
 
 namespace learn {
+
+dpdk_device *g_learn_lif = NULL;
+dpdk_mbuf *tx_packets[DPDK_MAX_BURST_SIZE];
 
 bool
 learn_thread_enabled (void)
@@ -45,22 +47,98 @@ learn_log (sdk_trace_level_e trace_level,
     return 0;
 }
 
-void *
-learn_thread_start (void *ctxt)
+static inline sdk_ret_t
+learn_p4_rx_hdr_remove (dpdk_mbuf *pkt)
 {
-    sdk_dpdk_params_t params;
+    char *hdr;
+
+    hdr = dpdk_device::remove_header(pkt, LEARN_P4_TO_ARM_HDR_SZ);
+    if (unlikely(hdr == NULL)) {
+        return SDK_RET_OOB;
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+learn_p4_tx_hdr_add (dpdk_mbuf *pkt)
+{
+    char *tx_hdr;
+
+    tx_hdr = dpdk_device::add_header(pkt, LEARN_ARM_TO_P4_HDR_SZ);
+    if (unlikely(tx_hdr == NULL)) {
+        return SDK_RET_OOM;
+    }
+    learn_p4_tx_hdr_fill(tx_hdr);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+learn_pkt_headers_process (dpdk_mbuf *pkt)
+{
     sdk_ret_t ret;
+
+    // TODO: plug in learn code, which learns info from pkt
+
+    ret = learn_p4_rx_hdr_remove(pkt);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("learn thread : Failed to remove rx header");
+        return ret;
+    }
+
+    // TODO: pass learn info to add_tx_header for populating lif
+    ret = learn_p4_tx_hdr_add(pkt);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("learn thread : Failed to add tx header");
+        return ret;
+    }
+
+    return SDK_RET_OK;
+}
+
+void
+learn_packets_process (dpdk_mbuf **rx_pkts, uint16_t rx_count)
+{
+    sdk_ret_t ret;
+    dpdk_mbuf *rx_pkt;
+    uint16_t tx_count = 0, tx_fail;
+
+    PDS_TRACE_DEBUG("learn thread received %u packets", rx_count);
+    for (uint16_t i = 0; i < rx_count; i++) {
+        rx_pkt = rx_pkts[i];
+        ret = learn_pkt_headers_process(rx_pkt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("learn thread : Failed to process learn pkt");
+            // TODO: Drop packets?
+            continue;
+        }
+        // queue pkt to send
+        tx_packets[tx_count++] = rx_pkt;
+    }
+    tx_fail = g_learn_lif->transmit_packets(0, tx_packets, tx_count);
+    PDS_TRACE_DEBUG("learn thread re-injected %u packets", tx_count-tx_fail);
+}
+
+void
+learn_pkt_poll_timer_cb (void *timer)
+{
+    uint16_t rx_count = 0;
+    dpdk_mbuf **rx_pkts;
+
+    rx_pkts = g_learn_lif->receive_packets(0, DPDK_MAX_BURST_SIZE, &rx_count);
+    if (unlikely(!rx_pkts || !rx_count)) {
+        return;
+    }
+
+    learn_packets_process(rx_pkts, rx_count);
+}
+
+sdk_ret_t
+learn_init (void)
+{
+    sdk_ret_t ret;
+    sdk_dpdk_params_t params;
     sdk_dpdk_device_params_t args;
-    dpdk_device *learn_lif = NULL;
-    uint16_t recv_count = 0;
-    dpdk_mbuf **packets = NULL;
 
-    SDK_THREAD_INIT(ctxt);
-
-    // TODO: though we start this thread after is_nicmgr_ready(), still uio
-    // devices are not created by the time we reach here. So this hack
-    // for now. We need to come back and fix this later.
-    sleep(30);
     params.log_cb = learn_log;
     params.eal_init_list = "-c 3 -n 4 --in-memory --file-prefix learn --master-lcore 1";
     params.log_name = "learn_dpdk";
@@ -69,11 +147,11 @@ learn_thread_start (void *ctxt)
     params.num_mbuf = 1024;
     params.vdev_list.push_back(string(LEARN_LIF_NAME));
     ret = dpdk_init(&params);
-    if (ret != SDK_RET_OK) {
+    if (unlikely(ret != SDK_RET_OK)) {
         // learn lif may not be present on all pipelines, so exit
         // on dpdk init failure.
-        PDS_TRACE_ERR("DPDK init failed! Exit learn thread!");
-        goto end;
+        PDS_TRACE_ERR("DPDK init failed! learn thread exiting!");
+        return ret;
     }
 
     args.dev_name = LEARN_LIF_NAME;
@@ -81,15 +159,32 @@ learn_thread_start (void *ctxt)
     args.num_rx_queue = 1;
     args.num_tx_desc = 1024;
     args.num_tx_queue = 1;
-    learn_lif = dpdk_device::factory(&args);
-    SDK_ASSERT(learn_lif);
+    g_learn_lif = dpdk_device::factory(&args);
+    SDK_ASSERT(g_learn_lif);
 
+    return SDK_RET_OK;
+}
+
+void *
+learn_thread_start (void *ctxt)
+{
+    sdk_ret_t ret;
+
+    SDK_THREAD_INIT(ctxt);
+
+    // TODO: though we start this thread after is_nicmgr_ready(), still uio
+    // devices are not created by the time we reach here. So this hack
+    // for now. We need to come back and fix this later.
+    sleep(30);
+
+    ret = learn_init();
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+
+    PDS_TRACE_DEBUG("learn thread entering packet loop");
     while (1) {
-        recv_count = 0;
-        packets = learn_lif->recieve_packets(0, 256, &recv_count);
-        if (packets && recv_count) {
-            PDS_TRACE_DEBUG("Received %u packets", recv_count);
-        }
+        learn_pkt_poll_timer_cb(NULL);
         // Lazy poll
         usleep(100000);
     }
