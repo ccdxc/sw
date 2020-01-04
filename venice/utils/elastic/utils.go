@@ -62,14 +62,14 @@ const (
 	// EventsIndexPrefix is the elastic index prefix for events
 	EventsIndexPrefix = "venice.external.*.events.*"
 
-	// EventsIndexRetentionPeriod retention period for events - 30 days
-	EventsIndexRetentionPeriod = 30 * 24 * time.Hour
+	// EventsIndexRetentionPeriod retention period for events - 10 days
+	EventsIndexRetentionPeriod = 10 * 24 * time.Hour
 
 	// AuditLogsIndexPrefix is the elastic index prefix for audit logs
 	AuditLogsIndexPrefix = "venice.external.*.auditlogs.*"
 
-	// AuditLogsIndexRetentionPeriod retention period for audit logs - 90 days
-	AuditLogsIndexRetentionPeriod = 90 * 24 * time.Hour
+	// AuditLogsIndexRetentionPeriod retention period for audit logs - 30 days
+	AuditLogsIndexRetentionPeriod = 30 * 24 * time.Hour
 
 	// IndexScanInterval scan interval for elastic indices - 24 hours
 	IndexScanInterval = 24 * time.Hour
