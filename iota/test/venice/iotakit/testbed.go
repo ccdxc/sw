@@ -1346,10 +1346,8 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 
 	trig = sm.tb.NewTrigger()
 	//Make sure we can run command on naples
-
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			// cleaning up db is good for now.
 			trig.AddCommand(fmt.Sprintf("date"), node.NodeName+"_naples", node.NodeName)
 		}
 	}

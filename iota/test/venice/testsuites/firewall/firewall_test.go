@@ -64,6 +64,16 @@ var _ = Describe("firewall tests", func() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 
+			ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+				_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
+				Expect(err).ShouldNot(HaveOccurred())
+				return nil
+			})
+			defer ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
+				_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
+				Expect(err).ShouldNot(HaveOccurred())
+				return nil
+			})
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			err := make(chan error)
 

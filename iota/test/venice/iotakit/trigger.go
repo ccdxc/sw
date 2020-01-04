@@ -5,6 +5,7 @@ package iotakit
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -248,6 +249,64 @@ func (tb *TestBed) CopyFromNaples(nodeName string, files []string, destDir strin
 		return fmt.Errorf("Copy files failed. API Status: %+v ", copyResp.ApiResponse)
 	}
 
+	log.Debugf("Got Copy resp: %+v", copyResp)
+
+	return nil
+}
+
+// CopyToNaples copies files to naples
+func (tb *TestBed) CopyToNaples(nodeName string, files []string, destDir string) error {
+
+	//Copy to current directory where ever iota is running
+	hostTmpDir := "./"
+	// First copy to host
+	copyMsg := iota.EntityCopyMsg{
+		Direction:   iota.CopyDirection_DIR_IN,
+		NodeName:    nodeName,
+		EntityName:  nodeName + "_host",
+		Files:       files,
+		DestDir:     hostTmpDir,
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
+	// send it to iota
+	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
+	if err != nil {
+		log.Errorf("Copy failed to host (for naples): Err: %v", err)
+		return fmt.Errorf("Copy files failed.  Err: %v", err)
+	} else if copyResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Copy failed to host (for naples): Resp: %v", copyResp)
+		return fmt.Errorf("Copy files failed. API Status: %+v ", copyResp.ApiResponse)
+	}
+
+	//now copy to naples from host
+	naplesIP := "169.254.0.1"
+	trig := tb.NewTrigger()
+	for _, f := range files {
+		fullSrcPath := hostTmpDir + filepath.Base(f)
+		copyCmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no  %s %s@%s:%s", fullSrcPath, "root", naplesIP, destDir)
+		trig.AddCommand(copyCmd, nodeName+"_host", nodeName)
+	}
+
+	// trigger commands
+	resp, err := trig.Run()
+	if err != nil {
+		msg := fmt.Sprintf("Failed to Copy to naples command Err: %v", err)
+		log.Errorf(msg)
+		return fmt.Errorf(msg)
+	}
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Copy from host to naples failed. %+v", cmdResp)
+			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
+	}
 	log.Debugf("Got Copy resp: %+v", copyResp)
 
 	return nil
