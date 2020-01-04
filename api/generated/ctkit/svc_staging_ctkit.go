@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleBufferEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = bufferHandler.OnBufferUpdate(obj, &p)
-					workCtx.obj.Buffer = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Buffer = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

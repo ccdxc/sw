@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = eventpolicyHandler.OnEventPolicyUpdate(obj, &p)
-					workCtx.obj.EventPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.EventPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleStatsPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = statspolicyHandler.OnStatsPolicyUpdate(obj, &p)
-					workCtx.obj.StatsPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.StatsPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, &p)
-					workCtx.obj.FwlogPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.FwlogPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 						Status:     eobj.Status}
 
 					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, &p)
-					workCtx.obj.FlowExportPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.FlowExportPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = alertHandler.OnAlertUpdate(obj, &p)
-					workCtx.obj.Alert = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Alert = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -4326,11 +4331,12 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = alertpolicyHandler.OnAlertPolicyUpdate(obj, &p)
-					workCtx.obj.AlertPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.AlertPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5110,11 +5116,12 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 						Status:     eobj.Status}
 
 					err = alertdestinationHandler.OnAlertDestinationUpdate(obj, &p)
-					workCtx.obj.AlertDestination = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.AlertDestination = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5894,11 +5901,12 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, &p)
-					workCtx.obj.MirrorSession = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.MirrorSession = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -6678,11 +6686,12 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 						Status:     eobj.Status}
 
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, &p)
-					workCtx.obj.TroubleshootingSession = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.TroubleshootingSession = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -7462,11 +7471,12 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 						Status:     eobj.Status}
 
 					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, &p)
-					workCtx.obj.TechSupportRequest = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.TechSupportRequest = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -8246,11 +8256,12 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallelWithNoResolver(evt *kvstor
 						Status:     eobj.Status}
 
 					err = archiverequestHandler.OnArchiveRequestUpdate(obj, &p)
-					workCtx.obj.ArchiveRequest = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.ArchiveRequest = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

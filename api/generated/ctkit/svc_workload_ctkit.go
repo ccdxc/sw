@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleEndpointEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = endpointHandler.OnEndpointUpdate(obj, &p)
-					workCtx.obj.Endpoint = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Endpoint = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleWorkloadEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = workloadHandler.OnWorkloadUpdate(obj, &p)
-					workCtx.obj.Workload = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Workload = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

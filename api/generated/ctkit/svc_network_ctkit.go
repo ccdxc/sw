@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleNetworkEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = networkHandler.OnNetworkUpdate(obj, &p)
-					workCtx.obj.Network = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Network = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleServiceEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = serviceHandler.OnServiceUpdate(obj, &p)
-					workCtx.obj.Service = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Service = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = lbpolicyHandler.OnLbPolicyUpdate(obj, &p)
-					workCtx.obj.LbPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.LbPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = virtualrouterHandler.OnVirtualRouterUpdate(obj, &p)
-					workCtx.obj.VirtualRouter = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.VirtualRouter = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallelWithNoResolver(evt *kvst
 						Status:     eobj.Status}
 
 					err = networkinterfaceHandler.OnNetworkInterfaceUpdate(obj, &p)
-					workCtx.obj.NetworkInterface = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.NetworkInterface = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -4326,11 +4331,12 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallelWithNoResolver(evt *kvstore.Wa
 						Status:     eobj.Status}
 
 					err = ipampolicyHandler.OnIPAMPolicyUpdate(obj, &p)
-					workCtx.obj.IPAMPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.IPAMPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5110,11 +5116,12 @@ func (ct *ctrlerCtx) handleRoutingConfigEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = routingconfigHandler.OnRoutingConfigUpdate(obj, &p)
-					workCtx.obj.RoutingConfig = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.RoutingConfig = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5894,11 +5901,12 @@ func (ct *ctrlerCtx) handleRouteTableEventParallelWithNoResolver(evt *kvstore.Wa
 						Status:     eobj.Status}
 
 					err = routetableHandler.OnRouteTableUpdate(obj, &p)
-					workCtx.obj.RouteTable = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.RouteTable = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

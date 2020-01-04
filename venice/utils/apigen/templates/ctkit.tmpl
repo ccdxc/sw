@@ -412,11 +412,12 @@ func (ct *ctrlerCtx) handle{{.}}EventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = {{ToLower .}}Handler.On{{.}}Update(obj, &p)
-					workCtx.obj.{{.}} = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.{{.}} = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

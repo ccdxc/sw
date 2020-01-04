@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleClusterEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = clusterHandler.OnClusterUpdate(obj, &p)
-					workCtx.obj.Cluster = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Cluster = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleNodeEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = nodeHandler.OnNodeUpdate(obj, &p)
-					workCtx.obj.Node = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Node = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handleHostEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = hostHandler.OnHostUpdate(obj, &p)
-					workCtx.obj.Host = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Host = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallelWithNoResolver(evt
 						Status:     eobj.Status}
 
 					err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, &p)
-					workCtx.obj.DistributedServiceCard = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.DistributedServiceCard = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleTenantEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = tenantHandler.OnTenantUpdate(obj, &p)
-					workCtx.obj.Tenant = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Tenant = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -4326,11 +4331,12 @@ func (ct *ctrlerCtx) handleVersionEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = versionHandler.OnVersionUpdate(obj, &p)
-					workCtx.obj.Version = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Version = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5110,11 +5116,12 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallelWithNoResolver(evt 
 						Status:     eobj.Status}
 
 					err = configurationsnapshotHandler.OnConfigurationSnapshotUpdate(obj, &p)
-					workCtx.obj.ConfigurationSnapshot = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.ConfigurationSnapshot = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -5894,11 +5901,12 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallelWithNoResolver(evt *kvsto
 						Status:     eobj.Status}
 
 					err = snapshotrestoreHandler.OnSnapshotRestoreUpdate(obj, &p)
-					workCtx.obj.SnapshotRestore = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.SnapshotRestore = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -6678,11 +6686,12 @@ func (ct *ctrlerCtx) handleLicenseEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = licenseHandler.OnLicenseUpdate(obj, &p)
-					workCtx.obj.License = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.License = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

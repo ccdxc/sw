@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = userHandler.OnUserUpdate(obj, &p)
-					workCtx.obj.User = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.User = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 						Status:     eobj.Status}
 
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, &p)
-					workCtx.obj.AuthenticationPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.AuthenticationPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = roleHandler.OnRoleUpdate(obj, &p)
-					workCtx.obj.Role = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Role = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = rolebindingHandler.OnRoleBindingUpdate(obj, &p)
-					workCtx.obj.RoleBinding = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.RoleBinding = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 						Status:     eobj.Status}
 
 					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, &p)
-					workCtx.obj.UserPreference = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.UserPreference = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

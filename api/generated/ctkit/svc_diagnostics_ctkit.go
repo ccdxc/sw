@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = moduleHandler.OnModuleUpdate(obj, &p)
-					workCtx.obj.Module = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Module = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

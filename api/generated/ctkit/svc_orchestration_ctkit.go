@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 						Status:     eobj.Status}
 
 					err = orchestratorHandler.OnOrchestratorUpdate(obj, &p)
-					workCtx.obj.Orchestrator = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Orchestrator = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleSecurityGroupEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = securitygroupHandler.OnSecurityGroupUpdate(obj, &p)
-					workCtx.obj.SecurityGroup = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.SecurityGroup = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventParallelWithNoResolver(evt 
 						Status:     eobj.Status}
 
 					err = networksecuritypolicyHandler.OnNetworkSecurityPolicyUpdate(obj, &p)
-					workCtx.obj.NetworkSecurityPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.NetworkSecurityPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handleAppEventParallelWithNoResolver(evt *kvstore.WatchEven
 						Status:     eobj.Status}
 
 					err = appHandler.OnAppUpdate(obj, &p)
-					workCtx.obj.App = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.App = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleFirewallProfileEventParallelWithNoResolver(evt *kvsto
 						Status:     eobj.Status}
 
 					err = firewallprofileHandler.OnFirewallProfileUpdate(obj, &p)
-					workCtx.obj.FirewallProfile = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.FirewallProfile = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleCertificateEventParallelWithNoResolver(evt *kvstore.W
 						Status:     eobj.Status}
 
 					err = certificateHandler.OnCertificateUpdate(obj, &p)
-					workCtx.obj.Certificate = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Certificate = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -4326,11 +4331,12 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventParallelWithNoResolver(ev
 						Status:     eobj.Status}
 
 					err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj, &p)
-					workCtx.obj.TrafficEncryptionPolicy = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.TrafficEncryptionPolicy = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

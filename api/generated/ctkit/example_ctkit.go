@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleOrderEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = orderHandler.OnOrderUpdate(obj, &p)
-					workCtx.obj.Order = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Order = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleBookEventParallelWithNoResolver(evt *kvstore.WatchEve
 						Status:     eobj.Status}
 
 					err = bookHandler.OnBookUpdate(obj, &p)
-					workCtx.obj.Book = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Book = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1974,11 +1976,12 @@ func (ct *ctrlerCtx) handlePublisherEventParallelWithNoResolver(evt *kvstore.Wat
 						Status:     eobj.Status}
 
 					err = publisherHandler.OnPublisherUpdate(obj, &p)
-					workCtx.obj.Publisher = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Publisher = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -2758,11 +2761,12 @@ func (ct *ctrlerCtx) handleStoreEventParallelWithNoResolver(evt *kvstore.WatchEv
 						Status:     eobj.Status}
 
 					err = storeHandler.OnStoreUpdate(obj, &p)
-					workCtx.obj.Store = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Store = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -3542,11 +3546,12 @@ func (ct *ctrlerCtx) handleCouponEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = couponHandler.OnCouponUpdate(obj, &p)
-					workCtx.obj.Coupon = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Coupon = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -4326,11 +4331,12 @@ func (ct *ctrlerCtx) handleCustomerEventParallelWithNoResolver(evt *kvstore.Watc
 						Status:     eobj.Status}
 
 					err = customerHandler.OnCustomerUpdate(obj, &p)
-					workCtx.obj.Customer = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Customer = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

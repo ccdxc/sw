@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 						Status:     eobj.Status}
 
 					err = rolloutHandler.OnRolloutUpdate(obj, &p)
-					workCtx.obj.Rollout = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Rollout = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 						Status:     eobj.Status}
 
 					err = rolloutactionHandler.OnRolloutActionUpdate(obj, &p)
-					workCtx.obj.RolloutAction = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.RolloutAction = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}

@@ -406,11 +406,12 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = bucketHandler.OnBucketUpdate(obj, &p)
-					workCtx.obj.Bucket = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Bucket = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
@@ -1190,11 +1191,12 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 						Status:     eobj.Status}
 
 					err = objectHandler.OnObjectUpdate(obj, &p)
-					workCtx.obj.Object = p
-					obj.Unlock()
 					if err != nil {
 						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					} else {
+						workCtx.obj.Object = p
 					}
+					obj.Unlock()
 				}
 				return err
 			}
