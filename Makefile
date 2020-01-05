@@ -684,6 +684,9 @@ naples-firmware-tarball-iris: naples-firmware-tarball
 naples-firmware-tarball-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
 naples-firmware-tarball-apulu: naples-firmware-tarball
 
+naples-protos-apulu:
+	tar -zcf naples-protos-apulu.tgz nic/build/aarch64/${PIPELINE}/gen/proto/
+
 e2e-iota: e2e-naples
 	$(MAKE) venice-image
 	$(MAKE) venice-upgrade-image

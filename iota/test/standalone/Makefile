@@ -8,6 +8,9 @@ extract-naples-fw:
 extract-iota: 
 	cd ../../ && cp ../iota.tgz . && tar -zxf iota.tgz -C .
 
+extract-protos-apulu:
+	cd ../../../ && tar -zxf /sw/naples-protos-apulu.tgz -C .
+
 extract-artifacts: extract-naples-fw extract-iota
 
 esx: extract-artifacts
@@ -16,6 +19,8 @@ esx-regression: extract-artifacts
 
 apulu-linux: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
 apulu-linux: extract-artifacts
+
+apulu-networking: apulu-linux extract-protos-apulu
 
 linux: extract-artifacts
 

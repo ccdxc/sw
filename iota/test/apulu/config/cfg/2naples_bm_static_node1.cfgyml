@@ -67,7 +67,7 @@ vpc:
           dstaddr    : '1.0.0.3'
           macaddress : macaddr/0000.aaaa.aaa1
           encap      : vxlan
-          nhid       : 2
+          nhid       : 1
       subnet:
         - id               : 1
           count            : 1

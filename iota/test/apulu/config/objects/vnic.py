@@ -119,7 +119,6 @@ class VnicObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
-        spec.VPCId = self.SUBNET.VPC.VPCId
         if self.dot1Qenabled:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.VnicEncap.value.VlanId = self.VlanId
@@ -163,8 +162,6 @@ class VnicObject(base.ConfigObjectBase):
             if self.HostIf:
                 if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
                     return False
-        if spec.VPCId != self.SUBNET.VPC.VPCId:
-            return False
         if spec.MACAddress != self.MACAddr.getnum():
             return False
         if spec.SourceGuardEnable != self.SourceGuard:
