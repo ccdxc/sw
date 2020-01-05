@@ -7,6 +7,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_ecmp.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_hals_route.hpp"
 
 namespace pds_ms {
 
@@ -59,4 +60,29 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp_nh(NBB_CORRELATOR ecmp_corr,
                                                       NBB_CORRELATOR nh_corr) {
     return ATG_OK;
 };
+
+NBB_BYTE hals_l3_integ_subcomp_t::ropi_update_route(ATG_ROPI_UPDATE_ROUTE *update_route) {
+    try {
+        hals_route_t route;
+        route.handle_add_upd_ips(update_route);
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Route Add Update processing failed %s", e.what());
+        update_route->return_code = ATG_UNSUCCESSFUL;
+    }
+    // Always return ATG_OK - fill the actual return code in the IPS
+    return ATG_OK;
+};
+
+NBB_BYTE hals_l3_integ_subcomp_t::ropi_delete_route(ATG_ROPI_ROUTE_ID route_id) {
+    // Called in MS HALs stateless mode
+    try {
+        hals_route_t route;
+        route.handle_delete(route_id);
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Route Delete processing failed %s", e.what());
+    }
+    // Always return ATG_OK - fill the actual return code in the IPS
+    return ATG_OK;
+};
+
 } // End namespace

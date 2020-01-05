@@ -29,6 +29,10 @@ public:
                                  NBB_CORRELATOR nh_corr);
     // Enable ECMP even for 1 NextHop
     NBB_BYTE nhpi_ignore_num_next_hops() { return ATG_YES; }
+
+    NBB_BYTE ropi_update_route(ATG_ROPI_UPDATE_ROUTE *update_route);
+    
+    NBB_BYTE ropi_delete_route(ATG_ROPI_ROUTE_ID route_id);
 };
 
 } // End namespace

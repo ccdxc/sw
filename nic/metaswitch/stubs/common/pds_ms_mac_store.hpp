@@ -17,7 +17,7 @@
 
 // For the std::set of IP addresses
 static inline bool operator<(const ip_addr_t& a, const ip_addr_t& b) {
-    return ip_addr_is_lessthan (&a, &b);
+    return IPADDR_LT(&a, &b);
 }
 
 namespace pds_ms {

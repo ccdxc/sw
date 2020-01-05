@@ -34,4 +34,12 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp_nh(NBB_CORRELATOR ecmp_corr,
     return ATG_OK;
 }
 
+NBB_BYTE hals_l3_integ_subcomp_t::ropi_update_route(ATG_ROPI_UPDATE_ROUTE *update_route) {
+    return ATG_OK;
+}
+    
+NBB_BYTE hals_l3_integ_subcomp_t::ropi_delete_route(ATG_ROPI_ROUTE_ID route_id) {
+    return ATG_OK;
+}
+
 } // End namespace

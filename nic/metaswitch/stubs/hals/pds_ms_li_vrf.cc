@@ -24,7 +24,7 @@ extern NBB_ULONG li_proc_id;
 //
 // VPC Create -
 // a) MS Mgmt Stub initiator receives VPC create Proto.
-// b) It creates BD store obj holding the received VPC Spec.
+// b) It creates VPC store obj holding the received VPC Spec.
 // c) MS Mgmt Stub creates VRF MIB entries.
 // d) MS control-plane asynchronously calls LI Stub with VRF create.
 //    MS Mgmt Stub returns without waiting for LI Stub call invocation.
@@ -83,6 +83,22 @@ pds_vpc_spec_t li_vrf_t::make_pds_vpc_spec_(void) {
     return store_info_.vpc_obj->properties().vpc_spec;
 }
 
+pds_route_table_key_t li_vrf_t::make_pds_rttable_key_(void) {
+    // Get the route-table id from the VPC store
+    pds_vpc_spec_t vpc_spec = make_pds_vpc_spec_();
+    return (vpc_spec.v4_route_table);
+}
+
+pds_route_table_spec_t li_vrf_t::make_pds_rttable_spec_(void) {
+    pds_route_table_spec_t rttable;
+    memset(&rttable, 0, sizeof(pds_route_table_spec_t));
+    rttable.key = make_pds_rttable_key_();
+    rttable.af = IP_AF_IPV4;
+    rttable.num_routes = 0;
+    rttable.routes = NULL;
+    return rttable;
+}
+
 pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
@@ -102,22 +118,33 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     bctxt_guard_.set (bctxt);
 
     if (op_delete_) { // Delete
-        auto if_key = make_pds_vpc_key_();
+        auto vpc_key = make_pds_vpc_key_();
         if (!PDS_MOCK_MODE()) {
-            pds_vpc_delete(&if_key, bctxt);
+            pds_vpc_delete(&vpc_key, bctxt);
         }
+        // TODO: Revisit. Fix failing gtest since VPC store is already deleted
+#if 0
+        auto rttbl_key = make_pds_rttable_key_();
+        if (!PDS_MOCK_MODE()) {
+            pds_route_table_delete(&rttbl_key, bctxt);
+        }
+#endif
     } else { // Add or update
         auto vpc_spec = make_pds_vpc_spec_();
-        sdk_ret_t ret;
+        auto rttbl_spec = make_pds_rttable_spec_();
+        sdk_ret_t ret = SDK_RET_OK;
         if (op_create_) {
-            // TODO Create Routing table
             if (!PDS_MOCK_MODE()) {
                 ret = pds_vpc_create(&vpc_spec, bctxt);
+            }
+            if ((ret == SDK_RET_OK) && (!PDS_MOCK_MODE())) {
+                ret = pds_route_table_create(&rttbl_spec, bctxt);
             }
         } else {
             if (!PDS_MOCK_MODE()) {
                 ret = pds_vpc_update(&vpc_spec, bctxt);
             }
+            // Route table cannot be updated for the VPC
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS VPC Create or Update failed for MS VRF ")
@@ -167,11 +194,13 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
 
         auto l_op_create = op_create_;
         auto l_vrf_id = ips_info_.vrf_id;
+        auto l_rttbl_key =
+                store_info_.vpc_obj->properties().vpc_spec.v4_route_table;
         cookie_uptr_.reset(new cookie_t);
         auto pds_bctxt_guard = prepare_pds(state_ctxt, true /* async */);
 
         cookie_uptr_->send_ips_reply = 
-            [l_op_create, vrf_add_upd_ips, l_vrf_id] 
+            [l_op_create, vrf_add_upd_ips, l_vrf_id, l_rttbl_key] 
                      (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -187,7 +216,12 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
                     vpc_obj->properties().hal_created = false;
                 }
             }
-
+            if (pds_status && l_op_create) {
+                // Create the route table store for this VRF
+                auto state_ctxt = pds_ms::state_t::thread_context();
+                state_ctxt.state()->route_table_store().add_upd(l_vrf_id,
+                   new route_table_obj_t((pds_route_table_key_t &)l_rttbl_key));
+            }
             if (unlikely(ips_mock)) return; // UT
 
             NBB_CREATE_THREAD_CONTEXT
@@ -327,7 +361,9 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
             // ----------------------------------------------------------------
             SDK_TRACE_DEBUG("MS VRF %d Delete: Rcvd Async PDS response %s",
                             vrf_id, (pds_status) ? "Success" : "Failure");
-
+            auto state_ctxt = pds_ms::state_t::thread_context();
+            // Delete the VRF route table
+            state_ctxt.state()->route_table_store().erase(vrf_id);
         };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr

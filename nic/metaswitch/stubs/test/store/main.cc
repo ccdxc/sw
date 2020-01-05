@@ -22,6 +22,9 @@ using pds_ms::state_t;
 using pds_ms::tep_store_t;
 using pds_ms::tep_obj_t;
 using pds_ms::tep_obj_uptr_t;
+using pds_ms::route_table_store_t;
+using pds_ms::route_table_obj_t;
+using pds_ms::rttbl_obj_uptr_t;
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
@@ -32,6 +35,9 @@ sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
 
 namespace api_test {
 
+////////////////////////////////////////////////////////////////////////////////
+// TEP store tests
+////////////////////////////////////////////////////////////////////////////////
 class tep_store_test : public ::testing::Test {
 protected:
     tep_store_test() : state_thr_ctxt (state_t::thread_context()) {};
@@ -105,6 +111,168 @@ TEST_F(tep_store_test, delete_store) {
     auto tep_obj = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj == nullptr);
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// ROUTE store tests
+////////////////////////////////////////////////////////////////////////////////
+class route_store_test : public ::testing::Test {
+protected:
+    route_store_test() : state_thr_ctxt (state_t::thread_context()) {};
+    virtual ~route_store_test() {}
+
+public:
+    state_t::context_t state_thr_ctxt;
+};
+
+TEST_F(route_store_test, create) {
+    pds_route_table_key_t key;
+    auto state = state_thr_ctxt.state();
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
+    key.id = 1;
+    state->route_table_store().add_upd(1,
+                            rttbl_obj_uptr_t (new route_table_obj_t(key)));
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 1);
+
+    auto rttbl = state->route_table_store().get(1);
+    ASSERT_TRUE (rttbl != nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 0);
+
+    // Add route 1
+    pds_route_t route = {0};
+    route.prefix.addr.af = IP_AF_IPV4;
+    route.prefix.addr.addr.v4_addr = 0x01020300;
+    route.prefix.len = 20;
+    route.prio = 100;
+    rttbl->add_upd_route(route);
+    ASSERT_TRUE (rttbl->num_routes() == 1);
+
+    // Add route 2
+    route.prefix.addr.af = IP_AF_IPV4;
+    route.prefix.addr.addr.v4_addr = 0x11121300;
+    route.prefix.len = 24;
+    route.prio = 200;
+    rttbl->add_upd_route(route);
+    ASSERT_TRUE (rttbl->num_routes() == 2);
+    
+    // Add route 3
+    route.prefix.addr.af = IP_AF_IPV4;
+    route.prefix.addr.addr.v4_addr = 0x11121300;
+    route.prefix.len = 31;
+    route.prio = 500;
+    rttbl->add_upd_route(route);
+    ASSERT_TRUE (rttbl->num_routes() == 3);
+    
+    // Add route 4
+    route.prefix.addr.af = IP_AF_IPV4;
+    route.prefix.addr.addr.v4_addr = 0x11121300;
+    route.prefix.len = 30;
+    route.prio = 200;
+    rttbl->add_upd_route(route);
+    ASSERT_TRUE (rttbl->num_routes() == 4);
+}
+
+TEST_F(route_store_test, get) {
+    // Test the route store
+    auto state = state_thr_ctxt.state();
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 1);
+    auto rttbl = state->route_table_store().get(1);
+    ASSERT_TRUE (rttbl != nullptr);
+
+    // Get route 2
+    ip_prefix_t prefix = {0};
+    prefix.addr.af = IP_AF_IPV4;
+    prefix.addr.addr.v4_addr = 0x11121300;
+    prefix.len = 24;
+    auto rt = rttbl->get_route(prefix);
+    ASSERT_TRUE (rt != nullptr);
+    ASSERT_TRUE (rt->prio == 200);
+}
+
+TEST_F(route_store_test, update) {
+    // Update existing entry
+    auto state = state_thr_ctxt.state();
+    auto rttbl = state->route_table_store().get(1);
+    // Update route 1
+    pds_route_t route = {0};
+    route.prefix.addr.af = IP_AF_IPV4;
+    route.prefix.addr.addr.v4_addr = 0x01020300;
+    route.prefix.len = 20;
+    route.prio = 300;
+    rttbl->add_upd_route(route);
+
+    // Get route 1 and validate
+    ip_prefix_t pfx = {0};
+    pfx.addr.af = IP_AF_IPV4;
+    pfx.addr.addr.v4_addr = 0x01020300;
+    pfx.len = 20;
+    auto rt = rttbl->get_route(pfx);
+    ASSERT_TRUE (rt != nullptr);
+    ASSERT_TRUE (rt->prio == 300);
+}
+
+TEST_F(route_store_test, del) {
+    // Delete entry
+    auto state = state_thr_ctxt.state();
+    auto rttbl = state->route_table_store().get(1);
+
+    // Delete route 2
+    ip_prefix_t prefix = {0};
+    prefix.addr.af = IP_AF_IPV4;
+    prefix.addr.addr.v4_addr = 0x11121300;
+    prefix.len = 24;
+    rttbl->del_route(prefix);
+    // Check if route is deleted
+    auto rt = rttbl->get_route(prefix);
+    ASSERT_TRUE (rt == nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 3);
+
+    // Delete route 4
+    prefix = {0};
+    prefix.addr.af = IP_AF_IPV4;
+    prefix.addr.addr.v4_addr = 0x11121300;
+    prefix.len = 30;
+    rttbl->del_route(prefix);
+    // Check if route is deleted
+    rt = rttbl->get_route(prefix);
+    ASSERT_TRUE (rt == nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 2);
+
+    // Delete route 1
+    prefix = {0};
+    prefix.addr.af = IP_AF_IPV4;
+    prefix.addr.addr.v4_addr = 0x01020300;
+    prefix.len = 20;
+    rttbl->del_route(prefix);
+    // Check if route is deleted
+    rt = rttbl->get_route(prefix);
+    ASSERT_TRUE (rt == nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 1);
+
+    // Get route 3 and validate
+    ip_prefix_t pfx = {0};
+    pfx.addr.af = IP_AF_IPV4;
+    pfx.addr.addr.v4_addr = 0x11121300;
+    pfx.len = 32;
+    rt = rttbl->get_route(pfx);
+    // Incorrect pfx, get should fail
+    ASSERT_TRUE (rt == nullptr);
+    // Fix the pfx
+    pfx.len = 31;
+    // Get should pass now
+    rt = rttbl->get_route(pfx);
+    ASSERT_TRUE (rt != nullptr);
+    ASSERT_TRUE (rt->prio == 500);
+    // Delete route 3
+    rttbl->del_route(pfx);
+    // Check if route is deleted
+    rt = rttbl->get_route(pfx);
+    ASSERT_TRUE (rt == nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 0);
+
+    // Delete complete rttbl
+    state->route_table_store().erase(1);
+    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
 }
 
 } // namespace api_test

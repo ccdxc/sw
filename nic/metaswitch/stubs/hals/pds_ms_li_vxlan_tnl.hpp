@@ -45,7 +45,6 @@ private:
 
 private:
     std::unique_ptr<cookie_t> cookie_uptr_;
-    pds_batch_ctxt_guard_t bctxt_guard_;
     store_info_t  store_info_;
     ips_info_t  ips_info_;
     bool op_create_ = false;

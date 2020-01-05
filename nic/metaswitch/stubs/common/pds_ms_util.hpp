@@ -157,5 +157,12 @@ public:
     }
 };
 
+class ip_prefix_hash {
+public:
+    std::size_t operator()(const ip_prefix_t &pfx) const {
+        return hash_algo::fnv_hash((void *)&pfx, sizeof(pfx));
+    }
+};
+
 } // End namespace
 #endif

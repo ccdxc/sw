@@ -259,8 +259,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
             }
-            }
-            while (0);
+            } while (0);
             NBS_RELEASE_SHARED_DATA();
             NBS_EXIT_SHARED_CONTEXT();
             NBB_DESTROY_THREAD_CONTEXT    

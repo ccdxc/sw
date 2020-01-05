@@ -13,6 +13,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_route_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -34,6 +35,7 @@ enum slab_id_e {
     PDS_MS_BD_SLAB_ID,
     PDS_MS_VPC_SLAB_ID,
     PDS_MS_MAC_SLAB_ID,
+    PDS_MS_RTTABLE_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
@@ -94,6 +96,7 @@ public:
     host_lif_store_t&  host_lif_store(void) {return host_lif_store_;}
     vpc_store_t& vpc_store(void) {return vpc_store_;}
     subnet_store_t& subnet_store(void) {return subnet_store_;}
+    route_table_store_t& route_table_store(void) {return route_table_store_;}
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -124,6 +127,7 @@ private:
     host_lif_store_t host_lif_store_;
     vpc_store_t vpc_store_;
     subnet_store_t subnet_store_;
+    route_table_store_t route_table_store_;
 
     static state_t* g_state_;
     static std::mutex g_mtx_;
@@ -138,6 +142,7 @@ using tep_obj_uptr_t = std::unique_ptr<tep_obj_t>;
 using subnet_obj_uptr_t = std::unique_ptr<subnet_obj_t>;
 using bd_obj_uptr_t = std::unique_ptr<bd_obj_t>;
 using if_obj_uptr_t = std::unique_ptr<if_obj_t>;
+using rttbl_obj_uptr_t = std::unique_ptr<route_table_obj_t>;
 
 }
 

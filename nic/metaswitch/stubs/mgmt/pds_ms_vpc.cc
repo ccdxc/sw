@@ -162,7 +162,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                       spec->key.id);
 
     // TODO: Do we need to delete the mapping from here or from HAL stubs? 
-    // Remove cached VPS spec, after successful reply from MS
+    // Remove cached VPC spec, after successful reply from MS
     pds_cache_vni_to_vrf_mapping (spec, true);
 
     return SDK_RET_OK;

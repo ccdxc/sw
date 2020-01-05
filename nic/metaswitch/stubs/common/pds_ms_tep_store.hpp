@@ -19,7 +19,7 @@
 
 static inline bool operator==(const ip_addr_t& a,
                               const ip_addr_t& b) {
-    return (ip_addr_is_equal(&a, &b));
+    return (IPADDR_EQ(&a, &b));
 }
 
 namespace pds_ms {

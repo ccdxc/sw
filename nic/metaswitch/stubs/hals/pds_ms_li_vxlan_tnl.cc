@@ -63,7 +63,8 @@ void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_
     ms_to_pds_ipaddr(ms_dest_ip, &ips_info_.tep_ip);
     ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd_ips->vxlan_settings.source_ip;
     ms_to_pds_ipaddr(ms_src_ip, &ips_info_.src_ip);
-    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx, vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
+    NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx,
+                   vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
     ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
 }
 
