@@ -107,8 +107,15 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 //-----------------------------------------------------------------------------
 // API to send LIF updates to Agent
 //-----------------------------------------------------------------------------
-static inline hal_ret_t
-hal_stream_lif_updates (lif_t *lif) {
+static void
+hal_stream_lif_updates (void *timer, uint32_t timer_id, void *ctxt) {
+    uint64_t lif_id = (uint64_t)ctxt;
+
+    lif_t *lif = find_lif_by_id((uint32_t)lif_id);
+    if (lif == NULL) {
+        HAL_TRACE_ERR("Lif not found for id: {}", ((uint32_t)lif_id));
+        return;
+    }
 
     auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
         grpc::ServerWriter<EventResponse> *stream =
@@ -123,8 +130,6 @@ hal_stream_lif_updates (lif_t *lif) {
     };
 
     g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_LIF_ADD_UPDATE, lif, walk_cb);
-
-    return HAL_RET_OK;
 }
 
 void *
@@ -930,8 +935,9 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     pd::pd_func_args_t          pd_func_args = {0};
     lif_hal_info_t             proto_hal_info = {0};
     pd::pd_qos_class_get_qos_class_id_args_t q_args;
+    void                      *lifupd_timer = NULL;
 
-	proto_msg_dump(spec);
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_lif_create(spec, rsp);
@@ -1125,9 +1131,19 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     // Add to map of lif name and PI ID
     g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);
 
-    // Send updates to Agent
-    // TBD - Enable Async streaming 
-    //hal_stream_lif_updates(lif);
+    if (lif->type != types::LIF_TYPE_NONE) {
+        // Send updates to Agent
+        lifupd_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STREAM_LIF_UPDATE,
+                                        LIF_STREAM_TIMER,
+                                        (reinterpret_cast<void *>(lif->lif_id)),
+                                        hal_stream_lif_updates, false);
+
+        if (!lifupd_timer) {
+            HAL_TRACE_ERR("Failed to schedule the timer for the ep");
+            ret = HAL_RET_ERR;
+        }
+    }
+
     return ret;
 }
 
@@ -1640,6 +1656,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     lif_update_app_ctxt_t app_ctxt     = { 0 };
     hal_handle_t          hal_handle   = 0;
     uint64_t              hw_lif_id    = 0;
+    void                 *lifupd_timer = NULL;
 
     hal_api_trace(" API Begin: Lif Update ");
     proto_msg_dump(spec);
@@ -1744,9 +1761,18 @@ end:
        rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
      }
 
-    // Send updates to Agent
-    // TBD - Enable Async streaming
-    //hal_stream_lif_updates(lif);
+    if (lif->type == types::LIF_TYPE_NONE) {
+        // Send updates to Agent
+        lifupd_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STREAM_LIF_UPDATE,
+                                        LIF_STREAM_TIMER,
+                                        (reinterpret_cast<void *>(lif->lif_id)),
+                                        hal_stream_lif_updates, false);
+
+        if (!lifupd_timer) {
+            HAL_TRACE_ERR("Failed to schedule the timer for LIF updates: {:p}", (void *)lifupd_timer);
+            ret = HAL_RET_ERR;
+        }
+    }
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
