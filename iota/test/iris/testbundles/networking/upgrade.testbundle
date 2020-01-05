@@ -6,7 +6,6 @@ meta:
 testcases:
     -   name    : TCP_FIN_TO_LOCAL_EP
         testcase: testcases.upgrade.tcp_fin
-        ignore  : True
         iterators :
             type    : simple
             eptype  : [local, remote]

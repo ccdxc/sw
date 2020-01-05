@@ -25,7 +25,6 @@ testcases:
 
     -   name    : AgingTcpSessions
         testcase: testcases.aging.tcp
-        ignore  : True
         iterators:
             type              : simple
             #timeout           : [10s, 30s, 60s]
