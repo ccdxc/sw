@@ -130,6 +130,12 @@
             "cache": "p4plus-txdma"
         },
         {
+            "name": "dnat",
+            "_comment": "8 * 1024 * (128 + 10)",
+            "size": "1104K",
+            "cache": "p4plus-txdma"
+        },
+        {
             "name": "meter_v4",
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",

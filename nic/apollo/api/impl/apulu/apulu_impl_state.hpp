@@ -52,6 +52,7 @@ public:
     rte_indexer *nacl_idxr(void) { return nacl_idxr_; }
     rte_indexer *copp_idxr(void) { return copp_idxr_; }
     rte_indexer *nat_idxr(void) { return nat_idxr_; }
+    rte_indexer *dnat_idxr(void) { return dnat_idxr_; }
 
     friend class apulu_impl;            ///< friend of apulu_impl_state
 
@@ -61,6 +62,7 @@ private:
     rte_indexer *nacl_idxr_;            ///< indexer for NACL table
     rte_indexer *copp_idxr_;            ///< indexer for CoPP table
     rte_indexer *nat_idxr_;             ///< indexer for NAT table
+    rte_indexer *dnat_idxr_;            ///< indexer for DNAT table
     handle_t ing_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];
     handle_t egr_drop_stats_tbl_hdls_[P4E_DROP_REASON_MAX + 1];
 };

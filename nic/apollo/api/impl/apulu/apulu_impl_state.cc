@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -57,6 +58,10 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     nat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(nat_idxr_ != NULL);
 
+    // DNAT table bookkeeping
+    p4pd_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_DNAT, &tinfo);
+    dnat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
+    SDK_ASSERT(dnat_idxr_ != NULL);
 }
 
 apulu_impl_state::~apulu_impl_state() {
@@ -65,6 +70,7 @@ apulu_impl_state::~apulu_impl_state() {
     rte_indexer::destroy(nacl_idxr_);
     rte_indexer::destroy(copp_idxr_);
     rte_indexer::destroy(nat_idxr_);
+    rte_indexer::destroy(dnat_idxr_);
 }
 
 sdk_ret_t
