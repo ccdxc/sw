@@ -1146,7 +1146,8 @@ cleanup:
 
     if (session_pd) {
         p4pd_del_flow_stats_table_entries(session_pd);
-        p4pd_del_session_state_table_entry(session_pd->session_state_idx);
+        if (args->session->conn_track_en)
+            p4pd_del_session_state_table_entry(session_pd->session_state_idx);
         p4pd_del_flow_info_table_entries(session_pd);
         session_pd_free(session_pd);
         args->session->pd = NULL;
@@ -1183,9 +1184,11 @@ pd_session_delete (pd_func_args_t *pd_func_args)
     SDK_ASSERT(ret == HAL_RET_OK);
 
     // Del session state
-    ret = p4pd_del_session_state_table_entry(session_pd->session_state_idx);
-    if (session_pd->session_state_idx)
-        SDK_ASSERT(ret == HAL_RET_OK);
+    if (args->session->conn_track_en) {
+        ret = p4pd_del_session_state_table_entry(session_pd->session_state_idx);
+        if (session_pd->session_state_idx)
+            SDK_ASSERT(ret == HAL_RET_OK);
+    }
 
     // del flow info table entries
     ret = p4pd_del_flow_info_table_entries(session_pd);

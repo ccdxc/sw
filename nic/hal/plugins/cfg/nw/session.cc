@@ -2796,7 +2796,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                     session_state_p->iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
     if ((TIME_DIFF(ctime_ns, session_state_p->iflow_state.last_pkt_ts) >= session_timeout) ||
-        (tcp_session && session_state_p->iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+        (tcp_session && session->conn_track_en && 
+         session_state_p->iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
          session_state_p->iflow_state.state != session->iflow->state)) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
@@ -2806,7 +2807,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
         if ((TIME_DIFF(ctime_ns, session_state_p->rflow_state.last_pkt_ts) >= session_timeout) ||
-            (tcp_session && session_state_p->rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+            (tcp_session && session->conn_track_en && 
+             session_state_p->rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
              session_state_p->rflow_state.state != session->rflow->state)) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
@@ -3452,7 +3454,7 @@ schedule_tcp_close_timer (session_t *session)
     flow_key_t  key = {};
     uint32_t    timeout = 0;
 
-    if (getenv("DISABLE_AGING")) {
+    if (getenv("DISABLE_AGING") || session->conn_track_en == 0) {
         return HAL_RET_OK;
     }
 
@@ -3542,7 +3544,7 @@ schedule_tcp_half_closed_timer (session_t *session)
 {
     uint32_t  timeout = 0;
 
-    if (getenv("DISABLE_AGING")) {
+    if (getenv("DISABLE_AGING") || session->conn_track_en == 0) {
         return HAL_RET_OK;
     }
 
@@ -3637,7 +3639,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 schedule_tcp_cxnsetup_timer (session_t *session)
 {
-    if (getenv("DISABLE_AGING")) {
+    if (getenv("DISABLE_AGING") || session->conn_track_en == 0) {
         return HAL_RET_OK;
     }
 
