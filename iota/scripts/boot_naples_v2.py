@@ -681,7 +681,7 @@ class HostManagement(EntityManagement):
             nodeinit_args += " --skip-install"
 
         if cleanup:
-            nodeinit_args += "--cleanup"
+            nodeinit_args += " --cleanup"
             print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
