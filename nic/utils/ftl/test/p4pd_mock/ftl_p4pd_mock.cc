@@ -12,9 +12,10 @@
 #include "lib/p4/p4_api.hpp"
 #include "ftl_p4pd_mock.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "nic/utils/ftl/ftl_base.hpp"
 
 typedef struct ftl_mock_table_s {
-    flow_hash_entry_t *entries;
+    FLOW_HASH_ENTRY_T *entries;
 } ftl_mock_table_t;
 
 static ftl_mock_table_t mocktables[FTL_TBLID_MAX];
@@ -38,16 +39,16 @@ void
 ftl_mock_init ()
 {
     mocktables[FTL_TBLID_IPV6].entries =
-        (flow_hash_entry_t *)calloc(table_size_get(FTL_TBLID_IPV6), flow_hash_entry_t::entry_size());
+        (FLOW_HASH_ENTRY_T *)calloc(table_size_get(FTL_TBLID_IPV6), FLOW_HASH_ENTRY_T::entry_size());
     assert(mocktables[FTL_TBLID_IPV6].entries);
     mocktables[FTL_TBLID_IPV6_OHASH].entries =
-        (flow_hash_entry_t *)calloc(table_size_get(FTL_TBLID_IPV6_OHASH), flow_hash_entry_t::entry_size());
+        (FLOW_HASH_ENTRY_T *)calloc(table_size_get(FTL_TBLID_IPV6_OHASH), FLOW_HASH_ENTRY_T::entry_size());
     assert(mocktables[FTL_TBLID_IPV6_OHASH].entries);
     mocktables[FTL_TBLID_IPV4].entries =
-        (flow_hash_entry_t *)calloc(table_size_get(FTL_TBLID_IPV4), flow_hash_entry_t::entry_size());
+        (FLOW_HASH_ENTRY_T *)calloc(table_size_get(FTL_TBLID_IPV4), FLOW_HASH_ENTRY_T::entry_size());
     assert(mocktables[FTL_TBLID_IPV4].entries);
     mocktables[FTL_TBLID_IPV4_OHASH].entries =
-        (flow_hash_entry_t *)calloc(table_size_get(FTL_TBLID_IPV4_OHASH), flow_hash_entry_t::entry_size());
+        (FLOW_HASH_ENTRY_T *)calloc(table_size_get(FTL_TBLID_IPV4_OHASH), FLOW_HASH_ENTRY_T::entry_size());
     assert(mocktables[FTL_TBLID_IPV4_OHASH].entries);
 }
 
@@ -64,7 +65,10 @@ uint32_t
 ftl_mock_get_valid_count (uint32_t table_id)
 {
     uint32_t count = 0;
-    for (uint32_t i = 0; i < table_size_get(table_id); i++) {
+    uint32_t size = table_size_get(table_id);
+    SDK_TRACE_VERBOSE("size of table id : %lu is %lu ", table_id, size);
+
+    for (uint32_t i = 0; i < size; i++) {
         if (mocktables[table_id].entries[i].entry_valid) {
             count++;
         }

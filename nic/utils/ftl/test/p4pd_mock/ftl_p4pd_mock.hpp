@@ -9,6 +9,12 @@
 
 #include <stdint.h>
 
+#ifdef IRIS
+#define FLOW_HASH_ENTRY_T flow_hash_info_entry_t
+#else
+#define FLOW_HASH_ENTRY_T flow_hash_entry_t
+#endif
+
 typedef enum ftl_p4pd_table_ids_ {
     FTL_TBLID_NONE       = 0,
     FTL_TBLID_IPV6       = 1,

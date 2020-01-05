@@ -4,7 +4,9 @@
 #include <gtest/gtest.h>
 #include <arpa/inet.h>
 #include <stdio.h>
-#include "include/sdk/base.hpp"
+#include "ftltest_main.hpp"
+
+sdk_trace_level_e g_trace_level = sdk::lib::SDK_TRACE_LEVEL_VERBOSE;
 
 FILE *logfp;
 
@@ -18,7 +20,7 @@ ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
         assert(logfp);
     }
 
-    if (true || trace_level <= sdk::lib::SDK_TRACE_LEVEL_VERBOSE) {
+    if (trace_level <= g_trace_level) {
         va_start(args, format);
         vsnprintf(logbuf, sizeof(logbuf), format, args);
         fprintf(logfp, "%s\n", logbuf);
@@ -28,7 +30,7 @@ ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     return 0;
 }
 
-int 
+int
 main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

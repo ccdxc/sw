@@ -2,6 +2,11 @@
 #include "lib/thread/thread.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
+
+#ifdef IRIS
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#endif
+
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "gen/proto/types.pb.h"
@@ -157,6 +162,16 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 {
     return HAL_RET_OK;
 }
+
+#ifdef IRIS
+hal_ret_t
+delay_delete_to_slab (hal_slab_t slab_id, void *elem)
+{
+    return HAL_RET_OK;
+}
+
+class hal_state_pd *g_hal_state_pd;
+#endif
 
 }    // namespace pd
 }    // namespace hal

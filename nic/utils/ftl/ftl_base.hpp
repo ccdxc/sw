@@ -16,12 +16,21 @@ class ftl_table_info {
 private:
     sdk::table::properties_t *props_;
     void *table_;
+    int ref_count;
+
 
 public:
+    ftl_table_info() {
+        ref_count = 0;
+    }
+
     sdk::table::properties_t * get_props(void) { return props_; }
     void set_props(sdk::table::properties_t *val) { props_ = val; }
-    void * get_table(void) { return table_; }
+    void *get_table(void) { return table_; }
     void set_table(void *val) { table_ = val; }
+    void increment_ref_count () { ref_count++;}
+    void decrement_ref_count () { ref_count--;}
+    int get_ref_count() {return ref_count;}
 };
 
 class ftl_base {
@@ -42,6 +51,7 @@ private:
     void add_table_to_cache_(uint32_t table_id,
                              sdk::table::properties_t *props,
                              void *table);
+    bool remove_table_from_cache_(uint32_t table_id);
     ftl_table_info *get_cached_table_(uint32_t table_id);
 
 public:

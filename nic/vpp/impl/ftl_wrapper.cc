@@ -153,14 +153,15 @@ ftl_print_stats(sdk_table_api_stats_t *api_stats,
     char *cur = buf;
 
     cur += snprintf(buf, max_len,
-                    "Insert %u, Insert_fail_dupl %u, Insert_fail %u, "
-                    "Insert_fail_recirc %u\n"
-                    "Remove %u, Remove_not_found %u, Remove_fail %u\n"
-                    "Update %u, Update_fail %u\n"
-                    "Get %u, Get_fail %u\n"
-                    "Reserve %u, reserve_fail %u\n"
-                    "Release %u, Release_fail %u\n"
-                    "Tbl_insert %u, Tbl_remove %u, Tbl_read %u, Tbl_write %u\n",
+                    "Insert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
+                    "Insert_fail_recirc %lu\n"
+                    "Remove %lu, Remove_not_found %lu, Remove_fail %lu\n"
+                    "Update %lu, Update_fail %lu\n"
+                    "Get %lu, Get_fail %lu\n"
+                    "Reserve %lu, reserve_fail %lu\n"
+                    "Release %lu, Release_fail %lu\n"
+                    "Tbl_entries %lu, Tbl_collision %lu\n"
+                    "Tbl_insert %lu, Tbl_remove %lu, Tbl_read %lu, Tbl_write %lu\n",
                     api_stats->insert,
                     api_stats->insert_duplicate,
                     api_stats->insert_fail,
@@ -176,11 +177,12 @@ ftl_print_stats(sdk_table_api_stats_t *api_stats,
                     api_stats->reserve_fail,
                     api_stats->release,
                     api_stats->release_fail,
+                    table_stats->entries, table_stats->collisions,
                     table_stats->insert, table_stats->remove,
                     table_stats->read, table_stats->write);
     for (int i= 0; i < SDK_TABLE_MAX_RECIRC; i++) {
         cur += snprintf(cur, buf + max_len - cur,
-                        "Tbl_lvl %u, Tbl_insert %u, Tbl_remove %u\n",
+                        "Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
                         i, table_stats->insert_lvl[i], table_stats->remove_lvl[i]);
     }
 }

@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
+
+using namespace std;
 
 #ifndef __TIME_PROFILE_HPP__
 #define __TIME_PROFILE_HPP__
@@ -14,15 +17,11 @@ namespace sdk {
 namespace utils {
 namespace time_profile {
 
-//#define TIME_PROFILE_ENABLE
-#ifdef TIME_PROFILE_ENABLE
-
 class time_profile_info {
 private:
     struct timespec before_;
     struct timespec after_;
     uint64_t total_;
-
 public:
     time_profile_info() {
         total_ = 0;
@@ -30,7 +29,14 @@ public:
     void start();
     void stop();
     uint64_t total();
+    string print_diff();
 };
+
+extern bool time_profile_enable;
+
+//#define TIME_PROFILE_ENABLE
+#ifdef TIME_PROFILE_ENABLE
+
 
 #define TIME_PROFILE_FUNCTION_ENUMS(__handler) \
         __handler(TABLE_LIB_MEMHASH_INSERT) \
@@ -60,7 +66,6 @@ typedef enum time_profile_id_s {
 } time_profile_id_t;
 
 extern time_profile_info time_profile_db[];
-extern bool time_profile_enable;
 
 void print();
 

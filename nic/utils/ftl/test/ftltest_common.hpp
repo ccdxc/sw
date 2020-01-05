@@ -22,6 +22,8 @@ using sdk::table::sdk_table_api_params_t;
 #define NUM_INDEX_BITS 23
 #define NUM_HASH_BITS 9
 
+#define POOL_SIZE 16
+
 typedef union crc32_s {
     struct {
         uint32_t    index:NUM_INDEX_BITS;
@@ -30,11 +32,10 @@ typedef union crc32_s {
     uint32_t val;
 } crc32_t;
 
-uint32_t gencrc32(bool nextindex = true, bool nexthint = true);
+uint32_t
+gencrc32(bool nextindex = true, bool nexthint = true);
 char* key2str(void *key);
 char* appdata2str(void *data);
-
-
 uint32_t get_cache_count();
 void reset_cache();
 sdk_table_api_params_t *gen_entry (uint32_t index = 0,

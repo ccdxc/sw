@@ -9,8 +9,9 @@
 #include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_base.hpp"
 
-std::map<int, sdk::table::ftl_table_info *> 
+std::map<int, sdk::table::ftl_table_info *>
             sdk::table::ftl_base::table_info_cache;
+static std::mutex mtx;
 
 #define FTL_API_BEGIN(_name) {\
     FTL_TRACE_VERBOSE("%s %s begin: %s %s", \
@@ -82,6 +83,7 @@ ftl_base::add_table_to_cache_(uint32_t table_id,
                               void *table) {
     ftl_table_info *info = NULL;
 
+    mtx.lock();
     if (table_info_cache.find(table_id) != table_info_cache.end()) {
         info = table_info_cache[table_id];
     } else {
@@ -90,15 +92,47 @@ ftl_base::add_table_to_cache_(uint32_t table_id,
     SDK_ASSERT(info);
     info->set_table(table);
     info->set_props(props);
+    info->increment_ref_count();
     table_info_cache[table_id] = info;
+    mtx.unlock();
 }
 
 sdk::table::ftl_table_info *
 ftl_base::get_cached_table_(uint32_t table_id) {
+    mtx.lock();
     if (table_info_cache.find(table_id) == table_info_cache.end()) {
+        mtx.unlock();
         return NULL;
     }
+    table_info_cache[table_id]->increment_ref_count();
+    mtx.unlock();
     return table_info_cache[table_id];
+}
+
+bool
+ftl_base::remove_table_from_cache_(uint32_t table_id) {
+    ftl_table_info *info = NULL;
+    mtx.lock();
+    if (table_info_cache.find(table_id) == table_info_cache.end()) {
+        goto error;
+    }
+
+    info = table_info_cache[table_id];
+    info->decrement_ref_count();
+    if (info->get_ref_count() != 0) {
+        goto done;
+    }
+    table_info_cache.erase(table_id);
+    info->~ftl_table_info();
+
+done:
+    mtx.unlock();
+    return true;
+
+error:
+    mtx.unlock();
+    return false;
+
 }
 
 sdk_ret_t
@@ -108,7 +142,7 @@ ftl_base::init_(sdk_table_factory_params_t *params) {
     p4pd_table_properties_t tinfo, ctinfo;
     thread_id_ = params->thread_id;
     ftl_table_info *info = NULL;
-    
+
     info = get_cached_table_(params->table_id);
     if (info) {
         props_ = info->get_props();
@@ -193,15 +227,26 @@ skip_tables:
 //---------------------------------------------------------------------------
 void
 ftl_base::destroy(ftl_base *t) {
-    FTL_API_BEGIN("DestroyTable");
-    FTL_TRACE_VERBOSE("%p", t);
-    main_table::destroy_(static_cast<main_table*>(t->main_table_));
-    FTL_API_END("DestroyTable", SDK_RET_OK);
-    t->main_table_ = NULL;
-    t->props_ = NULL;
-    // TODO free entry
-}
+    if (t != NULL) {
+        FTL_API_BEGIN("DestroyTable");
+        FTL_TRACE_VERBOSE("%p", t);
 
+        if (t->remove_table_from_cache_(t->props_->ptable_id)) {
+            main_table::destroy_(static_cast<main_table*>(t->main_table_));
+            FTL_API_END("DestroyTable", SDK_RET_OK);
+            t->main_table_ = NULL;
+            if (t->props_ != NULL) {
+                t->props_->~properties_t();
+                SDK_FREE(SDK_MEM_ALLOC_FTL_PROPERTIES,t->props_);
+                t->props_ = NULL;
+            }
+        }
+
+        t->~ftl_base();
+        SDK_FREE(SDK_MEM_ALLOC_FTL, t);
+        t = NULL;
+    }
+}
 //---------------------------------------------------------------------------
 // ftl Insert entry with hash value
 //---------------------------------------------------------------------------

@@ -22,7 +22,6 @@
 #define WITHOUT_HASH false
 
 using sdk::table::ftl_base;
-using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -33,7 +32,6 @@ using sdk::table::sdk_table_factory_params_t;
 class FtlGtestBase: public ::testing::Test {
 protected:
     ftl_base *v6table;
-    ftl_base *v4table;
     uint32_t num_insert;
     uint32_t num_remove;
     uint32_t num_update;
@@ -50,7 +48,7 @@ protected:
     virtual ~FtlGtestBase() {}
     
     virtual void SetUp() {
-        SDK_TRACE_VERBOSE("============== SETUP : %s.%s ===============",
+        SDK_TRACE_INFO("============== SETUP : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
         
@@ -62,13 +60,9 @@ protected:
         
         params.table_id = FTL_TBLID_IPV6;
         params.num_hints = 4;
+        params.entry_alloc_cb = FLOW_HASH_ENTRY_T::alloc;
         v6table = ftl_base::factory(&params);
         assert(v6table);
-
-        params.table_id = FTL_TBLID_IPV4;
-        params.num_hints = 2;
-        v4table = ftl_base::factory(&params);
-        assert(v4table);
 
         num_insert = 0;
         num_remove = 0;
@@ -85,10 +79,9 @@ protected:
     virtual void TearDown() {
         ValidateStats();
         ftl_base::destroy(v6table);
-        ftl_base::destroy(v4table);
         reset_cache();
         ftl_mock_cleanup();
-        SDK_TRACE_VERBOSE("============== TEARDOWN : %s.%s ===============",
+        SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
     }
@@ -114,8 +107,8 @@ private:
         return v6table->get(params);
     }
 
-protected:
-    sdk_ret_t Insert(uint32_t count, sdk_ret_t expret, 
+public:
+    sdk_ret_t Insert(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
             auto params = gen_entry(i, with_hash, hash_32b);
@@ -129,15 +122,22 @@ protected:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t RemoveHelper(uint32_t index, sdk_ret_t expret,
+                           bool with_hash, uint32_t hash_32b) {
+        auto params = gen_entry(index, with_hash, hash_32b);
+        auto rs = remove_(params);
+        MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        if (rs == SDK_RET_OK) {
+            table_count--;
+        }
+        return rs;
+    }
+
     sdk_ret_t Remove(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash, hash_32b);
-            auto rs = remove_(params);
+            auto rs = RemoveHelper(i, expret, with_hash, hash_32b);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
-            if (rs == SDK_RET_OK) {
-                table_count--;
-            }
         }
         return SDK_RET_OK;
     }
@@ -160,7 +160,7 @@ protected:
             auto rs = get_(params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
             assert(params->handle.valid());
-            if (memcmp(params->entry, params2->entry, flow_hash_entry_t::entry_size())) {
+            if (!params->entry->compare_key(params2->entry)) {
                 return sdk::SDK_RET_ENTRY_NOT_FOUND;
             }
         }
@@ -168,15 +168,15 @@ protected:
     }
 
     void PrintStats() {
-        auto hw_count = ftl_mock_get_valid_count(FTL_TBLID_IPV6);
+        //auto hw_count = ftl_mock_get_valid_count(FTL_TBLID_IPV6);
         v6table->stats_get(&api_stats, &table_stats);
-        SDK_TRACE_VERBOSE("GTest Table Stats: Entries:%d", table_count);
-        SDK_TRACE_VERBOSE("HW Table Stats: Entries=%d", hw_count);
-        SDK_TRACE_VERBOSE("SW Table Stats: Entries=%d Collisions:%d",
+        SDK_TRACE_INFO("GTest Table Stats: Entries:%d", table_count);
+        //SDK_TRACE_INFO("HW Table Stats: Entries=%d", hw_count);
+        SDK_TRACE_INFO("SW Table Stats: Entries=%d Collisions:%d",
                           table_stats.entries, table_stats.collisions);
-        SDK_TRACE_VERBOSE("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
+        SDK_TRACE_INFO("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                           num_insert, num_update, num_get, num_remove, num_reserve, num_release);
-        SDK_TRACE_VERBOSE("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
+        SDK_TRACE_INFO("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                           api_stats.insert, api_stats.update, api_stats.get,
                           api_stats.remove, api_stats.reserve, api_stats.release);
         return;    
@@ -198,8 +198,8 @@ protected:
     static void
     IterateCallback(sdk_table_api_params_t *params) {
         static char buff[512];
-        ((flow_hash_entry_t *)params->entry)->tostr(buff, 512);
-        SDK_TRACE_VERBOSE("Handle[%s] Entry[%s]",
+        (params->entry)->tostr(buff, 512);
+        SDK_TRACE_INFO("Handle[%s] Entry[%s]",
                           params->handle.tostr(), buff);
         return;
     }

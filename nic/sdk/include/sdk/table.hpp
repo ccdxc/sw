@@ -199,32 +199,32 @@ typedef struct sdk_table_api_params_ {
 } sdk_table_api_params_t;
 
 typedef struct sdk_table_api_stats_ {
-    uint32_t insert;
-    uint32_t insert_duplicate;
-    uint32_t insert_fail;
-    uint32_t insert_recirc_fail;
-    uint32_t remove;
-    uint32_t remove_not_found;
-    uint32_t remove_fail;
-    uint32_t update;
-    uint32_t update_fail;
-    uint32_t get;
-    uint32_t get_fail;
-    uint32_t reserve;
-    uint32_t reserve_fail;
-    uint32_t release;
-    uint32_t release_fail;
+    uint64_t insert;
+    uint64_t insert_duplicate;
+    uint64_t insert_fail;
+    uint64_t insert_recirc_fail;
+    uint64_t remove;
+    uint64_t remove_not_found;
+    uint64_t remove_fail;
+    uint64_t update;
+    uint64_t update_fail;
+    uint64_t get;
+    uint64_t get_fail;
+    uint64_t reserve;
+    uint64_t reserve_fail;
+    uint64_t release;
+    uint64_t release_fail;
 } sdk_table_api_stats_t;
 
 typedef struct sdk_table_stats_ {
-    uint32_t entries;
-    uint32_t collisions;
-    uint32_t insert;
-    uint32_t remove;
-    uint32_t read;
-    uint32_t write;
-    uint32_t insert_lvl[SDK_TABLE_MAX_RECIRC];
-    uint32_t remove_lvl[SDK_TABLE_MAX_RECIRC];
+    uint64_t entries;
+    uint64_t collisions;
+    uint64_t insert;
+    uint64_t remove;
+    uint64_t read;
+    uint64_t write;
+    uint64_t insert_lvl[SDK_TABLE_MAX_RECIRC];
+    uint64_t remove_lvl[SDK_TABLE_MAX_RECIRC];
 } sdk_table_stats_t;
 
 typedef struct properties_ {

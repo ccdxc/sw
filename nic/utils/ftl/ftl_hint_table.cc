@@ -63,6 +63,7 @@ hint_table::destroy_(hint_table *table)
 {
     base_table::destroy_(table);
     table->indexer_.deinit();
+    SDK_FREE(SDK_MEM_ALLOC_FTL_HINT_TABLE, table);
 }
 
 inline Apictx *

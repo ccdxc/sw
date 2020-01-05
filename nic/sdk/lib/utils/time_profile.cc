@@ -5,20 +5,38 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include "time_profile.hpp"
 
-#ifdef TIME_PROFILE_ENABLE
 namespace sdk {
 namespace utils {
 namespace time_profile {
 
-time_profile_info time_profile_db[TIME_PROFILE_ID_MAX];
 bool time_profile_enable = false;
+
+#ifdef TIME_PROFILE_ENABLE
+time_profile_info time_profile_db[TIME_PROFILE_ID_MAX];
 
 static const char *time_profile_str_list[] = {
     TIME_PROFILE_FUNCTION_ENUMS(HANDLER_GENERATE_STRING)
 };
+
+void
+print() {
+    uint64_t seconds;
+    uint64_t mseconds;
+    uint64_t useconds;
+    uint64_t nseconds;
+    uint64_t delta;
+
+    printf("%-40s %-16s\n", "TimeProfileID", "TotalTime");
+    printf("------------------------------------------------------------\n");
+    for (uint32_t i = 0; i < TIME_PROFILE_ID_MAX; i++) {
+            printf("%-40s %s\n", time_profile_str_list[i],
+                   time_profile_db[i].print_diff().to_str());
+    }
+}
+
+#endif
 
 static uint64_t
 timespec_diff(struct timespec *before, struct timespec *after) {
@@ -52,34 +70,29 @@ time_profile_info::total() {
     return total_;
 }
 
-void
-print() {
-    uint64_t seconds;
-    uint64_t mseconds;
-    uint64_t useconds;
-    uint64_t nseconds;
-    uint64_t delta;
+string
+time_profile_info::print_diff() {
+    uint64_t seconds = 0;
+    uint64_t mseconds = 0;
+    uint64_t useconds = 0;
+    uint64_t nseconds = 0;
+    uint64_t delta = total_;
+    char buff[500];
 
-    printf("%-40s %-16s\n", "TimeProfileID", "TotalTime");
-    printf("------------------------------------------------------------\n");
-    for (uint32_t i = 0; i < TIME_PROFILE_ID_MAX; i++) {
-        delta = time_profile_db[i].total();
-        if (delta) {
-            nseconds = delta % 1000;
-            delta = delta / 1000;
-            useconds =  delta % 1000;
-            delta = delta / 1000;
-            mseconds = delta % 1000;
-            delta = delta / 1000;
-            seconds = delta % 1000;
-            printf("%-40s %ld.%03ld.%03ld.%03ld\n", time_profile_str_list[i],
-                   seconds, mseconds, useconds, nseconds);               
-        }
+    if (delta) {
+        nseconds = delta % 1000;
+        delta = delta / 1000;
+        useconds =  delta % 1000;
+        delta = delta / 1000;
+        mseconds = delta % 1000;
+        delta = delta / 1000;
+        seconds = delta % 1000;
     }
-    return;
+    snprintf(buff, 500,"%ld.%03ld.%03ld.%03ld",
+             seconds, mseconds, useconds, nseconds);
+    return string(buff);
 }
 
 } // namespace time_profile
 } // namespace utils
 } // namespace sdk
-#endif

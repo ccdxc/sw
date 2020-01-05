@@ -10,19 +10,19 @@ namespace ftlint {
 
 class apistats {
 private:
-    uint32_t insert_;
-    uint32_t insert_duplicate_;
-    uint32_t insert_fail_;
-    uint32_t insert_recirc_fail_;
-    uint32_t remove_;
-    uint32_t remove_not_found_;
-    uint32_t remove_fail_;
-    uint32_t update_;
-    uint32_t update_fail_;
-    uint32_t get_;
-    uint32_t get_fail_;
-    uint32_t release_;
-    uint32_t release_fail_;
+    uint64_t insert_;
+    uint64_t insert_duplicate_;
+    uint64_t insert_fail_;
+    uint64_t insert_recirc_fail_;
+    uint64_t remove_;
+    uint64_t remove_not_found_;
+    uint64_t remove_fail_;
+    uint64_t update_;
+    uint64_t update_fail_;
+    uint64_t get_;
+    uint64_t get_fail_;
+    uint64_t release_;
+    uint64_t release_fail_;
 
 public:
     apistats() {
@@ -127,12 +127,14 @@ public:
 
 class tablestats {
 private:
-    uint32_t    insert_; //Total entries inserted
-    uint32_t    remove_; //Total entries removed
-    uint32_t    read_; //Total entries read
-    uint32_t    write_; //Total entries written
-    uint32_t    insert_lvl_[SDK_TABLE_MAX_RECIRC]; //Entries inserted in level
-    uint32_t    remove_lvl_[SDK_TABLE_MAX_RECIRC]; //Entries inserted in level
+    uint64_t    insert_; //Total entries inserted
+    uint64_t    remove_; //Total entries removed
+    uint64_t    read_; //Total entries read
+    uint64_t    write_; //Total entries written
+    uint64_t    entries_; //Total entries in the Table
+    uint64_t    collisions_; //Total collisions incountred while insert
+    uint64_t    insert_lvl_[SDK_TABLE_MAX_RECIRC]; //Entries inserted in level
+    uint64_t    remove_lvl_[SDK_TABLE_MAX_RECIRC]; //Entries inserted in level
 
 public:
     tablestats() {
@@ -147,6 +149,26 @@ public:
 
     void clear() {
         memset(this, 0, sizeof(tablestats));
+    }
+
+    sdk_ret_t inc_entries() {
+        entries_ ++;
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t inc_collisions() {
+        collisions_ ++;
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t dec_entries() {
+        entries_ --;
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t dec_collisions() {
+        collisions_ --;
+        return SDK_RET_OK;
     }
 
     sdk_ret_t insert(uint32_t lvl) {
@@ -180,6 +202,8 @@ public:
         }
         stats->read = read_;
         stats->write = write_;
+        stats->entries = entries_;
+        stats->collisions = collisions_;
         return SDK_RET_OK;
     }
 };

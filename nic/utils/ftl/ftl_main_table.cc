@@ -60,6 +60,7 @@ void
 main_table::destroy_(main_table *table) {
     hint_table::destroy_(table->hint_table_);
     base_table::destroy_(table);
+    SDK_FREE(SDK_MEM_ALLOC_FTL_MAIN_TABLE, table);
 }
 
 inline void 
@@ -95,6 +96,7 @@ main_table::initctx_(Apictx *ctx) {
 sdk_ret_t
 main_table::insert_(Apictx *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+    bool collision = false;
 
     // INSERT SEQUENCE:
     // 1) Insert to Main Table
@@ -113,6 +115,7 @@ main_table::insert_(Apictx *ctx) {
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // COLLISION case
         ret = hint_table_->insert_(ctx);
+        collision = true;
     }
 
     if (likely(ret == SDK_RET_OK)) {
@@ -123,9 +126,17 @@ main_table::insert_(Apictx *ctx) {
         //         written. we can update the main entry. This will ensure
         //         make before break for any downstream changes.
         ret = buckets_[ctx->table_index].write_(ctx);
+
         ctx->params->handle.pindex(ctx->table_index);
     } else {
         FTL_TRACE_ERR("main_table: insert failed: ret:%d", ret);
+    }
+
+    if (likely(ret == SDK_RET_OK)) {
+        if (unlikely(collision == true)) {
+            ctx->tstats->inc_collisions();
+        }
+        ctx->tstats->inc_entries();
     }
 
     unlock_(ctx);
@@ -150,13 +161,16 @@ __label__ done;
         if (ctx->hint) {
             ret = hint_table_->defragment_(ctx);
             FTL_RET_CHECK_AND_GOTO(ret, done, "defragment r:%d", ret);
+            ctx->tstats->dec_collisions();
         }
     } else {
         // We have a hint match, traverse the hints to remove the entry.
         ret = hint_table_->remove_(ctx);
         FTL_RET_CHECK_AND_GOTO(ret, done, "hint table remove r:%d", ret);
+        ctx->tstats->dec_collisions();
     }
 
+    ctx->tstats->dec_entries();
 done:
     return ret;
 }
