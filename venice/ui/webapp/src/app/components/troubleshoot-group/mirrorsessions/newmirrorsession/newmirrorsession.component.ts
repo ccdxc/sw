@@ -21,6 +21,7 @@ import { SearchUtil } from '@app/components/search/SearchUtil';
 import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.component';
 import { SelectItem } from 'primeng/api';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { minValueValidator } from '@sdk/v1/utils/validators';
 
 const PACKET_FILTERS_ERRORMSG: string =
     'At least one match rule must be specified if packet filter is set to All Packets.';
@@ -183,6 +184,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isMirrorsessionNameValid(this.existingObjects)]);
 
+    this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([minValueValidator(0)]);
+
     // due to currently backend does not support all drops, comment out next lines
     /*
     this.newObject.$formGroup.get(['spec', 'packet-filters']).setValidators([
@@ -230,6 +233,11 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       return false;
     }
     */
+
+    if (!this.newObject.$formGroup.get(['spec', 'packet-size']).valid) {
+      this.createButtonTooltip = 'Invalid Packet Size';
+      return false;
+    }
 
     const collectors = this.controlAsFormArray(
       this.newObject.$formGroup.get(['spec', 'collectors'])).controls;

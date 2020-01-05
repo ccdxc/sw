@@ -62,9 +62,8 @@
   <div fxFlex="none" fxLayout="row">
     <span [formGroup]="newObject.$formGroup.get(['spec'])"
           class="newmirrorsession-general-box">
-      <p-spinner appErrorTooltip formControlName="packet-size"
-                 appFloatLabel="Packet Size" Scheduletype="number">
-      </p-spinner>
+      <input formControlName="packet-size" appFloatLabel="Packet Size"
+             appErrorTooltip spellcheck="false" type="number" min="0" pInputText>
     </span>
     <div fxFlex="89px"></div>
     <span [formGroup]="newObject.$formGroup.get(['spec'])"
