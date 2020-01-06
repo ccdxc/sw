@@ -15,7 +15,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { HttpEventUtility } from '@common/HttpEventUtility';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IApiStatus, ClusterHostList } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { FieldsRequirement, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -107,6 +107,20 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
   getHosts() {
     this.tableLoading = true;
+    const getSubscription = this.clusterService.ListHost().subscribe(
+      response => {
+        const hostList: ClusterHostList = response.body as ClusterHostList;
+        if (! ( hostList && hostList.items && hostList.items.length === 0 ) ) {
+          // Where there is no host, we turn off loading indicator.
+          this.tableLoading = false;
+        }
+      },
+      error => {
+        this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get hosts');
+        this.tableLoading = false;
+      }
+    );
+    this.subscriptions.push(getSubscription);
     this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
     this.dataObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
     const subscription = this.clusterService.WatchHost().subscribe(

@@ -16,7 +16,7 @@ import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/gener
 import { FieldsRequirement, SearchSearchRequest, SearchSearchResponse, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { IApiStatus, IWorkloadWorkload, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { IApiStatus, IWorkloadWorkload, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
 import * as _ from 'lodash';
 import { SelectItem } from 'primeng/primeng';
 import { Table } from 'primeng/table';
@@ -386,9 +386,24 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   /**
    * Fetch workloads.
+   * We start a GET, then watch workloads.
    */
   getWorkloads() {
     this.tableLoading = true;
+    const getSubscription = this.workloadService.ListWorkload().subscribe(
+      response => {
+        const workloadList: WorkloadWorkloadList = response.body as WorkloadWorkloadList;
+        if (! ( workloadList && workloadList.items && workloadList.items.length === 0 ) ) {
+          // Where there is no workload, we turn off loading indicator. //  VS-1064
+          this.tableLoading = false;
+        }
+      },
+      error => {
+        this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get workloads');
+        this.tableLoading = false;
+      }
+    );
+    this.subscriptions.push(getSubscription);
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.dataObjects = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(

@@ -18,7 +18,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard, ClusterDistributedServiceCardList } from '@sdk/v1/models/generated/cluster';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
@@ -248,6 +248,21 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    * Generates column based search object, currently facilitates condition search
    */
   getNaples() {
+    this.tableLoading = true;
+    const getSubscription = this.clusterService.ListDistributedServiceCard().subscribe(
+      response => {
+        const nicsList: ClusterDistributedServiceCardList = response.body as ClusterDistributedServiceCardList;
+        if (! ( nicsList && nicsList.items && nicsList.items.length === 0 ) ) {
+          // Where there is no DSC, we turn off loading indicator.
+          this.tableLoading = false;
+        }
+      },
+      error => {
+        this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get distributed service cards');
+        this.tableLoading = false;
+      }
+    );
+    this.subscriptions.push(getSubscription);
     this._clearDSCMaps();
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;

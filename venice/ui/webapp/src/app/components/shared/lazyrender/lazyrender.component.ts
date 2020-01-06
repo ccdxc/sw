@@ -237,6 +237,8 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
         headerHeight = 0;
       }
       const newHeight = containerHeight - headerHeight - tableBodyHeader;
+      // ui-table-scrollable-header-box was set to have margin-right:15px misteriously. I reset "right margin" so that table follows it. It makes scroll bar looks better.
+      $('.lazyrender-container .ui-table-scrollable-header-box').css('margin-right', '0px');
       $('.lazyrender-container .ui-table-scrollable-body').css('max-height', newHeight + 'px');
       // Setting height as well since sometimes the auto calculation is off by 1 px
       $('.lazyrender-container .ui-table-scrollable-body').css('height', newHeight + 'px');

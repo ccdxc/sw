@@ -81,7 +81,8 @@
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
           <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"
-              [class]="col.class ? col.class : ''" [style.min-width]="col.width + '%'"
+              [class]="col.class ? col.class : ''" [style.min-width]="col.width + '% !important'"
+              [colSpan]="last && actionTemplate != null ? 2 : 1"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container
                           *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData}">
