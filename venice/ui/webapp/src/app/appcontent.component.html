@@ -174,9 +174,11 @@
             </div>
             <div fxFlex fxLayout="column"></div>
             <div class="app-shell-cluster-version" fxLayout="column" fxLayoutAlign="center end"
+                 [matTooltip]="'Click to see details'"
                  (click)="versionOp.toggle($event)">{{version?.status["build-version"]}}</div>
             <div fxFlex="20px" fxLayout="column"></div>
-            <div fxLayout="column" fxLayoutAlign="center end">
+            <div fxLayout="column" fxLayoutAlign="center end"
+                 [matTooltip]="'The Venice system tracks time in UTC, please note the offset for your local time zone.'">
               {{ clock | PrettyDate }} ({{hourDifference}}h)
             </div>
           </div>

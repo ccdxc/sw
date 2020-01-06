@@ -91,7 +91,8 @@
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <p-dropdown class="newrole-severity" fxFlex="170px"
                                         formControlName="resource-group" styleClass="newrole-font"
-                                        appendTo="body"
+                                        appendTo="body" (onShow)="onOverlayShow($event)"
+                                        (onHide)="onOverlayHide($event)"
                                         [options]="groupOptions" placeholder="group..."
                                         (onChange)="onGroupChange($event, permission, index)">
                             </p-dropdown>
@@ -99,7 +100,8 @@
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <p-dropdown class="newrole-severity" fxFlex="170px"
                                         formControlName="resource-kind" styleClass="newrole-font"
-                                        appendTo="body"
+                                        appendTo="body" (onShow)="onOverlayShow($event)"
+                                        (onHide)="onOverlayHide($event)"
                                         (onChange)="onKindChange($event, permission, index)"
                                         [options]="permission.kindOptions" placeholder="kind...">
                             </p-dropdown>

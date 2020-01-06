@@ -107,7 +107,7 @@
       <mat-panel-title class="rolloutstatus-summary-panel-header">
         Status ({{selectedRollout?.status.state}}) <span
               class="rolloutstatus-summary-panel-header-failurereason"
-              *ngIf="false && selectedRollout?.status.state==='failure'"
+              *ngIf="selectedRollout?.status.state==='failure'"
               (click)=onFailureReasonClick($event)>View Reasons</span>
         <!-- the reasons link per QA request 2019-09-03 -->
       </mat-panel-title>

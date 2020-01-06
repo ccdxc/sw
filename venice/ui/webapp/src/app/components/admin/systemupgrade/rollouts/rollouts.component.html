@@ -4,7 +4,7 @@
                  (selectedIndexChange)="selectedIndexChangeEvent($event)"
                  [selectedIndex]="tabIndex">
     <mat-tab
-             label="PENDING {{ (pendingRollouts && pendingRollouts.length >0)?  ' (' +  pendingRollouts.length + ')' : '' }}">
+             label="PENDING {{ (pendingRollouts && pendingRollouts.length >0)?  ' (' +  pendingRollouts.length + ')' : '(0)' }}">
       <app-tableviewedit fxLayout="column" style="height: 100%"
                          [creatingMode]="creatingMode"
                          [showRowExpand]="showRowExpand"
@@ -19,7 +19,7 @@
                          (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
       </app-tableviewedit>
     </mat-tab>
-    <mat-tab label="PAST {{ (pastRollouts && pastRollouts.length >0)? ' (' +  pastRollouts.length + ')' : '' }}"
+    <mat-tab label="PAST {{ (pastRollouts && pastRollouts.length >0)? ' (' +  pastRollouts.length + ')' : '(0)' }}"
              [disabled]="isToDisablePastTab()">
       <app-tableviewedit fxLayout="column" style="height: 100%"
                          [data]="pastRollouts"

@@ -131,6 +131,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         this.pastRollouts.push(this.dataObjects[i]);
       }
     }
+    this.tabIndex  = (this.pendingRollouts.length === 0) ? 1 : 0; // If there is no pending rollout, switch to past rollout tab
   }
 
   getRolloutImages() {

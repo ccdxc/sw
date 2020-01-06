@@ -398,7 +398,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   getRolloutFailureReasons(): string[] {
     if (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure) {
       const controllerNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['controller-nodes-status']);
-      const nicsNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['dscs-status']);
+      const nicsNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['dscs-status'], true);
       let reasons = [];
       if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0) {
         reasons = reasons.concat(controllerNodesReasons);
@@ -413,11 +413,11 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * helper function
    * @param nodes
    */
-  getNodesFailureReasons(nodes: IRolloutRolloutPhase[]): any[] {
+  getNodesFailureReasons(nodes: IRolloutRolloutPhase[], isDSC: boolean  = false): any[] {
     const reasons = [];
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
-      const reason = this.getStatusReasonHelper(node);
+      const reason = this.getStatusReasonHelper(node, isDSC);
       if (reason) {
         reasons.push(reason);
       }
@@ -425,9 +425,10 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     return reasons;
   }
 
-  getStatusReasonHelper(node: IRolloutRolloutPhase): string {
+  getStatusReasonHelper(node: IRolloutRolloutPhase , isDSC: boolean  = false): string {
     if (node.reason === RolloutRolloutStatus_state.failure) {
-      return node.name + ' - ' + node.message;
+      const name = (isDSC) ? this.getNICID(node.name) : node.name;
+      return name + ' - ' + node.message;
     }
     return null;
   }

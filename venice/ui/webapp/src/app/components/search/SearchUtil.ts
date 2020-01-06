@@ -645,6 +645,7 @@ export class SearchUtil {
         searchExpression.key = this.padKey(strs[0], isField, isEvent);
         searchExpression.operator = op.searchoperator;
         searchExpression.values = [strs[1].trim()];
+        break;  // operators has "<=" ahead of "<".  So if inputString is a<=b, we want [a, <=, b] instead of [a, <, =b]
       }
     }
     return (searchExpression.key) ? searchExpression : null;

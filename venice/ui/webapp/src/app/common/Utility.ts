@@ -1113,7 +1113,7 @@ export class Utility {
       case 'RoleBinding':
         return 'admin/users';
       case 'Rollout':
-        return 'admin/upgrade/rollouts';
+        return 'admin/upgrade/rollouts/' + name;
       case 'EventPolicy':
         return 'monitoring/alertsevents/eventpolicy';
       case 'SnapshotRestore':

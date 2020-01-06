@@ -178,7 +178,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   isAllInputsValidated() {
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newAuthRole.$formGroup);
-    return (hasFormGroupError === null);
+    const formValid =  (hasFormGroupError === null);
+    const permissionsValid = this.checkPermissions();
+    return (formValid && permissionsValid);
   }
 
   /**
@@ -186,13 +188,15 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * @param $event
    */
   onSaveAddRole($event) {
-    const errors = Utility.getAllFormgroupErrors(this.newAuthRole.$formGroup);
-    if (errors === null) {
+    const isAllOK = this.isAllInputsValidated();
+    if (isAllOK === true) {
       if (this.isEditMode()) {
         this.updateRole();
       } else {
         this.addRole();
       }
+    } else {
+      this._controllerService.invokeErrorToaster('Error', 'Input data is not valid');
     }
   }
 
@@ -266,6 +270,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       }
     );
   }
+
 
 
   /**
@@ -495,6 +500,41 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
 
+  checkPermissions(): boolean  {
+    const newRole = this.newAuthRole;
+    const permissions = newRole.spec.getFormGroupValues().permissions;
+    for (let i = 0; i < permissions.length; i++) {
+      const myPermission: AuthPermission = new AuthPermission(permissions[i]);
+      const errors  = this.checkOnePermission(myPermission, i);
+      if (errors.length > 0 ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  checkOnePermission(permission: AuthPermission, index: number): string []  {
+      const actions = permission.getFormGroupValues().actions;
+      const errors: string [] = [];
+      if (! (actions && actions.length > 0 ) ) {
+        errors.push (  ' action list is empty');
+      }
+      if (Utility.isEmpty(permission.getFormGroupValues()['resource-group'])) {
+        errors.push ( ' group is empty');
+      }
+      if (Utility.isEmpty(permission.getFormGroupValues()['resource-kind'])) {
+        errors.push ( ' kind is empty');
+      }
+      if (errors.length > 0) {
+        const _myErrors: string [] = [];
+        _myErrors.push('Permission ' + index);
+        _myErrors.concat(errors);
+        return _myErrors;
+      }
+      return errors;
+  }
+
+
   getAllActionIndex(values: any): number {
     return values.findIndex((value: SelectItem) => value.value === NewroleComponent.ACTIONOPTIONS_ALL);
   }
@@ -504,5 +544,25 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       return true;
     }
     return false;
+  }
+
+  /**
+   * VS-1052  dropdown overlay is appendTo body. When overlay is shown, if user scrolls window, the overlay will  not follow the target dropdown.
+   * So when overlay is on show, we block overlay scroll.
+   * @param $event
+   */
+  onOverlayShow($event) {
+    const $ = Utility.getJQuery();
+    $('app-users .pagebody-content').css('overflow', 'hidden');
+  }
+
+   /**
+   * VS-1052  dropdown overlay is appendTo body. When overlay is shown, if user scrolls window, the overlay will  not follow the target dropdown.
+   * So when overlay is on hide, we block restore scroll.
+   * @param $event
+   */
+  onOverlayHide($event) {
+    const $ = Utility.getJQuery();
+    $('app-users .pagebody-content').css('overflow', 'auto');
   }
 }

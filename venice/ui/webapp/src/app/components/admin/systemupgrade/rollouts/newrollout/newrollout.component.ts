@@ -579,6 +579,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         }
       });
       this.newRollout.$formGroup.get(['spec', 'version']).enable(); // enable version dropdown
+      if ( this.rolloutImageOptions.length > 0 ) {
+        this.newRollout.$formGroup.get(['spec', 'version']).setValue(this.rolloutImageOptions[0].value);  // VS-1054. Assign a value to version control
+      }
     }
     this.computeVersionDescription(selectedVersion);
   }
