@@ -78,9 +78,84 @@ var _ = Describe("mirror session tests", func() {
 			Expect(mirrorRestIf).ShouldNot(Equal(nil))
 		})
 
+		It("Check max mirror sessions", func() {
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			ms := testMirrorSessions[0]
+
+			for i := 0; i < statemgr.MaxMirrorSessions+1; i++ {
+				ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+				ms.Spec.Collectors = []monitoring.MirrorCollector{
+					{
+						Type: "ERSPAN",
+						ExportCfg: &monitoring.MirrorExportConfig{
+							Destination: fmt.Sprintf("192.168.30.1"),
+						},
+					},
+				}
+
+				By(fmt.Sprintf("Creating MirrorSession %v", ms.Name))
+				_, err := mirrorRestIf.Create(ctx, &ms)
+				if i < statemgr.MaxMirrorSessions {
+					Expect(err).ShouldNot(HaveOccurred())
+				} else {
+					Expect(err).Should(HaveOccurred())
+				}
+			}
+			s, err := mirrorRestIf.List(ctx, &api.ListWatchOptions{})
+			Expect(err).ShouldNot(HaveOccurred())
+			for _, i := range s {
+				_, err := mirrorRestIf.Delete(ctx, i.GetObjectMeta())
+				Expect(err).ShouldNot(HaveOccurred())
+			}
+		})
+
+		It("Should run mirror sessions Test 1", func() {
+			// create mirror session with exp duration of 5s
+			// check that it starts active and then stops after 5s
+			// delete mirror session
+
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			ms := testMirrorSessions[0]
+			By("Creating MirrorSession ------")
+			_, err := mirrorRestIf.Create(ctx, &ms)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Checking that MirrorSession has started------")
+			Eventually(func() bool {
+				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
+				if err != nil {
+					By(fmt.Sprintf("GET err:%s", err))
+					return false
+				}
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
+					return false
+				}
+				return true
+			}, 5, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
+
+			/* XXX Reenable after session expiry is added in NAPLES
+			By("Checking that MirrorSession has stopped using expriy time------")
+			Eventually(func() bool {
+				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
+				if err != nil {
+					By(fmt.Sprintf("GET err:%s", err))
+					return false
+				}
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_STOPPED.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
+					return false
+				}
+				return true
+			}, 10, 1).Should(BeTrue(), fmt.Sprintf("Failed to stop %s", ms.Name)) */
+			By("Deleting MirrorSession ------")
+			_, err = mirrorRestIf.Delete(ctx, &ms.ObjectMeta)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
 		It("Should run mirror sessions after shcedule time", func() {
 			// create mirror session with exp duration of 5s
-			// check that it starts running and then stops after 5s
+			// check that it starts active and then stops after 5s
 			// delete mirror session
 			scheduledTestCase := monitoring.MirrorSession{
 				ObjectMeta: api.ObjectMeta{
@@ -126,7 +201,7 @@ var _ = Describe("mirror session tests", func() {
 					StartConditions: monitoring.MirrorStartConditions{
 						ScheduleTime: &api.Timestamp{
 							Timestamp: types.Timestamp{
-								Seconds: time.Now().Unix() + 30,
+								Seconds: time.Now().Unix() + 60,
 							},
 						},
 					},
@@ -138,120 +213,51 @@ var _ = Describe("mirror session tests", func() {
 			By("Creating MirrorSession ------")
 			_, err := mirrorRestIf.Create(ctx, &ms)
 			Expect(err).ShouldNot(HaveOccurred())
-			time.Sleep(5 * time.Second)
 
-			By("Checking that MirrorSession has started after scheduled time exactly------")
-			tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
-			if err != nil {
-				By(fmt.Sprintf("GET err:%s", err))
-			}
-			Expect(err).ShouldNot(HaveOccurred())
+			By("Checking whether MirrorSession has started after scheduled time or not------")
+			Eventually(func() bool {
+				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
+				if err != nil {
+					By(fmt.Sprintf("GET err:%s", err))
+					return false
+				}
 
-			// raise error if session start before scheduled time
-			// the expected state should be SCHEDULED
-			if tms.Status.ScheduleState != monitoring.MirrorSessionState_SCHEDULED.String() {
-				By(fmt.Sprintf("mirror state: %v before scheduled time", tms.Status.ScheduleState))
-			}
-			Expect(tms.Status.ScheduleState).To(Equal(monitoring.MirrorSessionState_SCHEDULED.String()))
+				// raise error if session start before scheduled time
+				// the expected state should be SCHEDULED
+				if tms.Status.ScheduleState != monitoring.MirrorSessionState_SCHEDULED.String() {
+					By(fmt.Sprintf("unexpected mirror session state: %v before scheduled time", tms.Status.ScheduleState))
+					return false
+				}
+				return true
+			}, 30, 5).Should(BeTrue(), fmt.Sprintf("Failed to get SCHEDULED state for scheduled mirror session %s", ms.Name))
 
 			Eventually(func() bool {
 				// get the new state
-				tms, err = mirrorRestIf.Get(ctx, &ms.ObjectMeta)
+				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
 				if err != nil {
 					By(fmt.Sprintf("GET err:%s", err))
 					return false
 				}
 
 				// raise error if session doesn't start after scheduled time
-				// the expected state should be RUNNING
+				// the expected state should be ACTIVE
 				if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
-					By(fmt.Sprintf("mirror state: %v after scheduled time", tms.Status.ScheduleState))
+					By(fmt.Sprintf("unexpected mirror session state: %v after scheduled time", tms.Status.ScheduleState))
 					return false
 				}
+				return true
+			}, 180, 30).Should(BeTrue(), fmt.Sprintf("Failed to get mirror session active state after scheduled time %s", ms.Name))
 
-				By("Deleting MirrorSession ------")
+			// Delete mirror session anyway to avoid the aftermath on the other tests
+			By("Deleting MirrorSession ------")
+			Eventually(func() bool {
 				_, err = mirrorRestIf.Delete(ctx, &ms.ObjectMeta)
 				if err != nil {
 					By(fmt.Sprintf("GET err:%s", err))
 					return false
 				}
 				return true
-			}, 90, 30).Should(BeTrue(), fmt.Sprintf("Failed to get mirror session running state after scheduled time %s", ms.Name))
-		})
-
-		It("Check max mirror sessions", func() {
-			ctx := ts.tu.MustGetLoggedInContext(context.Background())
-			ms := testMirrorSessions[0]
-
-			for i := 0; i < statemgr.MaxMirrorSessions+1; i++ {
-				ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
-				ms.Spec.Collectors = []monitoring.MirrorCollector{
-					{
-						Type: "ERSPAN",
-						ExportCfg: &monitoring.MirrorExportConfig{
-							Destination: fmt.Sprintf("192.168.30.1"),
-						},
-					},
-				}
-
-				By(fmt.Sprintf("Creating MirrorSession %v", ms.Name))
-				_, err := mirrorRestIf.Create(ctx, &ms)
-				if i < statemgr.MaxMirrorSessions {
-					Expect(err).ShouldNot(HaveOccurred())
-				} else {
-					Expect(err).Should(HaveOccurred())
-				}
-			}
-			s, err := mirrorRestIf.List(ctx, &api.ListWatchOptions{})
-			Expect(err).ShouldNot(HaveOccurred())
-			for _, i := range s {
-				_, err := mirrorRestIf.Delete(ctx, i.GetObjectMeta())
-				Expect(err).ShouldNot(HaveOccurred())
-			}
-		})
-
-		It("Should run mirror sessions Test 1", func() {
-			// create mirror session with exp duration of 5s
-			// check that it starts running and then stops after 5s
-			// delete mirror session
-
-			ctx := ts.tu.MustGetLoggedInContext(context.Background())
-			ms := testMirrorSessions[0]
-			By("Creating MirrorSession ------")
-			_, err := mirrorRestIf.Create(ctx, &ms)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			By("Checking that MirrorSession has started------")
-			Eventually(func() bool {
-				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
-				if err != nil {
-					By(fmt.Sprintf("GET err:%s", err))
-					return false
-				}
-				if tms.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
-					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
-					return false
-				}
-				return true
-			}, 5, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
-
-			/* XXX Reenable after session expiry is added in NAPLES
-			By("Checking that MirrorSession has stopped using expriy time------")
-			Eventually(func() bool {
-				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
-				if err != nil {
-					By(fmt.Sprintf("GET err:%s", err))
-					return false
-				}
-				if tms.Status.ScheduleState != monitoring.MirrorSessionState_STOPPED.String() {
-					By(fmt.Sprintf("mirror state: %v", tms.Status.ScheduleState))
-					return false
-				}
-				return true
-			}, 10, 1).Should(BeTrue(), fmt.Sprintf("Failed to stop %s", ms.Name)) */
-			By("Deleting MirrorSession ------")
-			_, err = mirrorRestIf.Delete(ctx, &ms.ObjectMeta)
-			Expect(err).ShouldNot(HaveOccurred())
+			}, 30, 5).Should(BeTrue(), fmt.Sprintf("Failed to delete mirror session %s after testing process", ms.Name))
 		})
 	})
 })
