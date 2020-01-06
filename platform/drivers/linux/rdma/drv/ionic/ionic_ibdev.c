@@ -18,7 +18,6 @@
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
-#include "ionic_sysfs.h"
 
 #ifdef HAVE_IB_API_UDATA
 #include <rdma/uverbs_ioctl.h>
@@ -664,9 +663,9 @@ static void ionic_admin_timedout(struct ionic_aq *aq)
 	dev_err(&dev->ibdev.dev, "admin command timed out, aq %d\n", aq->aqid);
 
 	dev_warn(&dev->ibdev.dev, "admin timeout was set for %ums\n",
-		 jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
+		 (u32)jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
 	dev_warn(&dev->ibdev.dev, "admin inactivity for %ums\n",
-		 jiffies_to_msecs(jiffies - aq->stamp));
+		 (u32)jiffies_to_msecs(jiffies - aq->stamp));
 
 	dev_warn(&dev->ibdev.dev, "admin commands outstanding %u\n",
 		 ionic_queue_length(&aq->q));
@@ -888,7 +887,7 @@ static void ionic_admin_dwork(struct work_struct *ws)
 					     IONIC_ADMIN_TIMEOUT)) {
 			/* Timeout threshold not met */
 			dev_dbg(&dev->ibdev.dev, "no progress after %ums\n",
-				jiffies_to_msecs(jiffies - aq->stamp));
+				(u32)jiffies_to_msecs(jiffies - aq->stamp));
 			goto next_aq;
 		}
 
@@ -1403,7 +1402,7 @@ static int ionic_del_gid(const struct ib_gid_attr *attr, void **context)
 {
 	return 0;
 }
-#endif
+#endif /* HAVE_IB_GID_DEV_PORT_INDEX */
 
 static int ionic_query_pkey(struct ib_device *ibdev, u8 port, u16 index,
 			    u16 *pkey)
@@ -1726,7 +1725,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	if (!sgid_attr.ndev)
 		return -ENXIO;
 
-	ether_addr_copy(smac, sgid_attr.ndev->dev_addr);
+	ether_addr_copy(smac, IF_LLADDR(sgid_attr.ndev));
 	vlan = rdma_vlan_dev_vlan_id(sgid_attr.ndev);
 	net = ib_gid_to_network_type(sgid_attr.gid_type, &sgid);
 
@@ -2578,7 +2577,7 @@ static int ionic_map_mr_page(struct ib_mr *ibmr, u64 dma)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 
-	dev_dbg(&dev->ibdev.dev, "dma %#llx\n", dma);
+	dev_dbg(&dev->ibdev.dev, "dma %p\n", (void *)dma);
 	return ionic_pgtbl_page(&mr->buf, dma);
 }
 
@@ -2945,6 +2944,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	}
 	cq->ibcq.device = ibdev;
 #endif
+
 	rc = __ionic_create_cq(cq, &buf, attr, &ctx->ibctx, udata);
 	if (rc)
 		goto err_init;
@@ -3028,7 +3028,7 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ib_wc *wc)
 	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
 		dev_warn(&qp->ibqp.device->dev,
 			 "flush qp %u recv index %llu invalid\n",
-			 qp->qpid, wqe->base.wqe_id);
+			 qp->qpid, (unsigned long long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
@@ -3037,7 +3037,7 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ib_wc *wc)
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
 		dev_warn(&qp->ibqp.device->dev,
 			 "flush qp %u recv index %llu not posted\n",
-			 qp->qpid, wqe->base.wqe_id);
+			 qp->qpid, (unsigned long long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
@@ -3168,7 +3168,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
 		dev_warn(&dev->ibdev.dev,
 			 "qp %u recv index %llu invalid\n",
-			 qp->qpid, cqe->recv.wqe_id);
+			 qp->qpid, (unsigned long long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
@@ -3177,7 +3177,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
 		dev_warn(&dev->ibdev.dev,
 			 "qp %u recv index %llu not posted\n",
-			 qp->qpid, cqe->recv.wqe_id);
+			 qp->qpid, (unsigned long long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
@@ -6077,6 +6077,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 #ifndef HAVE_IB_ALLOC_SRQ_OBJ
 	kfree(qp);
 #endif
+
 #ifndef HAVE_IB_DESTROY_SRQ_VOID
 	return 0;
 #endif

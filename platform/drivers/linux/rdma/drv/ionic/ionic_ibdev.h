@@ -18,6 +18,7 @@
 
 #include "ionic_kcompat.h"
 #include "ionic_fw.h"
+#include "ionic_sysfs.h"
 #include "ionic_queue.h"
 #include "ionic_res.h"
 

@@ -246,4 +246,11 @@ enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_PHY_TEST = 7,
 };
 
+static inline int raw_smp_processor_id(void)
+{
+	return curcpu;
+}
+
+#define RDMA_CREATE_AH_SLEEPABLE 1
+
 #endif /* IONIC_KCOMPAT */

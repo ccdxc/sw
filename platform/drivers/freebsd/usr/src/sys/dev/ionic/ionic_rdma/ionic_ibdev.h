@@ -44,10 +44,10 @@
 #include <ionic_api.h>
 #include <ionic_regs.h>
 
+#include "ionic_kcompat.h"
 #include "ionic_fw.h"
 #include "ionic_sysctl.h"
 #include "ionic_queue.h"
-#include "ionic_kcompat.h"
 #include "ionic_res.h"
 
 #ifdef HAVE_XARRAY

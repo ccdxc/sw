@@ -581,6 +581,8 @@ enum ib_port_phys_state {
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
+#define IF_LLADDR(ndev) (ndev->dev_addr)
+
 #ifdef HAVE_RDMA_DRIVER_ID
 #include <rdma/rdma_user_ioctl_cmds.h>
 /* Upstream: QIB, EFA, SIW, <us> */
