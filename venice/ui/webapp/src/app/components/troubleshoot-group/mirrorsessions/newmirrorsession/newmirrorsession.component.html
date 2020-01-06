@@ -10,8 +10,10 @@
       <div fxFlex="20px"></div>
       <ng-container *ngTemplateOutlet="collectors"></ng-container>
       <div fxFlex="20px"></div>
+      <!-- hide this for release a
       <ng-container *ngTemplateOutlet="interface_selector"></ng-container>
       <div fxFlex="20px"></div>
+      -->
     </div>
     <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
          class="newmirrorsession-row">
@@ -68,11 +70,13 @@
     <div fxFlex="89px"></div>
     <span [formGroup]="newObject.$formGroup.get(['spec'])"
           class="newmirrorsession-general-box">
+      <!-- hide this for release a
       <p-multiSelect appFloatLabel="Packet Filters"
                      appendTo="body" [showHeader]="false"
                      formControlName="packet-filters" [filter]="false" [showToggleAll]="false"
                      defaultLabel="All" [options]="packetFilterOptions">
       </p-multiSelect>
+      -->
     </span>
   </div>
 </ng-template>
