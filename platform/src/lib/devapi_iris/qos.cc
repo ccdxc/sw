@@ -43,6 +43,38 @@ devapi_qos::get_txtc_cos(const std::string &group, uint32_t uplink_port)
 }
 
 sdk_ret_t
+devapi_qos::qos_class_exist(uint8_t group)
+{
+    sdk_ret_t                   ret = SDK_RET_OK;
+    grpc::Status                status;
+    qos::QosClassGetRequestMsg  req_msg;
+    qos::QosClassGetResponseMsg rsp_msg;
+    qos::QosClassGetResponse    rsp;
+
+    auto req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_qos_group((kh::QosGroup)group);
+
+    VERIFY_HAL();
+    status = hal->qos_class_get(req_msg, rsp_msg);
+    if (!status.ok()) {
+        NIC_LOG_ERR("Failed to get qos class for group {} err {}:{}",
+                    group, status.error_code(), status.error_message());
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+
+    rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_LOG_DEBUG("qos class {} get failed", group);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+
+ end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_qos::qos_class_get(uint8_t group, qos_class_info_t *info)
 {
     sdk_ret_t                   ret = SDK_RET_OK;
@@ -72,6 +104,7 @@ devapi_qos::qos_class_get(uint8_t group, qos_class_info_t *info)
 
     info->group = rsp.spec().key_or_handle().qos_group();
     info->mtu = rsp.spec().mtu();
+    info->no_drop = rsp.spec().no_drop();
 
     /* flowcontrol configuration */
     info->pause_type = rsp.spec().pause().type();

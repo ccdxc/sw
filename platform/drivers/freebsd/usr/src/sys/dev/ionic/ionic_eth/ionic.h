@@ -33,9 +33,9 @@ struct ionic_lif;
 #include "ionic_kpicompat.h"
 #include "ionic_osdep.h"
 
-#define DRV_NAME			"ionic"
+#define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION			"0.8.0"
+#define DRV_VERSION		"0.0.0"
 
 #define SIZE_1K			1024
 #define IONIX_TX_MIN_DESC	64
@@ -51,10 +51,11 @@ struct ionic_lif;
 
 /* TSO DMA related definitions. */
 #define IONIC_MAX_TSO_SEG_SIZE 	(64 * SIZE_1K)
-#define IONIC_MAX_TSO_SIZE 		(64 * SIZE_1K)
+#define IONIC_MAX_TSO_SIZE 	(64 * SIZE_1K)
 #define IONIC_MAX_TSO_SEGMENTS	(64)
 
-#define QUEUE_NAME_MAX_SZ		8
+
+#define QUEUE_NAME_MAX_SZ	8
 MALLOC_DECLARE(M_IONIC);
 
 #ifndef IONIC_NDEBUG
@@ -153,17 +154,19 @@ extern int ionic_tso_debug;
 
 struct ionic_dev;
 
-/*
- * @cos: valid value 0-7
- * @weight: 0-99.
- */
-struct ionic_qos_tc {
-	bool enable;
-	bool drop;
-	uint8_t dot1q_pcp;
-	uint8_t dwrr_weight;
-	uint32_t mtu;
-	uint8_t pfc_cos;
+struct ionic_qos {
+	int max_tcs;
+	enum qos_class_type class_type;
+	/* Per TC value. */
+	uint8_t dwrr_bw_perc[IONIC_QOS_TC_MAX];
+	uint8_t enable_flag[IONIC_QOS_TC_MAX];
+	uint8_t no_drop[IONIC_QOS_TC_MAX];
+	uint8_t pfc_cos[IONIC_QOS_TC_MAX];
+	uint8_t sched_type[IONIC_QOS_TC_MAX];
+	/* PCP to TC map. */
+	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
+	/* DSCP to TC map. */
+	uint8_t dscp_to_tc[IONIC_QOS_DSCP_MAX];
 };
 
 struct ionic {
@@ -189,7 +192,7 @@ struct ionic {
 	unsigned int nlifs;
 
 	/* QoS software config. */
-	struct ionic_qos_tc qos_tc[IONIC_QOS_CLASS_MAX];
+	struct ionic_qos qos;
 
 	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
 	DECLARE_BITMAP(ethbits, IONIC_LIFS_MAX);
@@ -227,8 +230,20 @@ int ionic_port_reset(struct ionic *ionic);
 void ionic_set_port_state(struct ionic *ionic, uint8_t state);
 
 int ionic_qos_class_identify(struct ionic *ionic);
+int ionic_qos_init(struct ionic *ionic);
 int ionic_qos_class_init(struct ionic *ionic, uint8_t group,
-	union qos_config *config);
+    union qos_config *config);
 int ionic_qos_class_reset(struct ionic *ionic, uint8_t group);
+int ionic_qos_class_type_update(struct ionic_lif *lif,
+    enum qos_class_type class);
+int ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable);
+int ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop);
+int ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos);
+int ionic_qos_sched_type_update(struct ionic_lif *lif, uint8_t *sched);
+#ifdef notyet
+int ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc);
+#endif
+int ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
+int ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
 
 #endif /* _IONIC_H_ */

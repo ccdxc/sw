@@ -972,6 +972,7 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
         CASE(CMD_OPCODE_LIF_RESET);
         CASE(CMD_OPCODE_QOS_CLASS_IDENTIFY);
         CASE(CMD_OPCODE_QOS_CLASS_INIT);
+        CASE(CMD_OPCODE_QOS_CLASS_UPDATE);
         CASE(CMD_OPCODE_QOS_CLASS_RESET);
         CASE(CMD_OPCODE_FW_DOWNLOAD);
         CASE(CMD_OPCODE_FW_CONTROL);
@@ -1062,6 +1063,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     case CMD_OPCODE_QOS_CLASS_INIT:
         status = _CmdQosInit(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_QOS_CLASS_UPDATE:
+        status = _CmdQosUpdate(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_QOS_CLASS_RESET:
@@ -1454,11 +1459,10 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
                 cfg->ip_dscp[i] = info->class_ip_dscp[i];
         }
 
-        if (info->pause_type == sdk::platform::PAUSE_TYPE_NONE) {
+        if(info->no_drop)
             cfg->flags |= IONIC_QOS_CONFIG_F_DROP;
-        } else if (info->pause_type != sdk::platform::PAUSE_TYPE_PFC) {
-            cfg->pfc_cos = info->class_dot1q_pcp;
-        }
+
+        cfg->pfc_cos = info->pause_dot1q_pcp;
 
         cfg->sched_type = info->sched_type;
         if (info->sched_type == sdk::platform::QOS_SCHED_TYPE_STRICT) {
@@ -1476,9 +1480,17 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
             cfg->flags |= IONIC_QOS_CONFIG_F_RW_IP_DSCP;
             cfg->rw_ip_dscp = info->rewrite_ip_dscp;
         }
+        NIC_LOG_DEBUG("pause_type: {} no_drop {} flags: {}", 
+                      info->pause_type, info->no_drop, cfg->flags);
     };
 
     for (unsigned int i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
+        rs = dev_api->qos_class_exist(i);
+        if (rs != SDK_RET_OK) {
+            NIC_LOG_DEBUG("{}: qos group {} doesn't exist", spec->name, i);
+            continue;
+        }
+
         rs = dev_api->qos_class_get(i, &info);
         if (rs != SDK_RET_OK) {
             NIC_LOG_WARN("{}: failed to get qos group {}", spec->name, i);
@@ -1544,14 +1556,97 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     if (cfg->flags & IONIC_QOS_CONFIG_F_DROP) {
-        info.no_drop = false;
-    } else {
         info.no_drop = true;
+    } else {
+        info.no_drop = false;
     }
+
+    NIC_LOG_DEBUG("group: {} mtu: {} class_type: {} pcp: {} pause_type: {} "
+                  "pfc_cos: {} no_drop {} flags: {}", 
+                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp, 
+                  info.pause_type, info.pause_dot1q_pcp, info.no_drop, cfg->flags);
 
     rs = dev_api->qos_class_create(&info);
     if (rs != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to create qos group {}", spec->name, cmd->group);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t rs = SDK_RET_OK;
+    union qos_config *cfg = (union qos_config *)req_data;
+    struct qos_init_cmd *cmd = (struct qos_init_cmd *)req;
+    qos_class_info_t info = {0};
+
+    NIC_LOG_DEBUG("{}: {} qos group {}", spec->name, opcode_to_str(cmd->opcode),
+        qos_class_to_str(cmd->group));
+
+    DEVAPI_CHECK
+
+    rs = dev_api->qos_class_exist(cmd->group);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: qos group doesn't exist for update {}", spec->name, cmd->group);
+        return (IONIC_RC_ERROR);
+    }
+
+    rs = dev_api->qos_class_delete(cmd->group);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to delete qos group for update {}", spec->name, cmd->group);
+        return (IONIC_RC_ERROR);
+    }
+
+    info.group = cmd->group;
+    info.mtu = cfg->mtu;
+    info.class_type = cfg->class_type;
+    if (info.class_type == sdk::platform::QOS_CLASS_TYPE_PCP) {
+        info.class_dot1q_pcp = cfg->dot1q_pcp;
+    } else if (info.class_type == sdk::platform::QOS_CLASS_TYPE_DSCP) {
+        info.class_ndscp = cfg->ndscp;
+        for (uint8_t i = 0; i < info.class_ndscp; i++)
+            info.class_ip_dscp[i] = cfg->ip_dscp[i];
+    }
+
+    if (cfg->pause_type == PORT_PAUSE_TYPE_LINK) {
+        info.pause_type = sdk::platform::PAUSE_TYPE_LINK_LEVEL;
+    } else if (cfg->pause_type == PORT_PAUSE_TYPE_PFC) {
+        info.pause_type = sdk::platform::PAUSE_TYPE_PFC;
+    }
+    info.pause_dot1q_pcp = cfg->pfc_cos;
+
+    info.sched_type = cfg->sched_type;
+    if (info.sched_type == sdk::platform::QOS_SCHED_TYPE_STRICT) {
+        info.sched_strict_rlmt = cfg->strict_rlmt;
+    } else if (info.sched_type == sdk::platform::QOS_SCHED_TYPE_DWRR) {
+        info.sched_dwrr_weight = cfg->dwrr_weight;
+    }
+
+    if (cfg->flags & IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP) {
+        info.rewrite_dot1q_pcp = cfg->rw_dot1q_pcp;
+    }
+
+    if (cfg->flags & IONIC_QOS_CONFIG_F_RW_IP_DSCP) {
+        info.rewrite_ip_dscp = cfg->rw_ip_dscp;
+    }
+
+    if (cfg->flags & IONIC_QOS_CONFIG_F_DROP) {
+        info.no_drop = true;
+    } else {
+        info.no_drop = false;
+    }
+
+    NIC_LOG_DEBUG("group: {} mtu: {} class_type: {} pcp: {} pause_type: {} "
+                  "pfc_cos: {} no_drop {} flags: {}", 
+                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp, 
+                  info.pause_type, info.pause_dot1q_pcp, info.no_drop, cfg->flags);
+
+    rs = dev_api->qos_class_create(&info);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to update qos group {}", spec->name, cmd->group);
         return (IONIC_RC_ERROR);
     }
 

@@ -470,6 +470,17 @@ ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group)
 }
 
 void
+ionic_dev_cmd_qos_class_update(struct ionic_dev *idev, uint8_t group)
+{
+	union dev_cmd cmd = {
+		.qos_init.opcode = CMD_OPCODE_QOS_CLASS_UPDATE,
+		.qos_init.group = group,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
+void
 ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group)
 {
 	union dev_cmd cmd = {

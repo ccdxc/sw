@@ -43,6 +43,7 @@ public:
 
     // Qos APIs
     sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
+    sdk_ret_t qos_class_exist(uint8_t group);
     sdk_ret_t qos_class_create(qos_class_info_t *info);
     sdk_ret_t qos_class_delete(uint8_t group);
     sdk_ret_t qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,

@@ -337,7 +337,7 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	}
 
 	/* Qos */
-	err = ionic_qos_class_identify(ionic);
+	err = ionic_qos_init(ionic);
 	if (err) {
 		dev_err(dev, "Cannot identify qos configuration: %d, aborting\n", err);
 		goto err_out_unmap_bars;

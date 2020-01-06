@@ -353,6 +353,12 @@ devapi_iris::qos_class_get(uint8_t group, qos_class_info_t *info)
 }
 
 sdk_ret_t
+devapi_iris::qos_class_exist(uint8_t group)
+{
+    return devapi_qos::qos_class_exist(group);
+}
+
+sdk_ret_t
 devapi_iris::qos_class_create(qos_class_info_t *info)
 {
     return devapi_qos::qos_class_create(info);

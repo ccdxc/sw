@@ -15,6 +15,7 @@ public:
                                 uint32_t uplink_port);
 
     static sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
+    static sdk_ret_t qos_class_exist(uint8_t group);
     static sdk_ret_t qos_class_create(qos_class_info_t *info);
     static sdk_ret_t qos_class_delete(uint8_t group);
     static sdk_ret_t qos_class_set_global_pause_type(uint8_t pause_type);

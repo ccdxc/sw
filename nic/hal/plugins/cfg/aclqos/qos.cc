@@ -940,7 +940,9 @@ static hal_ret_t
 update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     //if (spec.has_pause()) {
-    if (spec.no_drop()) {
+    if ( spec.no_drop() || 
+         (spec.key_or_handle().qos_group() == kh::DEFAULT) ||
+         (spec.key_or_handle().qos_group() == kh::SPAN) ) {
         qos_class->pause.xon_threshold = spec.pause().xon_threshold();
         qos_class->pause.xoff_threshold = spec.pause().xoff_threshold();
         qos_class->pause.pfc_cos = spec.pause().pfc_cos();

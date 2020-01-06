@@ -505,7 +505,8 @@ TEST_F(qos_class_test, test1)
     // verify default
     get_spec = &get_rsp.response(0).spec();
     ASSERT_EQ(verify_mtu(get_spec, 9216), true);
-    ASSERT_EQ(verify_pause(get_spec, qos::QOS_PAUSE_TYPE_NONE), true);
+    // pause is not disabled for default class - hence it wont be NONE
+    ASSERT_EQ(verify_pause(get_spec, qos::QOS_PAUSE_TYPE_NONE), false);
     ASSERT_EQ(verify_dwrr(get_spec, 50), true);
     ASSERT_EQ(verify_pcp(get_spec, 0), true);
 

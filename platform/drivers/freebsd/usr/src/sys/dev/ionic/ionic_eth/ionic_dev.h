@@ -236,6 +236,7 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, uint32_t index);
 
 void ionic_dev_cmd_qos_class_identify(struct ionic_dev *idev);
 void ionic_dev_cmd_qos_class_init(struct ionic_dev *idev, uint8_t group);
+void ionic_dev_cmd_qos_class_update(struct ionic_dev *idev, uint8_t group);
 void ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group);
 
 void ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,

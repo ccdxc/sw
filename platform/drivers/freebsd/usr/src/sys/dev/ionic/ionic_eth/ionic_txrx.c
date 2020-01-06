@@ -63,6 +63,7 @@
 #endif
 
 #define QUEUE_NAME_LEN 32
+#define IONIC_DSCP_BLOCK_SIZE 8
 
 MALLOC_DEFINE(M_IONIC, "ionic", "Pensando IONIC Ethernet adapter");
 static int ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data);
@@ -2729,185 +2730,379 @@ ionic_notifyq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 			&notifyq->comp_count, "NQ completions processed");
 }
 
-static void
-ionic_qos_config_sysctl(struct ionic_qos_tc *tc, int num, struct sysctl_ctx_list *ctx,
-    struct sysctl_oid_list *queue_list)
+static int
+ionic_qos_class_type_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	if (num == 0) {
-		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "enable", CTLFLAG_RD,
-				&tc->enable, 0, "Enable policy");
-		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "drop", CTLFLAG_RD,
-				&tc->drop, 0, "Enable drop");
-	} else {
-		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "enable", CTLFLAG_RW,
-				&tc->enable, 0, "Enable policy");
-		SYSCTL_ADD_BOOL(ctx, queue_list, OID_AUTO, "drop", CTLFLAG_RW,
-				&tc->drop, 0, "Enable drop");
+	struct ionic_lif *lif = oidp->oid_arg1;
+	int value, error;
+
+	IONIC_LIF_LOCK(lif);
+	value = lif->ionic->qos.class_type;
+
+	error = sysctl_handle_int(oidp, &value, 0, req);
+	if (error || (req->newptr == NULL))
+		goto err_out;
+
+	if ((value < QOS_CLASS_TYPE_PCP) || (value > QOS_CLASS_TYPE_DSCP)) {
+		error = ERANGE;
+		if_printf(lif->netdev,
+		    "Unsupported classification type - %d(PCP)/%d(DSCP)\n",
+		    QOS_CLASS_TYPE_PCP, QOS_CLASS_TYPE_DSCP);
+		goto err_out;
 	}
 
-	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "mtu", CTLFLAG_RW,
-			&tc->mtu, 1500, "MTU");
-	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "pcp", CTLFLAG_RW,
-			&tc->dot1q_pcp, 0, "802.1q TCI pcp value");
-	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "weight", CTLFLAG_RW,
-			&tc->dwrr_weight, 0, "DWRR weight");
-	SYSCTL_ADD_U8(ctx, queue_list, OID_AUTO, "pfc_cos", CTLFLAG_RW,
-			&tc->pfc_cos, 0, "pfc cos value");
+	error = ionic_qos_class_type_update(lif, value);
+	if (error) {
+		goto err_out;
+	}
+	lif->ionic->qos.class_type = value;
+
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
 }
 
 static int
-ionic_qos_validate(struct ionic_lif *lif, int qnum)
-{	
-	struct ionic_qos_tc *swtc;
-	struct ifnet *ifp = lif->netdev;
-	swtc = &lif->ionic->qos_tc[qnum];
-	if (swtc->dot1q_pcp >= IONIC_QOS_CLASS_MAX) {
-		IONIC_NETDEV_ERROR(ifp, "tc%d pcp value: %d invalid\n",
-		    qnum, swtc->dot1q_pcp);
-			return (EINVAL);
-	}
-
-	if (swtc->dwrr_weight > 100) {
-		IONIC_NETDEV_ERROR(ifp, "tc%d weight value: %d invalid\n",
-		    qnum, swtc->dwrr_weight);
-		return (EINVAL);
-	}
-
-	if (swtc->mtu < IONIC_MIN_MTU || swtc->mtu > IONIC_MAX_MTU) {
-		IONIC_NETDEV_ERROR(lif->netdev, "tc%d mtu value: %d invalid\n",
-		    qnum, swtc->mtu);
-		return (EINVAL);
-	}
-
-	if (swtc->pfc_cos >= IONIC_QOS_CLASS_MAX) {
-		IONIC_NETDEV_ERROR(ifp, "tc%d pfc_cos value: %d invalid\n",
-		    qnum, swtc->pfc_cos);
-			return (EINVAL);
-	}
-
-	return (0);
-}
-
-/*
- * Send the QoS config to the card.
- */
-static int
-ionic_qos_apply_sysctl(SYSCTL_HANDLER_ARGS)
+ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
-	struct ionic_qos_tc *swtc;
-	int i, err, val, total_wt;
+	uint8_t enable[IONIC_QOS_TC_MAX];
+	int i, error;
 
-	/* Not allowed to change for mgmt interface. */
-	if (ionic->is_mgmt_nic)
-		return (EINVAL);
+	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
+		("number of TC%d > %d", ionic->qos.max_tcs, IONIC_QOS_TC_MAX));
 
-	err = sysctl_handle_int(oidp, &val, 0, req);
-	if ((err) || (req->newptr == NULL))
-		return (err);
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.enable_flag, ionic->qos.max_tcs);
+	if (error || !req->newptr)
+		goto err_out;
 
-	total_wt = 0;
-	for (i = 1; i < IONIC_QOS_CLASS_MAX; i++) {
-		swtc = &ionic->qos_tc[i];
-		if (swtc->enable)
-			total_wt += swtc->dwrr_weight;
-	}
+	error = SYSCTL_IN(req, enable, ionic->qos.max_tcs);
+	if (error)
+		goto err_out;
 
-	if (total_wt > 100) {
-		IONIC_NETDEV_ERROR(lif->netdev,
-		    "total weight %d > 100\n", total_wt);
-		return (EINVAL);
-	}
-
-	ionic_qos_class_identify(ionic);
-
-	for (i = 1; i < IONIC_QOS_CLASS_MAX; i++) {
-		qos = &ident->qos.config[i];
-		swtc = &ionic->qos_tc[i];
-
-		/* Validate user provided parameters. */
-		if (ionic_qos_validate(lif, i))
-			continue;
-
-		/* Delete the class if it already exists */
-		if (qos->flags & IONIC_QOS_CONFIG_F_ENABLE)
-			ionic_qos_class_reset(ionic, i);
-
-		/* No need to init the class if the user does not want to enable it */
-		if (!swtc->enable) {
-			IONIC_NETDEV_DEBUG(lif->netdev,
-			    "Class %d not enabled. Skipped!\n", i);
-			continue;
-		}
-
-		qos->flags |= IONIC_QOS_CONFIG_F_ENABLE;
-
-		if (swtc->drop)
-			qos->flags |= IONIC_QOS_CONFIG_F_DROP;
-		else
-			qos->flags &= ~IONIC_QOS_CONFIG_F_DROP;
-
-		qos->mtu = swtc->mtu;
-		qos->dot1q_pcp = swtc->dot1q_pcp;
-		qos->dwrr_weight = swtc->dwrr_weight;
-
-		if ((ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK) != PORT_PAUSE_TYPE_PFC)
-			qos->pause_type = PORT_PAUSE_TYPE_LINK;  // default
-		else
-			qos->pause_type = (ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK);
-
-		qos->class_type = QOS_CLASS_TYPE_PCP;
-		qos->sched_type = QOS_SCHED_TYPE_DWRR;
-
-		qos->pfc_cos = swtc->pfc_cos;
-
-		IONIC_NETDEV_DEBUG(lif->netdev,
-		    "TC: %d pcp: %d weight: %d drop: %s class: %d pause_type:%d pfc_cos: %d "
-		    "flags: %#x\n",
-		    i, qos->dot1q_pcp, qos->dwrr_weight,
-		    swtc->drop ? "true" : "false", qos->class_type, qos->pause_type,
-		    qos->pfc_cos, qos->flags);
-
-		err = ionic_qos_class_init(ionic, i, qos);
-		if (err) {
-			IONIC_NETDEV_ERROR(lif->netdev,
-			    "failed to create class %d\n", i);
-			ionic_qos_class_identify(ionic);
-			return (err);
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
+		if (enable[i] > 1) {
+			error = ERANGE;
+			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable).\n");
+			goto err_out;
 		}
 	}
 
-	return (0);
+	error = ionic_qos_enable_update(lif, enable);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+//	memcpy(ionic->qos.enable_flag, enable, sizeof(ionic->qos.enable_flag));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+
+}
+
+static int
+ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	uint8_t no_drop[IONIC_QOS_TC_MAX];
+	int i, error;
+
+	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
+		("number of TC%d > %d", ionic->qos.max_tcs, IONIC_QOS_TC_MAX));
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.no_drop, ionic->qos.max_tcs);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, no_drop, ionic->qos.max_tcs);
+	if (error)
+		goto err_out;
+
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
+		if (no_drop[i] > 1) {
+			error = ERANGE;
+			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable).\n");
+			goto err_out;
+		}
+	}
+
+	error = ionic_qos_no_drop_update(lif, no_drop);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.no_drop, no_drop, sizeof(ionic->qos.no_drop));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+
+}
+
+
+static int
+ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	uint8_t sched[IONIC_QOS_TC_MAX];
+	int i, error;
+
+	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
+		("number of TC%d > %d", ionic->qos.max_tcs, IONIC_QOS_TC_MAX));
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.sched_type, ionic->qos.max_tcs);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, sched, ionic->qos.max_tcs);
+	if (error)
+		goto err_out;
+
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
+		if (sched[i] > 1) {
+			error = ERANGE;
+			if_printf(lif->netdev, "sched value is 0(strict) or 1(DWRR).\n");
+			goto err_out;
+		}
+	}
+
+	error = ionic_qos_sched_type_update(lif, sched);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.sched_type, sched, sizeof(ionic->qos.sched_type));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+
+}
+#ifdef notyet
+static int
+ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct ifnet *ifp = lif->netdev;
+	uint8_t bw_perc[IONIC_QOS_TC_MAX];
+	int i, error, sum;
+
+	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
+		("number of TC%d > %d", ionic->qos.max_tcs, IONIC_QOS_TC_MAX));
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.dwrr_bw_perc, ionic->qos.max_tcs);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, bw_perc, ionic->qos.max_tcs);
+	if (error)
+		goto err_out;
+
+	sum = 0;
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
+		if (bw_perc[i] > 100) {
+			error = ERANGE;
+			goto err_out;
+		}
+		sum += bw_perc[i];
+	}
+
+	if (sum != 100) {
+		if_printf(ifp, "total sum %d != 100\n", sum);
+		error = ERANGE;
+		goto err_out;
+	}
+
+	error = ionic_qos_bw_update(lif, bw_perc);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.dwrr_bw_perc, bw_perc, sizeof(ionic->qos.dwrr_bw_perc));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+
+}
+#endif
+static int
+ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct ifnet *ifp = lif->netdev;
+	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
+	int i, error, max_pcps = IONIC_QOS_PCP_MAX;
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.pcp_to_tc, max_pcps);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, pcp_to_tc, max_pcps);
+	if (error)
+		goto err_out;
+
+	for (i = 0; i < max_pcps; i++) {
+		if (pcp_to_tc[i] >= ionic->qos.max_tcs ) {
+			if_printf(ifp, "Out of range value: %d\n", pcp_to_tc[i]);
+			error = ERANGE;
+			goto err_out;
+		}
+	}
+
+	error = ionic_qos_pcp_to_tc_update(lif, pcp_to_tc);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.pcp_to_tc, pcp_to_tc, sizeof(ionic->qos.pcp_to_tc));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+}
+
+static int
+ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct ifnet *ifp = lif->netdev;
+	uint8_t pfc_cos[IONIC_QOS_TC_MAX];
+	int i, error;
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.pfc_cos, ionic->qos.max_tcs);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, pfc_cos, ionic->qos.max_tcs);
+	if (error)
+		goto err_out;
+
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
+		if (pfc_cos[i] > 7) {
+			if_printf(ifp, "Out of range value: %d\n", pfc_cos[i]);
+			error = ERANGE;
+			goto err_out;
+		}
+	}
+
+	error = ionic_qos_pfc_cos_update(lif, pfc_cos);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.pfc_cos, pfc_cos, sizeof(ionic->qos.pfc_cos));
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
+}
+
+static int
+ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	struct ifnet *ifp = lif->netdev;
+	uint8_t dscp_to_tc[IONIC_DSCP_BLOCK_SIZE];
+	int i, error;
+	int start = oidp->oid_arg2;
+
+	IONIC_LIF_LOCK(lif);
+	error = SYSCTL_OUT(req, ionic->qos.dscp_to_tc + start, IONIC_DSCP_BLOCK_SIZE);
+	if (error || !req->newptr)
+		goto err_out;
+
+	error = SYSCTL_IN(req, dscp_to_tc, IONIC_DSCP_BLOCK_SIZE);
+	if (error)
+		goto err_out;
+
+	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++) {
+		if (dscp_to_tc[i] >= ionic->qos.max_tcs ) {
+			if_printf(ifp, "Out of range value: %d\n", dscp_to_tc[i]);
+			error = ERANGE;
+			goto err_out;
+		}
+	}
+
+	error = ionic_qos_dscp_to_tc_update(lif, dscp_to_tc);
+	if (error) {
+		goto err_out;
+	}
+
+	ionic_qos_init(ionic);
+	//memcpy(ionic->qos.dscp_to_tc + start, dscp_to_tc,
+	 //   sizeof(ionic->qos.dscp_to_tc[0]) * IONIC_DSCP_BLOCK_SIZE);
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+	return (error);
 }
 
 static void
 ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
     struct sysctl_oid_list *child)
 {
-	struct sysctl_oid *queue_node, *queue_node1;
-	struct sysctl_oid_list *queue_list, *queue_list1;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
 	int i;
 
-	snprintf(namebuf, QUEUE_NAME_LEN, "qos");
-	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
-	    CTLFLAG_RD, NULL, "QoS for controlling CoS/PFC etc, shared between ports");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, "qos",
+	    CTLFLAG_RD, NULL, "QoS policy for ports");
 	queue_list = SYSCTL_CHILDREN(queue_node);
 
-	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "apply",
-	    CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
-	    ionic_qos_apply_sysctl, "I",
-	    "Apply the newly configured QoS params to hardware");
-
-	for (i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
-		snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
-		queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO,
-		    namebuf, CTLFLAG_RD, NULL, "QoS traffic class");
-		queue_list1 = SYSCTL_CHILDREN(queue_node1);
-		ionic_qos_config_sysctl(&lif->ionic->qos_tc[i], i, ctx, queue_list1);
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "max_tcs", CTLFLAG_RD,
+			&lif->ionic->qos.max_tcs, 0, "Max number of TCs supported");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "classification_type",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_qos_class_type_sysctl, "I",
+			"Set port classification policy");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_enable",
+			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
+			ionic_qos_tc_enable_sysctl, "QU",
+			"Enable/disable for TC classes.");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_no_drop",
+			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
+			ionic_qos_no_drop_sysctl, "QU",
+			"No drop enabled for QoS TC class.");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_pfc_cos",
+			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
+			ionic_qos_pfc_cos_sysctl, "QU",
+			"Class of service value(0-7) for each TC.");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_sched_type",
+			CTLTYPE_U8 | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_qos_tc_sched_type_sysctl, "QU",
+			"Scheduling policy for TC class -0(strict)/1(DWRR).");
+#ifdef notyet
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_bw_perc",
+			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
+			ionic_qos_tc_bw_perc_sysctl, "QU",
+			"Bandwidth percent for traffic classes.");
+#endif
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "pcp_to_tc",
+			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
+			ionic_qos_pcp_to_tc_sysctl, "QU",
+			"PCP to TC mapping.");
+	for( i = 0; i < IONIC_QOS_DSCP_MAX;  i += IONIC_DSCP_BLOCK_SIZE)  {
+		snprintf(namebuf, QUEUE_NAME_LEN, "dscp_%d_%d_to_tc", i,
+		    i + (IONIC_DSCP_BLOCK_SIZE - 1));
+		SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, namebuf,
+			CTLTYPE_U8 | CTLFLAG_RW | CTLFLAG_SKIP, lif, i,
+			ionic_qos_dscp_to_tc_sysctl, "QU",
+			"DPCP to TC mapping for block of 8 DSCP range");
 	}
 }
 
@@ -3093,7 +3288,7 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_intr_sysctl, "A", "Interrupt details");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "flow_ctrl",
-			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_flow_ctrl_sysctl, "I",
 			"Set flow control - 0(off), 1(link), 2(pfc)");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "link_pause",

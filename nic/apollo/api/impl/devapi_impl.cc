@@ -212,6 +212,13 @@ devapi_impl::qos_class_get(uint8_t group, qos_class_info_t *info) {
 }
 
 sdk_ret_t
+devapi_impl::qos_class_exist(uint8_t group) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+
+sdk_ret_t
 devapi_impl::qos_class_create(qos_class_info_t *info) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;

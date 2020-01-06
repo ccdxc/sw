@@ -60,6 +60,7 @@ enum cmd_opcode {
 	CMD_OPCODE_QOS_CLASS_IDENTIFY		= 240,
 	CMD_OPCODE_QOS_CLASS_INIT		= 241,
 	CMD_OPCODE_QOS_CLASS_RESET		= 242,
+	CMD_OPCODE_QOS_CLASS_UPDATE		= 243,
 
 	/* Firmware commands */
 	CMD_OPCODE_FW_DOWNLOAD			= 254,
@@ -1779,9 +1780,12 @@ struct qos_identify_comp {
 	u8 rsvd[14];
 };
 
+#define IONIC_QOS_TC_MAX		8
+/* Capri max supported, should be renamed. */
 #define IONIC_QOS_CLASS_MAX		7
+#define IONIC_QOS_PCP_MAX		8
 #define IONIC_QOS_CLASS_NAME_SZ		32
-#define IONIC_QOS_DSCP_MAX_VALUES	64
+#define IONIC_QOS_DSCP_MAX		64
 
 /**
  * enum qos_class
@@ -1838,6 +1842,7 @@ union qos_config {
 	struct {
 #define IONIC_QOS_CONFIG_F_ENABLE		BIT(0)
 #define IONIC_QOS_CONFIG_F_DROP			BIT(1)
+/* Used to rewrite PCP or DSCP value. */
 #define IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		BIT(2)
 #define IONIC_QOS_CONFIG_F_RW_IP_DSCP		BIT(3)
 		u8      flags;
@@ -1854,6 +1859,7 @@ union qos_config {
 			__le64  strict_rlmt;
 		};
 		/* marking */
+		/* Used to rewrite PCP or DSCP value. */
 		union {
 			u8      rw_dot1q_pcp;
 			u8      rw_ip_dscp;
@@ -1863,7 +1869,7 @@ union qos_config {
 			u8      dot1q_pcp;
 			struct {
 				u8      ndscp;
-				u8      ip_dscp[IONIC_QOS_DSCP_MAX_VALUES];
+				u8      ip_dscp[IONIC_QOS_DSCP_MAX];
 			};
 		};
 	};
