@@ -54,13 +54,11 @@ TEST_F(tep_store_test, create) {
     ip_addr_t tep_ip;
     str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
     state->tep_store().add_upd (tep_ip,   // TEP IP
-                               tep_obj_uptr_t (new tep_obj_t (
-                               tep_ip, // TEP IP
-                               11,     // Underlay ECMP Idx
-                               501009, // PDS TEP Idx
-                               501009  // PDS Overlay ECMP index
-                               )
-                              ));
+                                tep_obj_uptr_t (new tep_obj_t (
+                                        tep_ip, // TEP IP
+                                        11,     // Underlay ECMP Idx
+                                        501009 // PDS TEP Idx
+                                        )));
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 1);
 }
 
@@ -74,7 +72,7 @@ TEST_F(tep_store_test, get) {
     ASSERT_TRUE (tep_obj->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 11);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
-    ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
+    ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
 }
 
 TEST_F(tep_store_test, update) {
@@ -99,7 +97,7 @@ TEST_F(tep_store_test, update) {
     ASSERT_TRUE (tep_obj_test->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 12);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
-    ASSERT_TRUE (tep_obj->properties().hal_oecmp_idx == 501009);
+    ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
 }
 
 TEST_F(tep_store_test, delete_store) {

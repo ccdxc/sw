@@ -14,7 +14,10 @@
 #include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_route_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_pathset_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ecmp_idx_guard.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/port.hpp"
@@ -36,6 +39,8 @@ enum slab_id_e {
     PDS_MS_VPC_SLAB_ID,
     PDS_MS_MAC_SLAB_ID,
     PDS_MS_RTTABLE_SLAB_ID,
+    PDS_MS_PATHSET_SLAB_ID,
+    PDS_MS_ECMP_IDX_GUARD_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
@@ -45,7 +50,7 @@ class state_t {
 public:
     struct context_t {
     public:    
-        context_t(std::mutex& m, state_t* s) : l_(m), state_(s)  {};
+        context_t(std::recursive_mutex& m, state_t* s) : l_(m), state_(s)  {};
         state_t* state(void) {return state_;}
         void release(void) {l_.unlock(); state_ = nullptr;}
         context_t(context_t&& c) {
@@ -61,7 +66,7 @@ public:
         }
             
     private:    
-        std::unique_lock<std::mutex> l_;
+        std::unique_lock<std::recursive_mutex> l_;
         state_t* state_ = nullptr;
     };
     static void create(void) { 
@@ -97,6 +102,7 @@ public:
     vpc_store_t& vpc_store(void) {return vpc_store_;}
     subnet_store_t& subnet_store(void) {return subnet_store_;}
     route_table_store_t& route_table_store(void) {return route_table_store_;}
+    pathset_store_t& pathset_store(void) {return pathset_store_;}
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -116,6 +122,13 @@ public:
         lnx_ifindex_table_[port-1] = lnx_ifindex;
     }
 
+    sdk_ret_t ecmp_idx_alloc(uint32_t* index) {
+        return ecmp_idx_gen_->alloc(index);
+    }
+    sdk_ret_t ecmp_idx_free(uint32_t index) {
+        return ecmp_idx_gen_->free(index);
+    }
+
 private:
     static constexpr uint32_t k_max_fp_ports = 2;
     // Unique ptr helps to uninitialize cleanly in case of initialization errors
@@ -128,14 +141,21 @@ private:
     vpc_store_t vpc_store_;
     subnet_store_t subnet_store_;
     route_table_store_t route_table_store_;
+    pathset_store_t pathset_store_;
+
+    // Index generator for PDS HAL Overlay ECMP table
+    sdk::lib::rte_indexer  *ecmp_idx_gen_;
 
     static state_t* g_state_;
-    static std::mutex g_mtx_;
+    static std::recursive_mutex g_mtx_;
     pds_batch_ctxt_guard_t bg_;
     uint32_t lnx_ifindex_table_[k_max_fp_ports] = {0};
 
 private:
     state_t(void);
+    ~state_t(void) {
+        sdk::lib::rte_indexer::destroy(ecmp_idx_gen_);
+    }
 };
 
 using tep_obj_uptr_t = std::unique_ptr<tep_obj_t>;
@@ -143,6 +163,7 @@ using subnet_obj_uptr_t = std::unique_ptr<subnet_obj_t>;
 using bd_obj_uptr_t = std::unique_ptr<bd_obj_t>;
 using if_obj_uptr_t = std::unique_ptr<if_obj_t>;
 using rttbl_obj_uptr_t = std::unique_ptr<route_table_obj_t>;
+using pathset_obj_uptr_t = std::unique_ptr<pathset_obj_t>;
 
 }
 

@@ -118,17 +118,14 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     bctxt_guard_.set (bctxt);
 
     if (op_delete_) { // Delete
-        auto vpc_key = make_pds_vpc_key_();
-        if (!PDS_MOCK_MODE()) {
-            pds_vpc_delete(&vpc_key, bctxt);
-        }
-        // TODO: Revisit. Fix failing gtest since VPC store is already deleted
-#if 0
         auto rttbl_key = make_pds_rttable_key_();
         if (!PDS_MOCK_MODE()) {
             pds_route_table_delete(&rttbl_key, bctxt);
         }
-#endif
+        auto vpc_key = make_pds_vpc_key_();
+        if (!PDS_MOCK_MODE()) {
+            pds_vpc_delete(&vpc_key, bctxt);
+        }
     } else { // Add or update
         auto vpc_spec = make_pds_vpc_spec_();
         auto rttbl_spec = make_pds_rttable_spec_();
@@ -180,10 +177,13 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
         fetch_store_info_(state_ctxt.state());
 
         // Ensure that the cached vpc_spec is still valid
-        if (unlikely(store_info_.vpc_obj == nullptr)) {
+        if (unlikely((store_info_.vpc_obj == nullptr) ||
+                     (store_info_.vpc_obj->properties().spec_invalid))) {
             // The prev VRF IPS response could have possibly been delayed
-            // beyond VPC Spec delete - Ignore and return success to MS
-            SDK_TRACE_INFO ("VRF %d: VRF AddUpd IPS for unknown VRF", ips_info_.vrf_id);
+            // beyond VPC Spec delete - Ignore and return success.
+            // Delete is on the way
+            SDK_TRACE_INFO ("VRF %d: VRF AddUpd IPS for unknown VRF",
+                            ips_info_.vrf_id);
             return;
         }
         if (op_create_) {
@@ -287,7 +287,8 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     }
 }
 
-// Synchronous HAL update completion
+// API for Direct Fastpath update from MGMT stub to HAL stub bypassing
+// Metaswitch controlplane. Requires Synchronous HAL update completion
 sdk_ret_t li_vrf_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
                                      vpc_obj_t* vpc_obj) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
@@ -350,6 +351,9 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         // Cannot add VPC Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
+        // Delete the VRF route table
+        state_ctxt.state()->route_table_store().erase(ips_info_.vrf_id);
+        state_ctxt.state()->vpc_store().erase(ips_info_.vrf_id);
     } // End of state thread_context
       // Do Not access/modify global state after this
 
@@ -361,9 +365,6 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
             // ----------------------------------------------------------------
             SDK_TRACE_DEBUG("MS VRF %d Delete: Rcvd Async PDS response %s",
                             vrf_id, (pds_status) ? "Success" : "Failure");
-            auto state_ctxt = pds_ms::state_t::thread_context();
-            // Delete the VRF route table
-            state_ctxt.state()->route_table_store().erase(vrf_id);
         };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr

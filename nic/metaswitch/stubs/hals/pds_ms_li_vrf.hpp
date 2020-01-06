@@ -58,8 +58,8 @@ private:
                                        bool async);
 };
 
-// API to update HAL directly bypassing Metaswitch
-// Synchronous HAL update completion
+// API for Direct Fastpath update from MGMT stub to HAL stub bypassing
+// Metaswitch controlplane. Requires Synchronous HAL update completion
 sdk_ret_t li_vrf_update_pds_synch(state_t::context_t&& state_ctxt,
                                   vpc_obj_t* vpc_obj);
 

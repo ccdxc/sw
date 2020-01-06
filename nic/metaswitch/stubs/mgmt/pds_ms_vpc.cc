@@ -100,8 +100,12 @@ pds_cache_vni_to_vrf_mapping (pds_vpc_spec_t *vpc_spec, bool op_delete)
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vpc_spec->key.id);
         if (vpc_obj == nullptr) {return;}
         if (vpc_obj->properties().hal_created) {
-            vpc_obj->properties().hal_created = false;
+            SDK_TRACE_DEBUG("VPC already created in HAL - marking for delete",
+                            vpc_spec->key.id);
+            vpc_obj->properties().spec_invalid = true;
         } else {
+            SDK_TRACE_DEBUG("VPC %d not created in HAL yet - remove from store",
+                            vpc_spec->key.id);
             state_ctxt.state()->vpc_store().erase(vpc_spec->key.id);
         }
         return;

@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <nbase.h>
@@ -46,17 +47,26 @@ private:
         uint32_t       num_deleted_nh = 0; 
         pds_nexthop_group_type_t  pds_nhgroup_type = PDS_NHGROUP_TYPE_NONE;
     };
+    struct store_info_t {
+        pathset_obj_t*   pathset_obj = nullptr;
+        pds_batch_ctxt_t  bctxt = 0;
+    };
 
 private:
     std::unique_ptr<cookie_t> cookie_uptr_;
     ips_info_t  ips_info_;
+    store_info_t  store_info_;
     bool op_create_ = false;
     bool op_delete_ = false;
 
 private:
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(void);
+    pds_batch_ctxt_guard_t make_batch_pds_spec_(state_t::context_t& state_ctxt);
     bool parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* nh_add_upd);
-    pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void);
+    void fetch_store_info_(state_t* state);
+    pds_nexthop_group_spec_t make_pds_nhgroup_spec_(state_t::context_t& state_ctxt);
+    void make_pds_underlay_nhgroup_spec_ (pds_nexthop_group_spec_t&);
+    void make_pds_overlay_nhgroup_spec_ (pds_nexthop_group_spec_t&,
+                                         state_t::context_t& state_ctxt);
     pds_nexthop_group_key_t make_pds_nhgroup_key_(void);
 };
 

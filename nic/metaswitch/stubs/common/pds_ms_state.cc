@@ -12,7 +12,7 @@
 namespace pds_ms {
 
 state_t* state_t::g_state_ = nullptr;
-std::mutex state_t::g_mtx_;
+std::recursive_mutex state_t::g_mtx_;
 
 template<> sdk::lib::slab* slab_obj_t<cookie_t>::slab_ = nullptr;
 
@@ -26,6 +26,8 @@ state_t::state_t(void)
     vpc_slab_init (slabs_, PDS_MS_VPC_SLAB_ID);
     mac_slab_init (slabs_, PDS_MS_MAC_SLAB_ID);
     route_table_slab_init (slabs_, PDS_MS_RTTABLE_SLAB_ID);
+    pathset_slab_init (slabs_, PDS_MS_PATHSET_SLAB_ID);
+    ecmp_idx_guard_slab_init (slabs_, PDS_MS_ECMP_IDX_GUARD_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE", 
@@ -37,6 +39,12 @@ state_t::state_t(void)
         throw Error("SLAB creation failed for Cookie");
     }
     cookie_t::set_slab(slabs_[PDS_MS_COOKIE_SLAB_ID].get());
+
+    // Index generator for PDS HAL Overlay ECMP table
+    // Using 16 bit max index - 65535 Overlay ECMP Indexes
+    ecmp_idx_gen_ = sdk::lib::rte_indexer::factory(0xFFFF-1,
+                                                   /* skip zero */
+                                                   true, true);
 }
 
 bool 

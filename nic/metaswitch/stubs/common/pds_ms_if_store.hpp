@@ -34,7 +34,8 @@ public:
     // Ensure that ifindex is always the first member in any of the 
     // xxx_properties_t struct below sinhce the key() member function 
     // directly accesses this without checking for the struct type
-    struct phy_port_properties_t {
+
+    struct phy_port_properties_t { // Uplink L3 ports
         ms_ifindex_t ifindex;
         bool         admin_state;
         mac_addr_t   mac_addr;
@@ -43,15 +44,22 @@ public:
         bool         hal_created; // Intf created in HAL ?
         bool         switchport;  // Switchport ?
     };
-    struct vxlan_tunnel_properties_t {
+    struct vxlan_tunnel_properties_t { // All TEPs
         ms_ifindex_t ifindex;
         ip_addr_t tep_ip;
     };
-    struct vxlan_port_properties_t {
-        ms_ifindex_t ifindex;
-        ip_addr_t tep_ip;
+    struct vxlan_port_properties_t { // Type5 TEP, VNI combo
+        ms_ifindex_t   ifindex;
+        ip_addr_t      tep_ip;
+        pds_vnid_id_t  vni;
+        pds_tep_id_t   hal_tep_idx;
+        mac_addr_t     dmaci;        // Inner DMAC
+        vxlan_port_properties_t(ms_ifindex_t ifi, ip_addr_t tip, pds_vnid_id_t v, pds_tep_id_t ht) 
+            : ifindex(ifi), tep_ip(tip), vni(v), hal_tep_idx(ht) {
+            memset(dmaci, 0, ETH_ADDR_LEN);
+        }
     };
-    struct irb_properties_t {
+    struct irb_properties_t {  // Subnet SVI
         ms_ifindex_t ifindex;
         ms_bd_id_t bd_id;
     };

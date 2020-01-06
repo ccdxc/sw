@@ -5,6 +5,7 @@
  
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_port.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
@@ -110,9 +111,25 @@ NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
 // VXLAN port (TEP, VNI)
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vxlan_port_add_update(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
+    try {
+        li_vxlan_port vxport;
+        vxport.handle_add_upd_ips (vxlan_port_add_upd_ips);
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Vxlan Port Add Update processing failed %s", e.what());
+        vxlan_port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
+    }
+    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
+
 NBB_BYTE li_integ_subcomp_t::vxlan_port_delete(NBB_ULONG vxlan_port_ifindex) {
+    try {
+        li_vxlan_port vxport;
+        vxport.handle_delete (vxlan_port_ifindex);
+    } catch (Error& e) {
+        SDK_TRACE_ERR ("Vxlan Port Delete processing failed %s", e.what());
+    }
+    // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
 }
 

@@ -50,7 +50,12 @@ public:
    }; 
    void trigger_delete(void) override { 
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->vpc_store().erase (vrf_id);
+       auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+       if (vpc_obj->properties().hal_created) {
+           vpc_obj->properties().spec_invalid = true;
+       } else {
+           state_ctxt.state()->vpc_store().erase(vrf_id);
+       }
    }
    virtual ~vrf_input_params_t(void) {};
    virtual void init_direct_update() {

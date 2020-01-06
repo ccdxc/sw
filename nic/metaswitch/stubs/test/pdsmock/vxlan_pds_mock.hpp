@@ -17,6 +17,7 @@ public:
     }
     void expect_create() override {
         op_create_ = true; op_delete_ = false;
+        ++hal_oecmp_idx_;
         clear_batches();
         auto vxlan_input = dynamic_cast<vxlan_input_params_t*>(test_params()->test_input);
         generate_addupd_specs(*vxlan_input, expected_pds);
@@ -37,6 +38,15 @@ public:
         mock_pds_batch_async_fail_ = true;
         expect_create();
     }
+    void expect_pds_spec_op_fail(void) override {
+        ++hal_oecmp_idx_;
+        pds_mock_t::expect_pds_spec_op_fail();
+    }
+    void expect_pds_batch_commit_fail(void) override {
+        ++hal_oecmp_idx_;
+        pds_mock_t::expect_pds_batch_commit_fail();
+    }
+
     void cleanup(void) override {
         pds_mock_t::cleanup();
         num_tep_objs_ = 0;
@@ -44,6 +54,7 @@ public:
     }
 private:
     int           num_tep_objs_ = 0;
+    int           hal_oecmp_idx_ = 0;
     int           num_if_objs_ = 0;
     void generate_addupd_specs(const vxlan_input_params_t& input,
                                batch_spec_t& pds_batch);

@@ -18,6 +18,17 @@
 
 extern int l2f_proc_id;
 
+//-------------------------------------------------------------------
+//       MS obj                  PDS HAL Spec
+// a) Pathset containing
+//    L3 interfaces  -> Underlay ECMP NHs (referenced by TEP entries)
+// b) VXLAN Tunnel   -> TEP entry -> Overlay ECMP entry (ref by Type2 MAC,IP)
+// c) L2 VXLAN Port  -> Unused (since Type 2 VNI comes from Egress BD)
+// d) L3 VXLAN Port  -> TEP,VNI entry (referenced by Type5 Overlay ECMP)
+// e) Pathset containing
+//    L3 VXLAN Ports -> Overlay ECMP entry (ref by Type5 Prefix routes)
+//--------------------------------------------------------------------
+
 namespace pds_ms {
 
 void 
@@ -33,8 +44,10 @@ l2f_local_mac_ip_add (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
         SDK_TRACE_DEBUG("Advertise MAC learn for BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
                         subnet_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
     } else {
-        SDK_TRACE_DEBUG("Advertise IP-MAC learn for BD %d IP %s MAC %s LIF 0x%x MS-LIF 0x%x",
-                        subnet_id, ipaddr2str(&ip), macaddr2str(mac), lif_ifindex, ms_lif_index);
+        SDK_TRACE_DEBUG("Advertise IP-MAC learn for BD %d IP %s MAC %s"
+                        " LIF 0x%x MS-LIF 0x%x",
+                        subnet_id, ipaddr2str(&ip), macaddr2str(mac),
+                        lif_ifindex, ms_lif_index);
     }
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
@@ -148,7 +161,7 @@ void l2f_mai_t::resolve_teps_(state_t* state) {
     }
     // For now assuming only a single TEP to get ECMP index
     store_info_.hal_oecmp_idx = 
-        store_info_.tep_obj_list.back()->properties().hal_oecmp_idx;
+        store_info_.tep_obj_list.back()->hal_oecmp_idx_guard->idx();
 }
 
 pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
@@ -281,7 +294,8 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         // Add to batch
         for (auto ip_address: store_info_.mac_obj->out_of_seq_ip) {
             ips_info_.ip_address = ip_address;
-            SDK_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s", ipaddr2str(&ip_address));
+            SDK_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s",
+                            ipaddr2str(&ip_address));
             add_pds_mapping_spec_(pds_bctxt_guard.get());
         }
 
@@ -291,7 +305,8 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         MAC_ADDR_COPY(l_mac, update_fdb_mac->mac_address);
 
         cookie_uptr_->send_ips_reply = 
-            [update_fdb_mac, l_bd_id, l_mac, l_op_create] (bool pds_status, bool ips_mock) -> void {
+            [update_fdb_mac, l_bd_id, l_mac, l_op_create] (bool pds_status,
+                                                           bool ips_mock) -> void {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
                 // ----------------------------------------------------------------
@@ -304,7 +319,8 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                         // Enter thread-safe context to access/modify global state
                         auto state_ctxt = state_t::thread_context();
                         // Create failed - Reset the HAL created flag
-                        auto bd_obj = state_ctxt.state()->bd_store().get(update_fdb_mac->bd_id.bd_id);
+                        auto bd_obj = state_ctxt.state()->bd_store().
+                            get(update_fdb_mac->bd_id.bd_id);
                         if (!bd_obj) break;
                         auto mac_obj = bd_obj->mac_store().get({l_bd_id, l_mac});
                         if (!mac_obj) break;
@@ -419,7 +435,8 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
             SDK_TRACE_DEBUG("MS BD %d MAC %s: MAC Del Rcvd Async PDS response %s",
-                            l_bd_id, macaddr2str(l_mac), (pds_status) ? "Success" : "Failure");
+                            l_bd_id, macaddr2str(l_mac),
+                            (pds_status) ? "Success" : "Failure");
 
         };
     // All processing complete, only batch commit remains - 
@@ -472,7 +489,8 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             return;
         }
 
-        // TODO - Cannot differentiate between Create and Update for Remote Mapping IP entry
+        // TODO - Cannot differentiate between Create and Update for 
+        // Remote Mapping IP entry
         // Assume Create
         op_create_ = true;
         resolve_teps_(state_ctxt.state());
@@ -495,8 +513,10 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async PDS response %s",
-                            l_bd_id, ipaddr2str(&l_ip), (pds_status) ? "Success" : "Failure");
+            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
+                            " PDS response %s",
+                            l_bd_id, ipaddr2str(&l_ip),
+                            (pds_status) ? "Success" : "Failure");
 
         };
 
@@ -546,8 +566,10 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async PDS response %s",
-                            l_bd_id, ipaddr2str(&l_ip), (pds_status) ? "Success" : "Failure");
+            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
+                            " PDS response %s",
+                            l_bd_id, ipaddr2str(&l_ip),
+                            (pds_status) ? "Success" : "Failure");
 
         };
 

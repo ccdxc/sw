@@ -22,6 +22,8 @@ public:
         uint32_t        vrf_id;
         pds_vpc_spec_t  vpc_spec;
         bool            hal_created = false; // Is the VPC created in HAL
+        bool            spec_invalid = false; // Has the VPC Spec been deleted
+                                              // mgmt
 
         properties_t(const pds_vpc_spec_t& vpc_spec_) 
             : vrf_id(vpc_spec_.key.id), vpc_spec(vpc_spec_) {};

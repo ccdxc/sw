@@ -27,23 +27,13 @@ tep_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
     tep_obj_t::set_slab(slabs_[slab_id].get());
 }
 
-const tep_dmac_t* tep_obj_t::dmac_info(const mac_addr_wr_t& mac) const
+tep_obj_t::tep_obj_t(ip_addr_t tep_ip_, pds_nexthop_group_id_t hal_uecmp_idx_,
+                     pds_tep_id_t hal_tep_idx_) 
+        : prop_(tep_ip_, hal_uecmp_idx_, hal_tep_idx_) 
 {
-    auto it = dmacs_.find(mac);
-    if (it == dmacs_.end()) {
-        return nullptr;
-    }
-    return &(it->second);
-}
-
-bool tep_obj_t::dmac_info(const mac_addr_wr_t& mac, tep_dmac_t* out_dmac_entry) const
-{
-    auto it = dmacs_.find(mac);
-    if (it == dmacs_.end()) {
-        return false;
-    }
-    *out_dmac_entry = it->second;
-    return true;
+    hal_oecmp_idx_guard = std::make_shared<ecmp_idx_guard_t>();
+    SDK_TRACE_DEBUG("Allocated HAL Overlay ECMP Index %d for TEP %s",
+                    hal_oecmp_idx_guard->idx(), ipaddr2str(&tep_ip_));
 }
 
 void tep_obj_t::update_store (state_t* state, bool op_delete)
@@ -53,7 +43,7 @@ void tep_obj_t::update_store (state_t* state, bool op_delete)
         SDK_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %ld, "
                          "hal_uecmp_idx_ %ld, hal_oecmp_idx_ %ld", 
                          ipaddr2str(&prop_.tep_ip), prop_.hal_tep_idx, 
-                         prop_.hal_uecmp_idx, prop_.hal_oecmp_idx);
+                         prop_.hal_uecmp_idx, hal_oecmp_idx_guard->idx());
     } else { 
         state->tep_store().erase(this->key());
         SDK_TRACE_DEBUG ("Delete TEP %s from store", 

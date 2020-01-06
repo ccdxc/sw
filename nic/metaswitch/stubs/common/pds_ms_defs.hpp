@@ -9,7 +9,7 @@
 #include <nbase.h>
 
 namespace pds_ms {
-using ms_ps_id_t = NBB_CORRELATOR; // Pathset ID
+using ms_ps_id_t = uint32_t; // Pathset ID
 using ms_ifindex_t = NBB_ULONG;
 using ms_bd_id_t = NBB_ULONG;
 }

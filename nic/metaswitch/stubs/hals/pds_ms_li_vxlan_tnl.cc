@@ -15,6 +15,17 @@
 
 extern NBB_ULONG li_proc_id;
 
+//-------------------------------------------------------------------
+//       MS obj                  PDS HAL Spec
+// a) Pathset containing
+//    L3 interfaces  -> Underlay ECMP NHs (referenced by TEP entries)
+// b) VXLAN Tunnel   -> TEP entry -> Overlay ECMP entry (ref by Type2 MAC,IP)
+// c) L2 VXLAN Port  -> Unused (since Type 2 VNI comes from Egress BD)
+// d) L3 VXLAN Port  -> TEP,VNI entry (referenced by Type5 Overlay ECMP)
+// e) Pathset containing
+//    L3 VXLAN Ports -> Overlay ECMP entry (ref by Type5 Prefix routes)
+//--------------------------------------------------------------------
+
 namespace pds_ms {
 
 void li_vxlan_tnl::fetch_store_info_(pds_ms::state_t* state) {
@@ -71,6 +82,7 @@ void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_
 void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     if (likely (store_info_.tun_if_obj == nullptr)) {
         // Create new If Object but do not save it in the Global State yet
+        // This automatically allocates a HAL Overlay ECMP table index 
         std::unique_ptr<if_obj_t> new_if_obj 
             (new if_obj_t(if_obj_t::vxlan_tunnel_properties_t
                               {ips_info_.if_index, 
@@ -88,10 +100,11 @@ void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     }
 
     // Create new Tep Object but do not save it in the Global State yet
-    // Use the MS Tunnel IfIndex as the HAL index for ECMP and TEP tables
+    // Use the MS Tunnel IfIndex as the HAL index for TEP table
+    // ECMP Table index is allocated in constructor for every new TEP object
     std::unique_ptr<tep_obj_t> new_tep_obj 
         (new tep_obj_t(ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
-                       ips_info_.if_index, ips_info_.if_index));
+                       ips_info_.if_index));
     // Update the local store info context so that the make_pds_spec 
     // refers to the latest fields
     store_info_.tep_obj = new_tep_obj.get(); 
@@ -115,6 +128,8 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
 
     // Create a new object with the updated fields
     // but do not save it in the Global State yet
+    // This does not allocate a new Overlay ECMP index
+    // since the old obj is copied to the new obj first
     std::unique_ptr<tep_obj_t> new_tep_obj 
         (new tep_obj_t(*(store_info_.tep_obj)));
     new_tep_obj->properties().hal_uecmp_idx = ips_info_.hal_uecmp_idx;
