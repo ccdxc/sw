@@ -113,6 +113,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
   healthyNaplesCount = 0;
   unknownNaplesCount = 0;
+  unhealthyNaples: string[] = [];
 
   themeColor: string = '#b592e3';
   backgroundIcon: Icon = {
@@ -198,6 +199,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         titleFontSize: 14,
         bodyFontFamily: 'Fira Sans Condensed',
         bodyFontSize: 13,
+        footerFontStyle: 'normal',
         callbacks: {
           label: function(tooltipItem, data) {
             const dataset = data.datasets[tooltipItem.datasetIndex];
@@ -211,6 +213,23 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
             } else {
               return rounded + '% of NSCs are not reachable';
             }
+          },
+          footer: () => {
+            const maxNames = 3;
+            const length = this.unhealthyNaples.length || 0;
+            const objectLabel = length === 1 ? 'DSC' : 'DSCs';
+            const displayArr = [];
+            if (length > 0) {
+              displayArr.push(`${length} unhealthy ${objectLabel}:`);
+            }
+            for (let i = 0; i < length && i < maxNames; i++) {
+              displayArr.push(this.unhealthyNaples[i]);
+            }
+            if (length > maxNames) {
+              displayArr.pop();
+              displayArr.push('...');
+            }
+            return displayArr;
           }
         }
       },
@@ -424,13 +443,17 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     let rejected = 0; let admitted = 0; let pending = 0;
     this.healthyNaplesCount = 0;
     this.unknownNaplesCount = 0;
+    this.unhealthyNaples = [];
     const admittedNics = [];
     this.naples.forEach((naple) => {
       if (Utility.isNaplesNICHealthy(naple)) {
         this.healthyNaplesCount += 1;
       } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
         this.unknownNaplesCount += 1;
+      } else {
+        this.unhealthyNaples.push(naple.meta.name);
       }
+
       if (!Utility.isNICConditionNotAdmitted(naple)) {
         admittedNics.push(naple);
       }
