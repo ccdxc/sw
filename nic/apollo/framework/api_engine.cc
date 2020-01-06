@@ -1179,8 +1179,9 @@ api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
 
 sdk_ret_t
 api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
-    if (!msgs)
+    if (!msgs) {
         return sdk::SDK_RET_OK;
+    }
 
     if (g_pds_state.vpp_ipc_msg_mock() == false) {
         sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG,
@@ -1208,11 +1209,16 @@ api_engine::batch_commit(api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg) {
         goto error;
     }
 
+#if 0
+//#ifdef APULU
     // if this API batch contains any config messages that are of interest
     // to other components, send a batched config msg now
-    ret = pds_msg_send_(batch_ctxt_.pds_msgs);
-    if (ret != SDK_RET_OK)
-        return ret;
+    if (batch_ctxt_.pds_msgs) {
+        pds_msg_send_(batch_ctxt_.pds_msgs);
+        return sdk::SDK_RET_IN_PROGRESS;
+    }
+//#endif
+#endif
 
     // this batch of APIs can be processed further as we don't need to wait to
     // hear from other components

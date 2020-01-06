@@ -1,8 +1,8 @@
 //---------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// PDS-MS Implementation of Metaswitch LI stub integration 
+// PDS-MS Implementation of Metaswitch LI stub integration
 //---------------------------------------------------------------
- 
+
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_port.hpp"
@@ -23,9 +23,9 @@ using pds_ms::Error;
 using pds_ms::vrfname_2_vrfid;
 using pds_ms::in_ipx_addr_t;
 
-li_integ_subcomp_t* li_is () 
+li_integ_subcomp_t* li_is ()
 {
-    static li_integ_subcomp_t g_li_is; 
+    static li_integ_subcomp_t g_li_is;
     return &g_li_is;
 }
 
@@ -95,7 +95,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_t
     // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
-     
+
 NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
     try {
         li_vxlan_tnl vxtnl;
@@ -148,16 +148,16 @@ NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex) {
 // Software interface (Loopback and Dummy LIFs)
 //-------------------------------------------------
 NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swif_add_upd_ips) {
-    SDK_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d", 
-                   swif_add_upd_ips->id.if_index, swif_add_upd_ips->id.if_name, 
+    SDK_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d",
+                   swif_add_upd_ips->id.if_index, swif_add_upd_ips->id.if_name,
                    swif_add_upd_ips->softwif_type);
     return ATG_OK;
 }
 
-NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index, 
-                                            const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN], 
+NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
+                                            const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN],
                                             NBB_ULONG softwif_type) {
-    SDK_TRACE_INFO("Loopback interface delete IfIndex 0x%lx Ifname %s SwType %d", 
+    SDK_TRACE_INFO("Loopback interface delete IfIndex 0x%lx Ifname %s SwType %d",
                    if_index, if_name, softwif_type);
     return ATG_OK;
 }
@@ -165,7 +165,7 @@ NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
 //--------------------------------------------------
 // Software interface IP (Loopback)
 //-------------------------------------------------
-static void 
+static void
 ms_to_lnx_ipaddr (const ATG_INET_ADDRESS& in_ip, in_ipx_addr_t* out_ip)
 {
     switch (in_ip.type) {
@@ -187,17 +187,17 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {
     try {
-        in_ipx_addr_t ip; 
+        in_ipx_addr_t ip;
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
 
         char buf[INET6_ADDRSTRLEN];
-        SDK_TRACE_INFO("Loopback interface IP address set request %s %s", 
+        SDK_TRACE_INFO("Loopback interface IP address set request %s %s",
                        if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
 
-        if (ip.af == IP_AF_IPV6) {
+        if (ip.af == AF_INET6) {
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
-        } 
+        }
         pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Loopback interface IP address add failed %s", e.what());
@@ -210,17 +210,17 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {
     try {
-        in_ipx_addr_t ip; 
+        in_ipx_addr_t ip;
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
 
         char buf[INET6_ADDRSTRLEN];
-        SDK_TRACE_INFO("Loopback interface IP address delete request %s %s", 
+        SDK_TRACE_INFO("Loopback interface IP address delete request %s %s",
                        if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
 
-        if (ip.af == IP_AF_IPV6) {
+        if (ip.af == AF_INET6) {
             SDK_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
-        } 
+        }
         pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len, true);
     } catch (Error& e) {
         SDK_TRACE_ERR ("Loopback interface IP address delete failed %s", e.what());

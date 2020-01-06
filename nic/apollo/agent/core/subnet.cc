@@ -29,7 +29,9 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
-    if (!ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
+    if ((spec->v6_prefix.addr.af == IP_AF_IPV6) &&
+        (vpc_spec->v6_prefix.addr.af == IP_AF_IPV6) &&
+        !ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid",
                       spec->key.id);
         return SDK_RET_INVALID_ARG;

@@ -129,14 +129,14 @@ policy::init_config(api_ctxt_t *api_ctxt) {
     spec = &api_ctxt->api_params->policy_spec;
     this->af_ = spec->af;
     this->dir_ = spec->direction;
-    memcpy(&this->key_, &spec->key,
-           sizeof(pds_policy_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_policy_key_t));
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 policy::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming security policy %u", key_.id);
+    PDS_TRACE_DEBUG("Programming security policy %u, af %u, dir %u",
+                    key_.id, af_, dir_);
     return impl_->program_hw(this, obj_ctxt);
 }
 

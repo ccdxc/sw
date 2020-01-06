@@ -65,7 +65,7 @@ using sdk::asic::pd::queue_credit_t;
 //----------------------------------------------------------------------------
 // convert IP address spec in proto to ip_addr
 //----------------------------------------------------------------------------
-static inline void
+static inline sdk_ret_t
 ipaddr_proto_spec_to_api_spec (ip_addr_t *out_ipaddr,
                                const types::IPAddress &in_ipaddr)
 {
@@ -79,10 +79,10 @@ ipaddr_proto_spec_to_api_spec (ip_addr_t *out_ipaddr,
                in_ipaddr.v6addr().c_str(),
                IP6_ADDR8_LEN);
     } else {
-        return;
+        //SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
     }
-
-    return;
+    return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
@@ -90,14 +90,20 @@ ippfx_proto_spec_to_api_spec (ip_prefix_t *ip_pfx,
                               const types::IPPrefix& in_ippfx)
 {
     ip_pfx->len = in_ippfx.len();
-    if (((in_ippfx.addr().af() == types::IP_AF_INET) &&
-             (ip_pfx->len > 32)) ||
-        ((in_ippfx.addr().af() == types::IP_AF_INET6) &&
-             (ip_pfx->len > 128))) {
-        return SDK_RET_INVALID_ARG;
+    if (in_ippfx.addr().af() == types::IP_AF_INET) {
+        if (ip_pfx->len > 32) {
+            return SDK_RET_INVALID_ARG;
+        }
+    } else if (in_ippfx.addr().af() == types::IP_AF_INET6) {
+        if (ip_pfx->len > 128) {
+            return SDK_RET_INVALID_ARG;
+        }
     } else {
-        ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
+        //SDK_ASSERT(FALSE);
+        ip_pfx->addr.af = IP_AF_NIL;
+        return SDK_RET_INVALID_ARG;
     }
+    ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
     return SDK_RET_OK;
 }
 
@@ -112,15 +118,19 @@ ippfx_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
     ippfx_proto_spec_to_api_spec(&ippfx, in_ippfx);
     ip_prefix_ip_low(&ippfx, &lo_addr);
     ip_prefix_ip_high(&ippfx, &hi_addr);
-
     if (ippfx.addr.af == IP_AF_IPV4) {
         ip_range->af = IP_AF_IPV4;
         ip_range->ip_lo.v4_addr = lo_addr.addr.v4_addr;
         ip_range->ip_hi.v4_addr = hi_addr.addr.v4_addr;
-    } else {
+    } else if (ippfx.addr.af == IP_AF_IPV6) {
         ip_range->af = IP_AF_IPV6;
-        memcpy(&ip_range->ip_lo.v6_addr, &lo_addr.addr.v6_addr, sizeof(ipv6_addr_t));
-        memcpy(&ip_range->ip_hi.v6_addr, &hi_addr.addr.v6_addr, sizeof(ipv6_addr_t));
+        memcpy(&ip_range->ip_lo.v6_addr, &lo_addr.addr.v6_addr,
+               sizeof(ipv6_addr_t));
+        memcpy(&ip_range->ip_hi.v6_addr, &hi_addr.addr.v6_addr,
+               sizeof(ipv6_addr_t));
+    } else {
+        SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
 }
@@ -135,6 +145,9 @@ ipsubnet_proto_spec_to_ipvx_range (ipvx_range_t *ip_range,
     } else if (in_ipsubnet.has_ipv6subnet()) {
         return ippfx_proto_spec_to_ipvx_range(ip_range,
                                               in_ipsubnet.ipv6subnet());
+    } else {
+        SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
 }
@@ -429,6 +442,7 @@ pds_af_proto_spec_to_api_spec (uint8_t *af, const types::IPAF &addrfamily)
         *af = IP_AF_IPV6;
     } else {
         PDS_TRACE_ERR("IP_AF_NONE passed in proto");
+        SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -872,6 +886,8 @@ pds_meter_api_spec_to_proto (pds::MeterSpec *proto_spec,
         proto_spec->set_af(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
+    } else {
+        SDK_ASSERT(FALSE);
     }
     for (uint32_t rule = 0; rule < api_spec->num_rules; rule++) {
         pds::MeterRuleSpec *proto_rule_spec = proto_spec->add_rules();
@@ -1692,7 +1708,8 @@ pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
 
 static inline sdk_ret_t
 pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
-                                         uint32_t rule_id, rule_match_t *match,
+                                         uint32_t rule_id, uint8_t af,
+                                         rule_match_t *match,
                                          const pds::SecurityRule &proto_rule)
 {
     if (unlikely(proto_rule.has_match() == false)) {
@@ -1733,8 +1750,9 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         match->l3_match.src_match_type = IP_MATCH_TAG;
         match->l3_match.src_tag = proto_l3_match.srctag();
     } else {
-        // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
-        // TODO: should we set the IP_AF_XXX ?
+        // TODO: introduce IP_MATCH_NONE and clean this up
+        match->l3_match.src_match_type = IP_MATCH_PREFIX;
+        match->l3_match.src_ip_pfx.addr.af = af;
     }
     if (proto_l3_match.has_dstprefix()) {
         match->l3_match.dst_match_type = IP_MATCH_PREFIX;
@@ -1748,8 +1766,9 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         match->l3_match.dst_match_type = IP_MATCH_TAG;
         match->l3_match.dst_tag = proto_l3_match.dsttag();
     } else {
-        // since the memory is zero-ed out, this is 0.0.0.0/0 or 0::0/0
-        // TODO: should we set the IP_AF_XXX ?
+        // TODO: introduce IP_MATCH_NONE and clean this up
+        match->l3_match.dst_match_type = IP_MATCH_PREFIX;
+        match->l3_match.dst_ip_pfx.addr.af = af;
     }
 
     if (proto_rule.match().has_l4match() &&
@@ -1853,8 +1872,8 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
                                       pds_proto_action_to_rule_action(proto_rule.action());
-        ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key.id,
-                                                      i+ 1,
+        ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key.id, i + 1,
+                                                      api_spec->af,
                                                       &api_spec->rules[i].match,
                                                       proto_rule);
         if (unlikely(ret != SDK_RET_OK)) {
@@ -1889,6 +1908,8 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         proto_spec->set_addrfamily(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_addrfamily(types::IP_AF_INET6);
+    } else {
+        SDK_ASSERT(FALSE);
     }
     if (api_spec->direction == RULE_DIR_INGRESS) {
         proto_spec->set_direction(types::RULE_DIR_INGRESS);
@@ -1908,9 +1929,13 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
 
         switch (api_rule->match.l3_match.src_match_type) {
         case IP_MATCH_PREFIX:
-            ippfx_api_spec_to_proto_spec(
-                proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
-                &api_rule->match.l3_match.src_ip_pfx);
+            if ((api_rule->match.l3_match.src_ip_pfx.len) &&
+                ((api_rule->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV4) ||
+                 (api_rule->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV6))) {
+                ippfx_api_spec_to_proto_spec(
+                    proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
+                    &api_rule->match.l3_match.src_ip_pfx);
+            }
             break;
         case IP_MATCH_RANGE:
             iprange_api_spec_to_proto_spec(
@@ -1927,9 +1952,13 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
 
         switch (api_rule->match.l3_match.dst_match_type) {
         case IP_MATCH_PREFIX:
-            ippfx_api_spec_to_proto_spec(
-                proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
-                &api_rule->match.l3_match.dst_ip_pfx);
+            if ((api_rule->match.l3_match.dst_ip_pfx.len) &&
+                ((api_rule->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV4) ||
+                 (api_rule->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV6))) {
+                ippfx_api_spec_to_proto_spec(
+                    proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
+                    &api_rule->match.l3_match.dst_ip_pfx);
+            }
             break;
         case IP_MATCH_RANGE:
             iprange_api_spec_to_proto_spec(
@@ -2458,6 +2487,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         break;
 
     default:
+        SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
     api_spec->enable_pbr = proto_spec.enablepbr();
@@ -2548,6 +2578,8 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         proto_spec->set_af(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
+    } else {
+        SDK_ASSERT(FALSE);
     }
     proto_spec->set_enablepbr(api_spec->enable_pbr);
 
