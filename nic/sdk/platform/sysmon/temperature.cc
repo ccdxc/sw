@@ -56,7 +56,8 @@ checktemperature(void)
     static int max_die_temp;
     static int max_local_temp;
     static int max_hbm_temp;
-    static sysmond_hbm_threshold_event_t hbm_event;
+    static sysmond_hbm_threshold_event_t prev_hbmtemp_event;
+    sysmond_hbm_threshold_event_t hbmtemp_event;
     sdk::platform::sensor::system_temperature_t temperature;
 
     ret = read_temperatures(&temperature);
@@ -94,19 +95,23 @@ checktemperature(void)
         if (startingfrequency_1100 == 1) {
             changefrequency(temperature.hbmtemp);
         }
-        if (temperature.hbmtemp >= g_sysmon_cfg.catalog->hbmtemperature_threshold()) {
+        if ((temperature.hbmtemp >= g_sysmon_cfg.catalog->hbmtemperature_threshold()) &&
+            (prev_hbmtemp_event != SYSMOND_HBM_TEMP_ABOVE_THRESHOLD)) {
             SDK_OBFL_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
                        temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
             SDK_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
                        temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
-            hbm_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
-        }
-        if (hbm_event == SYSMOND_HBM_TEMP_ABOVE_THRESHOLD) {
-            if (temperature.hbmtemp < g_sysmon_cfg.catalog->hbmtemperature_threshold())
-            hbm_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
+            hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
+            prev_hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
+        } else if ((prev_hbmtemp_event == SYSMOND_HBM_TEMP_ABOVE_THRESHOLD) &&
+                   (temperature.hbmtemp < g_sysmon_cfg.catalog->hbmtemperature_threshold())) {
+            hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
+            prev_hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
+        } else {
+            hbmtemp_event = SYSMOND_HBM_TEMP_NONE;
         }
         if (g_sysmon_cfg.temp_event_cb) {
-            g_sysmon_cfg.temp_event_cb(&temperature, hbm_event);
+            g_sysmon_cfg.temp_event_cb(&temperature, hbmtemp_event);
         }
     } else {
         SDK_TRACE_ERR("Reading temperature failed");
