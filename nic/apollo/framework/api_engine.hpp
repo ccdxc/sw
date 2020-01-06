@@ -589,7 +589,7 @@ private:
     /// \brief    helper function to send batch of config messages to other
     ///           components (e.g., VPP) and receive a response
     /// \param[in] msgs    batched msg to be sent
-    static void pds_msg_send_(pds_msg_list_t *msgs);
+    static sdk_ret_t pds_msg_send_(pds_msg_list_t *msgs);
 
 private:
     friend api_obj_ctxt_t;

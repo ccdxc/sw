@@ -35,12 +35,12 @@ vpp_thread_create (void)
 {
     event::event_thread *vpp;
 
-    vpp = event::event_thread::factory("vpp", PDS_IPC_ID_VPP,
-              THREAD_ROLE_CONTROL, 0x0, vpp_init_func,
-              NULL, NULL,
-              sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-              sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-              NULL);
+    vpp = event::event_thread::factory(
+        "vpp", PDS_IPC_ID_VPP, THREAD_ROLE_CONTROL, 0x0,
+        vpp_init_func, NULL, NULL,
+        sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+        sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+        NULL);
     SDK_ASSERT(vpp != NULL);
     vpp->start(vpp);
 
