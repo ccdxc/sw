@@ -63,7 +63,7 @@ NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd
         li_vrf_t vrf;
         vrf.handle_add_upd_ips (vrf_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("IRB Add Update processing failed %s", e.what());
+        SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
         vrf_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -75,7 +75,7 @@ NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_
         li_vrf_t vrf;
         vrf.handle_delete(vrf_name, vrf_len);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("IRB Add Update processing failed %s", e.what());
+        SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
     }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;

@@ -40,6 +40,7 @@ NBB_ULONG get_initial_mac_address(NBB_BYTE (&initial_mac)[ATG_L2_MAC_ADDR_LEN],
         return 0;
     }
     mac_str_to_addr((char*) value.c_str(), initial_mac);
+    SDK_TRACE_INFO ("FRU Read NumMacs %d MAC %s", total_num_macs, value.c_str());
 
     return total_num_macs;
 }

@@ -46,13 +46,41 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     SDK_ASSERT (add_upd_ecmp_ips->pathset_id.correlator2 == 0);
     NBB_CORR_GET_VALUE (ips_info_.pathset_id, add_upd_ecmp_ips->pathset_id);
 
+    bool process = true;
     auto list_p = &add_upd_ecmp_ips->next_hop_objects;
+    ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop;
 
     for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, list_p);
          next_hop != NULL;
          next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, list_p, next_hop)) {
 
-        if (next_hop->next_hop_properties.destination_type != 
+        if (next_hop->next_hop_properties.destination_type == 
+            ATG_NHPI_NEXT_HOP_DEST_NH) {
+                // Indirect NH Needed for VXLAN Tunnel - 
+                // Copy to programmed to make MS think it is programmed in HW
+                NBB_MEMSET(&appended_next_hop, 0, sizeof(ATG_NHPI_APPENDED_NEXT_HOP));
+
+                appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
+                appended_next_hop.next_hop_properties = next_hop->next_hop_properties;
+                NTL_OFF_LIST_APPEND(add_upd_ecmp_ips,
+                                    &add_upd_ecmp_ips->programmed_next_hop_objects,
+                                    appended_next_hop.total_length,
+                                    (NBB_VOID *)&appended_next_hop,
+                                    NULL);
+                // Inherit the lower level DP correlator
+                add_upd_ecmp_ips->dp_correlator =
+                    next_hop->next_hop_properties.indirect_next_hop_properties.
+                    lower_level_dp_correlator;
+                uint32_t corr;
+                NBB_CORR_GET_VALUE(corr, next_hop->next_hop_properties.
+                                   indirect_next_hop_properties.
+                                   lower_level_dp_correlator);
+                SDK_TRACE_VERBOSE("Indirect NH Copy lower level DP Correlator %d",
+                                  corr);
+                // Skip processing Indirect NH
+                process = false;
+        }
+        else if (next_hop->next_hop_properties.destination_type != 
             ATG_NHPI_NEXT_HOP_DEST_PORT) {
             // Ignore other types of next-hops
             SDK_TRACE_DEBUG("Ignoring non-direct nexthops");
@@ -74,7 +102,7 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     ips_info_.num_deleted_nh = 
         NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
                              &add_upd_ecmp_ips->deleted_next_hop_objects);
-    return true;
+    return process;
 }
 
 void hals_ecmp_t::fetch_store_info_(state_t* state) {
@@ -149,7 +177,8 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             li_vxlan_port vxp;
             vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
                                  false /* Op Update */);
-            SDK_TRACE_DEBUG("Change DMAC for Type5 TEP %s VNI %d L3 VXLAN Port 0x%x to %s",
+            SDK_TRACE_DEBUG("Change DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
+                            " 0x%x to %s",
                             ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                             vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
         }
@@ -161,7 +190,8 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
     }
 }
 
-pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(state_t::context_t& state_ctxt) {
+pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(state_t::context_t&
+                                                             state_ctxt) {
     pds_nexthop_group_spec_t nhgroup_spec = {0};
     nhgroup_spec.key = make_pds_nhgroup_key_();
     nhgroup_spec.type = ips_info_.pds_nhgroup_type;
@@ -173,7 +203,8 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(state_t::context_t&
     return nhgroup_spec;
 }
 
-pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(state_t::context_t& state_ctxt) {
+pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(state_t::context_t&
+                                                         state_ctxt) {
     pds_batch_ctxt_guard_t bctxt_guard_;
     sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(cookie_uptr_); // Cookie should have been alloc before
@@ -251,12 +282,14 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                 // MS will anyway program a separate NH Group that does not have
                 // the deleted nexthops when the routing protocol converges and
                 // then re-program each TEP with the new ECMP group
-                SDK_TRACE_ERR("MS Underlay ECMP %ld Update - Number of nexthops %d needs to"
-                              " be half of previous number %d - Ignore this update",
-                              ips_info_.pathset_id, num_nexthops, prev_num_nexthops); 
+                SDK_TRACE_ERR("MS Underlay ECMP %ld Update - Number of nexthops"
+                              " %d needs to be half of previous number %d -"
+                              " Ignore this update", ips_info_.pathset_id,
+                              num_nexthops, prev_num_nexthops); 
                 return;
             }
-            SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Update IPS (optimization)", ips_info_.pathset_id);
+            SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Update IPS (optimization)",
+                             ips_info_.pathset_id);
         }
     }
 
@@ -277,7 +310,9 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                 SDK_TRACE_DEBUG ("MS Overlay ECMP %ld: Create IPS Num nexthops %ld", 
                                  ips_info_.pathset_id, ips_info_.nexthops.size());
             } else {
-                SDK_TRACE_ERR ("MS Overlay ECMP %ld: Update IPS Num nexthops %ld - NOT SUPPORTED", 
+                // TODO: Handle Overlay ECMP Update if needed after checking with MS
+                SDK_TRACE_ERR ("MS Overlay ECMP %ld: Update IPS Num nexthops %ld"
+                               " NOT SUPPORTED", 
                                ips_info_.pathset_id, ips_info_.nexthops.size());
                 return;
             }
@@ -292,7 +327,8 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     auto l_overlay = (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_OVERLAY_ECMP);
     auto pathset_id = ips_info_.pathset_id;
     cookie_uptr_->send_ips_reply = 
-        [add_upd_ecmp_ips, pathset_id, l_overlay] (bool pds_status, bool ips_mock) -> void {
+        [add_upd_ecmp_ips, pathset_id, l_overlay] (bool pds_status,
+                                                   bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
@@ -401,13 +437,16 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         // Cannot defer Nexthop updates
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-        store_info_.pathset_obj = state_ctxt.state()->pathset_store().get(ips_info_.pathset_id);
+        store_info_.pathset_obj = state_ctxt.state()->pathset_store().
+                                            get(ips_info_.pathset_id);
         if (store_info_.pathset_obj != nullptr) {
             ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
-            SDK_TRACE_DEBUG ("MS Overlay ECMP %ld: Delete IPS", ips_info_.pathset_id);
+            SDK_TRACE_DEBUG ("MS Overlay ECMP %ld: Delete IPS",
+                             ips_info_.pathset_id);
         } else {
             ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
-            SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Delete IPS", ips_info_.pathset_id);
+            SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Delete IPS",
+                             ips_info_.pathset_id);
         }
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);

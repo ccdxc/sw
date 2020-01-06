@@ -238,6 +238,18 @@ pds_ms_rtm_create (pds_ms_config_t *conf)
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
     pds_ms_row_update_rtm_mj (conf);
 
+    // rtmMjTable -AMB_RTM_ARI_PARTNER_FTM
+    conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;
+    conf->slave_type            = AMB_RTM_ARI_PARTNER_FTM;
+    conf->admin_status          = AMB_ADMIN_STATUS_UP;
+    pds_ms_row_update_rtm_mj (conf);
+
+    // rtmMjTable -AMB_RTM_ARI_PARTNER_PSM 
+    conf->slave_entity_index    = PDS_MS_PSM_ENT_INDEX;
+    conf->slave_type            = AMB_RTM_ARI_PARTNER_PSM;
+    conf->admin_status          = AMB_ADMIN_STATUS_UP;
+    pds_ms_row_update_rtm_mj (conf);
+
     // rtmEntityTable - Admin UP                                
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
     pds_ms_row_update_rtm (conf);

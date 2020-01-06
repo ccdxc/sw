@@ -50,7 +50,7 @@ enum BGPAfi {
   BGP_AFI_NONE  = 0;
   BGP_AFI_IPV4  = 1;
   BGP_AFI_IPV6  = 2;
-  BGP_AFI_L2VPN = 3;
+  BGP_AFI_L2VPN = 25;
 }
 
 // BGP sub-address family identitfier
@@ -231,8 +231,11 @@ message BGPPeerAf {
   BGPAfi          Afi         = 7 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
   // BGP Sub-Address family
   BGPSafi         Safi        = 8 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
+  // Disable AFI SAFI
+  AMBBool         Disable     = 9 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
+
   // Enforce this router to set self as next-hop for advertised routes
-  AMBBool         NHself      = 9 [(venice.pdsaFields) = {Field: "next_hop_self"}];
+  AMBBool         NHself      = 10 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // Originate a default route to this peer
-  AMBBool         DefaultOrig = 10 [(venice.pdsaFields) = {Field: "originate_default"}];
+  AMBBool         DefaultOrig = 11 [(venice.pdsaFields) = {Field: "originate_default"}];
 }

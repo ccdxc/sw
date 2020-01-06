@@ -46,13 +46,11 @@ parse_json_config (test_config_t *conf, uint8_t node) {
 
     // read config
     read_json (json_cfg, pt);
-    try
-    {
+    try {
         // if there is test-config string, read it
         test_config = pt.get <uint32_t>("test-config", 0);
     }
-    catch (std::exception const&  ex)
-    {
+    catch (std::exception const&  ex) {
         // Otherwise, test config is not required
         fprintf(stderr, "Config file %s doesn't have test-config enabled!\n",
                 file.c_str());
@@ -64,14 +62,19 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     }
     g_node_id = test_config;
 
+    try {
     value                   = pt.get <std::string>("local.ip","");
-    conf->local_ip_addr     = inet_network (value.c_str());
+    conf->local_ip_addr     = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.lo-ip","");
+    conf->local_lo_ip_addr  = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.gwip","");
-    conf->local_gwip_addr   = inet_network (value.c_str());
+    conf->local_gwip_addr   = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.ac-ip","");
-    conf->local_mai_ip      = inet_network (value.c_str());
+    conf->local_mai_ip      = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.ip","");
-    conf->remote_ip_addr    = inet_network (value.c_str());
+    conf->remote_ip_addr    = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("remote.lo-ip","");
+    conf->remote_lo_ip_addr = inet_addr (value.c_str());
     value                   = pt.get <std::string>("eth-if-index","");
     conf->eth_if_index      = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("lif-if-index","");
@@ -83,9 +86,9 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     value                   = pt.get <std::string>("vni","");
     conf->vni               = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("route.dest_ip","");
-    conf->route_dest_ip     = inet_network (value.c_str());
+    conf->route_dest_ip     = inet_addr (value.c_str());
     value                   = pt.get <std::string>("route.nh_ip","");
-    conf->route_nh_ip       = inet_network (value.c_str());
+    conf->route_nh_ip       = inet_addr (value.c_str());
     value                   = pt.get <std::string>("route.prefix","");
     conf->route_prefix_len  = strtol (value.c_str(), NULL, 0);
 
@@ -106,6 +109,11 @@ parse_json_config (test_config_t *conf, uint8_t node) {
         }
         printf ("Using Manual RT\n");
     }
+    } catch (std::exception const&  ex) {
+        fprintf(stderr, "Config file %s doesn't have required fields\n",
+                file.c_str());
+    }
+
     return 0;
 }
 

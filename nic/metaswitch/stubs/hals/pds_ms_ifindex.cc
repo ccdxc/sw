@@ -68,8 +68,8 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
     if (ms_ifindex_to_pds_type (ms_ifindex) != IF_TYPE_L3) {
         return ms_ifindex;
     }
-    auto state_thr_ctxt = state_t::thread_context();
-    auto phy_port_if_obj = state_thr_ctxt.state()->if_store().get(ms_ifindex);
+    auto state_ctxt = state_t::thread_context();
+    auto phy_port_if_obj = state_ctxt.state()->if_store().get(ms_ifindex);
     SDK_ASSERT (phy_port_if_obj != nullptr);
     // Linux ifindex is cached in the store at the time 
     // of L3 interface creation
@@ -82,11 +82,11 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
 NBB_LONG 
 lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
 {
-    auto state_thr_ctxt = state_t::thread_context();
+    auto state_ctxt = state_t::thread_context();
     NBB_ULONG  ms_ifindex = 0;
     bool found = false;
 
-    state_thr_ctxt.state()->if_store().
+    state_ctxt.state()->if_store().
         walk([lnx_ifindex, &ms_ifindex, &found] (ms_ifindex_t ifindex, if_obj_t& if_obj) ->bool {
             if (if_obj.type() != ms_iftype_t::PHYSICAL_PORT) {
                 return true; // Continue walk

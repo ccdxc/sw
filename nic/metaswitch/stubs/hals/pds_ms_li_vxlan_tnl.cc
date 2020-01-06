@@ -268,7 +268,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
             auto it = vxlan_store.find(key);
             if (it == vxlan_store.end()) {
                 // MS Stub Stateless mode
-                auto send_response = li::Port::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
+                auto send_response = li::VxLan::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
                                                           (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
                 SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode",

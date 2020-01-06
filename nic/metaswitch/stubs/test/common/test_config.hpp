@@ -8,8 +8,10 @@
 namespace pds_ms_test {
 typedef struct test_config_s {
     uint32_t    local_ip_addr;
+    uint32_t    local_lo_ip_addr;
     uint32_t    local_gwip_addr;
     uint32_t    remote_ip_addr;
+    uint32_t    remote_lo_ip_addr;
     uint32_t    local_mai_ip;
     uint32_t    eth_if_index;
     uint32_t    lif_if_index;

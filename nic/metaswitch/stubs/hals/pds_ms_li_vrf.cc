@@ -45,9 +45,10 @@ extern NBB_ULONG li_proc_id;
 // 
 // VPC delete - Reverse of create
 // a) PDS MS Mgmt Stub deletes VRF MIB table entry.
-// b) PDS MS Mgmt Stub erases the cached VPC store obj.
+// b) PDS MS Mgmt Stub marks the cached VPC store spec as invalid.
 // c) MS calls LI Stub with VRF delete if no prev IPS response pending.
-// d) LI stub (this code) sends PDS Delete to HAL.
+// d) LI stub (this code) erases the VPC store obj and sends
+//    PDS Delete to HAL for the Route table and the VPC.
 //
 // VPC update after PDS HAL Create is invoked -
 // a) PDS MS Mgmt Stub updates cached VPC Spec in VPC obj
@@ -129,6 +130,7 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     } else { // Add or update
         auto vpc_spec = make_pds_vpc_spec_();
         auto rttbl_spec = make_pds_rttable_spec_();
+
         sdk_ret_t ret = SDK_RET_OK;
         if (op_create_) {
             if (!PDS_MOCK_MODE()) {

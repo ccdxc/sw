@@ -139,7 +139,6 @@ evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req, AMB_EVPN_IP_VRF_RT *data)
 } // End namespace pds
 
 namespace pds_ms {
-
 // Fill evpnEntTable: AMB_EVPN_ENT 
 NBB_VOID
 pds_ms_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)
@@ -177,6 +176,9 @@ pds_ms_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)
 
         data->irb_mode = AMB_EVPN_IRB_ASYMMETRIC;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_IRB_MODE);
+        data->use_hal = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_ENT_USE_HAL);
+
     }
     NBB_TRC_EXIT ();
     return;
@@ -297,6 +299,13 @@ pds_ms_evpn_create (pds_ms_config_t *conf)
     // evpnMjTable - AMB_EVPN_IF_ATG_MAI
     conf->interface_id   = AMB_EVPN_IF_ATG_MAI;
     conf->partner_type   = AMB_EVPN_MJ_PARTNER_L2FST;
+    conf->partner_index  = 1;
+    conf->sub_index      = 0;
+    pds_ms_row_update_evpn_mj (conf);
+
+    // evpnMjTable - PRI
+    conf->interface_id   = AMB_EVPN_IF_ATG_PRI;
+    conf->partner_type   = AMB_EVPN_MJ_PARTNER_PSM;
     conf->partner_index  = 1;
     conf->sub_index      = 0;
     pds_ms_row_update_evpn_mj (conf);
