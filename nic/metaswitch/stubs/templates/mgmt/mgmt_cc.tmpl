@@ -65,7 +65,7 @@
                     {{if (eq $castFn "")}}
         oid[{{$fieldOpt.SetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{else}}
-                      {{if (eq $fieldOpt.SetKeyOidLenIndex "")}}
+                      {{if (eq $fieldOpt.FieldHasLen false)}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}});
                       {{else}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}}, {{$fieldOpt.SetKeyOidLenIndex}});
@@ -488,11 +488,11 @@
                   {{if (eq .GetTypeName ".types.IPAddress")}}
         pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
-                    {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                    {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                     {{if (eq $castFn "")}}
         oid[{{$fieldOpt.GetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{else}}
-                      {{if (eq $fieldOpt.GetKeyOidLenIndex "")}}
+                      {{if (eq $fieldOpt.FieldHasLen false)}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.GetKeyOidIndex}});
                       {{else}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.GetKeyOidIndex}}, {{$fieldOpt.GetKeyOidLenIndex}});
