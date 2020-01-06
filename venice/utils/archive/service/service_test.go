@@ -104,9 +104,14 @@ func TestCancelRequest(t *testing.T) {
 
 	defer testutils.MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req.ObjectMeta)
 	// check running jobs
-	runningJobs := svcImpl.queue.ListJobs()
-	Assert(t, len(runningJobs) == 1, fmt.Sprintf("no running jobs in queue: %v", testutils.PrintJobs(runningJobs)))
-	Assert(t, runningJobs[0].ID() == fetchedReq.UUID, fmt.Sprintf("expected job ID %v", fetchedReq.UUID))
+	var runningJobs []archive.Job
+	AssertEventually(t, func() (bool, interface{}) {
+		runningJobs = svcImpl.queue.ListJobs()
+		if len(runningJobs) == 1 && runningJobs[0].ID() == fetchedReq.UUID {
+			return true, runningJobs
+		}
+		return false, runningJobs
+	}, fmt.Sprintf("running job for archive request UUID [%s] not found in queue: %v", fetchedReq.UUID, testutils.PrintJobs(runningJobs)))
 	// cancel request
 	_, err = svc.CancelRequest(context.TODO(), req)
 	AssertOk(t, err, "canceling archive request failed")
