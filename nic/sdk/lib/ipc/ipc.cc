@@ -166,7 +166,9 @@ client_receive_ms (int fd, int, void *ctx)
 }
 
 ipc_service::~ipc_service() {
-    close(this->eventfd_);
+    if (this->eventfd_ != -1) {
+        close(this->eventfd_);
+    }
 }
 
 ipc_service::ipc_service() : ipc_service(IPC_MAX_ID + 1) {};
@@ -174,8 +176,7 @@ ipc_service::ipc_service() : ipc_service(IPC_MAX_ID + 1) {};
 ipc_service::ipc_service(uint32_t id) {
     this->id_ = id;
     this->ipc_server_ = nullptr;
-    this->eventfd_ = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-    assert(this->eventfd_ != -1);
+    this->eventfd_ = -1;
     
     for (int i = 0; i < IPC_MAX_ID + 1; i++) {
         this->ipc_clients_[i] = nullptr;
@@ -189,7 +190,11 @@ ipc_service::get_id_(void) {
 
 void
 ipc_service::set_server_(zmq_ipc_server_ptr server) {
+    assert(this->ipc_server_ == nullptr);
     this->ipc_server_ = server;
+    
+    this->eventfd_ = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+    assert(this->eventfd_ != -1);
 }
 
 zmq_ipc_client_ptr
