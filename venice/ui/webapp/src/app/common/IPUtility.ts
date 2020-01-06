@@ -67,7 +67,7 @@ export class IPUtility {
     if (isNaN(number)) {
       return false;
     }
-    return number > 1 && number < 32;
+    return number > 1 && number <= 32;
   }
 
   /**
