@@ -59,6 +59,11 @@ __FBSDID("$FreeBSD$");
 
 #include "xform_enc.h"
 
+#if defined(__FreeBSD_version) && (__FreeBSD_version >= 1200000)
+#undef bcopy
+#undef bzero
+#endif
+
 #define bcopy(a, b, c) memcpy(b, a, c)
 #define bzero(a, b) memset(a, 0, b)
 

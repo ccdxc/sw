@@ -88,7 +88,11 @@ void sonic_bus_free_irq_vectors(struct sonic *sonic)
 #else
 int sonic_bus_get_irq(struct sonic *sonic, unsigned int num)
 {
+#if __FreeBSD_version >= 1200000
+	return sonic->pdev->dev.irq_start + num;
+#else
 	return sonic->pdev->dev.msix + num;
+#endif
 }
 
 int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
@@ -109,8 +113,13 @@ int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
 		return ret;
 
 	rle = linux_pci_get_rle(sonic->pdev, SYS_RES_IRQ, 1);
+#if __FreeBSD_version >= 1200000
+	sonic->pdev->dev.irq_start = rle->start;
+	sonic->pdev->dev.irq_end = rle->start + avail;
+#else
 	sonic->pdev->dev.msix = rle->start;
 	sonic->pdev->dev.msix_max = rle->start + avail;
+#endif
 
 	return avail;
 }
