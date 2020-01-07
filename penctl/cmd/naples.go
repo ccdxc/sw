@@ -36,6 +36,7 @@ var naplesShowCmd = &cobra.Command{
 	Aliases: []string{"naples"},
 	Short:   "Show Distributed Service Card Modes and Profiles",
 	Long:    "\n-------------------------------------------------------------------\n Show Distributed Service Card configuration \n-------------------------------------------------------------------\n",
+	Args:    cobra.NoArgs,
 	RunE:    naplesShowCmdHandler,
 }
 
@@ -53,6 +54,7 @@ var naplesProfileShowCmd = &cobra.Command{
 	Aliases: []string{"naples-profiles"},
 	Short:   "Show Available Distributed Service Card Profiles",
 	Long:    "\n----------------------------\n Show Distributed Service Card Profiles \n----------------------------\n",
+	Args:    cobra.NoArgs,
 	RunE:    naplesProfileShowCmdHandler,
 }
 
@@ -312,6 +314,10 @@ func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
+	if len(args) != 0 {
+		err = fmt.Errorf("unknown command options specified: %+v", args)
+		return
+	}
 	// Host Mode Validations
 	switch managedBy {
 	case "host":

@@ -43,6 +43,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: cliPreRunInit,
 	DisableAutoGenTag: true,
 	SilenceUsage:      true,
+	Args:              cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("version") {
 			printPenctlVer()

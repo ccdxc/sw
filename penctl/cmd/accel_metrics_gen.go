@@ -20,6 +20,7 @@ var hw_ringsonicShowCmd = &cobra.Command{
 	Use:   "hw_ring",
 	Short: "Metrics for hardware rings",
 	Long: "\n---------------------------------\n Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed\nPIndex	: ring producer index\nCIndex	: ring consumer index\nInputBytes	: total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes	: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets	: number of soft resets executed\n\n---------------------------------\n",
+	Args: cobra.NoArgs,
 	RunE: hw_ringsonicShowCmdHandler,
 }
 
@@ -44,6 +45,7 @@ var sonicShowCmd = &cobra.Command{
 	Use:   "sonic",
 	Short: "Metrics for Storage Offload DSC",
 	Long:  "\n---------------------------------\n Metrics for Storage Offload DSC\n---------------------------------\n",
+	Args:  cobra.NoArgs,
 }
 
 //cmd - sequencer_info
@@ -54,6 +56,7 @@ var sequencer_infosonicShowCmd = &cobra.Command{
 	Use:   "sequencer_info",
 	Short: "Sequencer queues information",
 	Long: "\n---------------------------------\n Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\n\nQStateAddr	: queue state memory address\nQGroup	: queue group\n           : 0 - compress/decompress\n           : 1 - compress/decompress status\n           : 2 - crypto\n           : 3 - crypto status\n\nCoreId	: CPU core ID (not available currently\n\n---------------------------------\n",
+	Args: cobra.NoArgs,
 	RunE: sequencer_infosonicShowCmdHandler,
 }
 
@@ -78,6 +81,7 @@ var sequencer_metricssonicShowCmd = &cobra.Command{
 	Use:   "sequencer_metrics",
 	Short: "Metrics for sequencer queues",
 	Long: "\n---------------------------------\n Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\n\nInterruptsRaised	: CPU interrupts raised\nNextDBsRung	: chaining doorbells rung\nSeqDescsProcessed	: sequencer descriptors processed\nSeqDescsAborted	: sequencer descriptors aborted (due to reset)\nStatusPdmaXfers	: status descriptors copied\nHwDescXfers	: descriptors transferred to hardware\nHwBatchErrors	: hardware batch (length) errors\nHwOpErrors	: hardware operation errors\nAolUpdateReqs	: AOL list updates requested\nSglUpdateReqs	: scatter/gather list updates requested\nSglPdmaXfers	: payload DMA transfers executed\nSglPdmaErrors	: payload DMA errors encountered\nSglPadOnlyXfers	: pad-data-only DMA transfers executed\nSglPadOnlyErrors	: pad-data-only DMA errors encountered\nAltDescsTaken	: alternate (bypass-onfail) descriptors executed\nAltBufsTaken	: alternate buffers taken\nLenUpdateReqs	: length updates requested\nCpHeaderUpdates	: compression header updates requested\nSeqHwBytes	: bytes processed\n\n---------------------------------\n",
+	Args: cobra.NoArgs,
 	RunE: sequencer_metricssonicShowCmdHandler,
 }
 

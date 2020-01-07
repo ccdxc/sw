@@ -21,6 +21,7 @@ var showSystemTimeCmd = &cobra.Command{
 	Use:   cmdName,
 	Short: "Show system clock time from Distributed Service Card",
 	Long:  "\n------------------------------------\n Show system clock time from Distributed Service Card \n------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  showSystemTimeCmdHandler,
 }
 
@@ -28,6 +29,7 @@ var setSystemTimeCmd = &cobra.Command{
 	Use:   cmdName,
 	Short: "Set system clock time on Distributed Service Card",
 	Long:  "\n---------------------------------\n Set system clock time on Distributed Service Card \n---------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  setSystemTimeCmdHandler,
 }
 

@@ -24,6 +24,7 @@ var showTechCmd = &cobra.Command{
 	Use:   "tech-support",
 	Short: "Get Tech Support from Distributed Service Card",
 	Long:  "\n------------------------------\n Get Tech Support from Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  showTechCmdHandler,
 }
 

@@ -15,6 +15,7 @@ var metricsShowCmd = &cobra.Command{
 	Use:   "metrics",
 	Short: "Show metrics from Distributed Service Card",
 	Long:  "\n--------------------------\n Show Metrics From Distributed Service Card \n--------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  genericmetricsShowCmdHandler,
 }
 

@@ -23,6 +23,7 @@ var showFirmwareCmd = &cobra.Command{
 	Use:   "firmware-version",
 	Short: "Get firmware version on Distributed Service Card",
 	Long:  "\n--------------------------------\n Get Firmware Version On Distributed Service Card \n--------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  showFirmwareDetailCmdHandler,
 }
 
@@ -30,6 +31,7 @@ var showRunningFirmwareCmd = &cobra.Command{
 	Use:   "running-firmware",
 	Short: "Show running firmware from Distributed Service Card (To be deprecated. Please use: penctl show firmware-version)",
 	Long:  "\n-----------------------------------------------------------------------------------------------\n Show Running Firmware from Distributed Service Card. (To be deprecated. Please use: penctl show firmware-version) \n-----------------------------------------------------------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  showRunningFirmwareCmdHandler,
 }
 
@@ -37,6 +39,7 @@ var showStartupFirmwareCmd = &cobra.Command{
 	Use:   "startup-firmware",
 	Short: "Show startup firmware from Distributed Service Card",
 	Long:  "\n-----------------------------------\n Show Startup Firmware from Distributed Service Card \n-----------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  showStartupFirmwareCmdHandler,
 }
 
@@ -44,12 +47,14 @@ var startupFirmwareCmd = &cobra.Command{
 	Use:   "startup-firmware",
 	Short: "Set startup firmware on Distributed Service Card",
 	Long:  "\n--------------------------------\n Set Startup Firmware on Distributed Service Card\n--------------------------------\n",
+	Args:  cobra.NoArgs,
 }
 
 var setStartupFirmwareMainfwaCmd = &cobra.Command{
 	Use:   "mainfwa",
 	Short: "Set startup firmware on Distributed Service Card to mainfwa",
 	Long:  "\n-------------------------------------------\n Set Startup Firmware on Distributed Service Card to mainfwa \n-------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  setStartupFirmwareMainfwaCmdHandler,
 }
 
@@ -57,6 +62,7 @@ var setStartupFirmwareMainfwbCmd = &cobra.Command{
 	Use:   "mainfwb",
 	Short: "Set startup firmware on Distributed Service Card to mainfwb",
 	Long:  "\n-------------------------------------------\n Set Startup Firmware on Distributed Service Card to mainfwb \n-------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  setStartupFirmwareMainfwbCmdHandler,
 }
 
@@ -64,6 +70,7 @@ var setFirmwareCmd = &cobra.Command{
 	Use:   "firmware-install",
 	Short: "Copy and Install Firmware Image to Distributed Service Card",
 	Long:  "\n-------------------------------------------\n Copy and Install Firmware Image to Distributed Service Card \n-------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  setFirmwareCmdHandler,
 }
 

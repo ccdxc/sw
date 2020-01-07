@@ -16,6 +16,7 @@ var factoryDefaultCmd = &cobra.Command{
 	Use:   "factory-default",
 	Short: "Perform \"erase-config\" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required)",
 	Long:  "\n------------------------------------------------------------------------------------------------------------------\n Perform \"erase-config\" plus remove all Distributed Service Card internal databases and diagnostic failure logs (reboot required) \n------------------------------------------------------------------------------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  factoryDefaultCmdHandler,
 }
 
@@ -23,6 +24,7 @@ var eraseConfigCmd = &cobra.Command{
 	Use:   "erase-config",
 	Short: "Erase all local Distributed Service Card configuration and revert to \"host-managed\" mode. (reboot required)",
 	Long:  "\n---------------------------------------------------------------------------------------------\n Erase all local Distributed Service Card configuration and revert to \"host-managed\" mode. (reboot required) \n---------------------------------------------------------------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  eraseConfigCmdHandler,
 }
 

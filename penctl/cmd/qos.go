@@ -30,6 +30,7 @@ var qosClassShowCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "show qos-class object",
 	Long:  "show qos-class object",
+	Args:  cobra.NoArgs,
 	Run:   qosClassShowCmdHandler,
 }
 
@@ -37,6 +38,7 @@ var qosClassDeleteCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
 	Long:  "qos-class object",
+	Args:  cobra.NoArgs,
 	Run:   qosClassDeleteCmdHandler,
 }
 
@@ -44,6 +46,7 @@ var qosClassCreateCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
 	Long:  "qos-class object",
+	Args:  cobra.NoArgs,
 	Run:   qosClassCreateCmdHandler,
 }
 
@@ -51,6 +54,7 @@ var qosClassUpdateCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
 	Long:  "qos-class object",
+	Args:  cobra.NoArgs,
 	Run:   qosClassUpdateCmdHandler,
 }
 

@@ -18,6 +18,7 @@ var getSysMemCmd = &cobra.Command{
 	Use:   "system-memory-usage",
 	Short: "Show free/used memory on Distributed Service Card (in MB)",
 	Long:  "\n-----------------------------------------\n Show Free/Used Memory on Distributed Service Card (in MB)\n-----------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  getSysMemCmdHandler,
 }
 
@@ -25,6 +26,7 @@ var getProcMemInfoCmd = &cobra.Command{
 	Use:   "proc-meminfo",
 	Short: "Check /proc/meminfo file on Distributed Service Card",
 	Long:  "\n------------------------------------\n Check /proc/meminfo file on Distributed Service Card \n------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  getProcMemInfoCmdHandler,
 }
 
@@ -32,12 +34,14 @@ var getSystemCmd = &cobra.Command{
 	Use:   "system",
 	Short: "show system information",
 	Long:  "\n------------------------------------\n show system information \n------------------------------------\n",
+	Args:  cobra.NoArgs,
 }
 
 var getSystemStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "show current system status",
 	Long:  "\n------------------------------------\n show current system status \n------------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  getSystemStatusCmdCmdHandler,
 }
 
@@ -45,6 +49,7 @@ var getSystemQueueStatsCmd = &cobra.Command{
 	Use:   "queue-statistics",
 	Short: "show system queue-statistics",
 	Long:  "\n------------------------------------\n show system queue-statistics \n------------------------------------\n",
+	Args:  cobra.NoArgs,
 	Run:   getSystemQueueStatsCmdHandler,
 }
 

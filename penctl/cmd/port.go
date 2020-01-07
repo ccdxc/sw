@@ -27,6 +27,7 @@ var portShowCmd = &cobra.Command{
 	Use:   "port",
 	Short: "show port object",
 	Long:  "show port object",
+	Args:  cobra.NoArgs,
 	Run:   portShowCmdHandler,
 }
 
@@ -34,6 +35,7 @@ var portStatusShowCmd = &cobra.Command{
 	Use:   "status",
 	Short: "show port object status",
 	Long:  "show port object status",
+	Args:  cobra.NoArgs,
 	Run:   portStatusShowCmdHandler,
 }
 
@@ -41,6 +43,7 @@ var portCmd = &cobra.Command{
 	Use:   "port",
 	Short: "update port object",
 	Long:  "update port object",
+	Args:  cobra.NoArgs,
 	Run:   portUpdateCmdHandler,
 }
 
@@ -48,6 +51,7 @@ var portStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
 	Short: "show port statistics",
 	Long:  "show port statistics",
+	Args:  cobra.NoArgs,
 	Run:   portStatsShowCmdHandler,
 }
 

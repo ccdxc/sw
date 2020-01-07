@@ -15,6 +15,7 @@ Value Description:
 frequency: Frequency of the system.
 The frequency is MHz
 
+Frequency	: Frequency of the system in MHz
 
 ---------------------------------
 

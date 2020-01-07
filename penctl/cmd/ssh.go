@@ -20,6 +20,7 @@ var setSSHConfigCmd = &cobra.Command{
 	Use:   "ssh-pub-key",
 	Short: "Configure ssh pub-key on Distributed Service Card",
 	Long:  "\n---------------------------------\n Configure ssh pub-key on Distributed Service Card \n---------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  setSSHConfigCmdHandler,
 }
 
@@ -27,6 +28,7 @@ var delSSHConfigCmd = &cobra.Command{
 	Use:   "ssh-pub-key",
 	Short: "Delete ssh pub-key on Distributed Service Card",
 	Long:  "\n------------------------------\n Delete ssh pub-key on Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  delSSHConfigCmdHandler,
 }
 
@@ -34,6 +36,7 @@ var enableSSHConfigCmd = &cobra.Command{
 	Use:   "enable-sshd",
 	Short: "Enable sshd on Distributed Service Card",
 	Long:  "\n------------------------------\n Enable sshd on Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  enableSSHConfigCmdHandler,
 }
 
@@ -41,6 +44,7 @@ var disableSSHConfigCmd = &cobra.Command{
 	Use:   "disable-sshd",
 	Short: "Disable sshd on Distributed Service Card",
 	Long:  "\n------------------------------\n Disable sshd on Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  disableSSHConfigCmdHandler,
 }
 

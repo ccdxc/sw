@@ -15,6 +15,7 @@ var naplesConfigShowCmd = &cobra.Command{
 	Aliases: []string{"naples-config"},
 	Short:   "Show Distributed Service Card Configuration",
 	Long:    "\n---------------------------\n Show Distributed Service Card Configuration \n---------------------------n",
+	Args:    cobra.NoArgs,
 	RunE:    naplesConfigShowCmdHandler,
 }
 

@@ -16,6 +16,7 @@ var enableConsoleConfigCmd = &cobra.Command{
 	Use:   "enable-console",
 	Short: "Enable serial console on Distributed Service Card",
 	Long:  "\n------------------------------\n Enable serial console on Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  enableConsoleConfigCmdHandler,
 }
 
@@ -23,6 +24,7 @@ var disableConsoleConfigCmd = &cobra.Command{
 	Use:   "disable-console",
 	Short: "Disable serial console on Distributed Service Card",
 	Long:  "\n------------------------------\n Disable serial console on Distributed Service Card \n------------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  disableConsoleConfigCmdHandler,
 }
 

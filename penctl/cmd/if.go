@@ -34,6 +34,7 @@ var ifUpdateCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Create interface",
 	Long:  "Create interface",
+	Args:  cobra.NoArgs,
 	RunE:  ifUpdateCmdHandler,
 }
 
@@ -41,6 +42,7 @@ var ifDeleteCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Delete interface",
 	Long:  "Delete interface",
+	Args:  cobra.NoArgs,
 	RunE:  ifDeleteCmdHandler,
 }
 
@@ -48,6 +50,7 @@ var ifShowCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Show interface",
 	Long:  "Show interface",
+	Args:  cobra.NoArgs,
 	Run:   ifShowCmdHandler,
 }
 
@@ -55,6 +58,7 @@ var tunnelShowCmd = &cobra.Command{
 	Use:   "tunnel",
 	Short: "Show tunnel interface",
 	Long:  "Show tunnel interface",
+	Args:  cobra.NoArgs,
 	Run:   ifTunnelShowCmdHandler,
 }
 
@@ -62,6 +66,7 @@ var mplsoudpShowCmd = &cobra.Command{
 	Use:   "mplsoudp",
 	Short: "Show MPLSoUDP tunnel interface",
 	Long:  "Show MPLSoUDP tunnel interface",
+	Args:  cobra.NoArgs,
 	Run:   mplsoudpShowCmdHandler,
 }
 

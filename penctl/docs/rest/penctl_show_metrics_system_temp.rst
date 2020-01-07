@@ -21,6 +21,9 @@ die_temperature: Temperature of the die.
 hbm_temperature: Temperature of the hbm.
 The temperature is degree Celcius
 
+LocalTemperature	: Temperature of the board in celsius
+DieTemperature	: Temperature of the die in celsius
+HbmTemperature	: Temperature of the HBM in celsius
 
 ---------------------------------
 

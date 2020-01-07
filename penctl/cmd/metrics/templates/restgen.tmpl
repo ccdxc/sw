@@ -30,6 +30,7 @@ import (
                 Use:   "{{ToLower $cmd}}",
                 Short: "{{$shortHelpStr}}",
                 Long:  "\n---------------------------------\n {{$longHelpStr}}\n---------------------------------\n",
+                Args:  cobra.NoArgs,
         }
         {{end}}
       {{end}}
@@ -48,6 +49,7 @@ import (
                 Use:   "{{ToLower $cmd}}",
                 Short: "{{$shortHelpStr}}",
                 Long:  "\n---------------------------------\n {{$longHelpStr}}\n---------------------------------\n",
+                Args:  cobra.NoArgs,
                 RunE:  {{ToLower $cmd}}{{$rootCmd}}ShowCmdHandler,
         }
 

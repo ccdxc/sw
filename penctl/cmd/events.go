@@ -15,6 +15,7 @@ var eventsShowCmd = &cobra.Command{
 	Use:   "events",
 	Short: "Show events from Distributed Service Card",
 	Long:  "\n-------------------------\n Show Events From Distributed Service Card \n-------------------------\n",
+	Args:  cobra.NoArgs,
 	RunE:  eventsShowCmdHandler,
 }
 
