@@ -390,3 +390,79 @@ def ftl_process_field(field_obj):
         width = str(field_width) + little_str
         field_str = "uint" + str(get_field_bit_unit()) + "_t " + field_name + " : " + width + ";"
     return field_str
+
+ftl_table_template_hpp = Template(
+"""\
+class ${table_name}: public ftl_base {
+public:
+    static ftl_base *factory(sdk_table_factory_params_t *params);
+    static void destroy(ftl_base *f);
+
+    ${table_name}() {}
+    ~${table_name}(){}
+
+    virtual base_table_entry_t *get_entry(int index) override;
+
+private:
+    sdk_ret_t init_(sdk_table_factory_params_t *params);
+    static thread_local ${table_entry_name} entry_[FTL_MAX_RECIRCS];
+};
+
+""")
+
+ftl_table_template_cc = Template(
+"""\
+thread_local ${table_entry_name} ${table_name}::entry_[FTL_MAX_RECIRCS];
+
+ftl_base*
+${table_name}::factory(sdk_table_factory_params_t *params) {
+    void *mem = NULL;
+    ${table_name} *f = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    mem = (ftl_base *) SDK_CALLOC(sdk::SDK_MEM_ALLOC_FTL, sizeof(${table_name}));
+    if (mem) {
+        f = new (mem) ${table_name}();
+        ret = f->init_(params);
+        if (ret != SDK_RET_OK) {
+            f->~${table_name}();
+            SDK_FREE(sdk::SDK_MEM_ALLOC_FTL, mem);
+            f = NULL;
+        }
+    } else {
+        ret = SDK_RET_OOM;
+    }
+    return f;
+}
+
+void
+${table_name}::destroy(ftl_base *f) {
+    ftl_base::destroy(f);
+}
+
+sdk_ret_t
+${table_name}::init_(sdk_table_factory_params_t *params) {
+    params->table_id = ${tableid};
+    params->max_recircs = FTL_MAX_RECIRCS;
+    params->num_hints = ${num_hints};
+    return ftl_base::init_(params);
+}
+
+base_table_entry_t *
+${table_name}::get_entry(int index) {
+    return &entry_[index];
+}
+
+""")
+
+#####################################
+# generate derived class for ftl_base
+#####################################
+def ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, table_name, table_entry_name):
+    f = open(output_h_dir + '/ftl_table.hpp', "a+")
+    output = ftl_table_template_hpp.substitute(table_name=table_name, table_entry_name=table_entry_name)
+    f.write(output)
+
+    f = open(output_c_dir + '/ftl.cc', "a+")
+    output = ftl_table_template_cc.substitute(tableid=tableid, table_name=table_name, table_entry_name=table_entry_name, num_hints=num_hints)
+    f.write(output)

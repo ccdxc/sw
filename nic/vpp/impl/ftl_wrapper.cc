@@ -11,6 +11,7 @@
 #include <nic/sdk/lib/p4/p4_api.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
 #include <ftl_utils.hpp>
@@ -230,15 +231,12 @@ ftlv4_create(void *key2str,
 {
     sdk_table_factory_params_t factory_params = {0};
 
-    factory_params.table_id = P4TBL_ID_IPV4_FLOW;
-    factory_params.num_hints = 2;
-    factory_params.max_recircs = 8;
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
     factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
 
-    return ftlv4::factory(&factory_params);
+    return ipv4_flow_hash::factory(&factory_params);
 }
 
 static int
@@ -609,15 +607,12 @@ ftlv6_create(void *key2str,
 {
     sdk_table_factory_params_t factory_params = {0};
 
-    factory_params.table_id = P4TBL_ID_FLOW;
-    factory_params.num_hints = 4;
-    factory_params.max_recircs = 8;
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
     factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
 
-    return ftlv6::factory(&factory_params);
+    return flow_hash::factory(&factory_params);
 }
 
 static int

@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#include "../ftltest_common.hpp"
+#include "nic/utils/ftl/test/ftltest_common.hpp"
 
 static void
 fill_entry (uint32_t index, flow_hash_info_entry_t *entry)

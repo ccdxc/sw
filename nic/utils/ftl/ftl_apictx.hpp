@@ -29,6 +29,10 @@ namespace internal {
 }
 
 class Apictx {
+private:
+    // pointer to the ftl_base class using the apictx
+    void *ftlbase_;
+
 public:
     enum hint_index {
         // Hint index 0 is reserved
@@ -51,7 +55,7 @@ public:
 public:
     // Flow Table Entry size
     uint32_t entry_size;
-    // Flow Table Entry size
+    // Flow Table Entry
     base_table_entry_t *entry;
 
     uint8_t hint_slot;
@@ -91,7 +95,6 @@ public:
 public:
     Apictx() {}
     ~Apictx() {
-        SDK_FREE(SDK_MEM_ALLOC_FTL, entry);
     }
 
     // Debug string
@@ -134,6 +137,10 @@ public:
         return;
     }
 
+    void *ftlbase(void) {
+        return ftlbase_;
+    }
+
 #if 0
     static void print_entry(base_table_entry_t *entry,
                             uint32_t hash_32b, bool hash_valid) {
@@ -146,15 +153,15 @@ public:
 #endif
 
     sdk_ret_t init(sdk_table_api_op_t op, sdk_table_api_params_t *params,
-              sdk::table::properties_t *props, tablestats *tstats,
-              uint32_t thread_id, uint32_t entry_size) {
-        base_table_entry_t *base_table_entry = this->entry;
-
+                   sdk::table::properties_t *props, tablestats *tstats,
+                   uint32_t thread_id, void* ftlbase,
+                   base_table_entry_t *entry, uint32_t entry_size) {
         memset(this, 0, sizeof(Apictx));
 
-        this->entry = base_table_entry;
+        this->entry = entry;
         this->entry->clear();
 
+        this->ftlbase_ = ftlbase;
         this->entry_size = entry_size;
         this->op = op;
         this->props = props;
@@ -167,14 +174,13 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t init(Apictx *p) {
-        base_table_entry_t *base_table_entry = this->entry;
-
+    sdk_ret_t init(Apictx *p, base_table_entry_t *entry) {
         memset(this, 0, sizeof(Apictx));
 
-        this->entry = base_table_entry;
+        this->entry = entry;
         this->entry->clear();
 
+        this->ftlbase_ = p->ftlbase();
         this->entry_size = p->entry_size;
         this->op = p->op;
         this->hash_msbits = p->hash_msbits;

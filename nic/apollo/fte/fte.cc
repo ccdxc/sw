@@ -54,6 +54,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/fte/fte.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "nic/utils/ftl/ftl_base.hpp"
 #include <impl.h>
 
@@ -177,15 +178,11 @@ fte_ftlv4_create (void *key2str, void *appdata2str, uint32_t thread_id)
 
     // fte is enabled only for Athena
     // In case of Athena, its Unified Table for both v4 and v6
-    factory_params.table_id = P4TBL_ID_FLOW;
-
-    factory_params.num_hints = 2;
-    factory_params.max_recircs = 8;
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return ftl_base::factory(&factory_params);
+    return ipv4_flow_hash::factory(&factory_params);
 }
 
 
@@ -194,14 +191,11 @@ fte_ftlv6_create (void *key2str, void *appdata2str, uint32_t thread_id)
 {
     sdk_table_factory_params_t factory_params = {0};
 
-    factory_params.table_id = P4TBL_ID_FLOW;
-    factory_params.num_hints = 4;
-    factory_params.max_recircs = 8;
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
     factory_params.thread_id = thread_id;
 
-    return ftl_base::factory(&factory_params);
+    return flow_hash::factory(&factory_params);
 }
 
 static int

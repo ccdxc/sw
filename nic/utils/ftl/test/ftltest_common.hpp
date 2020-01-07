@@ -12,7 +12,7 @@
 #include "include/sdk/table.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftl_base.hpp"
-#include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
+#include "p4pd_mock/ftl_p4pd_mock.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 

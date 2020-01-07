@@ -2,7 +2,110 @@
 //:: from ftl_utils import *
 //:: from collections import OrderedDict
 //:: pddict = _context['pddict']
-//:: #pdb.set_trace()
+//::
+//:: if pddict['p4plus']:
+//::    p4prog = pddict['p4program'] + '_'
+//::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
+//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
+//::    if pddict['p4plus_module'] == 'rxdma':
+//::        start_table_base = 101
+//::        prefix = 'p4pd_rxdma'
+//::    elif pddict['p4plus_module'] == 'txdma':
+//::	    start_table_base = 201
+//::        prefix = 'p4pd_txdma'
+//::    else:
+//::	    start_table_base = 301
+//::        prefix = 'p4pd_' + pddict['p4program']
+//::    #endif
+//:: else:
+//::    p4prog = ''
+//::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
+//::    caps_p4prog = ''
+//::    prefix = 'p4pd'
+//::	start_table_base = 1
+//:: #endif
+//::
+//:: tabledict = {}
+//:: tableid = start_table_base
+//:: for table in pddict['tables']:
+//::    if pddict['tables'][table]['type'] == 'Hash':
+//::        tabledict[table] = tableid
+//::        tableid += 1
+//::    #endif
+//:: #endfor
+//:: for table in pddict['tables']:
+//::    if pddict['tables'][table]['type'] == 'Hash_OTcam':
+//::        tabledict[table] = tableid
+//::        tableid += 1
+//::    #endif
+//:: #endfor
+//:: for table in pddict['tables']:
+//::    if pddict['tables'][table]['type'] == 'Ternary':
+//::        tabledict[table] = tableid
+//::        tableid += 1
+//::    #endif
+//:: #endfor
+//:: for table in pddict['tables']:
+//::    if pddict['tables'][table]['type'] == 'Index':
+//::        tabledict[table] = tableid
+//::        tableid += 1
+//::    #endif
+//:: #endfor
+//:: for table in pddict['tables']:
+//::    if pddict['tables'][table]['type'] == 'Mpu':
+//::        tabledict[table] = tableid
+//::        tableid += 1
+//::    #endif
+//:: #endfor
+//::
+//:: output_h_dir = _context['output_h_dir']
+//:: output_c_dir = _context['output_c_dir']
+//::
+//:: f = open(output_h_dir + '/ftl_table.hpp', "w+")
+//:: f.write("""\
+//:: /*
+//::  * ftl_table.hpp
+//::  * {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//::  *
+//::  * This file is generated from P4 program. Any changes made to this file will
+//::  * be lost.
+//::  */
+//::
+//:: #include <cstring>
+//:: #include "gen/p4gen/p4/include/ftl.h"
+//:: #include "nic/utils/ftl/ftl_base.hpp"
+//::
+//:: #define FTL_MAX_RECIRCS 8
+//::
+//:: #ifndef __FTL_SDK_TABLE_HPP__
+//:: #define __FTL_SDK_TABLE_HPP__
+//::
+//:: namespace sdk {
+//:: namespace table {
+//::
+//:: """)
+//:: f.close()
+//::
+//:: f = open(output_c_dir + '/ftl.cc', "w+")
+//:: f.write("""\
+//:: /*
+//::  * ftl.cc
+//::  * {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//::  *
+//::  * This file is generated from P4 program. Any changes made to this file will
+//::  * be lost.
+//::  */
+//::
+//:: """)
+//:: f.write('#include "gen/p4gen/p4/include/ftl_table.hpp"\n')
+//:: f.write('#include "gen/p4gen/p4/include/ftl.h"\n')
+//:: f.write('#include "gen/p4gen/p4/include/p4pd.h"\n')
+//:: f.write('#include "nic/sdk/include/sdk/mem.hpp"\n')
+//:: f.write('\n')
+//:: f.close()
+//::
 /*
  * ftl.h
  * {C} Copyright 2019 Pensando Systems Inc. All rights reserved
@@ -20,6 +123,7 @@
 //::
 //::     k_d_action_data_json = {}
 //::     k_d_action_data_json['INGRESS_KD'] = {}
+//::     ftl_table_using_str = ''
 //::     for table in pddict['tables']:
 //::        if not is_table_ftl_gen(table):
 //::            continue
@@ -841,7 +945,7 @@ public:
 //::
 //::                # To set fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table) and pddict['pipeline'] != 'iris':
+//::                if is_table_gen_key(table) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -883,7 +987,7 @@ public:
 //::
 //::                # To get fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table) and pddict['pipeline'] != 'iris':
+//::                if is_table_gen_key(table) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -938,6 +1042,11 @@ public:
 #endif
 };
 //::
+//::                num_hints = ftl_hash_field_cnt()-1
+//::                tableid = 'P4' + caps_p4prog + 'TBL_ID_' + table.upper()
+//::                ftl_table_using_str += 'using sdk::table::' + struct_name + ';\n'
+//::                ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, struct_name, struct_full_name)
+//::
 //::                # reset the global state since this in invoked multiple times
 //::                ftl_hash_field_cnt_reset()
 //::                split_fields_dict_reset()
@@ -984,4 +1093,14 @@ public:
 //::            #endif
 //::        #endif
 //::     #endfor
+//::
+//:: f = open(output_h_dir + '/ftl_table.hpp', "a+")
+//:: f.write("""\
+//:: }   // namespace table
+//:: }   // namespace sdk
+//::
+//:: """)
+//:: f.write(ftl_table_using_str)
+//:: f.write('#endif   // __FTL_SDK_TABLE_HPP__')
+//:: f.close()
 #endif    // __FTL_H__

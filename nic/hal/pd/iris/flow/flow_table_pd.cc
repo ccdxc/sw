@@ -6,6 +6,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "flow_table_pd.hpp"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 
 using table::TableFlowEntry;
 using sdk::table::sdk_table_factory_params_t;
@@ -91,7 +92,7 @@ flow_table_pd::factory() {
 
 void
 flow_table_pd::destroy(flow_table_pd *ftpd) {
-    ftl_base::destroy(ftpd->table_);
+    flow_hash_info::destroy(ftpd->table_);
     return;
 }
 
@@ -99,7 +100,7 @@ hal_ret_t
 flow_table_pd::init() {
     p4pd_table_properties_t tinfo, ctinfo;
     sdk_table_factory_params_t params = { 0 };
-    
+
     p4pd_table_properties_get(P4TBL_ID_FLOW_HASH, &tinfo);
     table_name_ = tinfo.tablename;
     table_size_ = tinfo.tabledepth;
@@ -107,15 +108,9 @@ flow_table_pd::init() {
     p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
     oflow_table_size_ = ctinfo.tabledepth;
 
-    params.table_id = P4TBL_ID_FLOW_HASH;
-    params.num_hints = P4_FLOW_NUM_HINTS_PER_ENTRY;
-    params.max_recircs = 8;
-    params.key2str = key2str;
-    params.appdata2str = appdata2str;
-    params.entry_alloc_cb = flow_hash_info_entry_t::alloc;
     // params.entry_trace_en = true;
 
-    table_ = ftl_base::factory(&params);
+    table_ = flow_hash_info::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
     return HAL_RET_OK;
 }

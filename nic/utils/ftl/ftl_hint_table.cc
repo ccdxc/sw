@@ -6,9 +6,10 @@
 #include <string.h>
 #include <cinttypes>
 #include "gen/p4gen/p4/include/ftl.h"
+#include "nic/utils/ftl/ftl_base.hpp"
 #include "ftl_includes.hpp"
 
-// thread_local uint8_t hint_table::nctx_ = 0;
+thread_local uint8_t hint_table::nctx_ = 0;
 
 hint_table *
 hint_table::factory(sdk::table::properties_t *props) {
@@ -74,8 +75,10 @@ hint_table::ctxnew_(Apictx *src) {
         SDK_ASSERT(nctx_ < FTL_MAX_API_CONTEXTS);
     }
     auto c = src + 1;
-    c->init(src);
+    sdk::table::ftl_base *ftlbase = (sdk::table::ftl_base *)src->ftlbase();
     nctx_++;
+    base_table_entry_t *entry = ftlbase->get_entry(nctx_);
+    c->init(src, entry);
     return c;
 }
 

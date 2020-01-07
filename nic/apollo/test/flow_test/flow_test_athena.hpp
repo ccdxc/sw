@@ -23,10 +23,10 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-using sdk::table::ftlv6;
-using sdk::table::ftlv4;
+using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -156,7 +156,7 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    ftlv6 *v6table;
+    ftl_base *v6table;
     vpc_epdb_t epdb[MAX_VPCS+1];
     uint32_t session_index;
     uint32_t nexthop_group_index;
@@ -263,13 +263,8 @@ private:
 public:
     flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
-        factory_params.table_id = P4TBL_ID_FLOW;
-        factory_params.num_hints = 4;
-        factory_params.max_recircs = 8;
-        factory_params.key2str = flow_key2str;
-        factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
-        v6table = ftlv6::factory(&factory_params);
+        v6table = flow_hash::factory(&factory_params);
         assert(v6table);
 
         // Unified V4 and V6 tables on Master, so just need to init only one table (above)
@@ -323,7 +318,7 @@ public:
     }
 
     ~flow_test() {
-        ftlv6::destroy(v6table);
+        flow_hash::destroy(v6table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {

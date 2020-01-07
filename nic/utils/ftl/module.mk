@@ -10,4 +10,6 @@ else
     MODULE_FLAGS  = -O3 -DFTL_ADDRESS_PREFIX=ftl
 endif
 MODULE_PIPELINE = apollo artemis apulu iris athena
+MODULE_SRCS = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
+              $(wildcard ${BLD_P4GEN_DIR}/p4/src/ftl.cc)
 include ${MKDEFS}/post.mk

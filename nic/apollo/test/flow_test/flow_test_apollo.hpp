@@ -19,6 +19,7 @@
 #include "include/sdk/table.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftl_base.hpp"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -35,7 +36,7 @@ namespace pt = boost::property_tree;
 #define FLOW_TEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 #define MAX_NEXTHOP_GROUP_INDEX 1024
 
-static char *
+char *
 flow_key2str(void *key) {
     static char str[256];
     flow_swkey_t *k = (flow_swkey_t *)key;
@@ -56,7 +57,7 @@ flow_key2str(void *key) {
     return str;
 }
 
-static char *
+char *
 flow_appdata2str(void *appdata) {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
@@ -275,25 +276,13 @@ private:
 public:
     flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
-        factory_params.table_id = P4TBL_ID_FLOW;
-        factory_params.num_hints = 4;
-        factory_params.max_recircs = 8;
-        factory_params.key2str = flow_key2str;
-        factory_params.appdata2str = flow_appdata2str;
         factory_params.entry_trace_en = false;
-        factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
-        v6table = ftl_base::factory(&factory_params);
+        v6table = flow_hash::factory(&factory_params);
         assert(v6table);
 
         memset(&factory_params, 0, sizeof(factory_params));
-        factory_params.table_id = P4TBL_ID_IPV4_FLOW;
-        factory_params.num_hints = 2;
-        factory_params.max_recircs = 8;
-        factory_params.key2str = NULL;
-        factory_params.appdata2str = NULL;
         factory_params.entry_trace_en = false;
-        factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
-        v4table = ftl_base::factory(&factory_params);
+        v4table = ipv4_flow_hash::factory(&factory_params);
         assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -345,8 +334,8 @@ public:
     }
 
     ~flow_test() {
-        ftl_base::destroy(v6table);
-        ftl_base::destroy(v4table);
+        flow_hash::destroy(v6table);
+        ipv4_flow_hash::destroy(v4table);
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {

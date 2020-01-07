@@ -12,9 +12,10 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
-#include "nic/utils/ftl/test/p4pd_mock/ftl_p4pd_mock.hpp"
+#include "p4pd_mock/ftl_p4pd_mock.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "nic/utils/ftl/ftl_base.hpp"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 
 #include "ftltest_common.hpp"
 
@@ -55,13 +56,13 @@ protected:
         ftl_mock_init();
         
         sdk_table_factory_params_t params = { 0 };
-        params.max_recircs = MAX_RECIRCS;
         params.entry_trace_en = true;
-        
-        params.table_id = FTL_TBLID_IPV6;
-        params.num_hints = 4;
-        params.entry_alloc_cb = FLOW_HASH_ENTRY_T::alloc;
-        v6table = ftl_base::factory(&params);
+
+#ifdef IRIS
+        v6table = flow_hash_info::factory(&params);
+#else
+        v6table = flow_hash::factory(&params);
+#endif
         assert(v6table);
 
         num_insert = 0;
@@ -78,7 +79,11 @@ protected:
     }
     virtual void TearDown() {
         ValidateStats();
-        ftl_base::destroy(v6table);
+#ifdef IRIS
+        flow_hash_info::destroy(v6table);
+#else
+        flow_hash::destroy(v6table);
+#endif
         reset_cache();
         ftl_mock_cleanup();
         SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",

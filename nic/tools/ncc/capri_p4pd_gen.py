@@ -54,6 +54,8 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_ou
         pdd = {}
         with open(outfile, "w") as of:
             pdd['pddict'] = pd_dict
+            pdd['output_h_dir'] = output_h_dir
+            pdd['output_c_dir'] = output_c_dir
             p4tbl_types = render_template(of, templatefile, pdd, os.path.dirname(templatefile), \
                                           prefix=tenjin_prefix)
             of.close()
@@ -117,6 +119,8 @@ def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, cl
         pdd = {}
         with open(outfile, "w") as of:
             pdd['pddict'] = pd_dict
+            pdd['output_h_dir'] = output_h_dir
+            pdd['output_c_dir'] = output_c_dir
             kd_dict = render_template(of, templatefile, pdd, os.path.dirname(templatefile), \
                             prefix=tenjin_prefix)
             for k, v in kd_dict.items():

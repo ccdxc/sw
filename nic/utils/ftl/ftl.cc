@@ -13,6 +13,8 @@ std::map<int, sdk::table::ftl_table_info *>
             sdk::table::ftl_base::table_info_cache;
 static std::mutex mtx;
 
+thread_local Apictx ftl_base::apictx_[FTL_MAX_API_CONTEXTS + 1];
+
 #define FTL_API_BEGIN(_name) {\
     FTL_TRACE_VERBOSE("%s %s begin: %s %s", \
                       "--", "ftl", _name, "--");\
@@ -23,8 +25,8 @@ static std::mutex mtx;
                      "--", "ftl", _name, _status, "--");\
 }
 
-#define FTL_API_BEGIN_() {\
-        FTL_API_BEGIN(props_->name.c_str());\
+#define FTL_API_BEGIN_() {                           \
+        FTL_API_BEGIN(props_->name.c_str());         \
 }
 
 #define FTL_API_END_(_status) {\
@@ -50,31 +52,10 @@ crc32_aarch64(const uint64_t *p) {
 }
 #endif
 
-//---------------------------------------------------------------------------
-// Factory method to instantiate the class
-//---------------------------------------------------------------------------
-ftl_base *
-ftl_base::factory(sdk_table_factory_params_t *params) {
-    void *mem = NULL;
-    ftl_base *f = NULL;
-    sdk_ret_t ret = SDK_RET_OK;
-
-    //FTL_API_BEGIN("NewTable");
-    mem = (ftl_base *) SDK_CALLOC(SDK_MEM_ALLOC_FTL, sizeof(ftl_base));
-    if (mem) {
-        f = new (mem) ftl_base();
-        ret = f->init_(params);
-        if (ret != SDK_RET_OK) {
-            f->~ftl_base();
-            SDK_FREE(SDK_MEM_ALLOC_FTL, mem);
-            f = NULL;
-        }
-    } else {
-        ret = SDK_RET_OOM;
-    }
-
-    FTL_API_END("NewTable", ret);
-    return f;
+base_table_entry_t *
+ftl_base::get_entry(int index) {
+    SDK_ASSERT(0);
+    return NULL;
 }
 
 void
@@ -138,7 +119,6 @@ error:
 sdk_ret_t
 ftl_base::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
-    Apictx *apictx;
     p4pd_table_properties_t tinfo, ctinfo;
     thread_id_ = params->thread_id;
     ftl_table_info *info = NULL;
@@ -211,14 +191,6 @@ ftl_base::init_(sdk_table_factory_params_t *params) {
 
 skip_tables:
 
-    for (int i = 0; i < FTL_MAX_API_CONTEXTS+1; i++) {
-        apictx = &apictx_[i];
-        memset (apictx, 0, sizeof(Apictx));
-        apictx->entry = params->entry_alloc_cb(0);
-        if (apictx->entry == NULL) {
-            return SDK_RET_OOM;
-        }
-    }
     return SDK_RET_OK;
 }
 
@@ -241,12 +213,12 @@ ftl_base::destroy(ftl_base *t) {
                 t->props_ = NULL;
             }
         }
-
         t->~ftl_base();
         SDK_FREE(SDK_MEM_ALLOC_FTL, t);
         t = NULL;
     }
 }
+
 //---------------------------------------------------------------------------
 // ftl Insert entry with hash value
 //---------------------------------------------------------------------------
@@ -302,6 +274,8 @@ ftl_base::genhash_(sdk_table_api_params_t *params) {
 sdk_ret_t
 ftl_base::ctxinit_(sdk_table_api_op_t op,
               sdk_table_api_params_t *params) {
+    int index;
+
     FTL_TRACE_VERBOSE("op:%d", op);
     if (SDK_TABLE_API_OP_IS_CRUD(op)) {
         auto ret = genhash_(params);
@@ -311,8 +285,9 @@ ftl_base::ctxinit_(sdk_table_api_op_t op,
         }
     }
 
-    apictx_[0].init(op, params, props_, &tstats_, thread_id_,
-                    params->entry_size);
+    index = 0;
+    get_apictx(index)->init(op, params, props_, &tstats_, thread_id_,
+                            this, get_entry(index), params->entry_size);
     return SDK_RET_OK;
 }
 
@@ -332,7 +307,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_INSERT, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<main_table*>(main_table_)->insert_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->insert_(get_apictx(0));
     FTL_RET_CHECK_AND_GOTO(ret, done, "main table insert r:%d", ret);
 
 done:
@@ -358,7 +333,7 @@ ftl_base::update(sdk_table_api_params_t *params) {
         goto update_return;
     }
 
-    ret = static_cast<main_table*>(main_table_)->update_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->update_(get_apictx(0));
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("update_ failed. ret:%d", ret);
         goto update_return;
@@ -386,7 +361,7 @@ ftl_base::remove(sdk_table_api_params_t *params) {
         goto remove_return;
     }
 
-    ret = static_cast<main_table*>(main_table_)->remove_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->remove_(get_apictx(0));
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("remove_ failed. ret:%d", ret);
         goto remove_return;
@@ -414,7 +389,7 @@ ftl_base::get(sdk_table_api_params_t *params) {
         goto get_return;
     }
 
-    ret = static_cast<main_table*>(main_table_)->get_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->get_(get_apictx(0));
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("get_ failed. ret:%d", ret);
         goto get_return;
@@ -452,7 +427,7 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    ret = static_cast<main_table*>(main_table_)->iterate_(apictx_);
+    ret = static_cast<main_table*>(main_table_)->iterate_(get_apictx(0));
     FTL_RET_CHECK_AND_GOTO(ret, done, "iterate r:%d", ret);
 
 done:
@@ -470,9 +445,9 @@ __label__ done;
     ret = ctxinit_(sdk::table::SDK_TABLE_API_CLEAR, NULL);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
-    apictx_[0].clear_global_state = clear_global_state;
-    apictx_[0].clear_thread_local_state = clear_thread_local_state;
-    ret = static_cast<main_table*>(main_table_)->clear_(apictx_);
+    get_apictx(0)->clear_global_state = clear_global_state;
+    get_apictx(0)->clear_thread_local_state = clear_thread_local_state;
+    ret = static_cast<main_table*>(main_table_)->clear_(get_apictx(0));
     FTL_RET_CHECK_AND_GOTO(ret, done, "clear r:%d", ret);
     
     if (clear_thread_local_state) {

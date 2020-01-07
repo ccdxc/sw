@@ -63,8 +63,7 @@ public:
 
 private:
     ftlindexer indexer_;
-    // static thread_local uint8_t nctx_;
-    uint8_t nctx_;
+    static thread_local uint8_t nctx_;
     ftl_flow_hint_id_thr_local_pool_t thr_local_pools_[PDS_FLOW_HINT_POOLS_MAX];
 
 private:
