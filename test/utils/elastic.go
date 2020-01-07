@@ -27,7 +27,7 @@ import (
 
 var (
 	elasticImage        = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
-	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.14"
+	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.15"
 	elasticHost         = "127.0.0.1"
 
 	helpMsgOnce sync.Once
@@ -94,7 +94,7 @@ func StartElasticsearch(name, dir string, signer certs.CSRSigner, trustRoots []*
 		var cmd []string
 		if signer != nil {
 			cmd = []string{
-				"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
+				"run", "--rm", "-d", "--privileged", "-p", fmt.Sprintf("%d:%d", port, port),
 				fmt.Sprintf("--name=%s", name),
 				"-e", fmt.Sprintf("cluster.name=%s", name),
 				"-e", "ES_JAVA_OPTS=-Xms2g -Xmx2g",
@@ -107,7 +107,7 @@ func StartElasticsearch(name, dir string, signer certs.CSRSigner, trustRoots []*
 				elasticClusterImage}
 		} else {
 			cmd = []string{
-				"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
+				"run", "--rm", "-d", "--privileged", "-p", fmt.Sprintf("%d:%d", port, port),
 				fmt.Sprintf("--name=%s", name),
 				"-e", fmt.Sprintf("cluster.name=%s", name),
 				"-e", "xpack.security.enabled=false",

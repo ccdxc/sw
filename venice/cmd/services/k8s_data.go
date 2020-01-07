@@ -274,7 +274,8 @@ var k8sModules = map[string]protos.Module{
 			Type: protos.ModuleSpec_DaemonSet,
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
-					Name: globals.ElasticSearch,
+					Name:       globals.ElasticSearch,
+					Privileged: true,
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.ElasticSearch,

@@ -11,6 +11,9 @@ ENV xpack.monitoring.enabled=false
 ENV xpack.graph.enabled=false
 ENV xpack.watcher.enabled=false
 
+# Disable swapping, improves GC and query/index performance
+ENV bootstrap.memory_lock=true
+
 ENV searchguard.enterprise_modules_enabled=false
 ENV searchguard.ssl.transport.pemcert_filepath=auth-node/cert.pem
 ENV searchguard.ssl.transport.pemkey_filepath=auth-node/key.pem
