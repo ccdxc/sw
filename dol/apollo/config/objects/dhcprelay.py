@@ -1,0 +1,86 @@
+#! /usr/bin/python3
+import pdb
+import ipaddress
+
+from infra.common.logging import logger
+
+import apollo.config.resmgr as resmgr
+import apollo.config.agent.api as api
+import apollo.config.utils as utils
+import apollo.config.objects.base as base
+
+class DhcpRelayObject(base.ConfigObjectBase):
+    def __init__(self, vpc, serverip, agentip):
+        super().__init__(api.ObjectTypes.DHCPRELAY)
+        self.Id = next(resmgr.DhcpIdAllocator)
+        self.GID("Dhcp%d"%self.Id)
+
+        ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
+        self.Vpc = vpc
+        self.ServerIp = serverip
+        self.AgentIp = agentip
+        ########## PRIVATE ATTRIBUTES OF DHCPRELAY CONFIG OBJECT #############
+        self.Show()
+        return
+
+    def __repr__(self):
+        return "DHCPRelayId%d|Vpc:%d|ServerIp:%s|AgentIp:%s" %\
+               (self.Id, self.Vpc, self.ServerIp, self.AgentIp)
+
+    def Show(self):
+        logger.info("Dhcp Relay config Object: %s" % self)
+        logger.info("- %s" % repr(self))
+        return
+
+    def PopulateKey(self, grpcmsg):
+        grpcmsg.Id.append(self.Id)
+        return
+
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.Id
+        spec.VPCId = self.Vpc
+        utils.GetRpcIPAddr(self.ServerIp, spec.ServerIP)
+        utils.GetRpcIPAddr(self.AgentIp, spec.AgentIP)
+        return
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.Id:
+            return False
+        if spec.VPCId != self.Vpc:
+            return False
+        if spec.ServerIP != self.ServerIp:
+            return False
+        if spec.AgentIP != self.AgentIp:
+            return False
+        return True
+
+    def ValidateYamlSpec(self, spec):
+        if spec['id'] != self.Id:
+            return False
+        return True
+
+class DhcpRelayObjectClient(base.ConfigClientBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.DHCPRELAY, resmgr.MAX_DHCP_RELAY)
+        return
+
+    def GetDhcpRelayObject(self):
+        return self.GetObjectByKey(1)
+
+    def GenerateObjects(self, dhcpspec):
+        def __add_dhcp_relay_config(dhcpspec):
+            vpcid = dhcpspec.vpcid
+            serverip = ipaddress.ip_address(dhcpspec.serverip)
+            agentip = ipaddress.ip_address(dhcpspec.agentip)
+            obj = DhcpRelayObject(vpcid, serverip, agentip)
+            self.Objs.update({obj.Id: obj})
+
+        if not hasattr(dhcpspec, 'dhcprelay'):
+            return
+
+        for dhcp_relay_spec_obj in dhcpspec.dhcprelay:
+            __add_dhcp_relay_config(dhcp_relay_spec_obj)
+        return
+
+client = DhcpRelayObjectClient()

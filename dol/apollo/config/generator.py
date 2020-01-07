@@ -25,6 +25,7 @@ import apollo.config.objects.vnic as vnic
 import apollo.config.objects.vpc as vpc
 import apollo.config.objects.interface as interface
 import apollo.config.objects.port as port
+import apollo.config.objects.dhcprelay as dhcp_relay
 import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
@@ -42,6 +43,7 @@ def __initialize_object_info():
     ObjectInfo[agentapi.ObjectTypes.ROUTE] = route
     ObjectInfo[agentapi.ObjectTypes.POLICY] = policy
     ObjectInfo[agentapi.ObjectTypes.MIRROR] = mirror
+    ObjectInfo[agentapi.ObjectTypes.DHCPRELAY] = dhcp_relay
     return
 
 def __validate_object_config(objid):
@@ -79,6 +81,9 @@ def __generate(topospec):
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
 
+    # Generate DHCP configuration
+    dhcp_relay.client.GenerateObjects(topospec)
+
     # Validate configuration
     __validate()
 
@@ -107,6 +112,9 @@ def __create():
     # Create Mirror session objects
     mirror.client.CreateObjects()
 
+    # Create DHCP Relay Objects
+    dhcp_relay.client.CreateObjects()
+
     # Commit the Batch
     batch.client.Commit()
     return
@@ -125,6 +133,7 @@ def __read():
     policy.client.ReadObjects()
     tag.client.ReadObjects()
     route.client.ReadObjects()
+    #dhcp_relay.client.ReadObjects()
     # lmapping.client.ReadObjects()
     # rmapping.client.ReadObjects()
     return

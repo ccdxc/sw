@@ -9,6 +9,7 @@ import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as routetable
 import apollo.config.utils as utils
 import apollo.config.topo as topo
+import apollo.config.objects.dhcprelay as dhcprelay
 
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
@@ -45,6 +46,7 @@ class FlowMapObject(base.ConfigObjectBase):
         #TODO: Handle host mode
         obj.hostport = EzAccessStore.GetHostPort()
         obj.switchport = EzAccessStore.GetSwitchPort()
+        obj.dhcprelay = dhcprelay.client.GetDhcpRelayObject()
         utils.DumpTestcaseConfig(obj)
         return
 

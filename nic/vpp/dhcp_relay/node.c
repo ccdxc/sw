@@ -10,6 +10,9 @@ VLIB_PLUGIN_REGISTER () = {
 };
 // *INDENT-ON*
 
+// used to fill dmac for traffic towards client
+mac_addr_t vnic_mac[128];
+
 vlib_node_registration_t pds_dhcp_relay_clfy_node;
 vlib_node_registration_t pds_dhcp_relay_svr_tx_node;
 vlib_node_registration_t pds_dhcp_relay_client_tx_node;
@@ -25,14 +28,6 @@ format_pds_dhcp_relay_clfy_trace (u8 * s, va_list * args)
 
     s = format (s, "lif  %d", t->lif);
     return s;
-}
-
-always_inline int
-pds_dhcp_relay_clfy_buffer_advance_offset (vlib_buffer_t *b)
-{
-    return (VPP_P4_TO_ARM_HDR_SZ +
-            vnet_buffer(b)->l4_hdr_offset - vnet_buffer (b)->l2_hdr_offset + \
-	    sizeof(udp_header_t));
 }
 
 always_inline void
@@ -103,71 +98,6 @@ pds_dhcp_relay_clfy_trace_add (vlib_main_t *vm,
     } PDS_PACKET_TRACE_LOOP_END;
 }
 
-always_inline void
-pds_dhcp_relay_clfy_fill_next (u16 *next, p4_rx_cpu_hdr_t *hdr, u32 *counter)
-{
-    if(hdr->lif == 0) {
-       /* TODO hostlif is recieving*/
-        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_SERVER;
-        counter[DHCP_RELAY_CLFY_COUNTER_TO_SERVER]++;
-
-    } else if (1) {
-	// TODO server lif is recieving
-        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_CLIENT;
-        counter[DHCP_RELAY_CLFY_COUNTER_TO_CLIENT]++;
-    }
-
-    return;
-}
-
-always_inline void
-pds_dhcp_relay_clfy_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
-                            u16 *next0, u16 *next1, u32 *counter)
-{
-    p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
-    p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
-
-    vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer (p0)->l3_hdr_offset =
-         hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset =
-        hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-
-    vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer (p1)->l3_hdr_offset =
-         hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset =
-        hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-
-
-    vlib_buffer_advance(p0, pds_dhcp_relay_clfy_buffer_advance_offset(p0));
-    vlib_buffer_advance(p1, pds_dhcp_relay_clfy_buffer_advance_offset(p1));
-
-    pds_dhcp_relay_clfy_fill_next(next0, hdr0, counter);
-    pds_dhcp_relay_clfy_fill_next(next1, hdr1, counter);
-
-    return;
-}
-    
-always_inline void
-pds_dhcp_relay_clfy_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
-{
-    p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
-
-    vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer (p)->l3_hdr_offset =
-         hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
-    vnet_buffer (p)->l4_hdr_offset =
-        hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
-
-
-    vlib_buffer_advance(p, pds_dhcp_relay_clfy_buffer_advance_offset(p));
-
-    pds_dhcp_relay_clfy_fill_next(next, hdr, counter);
-
-    return;
-}
-    
 static uword
 pds_dhcp_relay_clfy (vlib_main_t * vm,
                      vlib_node_runtime_t * node,
@@ -365,7 +295,7 @@ static char * pds_dhcp_relay_svr_hdr_error_strings[] = {
 
 VLIB_REGISTER_NODE (pds_dhcp_relay_svr_tx_node) = {
     .function = pds_dhcp_relay_svr_hdr,
-    .name = "pds-dhcp-relay-svr-hdr",
+    .name = "pds-dhcp-relay-svr-tx",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -516,7 +446,7 @@ static char * pds_dhcp_relay_client_hdr_error_strings[] = {
 
 VLIB_REGISTER_NODE (pds_dhcp_relay_client_tx_node) = {
     .function = pds_dhcp_relay_client_hdr,
-    .name = "pds-dhcp-relay-client-hdr",
+    .name = "pds-dhcp-relay-client-tx",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -532,14 +462,87 @@ VLIB_REGISTER_NODE (pds_dhcp_relay_client_tx_node) = {
     .format_trace = format_pds_dhcp_relay_client_hdr_trace,
 };
 
+int
+pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
+{
+    // current buffer is positioned at IP header.
+    // modify DHCP option 82 suboption values as per pensando req
+    udp_header_t *uh;
+    dhcp_header_t *dh;
+    ip4_header_t *ip;
+    dhcp_option_t *o, *end;
+    uint32_t l2_vni;
+    uint32_t l3_vni;
+
+    ip = vlib_buffer_get_current(b);
+    uh = (udp_header_t *) (ip + 1);
+    dh = (dhcp_header_t *) (uh + 1);
+
+    pds_l2vnid_get(vnet_buffer(b)->pds_dhcp_data.bd_id, &l2_vni);
+    pds_l3vnid_get(vnet_buffer(b)->pds_dhcp_data.vpc_id, &l3_vni);
+
+    o = dh->options;
+    end = (void *) vlib_buffer_get_tail (b);
+
+    while (o->option != DHCP_PACKET_OPTION_END && o < end) {
+        if(o->option == 82) {
+            o->length = 34; // for suboptions 1,5, 11, 151 and 152
+
+            // suboption 1
+            o->data[0] = 1;     // circuit id option will be used for BD VNID and vnic_id
+            o->data[1] = 7;     // BD VNID takes 3 bytes and vnicid takes 4 bytes
+            clib_memcpy(&o->data[2], &l2_vni, 3);  // l2 vnid
+            uint32_t *vnic_id = (uint32_t *) & o->data[5];
+            *vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;  // vnic id
+
+            // suboption 5
+            o->data[9] = 5;     // suboption which stores subnet prefix
+            o->data[10] = 4;     // prefix lenght is 4 bytes
+            uint32_t *subnet_prefix = (uint32_t *) & o->data[11];
+            clib_memset(subnet_prefix, 0x0, sizeof(uint32_t));
+            //TODO o->data[11-14] = fill subnet prefix
+
+            // suboption 11
+            o->data[15] = 11;     // suboption which stores subnet ip
+            o->data[16] = 4;      // prefix lenght is 4 bytes
+            uint32_t *subnet_ip = (uint32_t *) & o->data[17];
+            clib_memset(subnet_ip, 0x0, sizeof(uint32_t));
+            //TODO o->data[17-20] = fill subnet prefix
+
+            // suboption 151
+            o->data[21] = 151;     // suboption which stores vss type and vrf to choose subnet from
+            o->data[22] = 8;       // 1 byte for vss type, 3 bytes for l3 vni and 4 bytes padded 0x0
+            o->data[23] = 0x01;    // vss type 1
+            clib_memcpy(&o->data[24], &l3_vni, 3);  // l3 vnid or vrf
+            clib_memset(&o->data[27], 0x0, 4);
+
+            // suboption 152
+            o->data[21] = 152;     // suboption for vss control
+            o->data[32] = 0;       // no data to store
+
+            // suboption marking end
+            o->data[33] = DHCP_PACKET_OPTION_END;     // suboption fto identify end
+
+        }
+    }
+    return 0;
+}
+
 static clib_error_t *
 pds_dhcp_relay_init (vlib_main_t * vm)
 {
     pds_dhcp_relay_pipeline_init();
+
+    dhcp_register_server_next_node_tx(vm, (u8 *) "pds-dhcp-relay-svr-tx");
+
+    dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
+
+    dhcp_register_custom_options_cb(&pds_dhcp_options_callback);
+
     return 0;
 }
 
 VLIB_INIT_FUNCTION (pds_dhcp_relay_init) =
 {
-    .runs_after = VLIB_INITS("pds_infra_init"),
+    .runs_after = VLIB_INITS("pds_infra_init", "dhcp4_proxy_init"),
 };

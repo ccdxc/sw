@@ -1,0 +1,34 @@
+# Feature Test Modules List
+feature:
+    id       : networking
+    sub      : dhcp_relay
+    package  : test.networking
+    module   : networking
+    runorder : 15000
+    enable   : True
+    ignore   : True
+
+modules:
+    - module:
+        name    : DHCP_RELAY_DISCOVER
+        spec    : dhcp_relay_disc.testspec
+        iterate :
+              - flow     : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : DHCP_RELAY_OFFER
+        spec    : dhcp_relay_offer.testspec
+        iterate :
+              - flow     : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : DHCP_RELAY_REQUEST
+        spec    : dhcp_relay_req.testspec
+        iterate :
+              - flow     : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : DHCP_RELAY_ACK
+        spec    : dhcp_relay_ack.testspec
+        iterate :
+              - flow     : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING

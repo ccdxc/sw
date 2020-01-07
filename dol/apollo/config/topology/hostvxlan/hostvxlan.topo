@@ -32,7 +32,10 @@ device:
           type  : underlay
         - count : 16
           type  : underlay-ecmp
-
+dhcprelay:
+    - vpcid : 10
+      serverip : '100.1.1.1'
+      agentip : '1.1.1.1'
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6

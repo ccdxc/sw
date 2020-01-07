@@ -1,0 +1,99 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_DHCP
+        headers     :
+            bootp:
+                op       : const/2
+                xid      : callback://vpp/dhcp/GetDhcpXid
+                chaddr   : ref://testcase/config/localmapping/VNIC/MACAddr
+                yiaddr   : callback://vpp/dhcp/GetAssignedIp
+                siaddr   : callback://vpp/dhcp/GetDhcpServerIp
+                giaddr   : ref://testcase/config/devicecfg/IP
+                sname    : callback://vpp/dhcp/GetDhcpSname
+                file     : callback://vpp/dhcp/GetDhcpFile
+
+    - packet:
+        id          : FROM_SERVER_OFFER_PKT
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            eth:
+                src     : callback://vpp/dhcp/GetDhcpServerMAC
+                dst     : callback://networking/packets/GetUplinkPortMac
+            ipv4:
+                src     : callback://vpp/dhcp/GetDhcpServerIp
+                dst     : ref://testcase/config/devicecfg/IP
+            bootp:
+                options  : callback://vpp/dhcp/GetDhcpOptions
+
+    - packet:
+        id          : TO_HOST_OFFER_PKT
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                dst     : callback://vpp/dhcp/GetDhcpBroadcastMAC
+            ipv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://vpp/dhcp/GetDhcpBroadcastIp
+            bootp:
+                options  : callback://vpp/dhcp/GetDhcpOptions
+
+buffers:
+    - buffer:
+        id      : BUF1 #Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind : True
+            size : 1518
+            data : None
+    - buffer:
+        id      : BUF2 #Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_OFFER_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_OFFER_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=FROM_SERVER_OFFER_PKT
+                    port    : ref://testcase/config/switchport
+        expect:
+            delay    :    1
+            descriptors:
+                - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

@@ -54,6 +54,7 @@ VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
 PortIdAllocator = iter(irange(1, 2))
+DhcpIdAllocator = iter(irange(1, 16))
 
 # ---------------------------------------------------------------------------------
 # Artemis specific configs
@@ -125,6 +126,7 @@ MAX_TAG = 1
 MAX_METER = 64
 MAX_UNDERLAY_NHS = 2
 MAX_OVERLAY_NHS = 8
+MAX_DHCP_RELAY = 16
 
 NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
 UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))

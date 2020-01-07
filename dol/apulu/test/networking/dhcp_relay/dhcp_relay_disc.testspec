@@ -1,0 +1,84 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_DHCP
+        headers     :
+            bootp:
+                op       : const/1
+                xid      : callback://vpp/dhcp/GetDhcpXid
+                chaddr   : ref://testcase/config/localmapping/VNIC/MACAddr
+                sname    : callback://vpp/dhcp/GetDhcpSname
+                file     : callback://vpp/dhcp/GetDhcpFile
+    - packet:
+        id          : FROM_HOST_DISCOVER_PKT
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : callback://vpp/dhcp/GetDhcpBroadcastMAC
+            ipv4:
+                src     : callback://vpp/dhcp/GetDhcpClientSrcIp
+                dst     : callback://vpp/dhcp/GetDhcpBroadcastIp
+            bootp:
+                options  : callback://vpp/dhcp/GetDhcpOptions
+    - packet:
+        id          : TO_SERVER_DISCOVER_PKT
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            eth:
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://vpp/dhcp/GetDhcpServerMAC
+            ipv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://vpp/dhcp/GetDhcpServerIp
+            bootp:
+                giaddr   : ref://testcase/config/devicecfg/IP
+                options  : callback://vpp/dhcp/GetDhcpOptions
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind : True
+            size : ref://testcase/packets/id=FROM_HOST_DISCOVER_PKT/size
+            data : ref://testcase/packets/id=FROM_HOST_DISCOVER_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SERVER_DISCOVER_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
