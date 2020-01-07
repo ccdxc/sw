@@ -102,7 +102,7 @@ $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
 	${AT}$$(strip ${CMD_GOBIN} $${${1}_FLAGS}) -o $$@ $${${1}_GOPKG}
 	${AT}mkdir -p ${BLD_BIN_DIR}
 	${NAT}${AT} echo ${NAME_UPX} $$@
-	${AT} ${TOPDIR}/bin/upx -q $$@ > /dev/null
+	${AT}((${TOPDIR}/bin/upx -v $$@) || (echo "future: strace -o upx-strace.log $$@"))
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
 	${AT}ln -sf $$@ ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
 endef
