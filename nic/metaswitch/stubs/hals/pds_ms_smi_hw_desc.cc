@@ -11,6 +11,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 
@@ -88,8 +89,11 @@ bool pds_ms_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config
 
     for (uint32_t port = 1;
         port <= api::g_pds_state.catalogue()->num_fp_ports(); port++) {
-
         std::string if_name;
+        if (api::g_pds_state.catalogue()->port_type_fp(port) !=
+                                    sdk::types::port_type_t::PORT_TYPE_ETH) {
+            continue;
+        }
         auto ms_ifindex = pds_port_to_ms_ifindex_and_ifname(port, &if_name);
         smi::PortData temp_port = smi::PortData();
         temp_port.id.module_id = 1;
