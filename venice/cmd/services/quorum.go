@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	jt = NewDefragJobTicker()
+	jt                     = NewDefragJobTicker()
+	quorumClientNumRetries = 3
 )
 
 //update Ticker with new duration
@@ -120,14 +121,25 @@ func getNumHealthyQuorumMembers(qs *cmd.QuorumStatus) int {
 	return result
 }
 
-func getQuorumStatus(quorum quorum.Interface) *cmd.QuorumStatus {
-	if quorum == nil {
+func getQuorumStatus(q quorum.Interface) *cmd.QuorumStatus {
+	if q == nil {
 		log.Errorf("Quorum is not available")
 		return nil
 	}
-	members, err := quorum.List()
-	if err != nil {
+
+	var members []quorum.Member
+	var err error
+	var i int
+
+	for i = 0; i < quorumClientNumRetries; i++ {
+		members, err = q.List()
+		if err == nil {
+			break
+		}
 		log.Errorf("Error getting quorum members list: %v", err)
+	}
+	if i == quorumClientNumRetries {
+		log.Errorf("Error getting quorum members list, retries exhausted")
 		return nil
 	}
 
@@ -149,22 +161,34 @@ func getQuorumStatus(quorum quorum.Interface) *cmd.QuorumStatus {
 			qms.Status = "started"
 		}
 
-		if statusResp, err := quorum.GetStatus(&m); err == nil {
-			status := statusResp.(*etcd.StatusResponse).Header
-			qms.Term = fmt.Sprintf("%d", status.RaftTerm)
-		} else {
+		for i = 0; i < quorumClientNumRetries; i++ {
+			if statusResp, err := q.GetStatus(&m); err == nil {
+				status := statusResp.(*etcd.StatusResponse).Header
+				qms.Term = fmt.Sprintf("%d", status.RaftTerm)
+				break
+			}
 			log.Errorf("Error getting status for quorum member %+v: %v", m, err)
 		}
+		if i == quorumClientNumRetries {
+			log.Errorf("Error getting status for quorum member %+v, retries exhausted", m)
+			// do not return
+		}
 
-		if healthy, err := quorum.GetHealth(&m); err == nil {
-			if healthy {
-				qms.Conditions[0].Status = cmd.ConditionStatus_TRUE.String()
-			} else {
-				qms.Conditions[0].Status = cmd.ConditionStatus_FALSE.String()
+		for i = 0; i < quorumClientNumRetries; i++ {
+			if healthy, err := q.GetHealth(&m); err == nil {
+				if healthy {
+					qms.Conditions[0].Status = cmd.ConditionStatus_TRUE.String()
+				} else {
+					qms.Conditions[0].Status = cmd.ConditionStatus_FALSE.String()
+				}
+				break
 			}
-		} else {
 			log.Errorf("Error getting health for quorum member %+v: %v", m, err)
+		}
+		if i == quorumClientNumRetries {
+			log.Errorf("Error getting health for quorum member %+v, retries exhausted", m)
 			qms.Conditions[0].Status = cmd.ConditionStatus_UNKNOWN.String()
+			// do not return
 		}
 
 		log.Infof("Quorum Member: %+v, status: %+v", m, qms)

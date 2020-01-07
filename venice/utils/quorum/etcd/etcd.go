@@ -37,6 +37,7 @@ const (
 	defaultDataDir  = globals.EtcdDataDir
 	defaultUnitFile = globals.EtcdServiceFile
 	timeout         = time.Second * 15
+	defragTimeout   = time.Minute * 2
 
 	// Fixed parameters
 	instanceAuthDirName = "auth"
@@ -268,7 +269,7 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 
 // List returns the current quorum members.
 func (e *etcdQuorum) List() ([]quorum.Member, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	resp, err := e.client.MemberList(ctx)
 	if err != nil {
@@ -289,7 +290,7 @@ func (e *etcdQuorum) List() ([]quorum.Member, error) {
 
 // Add adds new member to the quorum.
 func (e *etcdQuorum) Add(member *quorum.Member) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	_, err := e.client.MemberAdd(ctx, member.PeerURLs)
 	if err != nil {
@@ -304,7 +305,7 @@ func (e *etcdQuorum) Defrag(member *quorum.Member) error {
 	if len(member.ClientURLs) == 0 {
 		return fmt.Errorf("Error defragmenting quorum member %s: no client URL", member.Name)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
+	ctx, cancel := context.WithTimeout(context.Background(), defragTimeout)
 	defer cancel()
 
 	_, err := e.client.Defragment(ctx, member.ClientURLs[0])
@@ -317,7 +318,7 @@ func (e *etcdQuorum) Defrag(member *quorum.Member) error {
 
 // Remove removes an existing quorum member.
 func (e *etcdQuorum) Remove(id uint64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	_, err := e.client.MemberRemove(ctx, id)
 	if err != nil {
